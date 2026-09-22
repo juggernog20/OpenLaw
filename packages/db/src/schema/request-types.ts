@@ -8,18 +8,9 @@
  * `entity_types` are the same machinery) plus the three columns that
  * are intake's own: the target.
  *
- * **The target is the routing decision, pre-encoded.** A request type
- * targets nothing, the Matter module, or the Contract module — and
- * inside Matter or Contract it may name one specific type. So "NDA
- * request" targets the NDA contract type, "Contract review" targets the
- * Contract module and leaves the type to the reviewer at conversion,
- * and "Legal question" targets nothing at all. The module-only state is
- * the third state INT-002 as written did not have; it is what lets a
- * request type promise a contract without pre-deciding which kind.
- *
- * Three columns hold it, and one check constraint holds them together:
- * `target_module` is NULL, `matter`, or `contract`; at most one type id
- * is set; and a type id may only be set under its matching module.
+ * DD-028 requires a Contract or Matter destination. A module-only destination
+ * uses that module's Default Form. The expand migration backfills old module-only
+ * destinations to that Default type and maps a missing module to Matter.
  *
  * **Deleting a targeted type demotes, never strands.** Both type FKs
  * are `on delete set null` while `target_module` stays, so
@@ -35,7 +26,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, integer, jsonb, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, integer, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { contractTypes } from "./contract-types.js";
 import { matterTypes } from "./matter-types.js";
 import { taxonomyColumns } from "./helpers.js";
@@ -44,13 +35,12 @@ export const requestTypes = pgTable(
   "request_types",
   {
     ...taxonomyColumns(),
-    /** Basics and attached field IDs in Portal presentation order. */
-    formFieldOrder: jsonb("form_field_order").$type<string[]>().notNull().default([]),
     /** INT-003: business days offered to triage as an unconfirmed estimate; NULL means no suggestion. */
     turnaroundDays: integer("turnaround_days"),
-    /** What converting one of these requests creates: NULL (nothing),
-     * `matter`, or `contract`. */
-    targetModule: text("target_module"),
+    /** Every Request type names a module, including one created by the legacy editor. */
+    targetModule: text("target_module", { enum: ["matter", "contract"] })
+      .notNull()
+      .default("matter"),
     /** The specific matter type, set only under `target_module =
      * 'matter'`; NULL leaves the type to the reviewer at conversion. */
     targetMatterTypeId: text("target_matter_type_id").references(() => matterTypes.id, {

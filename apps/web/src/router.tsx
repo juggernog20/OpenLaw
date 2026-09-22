@@ -543,7 +543,7 @@ export const routes: RouteObject[] = [
       },
       {
         // #85: each type row opens its own editor screen (ST15).
-        path: "matters/types/:typeId",
+        path: "matters/types/:typeId/:section?",
         loader: settingsMatterTypeEditorLoader,
         element: (
           <KeyedByParam name="typeId">
@@ -559,7 +559,7 @@ export const routes: RouteObject[] = [
       },
       {
         // #84: each type row opens its own editor screen (ST16).
-        path: "contracts/types/:typeId",
+        path: "contracts/types/:typeId/:section?",
         loader: settingsContractTypeEditorLoader,
         element: (
           <KeyedByParam name="typeId">
@@ -614,7 +614,7 @@ export const routes: RouteObject[] = [
         element: <SettingsEntityTypesPage />,
       },
       {
-        path: "entities/types/:typeId",
+        path: "entities/types/:typeId/:section?",
         loader: settingsEntityTypeEditorLoader,
         element: (
           <KeyedByParam name="typeId">

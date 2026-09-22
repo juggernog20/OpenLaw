@@ -41,6 +41,8 @@ document is the map, not the territory.
 
 ## Where we are
 
+**M39 is shipped, omnibus [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).** Each Contract, Matter and Entity type owns a Form of Rows and Branches. Contract and Matter Rows carry On intake form, Required for creation and Visible on Portal; Entity Rows omit On intake form. The switches decide the touchpoint and what a Business User reads. Request types read their destination Form; conversion and direct creation use the same conditions. The legacy intake catalog and Field tag are retired.
+
 **M37 Answer style is built.** Administrators choose the organization Answer style and override it on Contract text Fields. Prompt cards separate editable extraction instructions from fixed format sentences.
 
 **M38 adds device notifications on the staff app and the Portal.** Push joins In-app and Email,
@@ -744,6 +746,16 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - [x] Portal enrolment and Requester events through the second notification mount
   - [x] The browser journey, plan and decision records, and VAPID environment documentation
   - _Decisions:_ NOT-010, TECH-034, DES-089; NOT-001, NOT-005 and NOT-007 addenda
+
+- [x] **M39 — Type Forms**
+      _Demo:_ Build a Branch on the NDA type, submit a Request that takes it, convert it, and read the answers on the Contract and Portal record.
+      _Built:_ [#1007](https://github.com/juggernog20/OpenLaw/issues/1007), tasks #1009–#1020. The browser journey is
+      [`61-m39-type-form.spec.ts`](../e2e/tests/61-m39-type-form.spec.ts), run by CI against the built Compose stack.
+  - [x] Shared evaluator, built-in Row and Branch tables, Default types, and whole-Form API
+  - [x] Form tab, conditional Request and creation forms, and read-only Intake form card with preview
+  - [x] Conversion carry-through, AI preparation by Touchpoint, and Row-level Visible on Portal
+  - [x] Legacy storage retirement, schema and decision addenda, glossary and Administrator and Portal guides
+  - _Decisions:_ DD-028, DES-090
 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.

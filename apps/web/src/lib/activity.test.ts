@@ -290,7 +290,6 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     displayName: "Governing law",
     moduleScope: "contract",
     fieldType: "text",
-    fieldTag: "legal",
   },
   "field.updated": {
     slug: "governing-law",
@@ -1376,6 +1375,14 @@ describe("the sentences a reader gets", () => {
       },
     });
     expect(several.sentence).toBe("Nadia Counsel changed 2 fields");
+  });
+
+  it("names the Row visibility switch in activity changes", () => {
+    const narration = narrate("field.updated", {
+      displayName: "Context",
+      changed: { visibleOnPortal: { from: true, to: false } },
+    });
+    expect(narration.changes).toEqual([{ label: "Visible on Portal", from: "Yes", to: "No" }]);
   });
 
   it("counts each reminder lead time in days, day-of in words (#322)", () => {

@@ -247,15 +247,19 @@ test.describe.serial("M6 demo path", () => {
       await tabs.getByRole("link", { name: "Types" }).click();
       await page.getByRole("button", { name: `Edit ${typeName}` }).click();
       await expect(page).toHaveURL(/\/settings\/contracts\/types\/[^/]+$/);
+      await page.getByRole("link", { name: "Form", exact: true }).click();
+      await expect(page).toHaveURL(/\/settings\/contracts\/types\/[^/]+\/form$/);
       const attached = page.waitForResponse(
         (response) =>
-          /\/api\/v1\/contract-types\/[^/]+\/fields/.test(response.url()) &&
-          response.request().method() === "POST",
+          /\/api\/v1\/contract-types\/[^/]+\/form$/.test(response.url()) &&
+          response.request().method() === "PUT",
       );
-      await page.getByRole("button", { name: "Attach field" }).click();
+      await page.getByRole("button", { name: "Attach Field", exact: true }).click();
       await page.getByRole("menuitem", { name: new RegExp(fieldName) }).click();
       expect((await attached).ok()).toBe(true);
-      await expect(page.getByRole("checkbox", { name: `${fieldName} required` })).toBeVisible();
+      await expect(
+        page.getByRole("switch", { name: `${fieldName}: Required for creation` }),
+      ).toBeVisible();
       await expect(page.getByRole("button", { name: `Detach ${fieldName}` })).toBeVisible();
     } catch (error) {
       // A cleanup that throws here would replace the failure that caused

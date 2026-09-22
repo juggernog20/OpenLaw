@@ -364,7 +364,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
-        "stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} " +
+        "stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} " +
         "targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +
@@ -1378,7 +1378,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
                 {
                   id: "conversion.targetLabel",
                   defaultMessage:
-                    "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
+                    "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
                 },
                 { slug },
               ),
@@ -1409,6 +1409,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         notice_period_days: "noticePeriodDays",
         value: "value",
         counterparty: "primaryCounterparty",
+        counterparties: "primaryCounterparty",
       };
       const key = coreKey[slug];
       return {

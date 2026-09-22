@@ -420,7 +420,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -1299,7 +1299,7 @@
     "defaultMessage": "Assignment rules"
   },
   "autoDocs.attributeName": {
-    "defaultMessage": "{attribute, select, title {Title} primary_counterparty_name {Primary Counterparty name} entity_id {Our Entity} owning_department_id {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}"
+    "defaultMessage": "{attribute, select, title {Title} counterparties {Primary Counterparty name} entity {Our Entity} owning_department {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}"
   },
   "autoDocs.audience": {
     "defaultMessage": "Audience"
@@ -3195,7 +3195,7 @@
     "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."
   },
   "conversion.targetLabel": {
-    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
+    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
   },
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {record}."
@@ -3206,9 +3206,6 @@
   "convert.archivedReferenceNote": {
     "defaultMessage": "{value} is archived. Pick a live {fieldType, select, user {person} entity {entity} other {value}} to convert."
   },
-  "convert.counterparty": {
-    "defaultMessage": "Counterparty"
-  },
   "convert.failed": {
     "defaultMessage": "The request could not be converted. Try again."
   },
@@ -3218,17 +3215,11 @@
   "convert.from": {
     "defaultMessage": "{requestType} · submitted by {requester}"
   },
-  "convert.nativeCarried": {
-    "defaultMessage": "Carries into the contract"
-  },
   "convert.needTitle": {
     "defaultMessage": "Name the {module, select, matter {matter} other {contract}}."
   },
   "convert.needType": {
     "defaultMessage": "Pick a {module, select, matter {matter} other {contract}} type."
-  },
-  "convert.neededBy": {
-    "defaultMessage": "Needed by"
   },
   "convert.otherModule": {
     "defaultMessage": "Convert to {module, select, matter {contract} other {matter}} instead"
@@ -4694,6 +4685,12 @@
   "entities.documents.folder.recordRoot": {
     "defaultMessage": "None"
   },
+  "entities.form.fieldMissing": {
+    "defaultMessage": "Fill {field}."
+  },
+  "entities.form.fieldNumberInvalid": {
+    "defaultMessage": "{field}: enter this as a number."
+  },
   "entities.form.formedOn": {
     "defaultMessage": "Formed on"
   },
@@ -5584,6 +5581,9 @@
   },
   "error.title": {
     "defaultMessage": "Something went wrong."
+  },
+  "fields.notSet": {
+    "defaultMessage": "Not set"
   },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
@@ -6653,9 +6653,6 @@
   "matters.createFailed": {
     "defaultMessage": "The matter could not be created."
   },
-  "matters.customFields": {
-    "defaultMessage": "Custom fields"
-  },
   "matters.documents.batch.failures": {
     "defaultMessage": "{failed, plural, one {# file failed} other {# files failed}}. {landed, plural, =0 {Nothing was added to the matter.} one {The other # is on the matter.} other {The other # are on the matter.}}"
   },
@@ -7576,9 +7573,6 @@
   },
   "portal.form.description": {
     "defaultMessage": "Description"
-  },
-  "portal.form.descriptionHint": {
-    "defaultMessage": "What is it, who is on the other side, and what do you need from Legal?"
   },
   "portal.form.fieldRequired": {
     "defaultMessage": "{field} is required."
@@ -9113,15 +9107,6 @@
   "settings.contractFields.styleDefaultLoadError": {
     "defaultMessage": "The current organisation default could not be loaded."
   },
-  "settings.contractFields.tagColumn": {
-    "defaultMessage": "Tag"
-  },
-  "settings.contractFields.tagLabel": {
-    "defaultMessage": "{tag, select, business {Business} legal {Legal} other {Unknown}}"
-  },
-  "settings.contractFields.tagPrefix": {
-    "defaultMessage": "Tag:"
-  },
   "settings.contractFields.title": {
     "defaultMessage": "Fields"
   },
@@ -9215,56 +9200,17 @@
   "settings.contractStatuses.title": {
     "defaultMessage": "Contract statuses"
   },
-  "settings.contractTypeEditor.allAttached": {
-    "defaultMessage": "Every catalog field is attached."
-  },
   "settings.contractTypeEditor.allTypes": {
     "defaultMessage": "All types"
-  },
-  "settings.contractTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.contractTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
-  },
-  "settings.contractTypeEditor.attachedFields": {
-    "defaultMessage": "Custom Fields"
   },
   "settings.contractTypeEditor.description": {
     "defaultMessage": "Description"
   },
-  "settings.contractTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.contractTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.contractTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.contractTypeEditor.empty": {
-    "defaultMessage": "No fields are attached to this type."
-  },
-  "settings.contractTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
-  },
-  "settings.contractTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
-  },
   "settings.contractTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# contract uses this type.} other {# contracts use this type.}}"
-  },
-  "settings.contractTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
-  },
-  "settings.contractTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.contractTypeEditor.requiredColumn": {
-    "defaultMessage": "Required"
-  },
-  "settings.contractTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
   },
   "settings.contractTypePeople.add": {
     "defaultMessage": "Add person"
@@ -9665,56 +9611,17 @@
   "settings.entities.title": {
     "defaultMessage": "Entities"
   },
-  "settings.entityTypeEditor.allAttached": {
-    "defaultMessage": "Every eligible field is attached."
-  },
   "settings.entityTypeEditor.allTypes": {
     "defaultMessage": "All types"
-  },
-  "settings.entityTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.entityTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
-  },
-  "settings.entityTypeEditor.attachedFields": {
-    "defaultMessage": "Attached fields"
   },
   "settings.entityTypeEditor.description": {
     "defaultMessage": "Description"
   },
-  "settings.entityTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.entityTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.entityTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.entityTypeEditor.empty": {
-    "defaultMessage": "No fields are attached to this type."
-  },
-  "settings.entityTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
-  },
-  "settings.entityTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
-  },
   "settings.entityTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# entity uses this type.} other {# entities use this type.}}"
-  },
-  "settings.entityTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
-  },
-  "settings.entityTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.entityTypeEditor.requiredColumn": {
-    "defaultMessage": "Required"
-  },
-  "settings.entityTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
   },
   "settings.entityTypes.add": {
     "defaultMessage": "Add type"
@@ -9796,9 +9703,6 @@
   },
   "settings.fields.contractCatalog": {
     "defaultMessage": "Contract fields"
-  },
-  "settings.fields.counterpartyLookup": {
-    "defaultMessage": "Counterparty lookup"
   },
   "settings.fields.custom": {
     "defaultMessage": "Custom Fields"
@@ -10445,56 +10349,17 @@
   "settings.matterTemplates.typeLabel": {
     "defaultMessage": "Matter type"
   },
-  "settings.matterTypeEditor.allAttached": {
-    "defaultMessage": "Every eligible field is attached."
-  },
   "settings.matterTypeEditor.allTypes": {
     "defaultMessage": "All types"
-  },
-  "settings.matterTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.matterTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
-  },
-  "settings.matterTypeEditor.attachedFields": {
-    "defaultMessage": "Custom Fields"
   },
   "settings.matterTypeEditor.description": {
     "defaultMessage": "Description"
   },
-  "settings.matterTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.matterTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.matterTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.matterTypeEditor.empty": {
-    "defaultMessage": "No fields are attached to this type."
-  },
-  "settings.matterTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
-  },
-  "settings.matterTypeEditor.help": {
-    "defaultMessage": "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values."
-  },
   "settings.matterTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# matter uses this type.} other {# matters use this type.}}"
-  },
-  "settings.matterTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
-  },
-  "settings.matterTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.matterTypeEditor.requiredColumn": {
-    "defaultMessage": "Required"
-  },
-  "settings.matterTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
   },
   "settings.matterTypes.add": {
     "defaultMessage": "Add type"
@@ -10931,17 +10796,8 @@
   "settings.reminders.title": {
     "defaultMessage": "Reminder lead times"
   },
-  "settings.requestTypeEditor.allAttached": {
-    "defaultMessage": "Every field this target allows is attached."
-  },
   "settings.requestTypeEditor.allTypes": {
     "defaultMessage": "All request types"
-  },
-  "settings.requestTypeEditor.attach": {
-    "defaultMessage": "Attach field"
-  },
-  "settings.requestTypeEditor.attached": {
-    "defaultMessage": "{name} attached."
   },
   "settings.requestTypeEditor.basicAttachments": {
     "defaultMessage": "Attachments"
@@ -10949,32 +10805,8 @@
   "settings.requestTypeEditor.basicAttachmentsType": {
     "defaultMessage": "Files"
   },
-  "settings.requestTypeEditor.basicDescription": {
-    "defaultMessage": "Description"
-  },
-  "settings.requestTypeEditor.basicDescriptionType": {
-    "defaultMessage": "Long text"
-  },
-  "settings.requestTypeEditor.basicLocked": {
-    "defaultMessage": "{name} is always collected. You can change its position."
-  },
-  "settings.requestTypeEditor.basicTitle": {
-    "defaultMessage": "Title"
-  },
-  "settings.requestTypeEditor.basicTitleType": {
-    "defaultMessage": "Text"
-  },
-  "settings.requestTypeEditor.basicUrgency": {
-    "defaultMessage": "Urgency"
-  },
-  "settings.requestTypeEditor.basicUrgencyType": {
-    "defaultMessage": "Single select"
-  },
-  "settings.requestTypeEditor.basicsCaption": {
-    "defaultMessage": "Basics are always on the form"
-  },
-  "settings.requestTypeEditor.decideLater": {
-    "defaultMessage": "Decide during triage"
+  "settings.requestTypeEditor.defaultType": {
+    "defaultMessage": "Default"
   },
   "settings.requestTypeEditor.description": {
     "defaultMessage": "Description"
@@ -10994,56 +10826,32 @@
   "settings.requestTypeEditor.destinationType": {
     "defaultMessage": "{module, select, contract {Default contract type} other {Default matter type}}"
   },
-  "settings.requestTypeEditor.detach": {
-    "defaultMessage": "Detach {name}"
-  },
-  "settings.requestTypeEditor.detached": {
-    "defaultMessage": "{name} detached."
-  },
   "settings.requestTypeEditor.displayName": {
     "defaultMessage": "Display name"
   },
-  "settings.requestTypeEditor.empty": {
-    "defaultMessage": "No catalog fields are on this form yet."
+  "settings.requestTypeEditor.editOnType": {
+    "defaultMessage": "Edit on {type}"
   },
-  "settings.requestTypeEditor.fieldColumn": {
-    "defaultMessage": "Field"
+  "settings.requestTypeEditor.formLoading": {
+    "defaultMessage": "Loading Intake form…"
   },
-  "settings.requestTypeEditor.formFields": {
-    "defaultMessage": "Form fields"
+  "settings.requestTypeEditor.formReadError": {
+    "defaultMessage": "The Intake form could not be read."
   },
-  "settings.requestTypeEditor.moved": {
-    "defaultMessage": "{name} moved to position {position} of {total}."
+  "settings.requestTypeEditor.intakeForm": {
+    "defaultMessage": "Intake form"
+  },
+  "settings.requestTypeEditor.optionalFact": {
+    "defaultMessage": "Optional"
   },
   "settings.requestTypeEditor.previousDestination": {
     "defaultMessage": "Previous selection"
   },
-  "settings.requestTypeEditor.reorder": {
-    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
-  },
-  "settings.requestTypeEditor.requiredColumn": {
+  "settings.requestTypeEditor.requiredFact": {
     "defaultMessage": "Required"
   },
-  "settings.requestTypeEditor.requiredFor": {
-    "defaultMessage": "{name} required"
-  },
-  "settings.requestTypeEditor.requiredLocked": {
-    "defaultMessage": "{name} can be on the form, but it can't be required. A requester cannot pick a person in the Portal."
-  },
-  "settings.requestTypeEditor.targetOffer.accept": {
-    "defaultMessage": "Attach to both"
-  },
-  "settings.requestTypeEditor.targetOffer.attachedBoth": {
-    "defaultMessage": "{name} attached to the form and to {target}."
-  },
-  "settings.requestTypeEditor.targetOffer.body": {
-    "defaultMessage": "{name} is not on the {target} {module, select, contract {contract} other {matter}} type. An answer collected on this form carries into a {module, select, contract {contract} other {matter}} only through a Field its type attaches. Without it, the answer stays on the Request."
-  },
-  "settings.requestTypeEditor.targetOffer.decline": {
-    "defaultMessage": "Form only"
-  },
-  "settings.requestTypeEditor.targetOffer.title": {
-    "defaultMessage": "Attach {name} to {target} too?"
+  "settings.requestTypeEditor.retryForm": {
+    "defaultMessage": "Retry"
   },
   "settings.requestTypeEditor.turnaround": {
     "defaultMessage": "Target turnaround (business days)"
@@ -11084,17 +10892,17 @@
   "settings.requestTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },
+  "settings.requestTypes.destinationColumn": {
+    "defaultMessage": "Destination"
+  },
+  "settings.requestTypes.destinationPrefix": {
+    "defaultMessage": "Destination:"
+  },
+  "settings.requestTypes.destinationType": {
+    "defaultMessage": "{module, select, matter {Matter · {name}} other {Contract · {name}}}"
+  },
   "settings.requestTypes.edit": {
     "defaultMessage": "Edit {name}"
-  },
-  "settings.requestTypes.fieldsColumn": {
-    "defaultMessage": "Form fields"
-  },
-  "settings.requestTypes.fieldsCount": {
-    "defaultMessage": "{count, plural, one {# field} other {# fields}}"
-  },
-  "settings.requestTypes.fieldsPrefix": {
-    "defaultMessage": "Form fields:"
   },
   "settings.requestTypes.moved": {
     "defaultMessage": "{name} moved to position {position} of {total}."
@@ -11122,18 +10930,6 @@
   },
   "settings.requestTypes.restore": {
     "defaultMessage": "Restore {name}"
-  },
-  "settings.requestTypes.targetColumn": {
-    "defaultMessage": "Default destination"
-  },
-  "settings.requestTypes.targetModule": {
-    "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {Decide during triage}}"
-  },
-  "settings.requestTypes.targetPrefix": {
-    "defaultMessage": "Default destination:"
-  },
-  "settings.requestTypes.targetType": {
-    "defaultMessage": "{module, select, matter {Matter · {name}} contract {Contract · {name}} other {{name}}}"
   },
   "settings.requestTypes.title": {
     "defaultMessage": "Request types"
@@ -11236,9 +11032,6 @@
   },
   "settings.typeEditor.createdNotAttached": {
     "defaultMessage": "{name} was created but could not be attached. Select it from Attach field to try again. {detail}"
-  },
-  "settings.typeEditor.defaultFieldPrefix": {
-    "defaultMessage": "Default ·"
   },
   "settings.typeEditor.noMatchingFields": {
     "defaultMessage": "No matching fields."
@@ -11659,6 +11452,384 @@
   },
   "timezone.searchPlaceholder": {
     "defaultMessage": "Search timezones"
+  },
+  "typeForm.add-a-condition": {
+    "defaultMessage": "Add a condition"
+  },
+  "typeForm.add-a-row-above-this-branch-first": {
+    "defaultMessage": "Add a Row above this Branch first"
+  },
+  "typeForm.add-branch": {
+    "defaultMessage": "Add branch"
+  },
+  "typeForm.add-branch-inside": {
+    "defaultMessage": "Add branch inside"
+  },
+  "typeForm.add-condition": {
+    "defaultMessage": "Add condition"
+  },
+  "typeForm.add-row-into-branch": {
+    "defaultMessage": "Add row into branch"
+  },
+  "typeForm.all": {
+    "defaultMessage": "All"
+  },
+  "typeForm.all-fields-are-attached": {
+    "defaultMessage": "All Fields are attached"
+  },
+  "typeForm.already-at-the-root": {
+    "defaultMessage": "Already at the root"
+  },
+  "typeForm.any": {
+    "defaultMessage": "Any"
+  },
+  "typeForm.approval-defaults": {
+    "defaultMessage": "Approval defaults"
+  },
+  "typeForm.attach-field": {
+    "defaultMessage": "Attach Field"
+  },
+  "typeForm.attached": {
+    "defaultMessage": "{field} attached."
+  },
+  "typeForm.autoRenew": {
+    "defaultMessage": "Auto-renew"
+  },
+  "typeForm.boolean": {
+    "defaultMessage": "Boolean"
+  },
+  "typeForm.branch-conditions": {
+    "defaultMessage": "Branch conditions"
+  },
+  "typeForm.branchChildren": {
+    "defaultMessage": "Children of {branch}"
+  },
+  "typeForm.built-in": {
+    "defaultMessage": "Built-in"
+  },
+  "typeForm.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "typeForm.changes-apply-immediately": {
+    "defaultMessage": "Changes apply immediately"
+  },
+  "typeForm.choose-a-valid-value-for-this-condition": {
+    "defaultMessage": "Choose a valid value for this condition"
+  },
+  "typeForm.choose-a-value": {
+    "defaultMessage": "Choose a value"
+  },
+  "typeForm.close": {
+    "defaultMessage": "Close"
+  },
+  "typeForm.complete-the-branch-condition-first": {
+    "defaultMessage": "Complete the Branch condition first"
+  },
+  "typeForm.counterparties": {
+    "defaultMessage": "Counterparties"
+  },
+  "typeForm.create-field": {
+    "defaultMessage": "Create Field"
+  },
+  "typeForm.createdNotAttached": {
+    "defaultMessage": "{field} was created but could not be attached. Retry attachment."
+  },
+  "typeForm.creation": {
+    "defaultMessage": "Creation"
+  },
+  "typeForm.creationOptionsFailed": {
+    "defaultMessage": "Some choices could not be loaded. Close the dialog and try again."
+  },
+  "typeForm.critical": {
+    "defaultMessage": "Critical"
+  },
+  "typeForm.currency": {
+    "defaultMessage": "Currency"
+  },
+  "typeForm.date": {
+    "defaultMessage": "Date"
+  },
+  "typeForm.department": {
+    "defaultMessage": "Department"
+  },
+  "typeForm.description": {
+    "defaultMessage": "Description"
+  },
+  "typeForm.detachRow": {
+    "defaultMessage": "Detach {row}"
+  },
+  "typeForm.details": {
+    "defaultMessage": "Details"
+  },
+  "typeForm.edit-conditions": {
+    "defaultMessage": "Edit conditions"
+  },
+  "typeForm.edit-field": {
+    "defaultMessage": "Edit Field"
+  },
+  "typeForm.effective-date": {
+    "defaultMessage": "Effective date"
+  },
+  "typeForm.entity": {
+    "defaultMessage": "Entity"
+  },
+  "typeForm.evergreen": {
+    "defaultMessage": "Evergreen"
+  },
+  "typeForm.expiry-date": {
+    "defaultMessage": "Expiry date"
+  },
+  "typeForm.fixed": {
+    "defaultMessage": "Fixed"
+  },
+  "typeForm.form": {
+    "defaultMessage": "Form"
+  },
+  "typeForm.high": {
+    "defaultMessage": "High"
+  },
+  "typeForm.intake": {
+    "defaultMessage": "Intake"
+  },
+  "typeForm.is": {
+    "defaultMessage": "is"
+  },
+  "typeForm.is-greater-than": {
+    "defaultMessage": "is greater than"
+  },
+  "typeForm.is-less-than": {
+    "defaultMessage": "is less than"
+  },
+  "typeForm.is-not": {
+    "defaultMessage": "is not"
+  },
+  "typeForm.is-one-of": {
+    "defaultMessage": "is one of"
+  },
+  "typeForm.is-set": {
+    "defaultMessage": "is set"
+  },
+  "typeForm.keepRowAbove": {
+    "defaultMessage": "Keep {row} above the Branch that uses it"
+  },
+  "typeForm.long-text": {
+    "defaultMessage": "Long text"
+  },
+  "typeForm.low": {
+    "defaultMessage": "Low"
+  },
+  "typeForm.match": {
+    "defaultMessage": "Match"
+  },
+  "typeForm.medium": {
+    "defaultMessage": "Medium"
+  },
+  "typeForm.minorUnits": {
+    "defaultMessage": "{amount} minor units"
+  },
+  "typeForm.money": {
+    "defaultMessage": "Money"
+  },
+  "typeForm.moneyConditionHint": {
+    "defaultMessage": "Enter minor units. For example, 5,000 JPY or 50 USD is 5,000 minor units."
+  },
+  "typeForm.move-into": {
+    "defaultMessage": "Move into"
+  },
+  "typeForm.move-out": {
+    "defaultMessage": "Move out"
+  },
+  "typeForm.moveRow": {
+    "defaultMessage": "Move {row}"
+  },
+  "typeForm.moved": {
+    "defaultMessage": "{row} moved to position {position} of {count} in {parent}."
+  },
+  "typeForm.multi-select": {
+    "defaultMessage": "Multi select"
+  },
+  "typeForm.needed-by": {
+    "defaultMessage": "Needed by"
+  },
+  "typeForm.neededByFailed": {
+    "defaultMessage": "Needed by could not be saved."
+  },
+  "typeForm.no": {
+    "defaultMessage": "No"
+  },
+  "typeForm.no-fields-attached": {
+    "defaultMessage": "No Fields attached"
+  },
+  "typeForm.no-fields-match": {
+    "defaultMessage": "No Fields match"
+  },
+  "typeForm.noRequestTypes": {
+    "defaultMessage": "No Request type uses this Form yet"
+  },
+  "typeForm.not-set": {
+    "defaultMessage": "Not set"
+  },
+  "typeForm.notice-period": {
+    "defaultMessage": "Notice period"
+  },
+  "typeForm.number": {
+    "defaultMessage": "Number"
+  },
+  "typeForm.on-intake-form": {
+    "defaultMessage": "On intake form"
+  },
+  "typeForm.operator": {
+    "defaultMessage": "Operator"
+  },
+  "typeForm.options-could-not-be-loaded-close-and-reopen-conditions-to-retry": {
+    "defaultMessage": "Options could not be loaded. Close and reopen conditions to retry."
+  },
+  "typeForm.people": {
+    "defaultMessage": "People"
+  },
+  "typeForm.position-and-switches-are-fixed": {
+    "defaultMessage": "Position and switches are fixed"
+  },
+  "typeForm.preview-complete-no-request-was-sent": {
+    "defaultMessage": "Preview complete. No Request was sent"
+  },
+  "typeForm.preview-intake-form": {
+    "defaultMessage": "Preview intake form"
+  },
+  "typeForm.preview-only-no-request-will-be-sent": {
+    "defaultMessage": "Preview only. No Request will be sent."
+  },
+  "typeForm.priority": {
+    "defaultMessage": "Priority"
+  },
+  "typeForm.record": {
+    "defaultMessage": "Record"
+  },
+  "typeForm.region": {
+    "defaultMessage": "Region"
+  },
+  "typeForm.remove-branch-keep-children-here": {
+    "defaultMessage": "Remove branch · Keep children here"
+  },
+  "typeForm.removeCondition": {
+    "defaultMessage": "Remove condition {number}"
+  },
+  "typeForm.renewal-period": {
+    "defaultMessage": "Renewal period"
+  },
+  "typeForm.requestType": {
+    "defaultMessage": "Request type"
+  },
+  "typeForm.required-for-creation": {
+    "defaultMessage": "Required for creation"
+  },
+  "typeForm.retry-condition-change": {
+    "defaultMessage": "Retry condition change"
+  },
+  "typeForm.retryAttach": {
+    "defaultMessage": "Retry attaching {field}"
+  },
+  "typeForm.risk": {
+    "defaultMessage": "Risk"
+  },
+  "typeForm.root": {
+    "defaultMessage": "root"
+  },
+  "typeForm.row": {
+    "defaultMessage": "Row"
+  },
+  "typeForm.rowActions": {
+    "defaultMessage": "Actions for {row}"
+  },
+  "typeForm.rows-above-only": {
+    "defaultMessage": "Rows above only"
+  },
+  "typeForm.search-fields": {
+    "defaultMessage": "Search fields"
+  },
+  "typeForm.select-row": {
+    "defaultMessage": "Select Row"
+  },
+  "typeForm.select-value": {
+    "defaultMessage": "Select value"
+  },
+  "typeForm.show-when-all-of": {
+    "defaultMessage": "Show when all of:"
+  },
+  "typeForm.show-when-any-of": {
+    "defaultMessage": "Show when any of:"
+  },
+  "typeForm.single-select": {
+    "defaultMessage": "Single select"
+  },
+  "typeForm.some-portal-options-could-not-be-loaded-reopen-the-preview-to-retry": {
+    "defaultMessage": "Some Portal options could not be loaded. Reopen the preview to retry."
+  },
+  "typeForm.submit-request": {
+    "defaultMessage": "Submit request"
+  },
+  "typeForm.term-type": {
+    "defaultMessage": "Term type"
+  },
+  "typeForm.text": {
+    "defaultMessage": "Text"
+  },
+  "typeForm.this-section-does-not-exist": {
+    "defaultMessage": "This section does not exist."
+  },
+  "typeForm.title": {
+    "defaultMessage": "Title"
+  },
+  "typeForm.touchpoint": {
+    "defaultMessage": "Touchpoint"
+  },
+  "typeForm.turn-off-on-intake-form-first": {
+    "defaultMessage": "Turn off On intake form first"
+  },
+  "typeForm.turn-off-required-for-creation-first": {
+    "defaultMessage": "Turn off Required for creation first"
+  },
+  "typeForm.type": {
+    "defaultMessage": "Type"
+  },
+  "typeForm.type-sections": {
+    "defaultMessage": "Type sections"
+  },
+  "typeForm.unavailableValue": {
+    "defaultMessage": "Unavailable value"
+  },
+  "typeForm.urgency": {
+    "defaultMessage": "Urgency"
+  },
+  "typeForm.used-by-a-branch-condition-change-the-condition-first": {
+    "defaultMessage": "Used by a Branch condition. Change the condition first"
+  },
+  "typeForm.user": {
+    "defaultMessage": "User"
+  },
+  "typeForm.userRequiredReason": {
+    "defaultMessage": "Required for creation is unavailable for {row} while it is on the intake form"
+  },
+  "typeForm.value": {
+    "defaultMessage": "Value"
+  },
+  "typeForm.value-amount": {
+    "defaultMessage": "Value amount"
+  },
+  "typeForm.value-cadence": {
+    "defaultMessage": "Value cadence"
+  },
+  "typeForm.value-currency": {
+    "defaultMessage": "Value currency"
+  },
+  "typeForm.visible-on-portal": {
+    "defaultMessage": "Visible on Portal"
+  },
+  "typeForm.visibleQuestions": {
+    "defaultMessage": "{count} questions shown: {questions}"
+  },
+  "typeForm.yes": {
+    "defaultMessage": "Yes"
   },
   "views.builtIn": {
     "defaultMessage": "Default view"

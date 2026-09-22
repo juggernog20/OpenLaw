@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /** M27/4's Entity record writes at the HTTP seam. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { activityLog, asc, eq, inArray, users } from "@openlaw/db";
@@ -35,6 +37,7 @@ let businessCookies: Record<string, string>;
 let memberId: string;
 let corporationId: string;
 let directorRoleId: string;
+let reportingCodeSlug: string | undefined;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -83,7 +86,11 @@ async function newEntity(legalName: string) {
     method: "POST",
     url: "/api/v1/entities",
     cookies: memberCookies,
-    payload: { legalName, entityTypeId: corporationId },
+    payload: {
+      legalName,
+      entityTypeId: corporationId,
+      customFields: reportingCodeSlug ? { [reportingCodeSlug]: "ENT-44" } : {},
+    },
   });
   expect(response.statusCode, response.body).toBe(201);
   return response.json().entity as { id: string; legalName: string };
@@ -114,19 +121,17 @@ async function defineAndAttachField(
       displayName,
       moduleScope: "entity",
       fieldType,
-      fieldTag: "legal",
       ...(options ? { options } : {}),
     },
   });
   expect(field.statusCode, field.body).toBe(201);
   const created = field.json().field as { id: string; slug: string };
-  const attached = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/entity-types/${corporationId}/fields`,
+  const attached = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/entity-types/${corporationId}`,
     cookies: adminCookies,
     payload: { fieldId: created.id, isRequired },
   });
-  expect(attached.statusCode, attached.body).toBe(201);
+  expect(attached.statusCode, attached.body).toBe(200);
   return created;
 }
 
@@ -223,6 +228,7 @@ describe("the Entity Overview read and PATCH", () => {
   it("returns attached Fields and uses shared coercion for required values and types", async () => {
     const entity = await newEntity("Fields Record Ltd");
     const required = await defineAndAttachField("Entity reporting code", "text", undefined, true);
+    reportingCodeSlug = required.slug;
     const count = await defineAndAttachField("Licensed locations", "number");
 
     const missing = await patchEntity(entity.id, { customFields: { [required.slug]: "  " } });

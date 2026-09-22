@@ -42,7 +42,6 @@ beforeAll(async () => {
         displayName: `Publish ${scope}`,
         moduleScope: scope,
         fieldType: "text",
-        fieldTag: "business",
       })
       .returning();
     if (scope === "contract") catalogId = field!.id;
@@ -129,16 +128,14 @@ it("saves all four Clause operators and one map per field, and refuses absent Bl
           options: ["US", "UK"],
           catalogFieldId: catalogId,
         }),
-        field("counterparty_name", { contractAttribute: "primary_counterparty_name" }),
+        field("counterparty_name", { contractAttribute: "counterparties" }),
       ],
       clauseRules: [rule("arbitration", "jurisdiction", operator as string, value)],
     });
     expect(saved.statusCode, saved.body).toBe(201);
     expect(saved.json().formVersion.definition.clauseRules[0]).toMatchObject({ operator, value });
     expect(saved.json().formVersion.definition.fields[0].catalogFieldId).toBe(catalogId);
-    expect(saved.json().formVersion.definition.fields[1].contractAttribute).toBe(
-      "primary_counterparty_name",
-    );
+    expect(saved.json().formVersion.definition.fields[1].contractAttribute).toBe("counterparties");
   }
   for (const payload of [
     { fields: [field("jurisdiction")], clauseRules: [rule("missing")] },

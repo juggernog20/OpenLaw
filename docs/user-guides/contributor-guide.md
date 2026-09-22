@@ -18,7 +18,7 @@ Select a column heading to sort ascending, descending or return to the default o
 
 ## Read record information
 
-The record details at the top and **Fields** show the current values from the full app record. Contracts and Matters both show **Department** and **Region**. A Contract shows its details under **Overview**, including Value and dates. Business Fields, including Description, are read-only. Ask Legal to change a value; reload the record to see their update.
+The record details at the top and **Fields** show the current values from the full app record. Contracts and Matters both show **Department** and **Region**. A Contract shows its details under **Overview**, including Value and dates. Fields whose Rows have **Visible on Portal** on, and built-in values such as Description, are read-only. The switch belongs to the Row, so a Field may be visible on one type's Form and hidden on another's. Branches hide empty Rows when their conditions do not hold; stored values remain visible subject to that switch and your access. Ask Legal to change a value; reload the record to see their update.
 
 **Original request** contains the original description, submitted answers, Requester and submission date. It is read-only. A record may show more than one original submission, or none if it started without a Request. Legal's changes to the live Description do not change the original ask.
 

@@ -63,6 +63,122 @@
         },
         "required": ["name", "version"]
       },
+      "FormNodeInput": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "row"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "rowRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "fieldType": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "long_text",
+                  "number",
+                  "money",
+                  "currency",
+                  "date",
+                  "boolean",
+                  "single_select",
+                  "multi_select",
+                  "user",
+                  "entity"
+                ]
+              },
+              "onIntakeForm": {
+                "type": "boolean"
+              },
+              "isRequired": {
+                "type": "boolean"
+              },
+              "visibleOnPortal": {
+                "type": "boolean"
+              }
+            },
+            "required": ["kind", "id", "rowRef", "fieldType", "isRequired", "visibleOnPortal"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "branch"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "match": {
+                "type": "string",
+                "enum": ["all", "any"]
+              },
+              "conditions": {
+                "minItems": 1,
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rowRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "operator": {
+                      "type": "string",
+                      "enum": [
+                        "equals",
+                        "is_not",
+                        "is_one_of",
+                        "is_set",
+                        "greater_than",
+                        "less_than"
+                      ]
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": ["string", "number", "boolean"]
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": ["string", "number", "boolean"]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["rowRef", "operator", "value"]
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FormNodeInput"
+                }
+              }
+            },
+            "required": ["kind", "id", "match", "conditions", "children"]
+          }
+        ]
+      },
       "Problem": {
         "type": "object",
         "properties": {
@@ -117,6 +233,125 @@
         },
         "required": ["name", "version"],
         "additionalProperties": false
+      },
+      "FormNode": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "row"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "rowRef": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "fieldType": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "long_text",
+                  "number",
+                  "money",
+                  "currency",
+                  "date",
+                  "boolean",
+                  "single_select",
+                  "multi_select",
+                  "user",
+                  "entity"
+                ]
+              },
+              "onIntakeForm": {
+                "type": "boolean"
+              },
+              "isRequired": {
+                "type": "boolean"
+              },
+              "visibleOnPortal": {
+                "type": "boolean"
+              }
+            },
+            "required": ["kind", "id", "rowRef", "fieldType", "isRequired", "visibleOnPortal"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "branch"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "match": {
+                "type": "string",
+                "enum": ["all", "any"]
+              },
+              "conditions": {
+                "minItems": 1,
+                "maxItems": 100,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rowRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "operator": {
+                      "type": "string",
+                      "enum": [
+                        "equals",
+                        "is_not",
+                        "is_one_of",
+                        "is_set",
+                        "greater_than",
+                        "less_than"
+                      ]
+                    },
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": ["string", "number", "boolean"]
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": ["string", "number", "boolean"]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["rowRef", "operator", "value"],
+                  "additionalProperties": false
+                }
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FormNode"
+                }
+              }
+            },
+            "required": ["kind", "id", "match", "conditions", "children"],
+            "additionalProperties": false
+          }
+        ]
       }
     }
   },
@@ -6788,7 +7023,7 @@
                               "renewal_period_months",
                               "notice_period_days",
                               "value",
-                              "counterparty"
+                              "counterparties"
                             ]
                           },
                           "group": {
@@ -6863,7 +7098,7 @@
                       "renewal_period_months",
                       "notice_period_days",
                       "value",
-                      "counterparty"
+                      "counterparties"
                     ]
                   },
                   "prompt": {
@@ -6908,7 +7143,7 @@
                             "renewal_period_months",
                             "notice_period_days",
                             "value",
-                            "counterparty"
+                            "counterparties"
                           ]
                         },
                         "group": {
@@ -7737,9 +7972,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -7947,9 +8182,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -8597,9 +8832,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -8807,9 +9042,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -9346,9 +9581,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -9556,9 +9791,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -10264,9 +10499,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -10474,9 +10709,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -11027,9 +11262,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -11237,9 +11472,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -11790,9 +12025,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -12000,9 +12235,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -12553,9 +12788,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -12763,9 +12998,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -13674,9 +13909,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -13884,9 +14119,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -14138,9 +14373,9 @@
                               "type": "string",
                               "enum": [
                                 "title",
-                                "primary_counterparty_name",
-                                "entity_id",
-                                "owning_department_id",
+                                "counterparties",
+                                "entity",
+                                "owning_department",
                                 "region",
                                 "value",
                                 "effective_date",
@@ -14616,9 +14851,9 @@
                                             "type": "string",
                                             "enum": [
                                               "title",
-                                              "primary_counterparty_name",
-                                              "entity_id",
-                                              "owning_department_id",
+                                              "counterparties",
+                                              "entity",
+                                              "owning_department",
                                               "region",
                                               "value",
                                               "effective_date",
@@ -14826,9 +15061,9 @@
                                           "type": "string",
                                           "enum": [
                                             "title",
-                                            "primary_counterparty_name",
-                                            "entity_id",
-                                            "owning_department_id",
+                                            "counterparties",
+                                            "entity",
+                                            "owning_department",
                                             "region",
                                             "value",
                                             "effective_date",
@@ -15264,9 +15499,9 @@
                                 "type": "string",
                                 "enum": [
                                   "title",
-                                  "primary_counterparty_name",
-                                  "entity_id",
-                                  "owning_department_id",
+                                  "counterparties",
+                                  "entity",
+                                  "owning_department",
                                   "region",
                                   "value",
                                   "effective_date",
@@ -17611,6 +17846,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -17621,7 +17859,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -17714,6 +17953,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -17724,7 +17966,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -17810,6 +18053,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -17820,7 +18066,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -17933,6 +18180,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -17943,7 +18193,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -18071,6 +18322,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -18081,7 +18335,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -18183,6 +18438,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -18193,7 +18451,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -18279,6 +18538,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -18289,7 +18551,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -19275,6 +19538,119 @@
         }
       }
     },
+    "/api/v1/contract-types/{id}/form": {
+      "get": {
+        "operationId": "getContractTypeForm",
+        "tags": ["contract-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceContractTypeForm",
+        "tags": ["contract-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FormNodeInput"
+                    }
+                  }
+                },
+                "required": ["form"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/contract-types/{id}/fields": {
       "get": {
         "operationId": "listContractTypeFields",
@@ -19306,9 +19682,6 @@
                           "fieldId": {
                             "type": "string"
                           },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
                           "slug": {
                             "type": "string"
                           },
@@ -19341,398 +19714,8 @@
                           },
                           "isRequired": {
                             "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "fieldId",
-                          "slug",
-                          "displayName",
-                          "fieldType",
-                          "moduleScope",
-                          "displayOrder",
-                          "isRequired"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["attachedFields"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "attachContractTypeField",
-        "summary": "Attach a catalog field to a contract type: contract-scoped fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise",
-        "tags": ["contract-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldId": {
-                    "type": "string"
-                  },
-                  "isRequired": {
-                    "type": "boolean"
-                  }
-                },
-                "required": ["fieldId"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["contract"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["attachedField"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-types/{id}/fields/{fieldId}": {
-      "patch": {
-        "operationId": "setContractTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014)",
-        "tags": ["contract-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "isRequired": {
-                    "type": "boolean"
-                  }
-                },
-                "required": ["isRequired"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["contract"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["attachedField"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "detachContractTypeField",
-        "summary": "Detach a field from a contract type: the join row goes, the catalog definition and stored values stay (MTR-014)",
-        "tags": ["contract-types"],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Default Response"
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/contract-types/{id}/fields/order": {
-      "put": {
-        "operationId": "reorderContractTypeFields",
-        "summary": "Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1",
-        "tags": ["contract-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldIds": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": ["fieldIds"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedFields": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "fieldId": {
-                            "type": "string"
                           },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "fieldType": {
-                            "type": "string",
-                            "enum": [
-                              "text",
-                              "long_text",
-                              "number",
-                              "currency",
-                              "date",
-                              "boolean",
-                              "single_select",
-                              "multi_select",
-                              "user",
-                              "entity"
-                            ]
-                          },
-                          "moduleScope": {
-                            "type": "string",
-                            "enum": ["contract"]
-                          },
-                          "displayOrder": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "isRequired": {
+                          "visibleOnPortal": {
                             "type": "boolean"
                           }
                         },
@@ -19743,7 +19726,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -19833,6 +19817,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -19843,7 +19830,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -19936,6 +19924,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -19946,7 +19937,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20032,6 +20024,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20042,7 +20037,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20155,6 +20151,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20165,7 +20164,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20293,6 +20293,9 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -20303,7 +20306,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "isDefault"
                         ],
                         "additionalProperties": false
                       }
@@ -20405,6 +20409,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20415,7 +20422,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -20501,6 +20509,9 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -20511,7 +20522,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "isDefault"
                       ],
                       "additionalProperties": false
                     }
@@ -21900,6 +21912,119 @@
         }
       }
     },
+    "/api/v1/matter-types/{id}/form": {
+      "get": {
+        "operationId": "getMatterTypeForm",
+        "tags": ["matter-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceMatterTypeForm",
+        "tags": ["matter-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FormNodeInput"
+                    }
+                  }
+                },
+                "required": ["form"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/matter-types/{id}/fields": {
       "get": {
         "operationId": "listMatterTypeFields",
@@ -21931,9 +22056,6 @@
                           "fieldId": {
                             "type": "string"
                           },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
                           "slug": {
                             "type": "string"
                           },
@@ -21966,398 +22088,8 @@
                           },
                           "isRequired": {
                             "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "fieldId",
-                          "slug",
-                          "displayName",
-                          "fieldType",
-                          "moduleScope",
-                          "displayOrder",
-                          "isRequired"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["attachedFields"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "attachMatterTypeField",
-        "summary": "Attach a catalog field to a matter type: matter-scoped fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise",
-        "tags": ["matter-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldId": {
-                    "type": "string"
-                  },
-                  "isRequired": {
-                    "type": "boolean"
-                  }
-                },
-                "required": ["fieldId"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["matter"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["attachedField"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/matter-types/{id}/fields/{fieldId}": {
-      "patch": {
-        "operationId": "setMatterTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014)",
-        "tags": ["matter-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "isRequired": {
-                    "type": "boolean"
-                  }
-                },
-                "required": ["isRequired"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["matter"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["attachedField"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "detachMatterTypeField",
-        "summary": "Detach a field from a matter type: the join row goes, the catalog definition and stored values stay (MTR-014)",
-        "tags": ["matter-types"],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Default Response"
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/matter-types/{id}/fields/order": {
-      "put": {
-        "operationId": "reorderMatterTypeFields",
-        "summary": "Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1",
-        "tags": ["matter-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldIds": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": ["fieldIds"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedFields": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "fieldId": {
-                            "type": "string"
                           },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "fieldType": {
-                            "type": "string",
-                            "enum": [
-                              "text",
-                              "long_text",
-                              "number",
-                              "currency",
-                              "date",
-                              "boolean",
-                              "single_select",
-                              "multi_select",
-                              "user",
-                              "entity"
-                            ]
-                          },
-                          "moduleScope": {
-                            "type": "string",
-                            "enum": ["matter"]
-                          },
-                          "displayOrder": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "isRequired": {
+                          "visibleOnPortal": {
                             "type": "boolean"
                           }
                         },
@@ -22368,7 +22100,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -23718,7 +23451,7 @@
       },
       "post": {
         "operationId": "createMatter",
-        "summary": "Create the next M-number on the first live open status, enforcing required type fields",
+        "summary": "Create the next M-number on the first live open Status, enforcing Required on visible creation Rows",
         "tags": ["matters"],
         "requestBody": {
           "required": true,
@@ -23734,6 +23467,18 @@
                   },
                   "matterTypeId": {
                     "type": "string"
+                  },
+                  "neededBy": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "managerId": {
                     "type": ["string", "null"]
@@ -24217,7 +23962,7 @@
     "/api/v1/matters/options": {
       "get": {
         "operationId": "listMatterOptions",
-        "summary": "Live matter types with attached fields and creation templates, statuses, and assignable people",
+        "summary": "Live Matter types with Forms, creation trees, Field definitions and templates; Statuses and assignable people",
         "tags": ["matters"],
         "responses": {
           "200": {
@@ -24240,6 +23985,21 @@
                           },
                           "displayName": {
                             "type": "string"
+                          },
+                          "form": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "creationForm": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "isDefault": {
+                            "type": "boolean"
                           },
                           "fields": {
                             "type": "array",
@@ -24276,9 +24036,8 @@
                                     "entity"
                                   ]
                                 },
-                                "fieldTag": {
-                                  "type": "string",
-                                  "enum": ["business", "legal"]
+                                "visibleOnPortal": {
+                                  "type": "boolean"
                                 },
                                 "options": {
                                   "anyOf": [
@@ -24308,7 +24067,7 @@
                                 "displayName",
                                 "description",
                                 "fieldType",
-                                "fieldTag",
+                                "visibleOnPortal",
                                 "options",
                                 "displayOrder",
                                 "isRequired"
@@ -24858,6 +24617,12 @@
                         }
                       ]
                     },
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    },
                     "fields": {
                       "type": "array",
                       "items": {
@@ -24893,9 +24658,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -24925,7 +24689,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -24936,6 +24700,15 @@
                     "customFieldRefs": {
                       "type": "object",
                       "properties": {
+                        "builtins": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
                         "users": {
                           "type": "array",
                           "items": {
@@ -25505,6 +25278,12 @@
                         }
                       ]
                     },
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    },
                     "fields": {
                       "type": "array",
                       "items": {
@@ -25540,9 +25319,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -25572,7 +25350,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -25583,6 +25361,15 @@
                     "customFieldRefs": {
                       "type": "object",
                       "properties": {
+                        "builtins": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
                         "users": {
                           "type": "array",
                           "items": {
@@ -31732,12 +31519,6 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
-                          "formFieldOrder": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
                           "turnaroundDays": {
                             "anyOf": [
                               {
@@ -31751,23 +31532,11 @@
                             ]
                           },
                           "targetModule": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": ["matter", "contract"]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": "string",
+                            "enum": ["matter", "contract"]
                           },
                           "targetTypeId": {
                             "type": ["string", "null"]
-                          },
-                          "formFieldCount": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -31779,11 +31548,9 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "formFieldOrder",
                           "turnaroundDays",
                           "targetModule",
-                          "targetTypeId",
-                          "formFieldCount"
+                          "targetTypeId"
                         ],
                         "additionalProperties": false
                       }
@@ -31877,12 +31644,6 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
-                        "formFieldOrder": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -31896,23 +31657,11 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
-                        },
-                        "formFieldCount": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -31924,11 +31673,9 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
-                        "targetTypeId",
-                        "formFieldCount"
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -32015,12 +31762,6 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
-                        "formFieldOrder": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -32034,23 +31775,11 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
-                        },
-                        "formFieldCount": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -32062,11 +31791,9 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
-                        "targetTypeId",
-                        "formFieldCount"
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -32115,14 +31842,6 @@
                         "type": "null"
                       }
                     ]
-                  },
-                  "formFieldOrder": {
-                    "maxItems": 1005,
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "minLength": 1
-                    }
                   },
                   "turnaroundDays": {
                     "anyOf": [
@@ -32214,12 +31933,6 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
-                        "formFieldOrder": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -32233,23 +31946,11 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
-                        },
-                        "formFieldCount": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -32261,11 +31962,9 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
-                        "targetTypeId",
-                        "formFieldCount"
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -32394,12 +32093,6 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
-                          "formFieldOrder": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
                           "turnaroundDays": {
                             "anyOf": [
                               {
@@ -32413,23 +32106,11 @@
                             ]
                           },
                           "targetModule": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "enum": ["matter", "contract"]
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
+                            "type": "string",
+                            "enum": ["matter", "contract"]
                           },
                           "targetTypeId": {
                             "type": ["string", "null"]
-                          },
-                          "formFieldCount": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -32441,11 +32122,9 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "formFieldOrder",
                           "turnaroundDays",
                           "targetModule",
-                          "targetTypeId",
-                          "formFieldCount"
+                          "targetTypeId"
                         ],
                         "additionalProperties": false
                       }
@@ -32548,12 +32227,6 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
-                        "formFieldOrder": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -32567,23 +32240,11 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
-                        },
-                        "formFieldCount": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -32595,11 +32256,9 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
-                        "targetTypeId",
-                        "formFieldCount"
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
@@ -32686,12 +32345,6 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
-                        "formFieldOrder": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -32705,23 +32358,11 @@
                           ]
                         },
                         "targetModule": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "enum": ["matter", "contract"]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "enum": ["matter", "contract"]
                         },
                         "targetTypeId": {
                           "type": ["string", "null"]
-                        },
-                        "formFieldCount": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -32733,552 +32374,14 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "formFieldOrder",
                         "turnaroundDays",
                         "targetModule",
-                        "targetTypeId",
-                        "formFieldCount"
+                        "targetTypeId"
                       ],
                       "additionalProperties": false
                     }
                   },
                   "required": ["requestType"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/request-types/{id}/fields": {
-      "get": {
-        "operationId": "listRequestTypeFields",
-        "summary": "One request type's attached fields in per-type order — the type editor's Attached fields card",
-        "tags": ["request-types"],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedFields": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "fieldId": {
-                            "type": "string"
-                          },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "fieldType": {
-                            "type": "string",
-                            "enum": [
-                              "text",
-                              "long_text",
-                              "number",
-                              "currency",
-                              "date",
-                              "boolean",
-                              "single_select",
-                              "multi_select",
-                              "user",
-                              "entity"
-                            ]
-                          },
-                          "moduleScope": {
-                            "type": "string",
-                            "enum": ["matter", "contract", "entity"]
-                          },
-                          "displayOrder": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "isRequired": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "fieldId",
-                          "slug",
-                          "displayName",
-                          "fieldType",
-                          "moduleScope",
-                          "displayOrder",
-                          "isRequired"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["attachedFields"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "attachRequestTypeField",
-        "summary": "Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); alsoAttachToTarget attaches the same field to the request type's default destination type (INT-002) in the same transaction",
-        "tags": ["request-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldId": {
-                    "type": "string"
-                  },
-                  "isRequired": {
-                    "type": "boolean"
-                  },
-                  "alsoAttachToTarget": {
-                    "type": "boolean"
-                  },
-                  "expectedTarget": {
-                    "type": "object",
-                    "properties": {
-                      "module": {
-                        "type": "string",
-                        "enum": ["contract", "matter"]
-                      },
-                      "typeId": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["module", "typeId"]
-                  }
-                },
-                "required": ["fieldId"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["matter", "contract", "entity"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "alsoAttachedTo": {
-                      "anyOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "module": {
-                              "type": "string",
-                              "enum": ["contract", "matter"]
-                            },
-                            "typeId": {
-                              "type": "string"
-                            },
-                            "typeDisplayName": {
-                              "type": "string"
-                            },
-                            "attached": {
-                              "type": "boolean"
-                            }
-                          },
-                          "required": ["module", "typeId", "typeDisplayName", "attached"],
-                          "additionalProperties": false
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    }
-                  },
-                  "required": ["attachedField", "alsoAttachedTo"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/request-types/{id}/fields/{fieldId}": {
-      "patch": {
-        "operationId": "setRequestTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); hard enforcement arrives with the record milestone (M20)",
-        "tags": ["request-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "isRequired": {
-                    "type": "boolean"
-                  }
-                },
-                "required": ["isRequired"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["matter", "contract", "entity"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["attachedField"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "detachRequestTypeField",
-        "summary": "Detach a field from a request type: the join row goes, the catalog definition and stored values stay (MTR-014)",
-        "tags": ["request-types"],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Default Response"
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/request-types/{id}/fields/order": {
-      "put": {
-        "operationId": "reorderRequestTypeFields",
-        "summary": "Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1",
-        "tags": ["request-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldIds": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": ["fieldIds"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedFields": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "fieldId": {
-                            "type": "string"
-                          },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "fieldType": {
-                            "type": "string",
-                            "enum": [
-                              "text",
-                              "long_text",
-                              "number",
-                              "currency",
-                              "date",
-                              "boolean",
-                              "single_select",
-                              "multi_select",
-                              "user",
-                              "entity"
-                            ]
-                          },
-                          "moduleScope": {
-                            "type": "string",
-                            "enum": ["matter", "contract", "entity"]
-                          },
-                          "displayOrder": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "isRequired": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "fieldId",
-                          "slug",
-                          "displayName",
-                          "fieldType",
-                          "moduleScope",
-                          "displayOrder",
-                          "isRequired"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["attachedFields"],
                   "additionalProperties": false
                 }
               }
@@ -33785,12 +32888,6 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "formFieldOrder": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
                           "turnaroundDays": {
                             "anyOf": [
                               {
@@ -33822,7 +32919,6 @@
                           }
                         },
                         "required": [
-                          "formFieldOrder",
                           "turnaroundDays",
                           "id",
                           "slug",
@@ -33938,7 +33034,7 @@
     "/api/v1/portal/request-types/{slug}": {
       "get": {
         "operationId": "readPortalRequestForm",
-        "summary": "One request type's form definition (INT-002): the type, its attached catalog fields in display order, and the deflection links placed on this form. The four basics — Title, Description, Attachments, Urgency — are fixed on every form and are drawn by the portal, so they are not answered here",
+        "summary": "The destination type's Intake tree, pinned basics, Row definitions and deflection links",
         "tags": ["portal"],
         "parameters": [
           {
@@ -33961,12 +33057,6 @@
                     "requestType": {
                       "type": "object",
                       "properties": {
-                        "formFieldOrder": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
                         "turnaroundDays": {
                           "anyOf": [
                             {
@@ -33998,7 +33088,6 @@
                         }
                       },
                       "required": [
-                        "formFieldOrder",
                         "turnaroundDays",
                         "id",
                         "slug",
@@ -34043,9 +33132,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -34075,11 +33163,40 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
                         ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    },
+                    "basics": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["title", "department", "urgency", "attachments"]
+                      }
+                    },
+                    "regions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
                         "additionalProperties": false
                       }
                     },
@@ -34149,7 +33266,15 @@
                       }
                     }
                   },
-                  "required": ["requestType", "fields", "departments", "intakeLinks"],
+                  "required": [
+                    "requestType",
+                    "fields",
+                    "form",
+                    "basics",
+                    "regions",
+                    "departments",
+                    "intakeLinks"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -34741,9 +33866,9 @@
                                         "type": "string",
                                         "enum": [
                                           "title",
-                                          "primary_counterparty_name",
-                                          "entity_id",
-                                          "owning_department_id",
+                                          "counterparties",
+                                          "entity",
+                                          "owning_department",
                                           "region",
                                           "value",
                                           "effective_date",
@@ -36300,7 +35425,7 @@
                             "items": {
                               "type": "string",
                               "enum": [
-                                "counterparty",
+                                "counterparties",
                                 "value",
                                 "effectiveDate",
                                 "expiryDate",
@@ -36599,7 +35724,7 @@
                           "items": {
                             "type": "string",
                             "enum": [
-                              "counterparty",
+                              "counterparties",
                               "value",
                               "effectiveDate",
                               "expiryDate",
@@ -37397,9 +36522,8 @@
                                   "entity"
                                 ]
                               },
-                              "fieldTag": {
-                                "type": "string",
-                                "enum": ["business", "legal"]
+                              "visibleOnPortal": {
+                                "type": "boolean"
                               },
                               "options": {
                                 "anyOf": [
@@ -37429,7 +36553,7 @@
                               "displayName",
                               "description",
                               "fieldType",
-                              "fieldTag",
+                              "visibleOnPortal",
                               "options",
                               "displayOrder",
                               "isRequired"
@@ -37612,9 +36736,8 @@
                                         "entity"
                                       ]
                                     },
-                                    "fieldTag": {
-                                      "type": "string",
-                                      "enum": ["business", "legal"]
+                                    "visibleOnPortal": {
+                                      "type": "boolean"
                                     },
                                     "options": {
                                       "anyOf": [
@@ -37644,7 +36767,7 @@
                                     "displayName",
                                     "description",
                                     "fieldType",
-                                    "fieldTag",
+                                    "visibleOnPortal",
                                     "options",
                                     "displayOrder",
                                     "isRequired"
@@ -37890,9 +37013,8 @@
                                   "entity"
                                 ]
                               },
-                              "fieldTag": {
-                                "type": "string",
-                                "enum": ["business", "legal"]
+                              "visibleOnPortal": {
+                                "type": "boolean"
                               },
                               "options": {
                                 "anyOf": [
@@ -37922,7 +37044,7 @@
                               "displayName",
                               "description",
                               "fieldType",
-                              "fieldTag",
+                              "visibleOnPortal",
                               "options",
                               "displayOrder",
                               "isRequired"
@@ -38105,9 +37227,8 @@
                                         "entity"
                                       ]
                                     },
-                                    "fieldTag": {
-                                      "type": "string",
-                                      "enum": ["business", "legal"]
+                                    "visibleOnPortal": {
+                                      "type": "boolean"
                                     },
                                     "options": {
                                       "anyOf": [
@@ -38137,7 +37258,7 @@
                                     "displayName",
                                     "description",
                                     "fieldType",
-                                    "fieldTag",
+                                    "visibleOnPortal",
                                     "options",
                                     "displayOrder",
                                     "isRequired"
@@ -39637,7 +38758,7 @@
     "/api/v1/requests": {
       "post": {
         "operationId": "submitRequest",
-        "summary": "Submit a Request through a request type's portal form (INT-001). The Requester is the session; the type must be live; Title, Description, and Urgency are required, as is every attached field the type marks required; values are accepted for exactly the fields the type attaches, and a user Field must name a live person and an Entity Field must name a Portal-listed Entity",
+        "summary": "Submit the destination type's Intake Form. The session is the Requester. Required applies to visible Rows, and answers outside that set are refused.",
         "tags": ["requests"],
         "requestBody": {
           "required": true,
@@ -39735,7 +38856,7 @@
                     }
                   }
                 },
-                "required": ["requestTypeId", "title", "description", "urgency"],
+                "required": ["requestTypeId", "title", "urgency"],
                 "additionalProperties": false
               }
             }
@@ -40468,9 +39589,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -40500,7 +39620,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -40511,6 +39631,15 @@
                     "customFieldRefs": {
                       "type": "object",
                       "properties": {
+                        "builtins": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
                         "users": {
                           "type": "array",
                           "items": {
@@ -41007,6 +40136,22 @@
                                 }
                               }
                             ]
+                          }
+                        },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
                           }
                         },
                         "declinedReason": {
@@ -41731,6 +40876,22 @@
                             ]
                           }
                         },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
+                          }
+                        },
                         "declinedReason": {
                           "type": ["string", "null"]
                         },
@@ -41997,6 +41158,22 @@
                             ]
                           }
                         },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
+                          }
+                        },
                         "declinedReason": {
                           "type": ["string", "null"]
                         },
@@ -42219,9 +41396,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -42251,7 +41427,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -42262,6 +41438,15 @@
                     "customFieldRefs": {
                       "type": "object",
                       "properties": {
+                        "builtins": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
                         "users": {
                           "type": "array",
                           "items": {
@@ -42521,6 +41706,22 @@
                                 }
                               }
                             ]
+                          }
+                        },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
                           }
                         },
                         "declinedReason": {
@@ -42925,6 +42126,22 @@
                                 }
                               }
                             ]
+                          }
+                        },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
                           }
                         },
                         "declinedReason": {
@@ -44335,7 +43552,7 @@
     "/api/v1/requests/{number}/convert": {
       "post": {
         "operationId": "convertRequest",
-        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the Request description, risk unset, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. counterpartyName, contract conversions only, finds or creates the live counterparty of that name (case-insensitive) and links it as the primary; a matter conversion refuses it with 400. neededBy lands one \"Needed by\" key date on either record, past dates included. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only",
+        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the collected built-in Rows, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Built-in Row answers land on native columns, parties and the Needed by key date. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only",
         "tags": ["requests"],
         "description": "Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).",
         "requestBody": {
@@ -44368,9 +43585,6 @@
                     "items": {
                       "type": "string"
                     }
-                  },
-                  "counterpartyCleared": {
-                    "type": "boolean"
                   },
                   "contractTypeId": {
                     "type": "string",
@@ -44420,15 +43634,36 @@
                     "type": "string",
                     "enum": ["low", "medium", "high", "critical"]
                   },
-                  "counterpartyName": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 200
-                  },
-                  "neededBy": {
-                    "type": "string",
-                    "format": "date",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  "counterparties": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "counterpartyId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["counterpartyId"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            }
+                          },
+                          "required": ["name"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
                   }
                 },
                 "required": ["title"],
@@ -44511,6 +43746,22 @@
                                 }
                               }
                             ]
+                          }
+                        },
+                        "intakeCounterparties": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "counterpartyId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["name"],
+                            "additionalProperties": false
                           }
                         },
                         "declinedReason": {
@@ -46820,7 +46071,7 @@
       },
       "post": {
         "operationId": "createContract",
-        "summary": "Create a contract from a title, a live type, and any custom fields that type hard-requires (CTR-016/MTR-014 — creation is refused while one is empty); the status starts on the protected draft seed (CTR-001) and the number comes from the CTR-003 sequence. Everything else is set inline on the record afterward — except the Confidential flag (DD-014), which may be set here so a sensitive record is never visible to the wrong audience, even briefly, and the Owner (CTR-004), which the create dialog seeds with the acting person and which must be a live Administrator or Legal Team Member; omitted or null is unassigned, a real state. `renewalOf` routes a renewal into a new record (CTR-007's third and fourth vehicles, M16/5): the successor is born carrying its predecessor's business facts — our entity, the value, the term shape, and the counterparties — and linked to it, as a child by contracts.parent_id or as a standalone successor by a CTR-015 `renews` row. The team, the status, and the Confidential flag are **never** copied: CTR-015's no-inheritance stance, applied at birth. The title and the type are the body's, so whatever the person edited before pressing Create is what the record is born with. Appends the link's own activity action beside contract.created",
+        "summary": "Create a Contract from the chosen type's Intake and Creation Rows. Required applies only to visible Rows after Branch evaluation. Built-in answers populate native columns, Counterparties and the Needed by Key date. The record starts in Draft; Owner and Confidential are explicit choices. renewalOf copies the predecessor's business facts and links the new Contract as a child or successor.",
         "tags": ["contracts"],
         "description": "M35 pre-release breaking change: send nullable owningDepartmentId instead of the former owningDepartment text input. A non-null id must name a live Department. Responses retain owningDepartment as the display name alongside owningDepartmentId.",
         "requestBody": {
@@ -46834,6 +46085,160 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 200
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 10000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "entityId": {
+                    "type": ["string", "null"]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high", "critical"]
+                  },
+                  "risk": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["low", "medium", "high", "critical"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "termType": {
+                    "type": "string",
+                    "enum": ["fixed", "auto_renew", "evergreen"]
+                  },
+                  "effectiveDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "expiryDate": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "renewalPeriodMonths": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "noticePeriodDays": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 36500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "cadence": {
+                            "type": "string",
+                            "enum": ["one_time", "monthly", "annually", "other"]
+                          },
+                          "cadenceDescription": {
+                            "type": "string",
+                            "maxLength": 100
+                          }
+                        },
+                        "required": ["amount", "currency", "cadence"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "neededBy": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "counterparties": {
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "counterpartyId": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": ["counterpartyId"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            }
+                          },
+                          "required": ["name"],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
                   },
                   "owningDepartmentId": {
                     "anyOf": [
@@ -47578,7 +46983,7 @@
     "/api/v1/contracts/options": {
       "get": {
         "operationId": "listContractOptions",
-        "summary": "The live contract types in display order, each with the fields it attaches (CTR-016) so the create dialog can grow the ones it requires; the live statuses; and the live people the Owner and team pickers offer — the create dialog's and the record's Member+ picker source; and the live approver groups the record's apply picker offers, each with the ids of the people applying it would ask (CTR-012) — the settings surfaces that manage all of these stay Administrator-only per SET-002",
+        "summary": "Live Contract types with their Forms, creation trees and Field definitions; live Statuses, Departments, Regions, people and approver groups for Member+ pickers",
         "tags": ["contracts"],
         "responses": {
           "200": {
@@ -47634,6 +47039,21 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
+                          "form": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "creationForm": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
                           "fields": {
                             "type": "array",
                             "items": {
@@ -47669,9 +47089,8 @@
                                     "entity"
                                   ]
                                 },
-                                "fieldTag": {
-                                  "type": "string",
-                                  "enum": ["business", "legal"]
+                                "visibleOnPortal": {
+                                  "type": "boolean"
                                 },
                                 "options": {
                                   "anyOf": [
@@ -47701,7 +47120,7 @@
                                 "displayName",
                                 "description",
                                 "fieldType",
-                                "fieldTag",
+                                "visibleOnPortal",
                                 "options",
                                 "displayOrder",
                                 "isRequired"
@@ -48358,9 +47777,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -48390,7 +47808,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -48464,6 +47882,12 @@
                       },
                       "required": ["users", "entities"],
                       "additionalProperties": false
+                    },
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
                     },
                     "originalIntake": {
                       "anyOf": [
@@ -49576,9 +49000,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -49608,7 +49031,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -73376,6 +72799,119 @@
         }
       }
     },
+    "/api/v1/entity-types/{id}/form": {
+      "get": {
+        "operationId": "getEntityTypeForm",
+        "tags": ["entity-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceEntityTypeForm",
+        "tags": ["entity-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/FormNodeInput"
+                    }
+                  }
+                },
+                "required": ["form"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    }
+                  },
+                  "required": ["form"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/entity-types/{id}/fields": {
       "get": {
         "operationId": "listEntityTypeFields",
@@ -73407,9 +72943,6 @@
                           "fieldId": {
                             "type": "string"
                           },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
                           "slug": {
                             "type": "string"
                           },
@@ -73442,398 +72975,8 @@
                           },
                           "isRequired": {
                             "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "fieldId",
-                          "slug",
-                          "displayName",
-                          "fieldType",
-                          "moduleScope",
-                          "displayOrder",
-                          "isRequired"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["attachedFields"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "attachEntityTypeField",
-        "summary": "Attach a catalog field to a entity type: entity-scoped fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise",
-        "tags": ["entity-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldId": {
-                    "type": "string"
-                  },
-                  "isRequired": {
-                    "type": "boolean"
-                  }
-                },
-                "required": ["fieldId"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["entity"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["attachedField"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/entity-types/{id}/fields/{fieldId}": {
-      "patch": {
-        "operationId": "setEntityTypeFieldRequired",
-        "summary": "Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M27 record fields)",
-        "tags": ["entity-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "isRequired": {
-                    "type": "boolean"
-                  }
-                },
-                "required": ["isRequired"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedField": {
-                      "type": "object",
-                      "properties": {
-                        "fieldId": {
-                          "type": "string"
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
-                        },
-                        "slug": {
-                          "type": "string"
-                        },
-                        "displayName": {
-                          "type": "string"
-                        },
-                        "fieldType": {
-                          "type": "string",
-                          "enum": [
-                            "text",
-                            "long_text",
-                            "number",
-                            "currency",
-                            "date",
-                            "boolean",
-                            "single_select",
-                            "multi_select",
-                            "user",
-                            "entity"
-                          ]
-                        },
-                        "moduleScope": {
-                          "type": "string",
-                          "enum": ["entity"]
-                        },
-                        "displayOrder": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "isRequired": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "fieldId",
-                        "slug",
-                        "displayName",
-                        "fieldType",
-                        "moduleScope",
-                        "displayOrder",
-                        "isRequired"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "required": ["attachedField"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "detachEntityTypeField",
-        "summary": "Detach a field from a entity type: the join row goes, the catalog definition and stored values stay (MTR-014)",
-        "tags": ["entity-types"],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "fieldId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Default Response"
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/entity-types/{id}/fields/order": {
-      "put": {
-        "operationId": "reorderEntityTypeFields",
-        "summary": "Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1",
-        "tags": ["entity-types"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "fieldIds": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": ["fieldIds"]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string"
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "attachedFields": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "fieldId": {
-                            "type": "string"
                           },
-                          "builtInKey": {
-                            "type": ["string", "null"]
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "displayName": {
-                            "type": "string"
-                          },
-                          "fieldType": {
-                            "type": "string",
-                            "enum": [
-                              "text",
-                              "long_text",
-                              "number",
-                              "currency",
-                              "date",
-                              "boolean",
-                              "single_select",
-                              "multi_select",
-                              "user",
-                              "entity"
-                            ]
-                          },
-                          "moduleScope": {
-                            "type": "string",
-                            "enum": ["entity"]
-                          },
-                          "displayOrder": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "isRequired": {
+                          "visibleOnPortal": {
                             "type": "boolean"
                           }
                         },
@@ -73844,7 +72987,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -82433,7 +81577,7 @@
       },
       "post": {
         "operationId": "createEntity",
-        "summary": "Register an entity with its ENT-001 identity card: legal name and type required, the rest optional; status defaults to active",
+        "summary": "Register an Entity with its identity card and visible required Fields from its type Form. Status defaults to active.",
         "tags": ["entities"],
         "requestBody": {
           "required": true,
@@ -82449,6 +81593,38 @@
                   },
                   "entityTypeId": {
                     "type": "string"
+                  },
+                  "customFields": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
                   },
                   "portalListed": {
                     "type": "boolean"
@@ -82753,6 +81929,92 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "form": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "creationForm": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/FormNode"
+                            }
+                          },
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "builtInKey": {
+                                  "type": ["string", "null"]
+                                },
+                                "fieldId": {
+                                  "type": "string"
+                                },
+                                "slug": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": ["string", "null"]
+                                },
+                                "fieldType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "long_text",
+                                    "number",
+                                    "currency",
+                                    "date",
+                                    "boolean",
+                                    "single_select",
+                                    "multi_select",
+                                    "user",
+                                    "entity"
+                                  ]
+                                },
+                                "visibleOnPortal": {
+                                  "type": "boolean"
+                                },
+                                "options": {
+                                  "anyOf": [
+                                    {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "displayOrder": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "isRequired": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fieldId",
+                                "slug",
+                                "displayName",
+                                "description",
+                                "fieldType",
+                                "visibleOnPortal",
+                                "options",
+                                "displayOrder",
+                                "isRequired"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
                           "id": {
                             "type": "string"
                           },
@@ -82884,6 +82146,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    },
                     "canManageAccess": {
                       "type": "boolean"
                     },
@@ -83086,9 +82354,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -83118,7 +82385,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -83129,6 +82396,15 @@
                     "customFieldRefs": {
                       "type": "object",
                       "properties": {
+                        "builtins": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
                         "users": {
                           "type": "array",
                           "items": {
@@ -83403,6 +82679,12 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "form": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FormNode"
+                      }
+                    },
                     "canManageAccess": {
                       "type": "boolean"
                     },
@@ -83605,9 +82887,8 @@
                               "entity"
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           },
                           "options": {
                             "anyOf": [
@@ -83637,7 +82918,7 @@
                           "displayName",
                           "description",
                           "fieldType",
-                          "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -83648,6 +82929,15 @@
                     "customFieldRefs": {
                       "type": "object",
                       "properties": {
+                        "builtins": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
                         "users": {
                           "type": "array",
                           "items": {
@@ -89243,15 +88533,6 @@
             "in": "query",
             "name": "includeArchived",
             "required": false
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": ["true", "false"]
-            },
-            "in": "query",
-            "name": "intake",
-            "required": false
           }
         ],
         "responses": {
@@ -89311,10 +88592,6 @@
                               }
                             ]
                           },
-                          "fieldTag": {
-                            "type": "string",
-                            "enum": ["business", "legal"]
-                          },
                           "aiPrompt": {
                             "type": ["string", "null"]
                           },
@@ -89328,9 +88605,6 @@
                                 "type": "null"
                               }
                             ]
-                          },
-                          "builtInKey": {
-                            "type": ["string", "null"]
                           },
                           "isSystemDefault": {
                             "type": "boolean"
@@ -89361,7 +88635,6 @@
                           "moduleScope",
                           "fieldType",
                           "options",
-                          "fieldTag",
                           "aiPrompt",
                           "aiAnswerStyle",
                           "isSystemDefault",
@@ -89429,10 +88702,6 @@
                       "entity"
                     ]
                   },
-                  "fieldTag": {
-                    "type": "string",
-                    "enum": ["business", "legal"]
-                  },
                   "options": {
                     "minItems": 1,
                     "maxItems": 100,
@@ -89459,7 +88728,7 @@
                     ]
                   }
                 },
-                "required": ["displayName", "moduleScope", "fieldType", "fieldTag"]
+                "required": ["displayName", "moduleScope", "fieldType"]
               }
             }
           }
@@ -89519,10 +88788,6 @@
                             }
                           ]
                         },
-                        "fieldTag": {
-                          "type": "string",
-                          "enum": ["business", "legal"]
-                        },
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
@@ -89536,9 +88801,6 @@
                               "type": "null"
                             }
                           ]
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
                         },
                         "isSystemDefault": {
                           "type": "boolean"
@@ -89569,7 +88831,6 @@
                         "moduleScope",
                         "fieldType",
                         "options",
-                        "fieldTag",
                         "aiPrompt",
                         "aiAnswerStyle",
                         "isSystemDefault",
@@ -89601,7 +88862,7 @@
     "/api/v1/fields/{id}": {
       "patch": {
         "operationId": "updateField",
-        "summary": "Rename, describe, retag, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped",
+        "summary": "Rename, describe, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped",
         "tags": ["fields"],
         "requestBody": {
           "required": true,
@@ -89625,10 +88886,6 @@
                         "type": "null"
                       }
                     ]
-                  },
-                  "fieldTag": {
-                    "type": "string",
-                    "enum": ["business", "legal"]
                   },
                   "options": {
                     "minItems": 1,
@@ -89733,10 +88990,6 @@
                             }
                           ]
                         },
-                        "fieldTag": {
-                          "type": "string",
-                          "enum": ["business", "legal"]
-                        },
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
@@ -89750,9 +89003,6 @@
                               "type": "null"
                             }
                           ]
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
                         },
                         "isSystemDefault": {
                           "type": "boolean"
@@ -89783,7 +89033,6 @@
                         "moduleScope",
                         "fieldType",
                         "options",
-                        "fieldTag",
                         "aiPrompt",
                         "aiAnswerStyle",
                         "isSystemDefault",
@@ -89882,10 +89131,6 @@
                             }
                           ]
                         },
-                        "fieldTag": {
-                          "type": "string",
-                          "enum": ["business", "legal"]
-                        },
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
@@ -89899,9 +89144,6 @@
                               "type": "null"
                             }
                           ]
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
                         },
                         "isSystemDefault": {
                           "type": "boolean"
@@ -89932,7 +89174,6 @@
                         "moduleScope",
                         "fieldType",
                         "options",
-                        "fieldTag",
                         "aiPrompt",
                         "aiAnswerStyle",
                         "isSystemDefault",
@@ -90031,10 +89272,6 @@
                             }
                           ]
                         },
-                        "fieldTag": {
-                          "type": "string",
-                          "enum": ["business", "legal"]
-                        },
                         "aiPrompt": {
                           "type": ["string", "null"]
                         },
@@ -90048,9 +89285,6 @@
                               "type": "null"
                             }
                           ]
-                        },
-                        "builtInKey": {
-                          "type": ["string", "null"]
                         },
                         "isSystemDefault": {
                           "type": "boolean"
@@ -90081,7 +89315,6 @@
                         "moduleScope",
                         "fieldType",
                         "options",
-                        "fieldTag",
                         "aiPrompt",
                         "aiAnswerStyle",
                         "isSystemDefault",

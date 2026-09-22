@@ -16,7 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
+import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, type FormNode } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const REQUESTER = {
@@ -50,6 +50,18 @@ const COUNTERPARTY: FormField = {
   isRequired: true,
 };
 
+const DESCRIPTION: FormField = {
+  fieldId: "description",
+  slug: "description",
+  builtInKey: "description",
+  displayName: "Description",
+  description: null,
+  fieldType: "long_text",
+  options: null,
+  displayOrder: 0,
+  isRequired: true,
+};
+
 const PAPER_SIDE: FormField = {
   fieldId: "f2",
   slug: "paper_side",
@@ -74,6 +86,7 @@ function portalForm(
   state: {
     fields?: FormField[];
     formFieldOrder?: string[];
+    form?: FormNode[];
     departments?: { id: string; displayName: string }[];
     entities?: { id: string; name: string }[];
     intakeLinks?: { id: string; label: string; url: string; displayOrder: number }[];
@@ -103,14 +116,27 @@ function portalForm(
     ) {
       return json(200, {
         requestType: {
-          formFieldOrder: state.formFieldOrder ?? [],
           id: "rt2",
           slug: "contract_review",
           displayName: "Contract review",
           description: "Review of a counterparty contract or redline.",
           displayOrder: 2,
         },
-        fields: state.fields ?? [COUNTERPARTY, PAPER_SIDE],
+        fields: state.form
+          ? state.fields
+          : [DESCRIPTION, ...(state.fields ?? [COUNTERPARTY, PAPER_SIDE])],
+        form:
+          state.form ??
+          [DESCRIPTION, ...(state.fields ?? [COUNTERPARTY, PAPER_SIDE])].map((field) => ({
+            kind: "row",
+            id: field.fieldId,
+            rowRef: field.slug,
+            fieldType: field.fieldType,
+            isRequired: field.isRequired,
+            onIntakeForm: true,
+            visibleOnPortal: true,
+          })),
+        regions: [],
         intakeLinks: state.intakeLinks ?? [],
         departments: state.departments ?? [{ id: "dept-finance", displayName: "Finance" }],
       });
@@ -147,14 +173,15 @@ describe("the request type's form", () => {
   });
 
   it("draws the four fixed basics on every form", async () => {
-    openForm({ fields: [] });
+    openForm({ fields: [], form: [] });
     // INT-002's basics: three that carry a value, and Attachments,
     // which is on the form whatever the Administrator configured.
     expect(await screen.findByLabelText(/^Title/)).toHaveAttribute(
       "placeholder",
       "Enter a descriptive title for your request",
     );
-    expect(screen.getByLabelText(/^Description/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Description/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Department/)).toBeInTheDocument();
     expect(screen.getByLabelText(/^Urgency/)).toBeInTheDocument();
     expect(screen.getByText("Attachments")).toBeInTheDocument();
   });
@@ -269,9 +296,12 @@ describe("submitting the form", () => {
     expect(submissions.bodies[0]).toEqual({
       requestTypeId: "rt2",
       title: "MSA renewal with Orion Cloud",
-      description: "They sent a redline on the cap.",
       urgency: "high",
-      customFields: { counterparty: "Orion Cloud", paper_side: "Theirs" },
+      customFields: {
+        description: "They sent a redline on the cap.",
+        counterparty: "Orion Cloud",
+        paper_side: "Theirs",
+      },
       departmentId: "dept-finance",
     });
   });
@@ -353,7 +383,6 @@ describe("submitting the form", () => {
     expect(Object.keys(submissions.bodies[0] as object).sort()).toEqual([
       "customFields",
       "departmentId",
-      "description",
       "requestTypeId",
       "title",
       "urgency",
@@ -510,6 +539,7 @@ describe("an out-of-scope attached field", () => {
     });
     expect((submissions.bodies[0] as { customFields: unknown }).customFields).toEqual({
       counterparty: "Orion Cloud",
+      description: "They sent a redline on the cap.",
     });
   });
 });
@@ -586,7 +616,8 @@ it("looks up counterparties, supports multiple selections and stages a new name"
   const field = {
     ...COUNTERPARTY,
     builtInKey: "counterparties",
-    fieldType: "long_text",
+    slug: "counterparties",
+    fieldType: "multi_select",
     displayName: "Counterparties",
   };
   const base = portalForm({ fields: [field] }, submissions);
@@ -618,7 +649,7 @@ it("looks up counterparties, supports multiple selections and stages a new name"
   await screen.findByRole("heading", { name: "Thanks! Your request has been submitted to legal." });
   expect(submissions.bodies[0]).toMatchObject({
     counterparties: [{ counterpartyId: "party-b" }, { name: "New Vendor" }],
-    customFields: { counterparty: "Acme\nNew Vendor" },
+    customFields: { counterparties: ["party-b", "New Vendor"] },
   });
 });
 
@@ -646,36 +677,171 @@ it("does not offer adding a counterparty when lookup fails", async () => {
   expect(screen.queryByRole("option", { name: /Add new/ })).toBeNull();
 });
 
-it("renders default and attached questions in the saved order", async () => {
-  const submissions = { bodies: [], uploads: [] };
-  stubApi({
-    signedIn: REQUESTER,
-    extra: portalForm(
-      {
-        fields: [COUNTERPARTY],
-        formFieldOrder: [
-          "basic:urgency",
-          "f1",
-          "basic:description",
-          "basic:title",
-          "basic:department",
-          "basic:attachments",
-        ],
-      },
-      submissions,
-    ),
+it("pins Title, Department and Urgency above Intake Rows and Attachments last", async () => {
+  openForm({ fields: [COUNTERPARTY] });
+  const controls = [
+    await screen.findByLabelText(/^Title/),
+    screen.getByLabelText(/^Department/),
+    screen.getByLabelText(/^Urgency/),
+    screen.getByLabelText(/^Description/),
+    screen.getByLabelText(/^Counterparty/),
+    screen.getByLabelText("Attachments"),
+  ];
+  for (let i = 1; i < controls.length; i++)
+    expect(
+      controls[i - 1]!.compareDocumentPosition(controls[i]!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+});
+
+it("collects no Description when the destination has no Intake Rows", async () => {
+  openForm({ fields: [], form: [] });
+  await screen.findByLabelText(/^Title/);
+  expect(screen.queryByLabelText(/^Description/)).not.toBeInTheDocument();
+});
+
+it("shows Branch children as answers change and submits only the visible set", async () => {
+  const user = userEvent.setup();
+  const choice = { ...PAPER_SIDE, isRequired: true };
+  const child = { ...COUNTERPARTY, displayName: "Conditional answer" };
+  const row = (f: FormField): FormNode => ({
+    kind: "row",
+    id: f.fieldId,
+    rowRef: f.slug,
+    fieldType: "text",
+    isRequired: f.isRequired,
+    onIntakeForm: true,
+    visibleOnPortal: true,
   });
-  renderAt("/portal/new/contract_review");
-  const urgency = await screen.findByRole("combobox", { name: /Urgency/ });
-  const counterparty = screen.getByRole("textbox", { name: /Counterparty/ });
-  const description = screen.getByRole("textbox", { name: /Description/ });
-  const title = screen.getByRole("textbox", { name: /Title/ });
-  for (const [first, second] of [
-    [urgency, counterparty],
-    [counterparty, description],
-    [description, title],
-  ]) {
-    expect(first!.compareDocumentPosition(second!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  }
-  expect(title).toHaveAttribute("aria-required", "true");
+  const submissions = openForm({
+    fields: [choice, child],
+    form: [
+      row(choice),
+      {
+        kind: "branch",
+        id: "b",
+        match: "all",
+        conditions: [{ rowRef: choice.slug, operator: "equals", value: "Theirs" }],
+        children: [row(child)],
+      },
+    ],
+  });
+  await user.type(await screen.findByLabelText(/^Title/), "NDA");
+  expect(screen.queryByLabelText(/^Conditional answer/)).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText(/^Paper side/), "Theirs");
+  expect(screen.getByLabelText(/^Conditional answer/)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Submit request" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("Conditional answer");
+  await user.type(screen.getByLabelText(/^Conditional answer/), "Stale");
+  await user.selectOptions(screen.getByLabelText(/^Paper side/), "Ours");
+  expect(screen.queryByLabelText(/^Conditional answer/)).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Submit request" }));
+  await screen.findByRole("heading", { name: /Thanks! Your request/ });
+  expect(submissions.bodies[0]).toMatchObject({ customFields: { paper_side: "Ours" } });
+  expect((submissions.bodies[0] as { customFields: object }).customFields).not.toHaveProperty(
+    "counterparty",
+  );
+});
+
+it("keeps a user Row as an optional empty picker", async () => {
+  const field = {
+    ...COUNTERPARTY,
+    slug: "request_contact",
+    displayName: "Request contact",
+    fieldType: "user",
+    isRequired: false,
+  };
+  openForm({
+    fields: [field],
+    form: [
+      {
+        kind: "row",
+        id: field.fieldId,
+        rowRef: field.slug,
+        fieldType: "user",
+        onIntakeForm: true,
+        isRequired: false,
+        visibleOnPortal: true,
+      },
+    ],
+  });
+  const picker = await screen.findByRole("combobox", { name: /^Request contact/ });
+  expect(picker).not.toHaveAttribute("aria-required", "true");
+  expect(within(picker).getAllByRole("option")).toHaveLength(1);
+});
+
+it("collects Value as one Row and submits its three scalar parts", async () => {
+  const fields: FormField[] = [
+    {
+      ...COUNTERPARTY,
+      fieldId: "value_amount",
+      slug: "value_amount",
+      builtInKey: "value_amount",
+      displayName: "Value amount",
+      fieldType: "number",
+      isRequired: true,
+    },
+    {
+      ...COUNTERPARTY,
+      fieldId: "value_currency",
+      slug: "value_currency",
+      builtInKey: "value_currency",
+      displayName: "Value currency",
+      fieldType: "currency",
+      isRequired: true,
+    },
+    {
+      ...COUNTERPARTY,
+      fieldId: "value_cadence",
+      slug: "value_cadence",
+      builtInKey: "value_cadence",
+      displayName: "Value frequency",
+      fieldType: "single_select",
+      options: ["one_time", "monthly", "annually"],
+      isRequired: true,
+    },
+  ];
+  const submissions = openForm({
+    fields,
+    form: [
+      {
+        kind: "row",
+        id: "value",
+        rowRef: "value",
+        fieldType: "money",
+        onIntakeForm: true,
+        isRequired: true,
+        visibleOnPortal: true,
+      },
+    ],
+  });
+  const user = userEvent.setup();
+  await user.type(await screen.findByLabelText(/^Title/), "Value test");
+  await user.type(screen.getByLabelText("Amount"), "123.45");
+  await user.selectOptions(screen.getByLabelText("Currency"), "USD");
+  await user.selectOptions(screen.getByLabelText("Frequency"), "monthly");
+  await user.click(screen.getByRole("button", { name: "Submit request" }));
+  await screen.findByRole("heading", { name: /Thanks! Your request/ });
+  expect(submissions.bodies[0]).toMatchObject({
+    customFields: { value_amount: 12345, value_currency: "USD", value_cadence: "monthly" },
+  });
+});
+
+it("exposes reference picker validation and help text to assistive technology", async () => {
+  openForm({
+    fields: [
+      {
+        ...COUNTERPARTY,
+        fieldId: "owning_department",
+        slug: "owning_department",
+        builtInKey: "owning_department",
+        displayName: "Owning department",
+        fieldType: "single_select",
+        description: "Choose the team that owns the agreement.",
+      },
+    ],
+  });
+  const picker = await screen.findByRole("combobox", { name: /^Owning department/ });
+  expect(picker).toHaveAccessibleDescription("Choose the team that owns the agreement.");
+  await userEvent.setup().click(screen.getByRole("button", { name: "Submit request" }));
+  expect(picker).toHaveAttribute("aria-invalid", "true");
 });

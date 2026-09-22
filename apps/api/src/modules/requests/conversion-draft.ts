@@ -22,6 +22,7 @@ import {
   ConversionSuggestionSchema,
   isCarriedConversionValue,
   conversionContext,
+  conversionDestination,
   conversionSources,
   preparationEnabled,
 } from "../../lib/conversion-draft.js";
@@ -293,7 +294,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
           ),
         );
       if (!draft) throw httpError(404, "The Conversion draft is unavailable.");
-      const source = await conversionSources(app.db, row.id);
+      const source = await conversionSources(app.db, row.id, false, conversionDestination(draft));
       const proposal =
         draft.suggestions[request.params.slug] ?? draft.conflicts[request.params.slug];
       if (!isOpenRequestStatus(row.status))
@@ -324,7 +325,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         const field = fields.find((f) => `field:${f.slug}` === request.params.slug);
         if (
           !field ||
-          (field.fieldTag === "legal" &&
+          (!field.visibleOnPortal &&
             !["administrator", "legal_team_member"].includes(request.user.role))
         )
           return { available: false, citations: [] };
@@ -334,7 +335,12 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(conversionDrafts)
         .where(eq(conversionDrafts.id, flag.draftId));
       if (!draft) return { available: false, citations: [] };
-      const source = await conversionSources(app.db, draft.requestId).catch(() => null);
+      const source = await conversionSources(
+        app.db,
+        draft.requestId,
+        false,
+        conversionDestination(draft),
+      ).catch(() => null);
       if (!source || source.row.convertedMatterId !== row.id)
         return { available: false, citations: [] };
       const proposal = draft.suggestions[request.params.slug];
@@ -364,7 +370,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         const field = fields.find((f) => `field:${f.slug}` === request.params.slug);
         if (
           !field ||
-          (field.fieldTag === "legal" &&
+          (!field.visibleOnPortal &&
             !["administrator", "legal_team_member"].includes(request.user.role))
         )
           return { available: false, citations: [] };
@@ -374,7 +380,12 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(conversionDrafts)
         .where(eq(conversionDrafts.id, flag.draftId));
       if (!draft) return { available: false, citations: [] };
-      const source = await conversionSources(app.db, draft.requestId).catch(() => null);
+      const source = await conversionSources(
+        app.db,
+        draft.requestId,
+        false,
+        conversionDestination(draft),
+      ).catch(() => null);
       if (!source || source.row.convertedContractId !== row.id)
         return { available: false, citations: [] };
       const proposal = draft.suggestions[request.params.slug];
@@ -428,7 +439,12 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
             contract && (await reachedContract(app.db, request.user, contract.number));
           if (!reached || reached.archivedAt) throw httpError(404, "The source is unavailable.");
         } else throw httpError(404, "The source is unavailable.");
-        const sources = await conversionSources(app.db, row.id);
+        const sources = await conversionSources(
+          app.db,
+          row.id,
+          false,
+          conversionDestination(draft),
+        );
         const read = draft.attachmentReads.find((r) => r.sourceId === request.params.sourceId);
         const authorized =
           read && (await authorizedAttachment(app.db, request.user, sources, read));

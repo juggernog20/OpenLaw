@@ -5,7 +5,7 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 ## Before you start
 
 - Sign in as an Administrator.
-- Have live destination types and the Fields you want to collect. A Field must be attached to the destination Contract or Matter type if its answer should carry into that record. See [Configure types, Statuses, and Fields](types-statuses-fields.md).
+- Have a live destination Contract or Matter type. Its Form holds the Rows you want to collect. See [Configure types, Statuses, and Fields](types-statuses-fields.md).
 - This example uses the fictional request type **Docs Contract review**, the Contract type **MSA**, and a Contract **Deal value** Field. Use the names configured in your instance.
 
 ## Create the request type
@@ -15,17 +15,17 @@ Configure forms that collect the information Legal needs for a Contract or Matte
 3. Select the new row's **Edit** control to open its form configuration.
 4. Enter a **Description** that helps a Business User choose this form. Leave the field to save it, and check that the save succeeds.
 
-Every submission creates a Request first. Legal chooses whether to convert it to a Contract or Matter, or resolve it in the thread. The **Default destination** column shows the suggested destination for each request type.
+Every submission creates a Request first. Legal chooses whether to convert it to a Contract or Matter, or resolve it in the thread. The **Destination** column shows the suggested destination for each request type.
 
 ## Set the default destination
 
-1. In the request type editor, choose **Default destination**: **Contract**, **Matter**, or **Decide during triage**.
-2. For Contract or Matter, optionally select a **Default contract type** or **Default matter type**. Leave this as **Decide during triage** if Legal should select the type for each request.
+1. In the request type editor, choose **Default destination**: **Contract** or **Matter**. A module is required.
+2. For Contract or Matter, optionally select a **Default contract type** or **Default matter type**. Leave this as **Default** to use the module's Default type Form.
 3. Check the saved indication. Changing the destination module clears its previous type selection. An archived selection is shown as unavailable; choose a live replacement.
 
-This supplies the initial choice during conversion. It does not automatically create a record, and Legal can choose a different destination. New request types start with **Decide during triage**.
+This supplies the initial choice during conversion. It does not automatically create a record, and Legal can choose a different destination. New request types start with a Matter destination.
 
-The destination also determines which Fields can be added to the form. It does not attach Fields by itself. When you attach a Field that the default destination type does not have, the editor asks whether to attach it there too. If existing form Fields are incompatible with a new destination, the change is refused and names the Fields to detach; the saved destination and attachments remain unchanged.
+The **Intake form** card reads the destination type's Form. Changing the destination refreshes the card. Several Request types can use one Form while keeping their own display names, descriptions, and turnaround. A renamed Default type appears under its current name in the card and its edit link.
 
 The **Display name** can change. Rename or reorder request types from the list. Archiving a request type takes it out of the Portal's choices and closes its form. The archive dialog shows how many Requests use the type. If it is used, choose a live replacement before archiving; those Requests move to the replacement. Check the replacement’s Fields and routing first. Use **Show archived**, then **Restore**, to offer the type again.
 
@@ -35,29 +35,31 @@ In the request type editor, set **Target turnaround (business days)** to a whole
 
 Check the Portal's request-type card for this duration as general guidance before submission. Share updates through the Request conversation and track work deadlines on the resulting Contract or Matter.
 
-## Choose the form fields
+## Read and preview the Intake form
 
-1. Under **Form fields**, select **Attach field** and choose a Field, such as **Deal value**.
-   Fields are listed alphabetically. Use **Search fields** at the top of the menu to filter by name.
-   If the form has a default destination type that does not have this Field, the editor asks **Attach {Field} to {type} too?**. Choose **Attach to both** so the answer carries into the converted record, or **Form only**.
-2. Turn on that Field's **Required** checkbox if the Requester must answer it. Wait for the save to finish.
-3. Repeat for the other Fields you need. Use the reorder controls to put them in a useful order; with a reorder control focused, the arrow keys move its Field.
+The **Intake form** card is read-only. It lists **Title**, **Department**, and **Urgency** first, the destination type's Intake Rows in order, and **Attachments** last. Each Row says **Required** or **Optional**. Branch headers describe the conditions for their children. The card shows those children so you can inspect the whole configuration before answering anything.
 
-To create a Field while editing the form, choose **Attach field → Add new field**. Enter its name, type, description, and any other details, then select **Add field**. It is saved to the catalog and attached to this form. Contract and Matter destinations use their matching catalog; with **Decide during triage**, choose **Contract fields** or **Matter fields** in the dialog. Contract Fields other than User and Entity also support an AI prompt.
+1. Select the eye button, **Preview intake form**.
+2. Check the Request type's display name and description in the preview.
+3. Answer a Row used by a Branch condition. Check that its child Rows appear when the condition holds and disappear when it no longer holds.
+4. Select **Submit request** to try validation. This preview sends no Request and uploads no files.
+5. Close the dialog or press Escape to return to the eye button. Preview answers are discarded.
 
-Every form includes **Title**, **Description**, **Attachments**, **Department**, and **Urgency**. Drag their reorder handles, or focus a handle and use the arrow keys, to position them anywhere among the attached Fields. The Business Portal displays the saved order. These basics cannot be removed, and their required settings cannot be changed: Title, Description, and Urgency are required; Department is required when departments are available; attachments are optional. Department uses the shared list managed under **Settings → Organization → Departments** and carries into the converted record without a Field attachment.
+## Choose the Intake Rows
 
-The default destination decides which Fields **Attach field** offers. A Contract target offers Contract Fields. A Matter target offers Matter Fields. **Decide during triage** without a destination module offers Contract and Matter Fields, so you can build the questionnaire before deciding where requests will be converted. A User Field cannot be required on a Portal form, because the Portal does not offer people for the Requester to choose. An Entity Field can be required; the Portal offers only Portal-listed Entities for it. **Detach** removes a form attachment without deleting its catalog definition or earlier answers.
+1. Select **Edit on MSA**, or the destination type's current name, at the bottom of the card. This opens its **Form** tab. A module-only destination links to its Default type.
+2. Configure the Rows and Branches there. See [the switches, Touchpoint and Branch example](types-statuses-fields.md#attach-fields-and-set-requiredness). Turn on **On intake form** for Rows that a Requester should answer. For a Field, this also turns on **Visible on Portal**, which stays locked on until On intake form is off. Use **Required for creation** for a required answer.
+3. Return to the Request type editor and check its **Intake form** card and preview.
 
-## Collect default contract fields
+The Request type has no separate attach menu, Required checkbox, or Row order. Edits to the destination Form affect every Request type that reads it. A User Row on intake cannot be required because the Portal has no staff directory picker. Entity Rows use the Portal-listed Entities.
 
-For a **Contract** destination or **Decide during triage**, the picker also offers protected questions marked **Default**: Our entity, Counterparties, Effective date, Expiry date, Term type, Renewal period (months), Notice period (days), Value amount, Value currency, and Value frequency. Attach, require, detach, and reorder these like other form questions. Their definitions cannot be renamed or archived.
+Title, Department, and Urgency are fixed basics. Attachments are optional and fixed last. Description is an ordinary built-in Row on the destination Form. Department uses the shared list managed under **Settings → Organization → Departments**.
 
-These answers populate the Contract’s existing fields during conversion; they do not create custom fields on the Contract. Counterparties uses a searchable lookup with **Add new** when the name is not found. Select multiple counterparties; the first becomes primary. Remove a selection using its remove button. Existing selections keep their registry identity, and new names are added to the directory when Legal converts the request. Our entity offers only Portal-listed Entities. A renewal period requires an auto-renewing term; supplying a renewal period without a term type means auto-renewing. An evergreen term cannot have an expiry date.
+## Collect built-in Contract Rows
 
-To collect a complete **Value**, attach **Value amount**, **Value currency**, and **Value frequency**. Enter the amount in full currency units, such as 1500.50. All three must be answered for the value to populate the Contract; partial answers remain on the Request. The conversion dialog identifies answers that carry and those that remain on the Request.
+The Contract type's Form includes built-in Rows such as **Counterparties**, **Effective date**, **Expiry date**, **Term type**, and **Value**. Turn on **On intake form** on the Rows needed for this Request type. They collect native record values without a separate catalog Field.
 
-If Legal converts the Request into a Matter, these contract-specific answers remain on the Request. Submitted default answers remain readable even if the question is later detached. Internal fields such as Reference, Status, and Legal Owner are not intake questions.
+**Value** is one Row with amount, currency, and cadence controls. **Counterparties** uses the registry picker. These Rows share the same Branch and required settings as other Form Rows. Internal values such as Status and Legal Owner are not intake questions.
 
 ## Offer guidance before submission
 
@@ -75,7 +77,7 @@ Knowledge guidance must remain published and available to Business Users. See [P
 
 Test one form that Legal converts to a Contract and one that Legal converts to a Matter. Open the Portal and select the request type. Confirm that the description, guidance, Fields, order, and required markers match your configuration. Try submitting with a required answer missing, then supply valid fictional answers and submit. Have a Legal Team Member or Administrator convert the Request and check each intended answer on the new record.
 
-Attaching a Field to the form does not attach it to the destination type on its own. When the form has a default destination type and that type lacks the Field, the editor asks **Attach {Field} to {type} too?** Choose **Attach to both** to put the Field on the form and on the destination type in one step, or **Form only** to leave the destination type as it is. A Field marked **Default** is never asked about, because it carries on its own. Check both configurations before relying on carry-through for Fields attached earlier. For a Matter, also check any selected [Matter template](matter-templates.md): carried answers and explicit choices take precedence over its defaults, and its Tasks and Key dates use the new Matter's creation date.
+The Intake Rows already belong to the destination type's Form. If Legal changes the destination during conversion, check that the new type has the Rows needed to receive the answers. For a Matter, also check any selected [Matter template](matter-templates.md): carried answers and explicit choices take precedence over its defaults, and its Tasks and Key dates use the new Matter's creation date.
 
 ## If it does not work
 
@@ -83,7 +85,7 @@ If the form is missing from the Portal, check that its request type is active. I
 
 If an answer appears under **Does not carry into the contract**, or **Does not carry into the matter**, during conversion, check whether the Field is attached to the selected destination type. That answer remains on the Request. Review any missing required destination Fields before confirming conversion.
 
-If a configured destination type is archived, select a live type during conversion. Guidance that disappears may have an unpublished, archived, or unavailable Knowledge Item, or a placement on a different form. Test the Business User view after correcting it.
+If the Intake form card cannot be read, use **Retry**. If the destination type is archived or unavailable, choose a live destination in the Request type editor. Guidance that disappears may have an unpublished, archived, or unavailable Knowledge Item, or a placement on a different form. Test the Business User view after correcting it.
 
 ## Related guides
 

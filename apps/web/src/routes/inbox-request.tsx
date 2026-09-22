@@ -431,21 +431,25 @@ export function InboxRequestPage() {
               )}
             >
               <div className="flex min-w-0 flex-col gap-4">
-                {request.description !== null && request.description !== "" && (
-                  <Card
-                    id="description"
-                    heading={
-                      <FormattedMessage
-                        id="inbox.request.description"
-                        defaultMessage="Description"
-                      />
-                    }
-                  >
-                    {/* A requester's paragraphs are theirs: the line
+                {request.description !== null &&
+                  request.description !== "" &&
+                  !Object.hasOwn(request.customFields, "description") && (
+                    <Card
+                      id="description"
+                      heading={
+                        <FormattedMessage
+                          id="inbox.request.description"
+                          defaultMessage="Description"
+                        />
+                      }
+                    >
+                      {/* A requester's paragraphs are theirs: the line
                         breaks they typed are part of what they said. */}
-                    <p className="px-4 py-3 text-base whitespace-pre-line">{request.description}</p>
-                  </Card>
-                )}
+                      <p className="px-4 py-3 text-base whitespace-pre-line">
+                        {request.description}
+                      </p>
+                    </Card>
+                  )}
                 <Card
                   id="responses"
                   heading={
@@ -653,6 +657,7 @@ function FormResponses({
               field={field}
               value={request.customFields[field.slug]!}
               refs={customFieldRefs}
+              answers={request.customFields}
             />
           </dd>
         </div>

@@ -50,6 +50,7 @@ import {
   fields,
   FIELD_TYPES,
   isNull,
+  sql,
   users,
   type CustomFieldValue,
   type Executor,
@@ -98,9 +99,8 @@ export const AttachedCustomFieldSchema = z.object({
   /** Help text under the control; null = the field renders without it. */
   description: z.string().nullable(),
   fieldType: z.enum(FIELD_TYPES),
-  /** DD-015's authorization tag. It travels with every record
-   * projection so the same answer drives serialization and controls. */
-  fieldTag: z.enum(["business", "legal"]),
+  /** DD-028: visibility belongs to this type's Row. */
+  visibleOnPortal: z.boolean(),
   /** The select types' option labels, in order; null on the other seven. */
   options: z.array(z.string()).nullable(),
   /** The per-type form order, 1-based — the order the record renders. */
@@ -124,13 +124,13 @@ export async function selectAttachedFields(
 ): Promise<AttachedCustomField[]> {
   const rows = await db
     .select({
-      builtInKey: fields.builtInKey,
       fieldId: fields.id,
       slug: fields.slug,
       displayName: fields.displayName,
       description: fields.description,
       fieldType: fields.fieldType,
-      fieldTag: fields.fieldTag,
+      visibleOnPortal:
+        "visibleOnPortal" in joinTable ? joinTable.visibleOnPortal : sql<boolean>`true`,
       options: fields.options,
       displayOrder: joinTable.displayOrder,
       isRequired: joinTable.isRequired,
@@ -139,20 +139,19 @@ export async function selectAttachedFields(
     .innerJoin(fields, eq(joinTable.fieldId, fields.id))
     .where(and(eq(joinTable.typeId, typeId), isNull(fields.archivedAt)))
     .orderBy(asc(joinTable.displayOrder), asc(joinTable.createdAt));
-  return rows.map(({ builtInKey, ...row }) => ({
+  return rows.map((row) => ({
     ...row,
-    ...(builtInKey ? { builtInKey } : {}),
     options: row.options ?? null,
   }));
 }
 
 /**
- * The Field half of DD-015's Business User projection.
+ * The Field half of DD-028's Business User projection.
  *
  * Member+ receive the attachment and value maps unchanged, including
  * retained values for detached Fields. A Business User receives only the
- * active business-tagged attachments and the values keyed by those
- * attachments. Filtering both halves here prevents a legal value from
+ * active Portal-visible Rows and the values keyed by those
+ * attachments. Filtering both halves here prevents a hidden value from
  * surviving after its definition was omitted.
  */
 export function projectCustomFields(
@@ -163,7 +162,7 @@ export function projectCustomFields(
   if (role !== "business_user") {
     return { fields: [...attached], customFields: { ...values } };
   }
-  const visible = attached.filter((field) => field.fieldTag === "business");
+  const visible = attached.filter((field) => field.visibleOnPortal);
   const slugs = new Set(visible.map((field) => field.slug));
   return {
     fields: visible,
@@ -173,8 +172,8 @@ export function projectCustomFields(
 
 /**
  * Refuses a Business User's crafted write unless every named Field is
- * business-tagged and attached to this record's current type. The
- * sentence deliberately does not distinguish a legal Field from an
+ * Visible on Portal and attached to this record's current type. The
+ * sentence deliberately does not distinguish a hidden Field from an
  * unknown slug: neither is part of the Business User's projection.
  */
 export function assertBusinessCustomFieldWrite(
@@ -182,10 +181,13 @@ export function assertBusinessCustomFieldWrite(
   incoming: Readonly<Record<string, CustomFieldValue | null>>,
 ): void {
   const businessSlugs = new Set(
-    attached.filter((field) => field.fieldTag === "business").map((field) => field.slug),
+    attached.filter((field) => field.visibleOnPortal).map((field) => field.slug),
   );
   if (Object.keys(incoming).some((slug) => !businessSlugs.has(slug))) {
-    throw httpError(403, "Business Users can edit only business Fields on this record.");
+    throw httpError(
+      403,
+      "Business Users can edit only Fields visible on the Portal on this record.",
+    );
   }
 }
 

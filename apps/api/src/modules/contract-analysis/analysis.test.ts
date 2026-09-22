@@ -323,7 +323,7 @@ describe("the manual Contract analysis run", () => {
         value: { amount: 120000, currency: "usd", cadence: "monthly" },
         evidence: "USD 1200 every month",
       },
-      counterparty: { value: "acme llc", evidence: "acme llc" },
+      counterparties: { value: "acme llc", evidence: "acme llc" },
       governing_law: { value: "England and Wales", evidence: "governing law is England and Wales" },
       jurisdiction: { value: "Dubai", evidence: "courts of Dubai" },
       our_position: { value: "Buyer", evidence: "customer receives services" },
@@ -347,7 +347,7 @@ describe("the manual Contract analysis run", () => {
         "renewal_period_months",
         "notice_period_days",
         "value",
-        "counterparty",
+        "counterparties",
         "governing_law",
       ],
       kept: [],
@@ -443,7 +443,7 @@ describe("the manual Contract analysis run", () => {
       .select({ aiUnverified: contracts.aiUnverified })
       .from(contracts)
       .where(eq(contracts.id, contract.id));
-    expect(beforeRemoval!.aiUnverified).toHaveProperty("counterparty");
+    expect(beforeRemoval!.aiUnverified).toHaveProperty("counterparties");
 
     // A person taking the AI-linked primary off verifies that slot.
     const removed = await harness.app.inject({
@@ -456,7 +456,7 @@ describe("the manual Contract analysis run", () => {
       .select({ aiUnverified: contracts.aiUnverified })
       .from(contracts)
       .where(eq(contracts.id, contract.id));
-    expect(afterRemoval!.aiUnverified).not.toHaveProperty("counterparty");
+    expect(afterRemoval!.aiUnverified).not.toHaveProperty("counterparties");
     expect(afterRemoval!.aiUnverified).toHaveProperty("governing_law");
   });
 
@@ -478,7 +478,7 @@ describe("the manual Contract analysis run", () => {
       .update(contracts)
       .set({
         aiUnverified: {
-          counterparty: {
+          counterparties: {
             evidence: "Acme LLC",
             runId: "older",
             writtenAt: new Date().toISOString(),
@@ -644,21 +644,21 @@ describe("the manual Contract analysis run", () => {
         value: { amount: 60000, currency: "USD", cadence: "monthly" },
         evidence: "Fees are USD 500 once",
       },
-      counterparty: { value: "Acme LLC", evidence: "Acme LLC" },
+      counterparties: { value: "Acme LLC", evidence: "Acme LLC" },
       our_position: { value: "customer", evidence: "We are the Customer" },
     });
     const response = await startRun(contract.number);
     const run = await waitForRun(response.json().run.id as string);
     expect(run.outcome).toMatchObject({
       written: expect.arrayContaining(["effective_date"]),
-      kept: expect.arrayContaining(["notice_period_days", "value", "counterparty"]),
+      kept: expect.arrayContaining(["notice_period_days", "value", "counterparties"]),
     });
     expect(run.outcome).not.toHaveProperty("unmatched");
     expect(run.outcome!.results).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ slug: "notice_period_days", outcome: "kept" }),
         expect.objectContaining({ slug: "value", outcome: "kept" }),
-        expect.objectContaining({ slug: "counterparty", outcome: "kept" }),
+        expect.objectContaining({ slug: "counterparties", outcome: "kept" }),
       ]),
     );
     const [row] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
@@ -746,7 +746,7 @@ describe("the manual Contract analysis run", () => {
         .insert(contractCounterparties)
         .values({ contractId: contract.id, counterpartyId: party!.id, isPrimary });
       setAnswers({
-        counterparty: { value: "Acme LLC", evidence: "The counterparty is Acme LLC." },
+        counterparties: { value: "Acme LLC", evidence: "The counterparty is Acme LLC." },
       });
       const response = await startRun(contract.number);
       const run = await waitForRun(response.json().run.id as string);
@@ -758,7 +758,7 @@ describe("the manual Contract analysis run", () => {
       expect(runRead.statusCode, runRead.body).toBe(200);
       expect(runRead.json().run.outcome.unmatched).toBe("Acme LLC");
       expect(runRead.json().run.outcome.results).toContainEqual(
-        expect.objectContaining({ slug: "counterparty", outcome: "unmatched" }),
+        expect.objectContaining({ slug: "counterparties", outcome: "unmatched" }),
       );
       const read = await harness.app.inject({
         method: "GET",
@@ -1295,7 +1295,6 @@ it("sends each saved answer style through a real Analysis run to the provider", 
         displayName: "Style clause",
         moduleScope: "contract",
         fieldType: "long_text",
-        fieldTag: "legal",
         aiPrompt: "Extract the clause.",
       })
       .returning();
@@ -1309,7 +1308,6 @@ it("sends each saved answer style through a real Analysis run to the provider", 
         displayName: "Verbatim clause",
         moduleScope: "contract",
         fieldType: "long_text",
-        fieldTag: "legal",
         aiPrompt: "Extract the provision.",
         aiAnswerStyle: "full_clause",
       })
@@ -1502,7 +1500,6 @@ it.each(["openai_chat_completions", "anthropic_messages", "gemini"] as const)(
           displayName: `Legacy ${fieldType}`,
           moduleScope: "contract" as const,
           fieldType,
-          fieldTag: "business" as const,
           aiPrompt: `Extract the legacy ${fieldType} reference.`,
         })),
       )

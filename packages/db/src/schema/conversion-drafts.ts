@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Durable actor-scoped proposals before Request conversion (INT-008). */
+/** Source-bound proposals for conversion and the separate newborn Matter pass. */
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -14,12 +14,15 @@ import {
 import type { ConversionSuggestion, ConversionAttachmentRead } from "@openlaw/shared";
 import { uuidPk } from "./helpers.js";
 import { requests } from "./requests.js";
+import { matters } from "./matters.js";
 import { users } from "./auth.js";
 
 export const conversionDrafts = pgTable(
   "conversion_drafts",
   {
     id: uuidPk(),
+    /** Set only for the separate Record Row pass after a Matter is born. */
+    matterId: text("matter_id").references(() => matters.id),
     requestId: text("request_id")
       .notNull()
       .references(() => requests.id),

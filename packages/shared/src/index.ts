@@ -340,24 +340,6 @@ export const MAX_CONTRACT_TITLE_LENGTH = 200;
 export const MAX_MATTER_TITLE_LENGTH = 500;
 
 /**
- * The seeded request fields the conversion form knows how to land
- * (INT-002, the 2026-09-09 focus-group addendum).
- *
- * "Counterparty name" and "Needed by" are Fields on the seeded request
- * forms, but on a contract the other side is a counterparty row and a
- * deadline is a key date, so neither can carry by slug. The dialog
- * reads these two slugs to prefill its own Counterparty and Needed by
- * controls and sends what is in the boxes as `counterpartyName` and
- * `neededBy`. The server reads the body and never the slugs: a form
- * whose fields are named differently still converts, and the triager
- * fills the two boxes by hand.
- */
-export const INTAKE_CARRY_SLUGS = {
-  counterpartyName: "counterparty_name",
-  neededBy: "needed_by",
-} as const;
-
-/**
  * How long a counterparty's name may be (CTR-011). The add route and
  * the conversion refuse past it; the boxes that collect one restate it
  * as `maxLength`.
@@ -631,8 +613,6 @@ export {
   PORTAL_MATTER_FILTER_KEYS,
 } from "./portal-lists.js";
 
-/** Built-in Contract classification, outside the type's configurable Fields. */
-export const CONTRACT_OVERVIEW_FIELD_SLUGS: readonly string[] = ["owning_department", "region"];
 export const MAX_CONTRACT_CLASSIFICATION_LENGTH = 200;
 
 export { parseKnowledgeMarkdown, type MarkdownBlock, type MarkdownInline } from "./markdown.js";
@@ -651,3 +631,33 @@ export function isOpenRequestStatus(status: string): status is "new" | "read" {
 }
 
 export { normalizeAiBaseUrl } from "./ai-destination.js";
+
+export {
+  evaluateForm,
+  intakeFormAnswers,
+  formForTouchpoint,
+  recordFormAnswers,
+  formRowsForTouchpoint,
+  formRowTouchpoint,
+  recordFormRows,
+  validateForm,
+  type Form,
+  type FormNode,
+  type FormRow,
+  type FormRowType,
+  type FormBranch,
+  type FormCondition,
+  type FormOperator,
+  type FormScalar,
+  type FormAnswers,
+  type FormTouchpoint,
+  type FormEvaluation,
+  type FormValidationIssue,
+} from "./form-evaluator.js";
+export {
+  BUILTIN_KEYS,
+  AUTO_DOC_CONTRACT_ATTRIBUTES,
+  FORM_BUILTINS,
+  pinnedFormRows,
+  type FormModule,
+} from "./form-builtins.js";

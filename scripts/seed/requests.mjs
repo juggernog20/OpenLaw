@@ -60,8 +60,7 @@ function customFieldsFor(plan, fields, attached, random) {
   const collector = customFields(fields, attached, "request", slug);
   const set = (name, value) => collector.set(name, value);
   if (["nda_request", "contract_review", "vendor_onboarding"].includes(slug)) {
-    set("Counterparty name", plan.counterparty);
-    if (random.chance(0.7)) set("Needed by", daysFromToday(random.int(2, 40)));
+    if (random.chance(0.7)) collector.values.needed_by = daysFromToday(random.int(2, 40));
   }
   if (["contract_review", "vendor_onboarding"].includes(slug) && random.chance(0.7)) {
     set("Deal value (USD)", random.int(5, 900) * 1000);
@@ -151,6 +150,9 @@ export async function seedRequests(admin, context, log) {
       description: plan.description,
       urgency: plan.urgency,
       customFields: customFieldsFor(plan, fields, attached, random),
+      ...(["nda_request", "contract_review", "vendor_onboarding"].includes(plan.kind.typeSlug)
+        ? { counterparties: [{ name: plan.counterparty }] }
+        : {}),
     });
     const request = body.request;
 
@@ -263,10 +265,9 @@ export async function seedRequests(admin, context, log) {
     const module = typeRow?.targetModule ?? "matter";
     let targetTypeId = typeRow?.targetTypeId ?? null;
     if (!targetTypeId) {
-      const type =
-        module === "contract"
-          ? (taxonomy.contractTypes.bySlug.get("msa") ?? taxonomy.contractTypes.rows[0])
-          : (taxonomy.matterTypes.bySlug.get("advisory") ?? taxonomy.matterTypes.rows[0]);
+      const type = (
+        module === "contract" ? taxonomy.contractTypes : taxonomy.matterTypes
+      ).rows.find((row) => row.isDefault);
       targetTypeId = type.id;
       if (module === "contract") payload.contractTypeId = type.id;
       else payload.matterTypeId = type.id;

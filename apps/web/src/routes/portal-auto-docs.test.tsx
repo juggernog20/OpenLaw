@@ -52,7 +52,7 @@ const form = {
       displayOrder: 1,
       placeholder: false,
       catalogFieldId: null,
-      contractAttribute: "entity_id",
+      contractAttribute: "entity",
     },
   ],
 };

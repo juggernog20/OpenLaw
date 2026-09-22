@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * Onboarding state (SET-004) and the portal toggle (DD-010): both are
  * Administrator-only, completion is one-way and idempotent, every
@@ -474,9 +476,9 @@ describe("onboarding state (GET /api/v1/onboarding, POST /api/v1/onboarding/comp
 /** The eight catalog lists as the API lists them, with the skeleton
  * each keeps (SET-004, Start blank). */
 const CATALOG_LISTS = [
-  ["/api/v1/matter-types", "matterTypes", ["other"]],
+  ["/api/v1/matter-types", "matterTypes", ["other", "default"]],
   ["/api/v1/matter-statuses", "matterStatuses", ["open", "closed"]],
-  ["/api/v1/contract-types", "contractTypes", ["other"]],
+  ["/api/v1/contract-types", "contractTypes", ["other", "default"]],
   ["/api/v1/contract-statuses", "contractStatuses", ["draft", "active", "expired"]],
   ["/api/v1/entity-types", "entityTypes", ["other"]],
   ["/api/v1/officer-roles", "officerRoles", ["other"]],
@@ -651,13 +653,12 @@ describe("Start blank (POST /api/v1/onboarding/start-blank)", () => {
       .select({ id: fields.id })
       .from(fields)
       .where(eq(fields.slug, "governing_law"));
-    const attached = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/contract-types/${nda.id}/fields`,
+    const attached = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/contract-types/${nda.id}`,
       cookies: adminCookies,
       payload: { fieldId: governingLaw!.id },
     });
-    expect(attached.statusCode, attached.body).toBe(201);
+    expect(attached.statusCode, attached.body).toBe(200);
     expect(await harness.db.select().from(contractTypeFields)).toHaveLength(1);
 
     const offsetsBefore = (

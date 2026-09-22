@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { regions } from "@openlaw/db";
 
@@ -24,7 +26,7 @@ import { requestDepartment } from "../../testing/request-department.js";
  * refusal names the record the winner made.
  */
 
-import { departments, entities, entityTypes } from "@openlaw/db";
+import { departments } from "@openlaw/db";
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
@@ -71,6 +73,7 @@ let fieldSlugs: Map<string, string>;
 
 /** A request type whose bound contract type has since been archived. */
 let retiredTargetTypeId: string;
+let retiredContractTypeId: string;
 /** A request type that targets the Matter module — Re-target's subject. */
 let matterTargetTypeId: string;
 
@@ -162,7 +165,6 @@ beforeAll(async () => {
         displayName: field.displayName,
         moduleScope: "contract",
         fieldType: field.fieldType,
-        fieldTag: "legal",
       },
     });
     expect(created.statusCode, created.body).toBe(201);
@@ -178,13 +180,12 @@ beforeAll(async () => {
       [field.onMsa, "contract-types", contractTypeIds.get("msa")!, field.required],
     ] as const) {
       if (!attach) continue;
-      const attached = await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/${registry}/${typeId}/fields`,
+      const attached = await saveFieldRow(harness, {
+        typeUrl: `/api/v1/${registry}/${typeId}`,
         cookies: adminCookies,
         payload: { fieldId, isRequired },
       });
-      expect(attached.statusCode, attached.body).toBe(201);
+      expect(attached.statusCode, attached.body).toBe(200);
     }
   }
 
@@ -201,10 +202,7 @@ beforeAll(async () => {
     targetModule: "contract",
     targetTypeId: retiredType.json().contractType.id as string,
   });
-  await harness.db
-    .update(contractTypes)
-    .set({ archivedAt: new Date() })
-    .where(eq(contractTypes.id, retiredType.json().contractType.id as string));
+  retiredContractTypeId = retiredType.json().contractType.id as string;
 
   // A Matter-targeting Request can still convert into a Contract —
   // DD-018 rule 5's lossless Re-target, symmetric since M22.
@@ -248,7 +246,7 @@ async function submit(
   title: string,
   options: { typeId?: string; customFields?: Record<string, unknown>; urgency?: string } = {},
 ): Promise<{ id: string; number: number }> {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
@@ -409,30 +407,14 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     });
   });
 
-  it("asks a module-only target for the type the form deferred", async () => {
-    // "Contract review" promises a contract without pre-deciding which
-    // kind (the INT-002 M19/4 addendum). That one choice is the
-    // triager's, and it is the only one they get.
-    const request = await submit("Which kind is still open", {
+  it("uses the Default type backfilled onto a module-only destination", async () => {
+    const request = await submit("Default destination", {
       typeId: requestTypeIds.get("contract_review"),
     });
-    const before = await contractCount();
-    const without = await convert(request.number, { title: "Orion redline" });
-    expect(without.statusCode, without.body).toBe(400);
-    expect((await stored(request.id)).status).toBe("new");
-    // The refusal writes nothing. Without this the second press below
-    // would supply a contract for a test that never checked the first
-    // press had not already made one.
-    expect(await contractCount()).toBe(before);
-
-    const withType = await convert(request.number, {
-      title: "Orion redline",
-      contractTypeId: contractTypeIds.get("msa"),
-      customFields: { [fieldSlugs.get("Governing law")!]: "England and Wales" },
-    });
-    expect(withType.statusCode, withType.body).toBe(200);
-    const number = withType.json().request.convertedContract.number as number;
-    expect((await contractNumbered(number)).contractTypeId).toBe(contractTypeIds.get("msa"));
+    const converted = await convert(request.number, { title: "Orion redline" });
+    expect(converted.statusCode, converted.body).toBe(200);
+    const record = await contractNumbered(converted.json().request.convertedContract.number);
+    expect(record.contractTypeId).toBe(contractTypeIds.get("default"));
   });
 
   it("reads an archived target type as no type, on the read and at the write", async () => {
@@ -442,6 +424,10 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
     const request = await submit("The bound type has been retired", {
       typeId: retiredTargetTypeId,
     });
+    await harness.db
+      .update(contractTypes)
+      .set({ archivedAt: new Date() })
+      .where(eq(contractTypes.id, retiredContractTypeId));
     const detail = await harness.app.inject({
       method: "GET",
       url: `/api/v1/requests/${request.number}`,
@@ -664,8 +650,8 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
   });
 });
 
-describe("a value with nowhere to land (the INT-002 M19/7 addendum)", () => {
-  it("does not carry, is not deleted, and stays readable on the Request", async () => {
+describe("Intake Rows at conversion", () => {
+  it("carries destination Intake answers and retains them on the Request", async () => {
     const request = await submit("One value carries, one does not", {
       customFields: {
         [fieldSlugs.get("Counterparty")!]: "Northwind Labs",
@@ -677,10 +663,9 @@ describe("a value with nowhere to land (the INT-002 M19/7 addendum)", () => {
 
     const number = res.json().request.convertedContract.number as number;
     const contract = await contractNumbered(number);
-    // The NDA contract type attaches Counterparty and not Deal desk
-    // region, so one lands and the other has no field to land in.
+    // Both answers came from Rows on the destination Form.
     expect(contract.customFields[fieldSlugs.get("Counterparty")!]).toBe("Northwind Labs");
-    expect(contract.customFields[fieldSlugs.get("Deal desk region")!]).toBeUndefined();
+    expect(contract.customFields[fieldSlugs.get("Deal desk region")!]).toBe("EMEA");
 
     // Copied, never moved: the Request keeps its custom fields whole.
     const row = await stored(request.id);
@@ -945,7 +930,7 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const before = await namedCount("Helix Labs GmbH");
     const res = await convert(request.number, {
       title: "Helix Labs NDA",
-      counterpartyName: "  Helix Labs GmbH  ",
+      counterparties: [{ name: "  Helix Labs GmbH  " }],
     });
     expect(res.statusCode, res.body).toBe(200);
     const contract = await contractNumbered(res.json().request.convertedContract.number as number);
@@ -977,7 +962,7 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const request = await submit("A name we already know");
     const res = await convert(request.number, {
       title: "Orion Cloud NDA",
-      counterpartyName: "orion cloud ltd",
+      counterparties: [{ name: "orion cloud ltd" }],
     });
     expect(res.statusCode, res.body).toBe(200);
     const contract = await contractNumbered(res.json().request.convertedContract.number as number);
@@ -999,7 +984,7 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const request = await submit("A deadline the requester stated");
     const res = await convert(request.number, {
       title: "Dated NDA",
-      neededBy: "2020-02-29",
+      customFields: { needed_by: "2020-02-29" },
     });
     expect(res.statusCode, res.body).toBe(200);
     const contract = await contractNumbered(res.json().request.convertedContract.number as number);
@@ -1030,8 +1015,8 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const request = await submit("Badly formed facts");
     const before = await contractCount();
     for (const body of [
-      { title: "NDA", neededBy: "next Tuesday" },
-      { title: "NDA", counterpartyName: "   " },
+      { title: "NDA", customFields: { needed_by: "next Tuesday" } },
+      { title: "NDA", counterparties: [{ name: "   " }] },
     ]) {
       const res = await convert(request.number, body);
       expect(res.statusCode, res.body).toBe(400);
@@ -1132,332 +1117,6 @@ it("keeps the submitted Department fixed until conversion", async () => {
   expect(res.statusCode, res.body).toBe(200);
   const contract = await contractNumbered(res.json().request.convertedContract.number as number);
   expect(contract.owningDepartmentId).toBe(department!.id);
-});
-
-describe("default contract fields on intake forms", () => {
-  async function nativeForm(name: string) {
-    const typeId = await makeRequestType(name, {
-      targetModule: "contract",
-      targetTypeId: contractTypeIds.get("nda")!,
-    });
-    const catalog = await harness.app.inject({
-      method: "GET",
-      url: "/api/v1/fields?intake=true",
-      cookies: adminCookies,
-    });
-    const defaults = catalog
-      .json()
-      .fields.filter((field: { builtInKey?: string }) => field.builtInKey) as {
-      id: string;
-      slug: string;
-      builtInKey: string;
-    }[];
-    expect(defaults).toHaveLength(10);
-    for (const field of defaults) {
-      const attached = await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/request-types/${typeId}/fields`,
-        cookies: adminCookies,
-        payload: { fieldId: field.id },
-      });
-      expect(attached.statusCode, attached.body).toBe(201);
-    }
-    const answer = (values: Record<string, unknown>) =>
-      Object.fromEntries(
-        defaults
-          .filter((field) => field.builtInKey in values)
-          .map((field) => [field.slug, values[field.builtInKey]]),
-      );
-    return { typeId, defaults, answer };
-  }
-  it("offers protected defaults only for intake and carries them into native contract storage", async () => {
-    const { typeId, defaults, answer } = await nativeForm("Native contract intake");
-    const regular = await harness.app.inject({
-      method: "GET",
-      url: "/api/v1/fields",
-      cookies: adminCookies,
-    });
-    expect(regular.json().fields.some((field: { builtInKey?: string }) => field.builtInKey)).toBe(
-      false,
-    );
-    for (const [method, url, payload] of [
-      ["PATCH", `/api/v1/fields/${defaults[0]!.id}`, { displayName: "Changed" }],
-      ["POST", `/api/v1/fields/${defaults[0]!.id}/archive`, {}],
-      [
-        "POST",
-        `/api/v1/contract-types/${contractTypeIds.get("nda")}/fields`,
-        { fieldId: defaults[0]!.id },
-      ],
-    ] as const) {
-      const refused = await harness.app.inject({ method, url, cookies: adminCookies, payload });
-      expect(refused.statusCode, refused.body).toBe(400);
-    }
-    const [entityType] = await harness.db.select().from(entityTypes).limit(1);
-    const [entity] = await harness.db
-      .insert(entities)
-      .values({
-        legalName: "Intake signing entity",
-        entityTypeId: entityType!.id,
-        portalListed: true,
-      })
-      .returning();
-    const original = answer({
-      entityId: entity!.id,
-      effectiveDate: "2026-09-17",
-      expiryDate: "2027-09-17",
-      termType: "Auto-renewing",
-      renewalPeriodMonths: 12,
-      noticePeriodDays: 30,
-      valueAmount: 1200.5,
-      valueCurrency: "USD",
-      valueCadence: "Annually",
-      counterparties: "Native Alpha Ltd\nNative Beta Ltd",
-    });
-    const submitted = await submit("Native facts", { typeId, customFields: original });
-    // Detaching after submission must not lose the answer during conversion.
-    const detached = await harness.app.inject({
-      method: "DELETE",
-      url: `/api/v1/request-types/${typeId}/fields/${defaults.find((field) => field.builtInKey === "expiryDate")!.id}`,
-      cookies: adminCookies,
-    });
-    expect(detached.statusCode, detached.body).toBe(204);
-    const review = await readRequest(submitted.number);
-    expect(
-      review
-        .json()
-        .fields.some((field: { builtInKey?: string }) => field.builtInKey === "expiryDate"),
-    ).toBe(true);
-    const converted = await convert(submitted.number, { title: "Native facts" });
-    expect(converted.statusCode, converted.body).toBe(200);
-    const record = await contractNumbered(converted.json().request.convertedContract.number);
-    expect(record).toMatchObject({
-      entityId: entity!.id,
-      effectiveDate: "2026-09-17",
-      expiryDate: "2027-09-17",
-      termType: "auto_renew",
-      renewalPeriodMonths: 12,
-      noticePeriodDays: 30,
-      valueAmount: 120050,
-      valueCurrency: "USD",
-      valueCadence: "annually",
-      customFields: {},
-    });
-    const parties = await harness.db
-      .select()
-      .from(contractCounterparties)
-      .where(eq(contractCounterparties.contractId, record.id));
-    expect(parties).toHaveLength(2);
-    expect(parties.filter((party) => party.isPrimary)).toHaveLength(1);
-    expect((await stored(submitted.id)).customFields).toEqual(original);
-  });
-  it("enforces native constraints at submission and preserves answers when triage creates a matter", async () => {
-    const { typeId, answer } = await nativeForm("Undecided native intake");
-    const pointed = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/request-types/${typeId}`,
-      cookies: adminCookies,
-      payload: { targetModule: null },
-    });
-    expect(pointed.statusCode, pointed.body).toBe(200);
-    const invalid = await harness.app.inject({
-      method: "POST",
-      url: "/api/v1/requests",
-      cookies: requesterCookies,
-      payload: {
-        requestTypeId: typeId,
-        departmentId: requestDepartmentId,
-        title: "Bad date",
-        description: "Test",
-        urgency: "medium",
-        customFields: answer({ effectiveDate: "2026-02-30" }),
-      },
-    });
-    expect(invalid.statusCode, invalid.body).toBe(400);
-    const original = answer({ effectiveDate: "2026-09-17", counterparties: "Retained Party" });
-    const submitted = await submit("Matter instead", { typeId, customFields: original });
-    const types = await harness.app.inject({
-      method: "GET",
-      url: "/api/v1/matter-types",
-      cookies: adminCookies,
-    });
-    const converted = await convert(submitted.number, {
-      title: "Matter instead",
-      matterTypeId: types.json().matterTypes[0].id,
-    });
-    expect(converted.statusCode, converted.body).toBe(200);
-    expect(converted.json().request.convertedMatter).not.toBeNull();
-    expect((await stored(submitted.id)).customFields).toEqual(original);
-  });
-  it("enforces required defaults, rejects incompatible targets and rechecks entity eligibility", async () => {
-    const { typeId, defaults, answer } = await nativeForm("Required native intake");
-    const entityField = defaults.find((field) => field.builtInKey === "entityId")!;
-    const required = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/request-types/${typeId}/fields/${entityField.id}`,
-      cookies: adminCookies,
-      payload: { isRequired: true },
-    });
-    expect(required.statusCode, required.body).toBe(200);
-    const post = (customFields: Record<string, unknown>) =>
-      harness.app.inject({
-        method: "POST",
-        url: "/api/v1/requests",
-        cookies: requesterCookies,
-        payload: {
-          requestTypeId: typeId,
-          departmentId: requestDepartmentId,
-          title: "Required signing entity",
-          description: "Test",
-          urgency: "medium",
-          customFields,
-        },
-      });
-    expect((await post({})).statusCode).toBe(400);
-    const repoint = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/request-types/${typeId}`,
-      cookies: adminCookies,
-      payload: { targetModule: "matter" },
-    });
-    expect(repoint.statusCode, repoint.body).toBe(409);
-    const [entityType] = await harness.db.select().from(entityTypes).limit(1);
-    const [entity] = await harness.db
-      .insert(entities)
-      .values({ legalName: "Restricted signing entity", entityTypeId: entityType!.id })
-      .returning();
-    const answers = answer({ entityId: entity!.id });
-    expect((await post(answers)).statusCode).toBe(400);
-    await harness.db
-      .update(entities)
-      .set({ portalListed: true })
-      .where(eq(entities.id, entity!.id));
-    const submitted = await submit("Entity eligibility changed", { typeId, customFields: answers });
-    await harness.db
-      .update(entities)
-      .set({ isConfidential: true })
-      .where(eq(entities.id, entity!.id));
-    const rejected = await convert(submitted.number, { title: "Must not be created" });
-    expect(rejected.statusCode, rejected.body).toBe(400);
-    expect((await stored(submitted.id)).status).toBe("new");
-  });
-  it("searches intake counterparties, preserves exact selections and creates proposed names only on conversion", async () => {
-    const { typeId } = await nativeForm("Counterparty lookup intake");
-    const [first, selected] = await harness.db
-      .insert(counterparties)
-      .values([
-        {
-          name: "Lookup Twin",
-          jurisdiction: "England",
-          primaryContactEmail: "private@example.com",
-        },
-        { name: "Lookup Twin", jurisdiction: "Delaware" },
-      ])
-      .returning();
-    const lookup = await harness.app.inject({
-      method: "GET",
-      url: `/api/v1/portal/request-types/${typeId}/counterparties?query=Lookup`,
-      cookies: requesterCookies,
-    });
-    expect(lookup.statusCode, lookup.body).toBe(200);
-    expect(lookup.json().counterparties).toContainEqual({
-      id: selected!.id,
-      name: "Lookup Twin",
-      jurisdiction: "Delaware",
-    });
-    expect(lookup.body).not.toContain("private@example.com");
-    const unauthenticated = await harness.app.inject({
-      method: "GET",
-      url: `/api/v1/portal/request-types/${typeId}/counterparties`,
-    });
-    expect(unauthenticated.statusCode).toBe(401);
-    const created = await harness.app.inject({
-      method: "POST",
-      url: "/api/v1/requests",
-      cookies: requesterCookies,
-      payload: {
-        requestTypeId: typeId,
-        departmentId: requestDepartmentId,
-        title: "Lookup picks",
-        description: "Test",
-        urgency: "medium",
-        counterparties: [
-          { counterpartyId: selected!.id },
-          { name: "New Intake Vendor" },
-          { counterpartyId: selected!.id },
-        ],
-      },
-    });
-    expect(created.statusCode, created.body).toBe(201);
-    expect(
-      await harness.db
-        .select()
-        .from(counterparties)
-        .where(eq(counterparties.name, "New Intake Vendor")),
-    ).toHaveLength(0);
-    const converted = await convert(created.json().request.number, { title: "Lookup picks" });
-    expect(converted.statusCode, converted.body).toBe(200);
-    const contract = await contractNumbered(converted.json().request.convertedContract.number);
-    const parties = await harness.db
-      .select()
-      .from(contractCounterparties)
-      .where(eq(contractCounterparties.contractId, contract.id));
-    expect(parties).toHaveLength(2);
-    expect(parties.find((party) => party.isPrimary)?.counterpartyId).toBe(selected!.id);
-    expect(parties.some((party) => party.counterpartyId === first!.id)).toBe(false);
-    expect(
-      await harness.db
-        .select()
-        .from(counterparties)
-        .where(eq(counterparties.name, "New Intake Vendor")),
-    ).toHaveLength(1);
-  });
-
-  it("rejects forged or archived counterparty selections and forms without the question", async () => {
-    const { typeId } = await nativeForm("Counterparty refusal intake");
-    const [archived] = await harness.db
-      .insert(counterparties)
-      .values({ name: "Archived intake party", archivedAt: new Date() })
-      .returning();
-    for (const counterpartyId of ["missing", archived!.id]) {
-      const rejected = await harness.app.inject({
-        method: "POST",
-        url: "/api/v1/requests",
-        cookies: requesterCookies,
-        payload: {
-          requestTypeId: typeId,
-          departmentId: requestDepartmentId,
-          title: "Invalid lookup",
-          description: "Test",
-          urgency: "medium",
-          counterparties: [{ counterpartyId }],
-        },
-      });
-      expect(rejected.statusCode, rejected.body).toBe(400);
-    }
-    const emptyType = await makeRequestType("No counterparty question", {
-      targetModule: "contract",
-    });
-    const hidden = await harness.app.inject({
-      method: "GET",
-      url: `/api/v1/portal/request-types/${emptyType}/counterparties`,
-      cookies: requesterCookies,
-    });
-    expect(hidden.statusCode).toBe(404);
-    const injected = await harness.app.inject({
-      method: "POST",
-      url: "/api/v1/requests",
-      cookies: requesterCookies,
-      payload: {
-        requestTypeId: emptyType,
-        departmentId: requestDepartmentId,
-        title: "Extra input",
-        description: "Test",
-        urgency: "medium",
-        counterparties: [{ name: "Unexpected party" }],
-      },
-    });
-    expect(injected.statusCode).toBe(400);
-  });
 });
 
 it("converts a Read request and preserves conversion against a late read receipt", async () => {

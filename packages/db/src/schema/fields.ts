@@ -64,11 +64,6 @@ export const SELECT_FIELD_TYPES = ["single_select", "multi_select"] as const;
  */
 export type CustomFieldValue = string | number | boolean | string[];
 
-/** The DD-015 tag: `business` fields render for Contributors, `legal`
- * fields stay legal-side. Every field carries exactly one. */
-export const FIELD_TAGS = ["business", "legal"] as const;
-export type FieldTag = (typeof FIELD_TAGS)[number];
-
 export const fields = pgTable(
   "fields",
   {
@@ -76,8 +71,6 @@ export const fields = pgTable(
     /** Machine identity, derived from the name at creation; never
      * changes — it keys the per-module `custom_fields` jsonb. */
     slug: text("slug").notNull(),
-    /** Protected intake question mapped to a native record column at conversion. */
-    builtInKey: text("built_in_key"),
     displayName: text("display_name").notNull(),
     /** Shown as help text on forms; NULL = the field renders with no
      * help text. */
@@ -87,7 +80,6 @@ export const fields = pgTable(
     /** Option labels for the select types, in display order; NULL on
      * every other type — the options check enforces both directions. */
     options: jsonb("options").$type<string[]>(),
-    fieldTag: text("field_tag", { enum: FIELD_TAGS }).notNull(),
     /** The CTR-008 extraction prompt, consumed by contract AI analysis;
      * lives on contract-scoped fields, seeded on the core three. NULL =
      * contract analysis skips the field. */
@@ -116,7 +108,6 @@ export const fields = pgTable(
       sql`${table.aiAnswerStyle} is null or (${table.moduleScope} = 'contract' and ${table.fieldType} in ('text', 'long_text') and ${table.aiAnswerStyle} in ('few_words', 'sentence', 'full_clause') and (${table.aiAnswerStyle} <> 'full_clause' or ${table.fieldType} = 'long_text'))`,
     ),
     uniqueIndex("fields_slug_unique").on(table.slug),
-    uniqueIndex("fields_built_in_key_unique").on(table.builtInKey),
     check(
       "fields_module_scope_check",
       sql`${table.moduleScope} in ('matter', 'contract', 'entity')`,
@@ -125,7 +116,6 @@ export const fields = pgTable(
       "fields_field_type_check",
       sql`${table.fieldType} in ('text', 'long_text', 'number', 'currency', 'date', 'boolean', 'single_select', 'multi_select', 'user', 'entity')`,
     ),
-    check("fields_field_tag_check", sql`${table.fieldTag} in ('business', 'legal')`),
     // Options ride exactly the select types: a non-null jsonb array on
     // single/multi select, SQL NULL everywhere else. jsonb_typeof(NULL)
     // is NULL, so the array arm also refuses a missing list.

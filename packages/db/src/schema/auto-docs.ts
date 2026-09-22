@@ -38,17 +38,8 @@ export const AUTO_DOC_EMAIL_STATES = [
 export const AUTO_DOC_STATES = ["draft", "published", "archived"] as const;
 export const AUTO_DOC_AUDIENCES = ["legal_only", "selected", "everyone"] as const;
 export const AUTO_DOC_RULE_OPERATORS = ["equals", "is_one_of", "is_set", "is_not"] as const;
-export const AUTO_DOC_CONTRACT_ATTRIBUTES = [
-  "title",
-  "primary_counterparty_name",
-  "entity_id",
-  "owning_department_id",
-  "region",
-  "value",
-  "effective_date",
-  "expiry_date",
-  "term_type",
-] as const;
+import { AUTO_DOC_CONTRACT_ATTRIBUTES } from "@openlaw/shared";
+export { AUTO_DOC_CONTRACT_ATTRIBUTES } from "@openlaw/shared";
 export interface AutoDocCondition {
   fieldSlug: string;
   operator: (typeof AUTO_DOC_RULE_OPERATORS)[number];

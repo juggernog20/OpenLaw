@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * Contracts > Types (#81): the CTR-002 taxonomy behind the first
  * list-editor pane. Add, rename, reorder, archive, restore, the
@@ -40,6 +42,7 @@ const SEED_SLUGS = [
   "employment",
   "license",
   "other",
+  "default",
 ] as const;
 
 let harness: TestHarness;
@@ -163,10 +166,10 @@ describe("the SET-002 role gate", () => {
 });
 
 describe("GET /contract-types", () => {
-  it("lists the eight CTR-002 seeds in display order", async () => {
+  it("lists the CTR-002 seeds and Default in display order", async () => {
     const rows = await listTypes();
     expect(rows.map((row) => row.slug)).toEqual([...SEED_SLUGS]);
-    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     for (const row of rows) {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
@@ -192,7 +195,7 @@ describe("POST /contract-types", () => {
     expect(created.slug).toBe("real_estate");
     expect(created.displayName).toBe("Real Estate");
     expect(created.isSystemDefault).toBe(false);
-    expect(created.displayOrder).toBe(9);
+    expect(created.displayOrder).toBe(10);
 
     const rows = await listTypes();
     expect(rows.at(-1)!.slug).toBe("real_estate");
@@ -517,17 +520,16 @@ describe("the SET-003 archive guard over the contract record (#113)", () => {
       method: "POST",
       url: "/api/v1/fields",
       cookies: adminCookies,
-      payload: { moduleScope: "contract", fieldTag: "legal", fieldType: "text", displayName },
+      payload: { moduleScope: "contract", fieldType: "text", displayName },
     });
     expect(defined.statusCode, defined.body).toBe(201);
     const field = defined.json().field;
-    const attached = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/contract-types/${typeId}/fields`,
+    const attached = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/contract-types/${typeId}`,
       cookies: adminCookies,
       payload: { fieldId: field.id, isRequired: true },
     });
-    expect(attached.statusCode, attached.body).toBe(201);
+    expect(attached.statusCode, attached.body).toBe(200);
     return field.slug;
   };
 

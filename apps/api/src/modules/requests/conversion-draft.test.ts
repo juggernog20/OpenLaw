@@ -3,11 +3,18 @@ import { startAiResponseServer } from "../../testing/ai-response-server.js";
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   aiConnector,
+  departments,
+  regions,
+  contractTypes,
+  contractTypeFields,
+  contractTypeBranches,
+  matterTypeBuiltinRows,
+  contractTypeBuiltinRows,
   comments,
   conversionDrafts,
   eq,
+  sql,
   fields,
-  requestTypeFields,
   matters,
   matterTypes,
   matterTypeFields,
@@ -22,7 +29,7 @@ import { dispositionScaffold, type DispositionScaffold } from "../../testing/dis
 import { handleConversionDraft } from "../../pipeline/conversion-draft.js";
 import { formatSentence } from "../../lib/ai/format-sentence.js";
 import { extractionPrompt } from "../../lib/ai/http.js";
-import { conversionContext } from "../../lib/conversion-draft.js";
+import { checkedSuggestion, conversionContext } from "../../lib/conversion-draft.js";
 
 let harness: TestHarness;
 let cast: DispositionScaffold;
@@ -38,6 +45,14 @@ beforeAll(async () => {
   cast = await dispositionScaffold(harness);
   const [type] = await harness.db.select().from(matterTypes).limit(1);
   typeId = type!.id;
+  await harness.db
+    .update(matterTypeBuiltinRows)
+    .set({ onIntakeForm: true })
+    .where(eq(matterTypeBuiltinRows.builtinKey, "needed_by"));
+  await harness.db
+    .update(contractTypeBuiltinRows)
+    .set({ onIntakeForm: true })
+    .where(sql`${contractTypeBuiltinRows.builtinKey} in ('needed_by', 'counterparties')`);
   const [rt] = await harness.db
     .insert(requestTypes)
     .values({
@@ -95,14 +110,17 @@ it("includes field AI prompts and types in preparation and invalidates drafts af
       displayName: "Consent",
       fieldType: "boolean",
       moduleScope: "matter",
-      fieldTag: "legal",
       description: "Whether consent is required.",
       aiPrompt: "Only consider the express assignment provision.",
     })
     .returning();
-  await harness.db
-    .insert(matterTypeFields)
-    .values({ typeId, fieldId: field!.id, displayOrder: 100, isRequired: false });
+  await harness.db.insert(matterTypeFields).values({
+    typeId,
+    fieldId: field!.id,
+    displayOrder: 100,
+    isRequired: false,
+    onIntakeForm: true,
+  });
   const row = await ask();
   const before = await conversionContext(harness.db, row.id, typeId, false, "matter");
   expect(before.targets).toContainEqual(
@@ -255,7 +273,7 @@ it("prepares actual current messages, binds quotes and provenance, and preserves
     payload: {
       title: "Response preparation",
       matterTypeId: typeId,
-      neededBy: "2026-10-02",
+      customFields: { needed_by: "2026-10-02" },
       conversionDraftId: id,
       aiAccepted: ["title", "needed_by"],
     },
@@ -378,79 +396,7 @@ it("flags unresolved contradictions and rejects a quote assigned to the wrong so
   expect(read.json().draft.suggestions.needed_by).toBeUndefined();
   expect(read.json().draft.conflicts.needed_by).toBeDefined();
 });
-it("blocks narrowing a cited source until its unverified derivative is reviewed", async () => {
-  const [field] = await harness.db
-    .insert(fields)
-    .values({
-      slug: "conversion_context",
-      displayName: "Business context",
-      fieldType: "text",
-      moduleScope: "contract",
-      fieldTag: "business",
-    })
-    .returning();
-  await harness.db
-    .insert(requestTypeFields)
-    .values({ typeId: requestTypeId, fieldId: field!.id, displayOrder: 1, isRequired: false });
-  const row = await ask();
-  await harness.db
-    .update(requests)
-    .set({ customFields: { conversion_context: "Supplier dispute" } })
-    .where(eq(requests.id, row.id));
-  answers.title = {
-    value: "Supplier dispute",
-    sourceId: `field:${row.id}:conversion_context`,
-    evidence: "Supplier dispute",
-  };
-  const made = await prepare(row.number);
-  await handleConversionDraft(
-    {
-      db: harness.db,
-      storage: harness.storage,
-      docEngine: harness.docEngine,
-      notifier: harness.notifier,
-      resolveAiProvider: harness.resolveAiProvider,
-    },
-    made.json().draft.id,
-  );
-  const converted = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/requests/${row.number}/convert`,
-    cookies: cast.memberCookies,
-    payload: {
-      title: "Supplier dispute",
-      matterTypeId: typeId,
-      conversionDraftId: made.json().draft.id,
-      aiAccepted: ["title"],
-    },
-  });
-  expect(converted.statusCode, converted.body).toBe(200);
-  const retag = () =>
-    harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/fields/${field!.id}`,
-      cookies: cast.adminCookies,
-      payload: { fieldTag: "legal" },
-    });
-  const refused = await retag();
-  expect(refused.statusCode, refused.body).toBe(409);
-  expect(refused.body).not.toContain("Supplier dispute");
-  const [request] = await harness.db.select().from(requests).where(eq(requests.id, row.id));
-  const [matter] = await harness.db
-    .select()
-    .from(matters)
-    .where(eq(matters.id, request!.convertedMatterId!));
-  expect(
-    (
-      await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/matters/${matter!.number}/conversion-confirm/title`,
-        cookies: cast.memberCookies,
-      })
-    ).statusCode,
-  ).toBe(200);
-  expect((await retag()).statusCode).toBe(200);
-});
+
 it("checks disablement again at execution without calling AI", async () => {
   await harness.db.update(aiConnector).set({ matterPreparation: true });
   const row = await ask();
@@ -489,7 +435,6 @@ it("preserves provenance on no-op Matter resends and clears only edited values",
       displayName: "Review context",
       moduleScope: "matter",
       fieldType: "text",
-      fieldTag: "business",
     })
     .returning();
   await harness.db
@@ -965,7 +910,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
     sourceId: `request:${row.id}:description`,
     evidence: "Respond by October 1",
   };
-  answers.counterparty = {
+  answers.counterparties = {
     value: "Acme",
     sourceId: `request:${row.id}:title`,
     evidence: "Original ask",
@@ -1000,9 +945,9 @@ it("prepares Contracts independently and accepts only matching reviewed values",
       contractTypeId: type!.id,
       title: "Prepared Contract",
       description: null,
-      counterpartyName: "Acme",
+      counterparties: [{ name: "Acme" }],
       conversionDraftId: id,
-      aiAccepted: ["title", "description", "counterparty", "unknown", "toString", "__proto__"],
+      aiAccepted: ["title", "description", "counterparties", "unknown", "toString", "__proto__"],
     },
   });
   expect(converted.statusCode, converted.body).toBe(200);
@@ -1016,7 +961,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
     description: null,
     managerId: cast.memberId,
   });
-  expect(Object.keys(contract!.aiUnverified!)).toEqual(["title", "counterparty"]);
+  expect(Object.keys(contract!.aiUnverified!)).toEqual(["title", "counterparties"]);
   expect(contract!.aiUnverified!.title).toMatchObject({ draftId: id });
   expect(original!.description).toBe("Respond by October 1");
   const evidence = await harness.app.inject({
@@ -1040,12 +985,15 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
       displayName: "Opening context",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     })
     .returning();
-  await harness.db
-    .insert(contractTypeFields)
-    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 999, isRequired: false });
+  await harness.db.insert(contractTypeFields).values({
+    typeId: type!.id,
+    fieldId: field!.id,
+    displayOrder: 999,
+    isRequired: false,
+    onIntakeForm: true,
+  });
   const row = await ask();
   const paper = [];
   for (const index of [1, 2]) {
@@ -1110,8 +1058,7 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
   const payload = {
     title: "Agreement review",
     contractTypeId: type!.id,
-    customFields: { contract_opening: "Supported opening" },
-    neededBy: "2026-10-02",
+    customFields: { contract_opening: "Supported opening", needed_by: "2026-10-02" },
     conversionDraftId: id,
     aiAccepted: ["title", "field:contract_opening", "needed_by"],
   };
@@ -1164,9 +1111,13 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().contract.aiUnverified).not.toHaveProperty("field:contract_opening");
   }
-  await harness.db
-    .insert(contractTypeFields)
-    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 999, isRequired: false });
+  await harness.db.insert(contractTypeFields).values({
+    typeId: type!.id,
+    fieldId: field!.id,
+    displayOrder: 999,
+    isRequired: false,
+    onIntakeForm: true,
+  });
   const reattached = await harness.app.inject({
     url: `/api/v1/contracts/${contract!.number}`,
     cookies: cast.memberCookies,
@@ -1179,6 +1130,21 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
     cookies: cast.otherMemberCookies,
   });
   expect(read.json().available).toBe(true);
+  const businessEvidence = () =>
+    harness.app.inject({
+      url: `/api/v1/contracts/${contract!.number}/conversion-evidence/field:contract_opening`,
+      cookies: cast.requesterCookies,
+    });
+  expect((await businessEvidence()).json().available).toBe(true);
+  await harness.db
+    .update(contractTypeFields)
+    .set({ visibleOnPortal: false })
+    .where(eq(contractTypeFields.fieldId, field!.id));
+  expect((await businessEvidence()).json()).toEqual({ available: false, citations: [] });
+  await harness.db
+    .update(contractTypeFields)
+    .set({ visibleOnPortal: true })
+    .where(eq(contractTypeFields.fieldId, field!.id));
   const [promoted] = await harness.db
     .select()
     .from(requestAttachments)
@@ -1514,14 +1480,13 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
           displayName: "Schema text",
           fieldType: "text",
           moduleScope: "matter",
-          fieldTag: "legal",
           aiPrompt: "Extract text.",
         })
         .onConflictDoUpdate({ target: fields.slug, set: { aiPrompt: "Extract text." } })
         .returning();
       await harness.db
         .insert(matterTypeFields)
-        .values({ typeId, fieldId: field!.id, displayOrder: 200 })
+        .values({ typeId, fieldId: field!.id, displayOrder: 200, onIntakeForm: true })
         .onConflictDoNothing();
       const row = await ask();
       const server = await startAiResponseServer(protocol, (slug) => ({
@@ -1579,14 +1544,13 @@ it("keeps Contract Field style overrides in conversion prompts and freshness che
       displayName: "Assignment",
       fieldType: "long_text",
       moduleScope: "contract",
-      fieldTag: "legal",
       aiPrompt: "Extract the provision.",
       aiAnswerStyle: "full_clause",
     })
     .returning();
   await harness.db
     .insert(contractTypeFields)
-    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 100 });
+    .values({ typeId: type!.id, fieldId: field!.id, displayOrder: 100, onIntakeForm: true });
   const row = await ask();
   const before = await conversionContext(harness.db, row.id, type!.id, false, "contract");
   const target = before.targets.find((target) => target.slug === "field:conversion_style")!;
@@ -1644,4 +1608,124 @@ it("keeps Contract Field style overrides in conversion prompts and freshness che
   expect(
     after.targets.find((candidate) => candidate.slug === target.slug)?.aiAnswerStyle,
   ).toBeNull();
+});
+
+it("prepares NDA Intake and Creation Rows, including a false Branch, and restricts hidden answers", async () => {
+  const [type] = await harness.db
+    .insert(contractTypes)
+    .values({ slug: "split_nda", displayName: "Split NDA", displayOrder: 999 })
+    .returning();
+  await harness.db.insert(contractTypeBranches).values({
+    typeId: type!.id,
+    id: "false_branch",
+    displayOrder: 2,
+    match: "all",
+    conditions: [{ rowRef: "title", operator: "equals", value: "Never" }],
+  });
+  for (const [index, slug] of [
+    "split_intake",
+    "split_creation",
+    "split_record",
+    "split_reference",
+  ].entries()) {
+    const [field] = await harness.db
+      .insert(fields)
+      .values({
+        slug,
+        displayName: slug,
+        moduleScope: "contract",
+        fieldType: index === 3 ? "entity" : "text",
+      })
+      .returning();
+    await harness.db.insert(contractTypeFields).values({
+      typeId: type!.id,
+      fieldId: field!.id,
+      displayOrder: index,
+      onIntakeForm: index === 0,
+      isRequired: index === 1,
+      visibleOnPortal: index !== 1,
+      branchId: index === 1 ? "false_branch" : null,
+    });
+  }
+  const row = await ask();
+  await harness.db
+    .update(requests)
+    .set({
+      customFields: {
+        split_intake: "Public",
+        split_creation: "Hidden",
+        split_reference: "Private reference",
+      },
+    })
+    .where(eq(requests.id, row.id));
+  const context = await conversionContext(harness.db, row.id, type!.id, false, "contract");
+  expect(context.targets.map((t) => t.slug).sort()).toEqual(
+    [
+      "title",
+      "contract_type",
+      "description",
+      "priority",
+      "field:split_intake",
+      "field:split_creation",
+    ].sort(),
+  );
+  expect(context.all.find((s) => s.id.endsWith(":split_intake"))?.restricted).toBe(false);
+  expect(context.all.find((s) => s.id.endsWith(":split_creation"))?.restricted).toBe(true);
+  expect(context.all.find((s) => s.id.endsWith(":split_reference"))?.restricted).toBe(true);
+});
+
+it("keeps the draft snapshot stable after unchanged department and region updates", async () => {
+  const [type] = await harness.db
+    .insert(matterTypes)
+    .values({ slug: "stable_choices", displayName: "Stable choices", displayOrder: 1000 })
+    .returning();
+  await harness.db.insert(matterTypeBuiltinRows).values(
+    ["department", "region"].map((builtinKey, displayOrder) => ({
+      typeId: type!.id,
+      builtinKey,
+      displayOrder,
+      onIntakeForm: true,
+    })),
+  );
+  const row = await ask();
+  for (const table of [departments, regions])
+    await harness.db.insert(table).values([
+      { slug: "stable_first", displayName: "Stable first", displayOrder: 1000 },
+      { slug: "stable_second", displayName: "Stable second", displayOrder: 1001 },
+    ]);
+  const before = await conversionContext(harness.db, row.id, type!.id, false, "matter");
+  for (const table of [departments, regions]) {
+    const [choice] = await harness.db.select().from(table).orderBy(table.id).limit(1);
+    await harness.db
+      .update(table)
+      .set({ displayName: choice!.displayName })
+      .where(eq(table.id, choice!.id));
+  }
+  const after = await conversionContext(harness.db, row.id, type!.id, false, "matter");
+  expect(after.snapshot).toBe(before.snapshot);
+});
+
+it("drops a built-in Row suggestion that repeats the requester's Intake answer", async () => {
+  const [type] = await harness.db
+    .insert(matterTypes)
+    .values({ slug: "carried_risk", displayName: "Carried risk", displayOrder: 1001 })
+    .returning();
+  await harness.db
+    .insert(matterTypeBuiltinRows)
+    .values({ typeId: type!.id, builtinKey: "risk", displayOrder: 0, onIntakeForm: true });
+  const row = await ask();
+  await harness.db
+    .update(requests)
+    .set({ customFields: { risk: "high" } })
+    .where(eq(requests.id, row.id));
+  const context = await conversionContext(harness.db, row.id, type!.id, false, "matter");
+  expect(context.targets.map((t) => t.slug)).toContain("risk");
+  const answer = (value: string) => ({
+    slug: "risk",
+    value,
+    sourceId: `request:${row.id}:description`,
+    evidence: "October 1",
+  });
+  expect(checkedSuggestion(answer("high"), context)).toBeNull();
+  expect(checkedSuggestion(answer("low"), context)).toMatchObject({ value: "low" });
 });

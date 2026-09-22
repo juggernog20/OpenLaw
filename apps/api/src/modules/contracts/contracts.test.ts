@@ -576,6 +576,7 @@ describe("GET /contracts/options — the create dialog's picker source", () => {
       "employment",
       "license",
       "other",
+      "default",
     ]);
     expect(contractStatuses.map((row) => row.slug)).toEqual([
       "draft",

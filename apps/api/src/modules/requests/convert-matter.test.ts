@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { removeFieldRow, saveFieldRow } from "../../testing/form-fixtures.js";
+import { submitRequestFixture } from "../../testing/request-form.js";
+
 import { requestDepartment } from "../../testing/request-department.js";
 
 /** M22/8–9: Matter conversion and everything that follows it, at the HTTP seam. */
@@ -18,6 +21,7 @@ import {
   documents,
   documentVersions,
   eq,
+  fields,
   matterKeyDates,
   matters,
   matterStatuses,
@@ -59,6 +63,7 @@ let requiredMatterTypeId: string;
 let boundRequestTypeId: string;
 let moduleOnlyRequestTypeId: string;
 let retiredRequestTypeId: string;
+let retiredMatterTypeId: string;
 let noTargetRequestTypeId: string;
 let contractTargetRequestTypeId: string;
 let carrySlug: string;
@@ -105,15 +110,11 @@ beforeAll(async () => {
     .where(eq(requestTypes.slug, "nda_request"));
   contractTargetRequestTypeId = nda!.id;
 
-  const retiredMatterTypeId = await createMatterType("Retired conversion matter");
+  retiredMatterTypeId = await createMatterType("Retired conversion matter");
   retiredRequestTypeId = await createRequestType("Retired matter intake", {
     targetModule: "matter",
     targetTypeId: retiredMatterTypeId,
   });
-  await harness.db
-    .update(matterTypes)
-    .set({ archivedAt: new Date() })
-    .where(eq(matterTypes.id, retiredMatterTypeId));
 
   for (const fieldId of [carry.id, stays.id, owner.id]) {
     await attach("request-types", boundRequestTypeId, fieldId, false);
@@ -187,20 +188,19 @@ async function createField(displayName: string, moduleScope: string, fieldType: 
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { displayName, moduleScope, fieldType, fieldTag: "legal" },
+    payload: { displayName, moduleScope, fieldType },
   });
   expect(res.statusCode, res.body).toBe(201);
   return { id: res.json().field.id as string, slug: res.json().field.slug as string };
 }
 
 async function attach(registry: string, typeId: string, fieldId: string, isRequired: boolean) {
-  const res = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/${registry}/${typeId}/fields`,
+  const res = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/${registry}/${typeId}`,
     cookies: adminCookies,
     payload: { fieldId, isRequired },
   });
-  expect(res.statusCode, res.body).toBe(201);
+  expect(res.statusCode, res.body).toBe(200);
 }
 
 async function createRequestType(
@@ -233,7 +233,7 @@ async function submit(
   customFields: Record<string, unknown> = {},
   urgency = "high",
 ) {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
@@ -420,6 +420,16 @@ describe("the matter target", () => {
       { [carrySlug]: "Meridian Logistics", [staysSlug]: "EMEA" },
       "critical",
     );
+    const [detachedField] = await harness.db
+      .select()
+      .from(fields)
+      .where(eq(fields.slug, staysSlug));
+    const detached = await removeFieldRow(harness, {
+      typeUrl: `/api/v1/matter-types/${ordinaryMatterTypeId}`,
+      fieldId: `${detachedField!.id}`,
+      cookies: adminCookies,
+    });
+    expect(detached.statusCode, detached.body).toBe(200);
     const res = await convert(request.number, { title: "Meridian injunction threat" });
     expect(res.statusCode, res.body).toBe(200);
     expect(res.json().request.convertedRecord).toEqual({
@@ -603,6 +613,11 @@ describe("the matter target", () => {
   it("asks a module-only or archived target for a live matter type", async () => {
     for (const typeId of [moduleOnlyRequestTypeId, retiredRequestTypeId]) {
       const request = await submit(`Needs a live matter type ${typeId}`, typeId);
+      if (typeId === retiredRequestTypeId)
+        await harness.db
+          .update(matterTypes)
+          .set({ archivedAt: new Date() })
+          .where(eq(matterTypes.id, retiredMatterTypeId));
       const before = await matterCount();
       const refused = await convert(request.number, { title: "Still untyped" });
       expect(refused.statusCode, refused.body).toBe(400);
@@ -1079,7 +1094,10 @@ describe("the Request thread follows onto the matter (CMT-001, NOT-002)", () => 
 describe("what the form collected beside the Fields (INT-002, focus group 2026-09-07)", () => {
   it("lands Needed by as one key date on the matter and narrates it", async () => {
     const request = await submit("A deadline the requester stated");
-    const res = await convert(request.number, { title: "Dated matter", neededBy: "2027-03-31" });
+    const res = await convert(request.number, {
+      title: "Dated matter",
+      customFields: { needed_by: "2027-03-31" },
+    });
     expect(res.statusCode, res.body).toBe(200);
     const matter = await matterNumbered(res.json().request.convertedRecord.number as number);
 
@@ -1117,10 +1135,10 @@ describe("what the form collected beside the Fields (INT-002, focus group 2026-0
     const before = await matterCount();
     const res = await convert(request.number, {
       title: "Named matter",
-      counterpartyName: "Helix Labs GmbH",
+      counterparties: [{ name: "Helix Labs GmbH" }],
     });
     expect(res.statusCode, res.body).toBe(400);
-    expect(res.json().detail).toContain("matter has no counterparty");
+    expect(res.json().detail).toContain("no Counterparties Row");
     expect((await cast.stored(request.id)).status).toBe("new");
     expect(await matterCount()).toBe(before);
   });

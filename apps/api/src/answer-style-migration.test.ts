@@ -95,8 +95,8 @@ it("leaves existing Fields on Organisation default and constrains overrides", as
       (await db.execute(sql`select ai_answer_style from fields where ai_answer_style is not null`))
         .rows,
     ).toEqual([]);
-    await db.execute(sql`insert into fields (id, slug, display_name, module_scope, field_type, field_tag, ai_answer_style)
-      values ('style-fixture', 'style_clause', 'Clause', 'contract', 'long_text', 'legal', 'full_clause')`);
+    await db.execute(sql`insert into fields (id, slug, display_name, module_scope, field_type, ai_answer_style)
+      values ('style-fixture', 'style_clause', 'Clause', 'contract', 'long_text', 'full_clause')`);
     for (const style of ["few_words", "sentence", "full_clause", null]) {
       await db.execute(
         sql`update fields set ai_answer_style = ${style} where slug = 'style_clause'`,

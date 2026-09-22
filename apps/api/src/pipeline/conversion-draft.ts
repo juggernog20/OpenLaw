@@ -102,6 +102,7 @@ async function settleConversionDraft(
         and(
           eq(conversionDrafts.id, id),
           eq(conversionDrafts.state, "pending"),
+          isNull(conversionDrafts.matterId),
           eq(conversionDrafts.startedAt, startedAt),
         ),
       )
@@ -119,6 +120,7 @@ export async function handleConversionDraft(deps: ConversionDraftDeps, id: strin
       and(
         eq(conversionDrafts.id, id),
         eq(conversionDrafts.state, "pending"),
+        isNull(conversionDrafts.matterId),
         or(
           isNull(conversionDrafts.startedAt),
           lt(
@@ -139,6 +141,7 @@ export async function handleConversionDraft(deps: ConversionDraftDeps, id: strin
         and(
           eq(conversionDrafts.id, id),
           eq(conversionDrafts.state, "pending"),
+          isNull(conversionDrafts.matterId),
           eq(conversionDrafts.startedAt, now),
         ),
       )
@@ -256,6 +259,7 @@ export async function sweepConversionDrafts(db: Db, queue: JobQueue) {
     .where(
       and(
         eq(conversionDrafts.state, "pending"),
+        isNull(conversionDrafts.matterId),
         or(
           isNull(conversionDrafts.startedAt),
           lt(

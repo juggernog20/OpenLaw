@@ -67,7 +67,7 @@ const AttachmentParams = VersionParams.extend({
 });
 const Person = z.object({ id: z.string(), displayName: z.string(), image: z.string().nullable() });
 const AllowedUnverified = [
-  "counterparty",
+  "counterparties",
   "value",
   "effectiveDate",
   "expiryDate",
@@ -76,7 +76,7 @@ const AllowedUnverified = [
   "renewalPeriodMonths",
 ] as const;
 const UnverifiedSlugs: Record<(typeof AllowedUnverified)[number], string> = {
-  counterparty: "counterparty",
+  counterparties: "counterparties",
   value: "value",
   effectiveDate: "effective_date",
   expiryDate: "expiry_date",

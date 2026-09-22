@@ -13,6 +13,7 @@ import { matterTypeFields, matterTypes } from "@openlaw/db";
 import { typeFieldRoutes } from "../../lib/type-field-routes.js";
 
 export const matterAttachedFieldsRoutes = typeFieldRoutes({
+  formModule: "matter",
   typesTable: matterTypes,
   joinTable: matterTypeFields,
   path: "matter-types",
@@ -23,6 +24,5 @@ export const matterAttachedFieldsRoutes = typeFieldRoutes({
     scopes: ["matter"],
     refusal: "Only matter-scoped fields attach to matter types.",
   },
-  scopeSummary: "matter-scoped fields (MTR-011)",
   actionPrefix: "matter_type_field",
 });

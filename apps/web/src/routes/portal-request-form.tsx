@@ -1,86 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The Portal submission form (INT-001, INT-002, #378), from the I6
- * frame of intake.pen: one request type's form, and the confirmation a
- * submission earns.
- *
- * Default and attached fields share the request type's saved presentation
- * order. Required validation and submission values do not depend on position.
- *
- * **The refusal is shown twice, on purpose.** One alert says what is
- * wrong, and each unanswered field says it again beside the box that
- * answers it — a person filling a form in has to know which box, and a
- * sentence at the top of a long form does not point at one.
- *
- * **An out-of-scope attached field renders like any other.** The
- * INT-002 M19/7 addendum makes "attached but outside the current
- * target's scope" a state that exists; the portal meets it rather than
- * hiding it, so the field is drawn, marked, and collected as the
- * Administrator attached it.
- *
- * ### Recorded normalization points (I6 deviations accepted)
- *
- * 1. I6 draws a per-type lucide glyph beside the form title
- *    (`file-pen`). A request type carries a slug, a name, a
- *    description, an order, and a target (INT-002) — no icon — so the
- *    title is the name alone. It is the I5 picker's normalization,
- *    applied to the same row on the next screen.
- * 2. Default fields stay on every form, but Administrators can move them
- *    alongside attached fields. Unsaved forms retain the original order.
- * 3. I6's Urgency control offers "Normal". DES-018's ramp replaced that
- *    vocabulary, as INT-002 already records: the four levels are low,
- *    medium, high, and critical.
- * 4. I6 pairs two short fields into a hand-built two-up row.
- *    `request_type_fields` carries an order and no width, so attached
- *    fields render one per row whatever their type.
- * 5. I6's side column carries a "What happens next" note promising a
- *    pick-up "within one business day". OpenLaw records no
- *    service-level agreement and nothing in the product decides that
- *    number, so the panel is not drawn. The deflection panel above it
- *    is, because its links are the Administrator's own rows (INT-004).
- * 6. I6's dropzone carries no list of what was picked and no way to
- *    take one back. The files a requester chose are listed under it,
- *    each with a control that removes it, because a mis-picked file
- *    that cannot be unpicked is a form that has to be started again.
- * 7. I6 draws the form as one run of fields. The fixed basics and the
- *    type's own fields sit under two section strips, so a long form
- *    reads as "what every request says" and then "what this kind of
- *    request adds". The second strip is absent when the type attaches
- *    no fields: a heading over nothing is not a section.
- *
- * ### The paper (#380)
- *
- * **The files are picked before Submit and uploaded after it.** An
- * attachment is a row against a Request, so there is no Request to
- * attach to until the submission has been accepted — the form holds the
- * chosen files, posts the Request, and then puts the paper on it one
- * call at a time.
- *
- * **The confirmation appears the moment the Request exists**, not when
- * the last file lands. The ask has arrived and that is true whatever
- * the paper does next; a requester whose browser closed mid-upload must
- * already have been told, and must already have the number to quote.
- *
- * **A file that does not land is named, not swallowed** — with the
- * seam's own reason beside it, because "over the 100 MB upload limit" is
- * something a requester can act on and "did not attach" is not. There is
- * no retry here because there is no upload control on the request detail
- * yet; the honest answer is the fact and the reference to quote.
- */
+/** The Portal collects the destination Form's visible Intake Rows. */
 
 import {
   IntakeCounterpartiesInput,
   type IntakeCounterpartySelection,
 } from "../components/intake/counterparties-input";
-import { FileTypeIcon } from "../components/documents/file-type-icon";
-import { formatFileSize } from "../lib/format";
+import { Field, AttachmentsField } from "../components/intake/form-fields";
 import { HelpLink } from "../components/documentation/help-link";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
-import { CircleCheck, Mail, TriangleAlert, Upload, X } from "lucide-react";
-import { resolveIntakeFieldOrder } from "@openlaw/shared";
+import { defineMessage, FormattedMessage, useIntl } from "react-intl";
+import { CircleCheck, Mail, TriangleAlert } from "lucide-react";
+import { evaluateForm, intakeFormAnswers } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { SEVERITY_LEVELS, severityLabel } from "../lib/contracts";
@@ -92,11 +24,12 @@ import {
 } from "../lib/custom-fields";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
-import { attachToRequest, MAX_REQUEST_ATTACHMENTS, requestReference } from "../lib/requests";
+import { attachToRequest, requestReference } from "../lib/requests";
 import { currentUserFor, useSignOut } from "../lib/session";
 import { readPortalEntityOptions } from "../lib/portal-entities";
 import { CustomFieldControl, type FieldReference } from "../components/custom-field-control";
-import { AutoResizeTextarea } from "../components/auto-resize-textarea";
+import { ValueField } from "../components/contracts/value-field";
+import type { ContractValue } from "../lib/contracts";
 import { PageTitle } from "../components/page-title";
 import { PortalBackLink } from "../components/portal/back-link";
 import { DeflectionPanel } from "../components/portal/deflection-panel";
@@ -104,7 +37,6 @@ import { PortalShell } from "../components/portal/portal-shell";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { DepartmentPicker } from "../components/department-picker";
-import { Label } from "../components/ui/label";
 
 type FormResponse =
   paths["/api/v1/portal/request-types/{slug}"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -159,6 +91,8 @@ export function PortalRequestFormPage() {
     user,
     requestType,
     fields,
+    form,
+    regions,
     intakeLinks,
     entities,
     departments = [],
@@ -166,7 +100,8 @@ export function PortalRequestFormPage() {
   const intl = useIntl();
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [value, setValue] = useState<ContractValue | null>(null);
+  const [valueError, setValueError] = useState<string>();
   /** DES-018's ramp, and `medium` until the requester says otherwise —
    * the same default a contract's priority is born with. */
   const [urgency, setUrgency] = useState<(typeof SEVERITY_LEVELS)[number]>("medium");
@@ -204,33 +139,38 @@ export function PortalRequestFormPage() {
     });
   }
 
+  const answers: Record<string, CustomFieldValue> = {};
+  for (const field of fields) {
+    const parsed = toValue(field, drafts[field.slug] ?? emptyDraft(field));
+    if ("value" in parsed && parsed.value !== null) answers[field.slug] = parsed.value;
+  }
+  if (value)
+    Object.assign(answers, {
+      value_amount: value.amount,
+      value_currency: value.currency,
+      value_cadence: value.cadence,
+    });
+  if (counterparties.length)
+    answers.counterparties = counterparties.map((p) =>
+      "counterpartyId" in p.pick ? p.pick.counterpartyId : p.pick.name,
+    );
+  const visibleRows = evaluateForm(form, intakeFormAnswers(answers)).visibleRows;
+  const visibleKeys = new Set(
+    visibleRows.flatMap((row) =>
+      row.rowRef === "value" ? ["value_amount", "value_currency", "value_cadence"] : [row.rowRef],
+    ),
+  );
+  const visibleFields = fields.filter((field) => visibleKeys.has(field.slug));
+
   async function submit() {
     if (busy) return;
     setError(null);
-
-    // The seam refuses an incomplete form too, and names the same
-    // fields. This runs first so the marks land on the boxes: the
-    // refusal sentence names fields, and a sentence cannot point.
-    const missing: string[] = [];
-    const marks = new Set<string>();
-    if (title.trim() === "") {
-      missing.push(intl.formatMessage(BASIC_LABELS.title));
-      marks.add("title");
+    if (visibleKeys.has("value_amount") && valueError) {
+      setError(valueError);
+      return;
     }
-    if (description.trim() === "") {
-      missing.push(intl.formatMessage(BASIC_LABELS.description));
-      marks.add("description");
-    }
-
-    if (departments.length > 0 && !departmentId) {
-      missing.push(intl.formatMessage({ id: "records.department", defaultMessage: "Department" }));
-      marks.add("department");
-    }
-
-    const customFields: Record<string, CustomFieldValue> = {};
-    for (const field of fields) {
-      const parsed = toValue(field, drafts[field.slug] ?? emptyDraft(field));
-      if ("error" in parsed) {
+    for (const field of visibleFields) {
+      if ("error" in toValue(field, drafts[field.slug] ?? emptyDraft(field))) {
         setError(
           intl.formatMessage(
             {
@@ -243,6 +183,25 @@ export function PortalRequestFormPage() {
         setUnanswered(new Set([field.slug]));
         return;
       }
+    }
+
+    // The seam refuses an incomplete form too, and names the same
+    // fields. This runs first so the marks land on the boxes: the
+    // refusal sentence names fields, and a sentence cannot point.
+    const missing: string[] = [];
+    const marks = new Set<string>();
+    if (title.trim() === "") {
+      missing.push(intl.formatMessage(BASIC_LABELS.title));
+      marks.add("title");
+    }
+    if (departments.length > 0 && !departmentId) {
+      missing.push(intl.formatMessage({ id: "records.department", defaultMessage: "Department" }));
+      marks.add("department");
+    }
+
+    const customFields: Record<string, CustomFieldValue> = {};
+    for (const field of visibleFields) {
+      const parsed = { value: answers[field.slug] ?? null };
       if (parsed.value === null) {
         if (field.isRequired) {
           missing.push(field.displayName);
@@ -277,10 +236,9 @@ export function PortalRequestFormPage() {
           requestTypeId: requestType.id,
           departmentId,
           title: title.trim(),
-          description: description.trim(),
           urgency,
           customFields,
-          ...(fields.some((field) => field.builtInKey === "counterparties")
+          ...(visibleFields.some((field) => field.builtInKey === "counterparties")
             ? { counterparties: counterparties.map((selection) => selection.pick) }
             : {}),
         },
@@ -324,10 +282,13 @@ export function PortalRequestFormPage() {
     setSubmitted((current) => (current === null ? current : { ...current, uploading: false }));
   }
 
-  const fieldOrder = resolveIntakeFieldOrder(
-    fields.map((field) => field.fieldId),
-    requestType.formFieldOrder,
-  );
+  const fieldOrder = [
+    "basic:title",
+    "basic:department",
+    "basic:urgency",
+    ...visibleRows.map((row) => row.rowRef),
+    "basic:attachments",
+  ];
   const formControls: Record<string, ReactNode> = {
     "basic:title": (
       <Field
@@ -348,31 +309,6 @@ export function PortalRequestFormPage() {
           onChange={(event) => {
             setTitle(event.target.value);
             clearMark("title");
-          }}
-        />
-      </Field>
-    ),
-    "basic:description": (
-      <Field
-        htmlFor="request-description"
-        label={intl.formatMessage(BASIC_LABELS.description)}
-        required
-        unanswered={unanswered.has("description")}
-      >
-        <AutoResizeTextarea
-          id="request-description"
-          rows={4}
-          value={description}
-          aria-required="true"
-          aria-invalid={unanswered.has("description") || undefined}
-          placeholder={intl.formatMessage({
-            id: "portal.form.descriptionHint",
-            defaultMessage:
-              "What is it, who is on the other side, and what do you need from Legal?",
-          })}
-          onChange={(event) => {
-            setDescription(event.target.value);
-            clearMark("description");
           }}
         />
       </Field>
@@ -434,13 +370,37 @@ export function PortalRequestFormPage() {
       </Field>
     ),
     "basic:attachments": <AttachmentsField files={files} onFiles={setFiles} />,
+    value: (
+      <ValueField
+        cadences={["one_time", "monthly", "annually"]}
+        value={value}
+        frozen={false}
+        status="idle"
+        error={valueError}
+        required={visibleRows.find((row) => row.rowRef === "value")?.isRequired}
+        idPrefix="request-value"
+        onStatus={() => {}}
+        onCommit={setValue}
+        onDraftChange={(next, error) => {
+          setValue(next);
+          setValueError(error);
+        }}
+      />
+    ),
     ...Object.fromEntries(
-      fields.map((field) => [
-        field.fieldId,
+      visibleFields.map((field) => [
+        field.slug,
         <AttachedField
           key={field.slug}
           field={field}
           entities={entities}
+          referenceOptions={
+            field.builtInKey === "region"
+              ? regions
+              : ["department", "owning_department"].includes(field.builtInKey ?? "")
+                ? departments
+                : undefined
+          }
           requestTypeId={requestType.id}
           counterparties={counterparties}
           onCounterparties={setCounterparties}
@@ -534,205 +494,6 @@ const BASIC_LABELS = {
   urgency: defineMessage({ id: "portal.form.urgency", defaultMessage: "Urgency" }),
 } as const;
 
-/** One form row: the label with its required mark, the control, and the
- * two lines that may sit under it — the field's help text and the
- * refusal this box earned. */
-function Field({
-  htmlFor,
-  label,
-  required = false,
-  hint,
-  hintId,
-  unanswered = false,
-  children,
-}: Readonly<{
-  htmlFor: string;
-  label: string;
-  required?: boolean;
-  hint?: string;
-  /** The help text's own id, so the control can name it. Only the rows
-   * whose control carries `aria-describedby` pass one. */
-  hintId?: string;
-  unanswered?: boolean;
-  children: React.ReactNode;
-}>) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor={htmlFor}>
-        {label}
-        {required && (
-          <>
-            <span aria-hidden="true" className="ms-0.5 text-status-danger-fg">
-              *
-            </span>
-            <span className="sr-only">
-              <FormattedMessage id="portal.form.requiredMark" defaultMessage="(required)" />
-            </span>
-          </>
-        )}
-      </Label>
-      {children}
-      {hint !== undefined && (
-        <p id={hintId} className="text-xs text-muted">
-          {hint}
-        </p>
-      )}
-      {unanswered && (
-        <p className="text-xs text-status-danger-fg">
-          <FormattedMessage
-            id="portal.form.fieldRequired"
-            defaultMessage="{field} is required."
-            values={{ field: label }}
-          />
-        </p>
-      )}
-    </div>
-  );
-}
-
-/**
- * The Attachments basic: I6's dropzone, the files it has been given, and
- * a way to take one back.
- *
- * The input itself is out of the tab order and out of sight. A keyboard
- * reaches the button beside it, and a second stop on an invisible input
- * is a trap rather than an affordance — the documents composer's rule,
- * applied to the one picker the portal draws. The label still points at
- * the input, so clicking the word opens the picker.
- *
- * Nothing here is marked required and nothing here can refuse: the
- * fourth basic is optional (INT-002), and any file type is accepted
- * because the seam stores whatever a requester is asking Legal about.
- */
-function AttachmentsField({
-  files,
-  onFiles,
-}: Readonly<{ files: readonly File[]; onFiles: (files: readonly File[]) => void }>) {
-  const intl = useIntl();
-  const picker = useRef<HTMLInputElement>(null);
-  const [over, setOver] = useState(false);
-  /** Set when a pick or a drop carried more than there was room for. */
-  const [overflowed, setOverflowed] = useState(false);
-
-  function add(chosen: readonly File[]) {
-    if (chosen.length === 0) return;
-    // The seam refuses a file past the bound, so the picker says so
-    // first: a requester who queued thirty files should not learn it
-    // ten refusals into a submission. What fits is kept.
-    const room = MAX_REQUEST_ATTACHMENTS - files.length;
-    setOverflowed(chosen.length > room);
-    if (room > 0) onFiles([...files, ...chosen.slice(0, room)]);
-  }
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label htmlFor="request-attachments">
-        <FormattedMessage {...BASIC_LABELS.attachments} />
-      </Label>
-      <div
-        className={`flex flex-col items-center justify-center gap-2 rounded-card border border-dashed bg-control px-4 py-6 transition-colors duration-150 ${
-          over ? "border-link" : "border-border-strong"
-        }`}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setOver(true);
-        }}
-        onDragLeave={() => setOver(false)}
-        onDrop={(event) => {
-          event.preventDefault();
-          setOver(false);
-          add([...event.dataTransfer.files]);
-        }}
-      >
-        <input
-          ref={picker}
-          id="request-attachments"
-          type="file"
-          multiple
-          className="sr-only"
-          tabIndex={-1}
-          onChange={(event) => {
-            add([...(event.target.files ?? [])]);
-            // Cleared so picking the same file twice in a row still
-            // fires a change — the browser answers nothing otherwise,
-            // and a requester who removed a file by mistake could not
-            // put it back.
-            event.target.value = "";
-          }}
-        />
-        {files.length > 0 && (
-          <ul className="grid w-full grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-3 pb-3">
-            {files.map((file, index) => (
-              <li
-                key={`${String(index)}-${file.name}`}
-                className="relative flex aspect-square min-w-0 flex-col items-center justify-between gap-1 rounded-card border border-border-default bg-raised p-2.5 shadow-sm"
-              >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-1 end-1 size-6 rounded-full bg-raised"
-                  title={intl.formatMessage(REMOVE_ATTACHMENT, { filename: file.name })}
-                  onClick={() => {
-                    setOverflowed(false);
-                    onFiles(files.filter((_ignored, at) => at !== index));
-                  }}
-                >
-                  <X aria-hidden="true" className="size-3.5" />
-                  <span className="sr-only">
-                    <FormattedMessage {...REMOVE_ATTACHMENT} values={{ filename: file.name }} />
-                  </span>
-                </Button>
-                <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-                  <FileTypeIcon filename={file.name} />
-                </div>
-                <div className="flex w-full min-w-0 shrink-0 flex-col gap-1 text-center">
-                  <span
-                    title={file.name}
-                    className="line-clamp-2 break-words text-sm font-medium leading-4 text-primary"
-                  >
-                    {file.name}
-                  </span>
-                  <span className="text-xs text-muted">
-                    {formatFileSize(file.size, { locale: intl.locale })}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {files.length === 0 && <Upload aria-hidden="true" className="size-5 shrink-0 text-muted" />}
-        <p className="max-w-prose text-center text-sm text-muted">
-          <FormattedMessage
-            id="portal.form.attachmentsHint"
-            defaultMessage="Drop up to {max} files related to your request here."
-            values={{ max: MAX_REQUEST_ATTACHMENTS }}
-          />
-        </p>
-        <Button type="button" variant="secondary" size="sm" onClick={() => picker.current?.click()}>
-          <FormattedMessage id="portal.form.attachmentsBrowse" defaultMessage="Choose files" />
-        </Button>
-      </div>
-      {overflowed && (
-        <p role="alert" className="text-xs text-status-danger-fg">
-          <FormattedMessage
-            id="portal.form.attachmentsTooMany"
-            defaultMessage="A request carries at most {max} files."
-            values={{ max: MAX_REQUEST_ATTACHMENTS }}
-          />
-        </p>
-      )}
-    </div>
-  );
-}
-
-/** Said once: the row's accessible name and its tooltip are the same
- * sentence, and two spellings would be two controls. */
-const REMOVE_ATTACHMENT: MessageDescriptor = defineMessage({
-  id: "portal.form.attachmentRemove",
-  defaultMessage: "Remove {filename}",
-});
-
 /** Entity Fields use ENT-010's list; person Fields still have no Portal choices. */
 function AttachedField({
   field,
@@ -743,7 +504,9 @@ function AttachedField({
   requestTypeId,
   counterparties,
   onCounterparties,
+  referenceOptions,
 }: Readonly<{
+  referenceOptions?: readonly { id: string; displayName: string }[];
   requestTypeId: string;
   counterparties: readonly IntakeCounterpartySelection[];
   onCounterparties: (value: IntakeCounterpartySelection[]) => void;
@@ -773,9 +536,34 @@ function AttachedField({
           describedBy={field.description ? `${controlId}-help` : undefined}
           onChange={(next) => {
             onCounterparties(next);
-            onDraft(next.map((selection) => selection.label).join("\n"));
+            onDraft(
+              next.map((selection) =>
+                "counterpartyId" in selection.pick
+                  ? selection.pick.counterpartyId
+                  : selection.pick.name,
+              ),
+            );
           }}
         />
+      ) : referenceOptions ? (
+        <select
+          id={controlId}
+          className={CONTROL_CLASS}
+          value={typeof draft === "string" ? draft : ""}
+          aria-required={field.isRequired}
+          aria-invalid={unanswered || undefined}
+          aria-describedby={field.description ? `${controlId}-help` : undefined}
+          onChange={(e) => onDraft(e.target.value)}
+        >
+          <option value="">
+            <FormattedMessage id="fields.notSet" defaultMessage="Not set" />
+          </option>
+          {referenceOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.displayName}
+            </option>
+          ))}
+        </select>
       ) : (
         <CustomFieldControl
           id={controlId}

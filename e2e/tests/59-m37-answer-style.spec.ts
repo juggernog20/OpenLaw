@@ -68,7 +68,6 @@ test("Field answer style survives reload and explains the short text restriction
           displayName: `Style ${fieldType} ${Date.now()}`,
           moduleScope: "contract",
           fieldType,
-          fieldTag: "legal",
           aiPrompt: "Extract the provision.",
         },
       });

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /** ADO-005: each Filing creates independent paper under the destination upload rule. */
 import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, expect, it } from "vitest";
@@ -305,16 +307,19 @@ it("refuses required target Fields without leaving a partial Filing or Contract"
     displayName: "Filing required term",
     fieldType: "text",
     moduleScope: "contract",
-    fieldTag: "legal",
   });
   expect(
     (
-      await post(`/contract-types/${contractTypeId}/fields`, {
-        fieldId: field.json().field.id,
-        isRequired: true,
+      await saveFieldRow(h, {
+        typeUrl: `/api/v1/contract-types/${contractTypeId}`,
+        cookies: admin,
+        payload: {
+          fieldId: field.json().field.id,
+          isRequired: true,
+        },
       })
     ).statusCode,
-  ).toBe(201);
+  ).toBe(200);
   const before = await h.db.select({ id: contracts.id }).from(contracts).orderBy(contracts.id);
   const refused = await file(source, { kind: "new_contract", contractTypeId });
   expect(refused.statusCode, refused.body).toBe(400);

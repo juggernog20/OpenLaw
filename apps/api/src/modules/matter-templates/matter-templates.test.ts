@@ -165,7 +165,6 @@ describe("custom-field defaults", () => {
           displayName: "Template business unit",
           moduleScope: "matter" as const,
           fieldType: "single_select" as const,
-          fieldTag: "business" as const,
           options: ["Finance", "People"],
         },
         {
@@ -173,7 +172,6 @@ describe("custom-field defaults", () => {
           displayName: "Template budget",
           moduleScope: "matter" as const,
           fieldType: "number" as const,
-          fieldTag: "legal" as const,
         },
       ])
       .returning();

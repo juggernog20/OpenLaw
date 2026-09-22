@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The Entity type editor configures the shared TypeEditorScreen. Its
- * attachment catalog contains Entity-scoped Fields only.
- */
+/** The Entity type editor, with identity and the DD-028 Form on routed sections. */
 
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages } from "react-intl";
-import { EntitiesSettingsTabs } from "../components/entities-settings-tabs";
-import { TypeEditorScreen, type TypeEditorApi } from "../components/type-editor-screen";
+
+import { TypeEditorSections, TypeEditorTabs } from "../components/type-editor-sections";
+import { TypeFormBuilder } from "../components/type-form/builder";
+import { TypeEditorScreen, type TypeEditorIdentityApi } from "../components/type-editor-screen";
 import { api } from "../lib/api";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
@@ -17,17 +16,17 @@ export async function settingsEntityTypeEditorLoader({ params }: LoaderFunctionA
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
-  const [typeRes, attachedRes, catalogRes] = await Promise.all([
+  const [typeRes, formRes, catalogRes] = await Promise.all([
     api.GET("/api/v1/entity-types/{id}", { params: { path: { id } } }),
-    api.GET("/api/v1/entity-types/{id}/fields", { params: { path: { id } } }),
+    api.GET("/api/v1/entity-types/{id}/form", { params: { path: { id } } }),
     api.GET("/api/v1/fields", {}),
   ]);
-  if (!typeRes.data || !attachedRes.data || !catalogRes.data) {
+  if (!typeRes.data || !formRes.data || !catalogRes.data) {
     throw new Error("The entity type could not be read.");
   }
   return {
     entityType: typeRes.data.entityType,
-    attachedFields: attachedRes.data.attachedFields,
+    form: formRes.data.form,
     catalog: catalogRes.data.fields.filter((field) => field.moduleScope === "entity"),
   };
 }
@@ -41,104 +40,40 @@ const MESSAGES = defineMessages({
     defaultMessage:
       "{count, plural, one {# entity uses this type.} other {# entities use this type.}}",
   },
-  attachedFields: {
-    id: "settings.entityTypeEditor.attachedFields",
-    defaultMessage: "Attached fields",
-  },
-  fieldColumn: { id: "settings.entityTypeEditor.fieldColumn", defaultMessage: "Field" },
-  requiredColumn: { id: "settings.entityTypeEditor.requiredColumn", defaultMessage: "Required" },
-  requiredFor: {
-    id: "settings.entityTypeEditor.requiredFor",
-    defaultMessage: "{name} required",
-  },
-  detach: { id: "settings.entityTypeEditor.detach", defaultMessage: "Detach {name}" },
-  detached: { id: "settings.entityTypeEditor.detached", defaultMessage: "{name} detached." },
-  attach: { id: "settings.entityTypeEditor.attach", defaultMessage: "Attach field" },
-  attached: { id: "settings.entityTypeEditor.attached", defaultMessage: "{name} attached." },
-  allAttached: {
-    id: "settings.entityTypeEditor.allAttached",
-    defaultMessage: "Every eligible field is attached.",
-  },
-  empty: {
-    id: "settings.entityTypeEditor.empty",
-    defaultMessage: "No fields are attached to this type.",
-  },
-  reorder: {
-    id: "settings.entityTypeEditor.reorder",
-    defaultMessage:
-      "Reorder {name}, position {position} of {total}. Use the arrow keys to move it.",
-  },
-  moved: {
-    id: "settings.entityTypeEditor.moved",
-    defaultMessage: "{name} moved to position {position} of {total}.",
-  },
-  help: {
-    id: "settings.entityTypeEditor.help",
-    defaultMessage:
-      "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values.",
-  },
 });
 
-const EDITOR_API: TypeEditorApi = {
+const EDITOR_API: TypeEditorIdentityApi = {
   async update(id, body) {
     const result = await api
       .PATCH("/api/v1/entity-types/{id}", { params: { path: { id } }, body })
       .catch(() => undefined);
     return { data: result?.data?.entityType, ...(await problem(result)) };
   },
-  async attach(id, fieldId) {
-    const result = await api
-      .POST("/api/v1/entity-types/{id}/fields", {
-        params: { path: { id } },
-        body: { fieldId },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedField, ...(await problem(result)) };
-  },
-  async detach(id, fieldId) {
-    const result = await api
-      .DELETE("/api/v1/entity-types/{id}/fields/{fieldId}", {
-        params: { path: { id, fieldId } },
-      })
-      .catch(() => undefined);
-    return { ok: result?.response.ok === true, ...(await problem(result)) };
-  },
-  async setRequired(id, fieldId, isRequired) {
-    const result = await api
-      .PATCH("/api/v1/entity-types/{id}/fields/{fieldId}", {
-        params: { path: { id, fieldId } },
-        body: { isRequired },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedField, ...(await problem(result)) };
-  },
-  async reorder(id, fieldIds) {
-    const result = await api
-      .PUT("/api/v1/entity-types/{id}/fields/order", {
-        params: { path: { id } },
-        body: { fieldIds },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedFields, ...(await problem(result)) };
-  },
 };
 
 export function SettingsEntityTypeEditorPage() {
-  const { entityType, attachedFields, catalog } =
-    useLoaderData<typeof settingsEntityTypeEditorLoader>();
+  const { entityType, form, catalog } = useLoaderData<typeof settingsEntityTypeEditorLoader>();
   return (
     <TypeEditorScreen
       initialType={entityType}
-      tabs={<EntitiesSettingsTabs />}
+      tabs={<TypeEditorTabs module="entity" typeId={entityType.id} name={entityType.displayName} />}
       backPath="/settings/entities/types"
       api={EDITOR_API}
       messages={MESSAGES}
-      attachments={{
-        initialAttached: attachedFields,
-        catalog,
-        api: EDITOR_API,
-        messages: MESSAGES,
-      }}
+      sectionContent={
+        <TypeEditorSections
+          module="entity"
+          form={
+            <TypeFormBuilder
+              module="entity"
+              typeId={entityType.id}
+              typeName={entityType.displayName}
+              initialForm={form}
+              catalog={catalog}
+            />
+          }
+        />
+      }
     />
   );
 }

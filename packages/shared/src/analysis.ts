@@ -7,6 +7,7 @@ export const AI_OUTPUT_TOKEN_MIN = 1_024;
 export const AI_OUTPUT_TOKEN_MAX = 262_144;
 
 /** CTR-008's shared target vocabulary, answer provenance, and source-text budget. */
+import { BUILTIN_KEYS } from "./form-builtins.js";
 import type {
   ConversionAttachmentRead,
   ConversionSuggestion,
@@ -37,37 +38,37 @@ export function isReferenceFieldType(type: string): type is ReferenceFieldType {
 /** CTR-008's built-in field schema. Prompt overrides live in the database. */
 export const CORE_ANALYSIS_TARGETS = [
   {
-    slug: "term_type",
+    slug: BUILTIN_KEYS.term_type,
     defaultPrompt: "Extract the Contract term type.",
     type: "term_type",
   },
   {
-    slug: "effective_date",
+    slug: BUILTIN_KEYS.effective_date,
     defaultPrompt: "Extract the Contract's effective date.",
     type: "date",
   },
   {
-    slug: "expiry_date",
+    slug: BUILTIN_KEYS.expiry_date,
     defaultPrompt: "Extract the Contract's expiry or end date.",
     type: "date",
   },
   {
-    slug: "renewal_period_months",
+    slug: BUILTIN_KEYS.renewal_period_months,
     defaultPrompt: "Extract the length of each automatic renewal period.",
     type: "integer",
   },
   {
-    slug: "notice_period_days",
+    slug: BUILTIN_KEYS.notice_period_days,
     defaultPrompt: "Extract the notice period for non-renewal or termination.",
     type: "integer",
   },
   {
-    slug: "value",
+    slug: BUILTIN_KEYS.value,
     defaultPrompt: "Extract the Contract value.",
     type: "value",
   },
   {
-    slug: "counterparty",
+    slug: BUILTIN_KEYS.counterparties,
     defaultPrompt: "Extract the full legal name of the primary Counterparty.",
     type: "counterparty",
   },

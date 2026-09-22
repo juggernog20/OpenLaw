@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { formForTouchpoint } from "@openlaw/shared";
+import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
+
 /** The first matter surface: list, create, options, and record read. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -144,6 +147,7 @@ const MatterEnvelope = z.object({ matter: MatterRowSchema });
 const MatterRecordEnvelope = MatterEnvelope.extend({
   originalIntake: OriginalIntakeSchema.nullable().optional(),
   creator: PersonSchema.nullable().optional(),
+  form: z.array(FormNodeSchema).optional(),
   fields: z.array(AttachedCustomFieldSchema),
   customFieldRefs: StaffRequestCustomFieldRefsSchema,
   team: z.array(PersonSchema),
@@ -578,7 +582,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listMatterOptions",
         summary:
-          "Live matter types with attached fields and creation templates, statuses, and assignable people",
+          "Live Matter types with Forms, creation trees, Field definitions and templates; Statuses and assignable people",
         tags: ["matters"],
         response: {
           200: z.object({
@@ -587,6 +591,9 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
                 id: z.string(),
                 slug: z.string(),
                 displayName: z.string(),
+                form: z.array(FormNodeSchema).optional(),
+                creationForm: z.array(FormNodeSchema).optional(),
+                isDefault: z.boolean().optional(),
                 fields: z.array(AttachedCustomFieldSchema),
                 templates: z.array(
                   z.object({
@@ -627,6 +634,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
             id: matterTypes.id,
             slug: matterTypes.slug,
             displayName: matterTypes.displayName,
+            isDefault: matterTypes.isDefault,
           })
           .from(matterTypes)
           .where(isNull(matterTypes.archivedAt))
@@ -670,6 +678,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       const attached = await Promise.all(
         types.map((type) => selectAttachedFields(app.db, matterTypeFields, type.id)),
       );
+      const forms = await Promise.all(types.map((type) => readTypeForm(app.db, "matter", type.id)));
       const taskCountByTemplate = new Map(
         taskCounts.map((row) => [row.templateId, row.tally] as const),
       );
@@ -688,12 +697,14 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matterTypes: types.map((type, index) => {
           const visibleSlugs = new Set(
             attached[index]!.filter(
-              (field) => request.user.role !== "business_user" || field.fieldTag === "business",
+              (field) => request.user.role !== "business_user" || field.visibleOnPortal,
             ).map((field) => field.slug),
           );
           return {
             ...type,
             fields: attached[index]!,
+            form: forms[index]!,
+            creationForm: formForTouchpoint(forms[index]!, "creation"),
             templates: (templatesByType.get(type.id) ?? []).map((template) => ({
               id: template.id,
               name: template.name,
@@ -759,6 +770,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         },
         creator: await recordPerson(app.db, context.row.createdBy),
         originalIntake: await originalIntake(app.db, request.user, "matter", context.row.id),
+        form: await readTypeForm(app.db, "matter", context.row.matterTypeId),
         fields: projection.fields,
         customFieldRefs: await resolveStaffRefs(
           app.db,
@@ -855,11 +867,12 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "createMatter",
         summary:
-          "Create the next M-number on the first live open status, enforcing required type fields",
+          "Create the next M-number on the first live open Status, enforcing Required on visible creation Rows",
         tags: ["matters"],
         body: z.strictObject({
           title: z.string().trim().min(1).max(MAX_MATTER_TITLE_LENGTH),
           matterTypeId: z.string(),
+          neededBy: z.iso.date().nullable().optional(),
           managerId: z.string().nullable().optional(),
           departmentId: z.string().min(1).nullable().optional(),
           region: z.string().trim().max(200).nullable().optional(),
@@ -958,7 +971,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
               403,
-              "Contributors can edit only the description and business Fields on this matter.",
+              "Business Users can edit only the description and Fields visible on the Portal on this matter.",
             );
           }
           if (body.customFields !== undefined) {

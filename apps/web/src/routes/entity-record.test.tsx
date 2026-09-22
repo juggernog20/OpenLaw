@@ -415,7 +415,6 @@ describe("the /entities/:entityId record page", () => {
       displayName: "Reporting code",
       description: null,
       fieldType: "text",
-      fieldTag: "legal",
       options: null,
       displayOrder: 1,
       isRequired: false,

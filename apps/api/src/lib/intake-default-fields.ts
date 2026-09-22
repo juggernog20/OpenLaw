@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import {
-  fields,
-  isNotNull,
-  type Executor,
-  type CustomFieldValue,
-  type Contract,
-} from "@openlaw/db";
-import type { AttachedCustomField } from "./custom-fields.js";
+import { type CustomFieldValue, type Contract } from "@openlaw/db";
 import { CounterpartyNameSchema } from "./counterparty-link.js";
 import { httpError } from "./problem.js";
 
@@ -26,20 +19,50 @@ export type IntakeContractFacts = Partial<
   >
 >;
 
-/** Only protected catalog definitions can supply native record facts. */
-export async function readIntakeContractFacts(
-  db: Executor,
-  answers: Readonly<Record<string, CustomFieldValue>>,
-) {
-  const definitions = await db
-    .select({ slug: fields.slug, key: fields.builtInKey })
-    .from(fields)
-    .where(isNotNull(fields.builtInKey));
+/** Validate answers stored under built-in Row keys. */
+export function readIntakeContractFacts(answers: Readonly<Record<string, CustomFieldValue>>) {
   const values: Record<string, CustomFieldValue> = {};
-  for (const field of definitions) {
-    if (field.key && answers[field.slug] !== undefined) values[field.key] = answers[field.slug]!;
+  const nativeKeys = {
+    entity: "entityId",
+    effective_date: "effectiveDate",
+    expiry_date: "expiryDate",
+    term_type: "termType",
+    renewal_period_months: "renewalPeriodMonths",
+    notice_period_days: "noticePeriodDays",
+  } as const;
+  for (const [key, native] of Object.entries(nativeKeys)) {
+    if (answers[key] !== undefined) values[native] = answers[key]!;
   }
-  return parseIntakeContractFacts(values);
+  const terms: Record<string, string> = {
+    fixed: "Fixed term",
+    auto_renew: "Auto-renewing",
+    evergreen: "Evergreen",
+  };
+  if (typeof answers.term_type === "string")
+    values.termType = terms[answers.term_type] ?? answers.term_type;
+  const parsed = parseIntakeContractFacts(values);
+  if (
+    ["value_amount", "value_currency", "value_cadence"].some((key) => answers[key] !== undefined)
+  ) {
+    const amount = answers.value_amount;
+    const currency = answers.value_currency;
+    const cadence = answers.value_cadence;
+    if (
+      typeof amount !== "number" ||
+      !Number.isSafeInteger(amount) ||
+      amount < 0 ||
+      typeof currency !== "string" ||
+      !Intl.supportedValuesOf("currency").includes(currency) ||
+      (cadence !== "one_time" && cadence !== "monthly" && cadence !== "annually")
+    )
+      throw httpError(400, "Value: enter an amount, currency and frequency.");
+    Object.assign(parsed.facts, {
+      valueAmount: amount,
+      valueCurrency: currency,
+      valueCadence: cadence,
+    });
+  }
+  return parsed;
 }
 
 export function parseIntakeContractFacts(values: Readonly<Record<string, CustomFieldValue>>) {
@@ -126,32 +149,4 @@ export function parseIntakeContractFacts(values: Readonly<Record<string, CustomF
       "Counterparties: enter up to 50 legal names, one per line, each no longer than 200 characters.",
     );
   return { facts, counterparties: names };
-}
-
-/** Retain the labels needed to review submitted defaults after a form is edited. */
-export async function withAnsweredIntakeDefaults(
-  db: Executor,
-  attached: AttachedCustomField[],
-  answers: Readonly<Record<string, CustomFieldValue>>,
-): Promise<AttachedCustomField[]> {
-  const definitions = await db.select().from(fields).where(isNotNull(fields.builtInKey));
-  const missing = definitions.filter(
-    (field) =>
-      answers[field.slug] !== undefined && !attached.some((row) => row.fieldId === field.id),
-  );
-  return [
-    ...attached,
-    ...missing.map((field, index) => ({
-      builtInKey: field.builtInKey,
-      fieldId: field.id,
-      slug: field.slug,
-      displayName: field.displayName,
-      description: field.description,
-      fieldType: field.fieldType,
-      fieldTag: field.fieldTag,
-      options: field.options,
-      displayOrder: attached.length + index + 1,
-      isRequired: false,
-    })),
-  ];
 }

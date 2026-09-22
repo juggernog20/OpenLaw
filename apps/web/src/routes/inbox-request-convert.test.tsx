@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
+import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, pinnedFormRows, type FormRow } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 import {
   dispositionApi,
@@ -124,7 +124,10 @@ function field(
 const OPPOSING_PARTY = field("opposing_party", "Opposing party");
 /** The two seeded request fields the dialog lands through its own
  * boxes rather than as Fields (INT-002, 2026-09-09 addendum). */
-const COUNTERPARTY_NAME = field("counterparty_name", "Counterparty name");
+const COUNTERPARTY_NAME = field("counterparties", "Counterparties", {
+  fieldType: "multi_select",
+  builtInKey: "counterparties",
+});
 const NEEDED_BY = field("needed_by", "Needed by", { fieldType: "date" });
 const DEAL_DESK = field("deal_desk_region", "Deal desk region");
 const GOVERNING_LAW = field("governing_law", "Governing law", { isRequired: true });
@@ -168,7 +171,7 @@ const CONTRACT_TYPES = [
     id: "ct-sow",
     slug: "sow",
     displayName: "SOW",
-    fields: [OPPOSING_PARTY, COUNTERPARTY_NAME, NEEDED_BY],
+    fields: [OPPOSING_PARTY],
   },
 ];
 
@@ -189,6 +192,45 @@ const MATTER_TYPES = [
   },
 ];
 
+function withForm(type: (typeof CONTRACT_TYPES)[number], module: "contract" | "matter") {
+  const rows: FormRow[] = type.fields.map((field) => ({
+    kind: "row",
+    id: String(field.fieldId),
+    rowRef: String(field.slug),
+    fieldType: field.fieldType as FormRow["fieldType"],
+    onIntakeForm: true,
+    isRequired: Boolean(field.isRequired),
+    visibleOnPortal: true,
+  }));
+  const form = [
+    ...pinnedFormRows(module),
+    ...rows,
+    ...(module === "contract"
+      ? [
+          {
+            kind: "row" as const,
+            id: "counterparties",
+            rowRef: "counterparties",
+            fieldType: "multi_select" as const,
+            onIntakeForm: true,
+            isRequired: false,
+            visibleOnPortal: true,
+          },
+        ]
+      : []),
+    {
+      kind: "row" as const,
+      id: "needed_by",
+      rowRef: "needed_by",
+      fieldType: "date" as const,
+      onIntakeForm: true,
+      isRequired: false,
+      visibleOnPortal: true,
+    },
+  ];
+  return { ...type, form, creationForm: form };
+}
+
 /** The Request the screen opens on: a Request whose form collected two
  * values, one of which the NDA type has no field for. */
 const request = (overrides: Record<string, unknown> = {}) =>
@@ -204,6 +246,7 @@ const request = (overrides: Record<string, unknown> = {}) =>
 const detail = (
   row: Record<string, unknown>,
   customFieldRefs: unknown = { users: [], entities: [] },
+  extraFields: unknown[] = [],
 ) => ({
   ...(staffDetail(row, [
     OPPOSING_PARTY,
@@ -212,6 +255,7 @@ const detail = (
     CONTRACTING_ENTITY,
     COUNTERPARTY_NAME,
     NEEDED_BY,
+    ...extraFields,
   ]) as Record<string, unknown>),
   customFieldRefs,
 });
@@ -226,12 +270,13 @@ function requestApi(
   initial = request(),
   answer: (call: StubCall) => Response | undefined = () => undefined,
   customFieldRefs: unknown = { users: [], entities: [] },
+  extraFields: unknown[] = [],
 ) {
   const api = dispositionApi({
     segment: "convert",
     initial,
     answer,
-    detail: (row) => detail(row, customFieldRefs),
+    detail: (row) => detail(row, customFieldRefs, extraFields),
     applied: (row, body) => {
       const sent = body as Record<string, unknown>;
       const requestType = row.requestType as { targetModule?: unknown };
@@ -259,7 +304,7 @@ function requestApi(
     extra: (call) =>
       call.url.pathname === "/api/v1/contracts/options" && call.method === "GET"
         ? json(200, {
-            contractTypes: CONTRACT_TYPES,
+            contractTypes: CONTRACT_TYPES.map((type) => withForm(type, "contract")),
             contractStatuses: [],
             users: [
               {
@@ -277,7 +322,11 @@ function requestApi(
               entities: [{ id: "e2", legalName: "Orion Holdings Ltd", archivedAt: null }],
             })
           : call.url.pathname === "/api/v1/matters/options" && call.method === "GET"
-            ? json(200, { matterTypes: MATTER_TYPES, matterStatuses: [], users: [] })
+            ? json(200, {
+                matterTypes: MATTER_TYPES.map((type) => withForm(type, "matter")),
+                matterStatuses: [],
+                users: [],
+              })
             : undefined,
   });
   return {
@@ -519,153 +568,97 @@ describe("the prefill (INT-002, MTR-012)", () => {
   });
 });
 
-describe("the facts that are not Fields (INT-002, focus group 2026-09-07)", () => {
-  /** A Request whose form collected the two seeded fields the dialog
-   * lands through its own boxes, plus one with nowhere to go. */
-  const collected = () =>
-    request({
-      customFields: {
-        counterparty_name: "Helix Labs GmbH",
-        needed_by: "2026-10-01",
-        deal_desk_region: "EMEA",
-      },
-    });
-
-  it("draws Counterparty and Needed by prefilled, sends both, and lists neither as staying behind", async () => {
+describe("conversion built-in Rows", () => {
+  it("prefills the registry picker and date Row and sends Row answers", async () => {
     const user = userEvent.setup();
-    const api = requestApi(collected());
+    const api = requestApi(
+      request({
+        intakeCounterparties: [{ counterpartyId: "party-helix", name: "Helix Labs GmbH" }],
+        customFields: {
+          counterparties: ["party-helix"],
+          needed_by: "2026-10-01",
+          deal_desk_region: "EMEA",
+        },
+      }),
+    );
     open(api);
     const dialog = await openConvert(user);
-    expect(within(dialog).getByLabelText(/^Counterparty$/)).toHaveValue("Helix Labs GmbH");
-    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-10-01");
-
-    // The third value still has nowhere to land, and is the only one named.
-    expect(within(dialog).getByText("Does not carry into the contract")).toBeInTheDocument();
-    expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
-    expect(within(dialog).queryByText("Counterparty name")).toBeNull();
-    expect(within(dialog).queryByText(/Needed by,|, Needed by/)).toBeNull();
-
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
-    await waitFor(() => expect(api.conversions).toHaveLength(1));
-    expect(api.conversions[0]).toEqual({
-      title: "Northwind Labs mutual NDA",
-      contractTypeId: "ct-nda",
-      priority: "high",
-      counterpartyName: "Helix Labs GmbH",
-      neededBy: "2026-10-01",
-    });
-  });
-
-  it("sends what the boxes hold after an edit, and nothing for an emptied box", async () => {
-    const user = userEvent.setup();
-    const api = requestApi(collected());
-    open(api);
-    const dialog = await openConvert(user);
-    await user.clear(within(dialog).getByLabelText(/^Counterparty$/));
-    await user.type(within(dialog).getByLabelText(/^Counterparty$/), "Helix Labs AG");
-    await user.clear(within(dialog).getByLabelText(/^Needed by/));
-    // A cleared box carries nothing, so the collected date is named as
-    // staying behind again, after the value that never had a box.
-    expect(within(dialog).getByText("Deal desk region and Needed by")).toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
-    await waitFor(() => expect(api.conversions).toHaveLength(1));
-    expect(api.conversions[0]).toEqual({
-      title: "Northwind Labs mutual NDA",
-      contractTypeId: "ct-nda",
-      priority: "high",
-      counterpartyName: "Helix Labs AG",
-    });
-  });
-
-  it("names both collected values as staying behind once both boxes are cleared", async () => {
-    const user = userEvent.setup();
-    const api = requestApi(collected());
-    open(api);
-    const dialog = await openConvert(user);
-    expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
-    await user.clear(within(dialog).getByLabelText(/^Counterparty$/));
-    expect(within(dialog).getByText("Deal desk region and Counterparty name")).toBeInTheDocument();
-    await user.clear(within(dialog).getByLabelText(/^Needed by/));
-    expect(
-      within(dialog).getByText("Deal desk region, Counterparty name, and Needed by"),
-    ).toBeInTheDocument();
-    // Typing the name back takes it off the list again.
-    await user.type(within(dialog).getByLabelText(/^Counterparty$/), "Helix Labs AG");
-    expect(within(dialog).getByText("Deal desk region and Needed by")).toBeInTheDocument();
-  });
-
-  it("draws no box for a slug the target type attaches as a Field, and lands it as that Field", async () => {
-    const user = userEvent.setup();
-    const api = requestApi(collected());
-    open(api);
-    const dialog = await openConvert(user);
-    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-sow");
-
-    // The dialog's own boxes are gone; the type's Fields stand in their
-    // place, prefilled from what the form collected.
-    expect(dialog.querySelector("#convert-needed-by")).toBeNull();
+    expect(within(dialog).getByText("Helix Labs GmbH")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Oct 1, 2026");
     expect(dialog.querySelector("#convert-counterparty")).toBeNull();
-    const neededBy = within(dialog).getByLabelText(/^Needed by/);
-    expect(neededBy).toHaveAttribute("id", "convert-needed_by");
-    expect(neededBy).toHaveValue("2026-10-01");
-    const counterparty = within(dialog).getByLabelText(/^Counterparty name/);
-    expect(counterparty).toHaveAttribute("id", "convert-counterparty_name");
-    expect(counterparty).toHaveValue("Helix Labs GmbH");
-    // Neither is listed as staying behind: the Field carries it.
-    expect(within(dialog).getByText("Deal desk region")).toBeInTheDocument();
-    expect(within(dialog).queryByText(/Needed by,|, Needed by|and Needed by/)).toBeNull();
-    expect(within(dialog).queryByText(/Counterparty name,|, Counterparty name/)).toBeNull();
-
-    // An edit rides the Field, not a dedicated member of the body.
-    await user.clear(neededBy);
-    await user.type(neededBy, "2026-11-15");
+    expect(
+      within(dialog).getByText("Does not carry into the contract").parentElement,
+    ).toHaveTextContent("Deal desk region");
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
-    expect(api.conversions[0]).toEqual({
-      title: "Northwind Labs mutual NDA",
-      contractTypeId: "ct-sow",
-      priority: "high",
-      customFields: { needed_by: "2026-11-15" },
+    expect(api.conversions[0]).toMatchObject({
+      counterparties: [{ counterpartyId: "party-helix" }],
+      customFields: { needed_by: "2026-10-01" },
     });
-    expect(api.conversions[0]).not.toHaveProperty("neededBy");
     expect(api.conversions[0]).not.toHaveProperty("counterpartyName");
+    expect(api.conversions[0]).not.toHaveProperty("neededBy");
   });
 
-  it("draws no Counterparty box on the matter arm, so the name is named as staying behind", async () => {
+  it("re-targets NDA to MSA with shared answers carried and missing Rows listed behind", async () => {
     const user = userEvent.setup();
-    const api = requestApi(collected());
+    open(
+      requestApi(
+        request({ customFields: { opposing_party: "Shared party", requesting_manager: "u2" } }),
+      ),
+    );
+    const dialog = await openConvert(user);
+    expect(within(dialog).getByLabelText(/^Requesting manager/)).toBeVisible();
+    await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
+    expect(within(dialog).getByLabelText(/^Opposing party/)).toHaveValue("Shared party");
+    expect(within(dialog).queryByLabelText(/^Requesting manager/)).toBeNull();
+    expect(
+      within(dialog).getByText("Does not carry into the contract").parentElement,
+    ).toHaveTextContent("Requesting manager");
+  });
+
+  it("lists a built-in answer as staying behind when the target has no Row for it", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(
+      request({
+        customFields: {
+          opposing_party: "Northwind Labs",
+          effective_date: "2026-10-01",
+        },
+      }),
+      undefined,
+      undefined,
+      [
+        field("effective_date", "Effective date", {
+          fieldType: "date",
+          builtInKey: "effective_date",
+        }),
+      ],
+    );
     open(api);
+    const dialog = await openConvert(user);
+    expect(within(dialog).queryByLabelText(/^Effective date/)).toBeNull();
+    expect(
+      within(dialog).getByText("Does not carry into the contract").parentElement,
+    ).toHaveTextContent("Effective date");
+    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).not.toHaveProperty(["customFields", "effective_date"]);
+  });
+
+  it("keeps Contract-only answers behind when re-targeting to Matter", async () => {
+    const user = userEvent.setup();
+    open(
+      requestApi(
+        request({ customFields: { counterparties: ["Helix Labs GmbH"], needed_by: "2026-10-01" } }),
+      ),
+    );
     const dialog = await openDisposition(user, "Convert to matter");
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type/), "mt-dispute");
-    expect(within(dialog).queryByLabelText(/^Counterparty$/)).toBeNull();
-    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-10-01");
-    expect(within(dialog).getByText("Does not carry into the matter")).toBeInTheDocument();
-    expect(within(dialog).getByText(/Counterparty name/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/Deal desk region/)).toBeInTheDocument();
-
-    await user.type(within(dialog).getByLabelText(/^Governing law/), "DIFC Courts");
-    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
-    await waitFor(() => expect(api.conversions).toHaveLength(1));
-    expect(api.conversions[0]).toEqual({
-      title: "Northwind Labs mutual NDA",
-      matterTypeId: "mt-dispute",
-      priority: "high",
-      customFields: { governing_law: "DIFC Courts" },
-      neededBy: "2026-10-01",
-    });
-  });
-
-  it("draws both boxes empty when the form collected neither, and sends neither", async () => {
-    const user = userEvent.setup();
-    const api = requestApi();
-    open(api);
-    const dialog = await openConvert(user);
-    expect(within(dialog).getByLabelText(/^Counterparty$/)).toHaveValue("");
-    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
-    await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
-    await waitFor(() => expect(api.conversions).toHaveLength(1));
-    expect(api.conversions[0]).not.toHaveProperty("counterpartyName");
-    expect(api.conversions[0]).not.toHaveProperty("neededBy");
+    expect(within(dialog).queryByLabelText(/^Counterparties/)).toBeNull();
+    expect(
+      within(dialog).getByText("Does not carry into the matter").parentElement,
+    ).toHaveTextContent("Counterparties");
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Oct 1, 2026");
   });
 });
 
@@ -1718,13 +1711,13 @@ describe("Matter Conversion drafts", () => {
       await screen.findByDisplayValue("Prepared response");
       const dialog = screen.getByRole("dialog");
       expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("critical");
-      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-10-02");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Oct 2, 2026");
       await user.click(within(dialog).getByRole("button", { name: action }));
       if (action === "Convert to contract instead")
         await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
       expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Northwind Labs mutual NDA");
       expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("high");
-      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Select a date");
       expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("");
       expect(within(dialog).queryByText("Unverified")).toBeNull();
       expect(within(dialog).queryByLabelText("Description")).toBeNull();
@@ -1750,14 +1743,15 @@ describe("Matter Conversion drafts", () => {
       }
       await user.selectOptions(within(dialog).getByLabelText(/^Priority/), "low");
       const date = within(dialog).getByLabelText(/^Needed by/);
-      await user.clear(date);
-      await user.type(date, "2026-11-03");
+      await user.click(date);
+      await user.selectOptions(screen.getByRole("combobox", { name: "Month" }), "10");
+      await user.click(screen.getByRole("button", { name: /Tuesday, November 3rd, 2026/ }));
       await user.click(within(dialog).getByRole("button", { name: action }));
       if (action === "Convert to contract instead")
         await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
       expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Human title");
       expect(within(dialog).getByLabelText(/^Priority/)).toHaveValue("low");
-      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("2026-11-03");
+      expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Nov 3, 2026");
       expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("France");
       expect(within(dialog).queryByText("Unverified")).toBeNull();
       await user.click(
@@ -1769,8 +1763,7 @@ describe("Matter Conversion drafts", () => {
       expect(api.conversions[0]).toMatchObject({
         title: "Human title",
         priority: "low",
-        neededBy: "2026-11-03",
-        customFields: { governing_law: "France" },
+        customFields: { governing_law: "France", needed_by: "2026-11-03" },
       });
       expect(api.conversions[0]).not.toHaveProperty("conversionDraftId");
       expect(api.conversions[0]).not.toHaveProperty("aiAccepted");
@@ -2003,7 +1996,7 @@ describe("Contract and Matter preparation together", () => {
               description: proposal(`${target.targetModule} description`),
               priority: proposal("critical"),
               needed_by: proposal("2026-10-02"),
-              ...(target.targetModule === "contract" ? { counterparty: proposal("Acme") } : {}),
+              ...(target.targetModule === "contract" ? { counterparties: proposal("Acme") } : {}),
               ...(target.targetTypeId === "ct-msa"
                 ? { "field:governing_law": proposal("England") }
                 : {}),
@@ -2034,13 +2027,13 @@ describe("Contract and Matter preparation together", () => {
       0,
       request({
         urgency: "critical",
-        customFields: { counterparty_name: "Acme", needed_by: "2026-10-02" },
+        customFields: { counterparties: ["Acme"], needed_by: "2026-10-02" },
       }),
     );
     open(api);
     await openDisposition(user, "Convert to contract");
     await screen.findByDisplayValue("contract title 1");
-    for (const name of [/^Counterparty$/, /^Needed by/, /^Priority/]) {
+    for (const name of [/^Counterparties$/, /^Needed by/, /^Priority/]) {
       const control = screen.getByLabelText(name);
       expect(
         within(control.parentElement!.parentElement!).queryByRole("button", {
@@ -2055,12 +2048,12 @@ describe("Contract and Matter preparation together", () => {
     await user.click(screen.getByRole("button", { name: "Convert to contract" }));
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toMatchObject({
-      counterpartyName: "Acme",
-      neededBy: "2026-10-02",
+      counterparties: [{ name: "Acme" }],
+      customFields: { needed_by: "2026-10-02" },
       priority: "critical",
     });
     expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toEqual(
-      expect.arrayContaining(["counterparty"]),
+      expect.arrayContaining(["counterparties"]),
     );
     expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toContain("needed_by");
     expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toContain("priority");
@@ -2125,7 +2118,8 @@ describe("Contract and Matter preparation together", () => {
         await user.clear(title);
         await user.type(title, "Human title");
         await user.clear(within(screen.getByRole("dialog")).getByLabelText("Description"));
-        await user.clear(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/));
+        await user.click(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/));
+        await user.click(screen.getByRole("button", { name: "Clear date" }));
         await user.selectOptions(
           within(screen.getByRole("dialog")).getByLabelText(/^Contract type/),
           "ct-msa",
@@ -2148,7 +2142,9 @@ describe("Contract and Matter preparation together", () => {
           "Human title",
         );
         expect(within(screen.getByRole("dialog")).getByLabelText("Description")).toHaveValue("");
-        expect(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/)).toHaveValue("");
+        expect(within(screen.getByRole("dialog")).getByLabelText(/^Needed by/)).toHaveTextContent(
+          "Select a date",
+        );
         expect(within(screen.getByRole("dialog")).getByLabelText(/^Governing law/)).toHaveValue(
           "England",
         );
@@ -2187,12 +2183,13 @@ describe("Contract and Matter preparation together", () => {
     await openDisposition(user, "Convert to contract");
     const title = await screen.findByDisplayValue("contract title 1");
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByLabelText(/^Counterparty/)).toHaveValue("Acme");
+    expect(within(dialog).getByText("Acme")).toBeVisible();
     expect(within(dialog).queryByLabelText("Matter template")).toBeNull();
     await user.clear(title);
     await user.type(title, "Human title");
     await user.clear(within(dialog).getByLabelText("Description"));
-    await user.clear(within(dialog).getByLabelText(/^Needed by/));
+    await user.click(within(dialog).getByLabelText(/^Needed by/));
+    await user.click(screen.getByRole("button", { name: "Clear date" }));
     await user.selectOptions(within(dialog).getByLabelText(/^Contract type/), "ct-msa");
     expect(await within(dialog).findByDisplayValue("England")).toBeVisible();
     await user.clear(within(dialog).getByLabelText(/^Governing law/));
@@ -2206,7 +2203,7 @@ describe("Contract and Matter preparation together", () => {
     api.release();
     expect(within(dialog).getByLabelText(/^Title/)).toHaveValue("Human title");
     expect(within(dialog).getByLabelText("Description")).toHaveValue("");
-    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveValue("");
+    expect(within(dialog).getByLabelText(/^Needed by/)).toHaveTextContent("Select a date");
     expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("France");
     expect(within(dialog).queryByText("Getting matter ready…")).toBeNull();
     await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
@@ -2216,48 +2213,74 @@ describe("Contract and Matter preparation together", () => {
       description: null,
       contractTypeId: "ct-msa",
       customFields: { governing_law: "France" },
-      counterpartyName: "Acme",
-      aiAccepted: ["priority", "counterparty"],
+      counterparties: [{ name: "Acme" }],
+      aiAccepted: ["priority", "counterparties"],
     });
     expect(api.conversions[0]).not.toHaveProperty("neededBy");
     expect(api.conversions[0]).not.toHaveProperty("templateId");
   });
 });
 
-it("distinguishes native facts that carry from partial value answers", async () => {
-  const native = (key: string, name: string, fieldType = "date") => ({
-    ...DEAL_DESK,
-    fieldId: key,
-    slug: key,
-    builtInKey: key,
-    displayName: name,
-    fieldType,
-  });
-  const response: Record<string, unknown> = {
-    ...detail(request()),
-    fields: [
-      native("effectiveDate", "Effective date"),
-      native("valueAmount", "Value amount", "number"),
-    ],
-  };
-  response.request = {
-    ...(response.request as Record<string, unknown>),
-    customFields: { effectiveDate: "2026-09-17", valueAmount: 123 },
-  };
+it("evaluates Branches on edited carry answers and collects Rows in Form order", async () => {
+  const user = userEvent.setup();
   const api = requestApi();
   const handler = api.handler;
   open({
     ...api,
-    handler: (call) =>
-      call.method === "GET" && call.url.pathname === "/api/v1/requests/45"
-        ? json(200, response)
-        : handler(call),
+    handler: (call) => {
+      if (call.method === "GET" && call.url.pathname === "/api/v1/contracts/options") {
+        const type = withForm(
+          { ...CONTRACT_TYPES[0]!, fields: [OPPOSING_PARTY, GOVERNING_LAW] },
+          "contract",
+        );
+        const form = [
+          ...pinnedFormRows("contract"),
+          type.form[2]!,
+          {
+            kind: "branch",
+            id: "conditional",
+            match: "all",
+            conditions: [{ rowRef: "opposing_party", operator: "equals", value: "Reveal" }],
+            children: [type.form[3]!],
+          },
+          {
+            kind: "row",
+            id: "effective_date",
+            rowRef: "effective_date",
+            fieldType: "date",
+            onIntakeForm: true,
+            isRequired: false,
+            visibleOnPortal: true,
+          },
+        ];
+        return json(200, {
+          contractTypes: [{ ...type, form, creationForm: form }],
+          contractStatuses: [],
+          users: [],
+          regions: [],
+        });
+      }
+      return handler(call);
+    },
   });
-  const dialog = await openConvert(userEvent.setup());
-  expect(within(dialog).getByText("Carries into the contract").parentElement).toHaveTextContent(
-    "Effective date",
-  );
+  const dialog = await openConvert(user);
+  expect(within(dialog).queryByLabelText(/^Governing law/)).toBeNull();
+  const condition = within(dialog).getByLabelText(/^Opposing party/);
+  await user.clear(condition);
+  await user.type(condition, "Reveal");
+  expect(within(dialog).getByLabelText(/^Governing law/)).toHaveAttribute("aria-required", "true");
+  const labels = [...dialog.querySelectorAll("label")].map((label) => label.textContent);
   expect(
-    within(dialog).getByText("Does not carry into the contract").parentElement,
-  ).toHaveTextContent("Value amount");
+    labels.filter((label) => label?.startsWith("Governing law") || label === "Effective date"),
+  ).toEqual([expect.stringContaining("Governing law"), "Effective date"]);
+  await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+  expect(api.conversions).toHaveLength(0);
+  await user.clear(condition);
+  await user.type(condition, "Hidden again");
+  await user.click(within(dialog).getByRole("button", { name: "Convert to contract" }));
+  await waitFor(() => expect(api.conversions).toHaveLength(1));
+  expect(api.conversions[0]).toMatchObject({ customFields: { opposing_party: "Hidden again" } });
+  expect((api.conversions[0] as { customFields: object }).customFields).not.toHaveProperty(
+    "governing_law",
+  );
 });

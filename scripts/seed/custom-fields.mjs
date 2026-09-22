@@ -21,10 +21,28 @@ export async function readAttachments(admin, taxonomy) {
   const attached = new Map();
   for (const [module, path, types] of sources) {
     for (const type of types.rows) {
-      const { body } = await admin.get(`${path}/${type.id}/fields`);
+      let typePath = path;
+      let destination = type;
+      if (module === "request") {
+        const targets =
+          type.targetModule === "contract" ? taxonomy.contractTypes : taxonomy.matterTypes;
+        destination = targets.rows.find((row) =>
+          type.targetTypeId ? row.id === type.targetTypeId : row.isDefault,
+        );
+        typePath = `/api/v1/${type.targetModule}-types`;
+      }
+      if (!destination) continue;
+      const { body } = await admin.get(`${typePath}/${destination.id}/form`);
+      const rows = body.form.flatMap(function flatten(node) {
+        return node.kind === "row" ? [node] : node.children.flatMap(flatten);
+      });
       attached.set(
         `${module}:${type.slug}`,
-        new Set((body.attachedFields ?? []).map((row) => row.slug)),
+        new Set(
+          rows
+            .filter((row) => row.id !== row.rowRef && (module !== "request" || row.onIntakeForm))
+            .map((row) => row.rowRef),
+        ),
       );
     }
   }

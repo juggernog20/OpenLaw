@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { removeFieldRow } from "../../testing/form-fixtures.js";
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+import { contractTypeFields } from "@openlaw/db";
+import { submitRequestFixture } from "../../testing/request-form.js";
+
 import { requestDepartment } from "../../testing/request-department.js";
 
 /**
@@ -131,20 +136,18 @@ beforeAll(async () => {
         displayName: field.displayName,
         moduleScope: "contract",
         fieldType: field.fieldType,
-        fieldTag: "legal",
       },
     });
     expect(created.statusCode, created.body).toBe(201);
     fieldIds.set(field.displayName, created.json().field.id as string);
     fieldSlugs.set(field.displayName, created.json().field.slug as string);
 
-    const attached = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/request-types/${typeIds.get("nda_request")}/fields`,
+    const attached = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/request-types/${typeIds.get("nda_request")}`,
       cookies: adminCookies,
       payload: { fieldId: created.json().field.id, isRequired: false },
     });
-    expect(attached.statusCode, attached.body).toBe(201);
+    expect(attached.statusCode, attached.body).toBe(200);
   }
 });
 
@@ -164,7 +167,7 @@ function slug(displayName: string): string {
 
 /** Submits one Request as the Business User, and answers the row. */
 async function submit(body: Record<string, unknown> = {}): Promise<{ id: string; number: number }> {
-  const res = await harness.app.inject({
+  const res = await submitRequestFixture(harness, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: requesterCookies,
@@ -330,12 +333,12 @@ describe("the envelope (INT-006)", () => {
     expect((await readDetail(moduleOnly.number)).json().request.requestType).toMatchObject({
       displayName: "Contract review",
       targetModule: "contract",
-      targetTypeName: null,
+      targetTypeName: "Default",
     });
     expect((await readDetail(noTarget.number)).json().request.requestType).toMatchObject({
       displayName: "Legal question",
-      targetModule: null,
-      targetTypeName: null,
+      targetModule: "matter",
+      targetTypeName: "Default",
     });
   });
 
@@ -385,6 +388,7 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
     // The labels come from the same attached-fields read the form drew
     // its boxes from, so a value is named exactly as the box was.
     expect(detail.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
+      "Description",
       "Counterparty",
       "Requesting manager",
       "Contracting entity",
@@ -401,12 +405,15 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
       },
     });
 
-    const detached = await harness.app.inject({
-      method: "DELETE",
-      url: `/api/v1/request-types/${typeIds.get("nda_request")}/fields/${fieldIds.get("Deal desk region")}`,
+    const detached = await removeFieldRow(harness, {
+      typeUrl: `/api/v1/request-types/${typeIds.get("nda_request")}`,
+      fieldId: `${fieldIds.get("Deal desk region")}`,
       cookies: adminCookies,
     });
-    expect(detached.statusCode, detached.body).toBe(204);
+    expect(detached.statusCode, detached.body).toBe(200);
+    await harness.db
+      .delete(contractTypeFields)
+      .where(eq(contractTypeFields.fieldId, fieldIds.get("Deal desk region")!));
 
     try {
       const detail = (await readDetail(number)).json();
@@ -418,13 +425,12 @@ describe("the values, labelled through the type's live fields (INT-002)", () => 
         detail.fields.map((field: { displayName: string }) => field.displayName),
       ).not.toContain("Deal desk region");
     } finally {
-      const reattached = await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/request-types/${typeIds.get("nda_request")}/fields`,
+      const reattached = await saveFieldRow(harness, {
+        typeUrl: `/api/v1/request-types/${typeIds.get("nda_request")}`,
         cookies: adminCookies,
-        payload: { fieldId: fieldIds.get("Deal desk region"), isRequired: false },
+        payload: { fieldId: fieldIds.get("Deal desk region")!, isRequired: false },
       });
-      expect(reattached.statusCode, reattached.body).toBe(201);
+      expect(reattached.statusCode, reattached.body).toBe(200);
     }
   });
 

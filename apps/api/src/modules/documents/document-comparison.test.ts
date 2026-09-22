@@ -523,6 +523,7 @@ describe("a Word comparison", () => {
     const jobs: JobQueue = {
       requestGenerationDelivery: async () => {},
       requestConversionDraft: async () => {},
+      requestMatterRecordPreparation: async () => {},
       requestTextExtraction: async () => {},
       requestDisplayConversion: async () => {},
       requestDocumentComparison: async (comparisonId) => {

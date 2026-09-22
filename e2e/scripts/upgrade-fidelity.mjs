@@ -297,6 +297,33 @@ async function seed() {
       ? { role: "member" }
       : {};
 
+  // DD-028 retires attachment writes. The same seed must run before and after M39.
+  const fieldTag = Object.hasOwn(bodyProperties("/api/v1/fields"), "fieldTag")
+    ? { fieldTag: "business" }
+    : {};
+  async function attachField(module, typeId, field) {
+    const path = `/api/v1/${module}-types/${typeId}`;
+    if (baselineApi.paths[`/api/v1/${module}-types/{id}/form`]?.put) {
+      const { form } = await get(`${path}/form`);
+      await put(`${path}/form`, {
+        form: [
+          ...form,
+          {
+            kind: "row",
+            id: field.id,
+            rowRef: field.slug,
+            fieldType: field.fieldType,
+            isRequired: false,
+            onIntakeForm: false,
+            visibleOnPortal: true,
+          },
+        ],
+      });
+    } else {
+      await post(`${path}/fields`, { fieldId: field.id, isRequired: false });
+    }
+  }
+
   // Org identity, so `org_settings` carries more than its seeded defaults.
   await patch("/api/v1/org/general", {
     name: "Upgrade Fidelity Ltd",
@@ -333,25 +360,19 @@ async function seed() {
       displayName: "Upgrade reference",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
+      ...fieldTag,
     })
   ).field;
-  await post(`/api/v1/contract-types/${contractType.id}/fields`, {
-    fieldId: contractField.id,
-    isRequired: false,
-  });
+  await attachField("contract", contractType.id, contractField);
   const matterField = (
     await post("/api/v1/fields", {
       displayName: "Upgrade Matter reference",
       moduleScope: "matter",
       fieldType: "text",
-      fieldTag: "business",
+      ...fieldTag,
     })
   ).field;
-  await post(`/api/v1/matter-types/${matterType.id}/fields`, {
-    fieldId: matterField.id,
-    isRequired: false,
-  });
+  await attachField("matter", matterType.id, matterField);
   const customStatus = (
     await post("/api/v1/contract-statuses", { displayName: "Upgrade hold", stage: "review" })
   ).contractStatus;

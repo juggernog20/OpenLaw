@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The contract type editor (#84), the ST16 frame of settings.pen on
- * the shared TypeEditorScreen machinery (extracted with #85) — this
- * file owns the CTR-016 vocabulary and the API adapter over the
- * contract-types attachment routes; the DES-022 behavior lives in the
- * shared component. The loader is the client half of SET-002's gate;
- * the API's 403 is the real refusal.
- */
+/** The Contract type editor, with identity and the DD-028 Form on routed sections. */
 
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages } from "react-intl";
@@ -15,30 +8,32 @@ import { api } from "../lib/api";
 import { isFieldRow } from "../lib/field-catalog";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
-import { ContractsSettingsTabs } from "../components/contracts-settings-tabs";
+
 import { ContractTypeApprovalDefault } from "../components/approval-default-settings";
 import { ContractTypePeople } from "../components/contract-type-people";
-import { TypeEditorScreen, type TypeEditorApi } from "../components/type-editor-screen";
+import { TypeEditorSections, TypeEditorTabs } from "../components/type-editor-sections";
+import { TypeFormBuilder } from "../components/type-form/builder";
+import { TypeEditorScreen, type TypeEditorIdentityApi } from "../components/type-editor-screen";
 
 export async function settingsContractTypeEditorLoader({ params }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
-  const [typeRes, attachedRes, catalogRes, peopleRes, usersRes] = await Promise.all([
+  const [typeRes, formRes, catalogRes, peopleRes, usersRes] = await Promise.all([
     api.GET("/api/v1/contract-types/{id}", { params: { path: { id } } }),
-    api.GET("/api/v1/contract-types/{id}/fields", { params: { path: { id } } }),
+    api.GET("/api/v1/contract-types/{id}/form", { params: { path: { id } } }),
     api.GET("/api/v1/fields", {}),
     api.GET("/api/v1/contract-types/{id}/people", { params: { path: { id } } }),
     api.GET("/api/v1/users"),
   ]);
-  if (!typeRes.data || !attachedRes.data || !catalogRes.data || !peopleRes.data || !usersRes.data) {
+  if (!typeRes.data || !formRes.data || !catalogRes.data || !peopleRes.data || !usersRes.data) {
     throw new Error("The contract type could not be read.");
   }
   return {
     contractType: typeRes.data.contractType,
     people: peopleRes.data.people,
     users: usersRes.data.users,
-    attachedFields: attachedRes.data.attachedFields,
+    form: formRes.data.form,
     catalog: catalogRes.data.fields.filter((field) => isFieldRow(field, "contract")),
   };
 }
@@ -53,49 +48,10 @@ const MESSAGES = defineMessages({
     defaultMessage:
       "{count, plural, one {# contract uses this type.} other {# contracts use this type.}}",
   },
-  attachedFields: {
-    id: "settings.contractTypeEditor.attachedFields",
-    defaultMessage: "Custom Fields",
-  },
-  fieldColumn: { id: "settings.contractTypeEditor.fieldColumn", defaultMessage: "Field" },
-  requiredColumn: {
-    id: "settings.contractTypeEditor.requiredColumn",
-    defaultMessage: "Required",
-  },
-  requiredFor: {
-    id: "settings.contractTypeEditor.requiredFor",
-    defaultMessage: "{name} required",
-  },
-  detach: { id: "settings.contractTypeEditor.detach", defaultMessage: "Detach {name}" },
-  detached: { id: "settings.contractTypeEditor.detached", defaultMessage: "{name} detached." },
-  attach: { id: "settings.contractTypeEditor.attach", defaultMessage: "Attach field" },
-  attached: { id: "settings.contractTypeEditor.attached", defaultMessage: "{name} attached." },
-  allAttached: {
-    id: "settings.contractTypeEditor.allAttached",
-    defaultMessage: "Every catalog field is attached.",
-  },
-  empty: {
-    id: "settings.contractTypeEditor.empty",
-    defaultMessage: "No fields are attached to this type.",
-  },
-  reorder: {
-    id: "settings.contractTypeEditor.reorder",
-    defaultMessage:
-      "Reorder {name}, position {position} of {total}. Use the arrow keys to move it.",
-  },
-  moved: {
-    id: "settings.contractTypeEditor.moved",
-    defaultMessage: "{name} moved to position {position} of {total}.",
-  },
-  help: {
-    id: "settings.contractTypeEditor.help",
-    defaultMessage:
-      "Drag to reorder. Required fields are enforced at creation and re-type; detaching a field keeps stored values.",
-  },
 });
 
 /** The shared editor's API seam over the contract-types routes. */
-const EDITOR_API: TypeEditorApi = {
+const EDITOR_API: TypeEditorIdentityApi = {
   async update(id, body) {
     const result = await api
       .PATCH("/api/v1/contract-types/{id}", {
@@ -105,76 +61,54 @@ const EDITOR_API: TypeEditorApi = {
       .catch(() => undefined);
     return { data: result?.data?.contractType, ...(await problem(result)) };
   },
-  async attach(id, fieldId) {
-    const result = await api
-      .POST("/api/v1/contract-types/{id}/fields", {
-        params: { path: { id } },
-        body: { fieldId },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedField, ...(await problem(result)) };
-  },
-  async detach(id, fieldId) {
-    const result = await api
-      .DELETE("/api/v1/contract-types/{id}/fields/{fieldId}", {
-        params: { path: { id, fieldId } },
-      })
-      .catch(() => undefined);
-    return { ok: result?.response.ok === true, ...(await problem(result)) };
-  },
-  async setRequired(id, fieldId, isRequired) {
-    const result = await api
-      .PATCH("/api/v1/contract-types/{id}/fields/{fieldId}", {
-        params: { path: { id, fieldId } },
-        body: { isRequired },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedField, ...(await problem(result)) };
-  },
-  async reorder(id, fieldIds) {
-    const result = await api
-      .PUT("/api/v1/contract-types/{id}/fields/order", {
-        params: { path: { id } },
-        body: { fieldIds },
-      })
-      .catch(() => undefined);
-    return { data: result?.data?.attachedFields, ...(await problem(result)) };
-  },
 };
 
 export function SettingsContractTypeEditorPage() {
-  const { contractType, attachedFields, catalog, people, users } =
+  const { contractType, form, catalog, people, users } =
     useLoaderData<typeof settingsContractTypeEditorLoader>();
   return (
     <TypeEditorScreen
       key={contractType.id}
       initialType={contractType}
-      tabs={<ContractsSettingsTabs />}
+      tabs={
+        <TypeEditorTabs
+          module="contract"
+          typeId={contractType.id}
+          name={contractType.displayName}
+        />
+      }
       backPath="/settings/contracts/types"
       api={EDITOR_API}
       messages={MESSAGES}
-      extraCards={
-        <>
-          <ContractTypePeople
-            typeId={contractType.id}
-            initialPeople={people}
-            users={users}
-            archived={contractType.archivedAt !== null}
-          />
-          <ContractTypeApprovalDefault
-            typeId={contractType.id}
-            archived={contractType.archivedAt !== null}
-          />
-        </>
+      sectionContent={
+        <TypeEditorSections
+          module="contract"
+          form={
+            <TypeFormBuilder
+              module="contract"
+              typeId={contractType.id}
+              isDefault={contractType.isDefault}
+              typeName={contractType.displayName}
+              initialForm={form}
+              catalog={catalog}
+            />
+          }
+          people={
+            <ContractTypePeople
+              typeId={contractType.id}
+              initialPeople={people}
+              users={users}
+              archived={contractType.archivedAt !== null}
+            />
+          }
+          approval={
+            <ContractTypeApprovalDefault
+              typeId={contractType.id}
+              archived={contractType.archivedAt !== null}
+            />
+          }
+        />
       }
-      attachments={{
-        defaultFieldsModule: "contract",
-        createFieldModule: "contract",
-        initialAttached: attachedFields,
-        catalog,
-        api: EDITOR_API,
-        messages: MESSAGES,
-      }}
     />
   );
 }

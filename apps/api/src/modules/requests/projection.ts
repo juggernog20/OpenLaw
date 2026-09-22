@@ -42,6 +42,9 @@ import {
   and,
   asc,
   contracts,
+  counterparties,
+  departments,
+  regions,
   contractTypes,
   entities,
   eq,
@@ -195,6 +198,7 @@ export const RequestAttachmentSchema = z.object({
  * both mounts: a name is the whole of what either surface draws, and a
  * staff reader who wants more opens the directory. */
 export const RequestCustomFieldRefsSchema = z.object({
+  builtins: z.record(z.string(), z.string()).optional(),
   users: z.array(z.object({ id: z.string(), displayName: z.string() })),
   entities: z.array(z.object({ id: z.string(), legalName: z.string() })),
 });
@@ -203,6 +207,7 @@ export const RequestCustomFieldRefsSchema = z.object({
  * acts on (#437). The portal keeps the narrower shape above: an archive
  * behind a Request is Legal's repair to make, not the Requester's. */
 export const StaffRequestCustomFieldRefsSchema = z.object({
+  builtins: z.record(z.string(), z.string()).optional(),
   users: z.array(z.object({ id: z.string(), displayName: z.string(), archived: z.boolean() })),
   entities: z.array(
     z.discriminatedUnion("restricted", [
@@ -356,6 +361,7 @@ export async function resolveRefs(
 ) {
   const refs = await selectResolvedRefs(db, attached, values, eq(entities.isConfidential, false));
   return {
+    builtins: await resolveBuiltinRefs(db, attached, values),
     users: refs.users.map(({ id, displayName }) => ({ id, displayName })),
     entities: refs.entities.map(({ id, legalName }) => ({ id, legalName })),
   };
@@ -381,6 +387,7 @@ export async function resolveStaffRefs(
   const refs = await selectResolvedRefs(db, attached, values, entityReachScope(db, user));
   const named = new Map(refs.entities.map((entity) => [entity.id, entity]));
   return {
+    builtins: await resolveBuiltinRefs(db, attached, values),
     users: refs.users.map(({ id, displayName, archivedAt }) => ({
       id,
       displayName,
@@ -511,6 +518,9 @@ export const StaffRequestSchema = z.object({
   urgency: z.enum(SEVERITY_LEVELS),
   /** What the form collected, keyed by field slug (INT-002). */
   customFields: CustomFieldsSchema,
+  intakeCounterparties: z
+    .array(z.object({ counterpartyId: z.string().optional(), name: z.string() }))
+    .optional(),
   /** INT-006: "no" always arrives with a why. NULL on every status but
    * `declined`. */
   declinedReason: z.string().nullable(),
@@ -553,6 +563,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       departmentId: requests.departmentId,
       urgency: requests.urgency,
       customFields: requests.customFields,
+      intakeCounterparties: requests.intakeCounterparties,
       declinedReason: requests.declinedReason,
       createdAt: requests.createdAt,
       typeId: requestTypes.id,
@@ -598,6 +609,7 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     department: row.department,
     urgency: row.urgency,
     customFields: row.customFields,
+    intakeCounterparties: row.intakeCounterparties,
     declinedReason: row.declinedReason,
     createdAt: row.createdAt.toISOString(),
     requestType: toStaffRequestType(row),
@@ -610,4 +622,38 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     convertedContract: convertedContractOf(row.convertedRecord),
     convertedRecord: convertedRecordOf(row.convertedRecord),
   };
+}
+
+/** Resolve only reference values collected by Rows still on this Intake Form. */
+async function resolveBuiltinRefs(
+  db: Executor,
+  attached: readonly AttachedCustomField[],
+  values: Readonly<Record<string, CustomFieldValue>>,
+) {
+  const ids = attached
+    .filter((field) =>
+      ["counterparties", "owning_department", "department", "region"].includes(
+        field.builtInKey ?? "",
+      ),
+    )
+    .flatMap((field) => {
+      const value = values[field.slug];
+      return Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+    });
+  if (!ids.length) return {};
+  const names = await Promise.all([
+    db
+      .select({ id: counterparties.id, name: counterparties.name })
+      .from(counterparties)
+      .where(inArray(counterparties.id, ids)),
+    db
+      .select({ id: departments.id, name: departments.displayName })
+      .from(departments)
+      .where(inArray(departments.id, ids)),
+    db
+      .select({ id: regions.id, name: regions.displayName })
+      .from(regions)
+      .where(inArray(regions.id, ids)),
+  ]);
+  return Object.fromEntries(names.flat().map((row) => [row.id, row.name]));
 }

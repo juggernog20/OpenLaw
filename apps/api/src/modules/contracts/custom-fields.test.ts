@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { removeFieldRow } from "../../testing/form-fixtures.js";
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * The contract's custom fields (CTR-016, M8/6) at the HTTP seam — the
  * M6 catalog finally doing work, and the `is_required` stub closing.
@@ -87,7 +90,6 @@ interface AttachedField {
   displayName: string;
   description: string | null;
   fieldType: string;
-  fieldTag: "business" | "legal";
   options: string[] | null;
   displayOrder: number;
   isRequired: boolean;
@@ -121,39 +123,48 @@ const defineField = async (payload: Record<string, unknown>): Promise<AttachedFi
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { moduleScope: "contract", fieldTag: "legal", ...payload },
+    payload: { moduleScope: "contract", ...payload },
   });
   expect(res.statusCode, res.body).toBe(201);
   const field = res.json().field;
   return { ...field, fieldId: field.id, displayOrder: 0, isRequired: false };
 };
 
-const attachField = async (typeId: string, fieldId: string, isRequired = false) => {
-  const res = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/contract-types/${typeId}/fields`,
+const attachField = async (
+  typeId: string,
+  fieldId: string,
+  isRequired = false,
+  visibleOnPortal = true,
+) => {
+  const res = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/contract-types/${typeId}`,
     cookies: adminCookies,
-    payload: { fieldId, isRequired },
+    payload: { fieldId, isRequired, visibleOnPortal },
   });
-  expect(res.statusCode, res.body).toBe(201);
-  return res.json().attachedField as AttachedField;
+  expect(res.statusCode, res.body).toBe(200);
 };
 
 const detachField = async (typeId: string, fieldId: string) => {
-  const res = await harness.app.inject({
-    method: "DELETE",
-    url: `/api/v1/contract-types/${typeId}/fields/${fieldId}`,
+  const res = await removeFieldRow(harness, {
+    typeUrl: `/api/v1/contract-types/${typeId}`,
+    fieldId: `${fieldId}`,
     cookies: adminCookies,
   });
-  expect(res.statusCode, res.body).toBe(204);
+  expect(res.statusCode, res.body).toBe(200);
 };
 
 const reorderFields = async (typeId: string, fieldIds: string[]) => {
+  const url = `/api/v1/contract-types/${typeId}/form`;
+  const read = await harness.app.inject({ method: "GET", url, cookies: adminCookies });
+  const form = read.json().form;
+  const fields = fieldIds.map((id) => form.find((row: { id: string }) => row.id === id));
   const res = await harness.app.inject({
     method: "PUT",
-    url: `/api/v1/contract-types/${typeId}/fields/order`,
+    url,
     cookies: adminCookies,
-    payload: { fieldIds },
+    payload: {
+      form: [...form.filter((row: { id: string }) => !fieldIds.includes(row.id)), ...fields],
+    },
   });
   expect(res.statusCode, res.body).toBe(200);
 };
@@ -254,20 +265,18 @@ const auditRowsFor = async (id: string) =>
   ).filter((row) => row.entityId === id);
 
 describe("the fields a contract's type attaches (CTR-016)", () => {
-  it("projects only business Fields and values to a Business User on the team", async () => {
+  it("projects only Portal-visible Fields and values to a Business User on the team", async () => {
     const type = await newType("Business User projection");
     const business = await defineField({
       displayName: "Payment terms",
       fieldType: "text",
-      fieldTag: "business",
     });
     const legal = await defineField({
       displayName: "Governing law",
       fieldType: "text",
-      fieldTag: "legal",
     });
     await attachField(type.id, business.fieldId, true);
-    await attachField(type.id, legal.fieldId);
+    await attachField(type.id, legal.fieldId, false, false);
     const contract = await newContract("Business User fields", type.id, {
       [business.slug]: "Net 30",
       [legal.slug]: "England and Wales",
@@ -287,7 +296,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     });
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().work.fields).toEqual([
-      expect.objectContaining({ slug: business.slug, fieldTag: "business" }),
+      expect.objectContaining({ slug: business.slug, visibleOnPortal: true }),
     ]);
     expect(response.json().work.customFields).toEqual({ [business.slug]: "Net 30" });
     const list = await harness.app.inject({
@@ -344,6 +353,67 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     expect(updates).toHaveLength(0);
   });
 
+  it("uses each type's Visible on Portal switch for the same Field", async () => {
+    const field = await defineField({
+      displayName: "Shared Portal context",
+      fieldType: "text",
+    });
+    for (const [name, visibleOnPortal] of [
+      ["Portal NDA", false],
+      ["Portal MSA", true],
+    ] as const) {
+      const type = await newType(name);
+      await attachField(type.id, field.fieldId);
+      const form = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contract-types/${type.id}/form`,
+        cookies: adminCookies,
+      });
+      const tree = form.json().form;
+      tree.find((node: { id: string }) => node.id === field.fieldId).visibleOnPortal =
+        visibleOnPortal;
+      const saved = await harness.app.inject({
+        method: "PUT",
+        url: `/api/v1/contract-types/${type.id}/form`,
+        cookies: adminCookies,
+        payload: { form: tree },
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+      const contract = await newContract(name, type.id, { [field.slug]: "Shared value" });
+      const added = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${contract.number}/team`,
+        cookies: memberCookies,
+        payload: { userId: contributorId },
+      });
+      expect(added.statusCode, added.body).toBe(201);
+      const portal = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/contracts/${contract.number}/work`,
+        cookies: contributorCookies,
+      });
+      expect(portal.statusCode, portal.body).toBe(200);
+      expect(portal.json().work.customFields).toEqual(
+        visibleOnPortal ? { [field.slug]: "Shared value" } : {},
+      );
+      expect(portal.json().work.fields).toEqual(
+        visibleOnPortal
+          ? [expect.objectContaining({ slug: field.slug, visibleOnPortal: true })]
+          : [],
+      );
+      const staff = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: memberCookies,
+      });
+      expect(staff.statusCode, staff.body).toBe(200);
+      expect(staff.json().fields).toContainEqual(
+        expect.objectContaining({ slug: field.slug, visibleOnPortal }),
+      );
+      expect(staff.body).toContain("Shared value");
+    }
+  });
+
   it("renders the type's live attachments in attachment order, and no others", async () => {
     const type = await newType("Order form");
     const other = await newType("Statement of work");
@@ -357,7 +427,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     const contract = await newContract("Order form fields", type.id);
     const read = await readContract(contract.number);
     expect(read.fields.map((field) => field.slug)).toEqual([first.slug, second.slug]);
-    expect(read.fields.map((field) => field.displayOrder)).toEqual([1, 2]);
+    expect(read.fields[0]!.displayOrder).toBeLessThan(read.fields[1]!.displayOrder);
     // Nothing recorded yet is `{}`, not a map of nulls.
     expect(read.contract.customFields).toEqual({});
 
@@ -398,7 +468,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
       slug: required.slug,
       displayName: "Signing office",
       isRequired: true,
-      displayOrder: 1,
+      displayOrder: expect.any(Number),
     });
   });
 });

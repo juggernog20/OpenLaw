@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /** M22/5: matter edits, lifecycle timestamps, team reach, and recovery. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { activityLog, and, eq, matters, matterTeam, users } from "@openlaw/db";
@@ -115,46 +117,44 @@ async function newStatus(displayName: string, category: "open" | "closed"): Prom
 async function attachText(
   typeId: string,
   displayName: string,
-  fieldTag: "business" | "legal",
+  visibleOnPortal: boolean,
   isRequired = false,
 ): Promise<string> {
   const fieldResponse = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { moduleScope: "matter", fieldTag, displayName, fieldType: "text" },
+    payload: { moduleScope: "matter", displayName, fieldType: "text" },
   });
   expect(fieldResponse.statusCode, fieldResponse.body).toBe(201);
   const field = fieldResponse.json().field as { id: string; slug: string };
-  const attached = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/matter-types/${typeId}/fields`,
+  const attached = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/matter-types/${typeId}`,
     cookies: adminCookies,
-    payload: { fieldId: field.id, isRequired },
+    payload: { fieldId: field.id, isRequired, visibleOnPortal },
   });
-  expect(attached.statusCode, attached.body).toBe(201);
+  expect(attached.statusCode, attached.body).toBe(200);
   return field.slug;
 }
 
 const attachRequiredText = (typeId: string, displayName: string) =>
-  attachText(typeId, displayName, "legal", true);
+  attachText(typeId, displayName, false, true);
 
 async function attachEntity(typeId: string, displayName: string): Promise<string> {
   const fieldResponse = await harness.app.inject({
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { moduleScope: "matter", fieldTag: "legal", displayName, fieldType: "entity" },
+    payload: { moduleScope: "matter", displayName, fieldType: "entity" },
   });
   expect(fieldResponse.statusCode, fieldResponse.body).toBe(201);
   const field = fieldResponse.json().field as { id: string; slug: string };
-  const attached = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/matter-types/${typeId}/fields`,
+  const attached = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/matter-types/${typeId}`,
     cookies: adminCookies,
     payload: { fieldId: field.id },
   });
-  expect(attached.statusCode, attached.body).toBe(201);
+  expect(attached.statusCode, attached.body).toBe(200);
   return field.slug;
 }
 
@@ -237,10 +237,10 @@ describe("per-field matter PATCH", () => {
     expect(contributorChoices.statusCode, contributorChoices.body).toBe(403);
   });
 
-  it("projects only business Fields and values to a Business User on the team", async () => {
+  it("projects only Portal-visible Fields and values to a Business User on the team", async () => {
     const projectionTypeId = await newType("Business User projection");
-    const businessSlug = await attachText(projectionTypeId, "Business context", "business");
-    const legalSlug = await attachText(projectionTypeId, "Legal analysis", "legal");
+    const businessSlug = await attachText(projectionTypeId, "Business context", true);
+    const legalSlug = await attachText(projectionTypeId, "Legal analysis", false);
     const matter = await create({
       matterTypeId: projectionTypeId,
       customFields: {
@@ -257,7 +257,7 @@ describe("per-field matter PATCH", () => {
     });
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().work.fields).toEqual([
-      expect.objectContaining({ slug: businessSlug, fieldTag: "business" }),
+      expect.objectContaining({ slug: businessSlug, visibleOnPortal: true }),
     ]);
     expect(response.json().work.customFields).toEqual({ [businessSlug]: "Finance" });
     const list = await harness.app.inject({

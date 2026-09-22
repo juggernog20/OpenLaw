@@ -2,6 +2,7 @@
 
 import { expect, test } from "@playwright/test";
 import { z } from "zod";
+import { configureRequestIntake } from "./intake-form.js";
 import {
   ADMIN,
   ensureAdminExists,
@@ -24,6 +25,7 @@ test("an Administrator lists an Entity and a Business User picks it on a require
   const entityIds: string[] = [];
   let typeId: string | undefined;
   let fieldId: string | undefined;
+  let restoreForm: (() => Promise<void>) | undefined;
   let colleague: Awaited<ReturnType<typeof onboardActivatedMember>> | undefined;
   try {
     const options = await page.request.get("/api/v1/entities/types");
@@ -61,20 +63,20 @@ test("an Administrator lists an Entity and a Business User picks it on a require
       .object({ requestType: z.object({ id: z.string(), slug: z.string() }) })
       .parse(await type.json()).requestType;
     typeId = requestType.id;
+    const destination = await page.request.patch(`/api/v1/request-types/${typeId}`, {
+      data: { targetModule: "contract" },
+    });
+    expect(destination.status(), await destination.text()).toBe(200);
     const field = await page.request.post("/api/v1/fields", {
       data: {
         displayName: `Signing Entity ${suffix}`,
         moduleScope: "contract",
         fieldType: "entity",
-        fieldTag: "business",
       },
     });
     expect(field.status(), await field.text()).toBe(201);
     fieldId = z.object({ field: z.object({ id: z.string() }) }).parse(await field.json()).field.id;
-    const attached = await page.request.post(`/api/v1/request-types/${typeId}/fields`, {
-      data: { fieldId, isRequired: true },
-    });
-    expect(attached.status(), await attached.text()).toBe(201);
+    restoreForm = await configureRequestIntake(page.request, typeId, fieldId);
     colleague = await onboardActivatedMember(page.request, browser, {
       email,
       displayName: "Entity picker colleague",
@@ -98,6 +100,7 @@ test("an Administrator lists an Entity and a Business User picks it on a require
     ).toBeVisible();
   } finally {
     await colleague?.context.close();
+    await restoreForm?.();
     await ensureMemberInert(page.request, email);
     if (typeId) {
       const listed = await page.request.get("/api/v1/request-types");

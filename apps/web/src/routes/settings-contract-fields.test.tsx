@@ -25,16 +25,15 @@ const ADMIN = {
 
 const MEMBER = { ...ADMIN, id: "u2", email: "casey@example.com", role: "legal_team_member" };
 
-/** The CTR-008 seeds: id, slug, name, type, tag, options, prompt. */
+/** The CTR-008 seeds: id, slug, name, type, options, prompt. */
 const SEEDS = [
-  ["f1", "governing_law", "Governing law", "text", "legal", null, "Find the governing law."],
-  ["f2", "jurisdiction", "Jurisdiction", "text", "legal", null, "Find the forum."],
+  ["f1", "governing_law", "Governing law", "text", null, "Find the governing law."],
+  ["f2", "jurisdiction", "Jurisdiction", "text", null, "Find the forum."],
   [
     "f3",
     "our_position",
     "Our position",
     "single_select",
-    "business",
     ["Customer", "Provider", "Other"],
     "Decide our role.",
   ],
@@ -48,7 +47,6 @@ interface StubFieldRow {
   moduleScope: string;
   fieldType: string;
   options: readonly string[] | null;
-  fieldTag: string;
   aiPrompt: string | null;
   isSystemDefault?: boolean;
   archivedAt: string | null;
@@ -56,7 +54,7 @@ interface StubFieldRow {
 }
 
 function seededFields(archivedSlugs: string[] = []): StubFieldRow[] {
-  return SEEDS.map(([id, slug, displayName, fieldType, fieldTag, options, aiPrompt]) => ({
+  return SEEDS.map(([id, slug, displayName, fieldType, options, aiPrompt]) => ({
     id,
     slug,
     displayName,
@@ -64,7 +62,6 @@ function seededFields(archivedSlugs: string[] = []): StubFieldRow[] {
     moduleScope: "contract",
     fieldType,
     options,
-    fieldTag,
     aiPrompt,
     archivedAt: archivedSlugs.includes(slug) ? "2026-08-10T12:00:00.000Z" : null,
     inUseCount: 0,
@@ -103,7 +100,6 @@ function fieldsApi(calls: FieldCalls, rows = seededFields()) {
           moduleScope: body.moduleScope,
           fieldType: body.fieldType,
           options: body.options ?? null,
-          fieldTag: body.fieldTag,
           aiPrompt: body.aiPrompt ?? null,
           archivedAt: null,
           inUseCount: 0,
@@ -163,7 +159,7 @@ describe("the Contracts section tabs", () => {
 });
 
 describe("the seeded catalog (CTR-008 core fields)", () => {
-  it("renders the three seeds with type, tag, and the prompt sparkle", async () => {
+  it("renders the three seeds with type and the prompt sparkle, without a Tag column", async () => {
     stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls()) });
     renderAt("/settings/contracts/fields");
     await screen.findByText("Governing law");
@@ -175,7 +171,8 @@ describe("the seeded catalog (CTR-008 core fields)", () => {
     const first = items[0]!;
     expect(within(first).getByText(fullText("Type: Text"))).toBeInTheDocument();
     expect(screen.queryByText("Scope")).not.toBeInTheDocument();
-    expect(within(first).getByText(fullText("Tag: Legal"))).toBeInTheDocument();
+    expect(screen.queryByText("Tag")).not.toBeInTheDocument();
+    expect(within(first).queryByText(fullText("Tag: Legal"))).not.toBeInTheDocument();
     // Every seed carries a default prompt, marked by the sparkle.
     expect(
       within(first).getByRole("img", { name: "Governing law has an AI extraction prompt" }),
@@ -239,7 +236,7 @@ describe("in-place rename (DES-017)", () => {
 });
 
 describe("create (the field-editor dialog)", () => {
-  it("creates a select field in its area with options and a tag", async () => {
+  it("creates a select field in its area with options and no tag control", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
     renderAt("/settings/contracts/fields");
@@ -247,6 +244,7 @@ describe("create (the field-editor dialog)", () => {
     await user.click(await screen.findByRole("button", { name: "Add field" }));
 
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Department");
     await user.selectOptions(
       within(dialog).getByRole("combobox", { name: "Type" }),
@@ -265,7 +263,6 @@ describe("create (the field-editor dialog)", () => {
           displayName: "Department",
           moduleScope: "contract",
           fieldType: "single_select",
-          fieldTag: "business",
           options: ["Legal", "Procurement"],
         },
       ]),
@@ -281,6 +278,7 @@ describe("create (the field-editor dialog)", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add field" }));
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Payment terms");
     await user.selectOptions(within(dialog).getByRole("combobox", { name: "Type" }), "text");
     await user.type(
@@ -294,7 +292,6 @@ describe("create (the field-editor dialog)", () => {
           displayName: "Payment terms",
           moduleScope: "contract",
           fieldType: "text",
-          fieldTag: "business",
           aiPrompt: "Extract the payment terms.",
         },
       ]),
@@ -310,6 +307,7 @@ describe("create (the field-editor dialog)", () => {
       const user = userEvent.setup();
       await user.click(await screen.findByRole("button", { name: "Add field" }));
       const dialog = await screen.findByRole("dialog", { name: "Add field" });
+      expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
       await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Internal reference");
       const type = within(dialog).getByRole("combobox", { name: "Type" });
       await user.selectOptions(type, "text");
@@ -326,7 +324,6 @@ describe("create (the field-editor dialog)", () => {
             displayName: "Internal reference",
             moduleScope: "contract",
             fieldType,
-            fieldTag: "business",
           },
         ]),
       );
@@ -340,6 +337,7 @@ describe("create (the field-editor dialog)", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add field" }));
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
 
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Half-formed");
     await user.click(within(dialog).getByRole("button", { name: "Add field" }));
@@ -559,6 +557,7 @@ describe("Field answer style", () => {
     renderAt("/settings/contracts/fields");
     await user.click(await screen.findByRole("button", { name: "Add field" }));
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Assignment clause");
     const type = within(dialog).getByRole("combobox", { name: "Type" });
     await user.selectOptions(type, "long_text");

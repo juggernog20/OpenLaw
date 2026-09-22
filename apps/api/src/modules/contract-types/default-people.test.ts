@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
 
@@ -253,7 +254,7 @@ it("copies the current list on Request conversion and both renewal vehicles", as
     payload: { targetModule: "contract", targetTypeId: typeId },
   });
   expect(targeted.statusCode, targeted.body).toBe(200);
-  const submitted = await h.app.inject({
+  const submitted = await submitRequestFixture(h, {
     method: "POST",
     url: "/api/v1/requests",
     cookies: portal,
