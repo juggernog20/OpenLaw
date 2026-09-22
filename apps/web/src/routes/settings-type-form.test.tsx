@@ -137,6 +137,86 @@ describe("the type Form tab", () => {
     expect(required).toHaveAccessibleDescription(/unavailable for Finance reviewer/);
   });
 
+  it("stays quiet while a condition is half-written and still blocks other edits", async () => {
+    const { user, writes } = setupForm();
+    await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
+    await waitFor(() => expect(writes).toHaveLength(1));
+    await user.click(screen.getByRole("button", { name: "Add condition" }));
+    // Nothing picked yet, and a Row picked with no value yet: both are
+    // unfinished, not wrong, so the editor says nothing.
+    expect(screen.queryByText("Complete the Branch condition first")).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
+    expect(screen.queryByText("Complete the Branch condition first")).not.toBeInTheDocument();
+    expect(writes).toHaveLength(1);
+    // Another control cannot save while that Branch is unfinished, and
+    // says why.
+    await user.click(screen.getByRole("switch", { name: "Expiry date: On intake form" }));
+    expect(await screen.findByText("Complete the Branch condition first")).toBeInTheDocument();
+    expect(writes).toHaveLength(1);
+    await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
+    await waitFor(() => expect(writes).toHaveLength(2));
+  });
+
+  it("removes an unfinished Branch and refuses to stack a second draft on it", async () => {
+    const { user, writes } = setupForm();
+    await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
+    await waitFor(() => expect(writes).toHaveLength(1));
+    const header = screen.getByRole("heading", { name: "Form" }).parentElement!;
+    await user.click(within(header).getByRole("button", { name: "Add condition" }));
+    // An unfinished Branch reads "Add a condition" until it is complete.
+    expect(await screen.findByRole("button", { name: "Move Add a condition" })).toBeInTheDocument();
+    // A second draft cannot stack on the first: the tree already cannot
+    // be saved, and a deeper draft is how it became unclearable. Both
+    // the root's button and the Branch's own say so.
+    for (const add of screen.getAllByRole("button", { name: "Add condition" })) {
+      expect(add).toHaveAttribute("aria-disabled", "true");
+    }
+    await user.click(within(header).getByRole("button", { name: "Add condition" }));
+    expect(screen.getAllByRole("button", { name: "Move Add a condition" })).toHaveLength(1);
+    // Removing the unfinished Branch works, even though the removal is
+    // itself a save the incomplete tree cannot make.
+    await user.click(screen.getByRole("button", { name: "Actions for Add a condition" }));
+    await user.click(screen.getByRole("menuitem", { name: "Remove condition" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Move Add a condition" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(within(header).getByRole("button", { name: "Add condition" })).not.toHaveAttribute(
+      "aria-disabled",
+    );
+  });
+
+  it("asks AND or OR when the second condition is added and keeps one join for the Branch", async () => {
+    const { user, read } = setupForm();
+    await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
+    await user.click(screen.getByRole("switch", { name: "Expiry date: On intake form" }));
+    await user.click(screen.getByRole("button", { name: "Add condition" }));
+    // No All / Any control before there is anything to join.
+    expect(screen.queryByRole("combobox", { name: "Join conditions" })).not.toBeInTheDocument();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
+    await waitFor(() => expect(read().at(-1)?.kind).toBe("branch"));
+    // The question comes at the moment the join first means something.
+    await user.click(screen.getByRole("button", { name: "Add another condition" }));
+    const ask = screen.getByRole("group", { name: "Join the next condition with" });
+    expect(within(ask).getByRole("button", { name: "AND" })).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: "Row" })).toHaveLength(1);
+    await user.click(within(ask).getByRole("button", { name: "OR" }));
+    expect(screen.getAllByRole("combobox", { name: "Row" })).toHaveLength(2);
+    const join = screen.getByRole("combobox", { name: "Join conditions" });
+    expect(join).toHaveValue("any");
+    // The join stays changeable afterwards, and one value covers them all.
+    await user.selectOptions(join, "all");
+    expect(join).toHaveValue("all");
+    await user.click(screen.getByRole("button", { name: "Add another condition" }));
+    expect(
+      screen.queryByRole("group", { name: "Join the next condition with" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: "Row" })).toHaveLength(3);
+    expect(screen.getAllByRole("combobox", { name: "Join conditions" })).toHaveLength(1);
+  });
+
   it("adds a Fixed-term Branch, moves Expiry date into it and evaluates preview", async () => {
     const { user, read, router, route } = setupForm();
     await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
@@ -145,8 +225,8 @@ describe("the type Form tab", () => {
     await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
     await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
     await waitFor(() => expect(read().at(-1)?.kind).toBe("branch"));
-    await user.click(screen.getByRole("button", { name: "Actions for Expiry date" }));
-    await user.click(screen.getByRole("menuitem", { name: "Move into" }));
+    await user.click(screen.getByRole("button", { name: "Move Expiry date" }));
+    await user.click(screen.getByRole("menuitem", { name: "Put under a condition…" }));
     await user.click(screen.getByRole("button", { name: /Show when all of: Term type is Fixed/ }));
     await waitFor(() =>
       expect(read().at(-1)).toMatchObject({
@@ -237,12 +317,12 @@ it("refuses detaching a condition source beside Detach", async () => {
 
 it("moves out and removes a Branch while keeping its children", async () => {
   const { user, read } = setupForm("contract", false, conditional);
-  await user.click(await screen.findByRole("button", { name: "Actions for Expiry date" }));
-  await user.click(screen.getByRole("menuitem", { name: "Move out" }));
+  await user.click(await screen.findByRole("button", { name: "Move Expiry date" }));
+  await user.click(screen.getByRole("menuitem", { name: "Move out of the condition" }));
   await waitFor(() => expect(read().at(-1)?.id).toBe("expiry_date"));
   expect(read().at(-2)).toMatchObject({ kind: "branch", children: [] });
   await user.click(screen.getByRole("button", { name: /Actions for Show when all of/ }));
-  await user.click(screen.getByRole("menuitem", { name: /Remove branch/ }));
+  await user.click(screen.getByRole("menuitem", { name: "Remove condition" }));
   await waitFor(() => expect(read().some((n) => n.kind === "branch")).toBe(false));
   expect(read().at(-1)?.id).toBe("expiry_date");
 });
@@ -326,7 +406,7 @@ it("keeps an edited Branch draft after a failed write and resends it on Retry", 
 it("removes a populated Branch without detaching its children", async () => {
   const { user, read } = setupForm("contract", false, conditional);
   await user.click(await screen.findByRole("button", { name: /Actions for Show when all of/ }));
-  await user.click(screen.getByRole("menuitem", { name: /Remove branch/ }));
+  await user.click(screen.getByRole("menuitem", { name: "Remove condition" }));
   await waitFor(() => expect(read().at(-1)?.id).toBe("expiry_date"));
   expect(read().some((n) => n.kind === "branch")).toBe(false);
 });

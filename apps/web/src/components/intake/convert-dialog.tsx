@@ -11,7 +11,11 @@ import { identifierLabel } from "../../lib/identifier-label";
 
 /** Prefilled conversion form. Edits apply to the new record when conversion succeeds. */
 
-import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
+import {
+  CreateAttachments,
+  useCreateAttachments,
+  type ExistingAttachment,
+} from "../documents/create-attachments";
 import { ConversionEvidence } from "./conversion-evidence";
 import { DescriptionSourceToggle, RequesterDescription } from "./description-source-toggle";
 import { noticeWhenFinished, type ConversionDraft } from "./prepared-convert-dialog";
@@ -106,6 +110,7 @@ export function ConvertDialog({
   initialTargetModule,
   reference,
   request,
+  attachments: submitted = [],
   customFieldRefs,
   contractTypes,
   matterTypes,
@@ -121,6 +126,10 @@ export function ConvertDialog({
   reference: string;
   initialTargetModule?: "contract" | "matter";
   request: StaffRequest;
+  /** The files the Requester sent. The conversion copies each onto the
+   * new record, so the dialog lists them beside anything staged here
+   * (2026-09-22, from live review). */
+  attachments?: readonly ExistingAttachment[];
   /** The request type's own attached fields — what the form collected,
    * and the labels the collected values are named by. */
   fields: readonly StaffRequestField[];
@@ -1124,6 +1133,7 @@ export function ConvertDialog({
               showKind={targetModule !== "matter"}
               uploads={attachments}
               disabled={busy}
+              existing={submitted}
             />
             {error !== null && (
               <p id={TITLE_ERROR_ID} role="alert" className="text-xs text-status-danger-fg">

@@ -90,6 +90,13 @@ const messages = defineMessages({
   Close: { id: "typeForm.close", defaultMessage: "Close" },
   Cancel: { id: "typeForm.cancel", defaultMessage: "Cancel" },
   "{row}: {switch}": { id: "typeForm.row-switch-name", defaultMessage: "{row}: {switch}" },
+  AND: { id: "typeForm.and", defaultMessage: "AND" },
+  OR: { id: "typeForm.or", defaultMessage: "OR" },
+  "Join conditions": { id: "typeForm.join-conditions", defaultMessage: "Join conditions" },
+  "Join the next condition with": {
+    id: "typeForm.join-the-next-condition-with",
+    defaultMessage: "Join the next condition with",
+  },
   "Add another condition": {
     id: "typeForm.add-another-condition",
     defaultMessage: "Add another condition",
@@ -104,11 +111,10 @@ const messages = defineMessages({
     id: "typeForm.add-condition-inside",
     defaultMessage: "Add condition inside",
   },
-  "Add row into branch": {
-    id: "typeForm.add-row-into-branch",
-    defaultMessage: "Add row into branch",
+  "Add field into condition": {
+    id: "typeForm.add-field-into-condition",
+    defaultMessage: "Add field into condition",
   },
-  All: { id: "typeForm.all", defaultMessage: "All" },
   "All Fields are attached": {
     id: "typeForm.all-fields-are-attached",
     defaultMessage: "All Fields are attached",
@@ -117,7 +123,6 @@ const messages = defineMessages({
     id: "typeForm.already-at-the-root",
     defaultMessage: "Already at the root",
   },
-  Any: { id: "typeForm.any", defaultMessage: "Any" },
   "Approval defaults": { id: "typeForm.approval-defaults", defaultMessage: "Approval defaults" },
   "Attach Field": { id: "typeForm.attach-field", defaultMessage: "Attach Field" },
   Boolean: { id: "typeForm.boolean", defaultMessage: "Boolean" },
@@ -145,9 +150,18 @@ const messages = defineMessages({
   Form: { id: "typeForm.form", defaultMessage: "Form" },
   Intake: { id: "typeForm.intake", defaultMessage: "Intake" },
   "Long text": { id: "typeForm.long-text", defaultMessage: "Long text" },
-  Match: { id: "typeForm.match", defaultMessage: "Match" },
-  "Move into": { id: "typeForm.move-into", defaultMessage: "Move into" },
-  "Move out": { id: "typeForm.move-out", defaultMessage: "Move out" },
+  "Move out of the condition": {
+    id: "typeForm.move-out-of-the-condition",
+    defaultMessage: "Move out of the condition",
+  },
+  "Put under a condition": {
+    id: "typeForm.put-under-a-condition",
+    defaultMessage: "Put under a condition",
+  },
+  "Put under a condition…": {
+    id: "typeForm.put-under-a-condition-menu",
+    defaultMessage: "Put under a condition…",
+  },
   "Multi select": { id: "typeForm.multi-select", defaultMessage: "Multi select" },
   "No Fields attached": { id: "typeForm.no-fields-attached", defaultMessage: "No Fields attached" },
   "No Fields match": { id: "typeForm.no-fields-match", defaultMessage: "No Fields match" },
@@ -173,10 +187,7 @@ const messages = defineMessages({
     defaultMessage: "Preview intake form",
   },
   Record: { id: "typeForm.record", defaultMessage: "Record" },
-  "Remove branch \u00b7 Keep children here": {
-    id: "typeForm.remove-branch-keep-children-here",
-    defaultMessage: "Remove branch \u00b7 Keep children here",
-  },
+  "Remove condition": { id: "typeForm.remove-condition", defaultMessage: "Remove condition" },
   "Required for creation": {
     id: "typeForm.required-for-creation",
     defaultMessage: "Required for creation",
@@ -186,7 +197,6 @@ const messages = defineMessages({
     defaultMessage: "Retry condition change",
   },
   Row: { id: "typeForm.row", defaultMessage: "Row" },
-  "Rows above only": { id: "typeForm.rows-above-only", defaultMessage: "Rows above only" },
   "Search fields": { id: "typeForm.search-fields", defaultMessage: "Search fields" },
   "Select Row": { id: "typeForm.select-row", defaultMessage: "Select Row" },
   "Select value": { id: "typeForm.select-value", defaultMessage: "Select value" },

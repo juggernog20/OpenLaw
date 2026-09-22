@@ -69,6 +69,7 @@ export function TypeFormBuilder({
   const [notes, setNotes] = useState<Record<string, { status: FieldStatus; detail?: string }>>({});
   const [editing, setEditing] = useState<string | null>(null);
   const [moving, setMoving] = useState<string | null>(null);
+  const [gripMenu, setGripMenu] = useState<string | null>(null);
   const [fieldEditor, setFieldEditor] = useState<{
     parent: string | null;
     target: FieldRow | null;
@@ -132,16 +133,22 @@ export function TypeFormBuilder({
       <StatusNote status={notes[key]?.status ?? "idle"} detail={notes[key]?.detail} />
     </span>
   );
-  function refusal(next: Form): string | undefined {
-    const incomplete = flatten(next).find(
-      (n) =>
+  /** Every Branch whose condition is still half-written. */
+  function incompleteBranches(next: Form): FormBranch[] {
+    return flatten(next).filter(
+      (n): n is FormBranch =>
         n.kind === "branch" &&
         (!n.conditions.length ||
           n.conditions.some(
             (c) => !c.rowRef || (c.operator !== "is_set" && (c.value === null || c.value === "")),
           )),
     );
-    if (incomplete) return t("Complete the Branch condition first");
+  }
+  function incompleteBranch(next: Form): FormBranch | undefined {
+    return incompleteBranches(next)[0];
+  }
+  function refusal(next: Form): string | undefined {
+    if (incompleteBranch(next)) return t("Complete the Branch condition first");
     const issue = validateForm(next)[0];
     if (issue) {
       const row = nodes.find((n): n is FormRow => n.kind === "row" && n.rowRef === issue.rowRef);
@@ -156,12 +163,36 @@ export function TypeFormBuilder({
   }
   async function commit(next: Form, key: string, message?: string) {
     if (busyRef.current) return false;
+    // The whole Form goes in one write, so a tree holding a half-written
+    // Branch cannot be saved at all. The change still applies locally:
+    // otherwise a Branch nobody can save is also a Branch nobody can
+    // remove, and the person is stuck with it (2026-09-22, from live
+    // review). Clearing one, and the draft's own editor, say nothing,
+    // because unfinished is not wrong. Anything else explains why it
+    // did not save.
+    const unfinished = incompleteBranches(next);
+    if (unfinished.length) {
+      const clearing = unfinished.length < incompleteBranches(form).length;
+      const own = unfinished.some((branch) => key === `${branch.id}-condition`);
+      setForm(next);
+      if (clearing || own) note(key, "idle");
+      else note(key, "error", t("Complete the Branch condition first"));
+      return false;
+    }
     const reason = refusal(next);
     if (reason) {
       note(key, "error", reason);
       return false;
     }
-    if (JSON.stringify(next) === JSON.stringify(saved.current)) return true;
+    // Nothing to send, but the tree on screen may still differ: removing
+    // a Branch that was only ever local lands exactly back on the saved
+    // tree, and without this that removal was silently dropped
+    // (2026-09-22, from live review).
+    if (JSON.stringify(next) === JSON.stringify(saved.current)) {
+      setForm(next);
+      note(key, "idle");
+      return true;
+    }
     busyRef.current = true;
     setBusy(true);
     note(key, "saving");
@@ -257,7 +288,9 @@ export function TypeFormBuilder({
     void commit(next, `${node.id}-move`).then(() => focusGrip(node.id));
   }
   function addBranch(parent: string | null) {
-    if (busyRef.current) return;
+    // One draft at a time: a second unfinished Branch only deepens a
+    // tree that already cannot be saved.
+    if (busyRef.current || incompleteBranch(form)) return;
     restoreFocus.current = document.activeElement as HTMLElement;
     const branch: FormBranch = {
       kind: "branch",
@@ -311,6 +344,9 @@ export function TypeFormBuilder({
       node.kind === "row"
         ? catalog.find((f): f is FieldRow => f.id === node.id && isFieldRow(f, module))
         : undefined;
+    // Depth moves live on the grip's menu; a built-in Row has nothing
+    // else to offer, so it draws no overflow.
+    if (!field && node.kind !== "branch") return null;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -324,21 +360,6 @@ export function TypeFormBuilder({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem
-            onSelect={() => {
-              restoreFocus.current = document.getElementById(`move-${node.id}`);
-              setMoving(node.id);
-            }}
-          >
-            {t("Move into")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!location(form, node.id)?.parent}
-            onSelect={() => moveOut(node)}
-          >
-            {t("Move out")}
-            {!location(form, node.id)?.parent && ` · ${t("Already at the root")}`}
-          </DropdownMenuItem>
           {field && (
             <DropdownMenuItem
               onSelect={() => openField(null, field, document.getElementById(`move-${node.id}`))}
@@ -348,7 +369,10 @@ export function TypeFormBuilder({
           )}
           {node.kind === "branch" && (
             <>
-              <DropdownMenuItem onSelect={() => addBranch(node.id)}>
+              <DropdownMenuItem
+                disabled={!!incompleteBranch(form)}
+                onSelect={() => addBranch(node.id)}
+              >
                 {t("Add condition inside")}
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -356,7 +380,7 @@ export function TypeFormBuilder({
                   void commit(replaceNode(form, node.id, node.children), `${node.id}-move`)
                 }
               >
-                {t("Remove branch · Keep children here")}
+                {t("Remove condition")}
               </DropdownMenuItem>
             </>
           )}
@@ -364,36 +388,74 @@ export function TypeFormBuilder({
       </DropdownMenu>
     );
   }
+  /** The grip drags with the pointer and, on click, Enter or Space,
+   * opens the depth menu (DES-090 point 6). The menu anchors on an
+   * invisible sibling rather than the grip itself: a Radix trigger
+   * prevents default on pointer down, and Chromium then never starts a
+   * native drag. */
   function grip(node: FormNode) {
+    const open = gripMenu === node.id;
+    const atRoot = !location(form, node.id)?.parent;
+    const focusGrip = () => document.getElementById(`move-${node.id}`)?.focus();
     return (
-      <Button
-        id={`move-${node.id}`}
-        variant="ghost"
-        size="icon"
-        aria-label={t("Move {row}", { row: name(node) })}
-        aria-describedby={`note-${node.id}-move`}
-        draggable={!busy}
-        onDragStart={(e) => {
-          dragged.current = node.id;
-          e.dataTransfer.setData("text/plain", node.id);
-        }}
-        onDragEnd={() => {
-          dragged.current = null;
-          setDrop(null);
-        }}
-        onKeyDown={(e) => {
-          if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+      <DropdownMenu open={open} onOpenChange={(next) => setGripMenu(next ? node.id : null)}>
+        <span className="relative inline-flex">
+          <Button
+            id={`move-${node.id}`}
+            variant="ghost"
+            size="icon"
+            aria-label={t("Move {row}", { row: name(node) })}
+            aria-describedby={`note-${node.id}-move`}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            draggable={!busy}
+            onDragStart={(e) => {
+              dragged.current = node.id;
+              e.dataTransfer.setData("text/plain", node.id);
+            }}
+            onDragEnd={() => {
+              dragged.current = null;
+              setDrop(null);
+            }}
+            onKeyDown={(e) => {
+              if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+                e.preventDefault();
+                reorder(node.id, e.key === "ArrowUp" ? -1 : 1);
+              }
+            }}
+            onClick={() => setGripMenu(node.id)}
+          >
+            <GripVertical size={16} />
+          </Button>
+          <DropdownMenuTrigger asChild>
+            <span
+              aria-hidden="true"
+              tabIndex={-1}
+              className="pointer-events-none absolute inset-0"
+            />
+          </DropdownMenuTrigger>
+        </span>
+        <DropdownMenuContent
+          align="start"
+          onCloseAutoFocus={(e) => {
             e.preventDefault();
-            reorder(node.id, e.key === "ArrowUp" ? -1 : 1);
-          }
-        }}
-        onClick={() => {
-          restoreFocus.current = document.activeElement as HTMLElement;
-          setMoving(node.id);
-        }}
-      >
-        <GripVertical size={16} />
-      </Button>
+            focusGrip();
+          }}
+        >
+          <DropdownMenuItem
+            onSelect={() => {
+              restoreFocus.current = document.getElementById(`move-${node.id}`);
+              setMoving(node.id);
+            }}
+          >
+            {t("Put under a condition…")}
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={atRoot} onSelect={() => moveOut(node)}>
+            {t("Move out of the condition")}
+            {atRoot && ` · ${t("Already at the root")}`}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
   function switches(
@@ -544,7 +606,7 @@ export function TypeFormBuilder({
           </div>
         ) : (
           <div
-            className="relative before:pointer-events-none before:absolute before:inset-y-0 before:start-(--branch-indent) before:w-0.5 before:bg-border-default"
+            className="relative"
             style={{ "--branch-indent": `${24 + depth * 24}px` } as React.CSSProperties}
           >
             <div
@@ -612,10 +674,24 @@ export function TypeFormBuilder({
                 if (dragged.current) void move(dragged.current, node.id);
               }}
             >
-              <div className={drop === `${node.id}-inside` ? "outline-2 outline-accent" : ""}>
+              {/* The left rule runs beside the child Rows only: not the
+                  header, not an open condition editor, not the footer,
+                  and not at all while the Branch is empty. */}
+              <div
+                className={`relative before:pointer-events-none before:absolute before:inset-y-0 before:start-(--branch-indent) before:w-0.5 before:bg-border-default ${
+                  drop === `${node.id}-inside` ? "outline-2 outline-accent" : ""
+                }`}
+              >
                 {tree(node.children, depth + 1)}
               </div>
-              <div className="flex flex-wrap items-start gap-2 p-4">{toolbar(node.id)}</div>
+              {/* Starts where the Branch header starts, so the buttons
+                  sit inside the left rule like the children do. */}
+              <div
+                className="flex flex-wrap items-start gap-2 py-4 pe-4"
+                style={{ paddingInlineStart: 36 + depth * 24 }}
+              >
+                {toolbar(node.id)}
+              </div>
             </div>
           </div>
         )}
@@ -633,16 +709,24 @@ export function TypeFormBuilder({
           <AttachMenu
             fields={available}
             disabled={busy}
-            label={parent ? t("Add row into branch") : t("Attach Field")}
+            label={parent ? t("Add field into condition") : t("Attach Field")}
             onAttach={(f) => void attach(f, parent, `${key}-attach`)}
             onCreate={(trigger) => openField(parent, null, trigger)}
           />
           {status(`${key}-attach`)}
         </div>
+        {/* Only the root offers a standalone Create Field button: a
+            Branch's own Add field into condition menu carries the same
+            create action already scoped to it, so a second button here
+            would just repeat the root one (2026-09-22, from live
+            review). A failed create-and-attach can still happen from
+            that menu at any level, so the retry stays unconditional. */}
         <div>
-          <Button variant="secondary" size="sm" disabled={busy} onClick={() => openField(parent)}>
-            {t("Create Field")}
-          </Button>
+          {parent === null && (
+            <Button variant="secondary" size="sm" disabled={busy} onClick={() => openField(parent)}>
+              {t("Create Field")}
+            </Button>
+          )}
           {status(`${key}-create`)}
           {created?.parent === parent && (
             <Button
@@ -659,9 +743,27 @@ export function TypeFormBuilder({
             </Button>
           )}
         </div>
-        <Button variant="secondary" size="sm" disabled={busy} onClick={() => addBranch(parent)}>
-          {t("Add condition")}
-        </Button>
+        {(() => {
+          // One draft at a time. The reason rides the button itself, as
+          // a locked switch's does.
+          const drafting = !!incompleteBranch(form);
+          const add = (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              aria-disabled={drafting || undefined}
+              onClick={() => addBranch(parent)}
+            >
+              {t("Add condition")}
+            </Button>
+          );
+          return drafting ? (
+            <Tooltip content={t("Complete the Branch condition first")}>{add}</Tooltip>
+          ) : (
+            add
+          );
+        })()}
         {parent === null && module !== "entity" && (
           <Button
             variant="secondary"
@@ -720,7 +822,7 @@ export function TypeFormBuilder({
               restoreFocus.current?.focus();
             }}
           >
-            <DialogTitle>{t("Move into")}</DialogTitle>
+            <DialogTitle>{t("Put under a condition")}</DialogTitle>
             <div className="mt-4 flex flex-col gap-2">
               {nodes
                 .filter(
@@ -774,7 +876,7 @@ export function TypeFormBuilder({
                 }}
                 disabled={!location(form, moving)?.parent}
               >
-                {t("Move out")}
+                {t("Move out of the condition")}
               </Button>
               <Button variant="ghost" onClick={() => setMoving(null)}>
                 {t("Cancel")}

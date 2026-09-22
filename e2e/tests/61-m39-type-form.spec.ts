@@ -148,8 +148,8 @@ test("NDA Branch answers reach the converted Contract and its Portal record", as
       await page.getByRole("combobox", { name: "Value", exact: true }).selectOption("fixed");
     });
     for (const name of ["Expiry date", "Governing law"]) {
-      await page.getByRole("button", { name: `Actions for ${name}`, exact: true }).click();
-      await page.getByRole("menuitem", { name: "Move into", exact: true }).click();
+      await page.getByRole("button", { name: `Move ${name}`, exact: true }).click();
+      await page.getByRole("menuitem", { name: "Put under a condition…", exact: true }).click();
       await saveForm(page, formPath, async () => {
         await page
           .getByRole("button", { name: "Show when all of: Term type is Fixed", exact: true })

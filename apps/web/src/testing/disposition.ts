@@ -66,12 +66,16 @@ export function staffRequest(overrides: Record<string, unknown> = {}): Record<st
 /** The whole detail read, around one Request. `fields` is what the
  * request form collected labels for, which only Convert's suite needs
  * filled. */
-export function staffDetail(row: Record<string, unknown>, fields: unknown[] = []): unknown {
+export function staffDetail(
+  row: Record<string, unknown>,
+  fields: unknown[] = [],
+  attachments: unknown[] = [],
+): unknown {
   return {
     request: row,
     fields,
     customFieldRefs: { users: [], entities: [] },
-    attachments: [],
+    attachments,
   };
 }
 

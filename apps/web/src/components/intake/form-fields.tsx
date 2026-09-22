@@ -6,7 +6,7 @@ import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from
 import { Upload, X } from "lucide-react";
 import { MAX_REQUEST_ATTACHMENTS } from "../../lib/requests";
 import { formatFileSize } from "../../lib/format";
-import { FileTypeIcon } from "../documents/file-type-icon";
+import { FileTile, FileTileGrid, TILE_ACTION_CLASS } from "../documents/file-tiles";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { DescribedField } from "../described-field";
@@ -130,45 +130,33 @@ export function AttachmentsField({
           }}
         />
         {files.length > 0 && (
-          <ul className="grid w-full grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] gap-3 pb-3">
+          <FileTileGrid className="pb-3">
             {files.map((file, index) => (
-              <li
+              <FileTile
                 key={`${String(index)}-${file.name}`}
-                className="relative flex aspect-square min-w-0 flex-col items-center justify-between gap-1 rounded-card border border-border-default bg-raised p-2.5 shadow-sm"
-              >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-1 end-1 size-6 rounded-full bg-raised"
-                  title={intl.formatMessage(REMOVE_ATTACHMENT, { filename: file.name })}
-                  onClick={() => {
-                    setOverflowed(false);
-                    onFiles(files.filter((_ignored, at) => at !== index));
-                  }}
-                >
-                  <X aria-hidden="true" className="size-3.5" />
-                  <span className="sr-only">
-                    <FormattedMessage {...REMOVE_ATTACHMENT} values={{ filename: file.name }} />
-                  </span>
-                </Button>
-                <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-                  <FileTypeIcon filename={file.name} />
-                </div>
-                <div className="flex w-full min-w-0 shrink-0 flex-col gap-1 text-center">
-                  <span
-                    title={file.name}
-                    className="line-clamp-2 break-words text-sm font-medium leading-4 text-primary"
+                filename={file.name}
+                caption={formatFileSize(file.size, { locale: intl.locale })}
+                action={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className={TILE_ACTION_CLASS}
+                    title={intl.formatMessage(REMOVE_ATTACHMENT, { filename: file.name })}
+                    onClick={() => {
+                      setOverflowed(false);
+                      onFiles(files.filter((_ignored, at) => at !== index));
+                    }}
                   >
-                    {file.name}
-                  </span>
-                  <span className="text-xs text-muted">
-                    {formatFileSize(file.size, { locale: intl.locale })}
-                  </span>
-                </div>
-              </li>
+                    <X aria-hidden="true" className="size-3.5" />
+                    <span className="sr-only">
+                      <FormattedMessage {...REMOVE_ATTACHMENT} values={{ filename: file.name }} />
+                    </span>
+                  </Button>
+                }
+              />
             ))}
-          </ul>
+          </FileTileGrid>
         )}
         {files.length === 0 && <Upload aria-hidden="true" className="size-5 shrink-0 text-muted" />}
         <p className="max-w-prose text-center text-sm text-muted">

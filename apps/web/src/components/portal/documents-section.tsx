@@ -12,6 +12,7 @@ import { Label } from "../ui/label";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { dragCarriesFiles } from "../../lib/batch-upload";
 import { formatFileSize, formatShortDate } from "../../lib/format";
+import { FileTile, FileTileGrid, TILE_ACTION_CLASS } from "../documents/file-tiles";
 import {
   documentDownloadHref,
   documentKindLabel,
@@ -603,44 +604,49 @@ function UploadDocuments({
             />
           </button>
           {files.length > 0 && (
-            <ul className="flex max-h-60 flex-col gap-3 overflow-y-auto">
+            <FileTileGrid className="max-h-72 overflow-y-auto">
               {files.map((file, index) => (
-                <li key={index} className="flex items-start justify-between gap-2 text-sm">
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <span className="break-words font-medium">{file.name}</span>
-                    <span className="text-muted">{formatFileSize(file.size)}</span>
-                    {completed.has(file) && (
-                      <span role="status">
+                <FileTile
+                  key={index}
+                  filename={file.name}
+                  caption={formatFileSize(file.size)}
+                  status={
+                    completed.has(file) ? (
+                      <span role="status" className="text-xs text-muted">
                         <FormattedMessage
                           id="portal.documents.fileUploaded"
                           defaultMessage="Uploaded"
                         />
                       </span>
-                    )}
-                    {failures.has(file) && (
-                      <span role="alert" className="text-status-danger-fg">
+                    ) : failures.has(file) ? (
+                      <span role="alert" className="text-xs text-status-danger-fg">
                         {failures.get(file)}
                       </span>
-                    )}
-                  </div>
-                  {!completed.has(file) && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled={busy}
-                      aria-label={intl.formatMessage(
-                        { id: "portal.documents.removeFile", defaultMessage: "Remove {name}" },
-                        { name: file.name },
-                      )}
-                      onClick={() => setFiles((previous) => previous.filter((_, i) => i !== index))}
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </Button>
-                  )}
-                </li>
+                    ) : null
+                  }
+                  action={
+                    !completed.has(file) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className={TILE_ACTION_CLASS}
+                        disabled={busy}
+                        aria-label={intl.formatMessage(
+                          { id: "portal.documents.removeFile", defaultMessage: "Remove {name}" },
+                          { name: file.name },
+                        )}
+                        onClick={() =>
+                          setFiles((previous) => previous.filter((_, i) => i !== index))
+                        }
+                      >
+                        <X aria-hidden="true" className="size-3.5" />
+                      </Button>
+                    )
+                  }
+                />
               ))}
-            </ul>
+            </FileTileGrid>
           )}
           {module === "contract" && (
             <div className="flex flex-col gap-2">

@@ -383,6 +383,11 @@ export function InboxRequestPage() {
           initialTargetModule={disposing}
           reference={reference}
           request={request}
+          attachments={attachments.map((attachment) => ({
+            id: attachment.id,
+            filename: attachment.filename,
+            href: staffRequestAttachmentHref(request.number, attachment.id),
+          }))}
           fields={fields}
           customFieldRefs={customFieldRefs}
           contractTypes={contractTypes}
