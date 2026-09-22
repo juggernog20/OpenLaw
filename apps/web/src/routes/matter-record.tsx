@@ -653,12 +653,12 @@ function MatterRecord() {
       <MatterConversionValue
         // Retain the control's draft if the next Type attaches this same Field.
         key={field.slug}
+        className={field.fieldType === "long_text" ? "@2xl/page:col-span-2" : undefined}
         active={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
         number={saved.number}
         slug={`field:${field.slug}`}
         onConfirmed={!frozen ? confirmedConversion : undefined}
       >
-        {" "}
         <MatterCustomField
           field={field}
           aiGenerated={Boolean(saved.aiUnverified?.[`field:${field.slug}`])}
@@ -1316,7 +1316,7 @@ function MatterRecord() {
                       />
                     )}
                   </MatterConversionValue>{" "}
-                  <dl className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-2">
+                  <dl className="grid grid-cols-1 items-start gap-x-6 gap-y-4 @2xl/page:grid-cols-2">
                     {orderedRows}
                     <RecordPersonField
                       id="matter-manager"
@@ -1705,7 +1705,7 @@ function MatterCustomField({
       description={field.description}
       descriptionId={`${id}-description`}
       tabIndex={frozen && field.description?.trim() ? 0 : undefined}
-      className={`flex flex-col gap-1.5 ${field.fieldType === "text" || field.fieldType === "long_text" ? "@2xl/page:col-span-2" : ""}`}
+      className="flex min-w-0 flex-col gap-1.5 [&>span:empty]:hidden"
     >
       <Label id={`${id}-label`} htmlFor={id}>
         {field.displayName}
