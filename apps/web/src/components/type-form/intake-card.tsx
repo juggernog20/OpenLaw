@@ -175,18 +175,30 @@ export function IntakeFormCard({
       region
       flush
       actions={
-        <Button
-          ref={eye}
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="size-7"
-          aria-label={t("Preview intake form")}
-          disabled={!form}
-          onClick={() => setPreview(true)}
-        >
-          <Eye size={16} aria-hidden="true" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            ref={eye}
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="size-7"
+            aria-label={t("Preview intake form")}
+            disabled={!form}
+            onClick={() => setPreview(true)}
+          >
+            <Eye size={16} aria-hidden="true" />
+          </Button>
+          {destinationType && (
+            <Button asChild variant="secondary" size="sm">
+              <Link to={`/settings/${module}s/types/${destinationType.id}/form`}>
+                <FormattedMessage
+                  id="settings.requestTypeEditor.editForm"
+                  defaultMessage="Edit form"
+                />
+              </Link>
+            </Button>
+          )}
+        </div>
       }
     >
       {destinationType && (
@@ -227,20 +239,6 @@ export function IntakeFormCard({
             defaultMessage="Loading Intake form…"
           />
         </p>
-      )}
-      {destinationType && (
-        <div className="p-4">
-          <Link
-            className="rounded-button text-sm font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
-            to={`/settings/${module}s/types/${destinationType.id}/form`}
-          >
-            <FormattedMessage
-              id="settings.requestTypeEditor.editOnType"
-              defaultMessage="Edit on {type}"
-              values={{ type: destinationType.displayName }}
-            />
-          </Link>
-        </div>
       )}
       {preview && form && destinationType && (
         <IntakePreview
