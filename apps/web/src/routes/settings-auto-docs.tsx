@@ -10,6 +10,7 @@ import { requireUser } from "../lib/session";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../lib/form-controls";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
+import { Label } from "../components/ui/label";
 
 export async function settingsAutoDocsLoader() {
   const user = await requireUser();
@@ -71,14 +72,23 @@ export function SettingsAutoDocsPage() {
           void save();
         }}
       >
-        <label className="block space-y-1">
-          <span>
+        <div className="space-y-1">
+          <Label
+            htmlFor="acknowledgement-frequency"
+            help={
+              <FormattedMessage
+                id="settings.autoDocs.acknowledgementScopeHelp"
+                defaultMessage="When acknowledgement is required, a person must accept each distinct statement, including any custom text on an Auto-Doc."
+              />
+            }
+          >
             <FormattedMessage
               id="settings.autoDocs.acknowledgementFrequency"
               defaultMessage="Acknowledgement frequency"
             />
-          </span>
+          </Label>
           <select
+            id="acknowledgement-frequency"
             className={CONTROL_CLASS}
             value={frequency}
             disabled={busy}
@@ -108,13 +118,7 @@ export function SettingsAutoDocsPage() {
               </option>
             ))}
           </select>
-        </label>
-        <p className="text-sm text-muted">
-          <FormattedMessage
-            id="settings.autoDocs.acknowledgementScopeHelp"
-            defaultMessage="When acknowledgement is required, a person must accept each distinct statement, including any custom text on an Auto-Doc."
-          />
-        </p>
+        </div>
         <label className="block space-y-1">
           <span>
             <FormattedMessage

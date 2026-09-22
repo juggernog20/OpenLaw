@@ -3,7 +3,7 @@
 import { test, expect } from "@playwright/test";
 import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
 
-test("both AI prompt cards show editable prompts and no code-owned format note", async ({
+test("both AI prompt cards show format guidance in delayed label tooltips", async ({
   page,
   request,
 }) => {
@@ -17,12 +17,21 @@ test("both AI prompt cards show editable prompts and no code-owned format note",
     await expect(inputs).toHaveCount(name.startsWith("Matter") ? 5 : 7);
     for (const input of await inputs.all()) {
       await expect(input).toBeEditable();
-      await expect(input).not.toHaveAttribute("aria-describedby", /.+/);
+      await expect(input).toHaveAccessibleDescription(/^Return .+\.$/);
     }
-    await expect(card.getByText(/^Return .+\.$/)).toHaveCount(0);
+    for (const hint of await card.getByText(/^Return .+\.$/).all()) await expect(hint).toBeHidden();
     await expect(card.getByText(/greyed sentence/)).toHaveCount(0);
   }
   const date = page.getByRole("textbox", { name: "Effective date prompt", exact: true });
   await expect(date).toBeVisible();
-  await expect(date).not.toHaveAccessibleDescription(/Return a date/);
+  await expect(date).toHaveAccessibleDescription("Return a date as YYYY-MM-DD.");
+  const help = page
+    .getByRole("listitem")
+    .filter({ has: date })
+    .getByRole("button", { name: "More information" });
+  await help.hover();
+  await expect(page.getByRole("tooltip")).toBeHidden();
+  await expect(page.getByRole("tooltip")).toHaveText("Return a date as YYYY-MM-DD.");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).toBeHidden();
 });

@@ -318,7 +318,17 @@ export function SettingsGeneralPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="org-locale">
+          <Label
+            htmlFor="org-locale"
+            help={
+              <>
+                <FormattedMessage
+                  id="settings.general.locale.hint"
+                  defaultMessage="English (United States) is the only available locale for now."
+                />
+              </>
+            }
+          >
             <FormattedMessage id="settings.general.locale" defaultMessage="Default locale" />
           </Label>
           <div className="flex items-center gap-2">
@@ -343,16 +353,20 @@ export function SettingsGeneralPage() {
           </div>
           {/* One option today is honest, not broken: DES-013 ships
                 en-US alone, and the select comes alive with locale #2. */}
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="settings.general.locale.hint"
-              defaultMessage="English (United States) is the only available locale for now."
-            />
-          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="org-timezone">
+          <Label
+            htmlFor="org-timezone"
+            help={
+              <>
+                <FormattedMessage
+                  id="settings.general.timezone.hint"
+                  defaultMessage="Used for the daily digest and date displays until a user signs in."
+                />
+              </>
+            }
+          >
             <FormattedMessage id="settings.general.timezone" defaultMessage="Default timezone" />
           </Label>
           <div className="flex items-center gap-2">
@@ -365,12 +379,6 @@ export function SettingsGeneralPage() {
             />
             <StatusNote status={status.defaultTimezone} detail={detail.defaultTimezone} />
           </div>
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="settings.general.timezone.hint"
-              defaultMessage="Used for the daily digest and date displays until a user signs in."
-            />
-          </p>
         </div>
       </SettingsCard>
       <CurrenciesSettingsCard initialCurrencies={currencies} />

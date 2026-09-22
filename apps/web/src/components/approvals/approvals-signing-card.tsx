@@ -161,6 +161,7 @@ import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
+import { FieldHelp } from "../ui/field-help";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1260,9 +1261,19 @@ function AddApproverDialog({
             void submit();
           }}
         >
-          <fieldset className="flex flex-col gap-2">
+          <fieldset className="flex flex-col gap-2" aria-labelledby="approval-people-label">
             <legend className="mb-1 text-base font-medium">
-              <FormattedMessage id="approvals.approvers" defaultMessage="Approvers" />
+              <span className="inline-flex items-center gap-1">
+                <span id="approval-people-label">
+                  <FormattedMessage id="approvals.approvers" defaultMessage="Approvers" />
+                </span>
+                <FieldHelp labelId="approval-people-label">
+                  <FormattedMessage
+                    id="approvals.approversHelp"
+                    defaultMessage="Everyone you pick is asked at once. They answer in any order."
+                  />
+                </FieldHelp>
+              </span>
             </legend>
             {candidates.length === 0 ? (
               <p className="text-sm text-muted">
@@ -1294,12 +1305,6 @@ function AddApproverDialog({
                 ))}
               </ul>
             )}
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="approvals.approversHelp"
-                defaultMessage="Everyone you pick is asked at once. They answer in any order."
-              />
-            </p>
           </fieldset>
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">
@@ -1701,7 +1706,17 @@ function VoidEnvelopeDialog({
             />
           </p>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="envelope-void-reason">
+            <Label
+              htmlFor="envelope-void-reason"
+              help={
+                <>
+                  <FormattedMessage
+                    id="signing.reasonHelp"
+                    defaultMessage="The provider records this with the withdrawal, and the record keeps it on the row."
+                  />
+                </>
+              }
+            >
               <FormattedMessage id="signing.reason" defaultMessage="Reason" />
             </Label>
             <AutoResizeTextarea
@@ -1716,12 +1731,6 @@ function VoidEnvelopeDialog({
                 setError(null);
               }}
             />
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="signing.reasonHelp"
-                defaultMessage="The provider records this with the withdrawal, and the record keeps it on the row."
-              />
-            </p>
           </div>
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">
@@ -1923,9 +1932,19 @@ function SendEnvelopeDialog({
               />
             </p>
           </div>
-          <fieldset className="flex flex-col gap-2">
+          <fieldset className="flex flex-col gap-2" aria-labelledby="signing-people-label">
             <legend className="mb-1 text-base font-medium">
-              <FormattedMessage id="signing.signers" defaultMessage="Signers" />
+              <span className="inline-flex items-center gap-1">
+                <span id="signing-people-label">
+                  <FormattedMessage id="signing.signers" defaultMessage="Signers" />
+                </span>
+                <FieldHelp labelId="signing-people-label">
+                  <FormattedMessage
+                    id="signing.signersHelp"
+                    defaultMessage="Everyone you name is asked at once. They sign in any order."
+                  />
+                </FieldHelp>
+              </span>
             </legend>
             {signers.map((signer, index) => (
               <div key={signer.key} className="flex items-center gap-2">
@@ -1989,15 +2008,19 @@ function SendEnvelopeDialog({
                 </Button>
               </div>
             )}
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="signing.signersHelp"
-                defaultMessage="Everyone you name is asked at once. They sign in any order."
-              />
-            </p>
           </fieldset>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="envelope-subject">
+            <Label
+              htmlFor="envelope-subject"
+              help={
+                <>
+                  <FormattedMessage
+                    id="signing.subjectHelp"
+                    defaultMessage="Signers see this on the invitation. Left blank, it names this contract."
+                  />
+                </>
+              }
+            >
               <FormattedMessage id="signing.subject" defaultMessage="Subject" />
             </Label>
             <input
@@ -2010,12 +2033,6 @@ function SendEnvelopeDialog({
                 setError(null);
               }}
             />
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="signing.subjectHelp"
-                defaultMessage="Signers see this on the invitation. Left blank, it names this contract."
-              />
-            </p>
           </div>
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">

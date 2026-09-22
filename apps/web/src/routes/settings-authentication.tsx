@@ -71,10 +71,14 @@ function changedProviderFields(
   return body;
 }
 
-function FormField(props: Readonly<{ id: string; label: ReactNode; children: ReactNode }>) {
+function FormField(
+  props: Readonly<{ id: string; label: ReactNode; help?: ReactNode; children: ReactNode }>,
+) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={props.id}>{props.label}</Label>
+      <Label htmlFor={props.id} help={props.help}>
+        {props.label}
+      </Label>
       {props.children}
     </div>
   );
@@ -284,6 +288,16 @@ export function SettingsAuthenticationPage() {
       <FormField
         id="sso-client-secret"
         label={<FormattedMessage id="settings.auth.clientSecret" defaultMessage="Client secret" />}
+        help={
+          provider && (
+            <>
+              <FormattedMessage
+                id="settings.auth.secret.hint"
+                defaultMessage="Leave blank to keep the current secret. Paste a new value to rotate."
+              />
+            </>
+          )
+        }
       >
         <Input
           id="sso-client-secret"
@@ -299,14 +313,6 @@ export function SettingsAuthenticationPage() {
           value={secretDraft}
           onChange={(event) => setSecretDraft(event.target.value)}
         />
-        {provider && (
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="settings.auth.secret.hint"
-              defaultMessage="Leave blank to keep the current secret. Paste a new value to rotate."
-            />
-          </p>
-        )}
       </FormField>
       <div className="flex items-center gap-2">
         <Button type="submit" variant="secondary" size="sm">

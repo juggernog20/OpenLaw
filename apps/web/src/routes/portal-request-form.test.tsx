@@ -166,6 +166,17 @@ async function fillComplete(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("the request type's form", () => {
+  it("keeps attached field guidance accessible through the shared field tooltip", async () => {
+    const user = userEvent.setup();
+    openForm();
+    const input = await screen.findByLabelText(/^Counterparty/);
+    expect(input).toHaveAccessibleDescription("Company on the other side of the contract.");
+    expect(screen.getByText("Company on the other side of the contract.")).toHaveClass("sr-only");
+    await user.hover(input);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      "Company on the other side of the contract.",
+    );
+  });
   it("draws the type's name and its requester-facing description", async () => {
     openForm();
     expect(await screen.findByRole("heading", { name: "Contract review" })).toBeInTheDocument();

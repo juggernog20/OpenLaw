@@ -155,7 +155,17 @@ export function ContractTypeApprovalDefault({
         />
       }
     >
-      <Label htmlFor="type-approver-group">
+      <Label
+        htmlFor="type-approver-group"
+        help={
+          <>
+            <FormattedMessage
+              id="settings.approvalDefault.help"
+              defaultMessage="Applies to new Contracts of this type. Approval starts only when someone requests it."
+            />
+          </>
+        }
+      >
         <FormattedMessage id="settings.approvalDefault.label" defaultMessage="Approver group" />
       </Label>
       <select
@@ -187,12 +197,7 @@ export function ContractTypeApprovalDefault({
             </option>
           ))}
       </select>
-      <p className="text-sm text-muted">
-        <FormattedMessage
-          id="settings.approvalDefault.help"
-          defaultMessage="Applies to new Contracts of this type. Approval starts only when someone requests it."
-        />
-      </p>
+
       {error && (
         <p role="alert" className="text-sm text-status-danger-fg">
           {error}

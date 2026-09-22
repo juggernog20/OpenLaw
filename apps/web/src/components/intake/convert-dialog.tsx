@@ -21,8 +21,6 @@ import { useEffect, useRef, useState } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { ArrowRightLeft, FilePen } from "lucide-react";
 import {
-  type Form,
-  type FormRow,
   sameConversionValue,
   MAX_CONTRACT_TITLE_LENGTH,
   MAX_MATTER_TITLE_LENGTH,
@@ -108,7 +106,6 @@ export function ConvertDialog({
   initialTargetModule,
   reference,
   request,
-  fields,
   customFieldRefs,
   contractTypes,
   matterTypes,
@@ -434,19 +431,6 @@ export function ConvertDialog({
           isArchivedCustomFieldReference(field, request.customFields[field.slug]!, customFieldRefs),
       )
       .map((field) => field.slug),
-  );
-  const formRows = (form: Form): FormRow[] =>
-    form.flatMap((node) => (node.kind === "row" ? [node] : formRows(node.children)));
-  const targetRefs = new Set(
-    formRows(target?.form ?? target?.creationForm ?? []).map((row) => row.rowRef),
-  );
-  // Record-only Field Rows also accept carried answers.
-  for (const field of targetFields) targetRefs.add(field.slug);
-  const staysBehind = fields.filter(
-    (field) =>
-      isAnswered(request.customFields[field.slug]) &&
-      !targetRefs.has(field.slug) &&
-      !(field.slug.startsWith("value_") && targetRefs.has("value")),
   );
   // Keep live carried references labelled even when an options read omits them.
   const fieldPeople = [
@@ -1025,23 +1009,6 @@ export function ConvertDialog({
               </AiField>
               {marker("priority")}
             </div>
-            {target && staysBehind.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                <p className="text-sm font-medium">
-                  <FormattedMessage
-                    id="convert.staysBehind"
-                    defaultMessage="Does not carry into the {module, select, matter {matter} other {contract}}"
-                    values={{ module: targetModule }}
-                  />
-                </p>
-                <p className="text-xs text-muted">
-                  {intl.formatList(
-                    staysBehind.map((field) => field.displayName),
-                    { type: "conjunction" },
-                  )}
-                </p>
-              </div>
-            )}
             {collection.rows
               .filter(
                 (row) =>

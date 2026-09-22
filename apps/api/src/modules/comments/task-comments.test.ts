@@ -58,6 +58,56 @@ beforeAll(async () => {
 afterAll(async () => harness.stop());
 
 describe.each(["matter", "contract"] as const)("%s Task details", (module) => {
+  it("lets legal staff outside the record team read both internal task-comment tiers", async () => {
+    const options = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/${module}s/options`,
+      cookies: admin,
+    });
+    const created = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}s`,
+      cookies: admin,
+      payload: {
+        title: "Shared task access",
+        [`${module}TypeId`]: options.json()[`${module}Types`][0].id,
+        isConfidential: false,
+      },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const taskUrl = `/api/v1/${module}s/${created.json()[module].number}/tasks`;
+    const added = await harness.app.inject({
+      method: "POST",
+      url: taskUrl,
+      cookies: admin,
+      payload: { title: "Review the position" },
+    });
+    expect(added.statusCode, added.body).toBe(201);
+    const taskId = added.json().createdTaskId;
+    const tasks = await harness.app.inject({ method: "GET", url: taskUrl, cookies: outsider });
+    expect(tasks.statusCode, tasks.body).toBe(200);
+    expect(tasks.json().tasks).toEqual([expect.objectContaining({ id: taskId })]);
+    for (const visibility of ["working_team", "legal_only"]) {
+      const note = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/comments",
+        cookies: admin,
+        payload: { entityType: `${module}_task`, entityId: taskId, body: visibility, visibility },
+      });
+      expect(note.statusCode, note.body).toBe(201);
+    }
+    const thread = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/comments?entityType=${module}_task&entityId=${taskId}`,
+      cookies: outsider,
+    });
+    expect(thread.statusCode, thread.body).toBe(200);
+    expect(thread.json().comments.map((row: { body: string }) => row.body)).toEqual([
+      "working_team",
+      "legal_only",
+    ]);
+  });
+
   it("stores descriptions and isolated conversations, inherits access, and protects attachments", async () => {
     const options = await harness.app.inject({
       method: "GET",

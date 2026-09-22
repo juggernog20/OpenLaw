@@ -32,6 +32,7 @@ import { formatLongDateTime } from "../lib/format";
 import { PortalShell } from "../components/portal/portal-shell";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
+import { Label } from "../components/ui/label";
 import { FormControl, type Draft } from "../components/auto-docs/form-control";
 import {
   GenerationContract,
@@ -641,10 +642,14 @@ function PortalAutoDocForm({
             <fieldset disabled={busy} className="space-y-4">
               {data.form.fields.map((field) => (
                 <div key={field.slug} className="space-y-1">
-                  <label htmlFor={`answer-${field.slug}`} className="block font-medium">
+                  <Label
+                    htmlFor={`answer-${field.slug}`}
+                    help={field.help}
+                    helpId={`help-${field.slug}`}
+                  >
                     {field.label}
                     {field.required && <span aria-hidden="true"> *</span>}
-                  </label>
+                  </Label>
                   <FormControl
                     field={field}
                     form={data.form!}
@@ -653,11 +658,6 @@ function PortalAutoDocForm({
                       setDraft((current) => ({ ...current, [field.slug]: value }))
                     }
                   />
-                  {field.help && (
-                    <p id={`help-${field.slug}`} className="text-sm text-muted">
-                      {field.help}
-                    </p>
-                  )}
                 </div>
               ))}
             </fieldset>

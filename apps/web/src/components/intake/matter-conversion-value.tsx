@@ -3,6 +3,7 @@
  * purple frame is the control's own (DES-070); this only adds the evidence. */
 import { useIntl } from "react-intl";
 import type { ReactNode } from "react";
+import { cn } from "../../lib/utils";
 import { api } from "../../lib/api";
 import { problem } from "../../lib/problem";
 import { ConversionEvidence } from "./conversion-evidence";
@@ -12,16 +13,18 @@ export function MatterConversionValue({
   slug,
   children,
   onConfirmed,
+  className,
 }: Readonly<{
   active: boolean;
   number: number;
   slug: string;
   children: ReactNode;
   onConfirmed?: (slug: string) => void;
+  className?: string;
 }>) {
   const intl = useIntl();
   return (
-    <div className="min-w-0">
+    <div className={cn("min-w-0", className)}>
       {children}
       {active && (
         <ConversionEvidence

@@ -303,7 +303,17 @@ export function FieldEditorDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="field-description">
+            <Label
+              htmlFor="field-description"
+              help={
+                <>
+                  <FormattedMessage
+                    id="settings.contractFields.descriptionHelp"
+                    defaultMessage="Shown as help text wherever the field renders."
+                  />
+                </>
+              }
+            >
               <FormattedMessage
                 id="settings.contractFields.descriptionLabel"
                 defaultMessage="Description"
@@ -314,16 +324,20 @@ export function FieldEditorDialog({
               value={draft.description}
               onChange={(event) => set("description", event.target.value)}
             />
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.contractFields.descriptionHelp"
-                defaultMessage="Shown as help text wherever the field renders."
-              />
-            </p>
           </div>
           <div className="flex gap-3">
             <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="field-type">
+              <Label
+                htmlFor="field-type"
+                help={
+                  target !== null && (
+                    <FormattedMessage
+                      id="settings.contractFields.typeImmutable"
+                      defaultMessage="The field type is immutable after creation."
+                    />
+                  )
+                }
+              >
                 <FormattedMessage id="settings.contractFields.typeColumn" defaultMessage="Type" />
               </Label>
               {target === null ? (
@@ -363,19 +377,23 @@ export function FieldEditorDialog({
                   <span className="flex h-8 items-center text-sm text-primary">
                     {typeLabel(intl, target.fieldType)}
                   </span>
-                  <p className="text-xs text-muted">
-                    <FormattedMessage
-                      id="settings.contractFields.typeImmutable"
-                      defaultMessage="The field type is immutable after creation."
-                    />
-                  </p>
                 </>
               )}
             </div>
           </div>
           {isSelect && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="field-options">
+              <Label
+                htmlFor="field-options"
+                help={
+                  <>
+                    <FormattedMessage
+                      id="settings.contractFields.optionsHelp"
+                      defaultMessage="One option per line, in display order."
+                    />
+                  </>
+                }
+              >
                 <FormattedMessage
                   id="settings.contractFields.optionsLabel"
                   defaultMessage="Options"
@@ -387,17 +405,22 @@ export function FieldEditorDialog({
                 className={TEXTAREA_CLASS}
                 onChange={(event) => set("optionsText", event.target.value)}
               />
-              <p className="text-xs text-muted">
-                <FormattedMessage
-                  id="settings.contractFields.optionsHelp"
-                  defaultMessage="One option per line, in display order."
-                />
-              </p>
             </div>
           )}
           {promptable && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="field-ai-prompt">
+              <Label
+                htmlFor="field-ai-prompt"
+                help={
+                  <>
+                    <FormattedMessage
+                      id="settings.contractFields.aiPromptHelp"
+                      defaultMessage="Describe what AI should extract for this field, including any distinctions it should make. Leave blank to exclude this field from Contract analysis."
+                    />
+                  </>
+                }
+                helpId="field-ai-prompt-help"
+              >
                 <FormattedMessage
                   id="settings.contractFields.aiPromptLabel"
                   defaultMessage="AI prompt"
@@ -415,12 +438,6 @@ export function FieldEditorDialog({
                 className={TEXTAREA_CLASS}
                 onChange={(event) => set("aiPrompt", event.target.value)}
               />
-              <p id="field-ai-prompt-help" className="text-xs text-muted">
-                <FormattedMessage
-                  id="settings.contractFields.aiPromptHelp"
-                  defaultMessage="Describe what AI should extract for this field, including any distinctions it should make. Leave blank to exclude this field from Contract analysis."
-                />
-              </p>
             </div>
           )}
           {styleable && (

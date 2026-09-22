@@ -714,7 +714,10 @@ function CommentRow({
     if (landed) item.current?.focus();
   }, [landed]);
 
-  const legalOnly = comment.visibility === "legal_only";
+  const legalOnly =
+    comment.visibility === "legal_only" &&
+    entityType !== "matter_task" &&
+    entityType !== "contract_task";
   /** Redacted wins where both happened: the Administrator's act is the
    * later fact, and it is the one that took the text away for good. */
   const removed = comment.redactedAt ? "redacted" : comment.deletedAt ? "deleted" : null;
@@ -1162,7 +1165,8 @@ function MentionChip({ name }: Readonly<{ name: string }>) {
   );
 }
 
-/** The tier every comment wears (CMT-003). Legal Only takes DES-009's
+/** Record-comment audiences (CMT-003). Tasks inherit access without a badge.
+ * Legal Only takes DES-009's
  * own pair and its lock glyph, one step deeper than the row it sits on;
  * the other two are neutral counters on the panel's own surface. */
 function TierBadge({
@@ -1170,6 +1174,7 @@ function TierBadge({
   entityType,
 }: Readonly<{ tier: CommentTier; entityType: CommentEntityType }>) {
   const intl = useIntl();
+  if (entityType === "matter_task" || entityType === "contract_task") return null;
   return (
     <span
       title={tierAudience(intl, tier, entityType)}
@@ -1223,10 +1228,7 @@ function useComposer({
   onPosted: (comment: Comment) => void;
 }>) {
   const intl = useIntl();
-  const tiers = composerTiers(role, entityType).filter(
-    (tier) =>
-      !(entityType === "matter_task" || entityType === "contract_task") || tier !== "full_thread",
-  );
+  const tiers = composerTiers(role, entityType);
   // The record's default when this role is in that room, and their
   // widest room when it is not. Seeding the flat default would leave a
   // role without Working Team holding a tier no segment offers: nothing

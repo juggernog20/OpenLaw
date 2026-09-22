@@ -294,6 +294,11 @@ export function tierAudience(
   tier: CommentTier,
   entityType?: CommentEntityType,
 ): string {
+  if (entityType === "matter_task" || entityType === "contract_task")
+    return intl.formatMessage({
+      id: "comments.task.audience",
+      defaultMessage: "Visible to everyone who can access this task.",
+    });
   if (entityType === "request" && tier === "full_thread")
     return intl.formatMessage({
       id: "comments.request.sharedAudience",
@@ -322,8 +327,10 @@ export function tierAudience(
   return intl.formatMessage(TIER_COPY[tier].audience);
 }
 
-/** Staff choose the record audience. Business Users post Full Thread only. */
+/** Tasks inherit access; record threads retain their audience choices. */
 export function composerTiers(role: Role, entityType?: CommentEntityType): readonly CommentTier[] {
+  if (entityType === "matter_task" || entityType === "contract_task")
+    return isMemberPlus(role) ? ["working_team"] : [];
   if (entityType === "matter" || entityType === "contract" || entityType === "request")
     return isMemberPlus(role) ? ["legal_only", "full_thread"] : ["full_thread"];
   if (isMemberPlus(role)) return COMMENT_TIERS;

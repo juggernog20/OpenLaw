@@ -561,7 +561,18 @@ export function BatchDialog({
           </ul>
           {!started && record.entityType !== "matter" && record.entityType !== "entity" && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="batch-kind">
+              <Label
+                htmlFor="batch-kind"
+                help={
+                  <>
+                    <FormattedMessage
+                      id="documents.batch.kindHelp"
+                      defaultMessage="Applied to every file in this import. Notes are not collected in bulk."
+                    />
+                  </>
+                }
+                helpId="batch-kind-help"
+              >
                 <FormattedMessage id="documents.batch.kind" defaultMessage="Version kind" />
               </Label>
               <select
@@ -592,12 +603,6 @@ export function BatchDialog({
                   </option>
                 ))}
               </select>
-              <p id="batch-kind-help" className="text-xs text-muted">
-                <FormattedMessage
-                  id="documents.batch.kindHelp"
-                  defaultMessage="Applied to every file in this import. Notes are not collected in bulk."
-                />
-              </p>
             </div>
           )}
           {/* A directory the browser would not read to the end. Said

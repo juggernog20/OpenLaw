@@ -111,7 +111,18 @@ function DestinationControl({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="request-type-destination">
+        <Label
+          htmlFor="request-type-destination"
+          help={
+            <>
+              <FormattedMessage
+                id="settings.requestTypeEditor.destinationHelp"
+                defaultMessage="Suggests where Legal converts this request. Legal can choose a different destination during triage."
+              />
+            </>
+          }
+          helpId="request-type-destination-help"
+        >
           <FormattedMessage
             id="settings.requestTypeEditor.destination"
             defaultMessage="Default destination"
@@ -143,12 +154,6 @@ function DestinationControl({
             })}
           </option>
         </select>
-        <p id="request-type-destination-help" className="text-xs text-muted">
-          <FormattedMessage
-            id="settings.requestTypeEditor.destinationHelp"
-            defaultMessage="Suggests where Legal converts this request. Legal can choose a different destination during triage."
-          />
-        </p>
       </div>
       {value.targetModule && (
         <div className="flex flex-col gap-1.5">
@@ -260,7 +265,16 @@ function TurnaroundControl({
   }
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor="request-type-turnaround">
+      <Label
+        htmlFor="request-type-turnaround"
+        helpId="request-type-turnaround-help"
+        help={
+          <FormattedMessage
+            id="settings.requestTypeEditor.turnaroundHint"
+            defaultMessage="Counts Monday–Friday from submission in the organization’s timezone, without excluding public holidays, for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged."
+          />
+        }
+      >
         <FormattedMessage
           id="settings.requestTypeEditor.turnaround"
           defaultMessage="Target turnaround (business days)"
@@ -268,6 +282,7 @@ function TurnaroundControl({
       </Label>
       <input
         id="request-type-turnaround"
+        aria-describedby="request-type-turnaround-help"
         type="number"
         min="0"
         max="36500"
@@ -305,14 +320,7 @@ function TurnaroundControl({
             setError(null);
           }
         }}
-        aria-describedby="request-type-turnaround-help"
       />
-      <p id="request-type-turnaround-help" className="text-xs text-muted">
-        <FormattedMessage
-          id="settings.requestTypeEditor.turnaroundHint"
-          defaultMessage="Counts Monday–Friday from submission in the organization’s timezone, without excluding public holidays, for Legal to confirm. Blank means no suggestion; saved Request estimates stay unchanged."
-        />
-      </p>
       <StatusNote status={status} detail={error} />
     </div>
   );
