@@ -2222,6 +2222,9 @@
   "comments.request.sharedWithRequester": {
     "defaultMessage": "Shared with requester"
   },
+  "comments.task.audience": {
+    "defaultMessage": "Visible to everyone who can access this task."
+  },
   "comments.tier.fullThread": {
     "defaultMessage": "Full thread"
   },

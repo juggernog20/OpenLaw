@@ -352,6 +352,65 @@ it("opens a task in a detail modal and saves its description", async () => {
   });
 });
 
+it("posts task comments to the inherited audience without audience controls or badges", async () => {
+  const surface = recordApi([task()]);
+  const posted: unknown[] = [];
+  const original = {
+    id: "existing-note",
+    entityType: "matter_task",
+    entityId: "task-1",
+    author: { ...MEMBER, image: null, archived: false },
+    body: "Existing task note",
+    visibility: "legal_only",
+    mentions: [],
+    attachments: [],
+    createdAt: "2026-08-20T08:00:00.000Z",
+    editedAt: null,
+    deletedAt: null,
+    redactedAt: null,
+  };
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (
+        call.url.pathname === "/api/v1/comments" &&
+        call.url.searchParams.get("entityType") === "matter_task" &&
+        call.method === "GET"
+      )
+        return json(200, { comments: [original], nextCursor: null });
+      if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
+        posted.push(call.body);
+        return json(201, { comment: { ...original, id: "new-note", ...(call.body as object) } });
+      }
+      return surface.handler(call);
+    },
+  });
+  renderAt("/matters/12/tasks");
+  const user = userEvent.setup();
+  await user.click((await section()).getByRole("button", { name: "Draft response" }));
+  const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
+  const existingNote = await modal.findByText("Existing task note");
+  expect(existingNote).toBeVisible();
+  expect(existingNote.closest("li")).not.toHaveClass("bg-legal-only-bg");
+  expect(modal.queryByRole("group", { name: "Audience" })).not.toBeInTheDocument();
+  expect(modal.queryByText("Working team")).not.toBeInTheDocument();
+  expect(modal.queryByText("Legal Only")).not.toBeInTheDocument();
+  expect(modal.getByText("Visible to everyone who can access this task.")).toBeVisible();
+  await user.type(modal.getByRole("textbox", { name: "New comment" }), "Ready for review.");
+  await user.click(modal.getByRole("button", { name: "Comment" }));
+  await waitFor(() =>
+    expect(posted).toEqual([
+      {
+        entityType: "matter_task",
+        entityId: "task-1",
+        body: "Ready for review.",
+        visibility: "working_team",
+        mentions: [],
+      },
+    ]),
+  );
+});
+
 it("retries an initial note and attachment without creating the Task twice", async () => {
   const surface = recordApi();
   let attempts = 0;

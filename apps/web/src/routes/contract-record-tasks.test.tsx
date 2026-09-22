@@ -195,6 +195,60 @@ function recordApi(
 const section = async () => within(await screen.findByRole("region", { name: "Tasks" }));
 
 describe("the record's Tasks section (CTR-017)", () => {
+  it("uses the inherited audience for task comments without an audience selector", async () => {
+    const api = recordApi([task()]);
+    const posted: unknown[] = [];
+    const thread: Record<string, unknown>[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (
+          call.url.pathname === "/api/v1/comments" &&
+          call.url.searchParams.get("entityType") === "contract_task" &&
+          call.method === "GET"
+        )
+          return json(200, { comments: thread, nextCursor: null });
+        if (call.url.pathname === "/api/v1/comments" && call.method === "POST") {
+          posted.push(call.body);
+          const comment = {
+            id: "new-note",
+            author: { ...MEMBER, image: null, archived: false },
+            attachments: [],
+            createdAt: "2026-08-20T08:00:00.000Z",
+            editedAt: null,
+            deletedAt: null,
+            redactedAt: null,
+            ...(call.body as object),
+          };
+          thread.push(comment);
+          return json(201, { comment });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/contracts/42/tasks");
+    const user = userEvent.setup();
+    await user.click((await section()).getByRole("button", { name: "Draft the NDA" }));
+    const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
+    expect(await modal.findByText("Visible to everyone who can access this task.")).toBeVisible();
+    expect(modal.queryByRole("group", { name: "Audience" })).not.toBeInTheDocument();
+    await user.type(modal.getByRole("textbox", { name: "New comment" }), "Ready for review.");
+    await user.click(modal.getByRole("button", { name: "Comment" }));
+    await waitFor(() =>
+      expect(posted).toEqual([
+        {
+          entityType: "contract_task",
+          entityId: "t-1",
+          body: "Ready for review.",
+          visibility: "working_team",
+          mentions: [],
+        },
+      ]),
+    );
+    expect(await modal.findByText("Ready for review.")).toBeVisible();
+    expect(modal.queryByText("Working team")).not.toBeInTheDocument();
+  });
+
   it("assigns and unassigns directly on the row, persisting only the task's assignee", async () => {
     const api = recordApi([task()]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
