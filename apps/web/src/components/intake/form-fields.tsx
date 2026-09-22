@@ -9,7 +9,7 @@ import { formatFileSize } from "../../lib/format";
 import { FileTile, FileTileGrid, TILE_ACTION_CLASS } from "../documents/file-tiles";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
-import { DescribedField, DescribedFieldLabel } from "../described-field";
+import { DescribedField } from "../described-field";
 
 export function Field({
   htmlFor,
@@ -32,7 +32,7 @@ export function Field({
       descriptionId={`${htmlFor}-help`}
       className="flex flex-col gap-1.5"
     >
-      <DescribedFieldLabel fieldName={label} htmlFor={htmlFor}>
+      <Label htmlFor={htmlFor}>
         {label}
         {required && (
           <>
@@ -44,7 +44,7 @@ export function Field({
             </span>
           </>
         )}
-      </DescribedFieldLabel>
+      </Label>
       {children}
       {unanswered && (
         <p className="text-xs text-status-danger-fg">
