@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -420,6 +420,74 @@ setInterval(() => {}, 1000);
     }
   },
 );
+
+test("worktree discovery ignores inherited Git repository paths", async (t) => {
+  const fixture = mkdtempSync(path.join(tmpdir(), "openlaw-git-context-"));
+  t.after(() => rmSync(fixture, { recursive: true, force: true }));
+  const main = path.join(fixture, "main");
+  const branch = path.join(fixture, "branch");
+  const unrelated = path.join(fixture, "unrelated");
+  const gitEnv = { ...process.env };
+  for (const key of ["GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"])
+    delete gitEnv[key];
+  const git = (...args) => execFileSync("git", args, { env: gitEnv, stdio: "pipe" });
+  for (const root of [main, unrelated]) {
+    git("init", root);
+    git(
+      "-C",
+      root,
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.com",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--allow-empty",
+      "-m",
+      "Fixture",
+    );
+  }
+  git("-C", main, "worktree", "add", "--detach", branch);
+  writeFileSync(path.join(main, ".env"), "SETUP_TOKEN=main-fixture\n");
+  writeFileSync(path.join(unrelated, ".env"), "SETUP_TOKEN=unrelated-fixture\n");
+  for (const directory of ["scripts", "bin", "node_modules"])
+    mkdirSync(path.join(branch, directory));
+  copyFileSync(helper, path.join(branch, "scripts/dev-processes.mjs"));
+  copyFileSync(new URL("./dev-hot.sh", import.meta.url), path.join(branch, "scripts/dev-hot.sh"));
+  writeFileSync(path.join(branch, "bin/ss"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+  writeFileSync(
+    path.join(branch, "bin/docker"),
+    `#!/usr/bin/env node
+require("node:fs").writeFileSync(process.env.DOCKER_LOG, JSON.stringify({
+  cwd: process.cwd(), storage: process.env.STORAGE_PATH,
+}));
+process.exit(37);
+`,
+    { mode: 0o755 },
+  );
+  const env = {
+    ...gitEnv,
+    PATH: `${branch}/bin:${process.env.PATH}`,
+    COMPOSE_PROJECT_NAME: `test-${randomUUID()}`,
+    DOCKER_LOG: `${fixture}/docker.log`,
+    GIT_DIR: path.join(unrelated, ".git"),
+    GIT_COMMON_DIR: path.join(unrelated, ".git"),
+    GIT_WORK_TREE: unrelated,
+  };
+  delete env.OPENLAW_DEV_RUN;
+  delete env.STORAGE_PATH;
+  const command = launch(t, "bash", [`${branch}/scripts/dev-hot.sh`, "--worktree"], {
+    cwd: unrelated,
+    env,
+  });
+  assert.equal((await command.exited)[0], 37, command.output());
+  assert.equal(readFileSync(path.join(branch, ".env"), "utf8"), "SETUP_TOKEN=main-fixture\n");
+  assert.deepEqual(JSON.parse(readFileSync(env.DOCKER_LOG, "utf8")), {
+    cwd: branch,
+    storage: `${main}/.storage`,
+  });
+});
 
 test("shared worktree mode rejects seeding and resets before setup", async (t) => {
   const root = mkdtempSync(path.join(tmpdir(), "openlaw-shared-invalid-"));

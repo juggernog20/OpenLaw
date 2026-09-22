@@ -187,7 +187,9 @@ fi
 # see is compose refusing to interpolate AUTH_SECRET. Set them up here
 # rather than send you to a README.
 # `git worktree list` prints the main checkout first.
-main_checkout="$(git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')" || main_checkout=""
+# Ignore another checkout's Git context when resolving shared data.
+main_checkout="$(env -u GIT_DIR -u GIT_COMMON_DIR -u GIT_WORK_TREE \
+  git worktree list --porcelain 2>/dev/null | sed -n '1s/^worktree //p')" || main_checkout=""
 if $worktree && [[ -z "$main_checkout" && -z "${STORAGE_PATH:-}" ]]; then
   echo "error: cannot find the main checkout's uploads. Set STORAGE_PATH to the shared blob directory." >&2
   exit 1
