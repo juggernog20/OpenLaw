@@ -29,7 +29,7 @@ import { dispositionScaffold, type DispositionScaffold } from "../../testing/dis
 import { handleConversionDraft } from "../../pipeline/conversion-draft.js";
 import { formatSentence } from "../../lib/ai/format-sentence.js";
 import { extractionPrompt } from "../../lib/ai/http.js";
-import { conversionContext } from "../../lib/conversion-draft.js";
+import { checkedSuggestion, conversionContext } from "../../lib/conversion-draft.js";
 
 let harness: TestHarness;
 let cast: DispositionScaffold;
@@ -1766,4 +1766,29 @@ it("keeps the draft snapshot stable after unchanged department and region update
   }
   const after = await conversionContext(harness.db, row.id, type!.id, false, "matter");
   expect(after.snapshot).toBe(before.snapshot);
+});
+
+it("drops a built-in Row suggestion that repeats the requester's Intake answer", async () => {
+  const [type] = await harness.db
+    .insert(matterTypes)
+    .values({ slug: "carried_risk", displayName: "Carried risk", displayOrder: 1001 })
+    .returning();
+  await harness.db
+    .insert(matterTypeBuiltinRows)
+    .values({ typeId: type!.id, builtinKey: "risk", displayOrder: 0, onIntakeForm: true });
+  const row = await ask();
+  await harness.db
+    .update(requests)
+    .set({ customFields: { risk: "high" } })
+    .where(eq(requests.id, row.id));
+  const context = await conversionContext(harness.db, row.id, type!.id, false, "matter");
+  expect(context.targets.map((t) => t.slug)).toContain("risk");
+  const answer = (value: string) => ({
+    slug: "risk",
+    value,
+    sourceId: `request:${row.id}:description`,
+    evidence: "October 1",
+  });
+  expect(checkedSuggestion(answer("high"), context)).toBeNull();
+  expect(checkedSuggestion(answer("low"), context)).toMatchObject({ value: "low" });
 });

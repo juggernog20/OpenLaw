@@ -38,7 +38,10 @@ export async function requestAnalysisEvidenceReader(
     .where(eq(contracts.id, run.contractId));
   if (!contract) return async () => unavailable;
   const fields = await selectAttachedFields(db, contractTypeFields, contract.typeId);
-  const source = await conversionSources(db, context.requestId).catch((error: unknown) => {
+  const source = await conversionSources(db, context.requestId, false, {
+    module: "contract",
+    typeId: context.targetTypeId,
+  }).catch((error: unknown) => {
     if (error instanceof HttpError && error.statusCode === 404) return null;
     throw error;
   });

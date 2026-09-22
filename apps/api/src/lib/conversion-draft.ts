@@ -81,11 +81,25 @@ export async function preparationEnabled(
   const [row] = await (lock ? query.for("share") : query);
   return row?.enabled === true && row.disabledAt === null;
 }
+export type ConversionDestination = { module: "matter" | "contract"; typeId: string };
+/**
+ * The destination a draft or run was prepared for. Every evidence reader passes
+ * it, so the source ids match the ones the citations were checked against; a
+ * draft with no chosen type falls back to the Request type's destination.
+ */
+export function conversionDestination(draft: {
+  targetModule: "matter" | "contract";
+  targetTypeId: string;
+}): ConversionDestination | undefined {
+  return draft.targetTypeId
+    ? { module: draft.targetModule, typeId: draft.targetTypeId }
+    : undefined;
+}
 export async function conversionSources(
   db: Executor,
   requestId: string,
   lockSources = false,
-  destination?: { module: "matter" | "contract"; typeId: string },
+  destination?: ConversionDestination,
 ) {
   const [row] = await db
     .select()
@@ -525,9 +539,15 @@ export function isCarriedConversionValue(
         : undefined,
     needed_by: row.customFields.needed_by,
   };
+  // A built-in Row the requester answered on the Intake Form (risk, region,
+  // value_amount, ...) is carried under its own key, like a Field answer.
   return sameConversionValue(
     value,
-    slug.startsWith("field:") ? row.customFields[slug.slice(6)] : values[slug],
+    slug.startsWith("field:")
+      ? row.customFields[slug.slice(6)]
+      : Object.hasOwn(values, slug)
+        ? values[slug]
+        : row.customFields[slug],
   );
 }
 
