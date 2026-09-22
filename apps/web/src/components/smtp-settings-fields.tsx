@@ -90,8 +90,12 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
             setSecurity(next);
           }}
         >
-          <option value="starttls">STARTTLS</option>
-          <option value="tls">TLS</option>
+          <option value="starttls">
+            <FormattedMessage id="welcome.email.security.starttls" defaultMessage="STARTTLS" />
+          </option>
+          <option value="tls">
+            <FormattedMessage id="welcome.email.security.tls" defaultMessage="TLS" />
+          </option>
           <option value="none">
             <FormattedMessage id="welcome.email.security.none" defaultMessage="None" />
           </option>

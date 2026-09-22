@@ -11876,6 +11876,12 @@
   "welcome.email.security.none": {
     "defaultMessage": "None"
   },
+  "welcome.email.security.starttls": {
+    "defaultMessage": "STARTTLS"
+  },
+  "welcome.email.security.tls": {
+    "defaultMessage": "TLS"
+  },
   "welcome.email.test": {
     "defaultMessage": "Send test email"
   },
