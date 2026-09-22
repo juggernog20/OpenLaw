@@ -186,7 +186,6 @@ const PAYMENT_TERMS = {
   displayName: "Payment terms",
   description: "How long the other side has to pay.",
   fieldType: "text",
-
   options: null,
   displayOrder: 1,
   isRequired: false,
@@ -197,7 +196,6 @@ const OUR_POSITION = {
   displayName: "Our position",
   description: null,
   fieldType: "single_select",
-
   options: ["Customer", "Provider"],
   displayOrder: 1,
   isRequired: true,
@@ -222,7 +220,6 @@ const EVERY_FIELD = [
   displayName: displayName as string,
   description: null,
   fieldType: fieldType as string,
-
   options: options as string[] | null,
   displayOrder: index + 1,
   isRequired: false,

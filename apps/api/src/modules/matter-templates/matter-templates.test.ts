@@ -165,7 +165,6 @@ describe("custom-field defaults", () => {
           displayName: "Template business unit",
           moduleScope: "matter" as const,
           fieldType: "single_select" as const,
-
           options: ["Finance", "People"],
         },
         {

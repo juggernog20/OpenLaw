@@ -121,7 +121,6 @@ async function defineAndAttachField(
       displayName,
       moduleScope: "entity",
       fieldType,
-
       ...(options ? { options } : {}),
     },
   });

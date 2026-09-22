@@ -144,7 +144,6 @@ beforeAll(async () => {
         displayName: field.displayName,
         moduleScope: field.moduleScope,
         fieldType: field.fieldType,
-
         ...("options" in field ? { options: field.options } : {}),
       },
     });

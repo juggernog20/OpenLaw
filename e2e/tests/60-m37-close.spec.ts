@@ -45,7 +45,6 @@ test("M37: an Administrator chooses an Answer style and a Field override, reads 
       const created = await api.post("/api/v1/fields", {
         data: {
           moduleScope: "contract",
-
           displayName: names[fieldType],
           fieldType,
           ...(fieldType === "user" ? {} : { aiPrompt: "Find the termination position." }),

@@ -88,7 +88,6 @@ export type EditorFieldType =
 
 /** One attached field, as the editor renders it. */
 export interface AttachedFieldRow {
-  builtInKey?: string | null;
   fieldId: string;
   slug: string;
   displayName: string;
@@ -100,7 +99,6 @@ export interface AttachedFieldRow {
 
 /** One catalog row the Attach menu offers. */
 export interface EditorCatalogRow {
-  builtInKey?: string | null;
   id: string;
   displayName: string;
   moduleScope: string;
@@ -358,12 +356,7 @@ function AttachedFieldsCard({
   const intl = useIntl();
 
   /** Display the field type beside its name. */
-  function fieldCaption(row: { fieldType: EditorFieldType; builtInKey?: string | null }) {
-    if (row.builtInKey === "counterparties")
-      return intl.formatMessage({
-        id: "settings.fields.counterpartyLookup",
-        defaultMessage: "Counterparty lookup",
-      });
+  function fieldCaption(row: { fieldType: EditorFieldType }) {
     return typeLabel(intl, row.fieldType);
   }
 
@@ -772,15 +765,7 @@ function AttachedFieldsCard({
                   <span className="truncate text-base font-medium text-primary">
                     {row.displayName}
                   </span>
-                  <span className="text-sm whitespace-nowrap text-muted">
-                    {row.builtInKey && (
-                      <FormattedMessage
-                        id="settings.typeEditor.defaultFieldPrefix"
-                        defaultMessage="Default · "
-                      />
-                    )}
-                    {fieldCaption(row)}
-                  </span>
+                  <span className="text-sm whitespace-nowrap text-muted">{fieldCaption(row)}</span>
                 </span>
                 <span className="flex w-24 items-center px-3">
                   <Checkbox
@@ -929,15 +914,7 @@ function AttachedFieldsCard({
                     onSelect={() => void attach(field)}
                   >
                     <span className="text-base text-primary">{field.displayName}</span>
-                    <span className="text-sm text-muted">
-                      {field.builtInKey && (
-                        <FormattedMessage
-                          id="settings.typeEditor.defaultFieldPrefix"
-                          defaultMessage="Default · "
-                        />
-                      )}
-                      {fieldCaption(field)}
-                    </span>
+                    <span className="text-sm text-muted">{fieldCaption(field)}</span>
                   </DropdownMenuItem>
                 ))}
                 {matchingFields.length === 0 && (

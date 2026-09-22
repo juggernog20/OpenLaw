@@ -22,7 +22,6 @@ describe.each([
       fieldType: "text",
       description: null,
       options: null,
-
       aiPrompt: null,
       archivedAt: null,
       inUseCount: 0,

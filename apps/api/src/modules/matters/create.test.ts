@@ -644,7 +644,6 @@ describe("matter reach", () => {
       cookies: adminCookies,
       payload: {
         moduleScope: "matter",
-
         displayName: "Sponsor",
         fieldType: "user",
       },

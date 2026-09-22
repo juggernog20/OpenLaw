@@ -77,7 +77,6 @@ export async function settingsMatterTemplateEditorLoader({ params }: LoaderFunct
         displayName: attachment.displayName,
         description: field.description,
         fieldType: attachment.fieldType,
-
         visibleOnPortal: attachment.visibleOnPortal,
         options: field.options,
         displayOrder: attachment.displayOrder,

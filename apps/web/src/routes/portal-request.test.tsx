@@ -61,7 +61,6 @@ function field(
     displayOrder: 1,
     isRequired: false,
     ...overrides,
-
     visibleOnPortal: overrides.visibleOnPortal ?? true,
   };
 }

@@ -582,7 +582,6 @@ export function checkedSuggestion(
             options: target.options ? [...target.options] : null,
             displayName: target.slug,
             description: null,
-
             visibleOnPortal: true,
             displayOrder: 0,
             isRequired: false,

@@ -1565,7 +1565,6 @@ const REVIEW_RESPONSES = {
         moduleScope: "contract",
         fieldType: "text",
         options: null,
-
         aiPrompt: null,
         aiAnswerStyle: null,
       },

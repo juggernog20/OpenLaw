@@ -231,7 +231,6 @@ describe("custom chart exports", () => {
     const item = record("child");
     const base = {
       description: null,
-
       visibleOnPortal: false,
       options: null,
       displayOrder: 1,

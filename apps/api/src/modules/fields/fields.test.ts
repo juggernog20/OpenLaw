@@ -200,7 +200,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
         displayName: `Choice ${fieldType}`,
         moduleScope: "matter",
         fieldType,
-
         options: ["Beta", "Alpha", "Gamma"],
       });
       expect(row.options, fieldType).toEqual(["Beta", "Alpha", "Gamma"]);
@@ -219,7 +218,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Texty options",
       moduleScope: "contract",
       fieldType: "text",
-
       options: ["A"],
     });
     expect(optioned.statusCode, optioned.body).toBe(400);
@@ -228,7 +226,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Dupes",
       moduleScope: "contract",
       fieldType: "single_select",
-
       options: ["A", "A"],
     });
     expect(duplicated.statusCode, duplicated.body).toBe(400);
@@ -257,7 +254,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       description: "Extracted by analysis.",
       moduleScope: "contract",
       fieldType: "text",
-
       aiPrompt: "Extract the thing.",
     });
     expect(prompted.aiPrompt).toBe("Extract the thing.");
@@ -267,7 +263,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Matter prompted",
       moduleScope: "matter",
       fieldType: "text",
-
       aiPrompt: "Extract the thing.",
     });
     expect(matterPrompted.statusCode, matterPrompted.body).toBe(400);
@@ -279,7 +274,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
         displayName: "Reference prompt",
         moduleScope: "contract",
         fieldType,
-
         aiPrompt,
       });
       expect(response.statusCode, response.body).toBe(422);
@@ -369,7 +363,6 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
     const res = await patchField(row.id, {
       displayName: "Edited",
       description: "Now described.",
-
       aiPrompt: "Extract the edited thing.",
     });
     expect(res.statusCode, res.body).toBe(200);
@@ -420,7 +413,6 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       displayName: "Editable select",
       moduleScope: "contract",
       fieldType: "single_select",
-
       options: ["One"],
     });
     const reoptioned = await patchField(select.id, { options: ["One", "Two"] });
@@ -460,7 +452,6 @@ describe("archive and restore (values retained by rule — MTR-014)", () => {
       displayName: "Archivable",
       moduleScope: "contract",
       fieldType: "single_select",
-
       options: ["Keep me"],
       aiPrompt: "Keep this prompt too.",
     });
@@ -626,7 +617,6 @@ describe("per-Field answer style", () => {
       displayName: "Style override",
       moduleScope: "contract",
       fieldType: "long_text",
-
       aiAnswerStyle: "full_clause",
     });
     expect(field.aiAnswerStyle).toBe("full_clause");
@@ -686,7 +676,6 @@ describe("per-Field answer style", () => {
         displayName: `Invalid style ${moduleScope} ${fieldType}`,
         moduleScope,
         fieldType,
-
         ...(["single_select", "multi_select"].includes(fieldType!) ? { options: ["One"] } : {}),
       };
       const created = await createField({ ...body, aiAnswerStyle });

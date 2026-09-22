@@ -19,7 +19,6 @@ const FIELD = {
   displayName: "Cost center",
   description: null,
   fieldType: "text",
-
   options: null,
   isRequired: false,
   displayOrder: 0,

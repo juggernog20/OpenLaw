@@ -78,7 +78,6 @@ describe("the Contract analysis target list", () => {
             displayName: `${fieldType} reference`,
             moduleScope: "contract",
             fieldType,
-
             aiPrompt,
           })
           .returning();

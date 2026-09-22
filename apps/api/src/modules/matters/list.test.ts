@@ -171,7 +171,6 @@ async function attachRequiredField(typeId: string): Promise<string> {
     cookies: adminCookies,
     payload: {
       moduleScope: "matter",
-
       displayName: "Required list value",
       fieldType: "text",
     },

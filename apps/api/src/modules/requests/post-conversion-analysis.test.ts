@@ -61,7 +61,6 @@ beforeAll(async () => {
       displayName: "Post clear",
       moduleScope: "contract",
       fieldType: "text",
-
       aiPrompt: "Extract the effective date wording.",
     })
     .returning();
@@ -588,7 +587,6 @@ it("omits hidden Row names and Analysis outcomes from Portal work", async () => 
       displayName: "Private strategy",
       moduleScope: "contract",
       fieldType: "text",
-
       aiPrompt: "Extract the effective date wording.",
     })
     .returning();

@@ -161,7 +161,6 @@ export function IntakePreview({
       options: optionsFor(row, catalog, t).map((o) => o.value),
       isRequired: row.isRequired,
       displayOrder: 0,
-
       visibleOnPortal: row.visibleOnPortal,
     };
   }

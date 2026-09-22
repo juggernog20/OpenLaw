@@ -110,7 +110,6 @@ it("includes field AI prompts and types in preparation and invalidates drafts af
       displayName: "Consent",
       fieldType: "boolean",
       moduleScope: "matter",
-
       description: "Whether consent is required.",
       aiPrompt: "Only consider the express assignment provision.",
     })
@@ -1481,7 +1480,6 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
           displayName: "Schema text",
           fieldType: "text",
           moduleScope: "matter",
-
           aiPrompt: "Extract text.",
         })
         .onConflictDoUpdate({ target: fields.slug, set: { aiPrompt: "Extract text." } })
@@ -1546,7 +1544,6 @@ it("keeps Contract Field style overrides in conversion prompts and freshness che
       displayName: "Assignment",
       fieldType: "long_text",
       moduleScope: "contract",
-
       aiPrompt: "Extract the provision.",
       aiAnswerStyle: "full_clause",
     })

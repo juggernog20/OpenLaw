@@ -18,7 +18,6 @@ const baseField = {
   description: null,
   fieldType: "text",
   options: null,
-
   aiPrompt: null,
   archivedAt: null,
   inUseCount: 0,

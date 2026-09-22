@@ -1172,7 +1172,6 @@ it("removes historical Field edits when its Row is hidden on the Portal", async 
     payload: {
       displayName: "History projection",
       moduleScope: "contract",
-
       fieldType: "text",
     },
   });

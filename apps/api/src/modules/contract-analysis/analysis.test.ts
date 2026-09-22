@@ -1295,7 +1295,6 @@ it("sends each saved answer style through a real Analysis run to the provider", 
         displayName: "Style clause",
         moduleScope: "contract",
         fieldType: "long_text",
-
         aiPrompt: "Extract the clause.",
       })
       .returning();
@@ -1309,7 +1308,6 @@ it("sends each saved answer style through a real Analysis run to the provider", 
         displayName: "Verbatim clause",
         moduleScope: "contract",
         fieldType: "long_text",
-
         aiPrompt: "Extract the provision.",
         aiAnswerStyle: "full_clause",
       })
@@ -1502,7 +1500,6 @@ it.each(["openai_chat_completions", "anthropic_messages", "gemini"] as const)(
           displayName: `Legacy ${fieldType}`,
           moduleScope: "contract" as const,
           fieldType,
-
           aiPrompt: `Extract the legacy ${fieldType} reference.`,
         })),
       )

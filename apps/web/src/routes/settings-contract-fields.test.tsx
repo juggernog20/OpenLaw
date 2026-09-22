@@ -100,7 +100,6 @@ function fieldsApi(calls: FieldCalls, rows = seededFields()) {
           moduleScope: body.moduleScope,
           fieldType: body.fieldType,
           options: body.options ?? null,
-
           aiPrompt: body.aiPrompt ?? null,
           archivedAt: null,
           inUseCount: 0,
@@ -264,7 +263,6 @@ describe("create (the field-editor dialog)", () => {
           displayName: "Department",
           moduleScope: "contract",
           fieldType: "single_select",
-
           options: ["Legal", "Procurement"],
         },
       ]),
@@ -294,7 +292,6 @@ describe("create (the field-editor dialog)", () => {
           displayName: "Payment terms",
           moduleScope: "contract",
           fieldType: "text",
-
           aiPrompt: "Extract the payment terms.",
         },
       ]),

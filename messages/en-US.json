@@ -9704,9 +9704,6 @@
   "settings.fields.contractCatalog": {
     "defaultMessage": "Contract fields"
   },
-  "settings.fields.counterpartyLookup": {
-    "defaultMessage": "Counterparty lookup"
-  },
   "settings.fields.custom": {
     "defaultMessage": "Custom Fields"
   },
@@ -11035,9 +11032,6 @@
   },
   "settings.typeEditor.createdNotAttached": {
     "defaultMessage": "{name} was created but could not be attached. Select it from Attach field to try again. {detail}"
-  },
-  "settings.typeEditor.defaultFieldPrefix": {
-    "defaultMessage": "Default ·"
   },
   "settings.typeEditor.noMatchingFields": {
     "defaultMessage": "No matching fields."
