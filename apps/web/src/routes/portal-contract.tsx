@@ -17,7 +17,7 @@ import {
 import { formatShortDate } from "../lib/format";
 import { PortalRecordShell } from "../components/portal/record-shell";
 import { PageTitle } from "../components/page-title";
-import { UnverifiedMarker } from "../components/contracts/ai-analysis-card";
+import { UnverifiedMarker } from "../components/contracts/analysis";
 
 export async function portalContractLoader({ params, request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);

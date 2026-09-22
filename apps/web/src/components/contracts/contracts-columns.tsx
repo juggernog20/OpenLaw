@@ -42,7 +42,7 @@ import type { ColumnCatalogue, ColumnDef } from "../../lib/list-views";
 import { Avatar } from "../avatar";
 import { ConfidentialMarker } from "../confidential-marker";
 import { RestrictedRecordCell } from "../restricted-record-cell";
-import { UnverifiedMarker } from "./ai-analysis-card";
+import { UnverifiedMarker } from "./analysis";
 
 /** Nothing recorded, said the same way in every cell that can be empty.
  * A blank cell reads as a rendering fault; a named absence reads as a

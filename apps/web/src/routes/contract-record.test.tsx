@@ -881,7 +881,7 @@ describe("the /contracts/:number record page", () => {
       renderAt("/contracts/42/fields");
 
       expect(await screen.findByRole("heading", { name: "Fields" })).toBeInTheDocument();
-      expect(screen.queryByRole("heading", { name: "AI analysis" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
       expect(await recordActions(userEvent.setup())).toEqual([
         "Copy link",
         "Rename contract",
@@ -899,19 +899,17 @@ describe("the /contracts/:number record page", () => {
       renderAt("/contracts/42");
       const user = userEvent.setup();
 
-      // The marker stays beside the value on the Overview. The card is
-      // the Fields section's (DES-075), so the Overview has no heading.
+      // The marker stays beside the value on the Overview. The run
+      // controls are the Fields section's (DES-075), and an
+      // unavailable connector offers none of them anywhere.
       expect((await screen.findAllByText("Unverified")).length).toBeGreaterThan(0);
-      expect(screen.queryByRole("heading", { name: "AI analysis" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
       await user.click(screen.getByRole("link", { name: "Fields" }));
-      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
-        "section",
-      )!;
-      expect(within(card).getByText("No analysis has run yet.")).toBeInTheDocument();
-      expect(within(card).queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
+      const card = within(await screen.findByRole("region", { name: "Fields" }));
+      expect(card.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
     });
 
-    it("draws the pending and failed run sentences", async () => {
+    it("says a run is under way, and why the last one failed", async () => {
       const api = recordApi(contractRow(), undefined, undefined, undefined, {
         available: true,
         latestRun: analysisRun({ state: "pending", finishedAt: null }),
@@ -919,11 +917,11 @@ describe("the /contracts/:number record page", () => {
       stubApi({ signedIn: MEMBER, extra: api.handler });
       const rendered = renderAt("/contracts/42/fields");
 
-      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
-        "section",
-      )!;
-      expect(within(card).getByText("Running…")).toBeInTheDocument();
-      expect(within(card).queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
+      // A run under way is said on the control that started it, so the
+      // section needs no sentence of its own.
+      const running = await screen.findByRole("button", { name: "Running…" });
+      expect(running).toBeDisabled();
+      expect(screen.queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
 
       rendered.view.unmount();
       const failed = recordApi(contractRow(), undefined, undefined, undefined, {
@@ -936,128 +934,14 @@ describe("the /contracts/:number record page", () => {
       });
       stubApi({ signedIn: MEMBER, extra: failed.handler });
       renderAt("/contracts/42/fields");
+      // A failure has no field row to sit beside, so the section says it.
       expect(
-        await screen.findByText(
-          /Failed .* on Version 3 with gpt-analysis: The provider timed out\./,
-        ),
+        await screen.findByText("Analysis failed: The provider timed out."),
       ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
     });
 
-    it("draws every outcome with its read value and evidence", async () => {
-      const outcome = {
-        written: ["term_type"],
-        kept: ["expiry_date"],
-        unsupported: ["effective_date"],
-        invalid: ["notice_period_days"],
-        unmatched: "Acme Trading",
-        results: [
-          {
-            slug: "term_type",
-            value: "auto_renew",
-            evidence: "renews each year",
-            outcome: "written",
-          },
-          { slug: "expiry_date", value: "2028-06-30", evidence: "ends June 2028", outcome: "kept" },
-          { slug: "effective_date", value: null, evidence: "not stated", outcome: "unsupported" },
-          {
-            slug: "notice_period_days",
-            value: "soon",
-            evidence: "reasonable notice",
-            outcome: "invalid",
-          },
-          {
-            slug: "counterparties",
-            value: "Acme Trading",
-            evidence: "Acme Trading LLC",
-            outcome: "unmatched",
-          },
-        ],
-      };
-      stubApi({
-        signedIn: MEMBER,
-        extra: recordApi(
-          contractRow({ aiUnverified: { term_type: { evidence: "renews each year" } } }),
-          undefined,
-          undefined,
-          undefined,
-          { available: true, latestRun: analysisRun({ outcome }) },
-        ).handler,
-      });
-      renderAt("/contracts/42/fields");
-
-      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
-        "section",
-      )!;
-      expect(
-        within(card).getByText(/Completed .* on Version 3 with gpt-analysis\./),
-      ).toBeInTheDocument();
-      for (const word of ["Written", "Kept", "Unsupported", "Invalid", "Unmatched"]) {
-        expect(within(card).getByText(word)).toBeInTheDocument();
-      }
-      expect(within(card).getByText("Auto-renewing")).toBeInTheDocument();
-      expect(within(card).getByText("Jun 30, 2028")).toBeInTheDocument();
-      expect(within(card).getByText("renews each year")).toBeInTheDocument();
-      expect(within(card).getByText("Acme Trading LLC")).toBeInTheDocument();
-    });
-
-    it("does not list attached reference Fields absent from the run outcome", async () => {
-      const fields = ["user", "entity"].map((fieldType) => ({
-        ...PAYMENT_TERMS,
-        fieldId: `legacy-${fieldType}`,
-        slug: `legacy_${fieldType}`,
-        displayName: `Legacy ${fieldType}`,
-        fieldType,
-        aiPrompt: "Old saved prompt.",
-      }));
-      const api = recordApi(contractRow());
-      stubApi({
-        signedIn: MEMBER,
-        extra: (call) => {
-          if (call.url.pathname === "/api/v1/contracts/42" && call.method === "GET") {
-            return json(200, {
-              contract: contractRow(),
-              fields,
-              customFieldRefs: { users: [], entities: [] },
-              team: [],
-              counterparties: [],
-              renewals: [],
-              analysis: {
-                available: true,
-                latestRun: analysisRun({
-                  outcome: {
-                    written: ["effective_date"],
-                    kept: [],
-                    unsupported: [],
-                    invalid: [],
-                    results: [
-                      {
-                        slug: "effective_date",
-                        value: "2026-09-01",
-                        evidence: "Effective on 2026-09-01.",
-                        outcome: "written",
-                      },
-                    ],
-                  },
-                }),
-              },
-            });
-          }
-          return api.handler(call);
-        },
-      });
-      renderAt("/contracts/42/fields");
-      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
-        "section",
-      )!;
-      expect(within(card).getByText("Effective on 2026-09-01.")).toBeInTheDocument();
-      expect(within(card).getAllByRole("listitem")).toHaveLength(1);
-      for (const field of fields) {
-        expect(screen.getByText(field.displayName)).toBeInTheDocument();
-        expect(within(card).queryByText(field.displayName)).not.toBeInTheDocument();
-      }
-    });
-
-    it("runs from the card and the overflow menu", async () => {
+    it("runs from the Fields header and the overflow menu", async () => {
       const sources = stubEventSource();
       const api = recordApi(contractRow(), undefined, undefined, undefined, {
         available: true,
@@ -1068,7 +952,7 @@ describe("the /contracts/:number record page", () => {
       const user = userEvent.setup();
 
       await user.click(await screen.findByRole("button", { name: "Run analysis" }));
-      expect(await screen.findByText("Running…")).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "Running…" })).toBeInTheDocument();
       expect(api.posts).toEqual(["analysis"]);
       expect(await recordActions(user)).toEqual(["Copy link", "Rename contract", "Archive"]);
       await user.keyboard("{Escape}");
@@ -1084,7 +968,9 @@ describe("the /contracts/:number record page", () => {
           visibility: "working_team",
         });
       });
-      await screen.findByText(/Completed .* on Version 3 with gpt-analysis\./);
+      // The finished run offers the control again, in the header and
+      // in the menu. What it wrote is on the field rows it wrote to.
+      await screen.findByRole("button", { name: "Run analysis" });
       expect(await recordActions(user)).toEqual([
         "Copy link",
         "Rename contract",
@@ -1174,7 +1060,7 @@ describe("the /contracts/:number record page", () => {
       });
     });
 
-    it("draws the refusal on the card when the overflow menu's run is turned away", async () => {
+    it("draws the refusal in the Fields section when the overflow menu's run is turned away", async () => {
       const api = recordApi(contractRow(), undefined, undefined, undefined, {
         available: true,
         latestRun: null,
@@ -1189,7 +1075,7 @@ describe("the /contracts/:number record page", () => {
       renderAt("/contracts/42/fields");
       const user = userEvent.setup();
 
-      await screen.findByRole("heading", { name: "AI analysis" });
+      await screen.findByRole("heading", { name: "Fields" });
       await user.click(await screen.findByRole("button", { name: "Contract actions" }));
       await user.click(await screen.findByRole("menuitem", { name: "Run analysis" }));
 
@@ -1212,9 +1098,7 @@ describe("the /contracts/:number record page", () => {
       });
       renderAt("/contracts/42/fields");
 
-      const card = (await screen.findByRole("heading", { name: "AI analysis" })).closest(
-        "section",
-      )!;
+      const card = (await screen.findByRole("heading", { name: "Fields" })).closest("section")!;
       expect(within(card).queryByRole("button", { name: "Run analysis" })).not.toBeInTheDocument();
       expect(await recordActions(userEvent.setup())).toEqual([
         "Copy link",
@@ -1513,17 +1397,22 @@ describe("the /contracts/:number record page", () => {
         { available: true, latestRun: analysisRun({ outcome }) },
       );
       stubApi({ signedIn: MEMBER, extra: api.handler });
-      renderAt("/contracts/42/fields");
+      renderAt("/contracts/42");
       const user = userEvent.setup();
 
-      const evidence = await screen.findByText("fixed term");
-      await user.click(within(evidence.closest("li")!).getByRole("button", { name: "Confirm" }));
+      // The marker and its Confirm are the value's own, on the Overview
+      // row that holds it (DES-075 amendment).
+      const termField = (await screen.findByLabelText("Term type")).closest("[data-ai-generated]")!
+        .parentElement!.parentElement!;
+      expect(within(termField).getByText("Unverified")).toBeInTheDocument();
+      await user.click(within(termField).getByRole("button", { name: "Confirm" }));
       await waitFor(() => expect(api.posts).toContain("confirm term_type"));
-      expect(within(evidence.closest("li")!).queryByText("Unverified")).not.toBeInTheDocument();
+      await waitFor(() =>
+        expect(within(termField).queryByText("Unverified")).not.toBeInTheDocument(),
+      );
       expect(screen.getAllByText("Unverified")).not.toHaveLength(0);
-      // The Overview's own marker went with it, and only that one.
-      await user.click(screen.getByRole("link", { name: "Overview" }));
-      expect((await screen.findByLabelText("Term type")).closest("[data-ai-generated]")).toBeNull();
+      // The Overview's own treatment went with it, and only that one.
+      expect(screen.getByLabelText("Term type").closest("[data-ai-generated]")).toBeNull();
       expect(
         screen.queryByRole("button", { name: "View AI evidence for Term type" }),
       ).not.toBeInTheDocument();
@@ -1588,7 +1477,8 @@ describe("the /contracts/:number record page", () => {
           return api.handler(call);
         },
       });
-      renderAt("/contracts/42/fields");
+      // The Confirm is the Expiry date's own, on the Overview.
+      renderAt("/contracts/42");
       const strip = within(await screen.findByRole("navigation", { name: "Contract sections" }));
       expect(strip.getByRole("img", { name: "1 upcoming date" })).toBeInTheDocument();
       expect(strip.getByRole("img", { name: "1 unverified Key date" })).toHaveClass(
@@ -2797,6 +2687,23 @@ describe("the /contracts/:number record page", () => {
       expect(api.patches).toEqual([{ customFields: { payment_terms: "Net 45" } }]),
     );
     expect(await card.findByText("Saved")).toBeInTheDocument();
+  });
+
+  it("keeps the type's Fields out of the Overview, which draws the record's own Rows", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ customFields: { payment_terms: "Net 30" } })).handler,
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    // The record's own Rows are here, and the Field is not: it is drawn
+    // once, in the section that owns it (DES-075 amendment).
+    expect(await screen.findByLabelText("Title")).toBeInTheDocument();
+    expect(screen.getByLabelText("Term type")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Payment terms")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("link", { name: "Fields" }));
+    expect(await screen.findByLabelText("Payment terms")).toHaveValue("Net 30");
   });
 
   it("commits nothing when Escape reverts a field, or when a blur changes nothing", async () => {
@@ -11199,19 +11106,18 @@ it("revalidates post-conversion Analysis without losing a typed title", async ()
   const title = await screen.findByLabelText("Title");
   await user.clear(title);
   await user.type(title, "Unsaved human title");
-  // The run's sentence is the Fields section's (DES-075); the typed
-  // draft is the record's, and it rides along between sections.
+  // The run's progress is the Fields section's control (DES-075); the
+  // typed draft is the record's, and it rides along between sections.
   await user.click(screen.getByRole("link", { name: "Fields" }));
-  expect(await screen.findByText(/Filling Contract Fields from the Request/)).toBeVisible();
+  expect(await screen.findByRole("button", { name: "Running…" })).toBeDisabled();
   api.updateRow({ description: "Revalidated Contract description." });
   api.updateAnalysis({
     available: true,
     latestRun: analysisRun({ trigger: "conversion", versionId: null, versionNumber: null }),
   });
-  await waitFor(
-    () => expect(screen.getByText(/Request-context Analysis completed/)).toBeVisible(),
-    { timeout: 10_000 },
-  );
+  await waitFor(() => expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled(), {
+    timeout: 10_000,
+  });
   await user.click(screen.getByRole("link", { name: "Overview" }));
   expect(await screen.findByLabelText("Description")).toHaveValue(
     "Revalidated Contract description.",
@@ -11252,7 +11158,7 @@ it("offers a safe retry for a failed Request-context Analysis run", async () => 
   renderAt("/contracts/42/fields");
   expect(await screen.findByText(/The Contract was created successfully/)).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Retry Request-context Analysis" }));
-  expect(await screen.findByText(/Filling Contract Fields from the Request/)).toBeVisible();
+  expect(await screen.findByRole("button", { name: "Running…" })).toBeDisabled();
   expect(calls).toEqual(["/api/v1/contracts/42/analysis/run-ready/retry"]);
 });
 
@@ -11422,7 +11328,7 @@ it("keeps cadence and currency entered before an amount when focus leaves the va
   expect(screen.getByLabelText("Amount")).toHaveValue("10,000");
 });
 
-it("draws built-in and Field Rows in Form order, retaining a hidden Row with a value", async () => {
+it("draws the built-in Rows in Form order, retaining a hidden Row with a value, and leaves the Field Row to the Fields section", async () => {
   const field = {
     ...PAYMENT_TERMS,
     fieldId: "f-record-note",
@@ -11478,16 +11384,17 @@ it("draws built-in and Field Rows in Form order, retaining a hidden Row with a v
     },
   });
   renderAt("/contracts/42");
-  const note = await screen.findByLabelText(/Record note/);
+  const term = await screen.findByLabelText(/Term type/);
   const expiry = screen.getByLabelText(/Expiry date/);
-  const term = screen.getByLabelText(/Term type/);
-  expect(note).toHaveValue("Keep this");
   expect(expiry).toHaveTextContent("Sep 1, 2027");
   expect(screen.queryByLabelText(/Notice period/)).not.toBeInTheDocument();
-  expect(term.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(note.compareDocumentPosition(expiry) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  // The Field Row is drawn once, in the Fields section (DES-075 amendment).
+  expect(screen.queryByRole("textbox", { name: /Record note/ })).not.toBeInTheDocument();
+  expect(term.compareDocumentPosition(expiry) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(
     expiry.compareDocumentPosition(screen.getByLabelText(/^Priority/)) &
       Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
+  await userEvent.setup().click(screen.getByRole("link", { name: "Fields" }));
+  expect(await screen.findByRole("textbox", { name: /Record note/ })).toHaveValue("Keep this");
 });

@@ -7,7 +7,7 @@ import { FormattedMessage } from "react-intl";
 import type { DatesHomeSection } from "../../lib/home";
 import { formatDeadline, formatFullDate } from "../../lib/format";
 import { ConfidentialMarker } from "../confidential-marker";
-import { UnverifiedMarker } from "../contracts/ai-analysis-card";
+import { UnverifiedMarker } from "../contracts/analysis";
 
 type DateRow = DatesHomeSection["rows"][number];
 

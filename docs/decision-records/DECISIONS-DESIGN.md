@@ -4675,6 +4675,20 @@ The analysis card's rows are the type's field scope, extracted. Reading them bes
 
 `useTeamApplet` gains `businessOwner` and `stakeholderAccess`; `StakeholdersField` is deleted. `contracts.applet.team` reads "Contract team"; `contracts.teamRole.stakeholder` is new; the Stakeholders section's own messages are gone. The AI analysis card renders inside the `fields` tab branch of the Contract record. DD-021's "Stakeholders are managed separately" sentence, DES-047 clause 2 and DES-070's Overview placement are amended in place. `create-contract.md`, `roles-and-access.md` and `contract-analysis.md` follow. `designs/contracts.pen` still draws the Overview card and no Stakeholder tag; the mock owes a redraw and is not edited merely to restate the shipped surface (the DES-070 clause 3 treatment). No new tokens.
 
+### Amendment (2026-09-22, from live review): the analysis card dissolves, and the Overview drops the type's Fields
+
+Blair, reading the Contract record on the running build: "the AI analysis pops up in three separate places... overview includes the custom fields... then fields includes the fields as well as the separate AI analysis component... I think we can deprecate the AI analysis section... The Overview section can just be the fixed and default fields... with custom fields in the Fields tab". Point 8 above and DES-070's card are amended as follows.
+
+**The Overview draws the record's own Rows only.** The Contract card holds the built-in Rows in Form order, and the Legal Owner and Business Owner statements. The type's attached Fields are the Fields section's alone, so no Field is drawn twice. Every Unverified marker, evidence control and Confirm stays where its value is: a core value keeps them on the Overview, a Field keeps them on its row in the Fields section.
+
+**There is no AI analysis card.** Its three parts split by what they are. The run controls, Run analysis, Retry Request-context Analysis and Confirm all, are the Fields section header, because a run fills that section's scope. The Run control says "Running…" and is disabled while a run is under way, so the run's progress is on the control that started it. A failed run and a refused run are one note under that header, because a failure has no field row to sit beside. Everything else the card drew is gone: the completed-run sentence, the warnings line, and the results table of label, value, evidence and outcome.
+
+**What this gives up, deliberately.** The per-field outcome (Written, Kept, Unsupported, Invalid, Unmatched) and the quote behind a value the run wrote are no longer listed for a whole run. A value that is still Unverified keeps its own evidence on its row; once a person confirms it, the quote is no longer shown on the record. The activity feed keeps the run's own entries. An unmatched Counterparty name is no longer surfaced. Restoring any of this is a new decision, not a regression to fix in place.
+
+### Consequences of the amendment
+
+`AiAnalysisCard` is deleted with `legacyResults` and the outcome labels; `ai-analysis-card.tsx` becomes `analysis.tsx` and exports `UnverifiedMarker`, `ConfirmUnverified`, `AnalysisRunActions` and `AnalysisRunNote`. The Contract record's Fields card takes `actions` and `note` slots. `contracts.analysis.completed`, `contracts.analysis.notRun`, `contracts.analysis.conversionValues`, `contracts.analysis.requestReady`, `contracts.analysis.requestPending`, `contracts.analysis.failed`, `contracts.analysis.requestOmissions`, `contracts.analysis.results`, `contracts.analysis.noEvidence`, `contracts.analysis.booleanValue` and the five outcome messages leave the catalog; `contracts.analysis.failedShort` joins it. `contract-analysis.md` follows.
+
 ## DES-076: Portal Contracts and Matters carry the business work
 
 - **Status:** Accepted under Blair's 2026-09-11 instruction to implement DD-023

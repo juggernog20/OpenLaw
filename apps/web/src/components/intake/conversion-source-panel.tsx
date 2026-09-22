@@ -9,7 +9,7 @@ import { PdfSurface } from "../documents/doc-panel";
 import { readRenditionState, DOCUMENT_DERIVATION_POLL_MS } from "../../lib/documents";
 import { groupCitations, type Citation } from "./group-citations";
 import { EvidenceExplanation, SourceGlyph } from "./evidence-explanation";
-import { ConfirmUnverified } from "../contracts/ai-analysis-card";
+import { ConfirmUnverified } from "../contracts/analysis";
 
 export function ConversionSourcePanel({
   title,

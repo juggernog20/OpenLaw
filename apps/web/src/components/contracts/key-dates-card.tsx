@@ -67,7 +67,7 @@ import {
 import { formatShortDate } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { StatusNote, type FieldStatus } from "../status-note";
-import { UnverifiedMarker } from "./ai-analysis-card";
+import { UnverifiedMarker } from "./analysis";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";

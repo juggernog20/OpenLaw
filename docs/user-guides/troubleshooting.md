@@ -60,7 +60,7 @@ A **Signed** Envelope can still be waiting for the executed file to be stored. C
 
 Check your role, whether the Contract is Ended or archived, whether a run is already pending, and whether Analysis is enabled. The target is the primary Document's executed pin, or its current Version when there is no pin. Its extracted text must be ready and non-empty.
 
-Follow [Contract analysis](contract-analysis.md) to compare the run's Version and evidence with the actual saved Fields and Key dates. **Kept** means the existing value was preserved. **Unverified** values are already saved and usable; do not confirm them merely to clear a warning. Review the source Document Version and correct or confirm each value you have checked.
+Follow [Contract analysis](contract-analysis.md) to compare each value's evidence with the saved Fields and Key dates. A Row with no marker is a Row the run left alone. **Unverified** values are already saved and usable; do not confirm them merely to clear a warning. Review the source Document Version and correct or confirm each value you have checked.
 
 If a run failed, resolve the reported processing or provider problem before running again. Ask your Administrator about connector or Field-prompt configuration. Never put provider keys or private extracted text in a public report.
 
@@ -68,7 +68,7 @@ If a run failed, resolve the reported processing or provider problem before runn
 
 If a Convert dialog is preparing a Conversion draft, wait for its completion or use manual conversion. Retry a failed preparation after checking the Type and sources. The Matter and Contract preparation switches are independent. An Administrator can check them in [AI analysis settings](configure-analysis.md).
 
-A Contract can finish conversion before its background field-filling Analysis run finishes. The **AI analysis** card shows progress, completion or failure. A failure does not undo creation. Select **Retry Request-context Analysis** after checking the Type, sources and enabled filling switch. A late reply cannot replace human edits or explicit clears.
+A Contract can finish conversion before its background field-filling Analysis run finishes. The **Fields** section header says when a run is under way, and reports a failure. A failure does not undo creation. Select **Retry Request-context Analysis** after checking the Type, sources and enabled filling switch. A late reply cannot replace human edits or explicit clears.
 
 Purple borders and **Unverified** identify AI-written values. A sparkle opens saved source evidence without another AI call or leaving the record. Document citations open the original Version in the doc panel and locate its quote when possible. Removed Documents, changed or deleted messages and lost access can make evidence unavailable. Use the original source or ask an authorized colleague to check it before confirming. Disabling a workflow leaves existing evidence and individual confirm/edit usable.
 

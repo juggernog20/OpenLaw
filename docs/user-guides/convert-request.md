@@ -43,7 +43,7 @@ The template can create Tasks and Key dates relative to the Matter's creation da
 
 ## Fill Contract Fields after conversion
 
-The independent **Fill Contract Fields after conversion** switch starts a background Analysis run after successful Contract creation. It also works when Convert dialog preparation is off. It uses the confirmed Type's current core and prompted catalog Fields, saved Request answers, eligible conversation and readable supporting sources. It can also add Unverified Key dates for events with an explicit date in those sources. The Contract's **AI analysis** card reports progress, completion, source omissions or failure. The page refreshes completed values while retaining typed drafts.
+The independent **Fill Contract Fields after conversion** switch starts a background Analysis run after successful Contract creation. It also works when Convert dialog preparation is off. It uses the confirmed Type's current core and prompted catalog Fields, saved Request answers, eligible conversation and readable supporting sources. It can also add Unverified Key dates for events with an explicit date in those sources. The Contract's **Fields** section header says when the run is under way, and reports a failure. The page refreshes completed values while retaining typed drafts.
 
 A failed Analysis run does not undo conversion. Check the Type, sources and AI settings, then select **Retry Request-context Analysis**. Existing human values, confirmations, explicit Convert dialog clears and edits made while Analysis runs are preserved. Review new Unverified values using [Contract analysis](contract-analysis.md). Ordinary manual Contract analysis remains available under its original controls.
 
