@@ -2360,20 +2360,11 @@
   "contractMatter.unlink.error": {
     "defaultMessage": "The Contract could not be unlinked from the Matter."
   },
-  "contracts.analysis.booleanValue": {
-    "defaultMessage": "{value, select, true {Yes} other {No}}"
-  },
-  "contracts.analysis.completed": {
-    "defaultMessage": "Completed {when} on Version {version} with {model}."
-  },
   "contracts.analysis.confirm": {
     "defaultMessage": "Confirm"
   },
   "contracts.analysis.confirmAll": {
     "defaultMessage": "Confirm all"
-  },
-  "contracts.analysis.conversionValues": {
-    "defaultMessage": "Conversion draft values are ready for review. Confirm or edit each Unverified value."
   },
   "contracts.analysis.counterparty": {
     "defaultMessage": "Counterparty"
@@ -2381,53 +2372,17 @@
   "contracts.analysis.evidenceUnavailable": {
     "defaultMessage": "Source evidence is unavailable. The Document Version may have been removed or you may not have access."
   },
-  "contracts.analysis.failed": {
-    "defaultMessage": "Failed {when} on Version {version} with {model}: {reason}"
-  },
-  "contracts.analysis.heading": {
-    "defaultMessage": "AI analysis"
+  "contracts.analysis.failedShort": {
+    "defaultMessage": "Analysis failed: {reason}"
   },
   "contracts.analysis.loadingEvidence": {
     "defaultMessage": "Opening cited passage…"
   },
-  "contracts.analysis.noEvidence": {
-    "defaultMessage": "No evidence returned."
-  },
   "contracts.analysis.noSavedEvidence": {
     "defaultMessage": "No source quote was saved for this field."
   },
-  "contracts.analysis.notRun": {
-    "defaultMessage": "No analysis has run yet."
-  },
-  "contracts.analysis.outcome.invalid": {
-    "defaultMessage": "Invalid"
-  },
-  "contracts.analysis.outcome.kept": {
-    "defaultMessage": "Kept"
-  },
-  "contracts.analysis.outcome.unmatched": {
-    "defaultMessage": "Unmatched"
-  },
-  "contracts.analysis.outcome.unsupported": {
-    "defaultMessage": "Unsupported"
-  },
-  "contracts.analysis.outcome.written": {
-    "defaultMessage": "Written"
-  },
   "contracts.analysis.requestFailed": {
     "defaultMessage": "Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry."
-  },
-  "contracts.analysis.requestOmissions": {
-    "defaultMessage": "Some sources were restricted, unreadable or exceeded reading limits. Review the original Request and supporting Documents."
-  },
-  "contracts.analysis.requestPending": {
-    "defaultMessage": "Filling Contract Fields from the Request and supporting sources…"
-  },
-  "contracts.analysis.requestReady": {
-    "defaultMessage": "Request-context Analysis completed. Review the Unverified values and their source evidence."
-  },
-  "contracts.analysis.results": {
-    "defaultMessage": "Analysis results"
   },
   "contracts.analysis.retryEvidence": {
     "defaultMessage": "Try again"
@@ -2597,6 +2552,9 @@
   "contracts.entityUnknown": {
     "defaultMessage": "Not known yet"
   },
+  "contracts.field.no": {
+    "defaultMessage": "No"
+  },
   "contracts.field.noOptions": {
     "defaultMessage": "This field has no options yet."
   },
@@ -2611,6 +2569,9 @@
   },
   "contracts.field.selectPlaceholder": {
     "defaultMessage": "Not set"
+  },
+  "contracts.field.yes": {
+    "defaultMessage": "Yes"
   },
   "contracts.fields.empty": {
     "defaultMessage": "This contract type attaches no fields. Add them in contract settings."

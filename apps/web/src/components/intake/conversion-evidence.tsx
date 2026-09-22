@@ -11,7 +11,7 @@ import { groupCitations } from "./group-citations";
 import { api } from "../../lib/api";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { ConfirmUnverified, UnverifiedMarker } from "../contracts/ai-analysis-card";
+import { ConfirmUnverified, UnverifiedMarker } from "../contracts/analysis";
 
 export function ConversionEvidence({
   number,

@@ -240,12 +240,6 @@ function markerBeside(page: Page, label: string): Locator {
     .getByText("Unverified", { exact: true });
 }
 
-function analysisCard(page: Page): Locator {
-  return page
-    .getByRole("heading", { level: 2, name: "AI analysis" })
-    .locator("xpath=ancestor::section[1]");
-}
-
 test.describe.serial("M31 deployer journey", () => {
   test.beforeAll(async ({ request }) => ensureAdminExists(request));
 
@@ -304,10 +298,15 @@ test.describe.serial("M31 deployer journey", () => {
         const url = new URL(response.url());
         return url.pathname === "/api/events" && url.searchParams.has("entityId");
       });
-      // The AI analysis card lives on the Fields section (DES-075).
+      // The run control is the Fields section header (DES-075, amended
+      // 2026-09-22), and it says "Running…" while the run is under way.
       await observer.goto(`/contracts/${contract.number}/fields`);
       expect((await eventStream).status()).toBe(200);
-      await expect(analysisCard(observer).getByText("Running…")).toBeVisible();
+      await expect(
+        observer
+          .getByRole("region", { name: "Fields", exact: true })
+          .getByRole("button", { name: "Running…", exact: true }),
+      ).toBeVisible();
 
       let observerReloads = 0;
       observer.on("load", () => {
@@ -339,27 +338,20 @@ test.describe.serial("M31 deployer journey", () => {
       expect(observerReloads).toBe(0);
       expect(stub.extractionCount).toBe(1);
 
-      await observer
-        .getByRole("navigation", { name: "Contract sections" })
-        .getByRole("link", { name: "Fields" })
-        .click();
-      const valueResult = analysisCard(observer)
-        .getByRole("listitem")
-        .filter({ hasText: "The annual Contract value is USD 125,000." });
-      await expect(valueResult.getByText("Unverified", { exact: true })).toBeVisible();
+      // The Value's evidence and Confirm are its own, on the Overview row
+      // that holds it (DES-075, amended 2026-09-22). The evidence control
+      // names the field, so the Confirm beside it is the Value's.
+      const valueReview = observer
+        .getByRole("button", { name: "View AI evidence for Value", exact: true })
+        .locator("..");
       const confirming = observer.waitForResponse(
         (response) =>
           response.url().endsWith(`/api/v1/contracts/${contract!.number}/analysis/confirm`) &&
           response.request().method() === "POST",
       );
-      await valueResult.getByRole("button", { name: "Confirm" }).click();
+      await valueReview.getByRole("button", { name: "Confirm", exact: true }).click();
       const confirmed = await confirming;
       expect(confirmed.status(), await confirmed.text()).toBe(200);
-      await expect(valueResult.getByText("Unverified", { exact: true })).toHaveCount(0);
-      await observer
-        .getByRole("navigation", { name: "Contract sections" })
-        .getByRole("link", { name: "Overview" })
-        .click();
       await expect(markerBeside(observer, "Value")).toHaveCount(0);
       await expect(markerBeside(observer, "Term type")).toBeVisible();
       await expect(markerBeside(observer, "Notice period (days)")).toBeVisible();

@@ -25,7 +25,6 @@ import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
 import { NumberInput } from "./number-input";
-import { Switch } from "./ui/switch";
 import { RestrictedRecordCell } from "./restricted-record-cell";
 
 export interface FieldReference {
@@ -121,7 +120,25 @@ export function CustomFieldControl({
       );
     case "boolean":
       return (
-        <Switch {...shared} checked={draft === true} onCheckedChange={(next) => onDraft(next)} />
+        // Yes and No, not a switch (2026-09-22, from live review). A
+        // switch turns something on; a Field asks a question, and the
+        // answer reads better in the words the question expects. The
+        // draft model holds no third state, so an untouched Field
+        // reads No, exactly as the switch read off.
+        <select
+          {...shared}
+          value={draft === true ? "true" : "false"}
+          className={`${CONTROL_CLASS.replace("w-full", "w-auto")} self-start`}
+          onChange={(event) => onDraft(event.target.value === "true")}
+          onKeyDown={onKeyDown}
+        >
+          <option value="true">
+            {intl.formatMessage({ id: "contracts.field.yes", defaultMessage: "Yes" })}
+          </option>
+          <option value="false">
+            {intl.formatMessage({ id: "contracts.field.no", defaultMessage: "No" })}
+          </option>
+        </select>
       );
     case "currency":
       return (

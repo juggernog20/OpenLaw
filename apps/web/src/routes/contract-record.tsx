@@ -244,10 +244,11 @@ import { RenewalBanner } from "../components/contracts/renewal-banner";
 import { TEAM_CARD_ID, useTeamApplet } from "../components/contracts/team-applet";
 import { TermTimelineCard } from "../components/contracts/term-timeline-card";
 import {
-  AiAnalysisCard,
+  AnalysisRunActions,
+  AnalysisRunNote,
   ConfirmUnverified,
   UnverifiedMarker,
-} from "../components/contracts/ai-analysis-card";
+} from "../components/contracts/analysis";
 import { AiField } from "../components/ui/ai-field";
 import { ConversionEvidence } from "../components/intake/conversion-evidence";
 import {
@@ -1250,8 +1251,15 @@ function ContractRecord() {
         />
       );
     }
-    if (!marker.runId) return null;
     if (slug.startsWith("field:")) slug = slug.slice(6);
+    // A marker with no run to cite still gets its Confirm on the row:
+    // the value is the row's, and the deleted analysis card was the
+    // only other place that offered it (DES-075 amendment, 2026-09-22).
+    if (!marker.runId) {
+      return analysisConfirmable ? (
+        <ConfirmUnverified onConfirm={() => confirmAnalysisField(slug)} />
+      ) : null;
+    }
     const coreLabel = coreAnalysisLabel(slug);
     const label =
       eventLabel ??
@@ -2432,33 +2440,12 @@ function ContractRecord() {
     counterparties: parties.map((p) => p.id),
     neededBy: deadlines.find((d) => d.label === "Needed by")?.date,
   });
+  /* The Overview is the record's own summary: the built-in Rows in
+     Form order, and nothing else. The type's Fields are the Fields
+     section's (DES-032, and the 2026-09-22 amendment to DES-075), so
+     they are not drawn twice. */
   const orderedRows = (
-    <RecordRows
-      form={recordForm}
-      answers={recordAnswers}
-      builtins={formControls}
-      fields={attached.map((field) => ({
-        slug: field.slug,
-        control: (
-          <CustomFieldRow
-            key={field.slug}
-            field={field}
-            value={saved.customFields[field.slug]}
-            people={peopleReferences}
-            entities={entityReferences}
-            frozen={frozen}
-            marker={Boolean(
-              saved.aiUnverified?.[field.slug] ?? saved.aiUnverified?.[`field:${field.slug}`],
-            )}
-            confirmation={confirmationControl(`field:${field.slug}`)}
-            status={fieldStatus[`field:${field.slug}`] ?? "idle"}
-            error={fieldError[`field:${field.slug}`]}
-            onStatus={(status, detail) => note(`field:${field.slug}`, status, detail)}
-            onCommit={(value) => commitCustomField(field.slug, value)}
-          />
-        ),
-      }))}
-    />
+    <RecordRows form={recordForm} answers={recordAnswers} builtins={formControls} fields={[]} />
   );
 
   return (
@@ -2966,48 +2953,47 @@ function ContractRecord() {
                   own columns, and — once CTR-008 lands — where the
                   extraction writes its answers. */}
             {tab === "fields" && (
-              <>
-                <FieldsCard
-                  fields={
-                    recordForm
-                      ? recordFormRows(recordForm, recordAnswers).flatMap((row) => {
-                          const field = attached.find((f) => f.slug === row.rowRef);
-                          return field ? [field] : [];
-                        })
-                      : attached
-                  }
-                  values={saved.customFields}
-                  people={peopleReferences}
-                  entities={entityReferences}
-                  frozen={frozen}
-                  businessEditable={false}
-                  aiUnverified={saved.aiUnverified}
-                  reviewControl={(slug) => confirmationControl(`field:${slug}`)}
-                  status={fieldStatus}
-                  error={fieldError}
-                  onStatus={note}
-                  onCommit={commitCustomField}
-                />
-                {/* CTR-008's review surface (DES-075). It sits under the
-                      Fields card because what a run extracts is the
-                      type's field scope, which this section defines:
-                      the run's results are the account of that scope,
-                      not a fact of the Overview. The overflow menu still
-                      starts a run from any section. */}
-                <AiAnalysisCard
-                  analysis={analysis}
-                  contract={saved}
-                  fields={attached}
-                  canRun={canRunAnalysis}
-                  canConfirm={analysisConfirmable}
-                  running={runningAnalysis}
-                  runError={analysisRunError}
-                  onRun={() => void runAnalysis()}
-                  onRetry={() => void runAnalysis(analysis.latestRun?.id)}
-                  onConfirm={confirmAnalysisField}
-                  onConfirmAll={confirmAllAnalysisFields}
-                />
-              </>
+              <FieldsCard
+                fields={
+                  recordForm
+                    ? recordFormRows(recordForm, recordAnswers).flatMap((row) => {
+                        const field = attached.find((f) => f.slug === row.rowRef);
+                        return field ? [field] : [];
+                      })
+                    : attached
+                }
+                values={saved.customFields}
+                people={peopleReferences}
+                entities={entityReferences}
+                frozen={frozen}
+                businessEditable={false}
+                aiUnverified={saved.aiUnverified}
+                reviewControl={(slug) => confirmationControl(`field:${slug}`)}
+                status={fieldStatus}
+                error={fieldError}
+                onStatus={note}
+                onCommit={commitCustomField}
+                /* CTR-008's run belongs to the field scope this section
+                   defines (DES-075, amended 2026-09-22), so the run
+                   controls are this card's header and the run's account
+                   is one note under it. Each value the run wrote carries
+                   its own marker, evidence and Confirm on its own row.
+                   The overflow menu still starts a run from any
+                   section. */
+                actions={
+                  <AnalysisRunActions
+                    analysis={analysis}
+                    contract={saved}
+                    canRun={analysis.available && analysisRunnable}
+                    canConfirm={analysisConfirmable}
+                    running={runningAnalysis}
+                    onRun={() => void runAnalysis()}
+                    onRetry={() => void runAnalysis(analysis.latestRun?.id)}
+                    onConfirmAll={confirmAllAnalysisFields}
+                  />
+                }
+                note={<AnalysisRunNote analysis={analysis} runError={analysisRunError} />}
+              />
             )}
             {/* The record's paper (M11/2, M11/3), in the section the
                   C4 mock draws — and behind the tab the mock puts it
@@ -3537,6 +3523,8 @@ function CounterpartiesField({
 function FieldsCard({
   fields,
   values,
+  actions,
+  note,
   people,
   entities,
   frozen,
@@ -3550,6 +3538,10 @@ function FieldsCard({
 }: Readonly<{
   fields: readonly AttachedField[];
   values: CustomFieldValues;
+  /** Controls for this section's header, such as the analysis run. */
+  actions?: React.ReactNode;
+  /** One account under the header, such as what the last run did. */
+  note?: React.ReactNode;
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
   /** Disables editing unless businessEditable allows this Row. */
@@ -3570,11 +3562,13 @@ function FieldsCard({
       aria-labelledby="contract-fields-heading"
       className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
     >
-      <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
-        <h2 id="contract-fields-heading" className="text-base font-semibold">
+      <header className="flex min-h-section-header flex-wrap items-center gap-2 rounded-t-card border-b border-border-default bg-section-header px-4 py-2">
+        <h2 id="contract-fields-heading" className="me-auto text-base font-semibold">
           <FormattedMessage id="contracts.fields.section" defaultMessage="Fields" />
         </h2>
+        {actions}
       </header>
+      {note}
       {fields.length === 0 ? (
         <p className="px-4 py-3 text-base text-muted">
           <FormattedMessage
