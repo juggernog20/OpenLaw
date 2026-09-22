@@ -136,14 +136,8 @@ import { identifierLabel } from "../lib/identifier-label";
  * here mirrors `confidentialityWrite` exactly, because the API is the
  * authority and a second rule would drift.
  *
- * The page has two audiences (CTR-021). Member+ get the record above. A
- * Contributor on the contract's team gets the same core context, with
- * value, the effective-date input, and the business-tagged Fields left
- * editable while legal-managed details render inert. Archive, restore,
- * team and counterparty controls, and picker reads remain absent. A
- * Contributor who is not on the contract never gets this far — the API
- * answers 404, as it does for a contract that does not exist. Business
- * Users are bounced home, and the API's 403 is the real refusal.
+ * The full-app record is Member+ only (DD-023). Business Users use the
+ * Portal, where DD-026 keeps Fields read-only.
  */
 
 import { ValueField } from "../components/contracts/value-field";
@@ -3566,9 +3560,9 @@ function FieldsCard({
   values: CustomFieldValues;
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
-  /** Legal-tagged Fields keep the record's standing write floor. */
+  /** Disables editing unless businessEditable allows this Row. */
   frozen: boolean;
-  /** A live Contributor may edit only business-tagged Fields. */
+  /** Allows edits to Rows with Visible on Portal on. The record page keeps this false. */
   businessEditable: boolean;
   aiUnverified: ContractRow["aiUnverified"];
   reviewControl: (slug: string) => React.ReactNode;
