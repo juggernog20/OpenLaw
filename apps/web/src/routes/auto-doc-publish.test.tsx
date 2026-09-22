@@ -344,7 +344,17 @@ it("commits each setting on its own, then applies list filters", async () => {
     within(creation).getByText(
       "Without a target, a Generation's file stays on the Generation until it is Filed.",
     ),
-  ).toBeVisible();
+  ).not.toBeVisible();
+  const targetHelp = within(creation).getByRole("button", {
+    name: "More information",
+    description: /^Target Contract Type /,
+  });
+  await user.hover(targetHelp);
+  expect(await screen.findByRole("tooltip")).toHaveTextContent(
+    "Without a target, a Generation's file stays on the Generation until it is Filed.",
+  );
+  await user.unhover(targetHelp);
+  await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument());
   await user.selectOptions(within(creation).getByLabelText("Target Contract Type"), "type");
   await waitFor(() => expect(edits).toHaveLength(2));
   const titleInput = within(creation).getByLabelText("Title pattern");
