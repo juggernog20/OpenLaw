@@ -79,7 +79,8 @@ test("M37: an Administrator chooses an Answer style and a Field override, reads 
     const prompts = page.getByRole("region", { name: "Contract analysis prompts", exact: true });
     const datePrompt = prompts.getByRole("textbox", { name: "Effective date prompt", exact: true });
     await expect(datePrompt).toBeEditable();
-    await expect(prompts.getByText("Return a date as YYYY-MM-DD.", { exact: true })).toHaveCount(0);
+    await expect(datePrompt).toHaveAccessibleDescription("Return a date as YYYY-MM-DD.");
+    await expect(prompts.getByText("Return a date as YYYY-MM-DD.", { exact: true })).toBeHidden();
 
     await prompts.getByRole("link", { name: "Contracts → Fields", exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/contracts\/fields$/);

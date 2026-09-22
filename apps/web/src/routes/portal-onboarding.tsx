@@ -305,15 +305,21 @@ export function PortalOnboardingPage() {
                 <div className="flex items-start gap-4 rounded-card border border-border-muted bg-canvas p-4">
                   <Avatar name={savedName} image={image} className="size-16 text-lg" />
                   <div className="flex min-w-0 flex-1 flex-col gap-2">
-                    <Label htmlFor="first-run-photo">
+                    <Label
+                      htmlFor="first-run-photo"
+                      help={
+                        <>
+                          <FormattedMessage
+                            id="portal.onboarding.photo.hint"
+                            defaultMessage="PNG or JPG, up to 1 MB."
+                          />
+                        </>
+                      }
+                      helpId="first-run-photo-hint"
+                    >
                       <FormattedMessage id="portal.onboarding.photo" defaultMessage="Photo" />
                     </Label>
-                    <p id="first-run-photo-hint" className="text-sm text-muted">
-                      <FormattedMessage
-                        id="portal.onboarding.photo.hint"
-                        defaultMessage="PNG or JPG, up to 1 MB."
-                      />
-                    </p>
+
                     <input
                       ref={photoInput}
                       id="first-run-photo"

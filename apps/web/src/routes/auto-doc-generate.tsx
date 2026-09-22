@@ -18,6 +18,7 @@ import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
+import { Label } from "../components/ui/label";
 import { FormControl, type Draft } from "../components/auto-docs/form-control";
 import { AutoDocSubBar } from "../components/auto-docs/sub-bar";
 
@@ -212,14 +213,13 @@ export function AutoDocGeneratePage() {
               </legend>
               {form.fields.map((field) => (
                 <div className="space-y-1.5" key={field.slug}>
-                  <label htmlFor={`answer-${field.slug}`} className="block text-sm font-medium">
+                  <Label
+                    htmlFor={`answer-${field.slug}`}
+                    help={field.help}
+                    helpId={`help-${field.slug}`}
+                  >
                     {field.label}
-                  </label>
-                  {field.help && (
-                    <p id={`help-${field.slug}`} className="text-sm text-muted">
-                      {field.help}
-                    </p>
-                  )}
+                  </Label>
                   <FormControl
                     field={field}
                     form={form}

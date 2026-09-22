@@ -416,7 +416,18 @@ export function CreateContractDialog({
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="contract-new-matter">
+              <Label
+                htmlFor="contract-new-matter"
+                help={
+                  <>
+                    <FormattedMessage
+                      id="contracts.form.matterHelp"
+                      defaultMessage="Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
+                    />
+                  </>
+                }
+                helpId="contract-new-matter-help"
+              >
                 <FormattedMessage id="contracts.form.matter" defaultMessage="Matter" />
               </Label>
               <Input
@@ -489,12 +500,6 @@ export function CreateContractDialog({
                   />
                 </p>
               )}
-              <p id="contract-new-matter-help" className="text-xs text-muted">
-                <FormattedMessage
-                  id="contracts.form.matterHelp"
-                  defaultMessage="Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
-                />
-              </p>
             </div>
             <CreationRows
               rows={creation.rows}

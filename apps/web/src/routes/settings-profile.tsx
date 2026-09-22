@@ -422,22 +422,33 @@ export function SettingsProfilePage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-primary">
+          <Label
+            help={
+              <FormattedMessage
+                id="settings.profile.role.hint"
+                defaultMessage="Roles are managed in Organization → Users."
+              />
+            }
+          >
             <FormattedMessage id="settings.profile.role" defaultMessage="Role" />
-          </span>
+          </Label>
           <span className="inline-flex self-start rounded-full bg-status-neutral-bg px-2 py-0.5 text-xs font-semibold text-status-neutral-fg">
             <RoleLabel role={loaded.user.role} />
           </span>
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="settings.profile.role.hint"
-              defaultMessage="Roles are managed in Organization → Users."
-            />
-          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="profile-timezone">
+          <Label
+            htmlFor="profile-timezone"
+            help={
+              <>
+                <FormattedMessage
+                  id="settings.profile.timezone.hint"
+                  defaultMessage="Dates and times display in this timezone."
+                />
+              </>
+            }
+          >
             <FormattedMessage id="settings.profile.timezone" defaultMessage="Timezone" />
           </Label>
           <div className="flex items-center gap-2">
@@ -449,12 +460,6 @@ export function SettingsProfilePage() {
             />
             <StatusNote status={status.timezone} />
           </div>
-          <p className="text-xs text-muted">
-            <FormattedMessage
-              id="settings.profile.timezone.hint"
-              defaultMessage="Dates and times display in this timezone."
-            />
-          </p>
         </div>
       </SettingsCard>
 

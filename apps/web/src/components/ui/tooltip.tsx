@@ -31,7 +31,7 @@ export function Tooltip({
   side?: React.ComponentProps<typeof TooltipPrimitive.Content>["side"];
 }>) {
   return (
-    <TooltipPrimitive.Provider delayDuration={300} disableHoverableContent>
+    <TooltipPrimitive.Provider delayDuration={500} disableHoverableContent>
       <TooltipPrimitive.Root>
         <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal>

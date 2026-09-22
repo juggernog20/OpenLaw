@@ -77,7 +77,9 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
   return (
     <li className="flex flex-col gap-2 px-4 py-3">
       <div className="flex min-h-7 items-center justify-between gap-3">
-        <Label htmlFor={inputId}>{label}</Label>
+        <Label htmlFor={inputId} help={prompt.formatSentence} helpId={`${inputId}-format`}>
+          {label}
+        </Label>
         <div className="flex items-center gap-2">
           {prompt.overridden && (
             <Button
@@ -106,6 +108,7 @@ function PromptRow({ prompt, adopt }: Readonly<{ prompt: Prompt; adopt: (row: Pr
       </div>
       <AutoResizeTextarea
         id={inputId}
+        aria-describedby={`${inputId}-format`}
         aria-label={intl.formatMessage(
           {
             id: "settings.aiAnalysis.prompts.inputLabel",

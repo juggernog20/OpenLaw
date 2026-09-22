@@ -70,10 +70,20 @@ export function settingsIntegrationsIndexLoader() {
   return redirect("/settings/integrations/e-signature");
 }
 
-function FormField(props: Readonly<{ id: string; label: ReactNode; children: ReactNode }>) {
+function FormField(
+  props: Readonly<{
+    id: string;
+    label: ReactNode;
+    help?: ReactNode;
+    helpId?: string;
+    children: ReactNode;
+  }>,
+) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={props.id}>{props.label}</Label>
+      <Label htmlFor={props.id} help={props.help} helpId={props.helpId}>
+        {props.label}
+      </Label>
       {props.children}
     </div>
   );
@@ -374,6 +384,22 @@ export function SettingsESignaturePage() {
                 defaultMessage="Signing updates"
               />
             }
+            help={
+              <>
+                {updateMode === "polling" ? (
+                  <FormattedMessage
+                    id="settings.eSignature.polling.hint"
+                    defaultMessage="Keeps OpenLaw private. Only outbound access to DocuSign is needed. Updates can take about 15 to 20 minutes while the worker is running. Documents are still sent to DocuSign for signing."
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="settings.eSignature.webhook.hint"
+                    defaultMessage="Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates."
+                  />
+                )}
+              </>
+            }
+            helpId="ds-update-mode-hint"
           >
             <select
               id="ds-update-mode"
@@ -395,19 +421,6 @@ export function SettingsESignaturePage() {
                 })}
               </option>
             </select>
-            <p id="ds-update-mode-hint" className="text-xs text-muted">
-              {updateMode === "polling" ? (
-                <FormattedMessage
-                  id="settings.eSignature.polling.hint"
-                  defaultMessage="Keeps OpenLaw private. Only outbound access to DocuSign is needed. Updates can take about 15 to 20 minutes while the worker is running. Documents are still sent to DocuSign for signing."
-                />
-              ) : (
-                <FormattedMessage
-                  id="settings.eSignature.webhook.hint"
-                  defaultMessage="Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates."
-                />
-              )}
-            </p>
           </FormField>
           <FormField
             id="ds-integration-key"
@@ -429,6 +442,14 @@ export function SettingsESignaturePage() {
           <FormField
             id="ds-user-id"
             label={<FormattedMessage id="settings.eSignature.userId" defaultMessage="User ID" />}
+            help={
+              <>
+                <FormattedMessage
+                  id="settings.eSignature.userId.hint"
+                  defaultMessage="The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+                />
+              </>
+            }
           >
             <Input
               id="ds-user-id"
@@ -437,12 +458,6 @@ export function SettingsESignaturePage() {
               value={apiUserId}
               onChange={(event) => setApiUserId(event.target.value)}
             />
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.eSignature.userId.hint"
-                defaultMessage="The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
-              />
-            </p>
           </FormField>
           <FormField
             id="ds-private-key"
@@ -451,6 +466,16 @@ export function SettingsESignaturePage() {
                 id="settings.eSignature.privateKey"
                 defaultMessage="RSA private key"
               />
+            }
+            help={
+              connector.hasPrivateKey && (
+                <>
+                  <FormattedMessage
+                    id="settings.eSignature.secret.hint"
+                    defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                  />
+                </>
+              )
             }
           >
             <AutoResizeTextarea
@@ -465,14 +490,6 @@ export function SettingsESignaturePage() {
               })}
               className="w-80 rounded-button border border-border-default bg-raised px-2.5 py-1.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
             />
-            {connector.hasPrivateKey && (
-              <p className="text-xs text-muted">
-                <FormattedMessage
-                  id="settings.eSignature.secret.hint"
-                  defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
-                />
-              </p>
-            )}
           </FormField>
           {updateMode === "webhook" && (
             <>
@@ -484,6 +501,14 @@ export function SettingsESignaturePage() {
                     defaultMessage="Public callback URL"
                   />
                 }
+                help={
+                  <>
+                    <FormattedMessage
+                      id="settings.eSignature.publicCallback.hint"
+                      defaultMessage="Enter the gateway's HTTPS address if it differs from OpenLaw's address. Forward POST requests to /api/v1/signing/docusign/webhook and preserve the body and signature headers. Leave blank to use the app address, which must then be publicly reachable over HTTPS."
+                    />
+                  </>
+                }
               >
                 <Input
                   id="ds-public-callback"
@@ -493,12 +518,6 @@ export function SettingsESignaturePage() {
                   onChange={(event) => setWebhookUrl(event.target.value)}
                   placeholder={connector.webhookUrl}
                 />
-                <p className="text-xs text-muted">
-                  <FormattedMessage
-                    id="settings.eSignature.publicCallback.hint"
-                    defaultMessage="Enter the gateway's HTTPS address if it differs from OpenLaw's address. Forward POST requests to /api/v1/signing/docusign/webhook and preserve the body and signature headers. Leave blank to use the app address, which must then be publicly reachable over HTTPS."
-                  />
-                </p>
               </FormField>
               <FormField
                 id="ds-webhook-secret"
@@ -507,6 +526,21 @@ export function SettingsESignaturePage() {
                     id="settings.eSignature.webhookSecret"
                     defaultMessage="Connect HMAC secret"
                   />
+                }
+                help={
+                  <>
+                    {connector.hasWebhookSecret ? (
+                      <FormattedMessage
+                        id="settings.eSignature.secret.hint"
+                        defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                      />
+                    ) : (
+                      <FormattedMessage
+                        id="settings.eSignature.webhookSecret.hint"
+                        defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+                      />
+                    )}
+                  </>
                 }
               >
                 <Input
@@ -523,19 +557,6 @@ export function SettingsESignaturePage() {
                     defaultMessage: "••••••••••••••••",
                   })}
                 />
-                <p className="text-xs text-muted">
-                  {connector.hasWebhookSecret ? (
-                    <FormattedMessage
-                      id="settings.eSignature.secret.hint"
-                      defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
-                    />
-                  ) : (
-                    <FormattedMessage
-                      id="settings.eSignature.webhookSecret.hint"
-                      defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
-                    />
-                  )}
-                </p>
               </FormField>
             </>
           )}
@@ -592,7 +613,17 @@ export function SettingsESignaturePage() {
 
         {connector.updateMode === "webhook" && (
           <div className="flex flex-col gap-1.5 border-t border-border-default pt-4">
-            <Label htmlFor="ds-webhook-url">
+            <Label
+              htmlFor="ds-webhook-url"
+              help={
+                <>
+                  <FormattedMessage
+                    id="settings.eSignature.webhookUrl.hint"
+                    defaultMessage="Paste this into a DocuSign Connect configuration so envelope status reaches this install."
+                  />
+                </>
+              }
+            >
               <FormattedMessage id="settings.eSignature.webhookUrl" defaultMessage="Webhook URL" />
             </Label>
             <div className="flex gap-2">
@@ -610,12 +641,6 @@ export function SettingsESignaturePage() {
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.eSignature.webhookUrl.hint"
-                defaultMessage="Paste this into a DocuSign Connect configuration so envelope status reaches this install."
-              />
-            </p>
           </div>
         )}
 

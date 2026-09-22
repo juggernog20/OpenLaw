@@ -35,7 +35,22 @@ export function AuthenticationOptionsFields({
     <div className="flex flex-col gap-3">
       {(["password", "magicLink", "sso", "requireTwoFactor"] as const).map((method) => (
         <div key={method} className="flex items-center justify-between gap-4">
-          <Label htmlFor={`${id}-${method}`}>
+          <Label
+            htmlFor={`${id}-${method}`}
+            help={
+              method === "sso" && !ssoConfigured ? (
+                <FormattedMessage
+                  id="settings.auth.configureSso"
+                  defaultMessage="Configure an identity provider below to enable single sign-on."
+                />
+              ) : method === "requireTwoFactor" ? (
+                <FormattedMessage
+                  id="settings.auth.factorAllMethods"
+                  defaultMessage="An authenticator app is required with every enabled sign-in method. Users must complete setup before accessing OpenLaw."
+                />
+              ) : undefined
+            }
+          >
             <FormattedMessage {...labels[method]} />
           </Label>
           <Switch
@@ -46,22 +61,6 @@ export function AuthenticationOptionsFields({
           />
         </div>
       ))}
-      {!ssoConfigured && (
-        <p className="text-sm text-muted">
-          <FormattedMessage
-            id="settings.auth.configureSso"
-            defaultMessage="Configure an identity provider below to enable single sign-on."
-          />
-        </p>
-      )}
-      {value.requireTwoFactor && (
-        <p className="text-sm text-muted">
-          <FormattedMessage
-            id="settings.auth.factorAllMethods"
-            defaultMessage="An authenticator app is required with every enabled sign-in method. Users must complete setup before accessing OpenLaw."
-          />
-        </p>
-      )}
     </div>
   );
 }

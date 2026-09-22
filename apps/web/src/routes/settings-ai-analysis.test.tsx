@@ -407,7 +407,7 @@ describe("the AI analysis connector pane (#662)", () => {
     expect(screen.queryByText("Key saved")).not.toBeInTheDocument();
     expect(screen.queryByText("Key in use")).not.toBeInTheDocument();
     expect(screen.getByLabelText("API key")).toBeRequired();
-    expect(screen.getByText(/Required for this provider/)).toBeVisible();
+    expect(screen.getByText(/Required for this provider/)).not.toBeVisible();
     await user.selectOptions(screen.getByLabelText("Provider"), "groq");
     expect(screen.getByRole("status")).toHaveTextContent("Key saved");
     expect(screen.getByLabelText("API key")).not.toBeRequired();
@@ -533,7 +533,7 @@ describe("the AI analysis connector pane (#662)", () => {
     renderAt("/settings/ai-analysis");
     await openProvider(user);
     expect(screen.getByLabelText("API key")).toHaveValue("");
-    expect(screen.getByText(/Leave blank to use the saved key/)).toBeVisible();
+    expect(screen.getByText(/Leave blank to use the saved key/)).not.toBeVisible();
     await user.click(screen.getByRole("button", { name: "Enter model ID manually" }));
     await user.clear(screen.getByLabelText("Model"));
     await user.type(screen.getByLabelText("Model"), "gpt-updated");
@@ -567,7 +567,7 @@ describe("the AI analysis connector pane (#662)", () => {
 });
 
 describe("the prompt cards (#665)", () => {
-  it("shows the editable prompts without the code-owned format sentence in both cards", async () => {
+  it("keeps prompt formats in label tooltips, not beneath the editable prompts", async () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: connectorApi() });
     renderAt("/settings/ai-analysis");
@@ -575,7 +575,11 @@ describe("the prompt cards (#665)", () => {
       await openCard(user, name);
       const card = screen.getByRole("region", { name });
       expect(within(card).getAllByRole("textbox").length).toBeGreaterThan(0);
-      expect(within(card).queryByText("Return a short text.")).not.toBeInTheDocument();
+      for (const hint of within(card).getAllByText("Return a short text."))
+        expect(hint).not.toBeVisible();
+      await user.hover(within(card).getAllByRole("button", { name: "More information" })[0]!);
+      expect(await screen.findByRole("tooltip")).toHaveTextContent("Return a short text.");
+      await user.keyboard("{Escape}");
       expect(within(card).queryByText(/greyed sentence/)).not.toBeInTheDocument();
     }
   });
@@ -759,8 +763,15 @@ describe("the provider model selector", () => {
       "Groq models are filtered by model family. Use Test connection to check the selected model.";
     for (const { preset } of PRESETS) {
       await user.selectOptions(screen.getByLabelText("Provider"), preset);
-      if (preset === "groq") expect(screen.getByText(hint)).toBeVisible();
-      else expect(screen.queryByText(hint)).not.toBeInTheDocument();
+      if (preset === "groq") {
+        expect(screen.getByText(hint)).not.toBeVisible();
+        const label = screen.getByText("Model", { selector: "label" });
+        await user.hover(
+          within(label.parentElement!).getByRole("button", { name: "More information" }),
+        );
+        expect(await screen.findByRole("tooltip")).toHaveTextContent(hint);
+        await user.keyboard("{Escape}");
+      } else expect(screen.queryByText(hint)).not.toBeInTheDocument();
     }
   });
 
@@ -1030,7 +1041,7 @@ describe("the provider model selector", () => {
     expect(screen.getByText(/returned no models/)).toBeVisible();
     await user.selectOptions(screen.getByLabelText("Provider"), "azure_openai");
     expect(screen.queryByRole("button", { name: "Load models" })).not.toBeInTheDocument();
-    expect(screen.getByText(/Enter the deployment name from Azure/)).toBeVisible();
+    expect(screen.getByText(/Enter the deployment name from Azure/)).not.toBeVisible();
     expect(screen.getByLabelText("Model")).toHaveAttribute("maxlength", "300");
   });
 });

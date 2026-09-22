@@ -43,7 +43,7 @@ describe("the Profile pane (SET-006, #67)", () => {
     expect(email).toHaveValue(MEMBER.email);
     expect(email).toHaveAttribute("readonly");
     expect(screen.getByText("Legal team member")).toBeVisible();
-    expect(screen.getByText("Roles are managed in Organization → Users.")).toBeVisible();
+    expect(screen.getByText("Roles are managed in Organization → Users.")).not.toBeVisible();
     // The password credential's stamp, from the linked-accounts read.
     expect(screen.getByText("Last changed May 2.")).toBeVisible();
   });

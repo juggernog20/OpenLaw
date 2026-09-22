@@ -306,7 +306,7 @@ describe("the E-signature pane (#245)", () => {
       screen.getByText(
         "Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record.",
       ),
-    ).toBeVisible();
+    ).not.toBeVisible();
   });
 
   it("saves polling without a Connect secret and hides webhook setup", async () => {

@@ -346,7 +346,17 @@ function LinkEditorDialog({
           </fieldset>
           {draft.targetKind === "external" ? (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="intake-link-url">
+              <Label
+                htmlFor="intake-link-url"
+                help={
+                  <>
+                    <FormattedMessage
+                      id="settings.intakeLinks.urlHelp"
+                      defaultMessage="A full web address, starting with http:// or https://."
+                    />
+                  </>
+                }
+              >
                 <FormattedMessage id="settings.intakeLinks.urlLabel" defaultMessage="Address" />
               </Label>
               <Input
@@ -358,12 +368,6 @@ function LinkEditorDialog({
                   if (error !== null) setError(null);
                 }}
               />
-              <p className="text-xs text-muted">
-                <FormattedMessage
-                  id="settings.intakeLinks.urlHelp"
-                  defaultMessage="A full web address, starting with http:// or https://."
-                />
-              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-1.5">
@@ -407,7 +411,17 @@ function LinkEditorDialog({
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="intake-link-label">
+            <Label
+              htmlFor="intake-link-label"
+              help={
+                <>
+                  <FormattedMessage
+                    id="settings.intakeLinks.labelHelp"
+                    defaultMessage="What the panel reads as — an answer, not an address."
+                  />
+                </>
+              }
+            >
               <FormattedMessage id="settings.intakeLinks.labelLabel" defaultMessage="Label" />
             </Label>
             <Input
@@ -416,15 +430,22 @@ function LinkEditorDialog({
               value={draft.label}
               onChange={(event) => set("label", event.target.value)}
             />
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.intakeLinks.labelHelp"
-                defaultMessage="What the panel reads as — an answer, not an address."
-              />
-            </p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="intake-link-placement">
+            <Label
+              htmlFor="intake-link-placement"
+              help={
+                <>
+                  <FormattedMessage
+                    id="settings.intakeLinks.placementHelp"
+                    defaultMessage={
+                      "The portal home shows the link to everybody. A request type shows it on " +
+                      "that form only."
+                    }
+                  />
+                </>
+              }
+            >
               <FormattedMessage
                 id="settings.intakeLinks.placementLabel"
                 defaultMessage="Placement"
@@ -456,15 +477,6 @@ function LinkEditorDialog({
                 </option>
               ))}
             </select>
-            <p className="text-xs text-muted">
-              <FormattedMessage
-                id="settings.intakeLinks.placementHelp"
-                defaultMessage={
-                  "The portal home shows the link to everybody. A request type shows it on " +
-                  "that form only."
-                }
-              />
-            </p>
           </div>
           {error && (
             <p role="alert" className="text-xs text-status-danger-fg">

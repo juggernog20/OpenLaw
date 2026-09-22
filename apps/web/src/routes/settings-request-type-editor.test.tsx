@@ -392,6 +392,17 @@ it("reseeds the destination when navigating to another Request type", async () =
   expect(screen.queryByText("Business justification")).not.toBeInTheDocument();
 });
 
+it("restores turnaround guidance as a tooltip instead of input subtext", async () => {
+  openEditor(editorApi(newCalls()));
+  const user = userEvent.setup();
+  const input = await screen.findByLabelText("Target turnaround (business days)");
+  expect(input).toHaveAccessibleDescription(/Counts Monday–Friday/);
+  expect(screen.getByText(/Counts Monday–Friday/)).not.toBeVisible();
+  const label = screen.getByText("Target turnaround (business days)", { selector: "label" });
+  await user.hover(within(label.parentElement!).getByRole("button", { name: "More information" }));
+  expect(await screen.findByRole("tooltip")).toHaveTextContent(/without excluding public holidays/);
+});
+
 it("saves a whole business-day turnaround, rejects fractions, and clears back to no suggestion", async () => {
   const calls = newCalls();
   openEditor(editorApi(calls));

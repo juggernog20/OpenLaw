@@ -1501,16 +1501,21 @@ function RegisterEntityDialog({
                     aria-describedby="create-entity-portal-listed-help"
                     onCheckedChange={(value) => set("portalListed", value)}
                   />
-                  <Label htmlFor="create-entity-portal-listed">
+                  <Label
+                    htmlFor="create-entity-portal-listed"
+                    help={
+                      <>
+                        <FormattedMessage
+                          id="entities.portalListed.help"
+                          defaultMessage="Business Users can pick this Entity by name on Portal forms."
+                        />
+                      </>
+                    }
+                    helpId="create-entity-portal-listed-help"
+                  >
                     <FormattedMessage id="entities.portalListed" defaultMessage="Portal-listed" />
                   </Label>
                 </div>
-                <p id="create-entity-portal-listed-help" className="text-sm text-muted">
-                  <FormattedMessage
-                    id="entities.portalListed.help"
-                    defaultMessage="Business Users can pick this Entity by name on Portal forms."
-                  />
-                </p>
               </div>
             )}
             <CreationRows

@@ -59,12 +59,20 @@ export async function settingsAiAnalysisLoader() {
 }
 
 function FormField(
-  props: Readonly<{ id: string; label: ReactNode; status?: ReactNode; children: ReactNode }>,
+  props: Readonly<{
+    id: string;
+    label: ReactNode;
+    help?: ReactNode;
+    status?: ReactNode;
+    children: ReactNode;
+  }>,
 ) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
-        <Label htmlFor={props.id}>{props.label}</Label>
+        <Label htmlFor={props.id} help={props.help}>
+          {props.label}
+        </Label>
         {props.status}
       </div>
       {props.children}
@@ -350,6 +358,26 @@ export function SettingsAiAnalysisPage() {
                 <AiSavedKeyControl key={savedKey.id} savedKey={savedKey} onChanged={setConnector} />
               )
             }
+            help={
+              <>
+                {savedKey ? (
+                  <FormattedMessage
+                    id="settings.aiAnalysis.apiKey.keep"
+                    defaultMessage="Leave blank to use the saved key. Paste a new one to rotate it."
+                  />
+                ) : selected.requiresApiKey ? (
+                  <FormattedMessage
+                    id="settings.aiAnalysis.apiKey.required"
+                    defaultMessage="Required for this provider. The key is write-only and encrypted at rest."
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="settings.aiAnalysis.apiKey.optional"
+                    defaultMessage="Ollama does not require an API key."
+                  />
+                )}
+              </>
+            }
           >
             <Input
               id="ai-api-key"
@@ -363,24 +391,6 @@ export function SettingsAiAnalysisPage() {
                 defaultMessage: "••••••••••••••••",
               })}
             />
-            <p className="text-xs text-muted">
-              {savedKey ? (
-                <FormattedMessage
-                  id="settings.aiAnalysis.apiKey.keep"
-                  defaultMessage="Leave blank to use the saved key. Paste a new one to rotate it."
-                />
-              ) : selected.requiresApiKey ? (
-                <FormattedMessage
-                  id="settings.aiAnalysis.apiKey.required"
-                  defaultMessage="Required for this provider. The key is write-only and encrypted at rest."
-                />
-              ) : (
-                <FormattedMessage
-                  id="settings.aiAnalysis.apiKey.optional"
-                  defaultMessage="Ollama does not require an API key."
-                />
-              )}
-            </p>
           </FormField>
 
           <AiModelSelector
@@ -507,26 +517,32 @@ export function SettingsAiAnalysisPage() {
                 aria-describedby="ai-enabled-hint"
               />
               <div className="flex flex-col gap-1">
-                <Label id="ai-enabled-label" htmlFor="ai-enabled">
+                <Label
+                  id="ai-enabled-label"
+                  htmlFor="ai-enabled"
+                  help={
+                    <>
+                      {connector.disabledAt === null ? (
+                        <FormattedMessage
+                          id="settings.aiAnalysis.enabled.on"
+                          defaultMessage="Turn this off to disable AI analysis without deleting the connector."
+                        />
+                      ) : (
+                        <FormattedMessage
+                          id="settings.aiAnalysis.enabled.off"
+                          defaultMessage="Off since {when}. Turn it on to make AI analysis available again."
+                          values={{ when: formatShortDate(connector.disabledAt) }}
+                        />
+                      )}
+                    </>
+                  }
+                  helpId="ai-enabled-hint"
+                >
                   <FormattedMessage
                     id="settings.aiAnalysis.enabled"
                     defaultMessage="Use AI analysis"
                   />
                 </Label>
-                <p id="ai-enabled-hint" className="text-xs text-muted">
-                  {connector.disabledAt === null ? (
-                    <FormattedMessage
-                      id="settings.aiAnalysis.enabled.on"
-                      defaultMessage="Turn this off to disable AI analysis without deleting the connector."
-                    />
-                  ) : (
-                    <FormattedMessage
-                      id="settings.aiAnalysis.enabled.off"
-                      defaultMessage="Off since {when}. Turn it on to make AI analysis available again."
-                      values={{ when: formatShortDate(connector.disabledAt) }}
-                    />
-                  )}
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -580,18 +596,22 @@ export function SettingsAiAnalysisPage() {
           </div>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <Label htmlFor="contract-conversion-analysis">
+              <Label
+                htmlFor="contract-conversion-analysis"
+                help={
+                  <>
+                    <FormattedMessage
+                      id="conversion.settingsAnalysisHint"
+                      defaultMessage="Run Analysis with the saved Request, conversation and supporting sources. Also works with manual conversion."
+                    />
+                  </>
+                }
+              >
                 <FormattedMessage
                   id="conversion.settingsAnalysis"
                   defaultMessage="Fill Contract Fields after conversion"
                 />
               </Label>
-              <p className="text-sm text-muted">
-                <FormattedMessage
-                  id="conversion.settingsAnalysisHint"
-                  defaultMessage="Run Analysis with the saved Request, conversation and supporting sources. Also works with manual conversion."
-                />
-              </p>
             </div>
             <Switch
               id="contract-conversion-analysis"

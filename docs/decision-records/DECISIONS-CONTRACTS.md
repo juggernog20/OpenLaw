@@ -569,9 +569,10 @@ format sentences come from code. Saved prompts supply the extraction instruction
 The AI analysis pane has four collapsed cards: Provider, Answer style, Conversion draft
 prompts, and Contract analysis prompts. The Request conversion switches card is not one
 of them. It stays open, sits between Provider and Answer style, and appears once a
-connector is saved. ~~Each prompt shows its fixed format sentence as
-muted, non-editable text.~~ The format sentence is not shown since 2026-09-21; code appends
-and enforces it. The Contract Field editor supplies the override picker and the
+connector is saved. Each prompt's fixed format sentence is available from the help
+icon beside its label, rather than beneath the input (2026-09-21). Hover opens the
+tooltip after 500 ms; keyboard focus and tap open it immediately. Code still appends
+and enforces the format. The Contract Field editor supplies the override picker and the
 short-text tooltip, and omits AI prompts for reference Fields. The M37 browser journey
 proves these controls and reads both saved style choices after reopening.
 
