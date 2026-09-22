@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { saveFieldRow } from "../../testing/form-fixtures.js";
 import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { regions } from "@openlaw/db";
@@ -179,13 +180,12 @@ beforeAll(async () => {
       [field.onMsa, "contract-types", contractTypeIds.get("msa")!, field.required],
     ] as const) {
       if (!attach) continue;
-      const attached = await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/${registry}/${typeId}/fields`,
+      const attached = await saveFieldRow(harness, {
+        typeUrl: `/api/v1/${registry}/${typeId}`,
         cookies: adminCookies,
         payload: { fieldId, isRequired },
       });
-      expect(attached.statusCode, attached.body).toBe(201);
+      expect(attached.statusCode, attached.body).toBe(200);
     }
   }
 
