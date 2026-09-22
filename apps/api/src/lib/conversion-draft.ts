@@ -376,7 +376,7 @@ export async function conversionContext(
     ...(targetModule === "contract"
       ? [
           {
-            slug: "counterparty",
+            slug: "counterparties",
             type: "counterparty" as const,
             prompt: said("conversion.counterparty"),
           },
@@ -384,12 +384,7 @@ export async function conversionContext(
       : []),
   ];
   const builtinRows = rows.filter(
-    (row) =>
-      row.id === row.rowRef &&
-      !builtinTargets.some(
-        (t) =>
-          t.slug === row.rowRef || (t.slug === "counterparty" && row.rowRef === "counterparties"),
-      ),
+    (row) => row.id === row.rowRef && !builtinTargets.some((t) => t.slug === row.rowRef),
   );
   for (const row of builtinRows) {
     if (isReferenceFieldType(row.fieldType)) continue;
@@ -443,15 +438,7 @@ export async function conversionContext(
     ...builtinTargets.filter((t) =>
       ["title", `${targetModule}_type`, "description", "priority"].includes(t.slug)
         ? phase === "creation"
-        : rows.some(
-            (r) =>
-              r.rowRef ===
-              (t.slug === "counterparty"
-                ? "counterparties"
-                : t.slug.startsWith("value_")
-                  ? "value"
-                  : t.slug),
-          ),
+        : rows.some((r) => r.rowRef === (t.slug.startsWith("value_") ? "value" : t.slug)),
     ),
     ...fields
       .filter((f) => !isReferenceFieldType(f.fieldType))
@@ -532,7 +519,7 @@ export function isCarriedConversionValue(
     title: row.title,
     description: row.description,
     priority: row.urgency,
-    counterparty: row.intakeCounterparties.length
+    counterparties: row.intakeCounterparties.length
       ? row.intakeCounterparties.map((party) => party.name).join("\n")
       : Array.isArray(row.customFields.counterparties)
         ? row.customFields.counterparties.join("\n")
@@ -573,7 +560,7 @@ export function checkedSuggestion(
       (!context.targetTypeId || raw === context.targetTypeId)
         ? raw
         : null;
-  else if (answer.slug === "counterparty" && context.targetModule === "contract")
+  else if (answer.slug === "counterparties" && context.targetModule === "contract")
     value =
       typeof raw === "string" && raw.trim() && raw.length <= MAX_COUNTERPARTY_NAME_LENGTH
         ? raw.trim()
@@ -595,7 +582,6 @@ export function checkedSuggestion(
             options: target.options ? [...target.options] : null,
             displayName: target.slug,
             description: null,
-            fieldTag: "business" as const,
             visibleOnPortal: true,
             displayOrder: 0,
             isRequired: false,

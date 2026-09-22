@@ -72,7 +72,6 @@ test("an Administrator lists an Entity and a Business User picks it on a require
         displayName: `Signing Entity ${suffix}`,
         moduleScope: "contract",
         fieldType: "entity",
-        fieldTag: "business",
       },
     });
     expect(field.status(), await field.text()).toBe(201);

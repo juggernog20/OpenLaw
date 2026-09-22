@@ -112,11 +112,9 @@ const TaxonomyRow = z.object({
 });
 const TaxonomyRows = z.object({ contractTypes: z.array(TaxonomyRow) });
 
-const AttachedFields = z.object({
-  attachedFields: z.array(z.object({ slug: z.string(), isRequired: z.boolean() })),
+const CatalogFields = z.object({
+  fields: z.array(z.object({ id: z.string(), slug: z.string(), fieldType: z.string() })),
 });
-
-const CatalogFields = z.object({ fields: z.array(z.object({ id: z.string(), slug: z.string() })) });
 
 const EntityRows = z.object({
   entities: z.array(z.object({ id: z.string(), legalName: z.string() })),
@@ -214,29 +212,29 @@ async function ensureDemoType(request: APIRequestContext): Promise<void> {
   const catalog = await request.get("/api/v1/fields");
   expect(catalog.ok()).toBe(true);
   const seeds = CatalogFields.parse(await catalog.json()).fields;
-  const attachedNow = await request.get(`/api/v1/contract-types/${typeId}/fields`);
-  expect(attachedNow.ok()).toBe(true);
-  const attached = AttachedFields.parse(await attachedNow.json()).attachedFields;
-
+  const formResponse = await request.get(`/api/v1/contract-types/${typeId}/form`);
+  expect(formResponse.ok(), await formResponse.text()).toBe(true);
+  const { form } = await formResponse.json();
   for (const [field, isRequired] of [
     [REQUIRED_FIELD, true],
     [OPTIONAL_FIELD, false],
   ] as const) {
-    const seed = seeds.find((row) => row.slug === field.slug);
-    expect(seed, `the ${field.slug} seed field is missing from the catalog`).toBeDefined();
-    const held = attached.find((row) => row.slug === field.slug);
-    if (!held) {
-      const attachedField = await request.post(`/api/v1/contract-types/${typeId}/fields`, {
-        data: { fieldId: seed!.id, isRequired },
+    const seed = seeds.find((row) => row.slug === field.slug)!;
+    const held = form.find((row: { id: string }) => row.id === seed.id);
+    if (held) held.isRequired = isRequired;
+    else
+      form.push({
+        kind: "row",
+        id: seed.id,
+        rowRef: seed.slug,
+        fieldType: seed.fieldType,
+        isRequired,
+        onIntakeForm: false,
+        visibleOnPortal: false,
       });
-      expect(attachedField.status(), await attachedField.text()).toBe(201);
-    } else if (held.isRequired !== isRequired) {
-      const corrected = await request.patch(`/api/v1/contract-types/${typeId}/fields/${seed!.id}`, {
-        data: { isRequired },
-      });
-      expect(corrected.ok()).toBe(true);
-    }
   }
+  const saved = await request.put(`/api/v1/contract-types/${typeId}/form`, { data: { form } });
+  expect(saved.ok(), await saved.text()).toBe(true);
 }
 
 /** Registers the per-run Entity the contract will be signed by. M7's own

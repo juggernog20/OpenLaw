@@ -124,7 +124,7 @@ export function PortalContractPage() {
                   defaultMessage="Counterparty"
                 />,
                 contract.counterparty ?? unset,
-                flagged("counterparty"),
+                flagged("counterparties"),
               )}
               {fact(
                 <FormattedMessage id="portal.contract.stage" defaultMessage="Stage" />,

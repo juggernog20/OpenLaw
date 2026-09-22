@@ -172,7 +172,7 @@ export function ConvertDialog({
       title: request.title,
       description: request.description,
       priority: request.urgency,
-      counterparty: request.intakeCounterparties?.length
+      counterparties: request.intakeCounterparties?.length
         ? request.intakeCounterparties.map((p) => p.name).join("\n")
         : Array.isArray(request.customFields.counterparties)
           ? request.customFields.counterparties.join("\n")
@@ -196,7 +196,7 @@ export function ConvertDialog({
           {
             id: "conversion.targetLabel",
             defaultMessage:
-              "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
+              "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
           },
           { slug },
         );
@@ -260,10 +260,10 @@ export function ConvertDialog({
       request.urgency,
   );
   const [native, setNative] = useState<CreationValues>(() => ({
-    ...conversionValues(request, fields, customFieldRefs),
+    ...conversionValues(request, customFieldRefs),
     ...(suggestions.needed_by ? { neededBy: String(suggestions.needed_by.value) } : {}),
-    ...(suggestions.counterparty
-      ? { counterparties: [{ name: String(suggestions.counterparty.value) }] }
+    ...(suggestions.counterparties
+      ? { counterparties: [{ name: String(suggestions.counterparties.value) }] }
       : {}),
   }));
   const setNeededBy = (neededBy: string) =>
@@ -318,10 +318,10 @@ export function ConvertDialog({
       else if (slug === "priority") setPriority(request.urgency);
       else if (slug === "description") setDescription(request.description ?? "");
       else if (slug === "needed_by") setNeededBy(String(request.customFields.needed_by ?? ""));
-      else if (slug === "counterparty")
+      else if (slug === "counterparties")
         setNative((current) => ({
           ...current,
-          counterparties: conversionValues(request, fields, customFieldRefs).counterparties,
+          counterparties: conversionValues(request, customFieldRefs).counterparties,
         }));
       else if (slug === "matter_type" || slug === "contract_type")
         setPickedIds((current) => ({
@@ -403,8 +403,8 @@ export function ConvertDialog({
             request.urgency,
         );
       if (editable("needed_by")) setNeededBy(String(next.suggestions.needed_by!.value));
-      if (editable("counterparty"))
-        setCounterpartyName(String(next.suggestions.counterparty!.value));
+      if (editable("counterparties"))
+        setCounterpartyName(String(next.suggestions.counterparties!.value));
       if (editable(`${module}_type`))
         setPickedIds((current) => ({
           ...current,
@@ -441,30 +441,10 @@ export function ConvertDialog({
   );
   // Record-only Field Rows also accept carried answers.
   for (const field of targetFields) targetRefs.add(field.slug);
-  // A legacy intake slug carries only where the target has the Row its built-in
-  // key lands on (M39/11 re-keys these answers and removes this map).
-  const legacyBuiltinRows: Record<string, string> = {
-    entityId: "entity",
-    counterparties: "counterparties",
-    effectiveDate: "effective_date",
-    expiryDate: "expiry_date",
-    termType: "term_type",
-    renewalPeriodMonths: "renewal_period_months",
-    noticePeriodDays: "notice_period_days",
-    valueAmount: "value",
-    valueCurrency: "value",
-    valueCadence: "value",
-  };
   const staysBehind = fields.filter(
     (field) =>
       isAnswered(request.customFields[field.slug]) &&
       !targetRefs.has(field.slug) &&
-      !(
-        field.builtInKey &&
-        targetModule === "contract" &&
-        field.slug.startsWith("__intake_") &&
-        targetRefs.has(legacyBuiltinRows[field.builtInKey] ?? "")
-      ) &&
       !(field.slug.startsWith("value_") && targetRefs.has("value")),
   );
   // Keep live carried references labelled even when an options read omits them.
@@ -631,7 +611,7 @@ export function ConvertDialog({
       ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
       ...(visibleNative.counterparties?.length ||
-      (visibleNative.counterparties && human.has("counterparty"))
+      (visibleNative.counterparties && human.has("counterparties"))
         ? { counterparties: visibleNative.counterparties }
         : {}),
     });
@@ -980,7 +960,7 @@ export function ConvertDialog({
                     ) : (
                       <FormattedMessage
                         id="conversion.targetLabel"
-                        defaultMessage="{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
+                        defaultMessage="{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
                         values={{ slug }}
                       />
                     )}
@@ -1074,7 +1054,7 @@ export function ConvertDialog({
               .map((row) => {
                 const field = collection.fields.find((field) => field.slug === row.rowRef);
                 if (!field) {
-                  const slug = row.rowRef === "counterparties" ? "counterparty" : row.rowRef;
+                  const slug = row.rowRef;
                   return (
                     <div key={row.id}>
                       <AiField active={marked(slug)}>

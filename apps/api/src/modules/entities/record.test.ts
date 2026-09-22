@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /** M27/4's Entity record writes at the HTTP seam. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { activityLog, asc, eq, inArray, users } from "@openlaw/db";
@@ -119,19 +121,17 @@ async function defineAndAttachField(
       displayName,
       moduleScope: "entity",
       fieldType,
-      fieldTag: "legal",
       ...(options ? { options } : {}),
     },
   });
   expect(field.statusCode, field.body).toBe(201);
   const created = field.json().field as { id: string; slug: string };
-  const attached = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/entity-types/${corporationId}/fields`,
+  const attached = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/entity-types/${corporationId}`,
     cookies: adminCookies,
     payload: { fieldId: created.id, isRequired },
   });
-  expect(attached.statusCode, attached.body).toBe(201);
+  expect(attached.statusCode, attached.body).toBe(200);
   return created;
 }
 

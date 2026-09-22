@@ -46,7 +46,7 @@ it.each([false, true])(
       );
       await db.execute(sql`insert into requests (id, request_type_id, requester_id, title, urgency, custom_fields)
       values ('form-answer', 'form-nda-request', 'form-requester', 'Existing answer', 'medium', '{"__intake_contract_effectiveDate":"2026-01-01"}'::jsonb)`);
-      await runMigrations(db);
+      await migrateThrough(db, "0157_type-forms", migrationEntries());
       expect(
         (await db.execute(sql`select custom_fields from requests where id = 'form-answer'`)).rows,
       ).toEqual([{ custom_fields: { __intake_contract_effectiveDate: "2026-01-01" } }]);
@@ -200,7 +200,7 @@ it("sends a no-module Request type where 0140 sent its questions", async () => {
     await db.execute(
       sql`insert into request_type_fields (request_type_id, field_id, display_order) values ('unrouted', 'unrouted-contract-field', 1)`,
     );
-    await runMigrations(db);
+    await migrateThrough(db, "0157_type-forms", migrationEntries());
     expect(
       (
         await db.execute(sql`select r.target_module, t.is_default

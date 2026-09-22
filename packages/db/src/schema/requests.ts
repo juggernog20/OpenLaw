@@ -15,11 +15,8 @@
  * rather than an application convention — no write path can set or
  * correct it.
  *
- * **The basics are not configuration.** Title, Description,
- * Attachments, and Urgency are on every form by rule (the INT-002 M19/4
- * addendum), which is why three of them are columns here and none of
- * them is a `request_type_fields` row. Attachments are the fourth and
- * live in their own table, which lands with the upload build.
+ * Title, Department and Urgency are pinned Intake basics. Description is a
+ * built-in Row on the destination Form. Attachments live in their own table.
  *
  * **Everything the form collected beyond them is `custom_fields`,
  * keyed by field slug** — the same shape and the same rule as a

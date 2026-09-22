@@ -79,7 +79,6 @@ async function fixture(module: "contract" | "matter") {
       slug: `convert_${module}_answer_${suffix}`,
       displayName: "Conditional answer",
       fieldType: "text",
-      fieldTag: "business",
     })
     .returning();
   const form: Form = [
@@ -233,10 +232,8 @@ it.each(["contract", "matter"] as const)(
   },
 );
 
-it("keeps legacy built-ins until re-keying, with canonical and dialog answers taking precedence", async () => {
+it("carries migrated built-ins, with dialog answers taking precedence", async () => {
   const f = await fixture("contract");
-  const [legacy] = await h.db.select().from(fields).where(eq(fields.builtInKey, "effectiveDate"));
-  expect(legacy?.slug).toMatch(/^__intake_/);
   for (const [canonical, override, expected] of [
     [undefined, undefined, "2026-01-01"],
     ["2026-02-01", undefined, "2026-02-01"],
@@ -244,7 +241,7 @@ it("keeps legacy built-ins until re-keying, with canonical and dialog answers ta
     ["2026-02-01", null, null],
   ] as const) {
     const request = await f.createRequest({
-      [legacy!.slug]: "2026-01-01",
+      effective_date: "2026-01-01",
       ...(canonical ? { effective_date: canonical } : {}),
     });
     const result = await f.convert(request.number, {

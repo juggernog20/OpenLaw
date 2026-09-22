@@ -34,7 +34,6 @@ it.each(["contract", "matter", "entity"] as const)(
           slug: `${module}_creation_${index}`,
           displayName,
           fieldType: "text" as const,
-          fieldTag: "business" as const,
         })),
       )
       .returning();

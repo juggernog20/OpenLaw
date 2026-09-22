@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /** Matter birth at both seams: HTTP and a caller-owned transaction. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -161,17 +163,16 @@ async function attachField(typeId: string, displayName: string, isRequired = tru
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { moduleScope: "matter", fieldTag: "legal", displayName, fieldType: "text" },
+    payload: { moduleScope: "matter", displayName, fieldType: "text" },
   });
   expect(defined.statusCode, defined.body).toBe(201);
   const field = defined.json().field as { id: string; slug: string };
-  const attached = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/matter-types/${typeId}/fields`,
+  const attached = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/matter-types/${typeId}`,
     cookies: adminCookies,
     payload: { fieldId: field.id, isRequired },
   });
-  expect(attached.statusCode, attached.body).toBe(201);
+  expect(attached.statusCode, attached.body).toBe(200);
   return field.slug;
 }
 
@@ -643,19 +644,17 @@ describe("matter reach", () => {
       cookies: adminCookies,
       payload: {
         moduleScope: "matter",
-        fieldTag: "legal",
         displayName: "Sponsor",
         fieldType: "user",
       },
     });
     expect(defined.statusCode, defined.body).toBe(201);
-    const attached = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/matter-types/${sponsorTypeId}/fields`,
+    const attached = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/matter-types/${sponsorTypeId}`,
       cookies: adminCookies,
       payload: { fieldId: defined.json().field.id },
     });
-    expect(attached.statusCode, attached.body).toBe(201);
+    expect(attached.statusCode, attached.body).toBe(200);
     const [outsider] = await harness.db
       .select({ id: users.id })
       .from(users)

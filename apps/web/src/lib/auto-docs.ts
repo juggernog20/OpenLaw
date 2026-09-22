@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { AUTO_DOC_CONTRACT_ATTRIBUTES } from "@openlaw/shared";
+
 /** Validate multipart upload replies before replacing the editor's saved record. */
 import { z } from "zod";
 import type { paths } from "@openlaw/api-client";
@@ -41,17 +43,7 @@ export const autoDocFieldTypes = z.enum([
   "multi_select",
   "entity",
 ]);
-export const autoDocContractAttributes = z.enum([
-  "title",
-  "primary_counterparty_name",
-  "entity_id",
-  "owning_department_id",
-  "region",
-  "value",
-  "effective_date",
-  "expiry_date",
-  "term_type",
-]);
+export const autoDocContractAttributes = z.enum(AUTO_DOC_CONTRACT_ATTRIBUTES);
 export const autoDocClauseRule = z.object({
   blockName: z.string(),
   fieldSlug: z.string(),

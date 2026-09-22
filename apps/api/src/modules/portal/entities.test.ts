@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+import { saveFieldRow } from "../../testing/form-fixtures.js";
 import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
@@ -148,18 +150,16 @@ it("accepts a required Entity from the Portal list and refuses hidden, Confident
       displayName: "Signing Entity",
       moduleScope: "contract",
       fieldType: "entity",
-      fieldTag: "business",
     },
   });
   expect(field.statusCode, field.body).toBe(201);
   const { id: fieldId, slug } = field.json().field;
-  const attached = await h.app.inject({
-    method: "POST",
-    url: `/api/v1/request-types/${typeId}/fields`,
+  const attached = await saveFieldRow(h, {
+    typeUrl: `/api/v1/request-types/${typeId}`,
     cookies: admin,
     payload: { fieldId, isRequired: true },
   });
-  expect(attached.statusCode, attached.body).toBe(201);
+  expect(attached.statusCode, attached.body).toBe(200);
   const submit = async (entityId?: string) =>
     submitRequestFixture(h, {
       method: "POST",

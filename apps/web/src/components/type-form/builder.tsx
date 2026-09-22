@@ -303,8 +303,7 @@ export function TypeFormBuilder({
     setFieldEditor({ parent, target });
   }
   const available = catalog.filter(
-    (f) =>
-      isFieldRow(f, module) && !f.archivedAt && !f.builtInKey && !nodes.some((n) => n.id === f.id),
+    (f) => isFieldRow(f, module) && !f.archivedAt && !nodes.some((n) => n.id === f.id),
   );
   function actions(node: FormNode) {
     const field =

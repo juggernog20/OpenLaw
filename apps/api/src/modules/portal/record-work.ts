@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { readIntakeForm } from "../../lib/intake-form.js";
 import { z } from "zod";
 import {
   CONTRACT_VALUE_CADENCES,
@@ -20,7 +21,6 @@ import {
   matterTypeFields,
   requests,
   requestAttachments,
-  requestTypeFields,
   sql,
   users,
   type CustomFieldValue,
@@ -220,11 +220,9 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
             references: await references(app.db, projection.fields, projection.customFields),
             originalRequests: await Promise.all(
               originals.map(async ({ row: original, requester }) => {
-                const fields = await selectAttachedFields(
-                  app.db,
-                  requestTypeFields,
-                  original.requestTypeId,
-                );
+                const { fields } = await readIntakeForm(app.db, original.requestTypeId, {
+                  includeArchived: true,
+                });
                 const paper = await app.db
                   .select({
                     filename: requestAttachments.filename,

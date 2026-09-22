@@ -42,7 +42,6 @@ import { requireRole } from "../auth/guards.js";
 import { recordActivity } from "./activity.js";
 import { httpError, problemResponse } from "./problem.js";
 import type { TypeFieldRoutesConfig, TypeFieldScopeRule } from "./type-field-routes.js";
-import type { TaxonomyRow } from "./taxonomy-routes.js";
 
 const tables = {
   contract: {
@@ -191,50 +190,9 @@ export async function readTypeForm(
   return [...pins, ...children(null)];
 }
 
-/** Once a Form mixes nodes, the legacy Field order permutes only sibling Field slots. */
-export async function legacyFormFieldOrder(
-  tx: Transaction,
-  module: FormModule,
-  typeId: string,
-  fieldIds: string[],
-) {
-  const { branches, builtins, joins } = tables[module];
-  const branchRows = await tx
-    .select({ id: branches.id })
-    .from(branches)
-    .where(eq(branches.typeId, typeId));
-  const builtinRows = builtins
-    ? await tx
-        .select({ order: builtins.displayOrder })
-        .from(builtins)
-        .where(eq(builtins.typeId, typeId))
-    : [];
-  if (branchRows.length === 0 && builtinRows.every((row) => row.order <= 0)) return null;
-  const rows = await tx
-    .select()
-    .from(joins)
-    .where(and(eq(joins.typeId, typeId), inArray(joins.fieldId, fieldIds)));
-  const slots = new Map<string | null, number[]>();
-  for (const row of rows)
-    slots.set(row.branchId, [...(slots.get(row.branchId) ?? []), row.displayOrder]);
-  for (const orders of slots.values()) orders.sort((a, b) => a - b);
-  const byId = new Map(rows.map((row) => [row.fieldId, row]));
-  return new Map(fieldIds.map((id) => [id, slots.get(byId.get(id)!.branchId)!.shift()!]));
-}
-
-/** Legacy writes must not leave a Branch pointing at a missing or later Row. */
-export async function assertTypeFormReferences(
-  tx: Transaction,
-  module: FormModule,
-  typeId: string,
-) {
-  const [issue] = validateForm(await readTypeForm(tx, module, typeId));
-  if (issue) throw httpError(400, issue.message);
-}
-
 /** The shared attachment factory mounts this only for record types. */
-export function typeFormRoutes<TRow extends TaxonomyRow>(
-  config: TypeFieldRoutesConfig<TRow>,
+export function typeFormRoutes(
+  config: TypeFieldRoutesConfig,
   module: FormModule,
 ): FastifyPluginAsyncZod {
   const { branches, builtins, joins } = tables[module];
@@ -332,17 +290,12 @@ export function typeFormRoutes<TRow extends TaxonomyRow>(
         continue;
       }
       const field = byId.get(row.id);
-      if (
-        !field ||
-        field.slug !== row.rowRef ||
-        field.fieldType !== row.fieldType ||
-        field.builtInKey
-      )
+      if (!field || field.slug !== row.rowRef || field.fieldType !== row.fieldType)
         throw httpError(
           400,
           `Row "${row.rowRef}" must identify a catalog Field with its actual Field type.`,
         );
-      if (!rule.scopes.includes(field.moduleScope) || rule.excludedSlugs?.includes(field.slug))
+      if (!rule.scopes.includes(field.moduleScope))
         throw httpError(400, `Row "${row.rowRef}": ${rule.refusal}`);
       if (field.archivedAt)
         throw httpError(409, `${field.displayName} is archived — restore it first.`);
@@ -422,10 +375,7 @@ export function typeFormRoutes<TRow extends TaxonomyRow>(
         app.db.transaction(async (tx) => {
           const type = await lock(tx, request.params.id, true);
           const form = request.body.form;
-          const rule =
-            typeof config.scopeRule === "function"
-              ? config.scopeRule(type as TRow)
-              : config.scopeRule;
+          const rule = config.scopeRule;
           const catalog = await validate(tx, form, rule);
           const before = await readTypeForm(tx, module, type.id);
           // Archived Fields are absent from GET. Preserve their attachments for restore.

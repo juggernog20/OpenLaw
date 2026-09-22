@@ -16,7 +16,7 @@ import { type ChangedFields } from "@openlaw/shared";
 import { httpError } from "../../lib/problem.js";
 import { requestTypeUsage } from "../requests/type-usage.js";
 import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
-import { formFieldCounts, TARGET_MODULES, type TargetModule } from "./form-definition.js";
+import { TARGET_MODULES, type TargetModule } from "./form-definition.js";
 
 const TargetModuleSchema = z.enum(TARGET_MODULES);
 
@@ -61,29 +61,16 @@ export const requestTypesRoutes = taxonomyRoutes({
   recordNoun: { singular: "request", plural: "requests" },
   extras: {
     rowSchema: {
-      formFieldOrder: z.array(z.string()),
       turnaroundDays: z.number().int().nullable(),
       targetModule: TargetModuleSchema,
       targetTypeId: z.string().nullable(),
-      /** ST12's Form fields column: how many catalog fields this type's
-       * portal form collects, over and above the four fixed basics. */
-      formFieldCount: z.number().int(),
     },
-    // The count is not on the row, so it is read once over the whole
-    // answer set rather than per row — see the hook.
-    loadContext: (db, rows) =>
-      formFieldCounts(
-        db,
-        rows.map((row) => row.id),
-      ),
-    projectRow: (row, counts) => {
+    projectRow: (row) => {
       const type = row as RequestType;
       return {
-        formFieldOrder: type.formFieldOrder,
         turnaroundDays: type.turnaroundDays,
         targetModule: type.targetModule,
         targetTypeId: targetTypeId(type),
-        formFieldCount: counts.get(type.id) ?? 0,
       };
     },
     patchSchema: {

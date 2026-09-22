@@ -290,7 +290,6 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     displayName: "Governing law",
     moduleScope: "contract",
     fieldType: "text",
-    fieldTag: "legal",
   },
   "field.updated": {
     slug: "governing-law",

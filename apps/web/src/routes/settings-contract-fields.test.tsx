@@ -25,16 +25,15 @@ const ADMIN = {
 
 const MEMBER = { ...ADMIN, id: "u2", email: "casey@example.com", role: "legal_team_member" };
 
-/** The CTR-008 seeds: id, slug, name, type, tag, options, prompt. */
+/** The CTR-008 seeds: id, slug, name, type, options, prompt. */
 const SEEDS = [
-  ["f1", "governing_law", "Governing law", "text", "legal", null, "Find the governing law."],
-  ["f2", "jurisdiction", "Jurisdiction", "text", "legal", null, "Find the forum."],
+  ["f1", "governing_law", "Governing law", "text", null, "Find the governing law."],
+  ["f2", "jurisdiction", "Jurisdiction", "text", null, "Find the forum."],
   [
     "f3",
     "our_position",
     "Our position",
     "single_select",
-    "business",
     ["Customer", "Provider", "Other"],
     "Decide our role.",
   ],
@@ -48,7 +47,6 @@ interface StubFieldRow {
   moduleScope: string;
   fieldType: string;
   options: readonly string[] | null;
-  fieldTag: string;
   aiPrompt: string | null;
   isSystemDefault?: boolean;
   archivedAt: string | null;
@@ -56,7 +54,7 @@ interface StubFieldRow {
 }
 
 function seededFields(archivedSlugs: string[] = []): StubFieldRow[] {
-  return SEEDS.map(([id, slug, displayName, fieldType, fieldTag, options, aiPrompt]) => ({
+  return SEEDS.map(([id, slug, displayName, fieldType, options, aiPrompt]) => ({
     id,
     slug,
     displayName,
@@ -64,7 +62,6 @@ function seededFields(archivedSlugs: string[] = []): StubFieldRow[] {
     moduleScope: "contract",
     fieldType,
     options,
-    fieldTag,
     aiPrompt,
     archivedAt: archivedSlugs.includes(slug) ? "2026-08-10T12:00:00.000Z" : null,
     inUseCount: 0,
@@ -103,7 +100,6 @@ function fieldsApi(calls: FieldCalls, rows = seededFields()) {
           moduleScope: body.moduleScope,
           fieldType: body.fieldType,
           options: body.options ?? null,
-          fieldTag: body.fieldTag,
           aiPrompt: body.aiPrompt ?? null,
           archivedAt: null,
           inUseCount: 0,
@@ -267,7 +263,6 @@ describe("create (the field-editor dialog)", () => {
           displayName: "Department",
           moduleScope: "contract",
           fieldType: "single_select",
-          fieldTag: "business",
           options: ["Legal", "Procurement"],
         },
       ]),
@@ -297,7 +292,6 @@ describe("create (the field-editor dialog)", () => {
           displayName: "Payment terms",
           moduleScope: "contract",
           fieldType: "text",
-          fieldTag: "business",
           aiPrompt: "Extract the payment terms.",
         },
       ]),
@@ -330,7 +324,6 @@ describe("create (the field-editor dialog)", () => {
             displayName: "Internal reference",
             moduleScope: "contract",
             fieldType,
-            fieldTag: "business",
           },
         ]),
       );

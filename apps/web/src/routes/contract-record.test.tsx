@@ -186,7 +186,6 @@ const PAYMENT_TERMS = {
   displayName: "Payment terms",
   description: "How long the other side has to pay.",
   fieldType: "text",
-  fieldTag: "business",
   options: null,
   displayOrder: 1,
   isRequired: false,
@@ -197,7 +196,6 @@ const OUR_POSITION = {
   displayName: "Our position",
   description: null,
   fieldType: "single_select",
-  fieldTag: "legal",
   options: ["Customer", "Provider"],
   displayOrder: 1,
   isRequired: true,
@@ -222,7 +220,6 @@ const EVERY_FIELD = [
   displayName: displayName as string,
   description: null,
   fieldType: fieldType as string,
-  fieldTag: "legal" as const,
   options: options as string[] | null,
   displayOrder: index + 1,
   isRequired: false,
@@ -969,7 +966,7 @@ describe("the /contracts/:number record page", () => {
             outcome: "invalid",
           },
           {
-            slug: "counterparty",
+            slug: "counterparties",
             value: "Acme Trading",
             evidence: "Acme Trading LLC",
             outcome: "unmatched",
@@ -1346,7 +1343,7 @@ describe("the /contracts/:number record page", () => {
 
     it("marks only the AI primary Counterparty and removes its treatment on confirmation", async () => {
       const api = recordApi(
-        contractRow({ aiUnverified: { counterparty: { runId: "original-run" } } }),
+        contractRow({ aiUnverified: { counterparties: { runId: "original-run" } } }),
         undefined,
         [party("cp-helix", true), party("cp-orion", false)],
       );

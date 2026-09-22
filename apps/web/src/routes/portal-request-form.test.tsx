@@ -116,7 +116,6 @@ function portalForm(
     ) {
       return json(200, {
         requestType: {
-          formFieldOrder: state.formFieldOrder ?? [],
           id: "rt2",
           slug: "contract_review",
           displayName: "Contract review",

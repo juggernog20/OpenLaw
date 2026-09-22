@@ -92,15 +92,26 @@ test.describe.serial("M23 deployer journey", () => {
         displayName: FIELD_NAME,
         moduleScope: "matter",
         fieldType: "text",
-        fieldTag: "business",
       },
     });
     expect(fieldResponse.status(), await fieldResponse.text()).toBe(201);
     const field = CreatedField.parse(await fieldResponse.json()).field;
-    const attached = await page.request.post(`/api/v1/matter-types/${matterTypeId}/fields`, {
-      data: { fieldId: field.id, isRequired: false },
+    const formRead = await page.request.get(`/api/v1/matter-types/${matterTypeId}/form`);
+    expect(formRead.ok(), await formRead.text()).toBe(true);
+    const { form } = await formRead.json();
+    form.push({
+      kind: "row",
+      id: field.id,
+      rowRef: field.slug,
+      fieldType: "text",
+      isRequired: false,
+      onIntakeForm: false,
+      visibleOnPortal: true,
     });
-    expect(attached.status(), await attached.text()).toBe(201);
+    const savedForm = await page.request.put(`/api/v1/matter-types/${matterTypeId}/form`, {
+      data: { form },
+    });
+    expect(savedForm.ok(), await savedForm.text()).toBe(true);
 
     const contractResponse = await page.request.post("/api/v1/contracts", {
       data: { title: CONTRACT_TITLE, contractTypeId: contractType!.id },

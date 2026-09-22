@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 import { regions } from "@openlaw/db";
 
 import { readFile } from "node:fs/promises";
@@ -85,13 +87,18 @@ beforeAll(async () => {
     displayName: "Governing law",
     fieldType: "text",
     moduleScope: "contract",
-    fieldTag: "legal",
   });
   fieldId = field.json().field.id;
   fieldSlug = field.json().field.slug;
   expect(
-    (await post(`/contract-types/${typeId}/fields`, { fieldId, isRequired: true })).statusCode,
-  ).toBe(201);
+    (
+      await saveFieldRow(h, {
+        typeUrl: `/api/v1/contract-types/${typeId}`,
+        cookies,
+        payload: { fieldId, isRequired: true },
+      })
+    ).statusCode,
+  ).toBe(200);
 });
 afterAll(async () => {
   await h.stop();
@@ -136,12 +143,12 @@ async function prepare(settings: Record<string, unknown> = {}) {
   const saved = await post(`/auto-docs/${id}/form-versions`, {
     fields: [
       field("counterparty_name", {
-        contractAttribute: "primary_counterparty_name",
+        contractAttribute: "counterparties",
         required: true,
       }),
       field("signing_date", { fieldType: "date", contractAttribute: "effective_date" }),
-      field("entity", { fieldType: "entity", contractAttribute: "entity_id", required: true }),
-      field("department", { contractAttribute: "owning_department_id" }),
+      field("entity", { fieldType: "entity", contractAttribute: "entity", required: true }),
+      field("department", { contractAttribute: "owning_department" }),
       field("region", { contractAttribute: "region" }),
       field("amount", {
         fieldType: "currency",

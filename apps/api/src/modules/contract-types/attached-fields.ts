@@ -10,7 +10,6 @@
  * behavior set.
  */
 
-import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
 import { contractTypeFields, contractTypes } from "@openlaw/db";
 import { typeFieldRoutes } from "../../lib/type-field-routes.js";
 
@@ -24,11 +23,9 @@ export const attachedFieldsRoutes = typeFieldRoutes({
   noun: "contract type",
   scopeRule: {
     scopes: ["contract"],
-    excludedSlugs: CONTRACT_OVERVIEW_FIELD_SLUGS,
     refusal:
       "Only contract-scoped fields attach to contract types. Department and Region are built-in Overview attributes.",
   },
-  scopeSummary: "contract-scoped fields only (CTR-016)",
   actionPrefix: "contract_type_field",
   // No `requiredMilestone`: the contract record enforces the flag from
   // #112, at creation and at re-type (CTR-016/MTR-014).

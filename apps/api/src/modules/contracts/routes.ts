@@ -920,7 +920,7 @@ function toRow(
                       "description",
                       "priority",
                       "contract_type",
-                      "counterparty",
+                      "counterparties",
                       "needed_by",
                       "term_type",
                       "effective_date",
@@ -2698,7 +2698,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             if (
               flag.draftId &&
               flag.targetTypeId !== body.contractTypeId &&
-              !["title", "description", "priority", "counterparty", "needed_by"].includes(slug)
+              !["title", "description", "priority", "counterparties", "needed_by"].includes(slug)
             )
               humanWrittenSlugs.add(slug);
         }
@@ -2719,7 +2719,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
               "description",
               "priority",
               "contract_type",
-              "counterparty",
+              "counterparties",
               "needed_by",
               "term_type",
               "effective_date",
@@ -3361,16 +3361,16 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!removed) throw httpError(404, "That counterparty is not on this contract.");
         if (
           removed.isPrimary &&
-          (!current.row.analysisHumanFields.includes("counterparty") ||
-            current.row.aiUnverified?.counterparty)
+          (!current.row.analysisHumanFields.includes("counterparties") ||
+            current.row.aiUnverified?.counterparties)
         ) {
           const remaining = { ...current.row.aiUnverified };
-          delete remaining.counterparty;
+          delete remaining.counterparties;
           const [updated] = await tx
             .update(contracts)
             .set({
               analysisHumanFields: [
-                ...new Set([...current.row.analysisHumanFields, "counterparty"]),
+                ...new Set([...current.row.analysisHumanFields, "counterparties"]),
               ],
               aiUnverified: Object.keys(remaining).length ? remaining : null,
             })
@@ -3476,7 +3476,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
 
         await promotePrimary(tx, current.row.id, target.id);
         // The person chose the primary, so the slot is theirs (CTR-008).
-        await clearAiUnverified(tx, current.row.id, "counterparty");
+        await clearAiUnverified(tx, current.row.id, "counterparties");
         await recordActivity(tx, {
           entityType: "contract",
           entityId: current.row.id,

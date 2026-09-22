@@ -158,7 +158,7 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     ).toBeChecked();
     await counterparty
       .getByRole("combobox", { name: "Map to", exact: true })
-      .selectOption("attribute:primary_counterparty_name");
+      .selectOption("attribute:counterparties");
     await expect(
       fields
         .getByRole("listitem")
@@ -196,7 +196,7 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     const signingEntity = await addField("signing_entity", "Signing Entity", "entity");
     await signingEntity
       .getByRole("combobox", { name: "Map to", exact: true })
-      .selectOption("attribute:entity_id");
+      .selectOption("attribute:entity");
     await expect(
       fields
         .getByRole("listitem")
@@ -206,7 +206,7 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
     const owningDepartment = await addField("owning_department", "Owning department", "text");
     await owningDepartment
       .getByRole("combobox", { name: "Map to", exact: true })
-      .selectOption("attribute:owning_department_id");
+      .selectOption("attribute:owning_department");
     await expect(
       fields
         .getByRole("listitem")

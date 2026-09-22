@@ -99,8 +99,6 @@ export const AttachedCustomFieldSchema = z.object({
   /** Help text under the control; null = the field renders without it. */
   description: z.string().nullable(),
   fieldType: z.enum(FIELD_TYPES),
-  /** Retained until the M39/11 schema cleanup. */
-  fieldTag: z.enum(["business", "legal"]),
   /** DD-028: visibility belongs to this type's Row. */
   visibleOnPortal: z.boolean(),
   /** The select types' option labels, in order; null on the other seven. */
@@ -126,13 +124,11 @@ export async function selectAttachedFields(
 ): Promise<AttachedCustomField[]> {
   const rows = await db
     .select({
-      builtInKey: fields.builtInKey,
       fieldId: fields.id,
       slug: fields.slug,
       displayName: fields.displayName,
       description: fields.description,
       fieldType: fields.fieldType,
-      fieldTag: fields.fieldTag,
       visibleOnPortal:
         "visibleOnPortal" in joinTable ? joinTable.visibleOnPortal : sql<boolean>`true`,
       options: fields.options,
@@ -143,9 +139,8 @@ export async function selectAttachedFields(
     .innerJoin(fields, eq(joinTable.fieldId, fields.id))
     .where(and(eq(joinTable.typeId, typeId), isNull(fields.archivedAt)))
     .orderBy(asc(joinTable.displayOrder), asc(joinTable.createdAt));
-  return rows.map(({ builtInKey, ...row }) => ({
+  return rows.map((row) => ({
     ...row,
-    ...(builtInKey ? { builtInKey } : {}),
     options: row.options ?? null,
   }));
 }

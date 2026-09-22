@@ -24,6 +24,5 @@ export const matterAttachedFieldsRoutes = typeFieldRoutes({
     scopes: ["matter"],
     refusal: "Only matter-scoped fields attach to matter types.",
   },
-  scopeSummary: "matter-scoped fields (MTR-011)",
   actionPrefix: "matter_type_field",
 });

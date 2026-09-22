@@ -61,7 +61,6 @@ beforeAll(async () => {
       displayName: "Post clear",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
       aiPrompt: "Extract the effective date wording.",
     })
     .returning();
@@ -493,7 +492,7 @@ it("keeps an explicitly cleared Counterparty empty after conversion", async () =
   const { counterparties, contractCounterparties } = await import("@openlaw/db");
   await harness.db.insert(counterparties).values({ name: "Post analysis counterparty" });
   const { contract, runs } = await convert({ counterparties: [] }, async (id) => {
-    answers.counterparty = {
+    answers.counterparties = {
       value: "Post analysis counterparty",
       sourceId: `request:${id}:title`,
       evidence: "Agreement",
@@ -588,7 +587,6 @@ it("omits hidden Row names and Analysis outcomes from Portal work", async () => 
       displayName: "Private strategy",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
       aiPrompt: "Extract the effective date wording.",
     })
     .returning();
@@ -668,7 +666,6 @@ it("keeps the core Value marker when a legacy custom Field named value is edited
       displayName: "Legacy value",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     })
     .returning();
   await harness.db
@@ -707,7 +704,6 @@ it("prepares an unprompted Record Row through Analysis with saved provenance", a
       displayName: "Record wording",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     })
     .returning();
   await harness.db
@@ -764,7 +760,6 @@ async function convertMatter(options: { refuseQueue?: boolean } = {}) {
         displayName: slug,
         moduleScope: "matter",
         fieldType: "text",
-        fieldTag: "business",
       })
       .onConflictDoUpdate({ target: fields.slug, set: { displayName: slug } })
       .returning();

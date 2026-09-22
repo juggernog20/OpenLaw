@@ -92,11 +92,5 @@ export async function buildAnalysisTargets(
       options: field.options ?? null,
       core: false,
     })),
-  ].filter(
-    (target) =>
-      !rows ||
-      rows.some(
-        (row) => row.rowRef === (target.slug === "counterparty" ? "counterparties" : target.slug),
-      ),
-  );
+  ].filter((target) => !rows || rows.some((row) => row.rowRef === target.slug));
 }

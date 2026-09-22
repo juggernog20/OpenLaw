@@ -169,7 +169,7 @@ export async function prepareContractDestination(
       400,
       `The generated Contract title must have 1 to ${MAX_CONTRACT_TITLE_LENGTH} characters.`,
     );
-  const entityId = autoDoc.fixedEntityId ?? text("entity_id");
+  const entityId = autoDoc.fixedEntityId ?? text("entity");
   const entityIds = new Set<string>(entityId ? [entityId] : []);
   for (const field of attached)
     if (field.fieldType === "entity" && typeof customFields[field.slug] === "string")
@@ -198,7 +198,7 @@ export async function prepareContractDestination(
       .for("share");
     if (!owner) throw httpError(400, "Choose a live person as Business Owner.");
   }
-  const department = text("owning_department_id");
+  const department = text("owning_department");
   let owningDepartmentId: string | null = null;
   if (department) {
     const matches = await tx
@@ -236,7 +236,7 @@ export async function prepareContractDestination(
   const expiryDate = date("expiry_date");
   if (termType.data === "evergreen" && expiryDate)
     throw httpError(400, "An evergreen Contract has no expiry date.");
-  const counterparty = text("primary_counterparty_name");
+  const counterparty = text("counterparties");
   if (counterparty && !CounterpartyNameSchema.safeParse(counterparty).success)
     throw httpError(400, "The primary Counterparty name is too long.");
   let value: AutoDocContractSnapshot["value"] = null;

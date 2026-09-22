@@ -33,7 +33,7 @@ export const CORE_ANALYSIS_LABELS: Readonly<Record<CoreAnalysisSlug, MessageDesc
     defaultMessage: "Notice period (days)",
   }),
   value: defineMessage({ id: "contracts.form.value", defaultMessage: "Value" }),
-  counterparty: defineMessage({
+  counterparties: defineMessage({
     id: "contracts.analysis.counterparty",
     defaultMessage: "Counterparty",
   }),

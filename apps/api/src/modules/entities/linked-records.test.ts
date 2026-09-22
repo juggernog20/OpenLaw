@@ -100,7 +100,6 @@ beforeAll(async () => {
       displayName: "Named Entity",
       moduleScope: "matter",
       fieldType: "entity",
-      fieldTag: "legal",
     })
     .returning({ id: fields.id });
   await harness.db

@@ -125,7 +125,6 @@ export function FieldEditorDialog({
           description: draft.description.trim() || undefined,
           moduleScope: module,
           fieldType: draft.fieldType as FieldType,
-          fieldTag: "business",
           options: isSelect ? options : undefined,
           aiPrompt: promptable && draft.aiPrompt.trim() ? draft.aiPrompt.trim() : undefined,
           aiAnswerStyle: styleable ? (draft.aiAnswerStyle ?? undefined) : undefined,

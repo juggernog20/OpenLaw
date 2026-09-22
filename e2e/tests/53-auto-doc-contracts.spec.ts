@@ -45,7 +45,7 @@ test("Legal targets a Contract Type and generates its draft Contract with a prim
   await page
     .getByRole("region", { name: "Counterparty name", exact: true })
     .getByRole("combobox", { name: "Map to", exact: true })
-    .selectOption("attribute:primary_counterparty_name");
+    .selectOption("attribute:counterparties");
   await expect(
     fields
       .getByRole("listitem")

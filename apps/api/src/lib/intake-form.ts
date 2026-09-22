@@ -103,7 +103,6 @@ export async function readIntakeForm(
       builtInKey: key,
       displayName: labels[key] ?? key,
       description: null,
-      fieldTag: "business",
       visibleOnPortal: true,
       displayOrder: 0,
       fieldType:

@@ -18,7 +18,6 @@ const baseField = {
   description: null,
   fieldType: "text",
   options: null,
-  fieldTag: "business",
   aiPrompt: null,
   archivedAt: null,
   inUseCount: 0,
@@ -53,7 +52,6 @@ describe("the Matters Fields pane", () => {
             displayName: body.displayName,
             moduleScope: body.moduleScope,
             fieldType: body.fieldType,
-            fieldTag: body.fieldTag,
           },
         });
       }
@@ -90,7 +88,6 @@ describe("the Matters Fields pane", () => {
           displayName: "Business unit",
           moduleScope: "matter",
           fieldType: "text",
-          fieldTag: "business",
         },
       ]),
     );

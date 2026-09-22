@@ -11,7 +11,6 @@
  * DD-028 requires a Contract or Matter destination. A module-only destination
  * uses that module's Default Form. The expand migration backfills old module-only
  * destinations to that Default type and maps a missing module to Matter.
- * The legacy request-side attachments and form order remain until M39/11.
  *
  * **Deleting a targeted type demotes, never strands.** Both type FKs
  * are `on delete set null` while `target_module` stays, so
@@ -27,7 +26,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, integer, jsonb, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, integer, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { contractTypes } from "./contract-types.js";
 import { matterTypes } from "./matter-types.js";
 import { taxonomyColumns } from "./helpers.js";
@@ -36,8 +35,6 @@ export const requestTypes = pgTable(
   "request_types",
   {
     ...taxonomyColumns(),
-    /** Basics and attached field IDs in Portal presentation order. */
-    formFieldOrder: jsonb("form_field_order").$type<string[]>().notNull().default([]),
     /** INT-003: business days offered to triage as an unconfirmed estimate; NULL means no suggestion. */
     turnaroundDays: integer("turnaround_days"),
     /** Every Request type names a module, including one created by the legacy editor. */

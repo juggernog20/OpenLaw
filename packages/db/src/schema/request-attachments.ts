@@ -36,8 +36,7 @@ export const requestAttachments = pgTable(
   {
     id: uuidPk(),
     /** The ask the paper travels with. Cascade: an attachment is part
-     * of its Request and has no meaning without one, the rule
-     * `request_type_fields` follows one table up. The cascade takes the
+     * of its Request and has no meaning without one. The cascade takes the
      * row and not the blob, because no database cascade reaches a
      * storage driver. So whichever milestone builds a Request hard
      * delete owes the read-then-delete pass `documents` makes (DOC-010,

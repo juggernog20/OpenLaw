@@ -114,7 +114,6 @@ describe("currencies in use", () => {
       displayName: "Budget currency",
       description: null,
       fieldType: "currency",
-      fieldTag: "business",
       visibleOnPortal: true,
       options: null,
       displayOrder: 1,

@@ -56,7 +56,6 @@ it("reads the destination Intake tree, evaluates Required, and labels built-in a
         slug: `portal_branch_${i}`,
         displayName,
         fieldType: "text" as const,
-        fieldTag: "business" as const,
       })),
     )
     .returning();

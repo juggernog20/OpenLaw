@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+import { removeFieldRow, saveFieldRow } from "../../testing/form-fixtures.js";
 import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
@@ -186,20 +188,19 @@ async function createField(displayName: string, moduleScope: string, fieldType: 
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { displayName, moduleScope, fieldType, fieldTag: "legal" },
+    payload: { displayName, moduleScope, fieldType },
   });
   expect(res.statusCode, res.body).toBe(201);
   return { id: res.json().field.id as string, slug: res.json().field.slug as string };
 }
 
 async function attach(registry: string, typeId: string, fieldId: string, isRequired: boolean) {
-  const res = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/${registry}/${typeId}/fields`,
+  const res = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/${registry}/${typeId}`,
     cookies: adminCookies,
     payload: { fieldId, isRequired },
   });
-  expect(res.statusCode, res.body).toBe(201);
+  expect(res.statusCode, res.body).toBe(200);
 }
 
 async function createRequestType(
@@ -423,12 +424,12 @@ describe("the matter target", () => {
       .select()
       .from(fields)
       .where(eq(fields.slug, staysSlug));
-    const detached = await harness.app.inject({
-      method: "DELETE",
-      url: `/api/v1/matter-types/${ordinaryMatterTypeId}/fields/${detachedField!.id}`,
+    const detached = await removeFieldRow(harness, {
+      typeUrl: `/api/v1/matter-types/${ordinaryMatterTypeId}`,
+      fieldId: `${detachedField!.id}`,
       cookies: adminCookies,
     });
-    expect(detached.statusCode, detached.body).toBe(204);
+    expect(detached.statusCode, detached.body).toBe(200);
     const res = await convert(request.number, { title: "Meridian injunction threat" });
     expect(res.statusCode, res.body).toBe(200);
     expect(res.json().request.convertedRecord).toEqual({

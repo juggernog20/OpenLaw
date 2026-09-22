@@ -474,7 +474,7 @@ function mapName(
       {
         id: "autoDocs.attributeName",
         defaultMessage:
-          "{attribute, select, title {Title} primary_counterparty_name {Primary Counterparty name} entity_id {Our Entity} owning_department_id {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}",
+          "{attribute, select, title {Title} counterparties {Primary Counterparty name} entity {Our Entity} owning_department {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}",
       },
       { attribute: field.contractAttribute },
     );
@@ -759,9 +759,9 @@ function FieldCard({
               {(
                 [
                   "title",
-                  "primary_counterparty_name",
-                  "entity_id",
-                  "owning_department_id",
+                  "counterparties",
+                  "entity",
+                  "owning_department",
                   "region",
                   "value",
                   "effective_date",

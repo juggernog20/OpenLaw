@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import {
-  fields,
-  isNotNull,
-  type Executor,
-  type CustomFieldValue,
-  type Contract,
-} from "@openlaw/db";
-import type { AttachedCustomField } from "./custom-fields.js";
+import { type CustomFieldValue, type Contract } from "@openlaw/db";
 import { CounterpartyNameSchema } from "./counterparty-link.js";
 import { httpError } from "./problem.js";
 
@@ -26,19 +19,9 @@ export type IntakeContractFacts = Partial<
   >
 >;
 
-/** Native Row keys take precedence over the protected intake slugs retained until migration. */
-export async function readIntakeContractFacts(
-  db: Executor,
-  answers: Readonly<Record<string, CustomFieldValue>>,
-) {
-  const definitions = await db
-    .select({ slug: fields.slug, key: fields.builtInKey })
-    .from(fields)
-    .where(isNotNull(fields.builtInKey));
+/** Validate answers stored under built-in Row keys. */
+export function readIntakeContractFacts(answers: Readonly<Record<string, CustomFieldValue>>) {
   const values: Record<string, CustomFieldValue> = {};
-  for (const field of definitions) {
-    if (field.key && answers[field.slug] !== undefined) values[field.key] = answers[field.slug]!;
-  }
   const nativeKeys = {
     entity: "entityId",
     effective_date: "effectiveDate",
@@ -166,33 +149,4 @@ export function parseIntakeContractFacts(values: Readonly<Record<string, CustomF
       "Counterparties: enter up to 50 legal names, one per line, each no longer than 200 characters.",
     );
   return { facts, counterparties: names };
-}
-
-/** Retain the labels needed to review submitted defaults after a form is edited. */
-export async function withAnsweredIntakeDefaults(
-  db: Executor,
-  attached: AttachedCustomField[],
-  answers: Readonly<Record<string, CustomFieldValue>>,
-): Promise<AttachedCustomField[]> {
-  const definitions = await db.select().from(fields).where(isNotNull(fields.builtInKey));
-  const missing = definitions.filter(
-    (field) =>
-      answers[field.slug] !== undefined && !attached.some((row) => row.fieldId === field.id),
-  );
-  return [
-    ...attached,
-    ...missing.map((field, index) => ({
-      builtInKey: field.builtInKey,
-      fieldId: field.id,
-      slug: field.slug,
-      displayName: field.displayName,
-      description: field.description,
-      fieldType: field.fieldType,
-      fieldTag: field.fieldTag,
-      visibleOnPortal: true,
-      options: field.options,
-      displayOrder: attached.length + index + 1,
-      isRequired: false,
-    })),
-  ];
 }
