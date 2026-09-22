@@ -16,7 +16,5 @@ export const entityAttachedFieldsRoutes = typeFieldRoutes({
     scopes: ["entity"],
     refusal: "Only entity-scoped fields attach to entity types.",
   },
-  scopeSummary: "entity-scoped fields (ENT-001)",
   actionPrefix: "entity_type_field",
-  requiredMilestone: "M27 record fields",
 });

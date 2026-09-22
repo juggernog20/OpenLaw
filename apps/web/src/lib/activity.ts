@@ -1378,7 +1378,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
                 {
                   id: "conversion.targetLabel",
                   defaultMessage:
-                    "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
+                    "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
                 },
                 { slug },
               ),
@@ -1409,6 +1409,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         notice_period_days: "noticePeriodDays",
         value: "value",
         counterparty: "primaryCounterparty",
+        counterparties: "primaryCounterparty",
       };
       const key = coreKey[slug];
       return {

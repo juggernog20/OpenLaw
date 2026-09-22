@@ -585,7 +585,7 @@ async function applyAnswers(
       noteResult(slug, item, "written", item.value);
     }
 
-    const counterparty = prepared.get("counterparty");
+    const counterparty = prepared.get("counterparties");
     if (counterparty) {
       const name = counterparty.value as string;
       const [matches, linked] = await Promise.all([
@@ -606,29 +606,29 @@ async function applyAnswers(
           .from(contractCounterparties)
           .where(eq(contractCounterparties.contractId, row.id)),
       ]);
-      if (row.analysisHumanFields.includes("counterparty")) {
-        outcome.kept.push("counterparty");
-        noteResult("counterparty", counterparty, "kept", name);
+      if (row.analysisHumanFields.includes("counterparties")) {
+        outcome.kept.push("counterparties");
+        noteResult("counterparties", counterparty, "kept", name);
       } else if (matches.length === 1 && linked.length === 0) {
         await tx.insert(contractCounterparties).values({
           contractId: row.id,
           counterpartyId: matches[0]!.id,
           isPrimary: true,
         });
-        flags.counterparty = flag(counterparty.evidence, run.id, !!run.sourceContext);
-        outcome.written.push("counterparty");
-        noteResult("counterparty", counterparty, "written", name);
+        flags.counterparties = flag(counterparty.evidence, run.id, !!run.sourceContext);
+        outcome.written.push("counterparties");
+        noteResult("counterparties", counterparty, "written", name);
       } else if (
         matches.length === 1 &&
         linked.some((party) => party.id === matches[0]!.id && party.isPrimary)
       ) {
-        outcome.kept.push("counterparty");
-        noteResult("counterparty", counterparty, "kept", name);
+        outcome.kept.push("counterparties");
+        noteResult("counterparties", counterparty, "kept", name);
       } else {
         outcome.unmatched = name;
-        noteResult("counterparty", counterparty, "unmatched", name);
+        noteResult("counterparties", counterparty, "unmatched", name);
       }
-      prepared.delete("counterparty");
+      prepared.delete("counterparties");
     }
 
     for (const [slug, item] of prepared) {

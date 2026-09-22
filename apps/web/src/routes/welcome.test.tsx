@@ -1555,8 +1555,6 @@ const REVIEW_RESPONSES = {
         turnaroundDays: null,
         targetModule: "matter",
         targetTypeId: null,
-        formFieldCount: 0,
-        formFieldOrder: [],
       },
     ],
   },
@@ -1567,7 +1565,7 @@ const REVIEW_RESPONSES = {
         moduleScope: "contract",
         fieldType: "text",
         options: null,
-        fieldTag: "business",
+
         aiPrompt: null,
         aiAnswerStyle: null,
       },
@@ -1819,7 +1817,7 @@ describe("welcome wizard Review step (#700)", () => {
     expect(screen.queryByText(/Seeded rows removed/)).not.toBeInTheDocument();
   });
 
-  it("counts each field catalog including archived fields, excluding legacy Contract overview fields", async () => {
+  it("counts every catalog Field including archived Fields and former Overview slugs", async () => {
     const { user } = setup((call) => {
       if (call.method !== "GET" || call.url.pathname !== "/api/v1/fields") return undefined;
       const base = REVIEW_RESPONSES["/api/v1/fields"].fields[0];
@@ -1843,7 +1841,7 @@ describe("welcome wizard Review step (#700)", () => {
     await goToReviewStep(user);
     for (const [label, count] of [
       ["Matter fields", "1"],
-      ["Contract fields", "2"],
+      ["Contract fields", "4"],
       ["Entity fields", "1"],
     ]) {
       const row = screen.getByRole("link", { name: label }).closest("tr")!;

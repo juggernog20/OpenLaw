@@ -164,7 +164,6 @@ beforeAll(async () => {
         displayName: field.displayName,
         moduleScope: "contract",
         fieldType: field.fieldType,
-        fieldTag: "legal",
       },
     });
     expect(created.statusCode, created.body).toBe(201);

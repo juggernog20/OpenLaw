@@ -1299,7 +1299,7 @@
     "defaultMessage": "Assignment rules"
   },
   "autoDocs.attributeName": {
-    "defaultMessage": "{attribute, select, title {Title} primary_counterparty_name {Primary Counterparty name} entity_id {Our Entity} owning_department_id {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}"
+    "defaultMessage": "{attribute, select, title {Title} counterparties {Primary Counterparty name} entity {Our Entity} owning_department {Owning department} region {Region} value {Value} effective_date {Effective date} expiry_date {Expiry date} other {Term type}}"
   },
   "autoDocs.audience": {
     "defaultMessage": "Audience"
@@ -3195,7 +3195,7 @@
     "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."
   },
   "conversion.targetLabel": {
-    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
+    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
   },
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {record}."

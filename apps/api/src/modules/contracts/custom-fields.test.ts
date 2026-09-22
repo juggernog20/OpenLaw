@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { removeFieldRow } from "../../testing/form-fixtures.js";
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * The contract's custom fields (CTR-016, M8/6) at the HTTP seam — the
  * M6 catalog finally doing work, and the `is_required` stub closing.
@@ -87,7 +90,6 @@ interface AttachedField {
   displayName: string;
   description: string | null;
   fieldType: string;
-  fieldTag: "business" | "legal";
   options: string[] | null;
   displayOrder: number;
   isRequired: boolean;
@@ -121,39 +123,49 @@ const defineField = async (payload: Record<string, unknown>): Promise<AttachedFi
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { moduleScope: "contract", fieldTag: "legal", ...payload },
+    payload: { moduleScope: "contract", ...payload },
   });
   expect(res.statusCode, res.body).toBe(201);
   const field = res.json().field;
   return { ...field, fieldId: field.id, displayOrder: 0, isRequired: false };
 };
 
-const attachField = async (typeId: string, fieldId: string, isRequired = false) => {
-  const res = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/contract-types/${typeId}/fields`,
+const attachField = async (
+  typeId: string,
+  fieldId: string,
+  isRequired = false,
+  visibleOnPortal = true,
+) => {
+  const res = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/contract-types/${typeId}`,
     cookies: adminCookies,
-    payload: { fieldId, isRequired },
+    payload: { fieldId, isRequired, visibleOnPortal },
   });
-  expect(res.statusCode, res.body).toBe(201);
+  expect(res.statusCode, res.body).toBe(200);
   return res.json().attachedField as AttachedField;
 };
 
 const detachField = async (typeId: string, fieldId: string) => {
-  const res = await harness.app.inject({
-    method: "DELETE",
-    url: `/api/v1/contract-types/${typeId}/fields/${fieldId}`,
+  const res = await removeFieldRow(harness, {
+    typeUrl: `/api/v1/contract-types/${typeId}`,
+    fieldId: `${fieldId}`,
     cookies: adminCookies,
   });
-  expect(res.statusCode, res.body).toBe(204);
+  expect(res.statusCode, res.body).toBe(200);
 };
 
 const reorderFields = async (typeId: string, fieldIds: string[]) => {
+  const url = `/api/v1/contract-types/${typeId}/form`;
+  const read = await harness.app.inject({ method: "GET", url, cookies: adminCookies });
+  const form = read.json().form;
+  const fields = fieldIds.map((id) => form.find((row: { id: string }) => row.id === id));
   const res = await harness.app.inject({
     method: "PUT",
-    url: `/api/v1/contract-types/${typeId}/fields/order`,
+    url,
     cookies: adminCookies,
-    payload: { fieldIds },
+    payload: {
+      form: [...form.filter((row: { id: string }) => !fieldIds.includes(row.id)), ...fields],
+    },
   });
   expect(res.statusCode, res.body).toBe(200);
 };
@@ -259,15 +271,13 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     const business = await defineField({
       displayName: "Payment terms",
       fieldType: "text",
-      fieldTag: "business",
     });
     const legal = await defineField({
       displayName: "Governing law",
       fieldType: "text",
-      fieldTag: "legal",
     });
     await attachField(type.id, business.fieldId, true);
-    await attachField(type.id, legal.fieldId);
+    await attachField(type.id, legal.fieldId, false, false);
     const contract = await newContract("Business User fields", type.id, {
       [business.slug]: "Net 30",
       [legal.slug]: "England and Wales",
@@ -348,7 +358,6 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     const field = await defineField({
       displayName: "Shared Portal context",
       fieldType: "text",
-      fieldTag: "business",
     });
     for (const [name, visibleOnPortal] of [
       ["Portal NDA", false],
@@ -419,7 +428,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     const contract = await newContract("Order form fields", type.id);
     const read = await readContract(contract.number);
     expect(read.fields.map((field) => field.slug)).toEqual([first.slug, second.slug]);
-    expect(read.fields.map((field) => field.displayOrder)).toEqual([1, 2]);
+    expect(read.fields[0]!.displayOrder).toBeLessThan(read.fields[1]!.displayOrder);
     // Nothing recorded yet is `{}`, not a map of nulls.
     expect(read.contract.customFields).toEqual({});
 
@@ -460,7 +469,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
       slug: required.slug,
       displayName: "Signing office",
       isRequired: true,
-      displayOrder: 1,
+      displayOrder: expect.any(Number),
     });
   });
 });

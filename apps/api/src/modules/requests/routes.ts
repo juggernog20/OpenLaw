@@ -230,7 +230,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         const visibleFields = attached.filter((field) => visibleKeys.has(field.slug));
         // Validate native facts now; conversion reads them again when creating the record.
-        await readIntakeContractFacts(tx, customFields);
+        readIntakeContractFacts(customFields);
 
         // Lock referenced rows until submission commits, so a concurrent
         // archive or change to Portal-listed cannot admit a stale choice.

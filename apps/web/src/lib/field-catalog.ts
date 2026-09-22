@@ -2,7 +2,6 @@
 
 import type { IntlShape } from "react-intl";
 import type { paths } from "@openlaw/api-client";
-import { CONTRACT_OVERVIEW_FIELD_SLUGS } from "@openlaw/shared";
 
 export type ModuleScope = "contract" | "matter" | "entity";
 export type Scope = ModuleScope;
@@ -12,10 +11,7 @@ export type FieldRow = ApiField & { moduleScope: Scope };
 
 /** The custom fields shown in each module's Settings catalog. */
 export function isFieldRow(field: ApiField, module: ModuleScope): field is FieldRow {
-  return (
-    (module !== "contract" || !CONTRACT_OVERVIEW_FIELD_SLUGS.includes(field.slug)) &&
-    field.moduleScope === module
-  );
+  return field.moduleScope === module;
 }
 
 /** Custom field types are immutable after creation. */

@@ -55,7 +55,7 @@ export function setupForm(
   ].map((f) => ({
     description: null,
     options: null,
-    fieldTag: "business",
+
     aiPrompt: null,
     archivedAt: null,
     inUseCount: 0,

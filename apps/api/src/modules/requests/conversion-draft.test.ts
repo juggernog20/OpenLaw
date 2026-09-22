@@ -110,7 +110,7 @@ it("includes field AI prompts and types in preparation and invalidates drafts af
       displayName: "Consent",
       fieldType: "boolean",
       moduleScope: "matter",
-      fieldTag: "legal",
+
       description: "Whether consent is required.",
       aiPrompt: "Only consider the express assignment provision.",
     })
@@ -397,79 +397,7 @@ it("flags unresolved contradictions and rejects a quote assigned to the wrong so
   expect(read.json().draft.suggestions.needed_by).toBeUndefined();
   expect(read.json().draft.conflicts.needed_by).toBeDefined();
 });
-it("blocks narrowing a cited source until its unverified derivative is reviewed", async () => {
-  const [field] = await harness.db
-    .insert(fields)
-    .values({
-      slug: "conversion_context",
-      displayName: "Business context",
-      fieldType: "text",
-      moduleScope: "contract",
-      fieldTag: "business",
-    })
-    .returning();
-  await harness.db
-    .insert(matterTypeFields)
-    .values({ typeId, fieldId: field!.id, displayOrder: 1, isRequired: false, onIntakeForm: true });
-  const row = await ask();
-  await harness.db
-    .update(requests)
-    .set({ customFields: { conversion_context: "Supplier dispute" } })
-    .where(eq(requests.id, row.id));
-  answers.title = {
-    value: "Supplier dispute",
-    sourceId: `field:${row.id}:conversion_context`,
-    evidence: "Supplier dispute",
-  };
-  const made = await prepare(row.number);
-  await handleConversionDraft(
-    {
-      db: harness.db,
-      storage: harness.storage,
-      docEngine: harness.docEngine,
-      notifier: harness.notifier,
-      resolveAiProvider: harness.resolveAiProvider,
-    },
-    made.json().draft.id,
-  );
-  const converted = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/requests/${row.number}/convert`,
-    cookies: cast.memberCookies,
-    payload: {
-      title: "Supplier dispute",
-      matterTypeId: typeId,
-      conversionDraftId: made.json().draft.id,
-      aiAccepted: ["title"],
-    },
-  });
-  expect(converted.statusCode, converted.body).toBe(200);
-  const retag = () =>
-    harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/fields/${field!.id}`,
-      cookies: cast.adminCookies,
-      payload: { fieldTag: "legal" },
-    });
-  const refused = await retag();
-  expect(refused.statusCode, refused.body).toBe(409);
-  expect(refused.body).not.toContain("Supplier dispute");
-  const [request] = await harness.db.select().from(requests).where(eq(requests.id, row.id));
-  const [matter] = await harness.db
-    .select()
-    .from(matters)
-    .where(eq(matters.id, request!.convertedMatterId!));
-  expect(
-    (
-      await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/matters/${matter!.number}/conversion-confirm/title`,
-        cookies: cast.memberCookies,
-      })
-    ).statusCode,
-  ).toBe(200);
-  expect((await retag()).statusCode).toBe(200);
-});
+
 it("checks disablement again at execution without calling AI", async () => {
   await harness.db.update(aiConnector).set({ matterPreparation: true });
   const row = await ask();
@@ -508,7 +436,6 @@ it("preserves provenance on no-op Matter resends and clears only edited values",
       displayName: "Review context",
       moduleScope: "matter",
       fieldType: "text",
-      fieldTag: "business",
     })
     .returning();
   await harness.db
@@ -984,7 +911,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
     sourceId: `request:${row.id}:description`,
     evidence: "Respond by October 1",
   };
-  answers.counterparty = {
+  answers.counterparties = {
     value: "Acme",
     sourceId: `request:${row.id}:title`,
     evidence: "Original ask",
@@ -1021,7 +948,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
       description: null,
       counterparties: [{ name: "Acme" }],
       conversionDraftId: id,
-      aiAccepted: ["title", "description", "counterparty", "unknown", "toString", "__proto__"],
+      aiAccepted: ["title", "description", "counterparties", "unknown", "toString", "__proto__"],
     },
   });
   expect(converted.statusCode, converted.body).toBe(200);
@@ -1035,7 +962,7 @@ it("prepares Contracts independently and accepts only matching reviewed values",
     description: null,
     managerId: cast.memberId,
   });
-  expect(Object.keys(contract!.aiUnverified!)).toEqual(["title", "counterparty"]);
+  expect(Object.keys(contract!.aiUnverified!)).toEqual(["title", "counterparties"]);
   expect(contract!.aiUnverified!.title).toMatchObject({ draftId: id });
   expect(original!.description).toBe("Respond by October 1");
   const evidence = await harness.app.inject({
@@ -1059,7 +986,6 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
       displayName: "Opening context",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     })
     .returning();
   await harness.db.insert(contractTypeFields).values({
@@ -1555,7 +1481,7 @@ for (const protocol of ["openai_chat_completions", "anthropic_messages", "gemini
           displayName: "Schema text",
           fieldType: "text",
           moduleScope: "matter",
-          fieldTag: "legal",
+
           aiPrompt: "Extract text.",
         })
         .onConflictDoUpdate({ target: fields.slug, set: { aiPrompt: "Extract text." } })
@@ -1620,7 +1546,7 @@ it("keeps Contract Field style overrides in conversion prompts and freshness che
       displayName: "Assignment",
       fieldType: "long_text",
       moduleScope: "contract",
-      fieldTag: "legal",
+
       aiPrompt: "Extract the provision.",
       aiAnswerStyle: "full_clause",
     })
@@ -1712,7 +1638,6 @@ it("prepares NDA Intake and Creation Rows, including a false Branch, and restric
         displayName: slug,
         moduleScope: "contract",
         fieldType: index === 3 ? "entity" : "text",
-        fieldTag: index === 0 ? "legal" : "business",
       })
       .returning();
     await harness.db.insert(contractTypeFields).values({

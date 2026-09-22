@@ -70,7 +70,6 @@ interface StubRow {
   inUseCount: number;
   targetModule: "matter" | "contract";
   targetTypeId: string | null;
-  formFieldCount: number;
 }
 
 function seededTypes(): StubRow[] {
@@ -134,7 +133,6 @@ function typesApi(calls: TypesCalls, rows: StubRow[] = seededTypes()) {
           inUseCount: 0,
           targetModule: "matter",
           targetTypeId: null,
-          formFieldCount: 0,
         },
       });
     }
@@ -245,7 +243,6 @@ describe("the seeded list (INT-002)", () => {
         inUseCount: 0,
         targetModule: "matter",
         targetTypeId: null,
-        formFieldCount: 0,
       },
     ];
     const calls = newCalls();

@@ -321,7 +321,6 @@ type FieldCatalogPayloads = {
     displayName: string;
     moduleScope: string;
     fieldType: string;
-    fieldTag: string;
   };
   "field.updated": { slug: string; changed: ChangedFields };
   /** Legacy audit events; no current route changes a field's module. */

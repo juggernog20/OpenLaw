@@ -1087,7 +1087,7 @@ it("collects creation Rows in Form order and reveals a required Branch live", as
     displayName: "Conditional answer",
     description: null,
     fieldType: "text",
-    fieldTag: "business",
+
     options: null,
     displayOrder: 1,
     isRequired: true,

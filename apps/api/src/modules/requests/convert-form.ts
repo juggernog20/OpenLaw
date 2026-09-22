@@ -14,7 +14,6 @@ import {
 import { z } from "zod";
 import { intakeRows, intakeRowKeys } from "../../lib/intake-form.js";
 import { readTypeForm } from "../../lib/type-form-routes.js";
-import { readIntakeContractFacts } from "../../lib/intake-default-fields.js";
 import { CounterpartyNameSchema } from "../../lib/counterparty-link.js";
 import { httpError } from "../../lib/problem.js";
 import type { CustomFieldValue } from "@openlaw/db";
@@ -100,32 +99,11 @@ export async function conversionForm(
   if (input.counterparties && !refs.has("counterparties"))
     throw httpError(400, "The target Form has no Counterparties Row.");
 
-  // M39/11 removes this read after re-keying stored __intake_* answers.
-  const legacy =
-    module === "contract"
-      ? await readIntakeContractFacts(
-          tx,
-          Object.fromEntries(
-            Object.entries(request.customFields).filter(([key]) => key.startsWith("__intake_")),
-          ),
-        )
-      : null;
   const defaults: Record<string, CustomFieldValue | null> = {
     description: request.description,
     priority: request.urgency,
     [module === "contract" ? "owning_department" : "department"]: request.departmentId,
   };
-  if (legacy) {
-    for (const [ref, key] of Object.entries(keys)) {
-      const value = legacy.facts[key as keyof typeof legacy.facts];
-      if (value !== undefined) defaults[ref] = value;
-    }
-    if (legacy.facts.valueAmount !== undefined) {
-      defaults.value_amount = legacy.facts.valueAmount;
-      defaults.value_currency = legacy.facts.valueCurrency ?? null;
-      defaults.value_cadence = legacy.facts.valueCadence ?? null;
-    }
-  }
   const carried = Object.fromEntries(
     Object.entries({ ...defaults, ...request.customFields }).filter(([key]) => allowed.has(key)),
   );
@@ -188,11 +166,7 @@ export async function conversionForm(
           ? request.intakeCounterparties.map((p) =>
               p.counterpartyId ? { counterpartyId: p.counterpartyId } : { name: p.name },
             )
-          : picks(
-              Array.isArray(merged.counterparties)
-                ? merged.counterparties
-                : (legacy?.counterparties ?? []),
-            )));
+          : picks(Array.isArray(merged.counterparties) ? merged.counterparties : [])));
   const parsedParties = parties === undefined ? undefined : ConversionParties.safeParse(parties);
   if (parsedParties && !parsedParties.success) throw httpError(400, "Choose valid Counterparties.");
   const builtin = new Set([

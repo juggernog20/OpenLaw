@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * Onboarding state (SET-004) and the portal toggle (DD-010): both are
  * Administrator-only, completion is one-way and idempotent, every
@@ -651,13 +653,12 @@ describe("Start blank (POST /api/v1/onboarding/start-blank)", () => {
       .select({ id: fields.id })
       .from(fields)
       .where(eq(fields.slug, "governing_law"));
-    const attached = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/contract-types/${nda.id}/fields`,
+    const attached = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/contract-types/${nda.id}`,
       cookies: adminCookies,
       payload: { fieldId: governingLaw!.id },
     });
-    expect(attached.statusCode, attached.body).toBe(201);
+    expect(attached.statusCode, attached.body).toBe(200);
     expect(await harness.db.select().from(contractTypeFields)).toHaveLength(1);
 
     const offsetsBefore = (

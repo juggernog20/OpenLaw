@@ -22,7 +22,7 @@ describe.each([
       fieldType: "text",
       description: null,
       options: null,
-      fieldTag: "business",
+
       aiPrompt: null,
       archivedAt: null,
       inUseCount: 0,

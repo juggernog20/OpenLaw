@@ -622,15 +622,15 @@ describe("conversion built-in Rows", () => {
       request({
         customFields: {
           opposing_party: "Northwind Labs",
-          __intake_contract_effectiveDate: "2026-10-01",
+          effective_date: "2026-10-01",
         },
       }),
       undefined,
       undefined,
       [
-        field("__intake_contract_effectiveDate", "Effective date", {
+        field("effective_date", "Effective date", {
           fieldType: "date",
-          builtInKey: "effectiveDate",
+          builtInKey: "effective_date",
         }),
       ],
     );
@@ -1996,7 +1996,7 @@ describe("Contract and Matter preparation together", () => {
               description: proposal(`${target.targetModule} description`),
               priority: proposal("critical"),
               needed_by: proposal("2026-10-02"),
-              ...(target.targetModule === "contract" ? { counterparty: proposal("Acme") } : {}),
+              ...(target.targetModule === "contract" ? { counterparties: proposal("Acme") } : {}),
               ...(target.targetTypeId === "ct-msa"
                 ? { "field:governing_law": proposal("England") }
                 : {}),
@@ -2053,7 +2053,7 @@ describe("Contract and Matter preparation together", () => {
       priority: "critical",
     });
     expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toEqual(
-      expect.arrayContaining(["counterparty"]),
+      expect.arrayContaining(["counterparties"]),
     );
     expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toContain("needed_by");
     expect((api.conversions[0] as { aiAccepted: string[] }).aiAccepted).not.toContain("priority");
@@ -2214,7 +2214,7 @@ describe("Contract and Matter preparation together", () => {
       contractTypeId: "ct-msa",
       customFields: { governing_law: "France" },
       counterparties: [{ name: "Acme" }],
-      aiAccepted: ["priority", "counterparty"],
+      aiAccepted: ["priority", "counterparties"],
     });
     expect(api.conversions[0]).not.toHaveProperty("neededBy");
     expect(api.conversions[0]).not.toHaveProperty("templateId");

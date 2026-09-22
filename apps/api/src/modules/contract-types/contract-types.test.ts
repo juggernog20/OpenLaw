@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * Contracts > Types (#81): the CTR-002 taxonomy behind the first
  * list-editor pane. Add, rename, reorder, archive, restore, the
@@ -518,17 +520,16 @@ describe("the SET-003 archive guard over the contract record (#113)", () => {
       method: "POST",
       url: "/api/v1/fields",
       cookies: adminCookies,
-      payload: { moduleScope: "contract", fieldTag: "legal", fieldType: "text", displayName },
+      payload: { moduleScope: "contract", fieldType: "text", displayName },
     });
     expect(defined.statusCode, defined.body).toBe(201);
     const field = defined.json().field;
-    const attached = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/contract-types/${typeId}/fields`,
+    const attached = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/contract-types/${typeId}`,
       cookies: adminCookies,
       payload: { fieldId: field.id, isRequired: true },
     });
-    expect(attached.statusCode, attached.body).toBe(201);
+    expect(attached.statusCode, attached.body).toBe(200);
     return field.slug;
   };
 

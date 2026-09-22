@@ -19,7 +19,7 @@ const FIELD = {
   displayName: "Cost center",
   description: null,
   fieldType: "text",
-  fieldTag: "business",
+
   options: null,
   isRequired: false,
   displayOrder: 0,

@@ -173,7 +173,7 @@ const FIELD_CATALOG = [
     moduleScope: "matter" as const,
     fieldType: "single_select" as const,
     options: ["Finance", "People"],
-    fieldTag: "business" as const,
+
     aiPrompt: null,
     archivedAt: null,
     attachmentCount: 1,
@@ -188,7 +188,7 @@ const FIELD_CATALOG = [
     moduleScope: "matter" as const,
     fieldType: "number" as const,
     options: null,
-    fieldTag: "legal" as const,
+
     aiPrompt: null,
     archivedAt: null,
     attachmentCount: 1,
@@ -203,7 +203,7 @@ const FIELD_CATALOG = [
     moduleScope: "matter" as const,
     fieldType: "text" as const,
     options: null,
-    fieldTag: "business" as const,
+
     aiPrompt: null,
     archivedAt: null,
     attachmentCount: 0,

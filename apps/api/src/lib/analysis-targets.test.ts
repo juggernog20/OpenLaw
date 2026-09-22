@@ -15,7 +15,7 @@ describe("the core contract analysis targets", () => {
       "renewal_period_months",
       "notice_period_days",
       "value",
-      "counterparty",
+      "counterparties",
     ]);
     expect(CORE_ANALYSIS_TARGETS.map(({ type }) => type)).toEqual([
       "term_type",
@@ -78,7 +78,7 @@ describe("the Contract analysis target list", () => {
             displayName: `${fieldType} reference`,
             moduleScope: "contract",
             fieldType,
-            fieldTag: "business",
+
             aiPrompt,
           })
           .returning();

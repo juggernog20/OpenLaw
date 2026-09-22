@@ -15,7 +15,6 @@
  * (DD-017) inside the same transaction.
  */
 
-import { unverifiedConversionCitations } from "../../lib/conversion-source-privacy.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -28,7 +27,6 @@ import {
   entities,
   entityTypeFields,
   fields,
-  FIELD_TAGS,
   FIELD_TYPES,
   inArray,
   isNull,
@@ -53,7 +51,6 @@ const OPEN_SCOPES = ["contract", "matter", "entity"] as const;
 
 const ScopeSchema = z.enum(OPEN_SCOPES);
 const FieldTypeSchema = z.enum(FIELD_TYPES);
-const FieldTagSchema = z.enum(FIELD_TAGS);
 
 const FieldSchema = z.object({
   id: z.string(),
@@ -63,10 +60,8 @@ const FieldSchema = z.object({
   moduleScope: ScopeSchema,
   fieldType: FieldTypeSchema,
   options: z.array(z.string()).nullable(),
-  fieldTag: FieldTagSchema,
   aiPrompt: z.string().nullable(),
   aiAnswerStyle: z.enum(AI_ANSWER_STYLES).nullable(),
-  builtInKey: z.string().nullable().optional(),
   /** A default Field (SET-004): seeded by a migration, kept by Start
    * blank, and locked against archive in the Fields panes. */
   isSystemDefault: z.boolean(),
@@ -116,10 +111,8 @@ function toRow(row: Field, inUseCount: number) {
     moduleScope: row.moduleScope as (typeof OPEN_SCOPES)[number],
     fieldType: row.fieldType,
     options: row.options ?? null,
-    fieldTag: row.fieldTag,
     aiPrompt: row.aiPrompt,
     aiAnswerStyle: row.aiAnswerStyle,
-    ...(row.builtInKey ? { builtInKey: row.builtInKey } : {}),
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     inUseCount,
@@ -148,7 +141,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   async function lockedField(tx: Transaction, id: string): Promise<Field> {
     const [row] = await tx.select().from(fields).where(eq(fields.id, id)).limit(1).for("update");
     if (!row) throw httpError(404, "No field exists with this id.");
-    if (row.builtInKey) throw httpError(400, "Default fields cannot be edited or archived.");
     return row;
   }
 
@@ -259,9 +251,8 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           "and entity fields, in creation order; archived rows only with " +
           "includeArchived=true",
         tags: ["fields"],
-        querystring: z.object({
+        querystring: z.strictObject({
           includeArchived: z.enum(["true", "false"]).optional(),
-          intake: z.enum(["true", "false"]).optional(),
         }),
         response: { 200: FieldListEnvelope, default: problemResponse },
       },
@@ -269,10 +260,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       // The catalog has no display order (fields render in per-type
       // attachment order once #84 lands); the pane lists creation order.
-      const scoped = and(
-        inArray(fields.moduleScope, [...OPEN_SCOPES]),
-        request.query.intake === "true" ? undefined : isNull(fields.builtInKey),
-      );
+      const scoped = and(inArray(fields.moduleScope, [...OPEN_SCOPES]));
       const rows = await app.db
         .select()
         .from(fields)
@@ -304,7 +292,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           description: DescriptionSchema.optional(),
           moduleScope: ScopeSchema,
           fieldType: FieldTypeSchema,
-          fieldTag: FieldTagSchema,
           options: OptionsSchema.optional(),
           aiPrompt: AiPromptSchema.optional(),
           aiAnswerStyle: z.enum(AI_ANSWER_STYLES).nullable().optional(),
@@ -313,7 +300,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { moduleScope, fieldType, fieldTag } = request.body;
+      const { moduleScope, fieldType } = request.body;
       const displayName = request.body.displayName.trim();
       const description = request.body.description?.trim() || null;
       const aiPrompt = request.body.aiPrompt?.trim() || null;
@@ -345,7 +332,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             moduleScope,
             fieldType,
             options,
-            fieldTag,
             aiPrompt,
             aiAnswerStyle,
           })
@@ -355,7 +341,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "field.created",
           visibility: "admin_only",
-          payload: { slug, displayName, moduleScope, fieldType, fieldTag },
+          payload: { slug, displayName, moduleScope, fieldType },
         });
         return created!;
       });
@@ -370,7 +356,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateField",
         summary:
-          "Rename, describe, retag, or edit a field's options and AI " +
+          "Rename, describe, or edit a field's options and AI " +
           "prompt; the slug and the field type never change, and the " +
           "scope moves through its own route — a body carrying any of " +
           "them is refused, not silently stripped",
@@ -380,7 +366,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           displayName: DisplayNameSchema.optional(),
           description: DescriptionSchema.nullable().optional(),
-          fieldTag: FieldTagSchema.optional(),
           options: OptionsSchema.optional(),
           aiPrompt: AiPromptSchema.nullable().optional(),
           aiAnswerStyle: z.enum(AI_ANSWER_STYLES).nullable().optional(),
@@ -406,26 +391,6 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         if (body.description !== undefined) {
           wants("description", body.description?.trim() || null);
         }
-        if (body.fieldTag === "legal" && target.fieldTag === "business") {
-          // conversionSources identifies answers as field:<requestId>:<slug>.
-          // JSON citations require this SQL join across draft and Matter maps.
-          // Same-slot values follow the Field tag themselves; only derivatives
-          // in another slot would keep a broader audience after retagging.
-          const dependencies = await tx.execute<{ present: boolean }>(sql`
-            select exists (
-              select 1 from (${unverifiedConversionCitations}) dependency
-              where dependency.citation->>'sourceId' = 'field:' || dependency.request_id || ':' || ${target.slug}
-                and dependency.slug <> ${`field:${target.slug}`}
-                and dependency.slug <> ${target.slug}
-            ) as present
-          `);
-          if (dependencies.rows[0]?.present)
-            throw httpError(
-              409,
-              "Review and confirm or edit the unverified record values derived from this Field before marking it Legal. No Field tag was changed.",
-            );
-        }
-        if (body.fieldTag !== undefined) wants("fieldTag", body.fieldTag);
         if (body.options !== undefined) {
           wants("options", checkOptions(target.fieldType, body.options));
         }

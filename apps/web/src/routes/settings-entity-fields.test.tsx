@@ -18,7 +18,7 @@ const base = {
   description: null,
   fieldType: "text",
   options: null,
-  fieldTag: "business",
+
   aiPrompt: null,
   archivedAt: null,
   inUseCount: 0,

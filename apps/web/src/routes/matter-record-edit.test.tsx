@@ -25,7 +25,7 @@ const FIELD = {
   displayName: "Business unit",
   description: null,
   fieldType: "text",
-  fieldTag: "business",
+
   options: null,
   displayOrder: 1,
   isRequired: true,
@@ -36,7 +36,7 @@ const ENTITY_FIELD = {
   displayName: "Acquisition vehicle",
   description: null,
   fieldType: "entity",
-  fieldTag: "legal",
+
   options: null,
   displayOrder: 1,
   isRequired: false,

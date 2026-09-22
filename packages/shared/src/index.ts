@@ -613,8 +613,6 @@ export {
   PORTAL_MATTER_FILTER_KEYS,
 } from "./portal-lists.js";
 
-/** Built-in Contract classification, outside the type's configurable Fields. */
-export const CONTRACT_OVERVIEW_FIELD_SLUGS: readonly string[] = ["owning_department", "region"];
 export const MAX_CONTRACT_CLASSIFICATION_LENGTH = 200;
 
 export { parseKnowledgeMarkdown, type MarkdownBlock, type MarkdownInline } from "./markdown.js";
@@ -656,4 +654,10 @@ export {
   type FormEvaluation,
   type FormValidationIssue,
 } from "./form-evaluator.js";
-export { FORM_BUILTINS, pinnedFormRows, type FormModule } from "./form-builtins.js";
+export {
+  BUILTIN_KEYS,
+  AUTO_DOC_CONTRACT_ATTRIBUTES,
+  FORM_BUILTINS,
+  pinnedFormRows,
+  type FormModule,
+} from "./form-builtins.js";

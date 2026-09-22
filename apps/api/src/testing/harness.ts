@@ -331,6 +331,8 @@ function capturingLogger(lines: JobLogLine[]): PipelineLogger {
 
 /** What a suite may vary about the app the harness builds. */
 export interface HarnessOptions {
+  /** Seed a past schema before the current app applies its migrations. */
+  beforeMigrations?: (db: Db) => Promise<void>;
   advancedRuntime?: AdvancedRuntime;
   /** Keep the real queue but omit consumers when a test controls worker execution. */
   runPipelineWorkers?: boolean;
@@ -369,6 +371,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     // them. Installed before the first query for the same reason.
     useSecretKeys(readSecretKeys({ [SECRET_KEY_VARIABLE]: TEST_SECRET_KEY }));
     const db = createDb(container.getConnectionUri());
+    await options.beforeMigrations?.(db);
     await runMigrations(db);
     const mailer = new CapturingMailer();
     // The TECH-011 double moved up one level (#37): the same env-else-

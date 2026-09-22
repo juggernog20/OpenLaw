@@ -254,7 +254,6 @@ export async function configureFields(admin, taxonomy, log) {
       displayName: definition.displayName,
       moduleScope: definition.moduleScope,
       fieldType: definition.fieldType,
-      fieldTag: definition.fieldTag,
       ...(definition.description ? { description: definition.description } : {}),
       ...(definition.options ? { options: definition.options } : {}),
       ...(definition.aiPrompt ? { aiPrompt: definition.aiPrompt } : {}),
@@ -269,6 +268,39 @@ export async function configureFields(admin, taxonomy, log) {
     request: taxonomy.requestTypes,
   };
 
+  async function saveRow(module, type, field, isRequired, visibleOnPortal, intake = false) {
+    if (module === "request") {
+      module = type.targetModule;
+      const types = typeIndexes[module];
+      type = types.rows.find((row) =>
+        type.targetTypeId ? row.id === type.targetTypeId : row.isDefault,
+      );
+      intake = true;
+    }
+    const at = `${TYPE_PATHS[module]}/${type.id}/form`;
+    const { body } = await admin.get(at);
+    const form = body.form;
+    const rows = form.flatMap(function flatten(node) {
+      return node.kind === "row" ? [node] : node.children.flatMap(flatten);
+    });
+    const existing = rows.find((row) => row.id === field.id);
+    if (existing) {
+      existing.isRequired ||= isRequired;
+      existing.onIntakeForm ||= intake;
+      existing.visibleOnPortal ||= intake || visibleOnPortal;
+    } else
+      form.push({
+        kind: "row",
+        id: field.id,
+        rowRef: field.slug,
+        fieldType: field.fieldType,
+        isRequired,
+        onIntakeForm: intake,
+        visibleOnPortal: intake || visibleOnPortal,
+      });
+    await admin.put(at, { form });
+  }
+
   let attachments = 0;
   for (const definition of definitions) {
     const field = fields.byName.get(definition.displayName);
@@ -278,10 +310,7 @@ export async function configureFields(admin, taxonomy, log) {
         const type = typeIndexes[module]?.bySlug.get(slug);
         if (!type) continue;
         const isRequired = (definition.required?.[module] ?? []).includes(slug);
-        await admin.request("POST", `${TYPE_PATHS[module]}/${type.id}/fields`, {
-          json: { fieldId: field.id, isRequired },
-          expect: [200, 201, 409],
-        });
+        await saveRow(module, type, field, isRequired, definition.visibleOnPortal);
         attachments += 1;
       }
     }
@@ -296,12 +325,25 @@ export async function configureFields(admin, taxonomy, log) {
     for (const typeSlug of ["msa", "sales", "sow", "vendor", "license", "reseller"]) {
       const type = taxonomy.contractTypes.bySlug.get(typeSlug);
       if (!type) continue;
-      await admin.request("POST", `/api/v1/contract-types/${type.id}/fields`, {
-        json: { fieldId: field.id, isRequired: false },
-        expect: [200, 201, 409],
-      });
+      await saveRow("contract", type, field, false, false);
       attachments += 1;
     }
+  }
+
+  for (const slug of ["nda_request", "contract_review", "vendor_onboarding"]) {
+    const requestType = taxonomy.requestTypes.bySlug.get(slug);
+    const type = taxonomy.contractTypes.rows.find((row) =>
+      requestType.targetTypeId ? row.id === requestType.targetTypeId : row.isDefault,
+    );
+    const at = `/api/v1/contract-types/${type.id}/form`;
+    const { body } = await admin.get(at);
+    for (const row of body.form) {
+      if (row.kind === "row" && ["counterparties", "needed_by"].includes(row.rowRef)) {
+        row.onIntakeForm = true;
+        row.visibleOnPortal = true;
+      }
+    }
+    await admin.put(at, { form: body.form });
   }
 
   log(`${definitions.length} custom fields, ${attachments} attachments`);

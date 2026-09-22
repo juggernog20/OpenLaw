@@ -2208,8 +2208,8 @@ function ContractRecord() {
         frozen={frozen}
         status={fieldStatus.counterparties ?? "idle"}
         error={fieldError.counterparties}
-        marker={unverifiedMarker("counterparty")}
-        confirmation={confirmationControl("counterparty")}
+        marker={unverifiedMarker("counterparties")}
+        confirmation={confirmationControl("counterparties")}
         onStatus={(next, detail) => note("counterparties", next, detail)}
         onChange={(row, next) => {
           // The primary decides what the list column and the

@@ -312,7 +312,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                 description: born.row.description,
                 priority: born.row.priority,
                 [`${target.module}_type`]: target.typeId,
-                counterparty: counterpartyName,
+                counterparties: counterpartyName,
                 needed_by: neededBy,
                 ...Object.fromEntries(
                   Object.entries(born.row.customFields).map(([slug, value]) => [
@@ -366,14 +366,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                   analysisHumanFields: [
                     ...new Set([
                       ...Object.keys({ ...carried, ...answers }).map((key) =>
-                        key === "counterparties"
-                          ? "counterparty"
-                          : ["value_amount", "value_currency", "value_cadence"].includes(key)
-                            ? "value"
-                            : key,
+                        ["value_amount", "value_currency", "value_cadence"].includes(key)
+                          ? "value"
+                          : key,
                       ),
                       ...(request.body.counterparties !== undefined || form.counterparties?.length
-                        ? ["counterparty"]
+                        ? ["counterparties"]
                         : []),
                     ]),
                   ],

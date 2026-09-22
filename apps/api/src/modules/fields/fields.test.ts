@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { removeFieldRow } from "../../testing/form-fixtures.js";
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * The Fields catalog (#83): the shared CTR-016 custom-field catalog
  * behind the third list-editor pane — create across all nine field
@@ -58,7 +61,6 @@ interface FieldRow {
   moduleScope: string;
   fieldType: string;
   options: string[] | null;
-  fieldTag: string;
   aiPrompt: string | null;
   aiAnswerStyle: string | null;
   isSystemDefault: boolean;
@@ -114,7 +116,6 @@ describe("the SET-002 gate", () => {
           displayName: "Sneaky",
           moduleScope: "contract",
           fieldType: "text",
-          fieldTag: "legal",
         },
       },
       { method: "PATCH", url: "/api/v1/fields/some-id", payload: { displayName: "Sneaky" } },
@@ -155,7 +156,6 @@ describe("the seeded catalog (CTR-008 core fields)", () => {
       expect(seed.isSystemDefault, slug).toBe(true);
     }
     expect(bySlug.get("governing_law")!.fieldType).toBe("text");
-    expect(bySlug.get("governing_law")!.fieldTag).toBe("legal");
     expect(bySlug.get("jurisdiction")!.fieldType).toBe("text");
     expect(bySlug.get("our_position")!.fieldType).toBe("single_select");
     expect(bySlug.get("our_position")!.options).toEqual(["Customer", "Provider", "Other"]);
@@ -184,7 +184,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
         displayName: `Plain ${fieldType}`,
         moduleScope: "contract",
         fieldType,
-        fieldTag: "business",
       });
       expect(row.fieldType, fieldType).toBe(fieldType);
       expect(row.slug, fieldType).toBe(`plain_${fieldType}`);
@@ -201,7 +200,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
         displayName: `Choice ${fieldType}`,
         moduleScope: "matter",
         fieldType,
-        fieldTag: "business",
+
         options: ["Beta", "Alpha", "Gamma"],
       });
       expect(row.options, fieldType).toEqual(["Beta", "Alpha", "Gamma"]);
@@ -213,7 +212,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "No options",
       moduleScope: "contract",
       fieldType: "single_select",
-      fieldTag: "legal",
     });
     expect(optionless.statusCode, optionless.body).toBe(400);
 
@@ -221,7 +219,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Texty options",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "legal",
+
       options: ["A"],
     });
     expect(optioned.statusCode, optioned.body).toBe(400);
@@ -230,7 +228,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Dupes",
       moduleScope: "contract",
       fieldType: "single_select",
-      fieldTag: "legal",
+
       options: ["A", "A"],
     });
     expect(duplicated.statusCode, duplicated.body).toBe(400);
@@ -242,7 +240,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
         displayName: `${moduleScope} field`,
         moduleScope,
         fieldType: "text",
-        fieldTag: "business",
       });
       expect(res.statusCode, res.body).toBe(201);
     }
@@ -250,7 +247,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Unknown scope",
       moduleScope: "nonsense",
       fieldType: "text",
-      fieldTag: "business",
     });
     expect(unknown.statusCode, unknown.body).toBe(400);
   });
@@ -261,7 +257,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       description: "Extracted by analysis.",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "legal",
+
       aiPrompt: "Extract the thing.",
     });
     expect(prompted.aiPrompt).toBe("Extract the thing.");
@@ -271,7 +267,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Matter prompted",
       moduleScope: "matter",
       fieldType: "text",
-      fieldTag: "legal",
+
       aiPrompt: "Extract the thing.",
     });
     expect(matterPrompted.statusCode, matterPrompted.body).toBe(400);
@@ -283,7 +279,7 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
         displayName: "Reference prompt",
         moduleScope: "contract",
         fieldType,
-        fieldTag: "business",
+
         aiPrompt,
       });
       expect(response.statusCode, response.body).toBe(422);
@@ -297,14 +293,12 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Renewal – Term!",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     });
     expect(first.slug).toBe("renewal_term");
     const second = await createdField({
       displayName: "Renewal term",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     });
     expect(second.slug).toBe("renewal_term_2");
 
@@ -312,7 +306,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Value",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     });
     expect(coreCollision.slug).toBe("value_2");
   });
@@ -322,7 +315,6 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
       displayName: "Audited create",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "legal",
     });
     const entries = await activityEntries(["field.created"]);
     const last = entries.at(-1)!;
@@ -348,7 +340,6 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
         displayName: `Legacy ${fieldType}`,
         moduleScope: "contract",
         fieldType,
-        fieldTag: "business",
       });
       await harness.db
         .update(fields)
@@ -374,19 +365,17 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       displayName: "Editable",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     });
     const res = await patchField(row.id, {
       displayName: "Edited",
       description: "Now described.",
-      fieldTag: "legal",
+
       aiPrompt: "Extract the edited thing.",
     });
     expect(res.statusCode, res.body).toBe(200);
     const updated = (res.json() as { field: FieldRow }).field;
     expect(updated.displayName).toBe("Edited");
     expect(updated.description).toBe("Now described.");
-    expect(updated.fieldTag).toBe("legal");
     expect(updated.aiPrompt).toBe("Extract the edited thing.");
     expect(updated.slug).toBe("editable");
 
@@ -395,7 +384,6 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       slug: "editable",
       changed: {
         displayName: { from: "Editable", to: "Edited" },
-        fieldTag: { from: "business", to: "legal" },
       },
     });
 
@@ -411,7 +399,6 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       displayName: "Immutable core",
       moduleScope: "contract",
       fieldType: "date",
-      fieldTag: "legal",
     });
     for (const body of [
       { fieldType: "text" },
@@ -433,7 +420,7 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       displayName: "Editable select",
       moduleScope: "contract",
       fieldType: "single_select",
-      fieldTag: "business",
+
       options: ["One"],
     });
     const reoptioned = await patchField(select.id, { options: ["One", "Two"] });
@@ -444,7 +431,6 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       displayName: "Optionless",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     });
     const refused = await patchField(plain.id, { options: ["One"] });
     expect(refused.statusCode, refused.body).toBe(400);
@@ -455,7 +441,6 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       displayName: "Matter no prompt",
       moduleScope: "matter",
       fieldType: "text",
-      fieldTag: "business",
     });
     const res = await patchField(row.id, { aiPrompt: "Sneaky." });
     expect(res.statusCode, res.body).toBe(400);
@@ -475,7 +460,7 @@ describe("archive and restore (values retained by rule — MTR-014)", () => {
       displayName: "Archivable",
       moduleScope: "contract",
       fieldType: "single_select",
-      fieldTag: "legal",
+
       options: ["Keep me"],
       aiPrompt: "Keep this prompt too.",
     });
@@ -510,7 +495,6 @@ describe("archive and restore (values retained by rule — MTR-014)", () => {
       displayName: "Already live",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     });
     const res = await harness.app.inject({
       method: "POST",
@@ -525,7 +509,6 @@ describe("archive and restore (values retained by rule — MTR-014)", () => {
       displayName: "Undeletable",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "business",
     });
     const res = await harness.app.inject({
       method: "DELETE",
@@ -553,13 +536,12 @@ describe("the armed attachment seams (#84)", () => {
   };
 
   const attachTo = async (typeId: string, fieldId: string) => {
-    const res = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/contract-types/${typeId}/fields`,
+    const res = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/contract-types/${typeId}`,
       cookies: adminCookies,
       payload: { fieldId },
     });
-    expect(res.statusCode, res.body).toBe(201);
+    expect(res.statusCode, res.body).toBe(200);
   };
 
   it("counts type attachments as usage, per field", async () => {
@@ -567,7 +549,6 @@ describe("the armed attachment seams (#84)", () => {
       displayName: "Attachment counted",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "legal",
     });
     expect(row.inUseCount).toBe(0);
 
@@ -579,12 +560,12 @@ describe("the armed attachment seams (#84)", () => {
     const counted = (await listFields()).find((candidate) => candidate.id === row.id);
     expect(counted!.inUseCount).toBe(2);
 
-    const detach = await harness.app.inject({
-      method: "DELETE",
-      url: `/api/v1/contract-types/${msa}/fields/${row.id}`,
+    const detach = await removeFieldRow(harness, {
+      typeUrl: `/api/v1/contract-types/${msa}`,
+      fieldId: `${row.id}`,
       cookies: adminCookies,
     });
-    expect(detach.statusCode, detach.body).toBe(204);
+    expect(detach.statusCode, detach.body).toBe(200);
     const recounted = (await listFields()).find((candidate) => candidate.id === row.id);
     expect(recounted!.inUseCount).toBe(1);
   });
@@ -594,7 +575,6 @@ describe("the armed attachment seams (#84)", () => {
       displayName: "Archived while attached",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "legal",
     });
     await attachTo(await typeIdBySlug("nda"), row.id);
 
@@ -617,14 +597,12 @@ it("rejects the removed scope and refuses changing a field's module", async () =
     displayName: "Removed scope",
     moduleScope: "global",
     fieldType: "text",
-    fieldTag: "business",
   });
   expect(invalid.statusCode).toBe(400);
   const row = await createdField({
     displayName: "Fixed area",
     moduleScope: "contract",
     fieldType: "text",
-    fieldTag: "business",
   });
   const patched = await harness.app.inject({
     method: "PATCH",
@@ -648,7 +626,7 @@ describe("per-Field answer style", () => {
       displayName: "Style override",
       moduleScope: "contract",
       fieldType: "long_text",
-      fieldTag: "legal",
+
       aiAnswerStyle: "full_clause",
     });
     expect(field.aiAnswerStyle).toBe("full_clause");
@@ -677,7 +655,6 @@ describe("per-Field answer style", () => {
           displayName: "Default style",
           moduleScope: "contract",
           fieldType: "text",
-          fieldTag: "legal",
         })
       ).aiAnswerStyle,
     ).toBeNull();
@@ -709,7 +686,7 @@ describe("per-Field answer style", () => {
         displayName: `Invalid style ${moduleScope} ${fieldType}`,
         moduleScope,
         fieldType,
-        fieldTag: "legal",
+
         ...(["single_select", "multi_select"].includes(fieldType!) ? { options: ["One"] } : {}),
       };
       const created = await createField({ ...body, aiAnswerStyle });
@@ -728,4 +705,27 @@ describe("per-Field answer style", () => {
       expect(patched.json()).toMatchObject({ status: 422, detail });
     },
   );
+});
+
+it("retires the intake catalog query and lists only catalog Fields", async () => {
+  const retired = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/fields?intake=true",
+    cookies: adminCookies,
+  });
+  expect(retired.statusCode).toBe(400);
+  const fields = await listFields();
+  expect(fields.some((field) => field.slug.startsWith("__intake_"))).toBe(false);
+  expect(fields.every((field) => !("fieldTag" in field) && !("builtInKey" in field))).toBe(true);
+});
+
+it("refuses the retired Field tag on edit", async () => {
+  const [field] = await listFields();
+  const response = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/fields/${field!.id}`,
+    cookies: adminCookies,
+    payload: { fieldTag: "legal" },
+  });
+  expect(response.statusCode, response.body).toBe(400);
 });

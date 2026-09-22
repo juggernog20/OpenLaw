@@ -181,7 +181,7 @@ function legacyResults(analysis: ContractAnalysis): ContractAnalysisResult[] {
     ...(outcome.unmatched
       ? [
           {
-            slug: "counterparty",
+            slug: "counterparties",
             value: outcome.unmatched,
             evidence: null,
             outcome: "unmatched" as const,

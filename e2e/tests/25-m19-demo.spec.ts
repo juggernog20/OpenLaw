@@ -446,7 +446,7 @@ test.describe.serial("M19 demo path", () => {
       const seeded = await listRequestTypes(page.request);
       const anyType = seeded[0];
       expect(anyType, "the request-type seeds are missing").toBeDefined();
-      for (const path of ["request-types", "intake-links", `request-types/${anyType!.id}/fields`]) {
+      for (const path of ["request-types", "intake-links"]) {
         const refused = await memberPage.request.get(`/api/v1/${path}`);
         expect(refused.status(), `/api/v1/${path} must refuse a Legal Team Member`).toBe(403);
       }

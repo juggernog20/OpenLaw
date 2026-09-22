@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+import { saveFieldRow } from "../../testing/form-fixtures.js";
 import { submitRequestFixture } from "../../testing/request-form.js";
 
 import { requestDepartment } from "../../testing/request-department.js";
@@ -21,7 +23,7 @@ import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { activityLog, and, departments, eq, requestTypeFields, requests, users } from "@openlaw/db";
+import { activityLog, and, departments, eq, requests, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies as harnessSignInCookies,
@@ -142,7 +144,7 @@ beforeAll(async () => {
         displayName: field.displayName,
         moduleScope: field.moduleScope,
         fieldType: field.fieldType,
-        fieldTag: "legal",
+
         ...("options" in field ? { options: field.options } : {}),
       },
     });
@@ -150,13 +152,12 @@ beforeAll(async () => {
     const id = created.json().field.id as string;
     fieldIds.set(field.displayName, id);
 
-    const attached = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/request-types/${typeIds.get("contract_review")}/fields`,
+    const attached = await saveFieldRow(harness, {
+      typeUrl: `/api/v1/request-types/${typeIds.get("contract_review")}`,
       cookies: adminCookies,
       payload: { fieldId: id, isRequired: field.required },
     });
-    expect(attached.statusCode, attached.body).toBe(201);
+    expect(attached.statusCode, attached.body).toBe(200);
   }
 });
 
@@ -322,82 +323,6 @@ describe("the attached fields the type collects", () => {
     expect(res.json().detail).toContain("Paper side");
   });
 
-  it("collects an out-of-scope attached field like any other", async () => {
-    // The INT-002 M19/7 addendum's reachable state: a contract-scoped
-    // field stays attached across a re-point to Matter, so the form
-    // draws it under a target whose scope no longer admits it. M20
-    // meets that state rather than preventing it — the field renders,
-    // its required flag still applies, and its value is collected.
-    const typeId = typeIds.get("contract_review")!;
-    const scoped = ["Counterparty name", "Paper side", "Deal desk region"] as const;
-    // Inside the try from the first mutation on: an assertion that
-    // fails half way through the setup must still put the shared seed
-    // type back, or every suite after it inherits a matter-targeting
-    // "Contract review".
-    try {
-      // Archive the contract-scoped fields so the strand check does
-      // not see them, re-point, then restore: the sequence the addendum
-      // records.
-      for (const name of scoped) {
-        const res = await harness.app.inject({
-          method: "POST",
-          url: `/api/v1/fields/${fieldIds.get(name)}/archive`,
-          cookies: adminCookies,
-          payload: {},
-        });
-        expect(res.statusCode, res.body).toBe(200);
-      }
-      const repointed = await harness.app.inject({
-        method: "PATCH",
-        url: `/api/v1/request-types/${typeId}`,
-        cookies: adminCookies,
-        payload: { targetModule: "matter", targetTypeId: null },
-      });
-      expect(repointed.statusCode, repointed.body).toBe(200);
-      for (const name of scoped) {
-        const res = await harness.app.inject({
-          method: "POST",
-          url: `/api/v1/fields/${fieldIds.get(name)}/restore`,
-          cookies: adminCookies,
-          payload: {},
-        });
-        expect(res.statusCode, res.body).toBe(200);
-      }
-
-      const stillAttached = await harness.db
-        .select()
-        .from(requestTypeFields)
-        .where(
-          and(
-            eq(requestTypeFields.typeId, typeId),
-            eq(requestTypeFields.fieldId, fieldIds.get("Counterparty name")!),
-          ),
-        );
-      expect(stillAttached).toHaveLength(1);
-
-      // It is still required, and it still collects.
-      const missing = await submit(completeBody({ customFields: {} }));
-      expect(missing.statusCode, missing.body).toBe(400);
-      expect(missing.json().detail).toContain("Counterparty name");
-
-      const res = await submit(completeBody());
-      expect(res.statusCode, res.body).toBe(201);
-      expect((await storedRequest(res.json().request.id)).customFields).toEqual({
-        counterparty_name: "Orion Cloud",
-      });
-    } finally {
-      const back = await harness.app.inject({
-        method: "PATCH",
-        url: `/api/v1/request-types/${typeId}`,
-        cookies: adminCookies,
-        payload: { targetModule: "contract", targetTypeId: null },
-      });
-      expect(back.statusCode, back.body).toBe(200);
-    }
-  });
-});
-
-describe("an archived request type", () => {
   it("takes no submission, even from a form opened before the archive", async () => {
     const typeId = typeIds.get("legal_question")!;
     const archived = await harness.app.inject({
@@ -780,20 +705,18 @@ describe("the two field types that name a row", () => {
           displayName: field.displayName,
           moduleScope: "contract",
           fieldType: field.fieldType,
-          fieldTag: "legal",
         },
       });
       expect(created.statusCode, created.body).toBe(201);
       if (field.fieldType === "user") userSlug = created.json().field.slug;
       else entitySlug = created.json().field.slug;
 
-      const attached = await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/request-types/${typeIds.get("nda_request")}/fields`,
+      const attached = await saveFieldRow(harness, {
+        typeUrl: `/api/v1/request-types/${typeIds.get("nda_request")}`,
         cookies: adminCookies,
         payload: { fieldId: created.json().field.id, isRequired: false },
       });
-      expect(attached.statusCode, attached.body).toBe(201);
+      expect(attached.statusCode, attached.body).toBe(200);
     }
 
     liveEntityId = await createEntity("Orion Cloud Holdings LLC");

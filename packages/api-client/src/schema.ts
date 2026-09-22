@@ -1157,9 +1157,9 @@ export interface paths {
                 contractAttribute:
                   | (
                       | "title"
-                      | "primary_counterparty_name"
-                      | "entity_id"
-                      | "owning_department_id"
+                      | "counterparties"
+                      | "entity"
+                      | "owning_department"
                       | "region"
                       | "value"
                       | "effective_date"
@@ -2070,42 +2070,6 @@ export interface paths {
     /** One contract type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listContractTypeFields"];
     put?: never;
-    /** Attach a catalog field to a contract type: contract-scoped fields only (CTR-016), appended to the per-type order, optional from the start unless isRequired says otherwise */
-    post: operations["attachContractTypeField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}/fields/{fieldId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Detach a field from a contract type: the join row goes, the catalog definition and stored values stay (MTR-014) */
-    delete: operations["detachContractTypeField"];
-    options?: never;
-    head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014) */
-    patch: operations["setContractTypeFieldRequired"];
-    trace?: never;
-  };
-  "/api/v1/contract-types/{id}/fields/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
-    put: operations["reorderContractTypeFields"];
     post?: never;
     delete?: never;
     options?: never;
@@ -2386,42 +2350,6 @@ export interface paths {
     /** One matter type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listMatterTypeFields"];
     put?: never;
-    /** Attach a catalog field to a matter type: matter-scoped fields (MTR-011), appended to the per-type order, optional from the start unless isRequired says otherwise */
-    post: operations["attachMatterTypeField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}/fields/{fieldId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Detach a field from a matter type: the join row goes, the catalog definition and stored values stay (MTR-014) */
-    delete: operations["detachMatterTypeField"];
-    options?: never;
-    head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard-enforced when a record is created on this type and when one is re-typed onto it (MTR-014) */
-    patch: operations["setMatterTypeFieldRequired"];
-    trace?: never;
-  };
-  "/api/v1/matter-types/{id}/fields/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
-    put: operations["reorderMatterTypeFields"];
     post?: never;
     delete?: never;
     options?: never;
@@ -3073,59 +3001,6 @@ export interface paths {
     put?: never;
     /** Restore an archived request type (SET-003's recovery story) to the end of the display order */
     post: operations["restoreRequestType"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/request-types/{id}/fields": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** One request type's attached fields in per-type order — the type editor's Attached fields card */
-    get: operations["listRequestTypeFields"];
-    put?: never;
-    /** Attach a catalog field to a request type: the scopes this type's target allows (INT-002), appended to the per-type order, optional from the start unless isRequired says otherwise; a user Field cannot be required on a request form because the Portal has no person picker (INT-002) */
-    post: operations["attachRequestTypeField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/request-types/{id}/fields/{fieldId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Detach a field from a request type: the join row goes, the catalog definition and stored values stay (MTR-014) */
-    delete: operations["detachRequestTypeField"];
-    options?: never;
-    head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; a user Field cannot be required on a request form because the Portal has no person picker (INT-002); hard enforcement arrives with the record milestone (M20) */
-    patch: operations["setRequestTypeFieldRequired"];
-    trace?: never;
-  };
-  "/api/v1/request-types/{id}/fields/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
-    put: operations["reorderRequestTypeFields"];
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -5941,42 +5816,6 @@ export interface paths {
     /** One entity type's attached fields in per-type order — the type editor's Attached fields card */
     get: operations["listEntityTypeFields"];
     put?: never;
-    /** Attach a catalog field to a entity type: entity-scoped fields (ENT-001), appended to the per-type order, optional from the start unless isRequired says otherwise */
-    post: operations["attachEntityTypeField"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entity-types/{id}/fields/{fieldId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Detach a field from a entity type: the join row goes, the catalog definition and stored values stay (MTR-014) */
-    delete: operations["detachEntityTypeField"];
-    options?: never;
-    head?: never;
-    /** Set an attachment's required flag: per attachment, so a field can be required for one type and optional elsewhere; hard enforcement arrives with the record milestone (M27 record fields) */
-    patch: operations["setEntityTypeFieldRequired"];
-    trace?: never;
-  };
-  "/api/v1/entity-types/{id}/fields/order": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    /** Apply a full permutation of one type's attached fields (SET-003 immediate apply); per-type orders renumber from 1 */
-    put: operations["reorderEntityTypeFields"];
     post?: never;
     delete?: never;
     options?: never;
@@ -6929,7 +6768,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Rename, describe, retag, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped */
+    /** Rename, describe, or edit a field's options and AI prompt; the slug and the field type never change, and the scope moves through its own route — a body carrying any of them is refused, not silently stripped */
     patch: operations["updateField"];
     trace?: never;
   };
@@ -10643,7 +10482,7 @@ export interface operations {
                 | "renewal_period_months"
                 | "notice_period_days"
                 | "value"
-                | "counterparty";
+                | "counterparties";
               /** @enum {string} */
               group: "conversion" | "analysis";
               prompt: string;
@@ -10688,7 +10527,7 @@ export interface operations {
             | "renewal_period_months"
             | "notice_period_days"
             | "value"
-            | "counterparty";
+            | "counterparties";
           prompt: string | null;
         };
       };
@@ -10715,7 +10554,7 @@ export interface operations {
                 | "renewal_period_months"
                 | "notice_period_days"
                 | "value"
-                | "counterparty";
+                | "counterparties";
               /** @enum {string} */
               group: "conversion" | "analysis";
               prompt: string;
@@ -11021,9 +10860,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11073,9 +10912,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11213,9 +11052,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11265,9 +11104,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11460,9 +11299,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11512,9 +11351,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11709,9 +11548,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11761,9 +11600,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11905,9 +11744,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -11957,9 +11796,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12101,9 +11940,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12153,9 +11992,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12297,9 +12136,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12349,9 +12188,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12620,9 +12459,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12672,9 +12511,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12750,9 +12589,9 @@ export interface operations {
             contractAttribute?:
               | (
                   | "title"
-                  | "primary_counterparty_name"
-                  | "entity_id"
-                  | "owning_department_id"
+                  | "counterparties"
+                  | "entity"
+                  | "owning_department"
                   | "region"
                   | "value"
                   | "effective_date"
@@ -12864,9 +12703,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -12916,9 +12755,9 @@ export interface operations {
                   contractAttribute:
                     | (
                         | "title"
-                        | "primary_counterparty_name"
-                        | "entity_id"
-                        | "owning_department_id"
+                        | "counterparties"
+                        | "entity"
+                        | "owning_department"
                         | "region"
                         | "value"
                         | "effective_date"
@@ -14309,222 +14148,6 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "contract";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  attachContractTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldId: string;
-          isRequired?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "contract";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  detachContractTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setContractTypeFieldRequired: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          isRequired: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "contract";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderContractTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -15632,222 +15255,6 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "matter";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  attachMatterTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldId: string;
-          isRequired?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "matter";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  detachMatterTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setMatterTypeFieldRequired: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          isRequired: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "matter";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderMatterTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -16570,8 +15977,6 @@ export interface operations {
                   | "multi_select"
                   | "user"
                   | "entity";
-                /** @enum {string} */
-                fieldTag: "business" | "legal";
                 visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
@@ -16738,8 +16143,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -16920,8 +16323,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -19021,12 +18422,10 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
-              formFieldCount: number;
             }[];
           };
         };
@@ -19073,12 +18472,10 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
-              formFieldCount: number;
             };
           };
         };
@@ -19121,12 +18518,10 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
-              formFieldCount: number;
             };
           };
         };
@@ -19208,12 +18603,10 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
-              formFieldCount: number;
             };
           };
         };
@@ -19260,12 +18653,10 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
-              formFieldCount: number;
             }[];
           };
         };
@@ -19314,12 +18705,10 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
-              formFieldCount: number;
             };
           };
         };
@@ -19362,283 +18751,11 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
-              formFieldCount: number;
             };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  listRequestTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  attachRequestTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldId: string;
-          isRequired?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  detachRequestTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setRequestTypeFieldRequired: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          isRequired: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderRequestTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "matter" | "contract" | "entity";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            }[];
           };
         };
       };
@@ -19915,8 +19032,6 @@ export interface operations {
         content: {
           "application/json": {
             requestTypes: {
-              /** @deprecated */
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;
@@ -20001,8 +19116,6 @@ export interface operations {
         content: {
           "application/json": {
             requestType: {
-              /** @deprecated */
-              formFieldOrder: string[];
               turnaroundDays: number | null;
               id: string;
               slug: string;
@@ -20028,8 +19141,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -20371,9 +19482,9 @@ export interface operations {
                 contractAttribute:
                   | (
                       | "title"
-                      | "primary_counterparty_name"
-                      | "entity_id"
-                      | "owning_department_id"
+                      | "counterparties"
+                      | "entity"
+                      | "owning_department"
                       | "region"
                       | "value"
                       | "effective_date"
@@ -20886,7 +19997,7 @@ export interface operations {
                 cadenceDescription?: string;
               } | null;
               unverifiedFields: (
-                | "counterparty"
+                | "counterparties"
                 | "value"
                 | "effectiveDate"
                 | "expiryDate"
@@ -20972,7 +20083,7 @@ export interface operations {
                 cadenceDescription?: string;
               } | null;
               unverifiedFields: (
-                | "counterparty"
+                | "counterparties"
                 | "value"
                 | "effectiveDate"
                 | "expiryDate"
@@ -21305,8 +20416,6 @@ export interface operations {
                   | "multi_select"
                   | "user"
                   | "entity";
-                /** @enum {string} */
-                fieldTag: "business" | "legal";
                 visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
@@ -21364,8 +20473,6 @@ export interface operations {
                     | "multi_select"
                     | "user"
                     | "entity";
-                  /** @enum {string} */
-                  fieldTag: "business" | "legal";
                   visibleOnPortal: boolean;
                   options: string[] | null;
                   displayOrder: number;
@@ -21453,8 +20560,6 @@ export interface operations {
                   | "multi_select"
                   | "user"
                   | "entity";
-                /** @enum {string} */
-                fieldTag: "business" | "legal";
                 visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
@@ -21512,8 +20617,6 @@ export interface operations {
                     | "multi_select"
                     | "user"
                     | "entity";
-                  /** @enum {string} */
-                  fieldTag: "business" | "legal";
                   visibleOnPortal: boolean;
                   options: string[] | null;
                   displayOrder: number;
@@ -22354,8 +21457,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -23073,8 +22174,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -25111,8 +24210,6 @@ export interface operations {
                   | "multi_select"
                   | "user"
                   | "entity";
-                /** @enum {string} */
-                fieldTag: "business" | "legal";
                 visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
@@ -25291,8 +24388,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -25588,8 +24683,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -33906,222 +32999,6 @@ export interface operations {
           "application/json": {
             attachedFields: {
               fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "entity";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  attachEntityTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldId: string;
-          isRequired?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "entity";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  detachEntityTypeField: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  setEntityTypeFieldRequired: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        fieldId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          isRequired: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedField: {
-              fieldId: string;
-              builtInKey?: string | null;
-              slug: string;
-              displayName: string;
-              /** @enum {string} */
-              fieldType:
-                | "text"
-                | "long_text"
-                | "number"
-                | "currency"
-                | "date"
-                | "boolean"
-                | "single_select"
-                | "multi_select"
-                | "user"
-                | "entity";
-              /** @enum {string} */
-              moduleScope: "entity";
-              displayOrder: number;
-              isRequired: boolean;
-              visibleOnPortal: boolean;
-            };
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  reorderEntityTypeFields: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          fieldIds: string[];
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            attachedFields: {
-              fieldId: string;
-              builtInKey?: string | null;
               slug: string;
               displayName: string;
               /** @enum {string} */
@@ -37140,8 +36017,6 @@ export interface operations {
                   | "multi_select"
                   | "user"
                   | "entity";
-                /** @enum {string} */
-                fieldTag: "business" | "legal";
                 visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
@@ -37272,8 +36147,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -37407,8 +36280,6 @@ export interface operations {
                 | "multi_select"
                 | "user"
                 | "entity";
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
@@ -39453,7 +38324,6 @@ export interface operations {
     parameters: {
       query?: {
         includeArchived?: "true" | "false";
-        intake?: "true" | "false";
       };
       header?: never;
       path?: never;
@@ -39488,11 +38358,8 @@ export interface operations {
                 | "user"
                 | "entity";
               options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               aiPrompt: string | null;
               aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
-              builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
@@ -39537,8 +38404,6 @@ export interface operations {
             | "multi_select"
             | "user"
             | "entity";
-          /** @enum {string} */
-          fieldTag: "business" | "legal";
           options?: string[];
           aiPrompt?: string;
           aiAnswerStyle?: ("few_words" | "sentence" | "full_clause") | null;
@@ -39573,11 +38438,8 @@ export interface operations {
                 | "user"
                 | "entity";
               options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               aiPrompt: string | null;
               aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
-              builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
@@ -39610,8 +38472,6 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
-          /** @enum {string} */
-          fieldTag?: "business" | "legal";
           options?: string[];
           aiPrompt?: string | null;
           aiAnswerStyle?: ("few_words" | "sentence" | "full_clause") | null;
@@ -39646,11 +38506,8 @@ export interface operations {
                 | "user"
                 | "entity";
               options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               aiPrompt: string | null;
               aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
-              builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
@@ -39707,11 +38564,8 @@ export interface operations {
                 | "user"
                 | "entity";
               options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               aiPrompt: string | null;
               aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
-              builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
@@ -39768,11 +38622,8 @@ export interface operations {
                 | "user"
                 | "entity";
               options: string[] | null;
-              /** @enum {string} */
-              fieldTag: "business" | "legal";
               aiPrompt: string | null;
               aiAnswerStyle: ("few_words" | "sentence" | "full_clause") | null;
-              builtInKey?: string | null;
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;

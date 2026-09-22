@@ -117,6 +117,7 @@ function customFieldsFor(plan, fields, attached, random) {
     );
   }
   set("Region", random.pick(["EMEA", "Americas", "APAC"]));
+  set("Country", random.pick(["United Kingdom", "Germany", "France"]));
   return collector.values;
 }
 

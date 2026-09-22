@@ -45,7 +45,7 @@ function field(overrides: Partial<Record<string, unknown>> = {}) {
     slug: "counterparty",
     displayName: "Counterparty",
     fieldType: "text",
-    fieldTag: "legal",
+
     moduleScope: "contract",
     isRequired: false,
     displayOrder: 1,

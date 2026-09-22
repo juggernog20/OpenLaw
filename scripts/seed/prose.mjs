@@ -197,7 +197,7 @@ export function contractDocument(deal) {
           evidence: `2.1 The ${value.cadence === "annually" ? "annual" : value.cadence === "monthly" ? "monthly" : "total"} charge under this agreement is ${money(value.currency, value.amount)}.`,
         }
       : { value: null, evidence: null },
-    counterparty: {
+    counterparties: {
       value: counterparty,
       evidence: `This agreement is made between ${ourEntity} and ${counterparty}.`,
     },

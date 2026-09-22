@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { saveFieldRow } from "../../testing/form-fixtures.js";
+
 /**
  * The contract create as a callable a second caller reaches (M21/1).
  *
@@ -115,17 +117,16 @@ async function attachRequiredField(typeId: string, displayName: string): Promise
     method: "POST",
     url: "/api/v1/fields",
     cookies: adminCookies,
-    payload: { moduleScope: "contract", fieldTag: "legal", displayName, fieldType: "text" },
+    payload: { moduleScope: "contract", displayName, fieldType: "text" },
   });
   expect(defined.statusCode, defined.body).toBe(201);
   const field = defined.json().field as { id: string; slug: string };
-  const attached = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/contract-types/${typeId}/fields`,
+  const attached = await saveFieldRow(harness, {
+    typeUrl: `/api/v1/contract-types/${typeId}`,
     cookies: adminCookies,
     payload: { fieldId: field.id, isRequired: true },
   });
-  expect(attached.statusCode, attached.body).toBe(201);
+  expect(attached.statusCode, attached.body).toBe(200);
   return field.slug;
 }
 

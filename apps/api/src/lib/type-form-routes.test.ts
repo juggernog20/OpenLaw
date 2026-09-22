@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+import { saveFieldRow } from "../testing/form-fixtures.js";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { activityLog, contractTypes, entityTypeFields, eq, fields, sql, users } from "@openlaw/db";
 import type { FormNode, FormRow, FormModule } from "@openlaw/shared";
@@ -56,7 +58,6 @@ async function field(
       displayName: "Test Row",
       moduleScope: module,
       fieldType,
-      fieldTag: "business",
     })
     .returning();
   return {
@@ -175,13 +176,12 @@ it("refuses invalid switches, duplicate Rows, foreign scopes, spoofed types and 
 it("detaches absent Fields while preserving stored record values and legacy attachment reads", async () => {
   const id = await createType();
   const custom = await field();
-  const attach = await h.app.inject({
-    method: "POST",
-    url: `/api/v1/contract-types/${id}/fields`,
+  const attach = await saveFieldRow(h, {
+    typeUrl: `/api/v1/contract-types/${id}`,
     cookies,
     payload: { fieldId: custom.id },
   });
-  expect(attach.statusCode, attach.body).toBe(201);
+  expect(attach.statusCode, attach.body).toBe(200);
   expect(await read(id)).toContainEqual(custom);
   await h.db
     .execute(sql`insert into contracts (id, title, contract_type_id, status_id, custom_fields)
@@ -230,38 +230,6 @@ it("protects both Default types by identity after rename", async () => {
       expect(refused.json().detail).toContain("Default");
     }
   }
-});
-
-it("legacy PATCH cannot make an Intake user Row required, and detach cannot break a Branch", async () => {
-  const id = await createType();
-  const person = { ...(await field("contract", "user")), onIntakeForm: true };
-  const form: FormNode[] = [
-    ...(await read(id)),
-    person,
-    {
-      kind: "branch",
-      id: "person-details",
-      match: "all",
-      conditions: [{ rowRef: person.rowRef, operator: "is_set", value: null }],
-      children: [],
-    },
-  ];
-  expect((await put(id, form)).statusCode).toBe(200);
-  const patched = await h.app.inject({
-    method: "PATCH",
-    url: `/api/v1/contract-types/${id}/fields/${person.id}`,
-    cookies,
-    payload: { isRequired: true },
-  });
-  expect(patched.statusCode, patched.body).toBe(400);
-  const detached = await h.app.inject({
-    method: "DELETE",
-    url: `/api/v1/contract-types/${id}/fields/${person.id}`,
-    cookies,
-  });
-  expect(detached.statusCode, detached.body).toBe(400);
-  expect(detached.json().detail).toContain("person-details");
-  expect(await read(id)).toEqual(form);
 });
 
 it("mounts the Form only for record types, and requires an Administrator", async () => {
@@ -321,37 +289,6 @@ it.each(["matter", "entity"] as const)(
   },
 );
 
-it("legacy ordering preserves Branch and built-in slots", async () => {
-  const id = await createType();
-  const original = await read(id);
-  const first = await field();
-  const second = await field();
-  const pins = original.slice(0, 2);
-  const builtins = original.slice(2);
-  const form: FormNode[] = [
-    ...pins,
-    first,
-    ...builtins,
-    second,
-    {
-      kind: "branch",
-      id: "after-fields",
-      match: "all",
-      conditions: [{ rowRef: first.rowRef, operator: "is_set", value: null }],
-      children: [],
-    },
-  ];
-  expect((await put(id, form)).statusCode).toBe(200);
-  const reordered = await h.app.inject({
-    method: "PUT",
-    url: `/api/v1/contract-types/${id}/fields/order`,
-    cookies,
-    payload: { fieldIds: [second.id, first.id] },
-  });
-  expect(reordered.statusCode, reordered.body).toBe(200);
-  expect(await read(id)).toEqual([...pins, second, ...builtins, first, form.at(-1)!]);
-});
-
 it.each([true, false])(
   "keeps archived attachments when their Branch survives: %s",
   async (keepBranch) => {
@@ -399,3 +336,23 @@ it("projects Entity Fields through each type's Visible on Portal switch", async 
     expect(projectCustomFields("legal_team_member", attached, values).customFields).toEqual(values);
   }
 });
+
+it.each(["contract", "matter", "entity", "request"])(
+  "retires per-Field mutations for %s types",
+  async (module) => {
+    for (const [method, suffix, payload] of [
+      ["POST", "", { fieldId: "field" }],
+      ["PATCH", "/field", { isRequired: true }],
+      ["DELETE", "/field", undefined],
+      ["PUT", "/order", { fieldIds: ["field"] }],
+    ] as const) {
+      const response = await h.app.inject({
+        method,
+        url: `/api/v1/${module}-types/retired/fields${suffix}`,
+        cookies,
+        payload,
+      });
+      expect(response.statusCode, response.body).toBe(404);
+    }
+  },
+);

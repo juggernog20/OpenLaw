@@ -156,7 +156,6 @@ describe("the request types a requester is offered", () => {
       description: "Mutual or one-way NDA with a counterparty.",
       turnaroundDays: null,
       displayOrder: 1,
-      formFieldOrder: [],
     });
   });
 
@@ -169,7 +168,6 @@ describe("the request types a requester is offered", () => {
       "description",
       "displayName",
       "displayOrder",
-      "formFieldOrder",
       "id",
       "slug",
       "turnaroundDays",
@@ -364,7 +362,6 @@ describe("the Administrator-facing intake routes", () => {
     const calls = [
       { method: "GET" as const, url: "/api/v1/request-types" },
       { method: "GET" as const, url: `/api/v1/request-types/${ids.get("nda_request")}` },
-      { method: "GET" as const, url: `/api/v1/request-types/${ids.get("nda_request")}/fields` },
       { method: "GET" as const, url: "/api/v1/intake-links" },
       {
         method: "POST" as const,

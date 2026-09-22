@@ -23,10 +23,8 @@
  * `on delete set null`, and that is the wrong move here. A link's
  * placement is its audience, so setting it null would take a link the
  * Administrator put on one form and publish it to every requester on
- * the portal home. Widening an audience is not a demotion. Cascade
- * matches `request_type_fields`, the other child of `request_types`.
- * The type carries its form definition and its deflection panel alike,
- * and a hard delete is only reachable for a type nothing has used.
+ * the portal home. Widening an audience is not a demotion. A hard delete is only reachable
+ * for a type nothing has used.
  *
  * The URL is stored exactly as the Administrator entered it (INT-004).
  * The API validates it as an absolute http/https address and normalizes
