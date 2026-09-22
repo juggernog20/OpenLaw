@@ -199,7 +199,10 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         const intake = await readIntakeForm(tx, requestType.id, { lock: true });
         const attached = intake.fields;
         const rawFields = { ...(body.customFields ?? {}) };
-        if (body.description !== undefined && body.description.trim())
+        // Description is a Row of the destination Form (DD-028.3). Off the
+        // form, a top-level description still lands on the Request column.
+        const collectsDescription = attached.some((field) => field.slug === "description");
+        if (body.description !== undefined && body.description.trim() && collectsDescription)
           rawFields.description = body.description;
         if (rawFields.counterparties !== undefined && body.counterparties === undefined) {
           const picks = rawFields.counterparties;
@@ -225,8 +228,15 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         const visible = evaluateForm(intake.form, intakeFormAnswers(customFields)).visibleRows;
         const visibleKeys = new Set(visible.flatMap((row) => intakeRowKeys(row.rowRef)));
         for (const key of Object.keys(rawFields)) {
-          if (!visibleKeys.has(key))
-            throw httpError(400, "That Row is not on the visible Request form.");
+          if (visibleKeys.has(key)) continue;
+          // Description keeps its Request column when its Row is off the
+          // form (DD-028.3); older intake clients still send it top-level.
+          if (key === "description" && body.customFields?.description === undefined) {
+            delete rawFields.description;
+            delete customFields.description;
+            continue;
+          }
+          throw httpError(400, "That Row is not on the visible Request form.");
         }
         const visibleFields = attached.filter((field) => visibleKeys.has(field.slug));
         // Validate native facts now; conversion reads them again when creating the record.
@@ -247,7 +257,9 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         // twice to learn two halves of the same answer.
         const title = body.title.trim();
         const description =
-          typeof customFields.description === "string" ? customFields.description : "";
+          typeof customFields.description === "string"
+            ? customFields.description
+            : (body.description?.trim() ?? "");
         assertAnswered([
           { name: "Title", answered: title !== "" },
           ...visibleFields

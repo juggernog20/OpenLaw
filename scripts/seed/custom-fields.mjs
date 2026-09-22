@@ -31,6 +31,7 @@ export async function readAttachments(admin, taxonomy) {
         );
         typePath = `/api/v1/${type.targetModule}-types`;
       }
+      if (!destination) continue;
       const { body } = await admin.get(`${typePath}/${destination.id}/form`);
       const rows = body.form.flatMap(function flatten(node) {
         return node.kind === "row" ? [node] : node.children.flatMap(flatten);

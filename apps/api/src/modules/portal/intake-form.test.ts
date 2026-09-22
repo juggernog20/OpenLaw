@@ -238,6 +238,63 @@ it("uses only the Contract Default Form for a module-only destination", async ()
   );
 });
 
+it("keeps a top-level description as the Request column when its Row is off the form", async () => {
+  const [type] = await h.db.select().from(contractTypes).where(eq(contractTypes.isDefault, true));
+  const formPath = `/api/v1/contract-types/${type!.id}/form`;
+  const read = await h.app.inject({ method: "GET", url: formPath, cookies });
+  const original = read.json().form as FormNode[];
+  const withoutDescription = original.map((node) =>
+    node.kind === "row" && node.rowRef === "description" ? { ...node, onIntakeForm: false } : node,
+  );
+  const off = await h.app.inject({
+    method: "PUT",
+    url: formPath,
+    cookies,
+    payload: { form: withoutDescription },
+  });
+  expect(off.statusCode, off.body).toBe(200);
+  const rt = (
+    await h.app.inject({
+      method: "POST",
+      url: "/api/v1/request-types",
+      cookies,
+      payload: { displayName: "Column description" },
+    })
+  ).json().requestType;
+  const target = await h.app.inject({
+    method: "PATCH",
+    url: `/api/v1/request-types/${rt.id}`,
+    cookies,
+    payload: { targetModule: "contract" },
+  });
+  expect(target.statusCode, target.body).toBe(200);
+  try {
+    const submitted = await h.app.inject({
+      method: "POST",
+      url: "/api/v1/requests",
+      cookies: requesterCookies,
+      payload: {
+        requestTypeId: rt.id,
+        title: "Older client",
+        description: "Sent top-level by an older intake client.",
+        urgency: "medium",
+        departmentId,
+      },
+    });
+    expect(submitted.statusCode, submitted.body).toBe(201);
+    expect(submitted.json().request.description).toBe("Sent top-level by an older intake client.");
+    expect(submitted.json().request.customFields).not.toHaveProperty("description");
+  } finally {
+    const restored = await h.app.inject({
+      method: "PUT",
+      url: formPath,
+      cookies,
+      payload: { form: original },
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+  }
+});
+
 it("stores native Row keys, validates Value and registry picks, and converts without shadow Fields", async () => {
   const made = await h.app.inject({
     method: "POST",

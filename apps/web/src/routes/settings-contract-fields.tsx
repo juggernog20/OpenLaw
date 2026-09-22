@@ -6,7 +6,7 @@
  * page, per the ST11 frame of settings.pen: the
  * ListEditor in its DES-021 table variant — column header, no reorder
  * (the catalog is unordered; per-type attachment orders rendering), the
- * scope pill, the type column, and the sparkle marking fields
+ * type column, and the sparkle marking fields
  * with an AI extraction prompt (CTR-008). Creation has seven dimensions
  * (two of them immutable), so add and edit go through the field-editor
  * dialog rather than an inline row; the name still renames in place

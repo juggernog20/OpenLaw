@@ -224,6 +224,7 @@ export async function handleMatterRecordPreparation(deps: Deps, id: string) {
           await recordActivity(tx, {
             entityType: "matter",
             entityId: matter.id,
+            actorId: run.actorId,
             action: "key_date.added",
             visibility: RECORD_ACTIVITY_TIER,
             payload: { keyDateId: date!.id, label: "Needed by", date: String(suggestion.value) },
@@ -253,6 +254,7 @@ export async function handleMatterRecordPreparation(deps: Deps, id: string) {
         await recordActivity(tx, {
           entityType: "matter",
           entityId: matter.id,
+          actorId: run.actorId,
           action: "matter.updated",
           visibility: RECORD_ACTIVITY_TIER,
           payload: {

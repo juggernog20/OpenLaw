@@ -529,7 +529,12 @@ async function applyAnswers(
       noteResult(slug, item, "written", item.value);
     }
 
-    for (const slug of ["risk", "region", "owning_department", "needed_by"] as const) {
+    // Record Rows prepared from the Request's sources (DD-028.9). A document
+    // run leaves a catalog Field that shares one of these slugs to the
+    // generic writer below.
+    for (const slug of run.sourceContext
+      ? (["risk", "region", "owning_department", "needed_by"] as const)
+      : []) {
       const item = prepared.get(slug);
       if (!item) continue;
       prepared.delete(slug);
@@ -580,6 +585,14 @@ async function applyAnswers(
           .values({ contractId: row.id, label: "Needed by", date: String(item.value) })
           .returning();
         flags[slug] = { ...marker, keyDateId: date!.id };
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: row.id,
+          actorId: run.requestedBy ?? undefined,
+          action: "key_date.added",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { keyDateId: date!.id, label: "Needed by", date: String(item.value) },
+        });
       } else flags[slug] = marker;
       outcome.written.push(slug);
       noteResult(slug, item, "written", item.value);

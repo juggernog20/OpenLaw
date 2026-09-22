@@ -34,7 +34,9 @@ describe("the matter type editor", () => {
     await user.click(
       await screen.findByRole("switch", { name: "Business justification: Required for creation" }),
     );
-    await waitFor(() => expect(writes.at(-1)?.at(-1)).toMatchObject({ isRequired: true }));
+    await waitFor(() =>
+      expect(writes.at(-1)?.find((n) => n.id === "f1")).toMatchObject({ isRequired: true }),
+    );
     await user.click(screen.getByRole("button", { name: "Detach Business justification" }));
     await waitFor(() => expect(writes.at(-1)?.some((n) => n.id === "f1")).toBe(false));
     await user.click(screen.getByRole("button", { name: "Attach Field" }));

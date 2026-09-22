@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** The Needed by Row's control (DD-028.3): a date that lands as the
+ * "Needed by" key date on the record it creates. */
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { Input } from "../ui/input";

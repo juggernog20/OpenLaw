@@ -41,7 +41,7 @@ document is the map, not the territory.
 
 ## Where we are
 
-**M39 is shipped, omnibus [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).** Each Contract, Matter and Entity type owns a Form of Rows and Branches. Contract and Matter Rows carry On intake form, Required for creation and Visible on Portal; Entity Rows carry Required for creation only. The switches decide the touchpoint and what a Business User reads. Request types read their destination Form; conversion and direct creation use the same conditions. The legacy intake catalog and Field tag are retired.
+**M39 is shipped, omnibus [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).** Each Contract, Matter and Entity type owns a Form of Rows and Branches. Contract and Matter Rows carry On intake form, Required for creation and Visible on Portal; Entity Rows omit On intake form. The switches decide the touchpoint and what a Business User reads. Request types read their destination Form; conversion and direct creation use the same conditions. The legacy intake catalog and Field tag are retired.
 
 **M37 Answer style is built.** Administrators choose the organization Answer style and override it on Contract text Fields. Prompt cards separate editable extraction instructions from fixed format sentences.
 

@@ -2937,17 +2937,8 @@ function ContractRecord() {
                     </div>
                   </div>
                 </section>
-                {/* The C2 mock gives the description a card of its own,
-                  and it earns one: it is the only free-form field on
-                  the record, and a textarea the width of the card reads
-                  as prose rather than as one more entry in a field
-                  grid. It follows the Contract card because the facts
-                  come before the account of them — the mock's own order,
-                  where the hero the Contract card replaces leads.
-
-                  The heading names the textarea rather than the card:
-                  one accessible name each, carried by the control that
-                  answers to it, as the Contract card above does. */}
+                {/* Description is a Row of the Form (DD-028.3): it draws inside the
+                  Contract card's grid in Form order, spanning both columns. */}
 
                 {/* CTR-006's term as a picture (M16/2). It closes the
                       Overview because it draws facts the two cards

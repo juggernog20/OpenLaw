@@ -275,6 +275,7 @@ export async function configureFields(admin, taxonomy, log) {
       type = types.rows.find((row) =>
         type.targetTypeId ? row.id === type.targetTypeId : row.isDefault,
       );
+      if (!type) return;
       intake = true;
     }
     const at = `${TYPE_PATHS[module]}/${type.id}/form`;
@@ -332,13 +333,18 @@ export async function configureFields(admin, taxonomy, log) {
 
   for (const slug of ["nda_request", "contract_review", "vendor_onboarding"]) {
     const requestType = taxonomy.requestTypes.bySlug.get(slug);
+    if (!requestType) continue;
     const type = taxonomy.contractTypes.rows.find((row) =>
       requestType.targetTypeId ? row.id === requestType.targetTypeId : row.isDefault,
     );
+    if (!type) continue;
     const at = `/api/v1/contract-types/${type.id}/form`;
     const { body } = await admin.get(at);
-    for (const row of body.form) {
-      if (row.kind === "row" && ["counterparties", "needed_by"].includes(row.rowRef)) {
+    const rows = body.form.flatMap(function flatten(node) {
+      return node.kind === "row" ? [node] : node.children.flatMap(flatten);
+    });
+    for (const row of rows) {
+      if (["counterparties", "needed_by"].includes(row.rowRef)) {
         row.onIntakeForm = true;
         row.visibleOnPortal = true;
       }

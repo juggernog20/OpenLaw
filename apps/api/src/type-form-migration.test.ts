@@ -161,8 +161,8 @@ it.each([
     "null",
     "values ('unmapped', 'unmapped-contract-field', 1), ('unmapped', 'unmapped-matter-field', 2)",
   ],
-])("names a legacy Request that %s", async (_, module, source) => {
-  const db = await freshDb(container, `unmapped_${source.length}`);
+])("names a legacy Request that %s", async (label, module, source) => {
+  const db = await freshDb(container, `unmapped_${label.replace(/\W+/g, "_").slice(0, 40)}`);
   try {
     await migrateThrough(db, "0156_answer-style", migrationEntries());
     await db.execute(

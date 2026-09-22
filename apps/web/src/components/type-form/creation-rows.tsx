@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** The creation Rows of a type's Form drawn inside a create or convert
+ * dialog (DD-028, DES-090): built-in Rows through the record's own
+ * controls, Field Rows through the shared custom-field control, hidden
+ * Rows dropped from what the dialog sends. */
 import { FormattedMessage } from "react-intl";
 import { DatePicker } from "../date-picker";
 import { useEffect, useState } from "react";

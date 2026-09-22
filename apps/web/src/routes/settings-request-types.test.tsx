@@ -73,21 +73,18 @@ interface StubRow {
 }
 
 function seededTypes(): StubRow[] {
-  return SEEDS.map(
-    ([id, slug, displayName, description, targetModule, targetTypeId, formFieldCount], index) => ({
-      id,
-      slug,
-      displayName,
-      description,
-      displayOrder: index + 1,
-      isSystemDefault: true,
-      archivedAt: null,
-      inUseCount: 0,
-      targetModule,
-      targetTypeId,
-      formFieldCount,
-    }),
-  );
+  return SEEDS.map(([id, slug, displayName, description, targetModule, targetTypeId], index) => ({
+    id,
+    slug,
+    displayName,
+    description,
+    displayOrder: index + 1,
+    isSystemDefault: true,
+    archivedAt: null,
+    inUseCount: 0,
+    targetModule,
+    targetTypeId,
+  }));
 }
 
 interface TypesCalls {

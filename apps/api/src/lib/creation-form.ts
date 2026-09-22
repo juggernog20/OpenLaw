@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** The creation touchpoint of a type's Form (DD-028): the Intake and
+ * Creation Rows a create or convert collects, Branches evaluated on the
+ * answers, and Required enforced on the visible set only, for Contracts,
+ * Matters and Entities alike. */
 import { regions, sql, type Executor } from "@openlaw/db";
 import {
   evaluateForm,

@@ -2188,7 +2188,8 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
             .from(entities)
             .where(and(eq(entities.id, request.body.entityId), entityReachScope(tx, request.user)))
             .for("update");
-          if (!entity) throw httpError(400, "Our entity must be a reachable live Entity.");
+          // Reach is refused here; liveness is createContract's own refusal.
+          if (!entity) throw httpError(400, "Our entity must be an Entity you can reach.");
         }
         const born = await createContract(tx, app.notifier, {
           ...request.body,

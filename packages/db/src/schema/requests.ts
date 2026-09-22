@@ -83,8 +83,9 @@ export const requests = pgTable(
     status: text("status", { enum: REQUEST_STATUSES }).notNull().default("new"),
     /** The one-line ask. Required on every form (INT-002). */
     title: text("title").notNull(),
-    /** The ask in full. Required on every form, so the column is only
-     * nullable for the rows a later import might bring. */
+    /** The ask in full. Collected only when the destination Form's
+     * Description Row is On intake form (DD-028.3); NULL means the Form
+     * did not collect it. */
     description: text("description"),
     departmentId: text("department_id").references(() => departments.id),
     /** DES-018's severity ramp, requester-supplied, required on every

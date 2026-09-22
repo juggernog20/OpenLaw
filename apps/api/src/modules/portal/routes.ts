@@ -30,7 +30,6 @@ import { readIntakeForm } from "../../lib/intake-form.js";
 import { FormNodeSchema } from "../../lib/type-form-routes.js";
 
 const PortalRequestTypeSchema = z.object({
-  // Retained for v1 readers; the destination Form now determines order.
   turnaroundDays: z.number().int().nullable(),
   id: z.string(),
   /** Addresses the type's form; the picker links on it. */
