@@ -334,11 +334,11 @@ The ordered tree a Contract, Matter, or Entity type owns, made of Rows and Branc
 _Avoid_: attachment list, field list, form definition (Auto-Docs own that term)
 
 **Row**:
-A node on a Form that collects one value: a built-in column or an attached Field. On a Contract or Matter Form it carries three switches, On intake form, Required for creation, Visible on Portal. On an Entity Form only Required for creation is shown; On intake form and Visible on Portal are absent [DD-028, DES-090].
+A node on a Form that collects one value: a built-in column or an attached Field. On a Contract or Matter Form it carries three switches, On intake form, Required for creation, Visible on Portal. Built-in Rows have fixed Portal visibility. Turning on On intake form for an attached Field also turns on Visible on Portal. On an Entity Form only Required for creation is shown; On intake form and Visible on Portal are absent [DD-028, DES-090].
 _Avoid_: attachment, form field, question
 
 **Branch**:
-A node on a Form holding a condition group (match all or any of `row operator value`) whose children show only when it holds. A condition references only Rows above the Branch [DD-028].
+A node on a Form holding a condition group (match all or any of `row operator value`) whose children show only when it holds. A condition references only Rows above the Branch. A false Branch hides its children during collection and suspends Required for creation. A record still shows a hidden Row that holds a value, subject to Visible on Portal and access rules [DD-028].
 _Avoid_: rule, logic jump, section, conditional group
 
 **Touchpoint**:
