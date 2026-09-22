@@ -644,7 +644,14 @@ export function TypeFormBuilder({
               <div className={drop === `${node.id}-inside` ? "outline-2 outline-accent" : ""}>
                 {tree(node.children, depth + 1)}
               </div>
-              <div className="flex flex-wrap items-start gap-2 p-4">{toolbar(node.id)}</div>
+              {/* Starts where the Branch header starts, so the buttons
+                  sit inside the left rule like the children do. */}
+              <div
+                className="flex flex-wrap items-start gap-2 py-4 pe-4"
+                style={{ paddingInlineStart: 36 + depth * 24 }}
+              >
+                {toolbar(node.id)}
+              </div>
             </div>
           </div>
         )}
