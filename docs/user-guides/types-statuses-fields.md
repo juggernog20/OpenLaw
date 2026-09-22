@@ -49,17 +49,17 @@ The Field catalog does not have reorder handles. Set order where Fields are atta
 3. Set the Row's switches. Each complete change saves immediately. Wait for **Saved** before leaving the page.
 4. Use the Row's move handle to drag it, or focus the handle and use the arrow keys. Rows and Branches share one order. Title and Type stay pinned on Contract and Matter Forms.
 
-| Switch                | Effect                                                                                                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| On intake form        | Collects the Row on every Request type that reads this destination Form, and again at creation. Turning it on for a Field also turns on Visible on Portal. |
-| Required for creation | Requires an answer when the Row's Branch holds, on the Intake form when included there and before the record is created.                                   |
-| Visible on Portal     | Lets a Business User who can reach the record read this Field. It is locked on while On intake form is on. Built-in Rows have fixed Portal visibility.     |
+| Switch                | Effect                                                                                                                                                                      |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| On intake form        | Collects the Row on every Request type that reads this destination Form, and again at creation. Turning it on for a Field also turns on Visible on Portal.                  |
+| Required for creation | Requires an answer while the Row is active (at the root, or under a Branch whose condition holds), on the Intake form when included there and before the record is created. |
+| Visible on Portal     | On the Field's Row for this type: lets a Business User who can reach the record read the value. It is locked on while On intake form is on. Built-in Rows have it fixed.    |
 
 **Touchpoint** is derived from the switches and is never set separately. **Intake** means On intake form is on. **Creation** means Required for creation is on and On intake form is off. **Record** means both are off. The creation form collects Intake and Creation Rows. An optional Intake Row can be left empty; a Record Row is completed on the record.
 
 Entity Forms show only **Required for creation**. They have Branches and Touchpoint, but no On intake form or Visible on Portal switch and no intake preview. Their native Entity columns remain on the existing create form. A User Row on intake cannot be required, because the Portal has no staff directory picker.
 
-A Field can be Visible on Portal on one type and hidden on another. **Detach** removes its Row and keeps the Field definition and stored values. **Archive** in the Field catalog hides the Field from live configuration and keeps its attachments and stored values for restoration. Use **Show archived**, then **Restore**, to recover the definition. Neither operation transfers answers to another Field. Built-in Rows cannot detach.
+Visible on Portal belongs to the Row, so a Field can be visible on one type's Form and hidden on another's. **Detach** removes its Row and keeps the Field definition and stored values. **Archive** in the Field catalog hides the Field from live configuration and keeps its attachments and stored values for restoration. Use **Show archived**, then **Restore**, to recover the definition. Neither operation transfers answers to another Field. Built-in Rows cannot detach.
 
 ## Add conditional Rows with a Branch
 

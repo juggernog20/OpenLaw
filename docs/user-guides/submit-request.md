@@ -21,7 +21,7 @@ For example, a fictional **Docs Contract review** Request could use the title **
 
 ## Answer conditional questions
 
-The Administrator configures a Form on the destination Contract or Matter type. Its **On intake form** switch chooses the Rows you answer here. **Required for creation** marks an included Row as required while its Branch holds. **Visible on Portal** lets you read a Field on a record you can access; an Intake Field always has this switch on. You do not edit these switches in the Portal.
+The Administrator configures a Form on the destination Contract or Matter type. Its **On intake form** switch chooses the Rows you answer here. **Required for creation** marks an included Row as required; only a Row under a Branch whose condition does not hold is exempt. **Visible on Portal** lets you read a Field on a record you can access; an Intake Field always has this switch on. You do not edit these switches in the Portal.
 
 A **Touchpoint** is where a Row is first collected. It is derived from those switches: Intake when On intake form is on, Creation when required but not on intake, and Record when neither is on. Legal completes Creation Rows during conversion and Record Rows on the resulting record.
 

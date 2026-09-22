@@ -9,7 +9,7 @@ Sign in as a Legal Team Member or Administrator with access to the intended work
 ## Create the record
 
 1. Open **Contracts** and select **Create contract**.
-2. Enter **Title** and select **Contract type**. Complete the shown Intake and Creation Rows from its Form. A Branch may reveal more Rows as you answer. Required Rows need an answer only while their Branch holds. Record Rows are completed after creation. **Legal Owner** starts on you. Choose another Legal Team Member or Administrator, or choose **Unassigned**.
+2. Enter **Title** and select **Contract type**. Complete the shown Intake and Creation Rows from its Form. A Branch may reveal more Rows as you answer. A required Row needs an answer; a Row under a Branch whose condition does not hold is not asked and not required. Record Rows are completed after creation. **Legal Owner** starts on you. Choose another Legal Team Member or Administrator, or choose **Unassigned**.
 3. Set **Confidential** before creating sensitive work. If the Contract belongs to broader Matter work, use the optional Matter search and select the intended Matter. A link does not copy access or other record details.
 4. Select **Create**. The app opens the new Contract. Check its title, type, Legal Owner, and new C- reference. **Cancel** creates nothing.
 
