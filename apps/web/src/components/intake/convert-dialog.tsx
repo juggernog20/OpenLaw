@@ -196,7 +196,7 @@ export function ConvertDialog({
           {
             id: "conversion.targetLabel",
             defaultMessage:
-              "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
+              "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}",
           },
           { slug },
         );
@@ -960,7 +960,7 @@ export function ConvertDialog({
                     ) : (
                       <FormattedMessage
                         id="conversion.targetLabel"
-                        defaultMessage="{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
+                        defaultMessage="{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
                         values={{ slug }}
                       />
                     )}

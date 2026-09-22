@@ -38,6 +38,7 @@ export async function saveFieldRow(
     }),
   ]);
   expect(read.statusCode, read.body).toBe(200);
+  expect(catalog.statusCode, catalog.body).toBe(200);
   const field = catalog.json().fields.find((f: { id: string }) => f.id === options.payload.fieldId);
   const row: FormRow = {
     kind: "row",
@@ -94,6 +95,7 @@ export async function removeFieldRow(
     url: `${typeUrl}/form`,
     cookies: options.cookies,
   });
+  expect(read.statusCode, read.body).toBe(200);
   const without = (form: Form): Form =>
     form
       .filter((n) => n.id !== options.fieldId)

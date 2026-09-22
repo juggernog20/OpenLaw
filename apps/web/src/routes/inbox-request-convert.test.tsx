@@ -616,7 +616,7 @@ describe("conversion built-in Rows", () => {
     ).toHaveTextContent("Requesting manager");
   });
 
-  it("lists a legacy intake answer as staying behind when the target has no Row for it", async () => {
+  it("lists a built-in answer as staying behind when the target has no Row for it", async () => {
     const user = userEvent.setup();
     const api = requestApi(
       request({

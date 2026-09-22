@@ -99,6 +99,10 @@ it("converts a pre-milestone Effective date onto the Contract after upgrade", as
       );
       await db.execute(sql`insert into request_type_fields (request_type_id, field_id, display_order)
       select rt.id, f.id, 1 from request_types rt cross join fields f where rt.slug = 'nda_request' and f.built_in_key = 'effectiveDate'`);
+      // The companion-attach offer could put a shadow row on the type itself;
+      // the join does not cascade, so the upgrade must detach it first.
+      await db.execute(sql`insert into contract_type_fields (contract_type_id, field_id, display_order, is_required)
+      select ct.id, f.id, 9, false from contract_types ct cross join fields f where ct.slug = 'nda' and f.built_in_key = 'effectiveDate'`);
       await db.execute(sql`insert into requests (id, request_type_id, requester_id, title, urgency, custom_fields)
       select 'old-convert', id, 'old-requester', 'Upgrade NDA', 'medium', '{"__intake_contract_effectiveDate":"2026-01-01"}'::jsonb from request_types where slug = 'nda_request'`);
     },

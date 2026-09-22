@@ -142,7 +142,6 @@ const attachField = async (
     payload: { fieldId, isRequired, visibleOnPortal },
   });
   expect(res.statusCode, res.body).toBe(200);
-  return res.json().attachedField as AttachedField;
 };
 
 const detachField = async (typeId: string, fieldId: string) => {

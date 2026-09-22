@@ -3195,7 +3195,7 @@
     "defaultMessage": "Some Fields exceeded the preparation limit. Complete them manually."
   },
   "conversion.targetLabel": {
-    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
+    "defaultMessage": "{slug, select, title {Title} description {Description} matter_type {Matter type} contract_type {Contract type} counterparty {Counterparty} counterparties {Counterparty} priority {Priority} needed_by {Needed by} other {Value}}"
   },
   "convert.alreadyConvertedRecord": {
     "defaultMessage": "It became {record}."

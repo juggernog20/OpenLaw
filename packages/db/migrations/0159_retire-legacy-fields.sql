@@ -54,6 +54,14 @@ WHERE custom_fields ? '__intake_contract_valueCadence';
 --> statement-breakpoint
 DROP TABLE "request_type_fields";
 --> statement-breakpoint
+-- The companion-attach offer could have attached a shadow row to a type; the
+-- join foreign keys do not cascade, so the attachments go first.
+DELETE FROM contract_type_fields WHERE field_id IN (SELECT id FROM fields WHERE slug IN ('__intake_contract_entityId','__intake_contract_counterparties','__intake_contract_effectiveDate','__intake_contract_expiryDate','__intake_contract_termType','__intake_contract_renewalPeriodMonths','__intake_contract_noticePeriodDays','__intake_contract_valueAmount','__intake_contract_valueCurrency','__intake_contract_valueCadence'));
+--> statement-breakpoint
+DELETE FROM matter_type_fields WHERE field_id IN (SELECT id FROM fields WHERE slug IN ('__intake_contract_entityId','__intake_contract_counterparties','__intake_contract_effectiveDate','__intake_contract_expiryDate','__intake_contract_termType','__intake_contract_renewalPeriodMonths','__intake_contract_noticePeriodDays','__intake_contract_valueAmount','__intake_contract_valueCurrency','__intake_contract_valueCadence'));
+--> statement-breakpoint
+DELETE FROM entity_type_fields WHERE field_id IN (SELECT id FROM fields WHERE slug IN ('__intake_contract_entityId','__intake_contract_counterparties','__intake_contract_effectiveDate','__intake_contract_expiryDate','__intake_contract_termType','__intake_contract_renewalPeriodMonths','__intake_contract_noticePeriodDays','__intake_contract_valueAmount','__intake_contract_valueCurrency','__intake_contract_valueCadence'));
+--> statement-breakpoint
 DELETE FROM fields WHERE slug IN ('__intake_contract_entityId','__intake_contract_counterparties','__intake_contract_effectiveDate','__intake_contract_expiryDate','__intake_contract_termType','__intake_contract_renewalPeriodMonths','__intake_contract_noticePeriodDays','__intake_contract_valueAmount','__intake_contract_valueCurrency','__intake_contract_valueCadence');
 --> statement-breakpoint
 ALTER TABLE "fields" DROP CONSTRAINT "fields_field_tag_check";--> statement-breakpoint
@@ -89,25 +97,27 @@ LANGUAGE sql IMMUTABLE AS $$
 $$;
 --> statement-breakpoint
 UPDATE contracts SET ai_unverified = pg_temp.rename_counterparty_key(ai_unverified),
-  analysis_human_fields = pg_temp.rename_counterparty_slugs(analysis_human_fields);
+  analysis_human_fields = pg_temp.rename_counterparty_slugs(analysis_human_fields)
+WHERE ai_unverified ? 'counterparty' OR analysis_human_fields @> '["counterparty"]'::jsonb;
 --> statement-breakpoint
 UPDATE conversion_drafts SET suggestions = pg_temp.rename_counterparty_key(suggestions),
-  conflicts = pg_temp.rename_counterparty_key(conflicts);
+  conflicts = pg_temp.rename_counterparty_key(conflicts)
+WHERE suggestions ? 'counterparty' OR conflicts ? 'counterparty';
 --> statement-breakpoint
 UPDATE contract_analysis_runs SET source_context = jsonb_set(source_context, '{suggestions}',
   pg_temp.rename_counterparty_key(source_context->'suggestions'))
 WHERE source_context->'suggestions' IS NOT NULL;
 --> statement-breakpoint
-UPDATE contract_analysis_runs SET outcome = outcome || jsonb_build_object(
+UPDATE contract_analysis_runs SET outcome = outcome || jsonb_strip_nulls(jsonb_build_object(
   'written', pg_temp.rename_counterparty_slugs(outcome->'written'),
   'kept', pg_temp.rename_counterparty_slugs(outcome->'kept'),
   'unsupported', pg_temp.rename_counterparty_slugs(outcome->'unsupported'),
   'invalid', pg_temp.rename_counterparty_slugs(outcome->'invalid')
-) || CASE WHEN outcome ? 'results' THEN jsonb_build_object('results', (
+)) || CASE WHEN outcome ? 'results' THEN jsonb_build_object('results', (
   SELECT coalesce(jsonb_agg(CASE WHEN result->>'slug' = 'counterparty'
     THEN jsonb_set(result, '{slug}', '"counterparties"') ELSE result END ORDER BY ord), '[]'::jsonb)
   FROM jsonb_array_elements(outcome->'results') WITH ORDINALITY AS elements(result, ord)
-)) ELSE '{}'::jsonb END WHERE outcome IS NOT NULL;
+)) ELSE '{}'::jsonb END WHERE outcome IS NOT NULL AND outcome::text LIKE '%"counterparty"%';
 --> statement-breakpoint
 INSERT INTO ai_field_prompts (slug, prompt, updated_at)
 SELECT 'counterparties', prompt, updated_at FROM ai_field_prompts WHERE slug = 'counterparty'

@@ -97,6 +97,7 @@ test.describe.serial("M23 deployer journey", () => {
     expect(fieldResponse.status(), await fieldResponse.text()).toBe(201);
     const field = CreatedField.parse(await fieldResponse.json()).field;
     const formRead = await page.request.get(`/api/v1/matter-types/${matterTypeId}/form`);
+    expect(formRead.ok(), await formRead.text()).toBe(true);
     const { form } = await formRead.json();
     form.push({
       kind: "row",

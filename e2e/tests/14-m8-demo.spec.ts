@@ -213,6 +213,7 @@ async function ensureDemoType(request: APIRequestContext): Promise<void> {
   expect(catalog.ok()).toBe(true);
   const seeds = CatalogFields.parse(await catalog.json()).fields;
   const formResponse = await request.get(`/api/v1/contract-types/${typeId}/form`);
+  expect(formResponse.ok(), await formResponse.text()).toBe(true);
   const { form } = await formResponse.json();
   for (const [field, isRequired] of [
     [REQUIRED_FIELD, true],
