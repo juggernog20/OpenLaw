@@ -971,7 +971,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
               403,
-              "Contributors can edit only the description and business Fields on this matter.",
+              "Business Users can edit only the description and Fields visible on the Portal on this matter.",
             );
           }
           if (body.customFields !== undefined) {

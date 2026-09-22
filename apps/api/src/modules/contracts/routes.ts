@@ -115,8 +115,8 @@ import { regionOptions, lockedRegionName } from "../regions/references.js";
  * except the per-field PATCH are Member+ — Administrators and Legal
  * Team Members equally. The list, record read, and PATCH reach one step
  * wider: a Contributor reaches contracts they hold a `contract_team`
- * row on. DD-015 then narrows their PATCH to value, effective date, and
- * business-tagged Fields; legal-tagged Fields are omitted from their
+ * row on. DD-028 then narrows their PATCH to value, effective date, and
+ * the Rows with Visible on Portal on; hidden Rows are omitted from their
  * projection. A contract a Contributor is not on answers exactly as a
  * contract that does not exist. Business Users are refused everywhere.
  *
@@ -2359,7 +2359,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
               403,
-              "Business Users can edit only the value, effective date, department, region, and business Fields on this Contract.",
+              "Business Users can edit only the value, effective date, department, region, and Fields visible on the Portal on this Contract.",
             );
           }
           if (body.customFields !== undefined) {
