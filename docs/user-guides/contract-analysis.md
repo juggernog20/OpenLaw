@@ -14,7 +14,7 @@ Analysis can start automatically when the target's text becomes ready or a ready
 
 User and Entity Fields stay outside Analysis, even if they have an old saved prompt. They do not appear in a new run's results or count towards its outcome. Set those Fields yourself on the Contract.
 
-A finished run writes its answers onto the Contract itself. Read them where the values live: a core value on **Overview**, a Field on **Fields**, a milestone in **Key dates**. Each value the run wrote carries an **Unverified** marker beside it. A value the run could not support, could not use, or chose to keep writes nothing, so a Row with no marker is a Row the run left alone. A Counterparty the run could not link stays unlinked: Analysis needs one matching live Counterparty and no existing Counterparty link, and it never creates one.
+A finished run writes its answers onto the Contract itself. Read them where the values live: a built-in Row on **Overview**, a Field on **Fields**, a milestone in **Key dates**. Each value the run wrote carries an **Unverified** marker beside it. A value the run could not support, could not use, or chose to keep writes nothing, so a Row with no marker is a Row the run left alone. A Counterparty the run could not link stays unlinked: Analysis needs one matching live Counterparty and no existing Counterparty link, and it never creates one.
 
 Analysis also looks for named Contract milestones with explicit calendar dates in Document text, such as a price review or an option deadline. A written milestone is added to the **Key dates** section with an **Unverified** marker. A milestone that matches an existing Key date or a term date is kept, and adds nothing.
 
@@ -36,13 +36,13 @@ A run's Version and evidence describe its own input. Uploading a newer Version d
 
 ## Analysis after Request conversion
 
-An Administrator can enable **Fill Contract Fields after conversion** independently of both Convert dialog preparation switches. Successful conversion commits first, then one durable Analysis run reads the confirmed Type's current core and prompted catalog Fields with eligible original Request context and supporting sources. A Document Version promoted from the Request does not queue a separate automatic run. The values the run fills appear on the record with their **Unverified** markers; a failure is reported in the **Fields** section header. Conversion draft values can already await confirmation even when no Analysis run has run.
+An Administrator can enable **Fill Contract Fields after conversion** independently of both Convert dialog preparation switches. Successful conversion commits first, then one durable Analysis run reads the confirmed Type's current built-in Rows and prompted catalog Fields with eligible original Request context and supporting sources. A Document Version promoted from the Request does not queue a separate automatic run. The values the run fills appear on the record with their **Unverified** markers; a failure is reported in the **Fields** section header. Conversion draft values can already await confirmation even when no Analysis run has run.
 
 If this run fails, the Contract remains created. Check the current Type, sources and settings, then select **Retry Request-context Analysis**. Retry reads current sources and Type. Human values, confirmations and explicit clears still win. Disabling the switch or connector prevents new application, while saved evidence and individual confirm/edit remain usable.
 
 ## If Analysis cannot finish
 
-If **Run analysis** is unavailable, check your role, the Contract's Ended/archived state, whether a run is pending, and the AI connector. If the control is absent altogether, the connector is disabled, no values are marked, and the Contract has no Analysis run. Disabling the connector does not erase existing unverified values.
+If **Run analysis** is unavailable, check your role, the Contract's Ended/archived state, whether a run is pending, and the AI connector. If the connector is disabled, no new run can start. Existing **Unverified** values keep their row controls, and **History** keeps the runs. Disabling the connector does not erase existing unverified values.
 
 A refusal can also mean there is no primary Document or its target text is not ready or is empty. Check [Document reading and processing](document-previews.md). A failed run reports its reason in the **Fields** section header. Resolve the processing or provider problem, then request another run; an Analysis failure does not justify confirming unchecked values. Ask an Administrator to check [the connector and Field prompts](configure-analysis.md) when the failure concerns configuration.
 
