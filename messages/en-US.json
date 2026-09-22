@@ -3227,9 +3227,6 @@
   "convert.priority": {
     "defaultMessage": "Priority"
   },
-  "convert.staysBehind": {
-    "defaultMessage": "Does not carry into the {module, select, matter {matter} other {contract}}"
-  },
   "convert.submit": {
     "defaultMessage": "Convert to {module, select, matter {matter} other {contract}}"
   },
