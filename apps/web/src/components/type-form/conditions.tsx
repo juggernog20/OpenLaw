@@ -51,7 +51,11 @@ export function Conditions({
   }
   return (
     <div
-      className="flex flex-col gap-3 px-4 py-3"
+      // Its own panel, drawn over any ancestor Branch's left rule: the
+      // editor sits inside those Branches' children, so their rules
+      // would otherwise run through it (2026-09-22, from live review).
+      // `relative` puts it in the same painting layer as those rules.
+      className="relative flex flex-col gap-3 bg-raised px-4 py-3"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           e.stopPropagation();
