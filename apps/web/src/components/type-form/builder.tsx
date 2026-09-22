@@ -571,7 +571,7 @@ export function TypeFormBuilder({
           </div>
         ) : (
           <div
-            className="relative before:pointer-events-none before:absolute before:inset-y-0 before:start-(--branch-indent) before:w-0.5 before:bg-border-default"
+            className="relative"
             style={{ "--branch-indent": `${24 + depth * 24}px` } as React.CSSProperties}
           >
             <div
@@ -626,7 +626,9 @@ export function TypeFormBuilder({
             <div
               role="group"
               aria-label={t("Children of {branch}", { branch: name(node) })}
-              className="min-h-8"
+              // The left rule marks the children only, so an open
+              // condition editor above them stays clear of it.
+              className="relative min-h-8 before:pointer-events-none before:absolute before:inset-y-0 before:start-(--branch-indent) before:w-0.5 before:bg-border-default"
               onDragOver={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
