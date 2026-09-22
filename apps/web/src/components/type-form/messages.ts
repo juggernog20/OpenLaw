@@ -89,6 +89,7 @@ const messages = defineMessages({
   Counterparties: { id: "typeForm.counterparties", defaultMessage: "Counterparties" },
   Close: { id: "typeForm.close", defaultMessage: "Close" },
   Cancel: { id: "typeForm.cancel", defaultMessage: "Cancel" },
+  "{row}: {switch}": { id: "typeForm.row-switch-name", defaultMessage: "{row}: {switch}" },
   "Add another condition": {
     id: "typeForm.add-another-condition",
     defaultMessage: "Add another condition",

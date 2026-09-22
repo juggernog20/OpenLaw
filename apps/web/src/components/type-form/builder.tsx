@@ -418,7 +418,7 @@ export function TypeFormBuilder({
         checked={!!row[key]}
         disabled={busy}
         aria-disabled={!!reason || undefined}
-        aria-label={`${name(row)}: ${label}`}
+        aria-label={t("{row}: {switch}", { row: name(row), switch: label })}
         aria-describedby={`${reason ? `reason-${control} ` : ""}note-${control}`}
         onCheckedChange={(checked) => {
           if (reason) return;
