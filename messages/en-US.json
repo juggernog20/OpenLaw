@@ -11711,8 +11711,8 @@
   "typeForm.region": {
     "defaultMessage": "Region"
   },
-  "typeForm.remove-branch-keep-children-here": {
-    "defaultMessage": "Remove branch · Keep children here"
+  "typeForm.remove-condition": {
+    "defaultMessage": "Remove condition"
   },
   "typeForm.removeCondition": {
     "defaultMessage": "Remove condition {number}"

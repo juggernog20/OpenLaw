@@ -161,6 +161,36 @@ describe("the type Form tab", () => {
     await waitFor(() => expect(writes).toHaveLength(2));
   });
 
+  it("removes an unfinished Branch and refuses to stack a second draft on it", async () => {
+    const { user, writes } = setupForm();
+    await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
+    await waitFor(() => expect(writes).toHaveLength(1));
+    const header = screen.getByRole("heading", { name: "Form" }).parentElement!;
+    await user.click(within(header).getByRole("button", { name: "Add condition" }));
+    // An unfinished Branch reads "Add a condition" until it is complete.
+    expect(await screen.findByRole("button", { name: "Move Add a condition" })).toBeInTheDocument();
+    // A second draft cannot stack on the first: the tree already cannot
+    // be saved, and a deeper draft is how it became unclearable. Both
+    // the root's button and the Branch's own say so.
+    for (const add of screen.getAllByRole("button", { name: "Add condition" })) {
+      expect(add).toHaveAttribute("aria-disabled", "true");
+    }
+    await user.click(within(header).getByRole("button", { name: "Add condition" }));
+    expect(screen.getAllByRole("button", { name: "Move Add a condition" })).toHaveLength(1);
+    // Removing the unfinished Branch works, even though the removal is
+    // itself a save the incomplete tree cannot make.
+    await user.click(screen.getByRole("button", { name: "Actions for Add a condition" }));
+    await user.click(screen.getByRole("menuitem", { name: "Remove condition" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Move Add a condition" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(within(header).getByRole("button", { name: "Add condition" })).not.toHaveAttribute(
+      "aria-disabled",
+    );
+  });
+
   it("asks AND or OR when the second condition is added and keeps one join for the Branch", async () => {
     const { user, read } = setupForm();
     await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
@@ -296,7 +326,7 @@ it("moves out and removes a Branch while keeping its children", async () => {
   await waitFor(() => expect(read().at(-1)?.id).toBe("expiry_date"));
   expect(read().at(-2)).toMatchObject({ kind: "branch", children: [] });
   await user.click(screen.getByRole("button", { name: /Actions for Show when all of/ }));
-  await user.click(screen.getByRole("menuitem", { name: /Remove branch/ }));
+  await user.click(screen.getByRole("menuitem", { name: "Remove condition" }));
   await waitFor(() => expect(read().some((n) => n.kind === "branch")).toBe(false));
   expect(read().at(-1)?.id).toBe("expiry_date");
 });
@@ -380,7 +410,7 @@ it("keeps an edited Branch draft after a failed write and resends it on Retry", 
 it("removes a populated Branch without detaching its children", async () => {
   const { user, read } = setupForm("contract", false, conditional);
   await user.click(await screen.findByRole("button", { name: /Actions for Show when all of/ }));
-  await user.click(screen.getByRole("menuitem", { name: /Remove branch/ }));
+  await user.click(screen.getByRole("menuitem", { name: "Remove condition" }));
   await waitFor(() => expect(read().at(-1)?.id).toBe("expiry_date"));
   expect(read().some((n) => n.kind === "branch")).toBe(false);
 });

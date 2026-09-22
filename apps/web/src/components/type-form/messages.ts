@@ -187,10 +187,7 @@ const messages = defineMessages({
     defaultMessage: "Preview intake form",
   },
   Record: { id: "typeForm.record", defaultMessage: "Record" },
-  "Remove branch \u00b7 Keep children here": {
-    id: "typeForm.remove-branch-keep-children-here",
-    defaultMessage: "Remove branch \u00b7 Keep children here",
-  },
+  "Remove condition": { id: "typeForm.remove-condition", defaultMessage: "Remove condition" },
   "Required for creation": {
     id: "typeForm.required-for-creation",
     defaultMessage: "Required for creation",

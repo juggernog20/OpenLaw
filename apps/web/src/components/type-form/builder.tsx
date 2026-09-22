@@ -133,9 +133,9 @@ export function TypeFormBuilder({
       <StatusNote status={notes[key]?.status ?? "idle"} detail={notes[key]?.detail} />
     </span>
   );
-  /** The first Branch whose condition is still half-written, if any. */
-  function incompleteBranch(next: Form): FormBranch | undefined {
-    return flatten(next).find(
+  /** Every Branch whose condition is still half-written. */
+  function incompleteBranches(next: Form): FormBranch[] {
+    return flatten(next).filter(
       (n): n is FormBranch =>
         n.kind === "branch" &&
         (!n.conditions.length ||
@@ -143,6 +143,9 @@ export function TypeFormBuilder({
             (c) => !c.rowRef || (c.operator !== "is_set" && (c.value === null || c.value === "")),
           )),
     );
+  }
+  function incompleteBranch(next: Form): FormBranch | undefined {
+    return incompleteBranches(next)[0];
   }
   function refusal(next: Form): string | undefined {
     if (incompleteBranch(next)) return t("Complete the Branch condition first");
@@ -160,13 +163,20 @@ export function TypeFormBuilder({
   }
   async function commit(next: Form, key: string, message?: string) {
     if (busyRef.current) return false;
-    // A half-written condition is unfinished, not wrong. Its own editor
-    // keeps it local and says nothing while the person is still writing
-    // it; every other control still explains why its change cannot save
-    // (2026-09-22, from live review).
-    const unfinished = incompleteBranch(next);
-    if (unfinished && key === `${unfinished.id}-condition`) {
-      note(key, "idle");
+    // The whole Form goes in one write, so a tree holding a half-written
+    // Branch cannot be saved at all. The change still applies locally:
+    // otherwise a Branch nobody can save is also a Branch nobody can
+    // remove, and the person is stuck with it (2026-09-22, from live
+    // review). Clearing one, and the draft's own editor, say nothing,
+    // because unfinished is not wrong. Anything else explains why it
+    // did not save.
+    const unfinished = incompleteBranches(next);
+    if (unfinished.length) {
+      const clearing = unfinished.length < incompleteBranches(form).length;
+      const own = unfinished.some((branch) => key === `${branch.id}-condition`);
+      setForm(next);
+      if (clearing || own) note(key, "idle");
+      else note(key, "error", t("Complete the Branch condition first"));
       return false;
     }
     const reason = refusal(next);
@@ -174,7 +184,15 @@ export function TypeFormBuilder({
       note(key, "error", reason);
       return false;
     }
-    if (JSON.stringify(next) === JSON.stringify(saved.current)) return true;
+    // Nothing to send, but the tree on screen may still differ: removing
+    // a Branch that was only ever local lands exactly back on the saved
+    // tree, and without this that removal was silently dropped
+    // (2026-09-22, from live review).
+    if (JSON.stringify(next) === JSON.stringify(saved.current)) {
+      setForm(next);
+      note(key, "idle");
+      return true;
+    }
     busyRef.current = true;
     setBusy(true);
     note(key, "saving");
@@ -270,7 +288,9 @@ export function TypeFormBuilder({
     void commit(next, `${node.id}-move`).then(() => focusGrip(node.id));
   }
   function addBranch(parent: string | null) {
-    if (busyRef.current) return;
+    // One draft at a time: a second unfinished Branch only deepens a
+    // tree that already cannot be saved.
+    if (busyRef.current || incompleteBranch(form)) return;
     restoreFocus.current = document.activeElement as HTMLElement;
     const branch: FormBranch = {
       kind: "branch",
@@ -349,7 +369,10 @@ export function TypeFormBuilder({
           )}
           {node.kind === "branch" && (
             <>
-              <DropdownMenuItem onSelect={() => addBranch(node.id)}>
+              <DropdownMenuItem
+                disabled={!!incompleteBranch(form)}
+                onSelect={() => addBranch(node.id)}
+              >
                 {t("Add condition inside")}
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -357,7 +380,7 @@ export function TypeFormBuilder({
                   void commit(replaceNode(form, node.id, node.children), `${node.id}-move`)
                 }
               >
-                {t("Remove branch · Keep children here")}
+                {t("Remove condition")}
               </DropdownMenuItem>
             </>
           )}
@@ -720,9 +743,27 @@ export function TypeFormBuilder({
             </Button>
           )}
         </div>
-        <Button variant="secondary" size="sm" disabled={busy} onClick={() => addBranch(parent)}>
-          {t("Add condition")}
-        </Button>
+        {(() => {
+          // One draft at a time. The reason rides the button itself, as
+          // a locked switch's does.
+          const drafting = !!incompleteBranch(form);
+          const add = (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              aria-disabled={drafting || undefined}
+              onClick={() => addBranch(parent)}
+            >
+              {t("Add condition")}
+            </Button>
+          );
+          return drafting ? (
+            <Tooltip content={t("Complete the Branch condition first")}>{add}</Tooltip>
+          ) : (
+            add
+          );
+        })()}
         {parent === null && module !== "entity" && (
           <Button
             variant="secondary"
