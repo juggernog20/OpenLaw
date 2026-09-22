@@ -31,12 +31,15 @@ export function Switch(
       aria-checked={checked}
       disabled={disabled}
       id={id}
+      // The rest goes first so a wrapper such as Tooltip's trigger can
+      // add its pointer and focus handlers, while the toggle stays the
+      // click handler.
+      {...aria}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
         "relative h-5 w-9 shrink-0 rounded-full before:absolute before:inset-x-0 before:-inset-y-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60",
         checked ? "bg-cta-primary" : "bg-control",
       )}
-      {...aria}
     >
       <span
         aria-hidden="true"

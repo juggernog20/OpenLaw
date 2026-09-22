@@ -40,6 +40,28 @@ describe("the type Form tab", () => {
     expect(moves.at(-2)).toHaveAccessibleName("Move Business justification");
   });
 
+  it("keeps a lock reason in a tooltip and the root controls in the header", async () => {
+    const { user } = setupForm();
+    const locked = await screen.findByRole("switch", { name: "Title: On intake form" });
+    expect(locked).toHaveAttribute("aria-disabled", "true");
+    expect(locked).toHaveAccessibleDescription(/Position and switches are fixed/);
+    for (const reason of screen.getAllByText("Position and switches are fixed")) {
+      expect(reason).toHaveClass("sr-only");
+    }
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    await user.hover(locked);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Position and switches are fixed");
+    await user.unhover(locked);
+    await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument());
+    act(() => locked.focus());
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Position and switches are fixed");
+    const header = screen.getByRole("heading", { name: "Form" }).parentElement!;
+    for (const name of ["Attach Field", "Create Field", "Add condition", "Preview intake form"]) {
+      expect(within(header).getByRole("button", { name })).toBeInTheDocument();
+    }
+    expect(within(header).queryByText("Changes apply immediately")).not.toBeInTheDocument();
+  });
+
   it("derives touchpoints immediately and explains the Portal and User locks", async () => {
     const { user, writes } = setupForm();
     await user.click(
@@ -80,7 +102,7 @@ describe("the type Form tab", () => {
     const { user, read, router, route } = setupForm();
     await user.click(await screen.findByRole("switch", { name: "Term type: On intake form" }));
     await user.click(screen.getByRole("switch", { name: "Expiry date: On intake form" }));
-    await user.click(screen.getByRole("button", { name: "Add branch" }));
+    await user.click(screen.getByRole("button", { name: "Add condition" }));
     await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
     await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
     await waitFor(() => expect(read().at(-1)?.kind).toBe("branch"));
@@ -196,7 +218,7 @@ it("drops a Row into a Branch through the same whole-tree write", async () => {
 
 it("keeps incomplete Branches local and discards them with Escape", async () => {
   const { user, writes } = setupForm("entity");
-  await user.click(await screen.findByRole("button", { name: "Add branch" }));
+  await user.click(await screen.findByRole("button", { name: "Add condition" }));
   expect(screen.getByRole("combobox", { name: "Row" })).toHaveFocus();
   await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "justification");
   expect(writes).toHaveLength(0);
@@ -235,7 +257,7 @@ it.each(["contract", "matter", "entity"] as const)(
 
 it("keeps a new Branch draft and its refusal visible after a failed write", async () => {
   const { user } = setupForm("contract", true);
-  await user.click(await screen.findByRole("button", { name: "Add branch" }));
+  await user.click(await screen.findByRole("button", { name: "Add condition" }));
   await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "term_type");
   await user.selectOptions(screen.getByRole("combobox", { name: "Value" }), "fixed");
   expect(await screen.findByText("The Form changed. Try again.")).toBeInTheDocument();
@@ -386,7 +408,7 @@ it("loads later Entity condition options and stops on a repeated registry cursor
       nextCursor: "same",
     });
   });
-  await user.click(await screen.findByRole("button", { name: "Add branch" }));
+  await user.click(await screen.findByRole("button", { name: "Add condition" }));
   await user.selectOptions(screen.getByRole("combobox", { name: "Row" }), "entity");
   expect(await screen.findByRole("option", { name: "Later entity" })).toBeInTheDocument();
   expect(screen.getByRole("option", { name: "First entity" })).toBeInTheDocument();

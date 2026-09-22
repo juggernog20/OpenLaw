@@ -11459,14 +11459,14 @@
   "typeForm.add-a-row-above-this-branch-first": {
     "defaultMessage": "Add a Row above this Branch first"
   },
-  "typeForm.add-branch": {
-    "defaultMessage": "Add branch"
-  },
-  "typeForm.add-branch-inside": {
-    "defaultMessage": "Add branch inside"
+  "typeForm.add-another-condition": {
+    "defaultMessage": "Add another condition"
   },
   "typeForm.add-condition": {
     "defaultMessage": "Add condition"
+  },
+  "typeForm.add-condition-inside": {
+    "defaultMessage": "Add condition inside"
   },
   "typeForm.add-row-into-branch": {
     "defaultMessage": "Add row into branch"
@@ -11509,9 +11509,6 @@
   },
   "typeForm.cancel": {
     "defaultMessage": "Cancel"
-  },
-  "typeForm.changes-apply-immediately": {
-    "defaultMessage": "Changes apply immediately"
   },
   "typeForm.choose-a-valid-value-for-this-condition": {
     "defaultMessage": "Choose a valid value for this condition"
@@ -11737,6 +11734,9 @@
   },
   "typeForm.row": {
     "defaultMessage": "Row"
+  },
+  "typeForm.row-switch-name": {
+    "defaultMessage": "{row}: {switch}"
   },
   "typeForm.rowActions": {
     "defaultMessage": "Actions for {row}"

@@ -20,6 +20,7 @@ import { isFieldRow, type ApiField, type FieldRow } from "../../lib/field-catalo
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
+import { Tooltip } from "../ui/tooltip";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import {
   DropdownMenu,
@@ -348,7 +349,7 @@ export function TypeFormBuilder({
           {node.kind === "branch" && (
             <>
               <DropdownMenuItem onSelect={() => addBranch(node.id)}>
-                {t("Add branch inside")}
+                {t("Add condition inside")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() =>
@@ -412,27 +413,33 @@ export function TypeFormBuilder({
           : key === "onIntakeForm" && row.fieldType === "user" && row.isRequired
             ? t("Turn off Required for creation first")
             : undefined;
+    const toggle = (
+      <Switch
+        checked={!!row[key]}
+        disabled={busy}
+        aria-disabled={!!reason || undefined}
+        aria-label={t("{row}: {switch}", { row: name(row), switch: label })}
+        aria-describedby={`${reason ? `reason-${control} ` : ""}note-${control}`}
+        onCheckedChange={(checked) => {
+          if (reason) return;
+          const next = {
+            ...row,
+            [key]: checked,
+            ...(key === "onIntakeForm" && checked ? { visibleOnPortal: true } : {}),
+          };
+          void commit(replaceNode(form, row.id, [next]), control);
+        }}
+      />
+    );
     return cell(
       label,
       <>
-        <Switch
-          checked={!!row[key]}
-          disabled={busy}
-          aria-disabled={!!reason || undefined}
-          aria-label={`${name(row)}: ${label}`}
-          aria-describedby={`${reason ? `reason-${control} ` : ""}note-${control}`}
-          onCheckedChange={(checked) => {
-            if (reason) return;
-            const next = {
-              ...row,
-              [key]: checked,
-              ...(key === "onIntakeForm" && checked ? { visibleOnPortal: true } : {}),
-            };
-            void commit(replaceNode(form, row.id, [next]), control);
-          }}
-        />
+        {/* A locked switch keeps its not-allowed cursor and shows the
+            reason as a tooltip on hover or focus. The sr-only copy is
+            the accessible description at rest (DES-090 point 6). */}
+        {reason ? <Tooltip content={reason}>{toggle}</Tooltip> : toggle}
         {reason && (
-          <span id={`reason-${control}`} className="text-xs text-muted">
+          <span id={`reason-${control}`} className="sr-only">
             {reason}
           </span>
         )}
@@ -608,17 +615,20 @@ export function TypeFormBuilder({
               <div className={drop === `${node.id}-inside` ? "outline-2 outline-accent" : ""}>
                 {tree(node.children, depth + 1)}
               </div>
-              {footer(node.id)}
+              <div className="flex flex-wrap items-start gap-2 p-4">{toolbar(node.id)}</div>
             </div>
           </div>
         )}
       </div>
     ));
   }
-  function footer(parent: string | null) {
+  /** The attach, create and branch controls for one level. The root
+   * set lives in the card header; a Branch shows its own set below its
+   * children (DES-090 point 7). */
+  function toolbar(parent: string | null) {
     const key = parent ?? "root";
     return (
-      <div className="flex flex-wrap items-start gap-2 p-4">
+      <>
         <div>
           <AttachMenu
             fields={available}
@@ -650,11 +660,10 @@ export function TypeFormBuilder({
           )}
         </div>
         <Button variant="secondary" size="sm" disabled={busy} onClick={() => addBranch(parent)}>
-          {t("Add branch")}
+          {t("Add condition")}
         </Button>
         {parent === null && module !== "entity" && (
           <Button
-            className="ms-auto"
             variant="secondary"
             size="sm"
             disabled={busy || !!refusal(form)}
@@ -666,7 +675,7 @@ export function TypeFormBuilder({
             {t("Preview intake form")}
           </Button>
         )}
-      </div>
+      </>
     );
   }
   return (
@@ -674,10 +683,10 @@ export function TypeFormBuilder({
       aria-label={t("Form")}
       className="@container/form min-w-0 rounded-card border border-border-default bg-raised"
     >
-      <header className="flex min-h-11 flex-wrap items-center gap-2 border-b border-border-default px-4">
+      <header className="flex min-h-11 flex-wrap items-center gap-2 border-b border-border-default px-4 py-1.5">
         <h3 className="font-semibold">{t("Form")}</h3>
         <span className="text-sm text-muted">{typeName}</span>
-        <span className="ms-auto text-sm text-muted">{t("Changes apply immediately")}</span>
+        <div className="ms-auto flex flex-wrap items-start gap-2">{toolbar(null)}</div>
       </header>
       <div
         className={`hidden min-h-10 items-center gap-2 border-b border-border-muted bg-section-header px-4 text-xs font-semibold @min-[848px]/form:grid ${columns}`}
@@ -694,7 +703,6 @@ export function TypeFormBuilder({
         {tree(form)}
         {!form.length && <p className="p-4 text-muted">{t("No Fields attached")}</p>}
       </div>
-      {footer(null)}
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>

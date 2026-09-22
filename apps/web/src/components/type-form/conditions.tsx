@@ -161,7 +161,7 @@ export function Conditions({
             })
           }
         >
-          {t("Add condition")}
+          {t("Add another condition")}
         </Button>
       </fieldset>
     </div>

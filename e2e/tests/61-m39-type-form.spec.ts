@@ -142,7 +142,7 @@ test("NDA Branch answers reach the converted Contract and its Portal record", as
     await expect(
       page.getByRole("switch", { name: "Governing law: Visible on Portal" }),
     ).toBeChecked();
-    await page.getByRole("button", { name: "Add branch", exact: true }).click();
+    await page.getByRole("button", { name: "Add condition", exact: true }).click();
     await page.getByRole("combobox", { name: "Row", exact: true }).selectOption("term_type");
     await saveForm(page, formPath, async () => {
       await page.getByRole("combobox", { name: "Value", exact: true }).selectOption("fixed");
