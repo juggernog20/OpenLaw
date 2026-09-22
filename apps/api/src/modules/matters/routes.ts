@@ -697,7 +697,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matterTypes: types.map((type, index) => {
           const visibleSlugs = new Set(
             attached[index]!.filter(
-              (field) => request.user.role !== "business_user" || field.fieldTag === "business",
+              (field) => request.user.role !== "business_user" || field.visibleOnPortal,
             ).map((field) => field.slug),
           );
           return {
@@ -971,7 +971,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           if (Object.keys(body).some((key) => !allowed.has(key))) {
             throw httpError(
               403,
-              "Contributors can edit only the description and business Fields on this matter.",
+              "Business Users can edit only the description and Fields visible on the Portal on this matter.",
             );
           }
           if (body.customFields !== undefined) {

@@ -269,13 +269,13 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
           record.typeId,
         );
         for (const field of fields) {
-          if (field.fieldTag !== "business") continue;
+          if (!field.visibleOnPortal) continue;
           keys.push(`field.${field.slug}`);
           if (field.fieldType === "entity") entityKeys.push(`field.${field.slug}`);
         }
       }
 
-      // Field tags and reference access can change after an append. Apply today's
+      // Row visibility and reference access can change after an append. Apply today's
       // projection before paging, so a now-private change leaves no row or cursor.
       const changed = sql`coalesce((select jsonb_object_agg(change.key,
       jsonb_build_object('from', change.value->'from', 'to', change.value->'to'))

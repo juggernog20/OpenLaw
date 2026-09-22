@@ -760,7 +760,6 @@ export function TypeFormBuilder({
         <FieldEditorDialog
           target={fieldEditor.target}
           module={module}
-          hideTag
           onOpenChange={(open) => {
             if (!open) setFieldEditor(null);
           }}

@@ -62,6 +62,7 @@ function field(
     isRequired: false,
     ...overrides,
     fieldTag: overrides.fieldTag ?? "business",
+    visibleOnPortal: overrides.visibleOnPortal ?? true,
   };
 }
 

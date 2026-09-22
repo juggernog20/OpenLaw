@@ -7,6 +7,8 @@ import {
   activityLog,
   and,
   contractTeam,
+  contractTypeFields,
+  matterTypeFields,
   matterTeam,
   sql,
   contracts,
@@ -282,15 +284,15 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
     const staff = `/api/v1/${module}s/${record.number}`;
     const path = `/api/v1/portal/${module}s/${record.number}/work`;
     const slugs: string[] = [];
-    for (const fieldTag of ["business", "legal"]) {
+    for (const visibleOnPortal of [true, false]) {
       const field = await harness.app.inject({
         method: "POST",
         url: "/api/v1/fields",
         cookies: admin,
         payload: {
-          displayName: `${module} ${fieldTag} value`,
+          displayName: `${module} ${visibleOnPortal ? "visible" : "hidden"} value`,
           moduleScope: module,
-          fieldTag,
+          fieldTag: visibleOnPortal ? "legal" : "business",
           fieldType: "number",
         },
       });
@@ -303,6 +305,11 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
         payload: { fieldId: field.json().field.id },
       });
       expect(attach.statusCode, attach.body).toBe(201);
+      const join = module === "contract" ? contractTypeFields : matterTypeFields;
+      await harness.db
+        .update(join)
+        .set({ visibleOnPortal })
+        .where(eq(join.fieldId, field.json().field.id));
     }
     const edit = await harness.app.inject({
       method: "PATCH",
@@ -1150,7 +1157,7 @@ it("keeps Portal comment reads, mentions and unread markers within the shared au
   ).toBe(200);
 });
 
-it("removes historical Field edits when the Field becomes legal-only", async () => {
+it("removes historical Field edits when its Row is hidden on the Portal", async () => {
   const record = await create();
   await harness.app.inject({
     method: "POST",
@@ -1192,13 +1199,20 @@ it("removes historical Field edits when the Field becomes legal-only", async () 
       cookies: business,
     });
   expect((await history()).body).toContain("A previously shared value");
-  const retag = await harness.app.inject({
-    method: "PATCH",
-    url: `/api/v1/fields/${id}`,
+  const form = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/contract-types/${contractTypeId}/form`,
     cookies: admin,
-    payload: { fieldTag: "legal" },
   });
-  expect(retag.statusCode, retag.body).toBe(200);
+  const tree = form.json().form;
+  tree.find((node: { id: string }) => node.id === id).visibleOnPortal = false;
+  const hidden = await harness.app.inject({
+    method: "PUT",
+    url: `/api/v1/contract-types/${contractTypeId}/form`,
+    cookies: admin,
+    payload: { form: tree },
+  });
+  expect(hidden.statusCode, hidden.body).toBe(200);
   expect((await history()).json()).toEqual({ entries: [], nextCursor: null });
 });
 

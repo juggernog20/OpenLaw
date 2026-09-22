@@ -1378,6 +1378,14 @@ describe("the sentences a reader gets", () => {
     expect(several.sentence).toBe("Nadia Counsel changed 2 fields");
   });
 
+  it("names the Row visibility switch in activity changes", () => {
+    const narration = narrate("field.updated", {
+      displayName: "Context",
+      changed: { visibleOnPortal: { from: true, to: false } },
+    });
+    expect(narration.changes).toEqual([{ label: "Visible on Portal", from: "Yes", to: "No" }]);
+  });
+
   it("counts each reminder lead time in days, day-of in words (#322)", () => {
     // A bare "7, 1, and 0" says nothing about what the numbers count.
     const narration = narrate("org_settings.updated", {

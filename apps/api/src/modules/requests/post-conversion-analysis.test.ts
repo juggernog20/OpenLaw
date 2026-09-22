@@ -20,6 +20,7 @@ import {
   requests,
   requestTypes,
 } from "@openlaw/db";
+import { requestAnalysisEvidenceReader } from "../contract-analysis/request-evidence.js";
 import { FakeAiProvider, FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
 import type { AiExtraction } from "../../lib/ai/provider.js";
 import { startHarness, TEST_ADMIN, type TestHarness } from "../../testing/harness.js";
@@ -578,7 +579,7 @@ it("renews an active worker lease before a sweep can dispatch a competing extrac
   expect(ready!.state).toBe("ready");
 });
 
-it("omits Legal Field names and Analysis outcomes from Portal work", async () => {
+it("omits hidden Row names and Analysis outcomes from Portal work", async () => {
   const slug = "private_strategy";
   const [field] = await harness.db
     .insert(fields)
@@ -587,13 +588,17 @@ it("omits Legal Field names and Analysis outcomes from Portal work", async () =>
       displayName: "Private strategy",
       moduleScope: "contract",
       fieldType: "text",
-      fieldTag: "legal",
+      fieldTag: "business",
       aiPrompt: "Extract the effective date wording.",
     })
     .returning();
-  await harness.db
-    .insert(contractTypeFields)
-    .values({ typeId, fieldId: field!.id, displayOrder: 1001, isRequired: false });
+  await harness.db.insert(contractTypeFields).values({
+    typeId,
+    fieldId: field!.id,
+    displayOrder: 1001,
+    isRequired: false,
+    visibleOnPortal: false,
+  });
   const { contract, runs } = await convert({}, async (id) => {
     answers[slug] = {
       value: "October 1",
@@ -622,6 +627,27 @@ it("omits Legal Field names and Analysis outcomes from Portal work", async () =>
   expect(contributor.statusCode, contributor.body).toBe(200);
   expect(contributor.body).not.toContain(slug);
   expect(contributor.json().work.customFields).not.toHaveProperty(slug);
+  const [run] = await harness.db
+    .select()
+    .from(contractAnalysisRuns)
+    .where(eq(contractAnalysisRuns.id, runs[0]!.id));
+  const user = { ...viewer!, role: "business_user" as const };
+  expect(await (await requestAnalysisEvidenceReader(harness.db, user, run!))(slug)).toMatchObject({
+    authorized: false,
+    available: false,
+  });
+  await harness.db
+    .update(contractTypeFields)
+    .set({ visibleOnPortal: true })
+    .where(eq(contractTypeFields.fieldId, field!.id));
+  expect(await (await requestAnalysisEvidenceReader(harness.db, user, run!))(slug)).toMatchObject({
+    authorized: true,
+    available: true,
+  });
+  await harness.db
+    .update(contractTypeFields)
+    .set({ visibleOnPortal: false })
+    .where(eq(contractTypeFields.fieldId, field!.id));
   // Older summaries may retain classification lists without per-target results.
   await harness.db
     .update(contractAnalysisRuns)
@@ -846,6 +872,22 @@ it("queues Matter Record Rows with bounded dispatch, recovers lost asks, and ser
     available: true,
     citations: [{ quote: "supplier needs a response" }],
   });
+  const businessEvidence = () =>
+    harness.app.inject({
+      url: `/api/v1/matters/${matter.number}/conversion-evidence/field:matter_record`,
+      cookies: cast.requesterCookies,
+    });
+  expect((await businessEvidence()).json().available).toBe(true);
+  await harness.db
+    .update(matterTypeFields)
+    .set({ visibleOnPortal: false })
+    .where(eq(matterTypeFields.typeId, matter.matterTypeId));
+  expect((await businessEvidence()).json()).toEqual({ available: false, citations: [] });
+  const legalEvidence = await harness.app.inject({
+    url: `/api/v1/matters/${matter.number}/conversion-evidence/field:matter_record`,
+    cookies: cast.memberCookies,
+  });
+  expect(legalEvidence.json().available).toBe(true);
   const calls = provider.extractions.length;
   await executeMatter(run!.id);
   expect(provider.extractions).toHaveLength(calls);

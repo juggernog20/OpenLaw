@@ -8,12 +8,9 @@ import { problem as readProblem } from "../lib/problem";
 import {
   FIELD_TYPES,
   SELECT_TYPES,
-  TAGS,
   fieldRow,
   typeLabel,
-  tagLabel,
   type FieldType,
-  type Tag,
   type ModuleScope,
   type FieldRow,
 } from "../lib/field-catalog";
@@ -42,7 +39,6 @@ interface EditorDraft {
   name: string;
   description: string;
   fieldType: FieldType | "";
-  tag: Tag;
   optionsText: string;
   aiPrompt: string;
   aiAnswerStyle: AiAnswerStyle | null;
@@ -54,7 +50,6 @@ function draftOf(target: FieldRow | null): EditorDraft {
       name: "",
       description: "",
       fieldType: "",
-      tag: "business",
       optionsText: "",
       aiPrompt: "",
       aiAnswerStyle: null,
@@ -64,7 +59,6 @@ function draftOf(target: FieldRow | null): EditorDraft {
     name: target.displayName,
     description: target.description ?? "",
     fieldType: target.fieldType,
-    tag: target.fieldTag,
     optionsText: (target.options ?? []).join("\n"),
     aiPrompt: target.aiPrompt ?? "",
     aiAnswerStyle: target.aiAnswerStyle ?? null,
@@ -83,7 +77,6 @@ export function FieldEditorDialog({
   target,
   module: initialModule,
   allowModuleSelection = false,
-  hideTag = false,
   onOpenChange,
   onRowChanged,
   onCreated,
@@ -94,7 +87,6 @@ export function FieldEditorDialog({
   module: ModuleScope;
   /** Intake forms without a destination can collect Contract or Matter fields. */
   allowModuleSelection?: boolean;
-  hideTag?: boolean;
   onOpenChange: (open: boolean) => void;
   /** The saved field after a successful edit. */
   onRowChanged: (row: FieldRow) => void;
@@ -133,7 +125,7 @@ export function FieldEditorDialog({
           description: draft.description.trim() || undefined,
           moduleScope: module,
           fieldType: draft.fieldType as FieldType,
-          fieldTag: draft.tag,
+          fieldTag: "business",
           options: isSelect ? options : undefined,
           aiPrompt: promptable && draft.aiPrompt.trim() ? draft.aiPrompt.trim() : undefined,
           aiAnswerStyle: styleable ? (draft.aiAnswerStyle ?? undefined) : undefined,
@@ -161,7 +153,6 @@ export function FieldEditorDialog({
     if (name !== existing.displayName) body.displayName = name;
     const description = draft.description.trim();
     if (description !== (existing.description ?? "")) body.description = description || null;
-    if (draft.tag !== existing.fieldTag) body.fieldTag = draft.tag;
     if (isSelect) {
       const options = parseOptions(draft.optionsText);
       if (options.join("\n") !== (existing.options ?? []).join("\n")) body.options = options;
@@ -382,25 +373,6 @@ export function FieldEditorDialog({
                 </>
               )}
             </div>
-            {!hideTag && (
-              <div className="flex flex-1 flex-col gap-1.5">
-                <Label htmlFor="field-tag">
-                  <FormattedMessage id="settings.contractFields.tagColumn" defaultMessage="Tag" />
-                </Label>
-                <select
-                  id="field-tag"
-                  value={draft.tag}
-                  className={CONTROL_CLASS}
-                  onChange={(event) => set("tag", event.target.value as Tag)}
-                >
-                  {TAGS.map((tag) => (
-                    <option key={tag} value={tag}>
-                      {tagLabel(intl, tag)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
           {isSelect && (
             <div className="flex flex-col gap-1.5">

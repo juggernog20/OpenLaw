@@ -325,7 +325,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         const field = fields.find((f) => `field:${f.slug}` === request.params.slug);
         if (
           !field ||
-          (field.fieldTag === "legal" &&
+          (!field.visibleOnPortal &&
             !["administrator", "legal_team_member"].includes(request.user.role))
         )
           return { available: false, citations: [] };
@@ -370,7 +370,7 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
         const field = fields.find((f) => `field:${f.slug}` === request.params.slug);
         if (
           !field ||
-          (field.fieldTag === "legal" &&
+          (!field.visibleOnPortal &&
             !["administrator", "legal_team_member"].includes(request.user.role))
         )
           return { available: false, citations: [] };

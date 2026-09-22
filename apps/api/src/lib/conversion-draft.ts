@@ -596,6 +596,7 @@ export function checkedSuggestion(
             displayName: target.slug,
             description: null,
             fieldTag: "business" as const,
+            visibleOnPortal: true,
             displayOrder: 0,
             isRequired: false,
           }

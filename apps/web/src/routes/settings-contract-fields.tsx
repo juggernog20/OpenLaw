@@ -6,7 +6,7 @@
  * page, per the ST11 frame of settings.pen: the
  * ListEditor in its DES-021 table variant — column header, no reorder
  * (the catalog is unordered; per-type attachment orders rendering), the
- * scope pill, the type and tag columns, and the sparkle marking fields
+ * scope pill, the type column, and the sparkle marking fields
  * with an AI extraction prompt (CTR-008). Creation has seven dimensions
  * (two of them immutable), so add and edit go through the field-editor
  * dialog rather than an inline row; the name still renames in place
@@ -22,7 +22,6 @@ import {
   type ModuleScope,
   fieldRow,
   typeLabel,
-  tagLabel,
   type FieldRow,
 } from "../lib/field-catalog";
 
@@ -251,7 +250,7 @@ function SettingsFieldsPage({
     }
   }
 
-  /** The table cells after the name: type, tag, and extraction prompt. */
+  /** The table cells after the name: type and extraction prompt. */
   function rowDetails(row: FieldRow) {
     return (
       <>
@@ -260,12 +259,6 @@ function SettingsFieldsPage({
             <FormattedMessage id="settings.contractFields.typePrefix" defaultMessage="Type:" />{" "}
           </span>
           {typeLabel(intl, row.fieldType)}
-        </span>
-        <span className="w-20 shrink-0 text-sm whitespace-nowrap text-muted">
-          <span className="sr-only">
-            <FormattedMessage id="settings.contractFields.tagPrefix" defaultMessage="Tag:" />{" "}
-          </span>
-          {tagLabel(intl, row.fieldTag)}
         </span>
         <span className="flex w-16 shrink-0 items-center">
           {row.aiPrompt && !isReferenceFieldType(row.fieldType) ? (
@@ -344,9 +337,6 @@ function SettingsFieldsPage({
                 </span>
                 <span className="w-24 shrink-0">
                   <FormattedMessage id="settings.contractFields.typeColumn" defaultMessage="Type" />
-                </span>
-                <span className="w-20 shrink-0">
-                  <FormattedMessage id="settings.contractFields.tagColumn" defaultMessage="Tag" />
                 </span>
                 <span className="w-16 shrink-0">
                   <FormattedMessage

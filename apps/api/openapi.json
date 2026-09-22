@@ -19717,6 +19717,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -19726,7 +19729,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -19832,6 +19836,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -19841,7 +19848,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -19953,6 +19961,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -19962,7 +19973,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -20110,6 +20122,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -20119,7 +20134,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -22483,6 +22499,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -22492,7 +22511,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -22598,6 +22618,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -22607,7 +22630,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -22719,6 +22743,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -22728,7 +22755,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -22876,6 +22904,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -22885,7 +22916,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -24824,6 +24856,9 @@
                                   "type": "string",
                                   "enum": ["business", "legal"]
                                 },
+                                "visibleOnPortal": {
+                                  "type": "boolean"
+                                },
                                 "options": {
                                   "anyOf": [
                                     {
@@ -24853,6 +24888,7 @@
                                 "description",
                                 "fieldType",
                                 "fieldTag",
+                                "visibleOnPortal",
                                 "options",
                                 "displayOrder",
                                 "isRequired"
@@ -25447,6 +25483,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -25476,6 +25515,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -26109,6 +26149,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -26138,6 +26181,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -33344,6 +33388,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -33353,7 +33400,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -33459,6 +33507,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -33468,7 +33519,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -33580,6 +33632,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -33589,7 +33644,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -33737,6 +33793,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -33746,7 +33805,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -34523,6 +34583,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -34552,6 +34615,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -37914,6 +37978,9 @@
                                 "type": "string",
                                 "enum": ["business", "legal"]
                               },
+                              "visibleOnPortal": {
+                                "type": "boolean"
+                              },
                               "options": {
                                 "anyOf": [
                                   {
@@ -37943,6 +38010,7 @@
                               "description",
                               "fieldType",
                               "fieldTag",
+                              "visibleOnPortal",
                               "options",
                               "displayOrder",
                               "isRequired"
@@ -38129,6 +38197,9 @@
                                       "type": "string",
                                       "enum": ["business", "legal"]
                                     },
+                                    "visibleOnPortal": {
+                                      "type": "boolean"
+                                    },
                                     "options": {
                                       "anyOf": [
                                         {
@@ -38158,6 +38229,7 @@
                                     "description",
                                     "fieldType",
                                     "fieldTag",
+                                    "visibleOnPortal",
                                     "options",
                                     "displayOrder",
                                     "isRequired"
@@ -38407,6 +38479,9 @@
                                 "type": "string",
                                 "enum": ["business", "legal"]
                               },
+                              "visibleOnPortal": {
+                                "type": "boolean"
+                              },
                               "options": {
                                 "anyOf": [
                                   {
@@ -38436,6 +38511,7 @@
                               "description",
                               "fieldType",
                               "fieldTag",
+                              "visibleOnPortal",
                               "options",
                               "displayOrder",
                               "isRequired"
@@ -38622,6 +38698,9 @@
                                       "type": "string",
                                       "enum": ["business", "legal"]
                                     },
+                                    "visibleOnPortal": {
+                                      "type": "boolean"
+                                    },
                                     "options": {
                                       "anyOf": [
                                         {
@@ -38651,6 +38730,7 @@
                                     "description",
                                     "fieldType",
                                     "fieldTag",
+                                    "visibleOnPortal",
                                     "options",
                                     "displayOrder",
                                     "isRequired"
@@ -40985,6 +41065,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -41014,6 +41097,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -42793,6 +42877,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -42822,6 +42909,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -48487,6 +48575,9 @@
                                   "type": "string",
                                   "enum": ["business", "legal"]
                                 },
+                                "visibleOnPortal": {
+                                  "type": "boolean"
+                                },
                                 "options": {
                                   "anyOf": [
                                     {
@@ -48516,6 +48607,7 @@
                                 "description",
                                 "fieldType",
                                 "fieldTag",
+                                "visibleOnPortal",
                                 "options",
                                 "displayOrder",
                                 "isRequired"
@@ -49176,6 +49268,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -49205,6 +49300,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -50400,6 +50496,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -50429,6 +50528,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -74375,6 +74475,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -74384,7 +74487,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -74490,6 +74594,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -74499,7 +74606,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -74611,6 +74719,9 @@
                         },
                         "isRequired": {
                           "type": "boolean"
+                        },
+                        "visibleOnPortal": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -74620,7 +74731,8 @@
                         "fieldType",
                         "moduleScope",
                         "displayOrder",
-                        "isRequired"
+                        "isRequired",
+                        "visibleOnPortal"
                       ],
                       "additionalProperties": false
                     }
@@ -74768,6 +74880,9 @@
                           },
                           "isRequired": {
                             "type": "boolean"
+                          },
+                          "visibleOnPortal": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -74777,7 +74892,8 @@
                           "fieldType",
                           "moduleScope",
                           "displayOrder",
-                          "isRequired"
+                          "isRequired",
+                          "visibleOnPortal"
                         ],
                         "additionalProperties": false
                       }
@@ -83769,6 +83885,9 @@
                                   "type": "string",
                                   "enum": ["business", "legal"]
                                 },
+                                "visibleOnPortal": {
+                                  "type": "boolean"
+                                },
                                 "options": {
                                   "anyOf": [
                                     {
@@ -83798,6 +83917,7 @@
                                 "description",
                                 "fieldType",
                                 "fieldTag",
+                                "visibleOnPortal",
                                 "options",
                                 "displayOrder",
                                 "isRequired"
@@ -84148,6 +84268,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -84177,6 +84300,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
@@ -84682,6 +84806,9 @@
                             "type": "string",
                             "enum": ["business", "legal"]
                           },
+                          "visibleOnPortal": {
+                            "type": "boolean"
+                          },
                           "options": {
                             "anyOf": [
                               {
@@ -84711,6 +84838,7 @@
                           "description",
                           "fieldType",
                           "fieldTag",
+                          "visibleOnPortal",
                           "options",
                           "displayOrder",
                           "isRequired"
