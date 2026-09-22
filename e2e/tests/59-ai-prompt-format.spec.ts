@@ -26,8 +26,8 @@ test("both AI prompt cards show format guidance in delayed label tooltips", asyn
   await expect(date).toBeVisible();
   await expect(date).toHaveAccessibleDescription("Return a date as YYYY-MM-DD.");
   const help = page
-    .locator("label[for='ai-field-prompt-effective_date']")
-    .locator("..")
+    .getByRole("listitem")
+    .filter({ has: date })
     .getByRole("button", { name: "More information" });
   await help.hover();
   await expect(page.getByRole("tooltip")).toBeHidden();
