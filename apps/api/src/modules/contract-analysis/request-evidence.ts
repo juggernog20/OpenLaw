@@ -53,7 +53,7 @@ export async function requestAnalysisEvidenceReader(
       const field = fields.find((field) => field.slug === slug);
       if (
         !field ||
-        (field.fieldTag === "legal" && !["administrator", "legal_team_member"].includes(user.role))
+        (!field.visibleOnPortal && !["administrator", "legal_team_member"].includes(user.role))
       )
         return { ...unavailable, authorized: false };
     }

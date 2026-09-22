@@ -364,7 +364,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
         "role {Role} email {Email} " +
-        "stage {Stage} moduleScope {Scope} isRequired {Required} defaultPeople {Default people} " +
+        "stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} " +
         "targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} " +
         "theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} " +
         "defaultLocale {Default language} defaultTimezone {Default timezone} " +

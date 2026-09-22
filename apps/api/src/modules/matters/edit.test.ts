@@ -237,7 +237,7 @@ describe("per-field matter PATCH", () => {
     expect(contributorChoices.statusCode, contributorChoices.body).toBe(403);
   });
 
-  it("projects only business Fields and values to a Business User on the team", async () => {
+  it("projects only Portal-visible Fields and values to a Business User on the team", async () => {
     const projectionTypeId = await newType("Business User projection");
     const businessSlug = await attachText(projectionTypeId, "Business context", "business");
     const legalSlug = await attachText(projectionTypeId, "Legal analysis", "legal");
@@ -257,7 +257,7 @@ describe("per-field matter PATCH", () => {
     });
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().work.fields).toEqual([
-      expect.objectContaining({ slug: businessSlug, fieldTag: "business" }),
+      expect.objectContaining({ slug: businessSlug, visibleOnPortal: true }),
     ]);
     expect(response.json().work.customFields).toEqual({ [businessSlug]: "Finance" });
     const list = await harness.app.inject({

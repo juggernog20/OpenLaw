@@ -14328,6 +14328,7 @@ export interface operations {
               moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -14389,6 +14390,7 @@ export interface operations {
               moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -14480,6 +14482,7 @@ export interface operations {
               moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -14540,6 +14543,7 @@ export interface operations {
               moduleScope: "contract";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -15647,6 +15651,7 @@ export interface operations {
               moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -15708,6 +15713,7 @@ export interface operations {
               moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -15799,6 +15805,7 @@ export interface operations {
               moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -15859,6 +15866,7 @@ export interface operations {
               moduleScope: "matter";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -16564,6 +16572,7 @@ export interface operations {
                   | "entity";
                 /** @enum {string} */
                 fieldTag: "business" | "legal";
+                visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
@@ -16731,6 +16740,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -16912,6 +16922,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -19411,6 +19422,7 @@ export interface operations {
               moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -19472,6 +19484,7 @@ export interface operations {
               moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -19563,6 +19576,7 @@ export interface operations {
               moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -19623,6 +19637,7 @@ export interface operations {
               moduleScope: "matter" | "contract" | "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -20015,6 +20030,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -21291,6 +21307,7 @@ export interface operations {
                   | "entity";
                 /** @enum {string} */
                 fieldTag: "business" | "legal";
+                visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
@@ -21349,6 +21366,7 @@ export interface operations {
                     | "entity";
                   /** @enum {string} */
                   fieldTag: "business" | "legal";
+                  visibleOnPortal: boolean;
                   options: string[] | null;
                   displayOrder: number;
                   isRequired: boolean;
@@ -21437,6 +21455,7 @@ export interface operations {
                   | "entity";
                 /** @enum {string} */
                 fieldTag: "business" | "legal";
+                visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
@@ -21495,6 +21514,7 @@ export interface operations {
                     | "entity";
                   /** @enum {string} */
                   fieldTag: "business" | "legal";
+                  visibleOnPortal: boolean;
                   options: string[] | null;
                   displayOrder: number;
                   isRequired: boolean;
@@ -22336,6 +22356,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -23054,6 +23075,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -25091,6 +25113,7 @@ export interface operations {
                   | "entity";
                 /** @enum {string} */
                 fieldTag: "business" | "legal";
+                visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
@@ -25270,6 +25293,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -25566,6 +25590,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -33900,6 +33925,7 @@ export interface operations {
               moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -33961,6 +33987,7 @@ export interface operations {
               moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -34052,6 +34079,7 @@ export interface operations {
               moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             };
           };
         };
@@ -34112,6 +34140,7 @@ export interface operations {
               moduleScope: "entity";
               displayOrder: number;
               isRequired: boolean;
+              visibleOnPortal: boolean;
             }[];
           };
         };
@@ -37113,6 +37142,7 @@ export interface operations {
                   | "entity";
                 /** @enum {string} */
                 fieldTag: "business" | "legal";
+                visibleOnPortal: boolean;
                 options: string[] | null;
                 displayOrder: number;
                 isRequired: boolean;
@@ -37244,6 +37274,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;
@@ -37378,6 +37409,7 @@ export interface operations {
                 | "entity";
               /** @enum {string} */
               fieldTag: "business" | "legal";
+              visibleOnPortal: boolean;
               options: string[] | null;
               displayOrder: number;
               isRequired: boolean;

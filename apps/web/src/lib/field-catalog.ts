@@ -36,9 +36,6 @@ export type FieldType = (typeof FIELD_TYPES)[number];
 /** The select types — the only ones that carry an options list. */
 export const SELECT_TYPES = new Set<FieldType>(["single_select", "multi_select"]);
 
-export const TAGS = ["business", "legal"] as const;
-export type Tag = (typeof TAGS)[number];
-
 export function fieldRow(field: ApiField, module: ModuleScope): FieldRow {
   if (!isFieldRow(field, module)) {
     throw new Error(`A ${module} field operation returned a field outside this catalog.`);
@@ -56,15 +53,5 @@ export function typeLabel(intl: IntlShape, fieldType: FieldType): string {
         "multi_select {Multi select} user {User} entity {Entity} other {Unknown}}",
     },
     { type: fieldType },
-  );
-}
-
-export function tagLabel(intl: IntlShape, tag: Tag): string {
-  return intl.formatMessage(
-    {
-      id: "settings.contractFields.tagLabel",
-      defaultMessage: "{tag, select, business {Business} legal {Legal} other {Unknown}}",
-    },
-    { tag },
   );
 }

@@ -189,6 +189,7 @@ export async function withAnsweredIntakeDefaults(
       description: field.description,
       fieldType: field.fieldType,
       fieldTag: field.fieldTag,
+      visibleOnPortal: true,
       options: field.options,
       displayOrder: attached.length + index + 1,
       isRequired: false,

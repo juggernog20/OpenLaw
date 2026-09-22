@@ -232,6 +232,7 @@ describe("custom chart exports", () => {
     const base = {
       description: null,
       fieldTag: "legal" as const,
+      visibleOnPortal: false,
       options: null,
       displayOrder: 1,
       isRequired: false,

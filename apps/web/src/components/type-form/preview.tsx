@@ -162,6 +162,7 @@ export function IntakePreview({
       isRequired: row.isRequired,
       displayOrder: 0,
       fieldTag: "business",
+      visibleOnPortal: row.visibleOnPortal,
     };
   }
   return (

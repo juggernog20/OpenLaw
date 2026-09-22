@@ -163,7 +163,7 @@ describe("the Contracts section tabs", () => {
 });
 
 describe("the seeded catalog (CTR-008 core fields)", () => {
-  it("renders the three seeds with type, tag, and the prompt sparkle", async () => {
+  it("renders the three seeds with type and the prompt sparkle, without a Tag column", async () => {
     stubApi({ signedIn: ADMIN, extra: fieldsApi(newCalls()) });
     renderAt("/settings/contracts/fields");
     await screen.findByText("Governing law");
@@ -175,7 +175,8 @@ describe("the seeded catalog (CTR-008 core fields)", () => {
     const first = items[0]!;
     expect(within(first).getByText(fullText("Type: Text"))).toBeInTheDocument();
     expect(screen.queryByText("Scope")).not.toBeInTheDocument();
-    expect(within(first).getByText(fullText("Tag: Legal"))).toBeInTheDocument();
+    expect(screen.queryByText("Tag")).not.toBeInTheDocument();
+    expect(within(first).queryByText(fullText("Tag: Legal"))).not.toBeInTheDocument();
     // Every seed carries a default prompt, marked by the sparkle.
     expect(
       within(first).getByRole("img", { name: "Governing law has an AI extraction prompt" }),
@@ -239,7 +240,7 @@ describe("in-place rename (DES-017)", () => {
 });
 
 describe("create (the field-editor dialog)", () => {
-  it("creates a select field in its area with options and a tag", async () => {
+  it("creates a select field in its area with options and no tag control", async () => {
     const calls = newCalls();
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls) });
     renderAt("/settings/contracts/fields");
@@ -247,6 +248,7 @@ describe("create (the field-editor dialog)", () => {
     await user.click(await screen.findByRole("button", { name: "Add field" }));
 
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Department");
     await user.selectOptions(
       within(dialog).getByRole("combobox", { name: "Type" }),
@@ -281,6 +283,7 @@ describe("create (the field-editor dialog)", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add field" }));
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Payment terms");
     await user.selectOptions(within(dialog).getByRole("combobox", { name: "Type" }), "text");
     await user.type(
@@ -310,6 +313,7 @@ describe("create (the field-editor dialog)", () => {
       const user = userEvent.setup();
       await user.click(await screen.findByRole("button", { name: "Add field" }));
       const dialog = await screen.findByRole("dialog", { name: "Add field" });
+      expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
       await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Internal reference");
       const type = within(dialog).getByRole("combobox", { name: "Type" });
       await user.selectOptions(type, "text");
@@ -340,6 +344,7 @@ describe("create (the field-editor dialog)", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Add field" }));
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
 
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Half-formed");
     await user.click(within(dialog).getByRole("button", { name: "Add field" }));
@@ -559,6 +564,7 @@ describe("Field answer style", () => {
     renderAt("/settings/contracts/fields");
     await user.click(await screen.findByRole("button", { name: "Add field" }));
     const dialog = await screen.findByRole("dialog", { name: "Add field" });
+    expect(within(dialog).queryByRole("combobox", { name: "Tag" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Assignment clause");
     const type = within(dialog).getByRole("combobox", { name: "Type" });
     await user.selectOptions(type, "long_text");

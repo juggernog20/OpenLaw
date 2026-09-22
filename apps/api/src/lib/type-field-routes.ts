@@ -305,6 +305,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
     moduleScope: z.enum(declaredScopes),
     displayOrder: z.number().int(),
     isRequired: z.boolean(),
+    visibleOnPortal: z.boolean(),
   });
   const TargetAttachmentSchema = z.object({
     module: z.enum(["contract", "matter"]),
@@ -346,6 +347,7 @@ export function typeFieldRoutes<TRow extends TaxonomyRow = TaxonomyRow>(
       moduleScope: field.moduleScope,
       displayOrder: join.displayOrder,
       isRequired: join.isRequired,
+      visibleOnPortal: "visibleOnPortal" in join ? join.visibleOnPortal : true,
     };
   }
 

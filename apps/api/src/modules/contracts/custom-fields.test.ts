@@ -254,7 +254,7 @@ const auditRowsFor = async (id: string) =>
   ).filter((row) => row.entityId === id);
 
 describe("the fields a contract's type attaches (CTR-016)", () => {
-  it("projects only business Fields and values to a Business User on the team", async () => {
+  it("projects only Portal-visible Fields and values to a Business User on the team", async () => {
     const type = await newType("Business User projection");
     const business = await defineField({
       displayName: "Payment terms",
@@ -287,7 +287,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
     });
     expect(response.statusCode, response.body).toBe(200);
     expect(response.json().work.fields).toEqual([
-      expect.objectContaining({ slug: business.slug, fieldTag: "business" }),
+      expect.objectContaining({ slug: business.slug, visibleOnPortal: true }),
     ]);
     expect(response.json().work.customFields).toEqual({ [business.slug]: "Net 30" });
     const list = await harness.app.inject({
@@ -342,6 +342,68 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
       (row) => row.action === "contract.updated",
     );
     expect(updates).toHaveLength(0);
+  });
+
+  it("uses each type's Visible on Portal switch for the same Field", async () => {
+    const field = await defineField({
+      displayName: "Shared Portal context",
+      fieldType: "text",
+      fieldTag: "business",
+    });
+    for (const [name, visibleOnPortal] of [
+      ["Portal NDA", false],
+      ["Portal MSA", true],
+    ] as const) {
+      const type = await newType(name);
+      await attachField(type.id, field.fieldId);
+      const form = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contract-types/${type.id}/form`,
+        cookies: adminCookies,
+      });
+      const tree = form.json().form;
+      tree.find((node: { id: string }) => node.id === field.fieldId).visibleOnPortal =
+        visibleOnPortal;
+      const saved = await harness.app.inject({
+        method: "PUT",
+        url: `/api/v1/contract-types/${type.id}/form`,
+        cookies: adminCookies,
+        payload: { form: tree },
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+      const contract = await newContract(name, type.id, { [field.slug]: "Shared value" });
+      const added = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${contract.number}/team`,
+        cookies: memberCookies,
+        payload: { userId: contributorId },
+      });
+      expect(added.statusCode, added.body).toBe(201);
+      const portal = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/contracts/${contract.number}/work`,
+        cookies: contributorCookies,
+      });
+      expect(portal.statusCode, portal.body).toBe(200);
+      expect(portal.json().work.customFields).toEqual(
+        visibleOnPortal ? { [field.slug]: "Shared value" } : {},
+      );
+      expect(portal.json().work.fields).toEqual(
+        visibleOnPortal
+          ? [expect.objectContaining({ slug: field.slug, visibleOnPortal: true })]
+          : [],
+      );
+      const staff = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: memberCookies,
+      });
+      expect(staff.statusCode, staff.body).toBe(200);
+      expect(staff.json().fields).toContainEqual(
+        expect.objectContaining({ slug: field.slug, visibleOnPortal }),
+      );
+      expect(staff.body).toContain("Shared value");
+    }
   });
 
   it("renders the type's live attachments in attachment order, and no others", async () => {

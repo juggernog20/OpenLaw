@@ -3608,7 +3608,7 @@ function FieldsCard({
               value={values[field.slug]}
               people={people}
               entities={entities}
-              frozen={frozen && !(businessEditable && field.fieldTag === "business")}
+              frozen={frozen && !(businessEditable && field.visibleOnPortal)}
               marker={Boolean(aiUnverified?.[field.slug] ?? aiUnverified?.[`field:${field.slug}`])}
               confirmation={reviewControl(field.slug)}
               status={status[`field:${field.slug}`] ?? "idle"}

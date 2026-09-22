@@ -697,7 +697,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         matterTypes: types.map((type, index) => {
           const visibleSlugs = new Set(
             attached[index]!.filter(
-              (field) => request.user.role !== "business_user" || field.fieldTag === "business",
+              (field) => request.user.role !== "business_user" || field.visibleOnPortal,
             ).map((field) => field.slug),
           );
           return {

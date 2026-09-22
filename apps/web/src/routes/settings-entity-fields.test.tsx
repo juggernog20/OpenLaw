@@ -41,7 +41,11 @@ describe("the Entities Fields pane", () => {
     expect(await screen.findByRole("button", { name: "Rename LEI" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rename Region" })).toBeInTheDocument();
     expect(screen.queryByText("Term")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tag")).not.toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole("button", { name: "Edit LEI" }));
+    expect(
+      within(screen.getByRole("dialog")).queryByRole("combobox", { name: "Tag" }),
+    ).not.toBeInTheDocument();
     expect(
       within(screen.getByRole("dialog")).queryByRole("combobox", { name: "Answer style" }),
     ).not.toBeInTheDocument();

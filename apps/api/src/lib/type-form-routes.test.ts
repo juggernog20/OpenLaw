@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { activityLog, contractTypes, eq, fields, sql, users } from "@openlaw/db";
+import { activityLog, contractTypes, entityTypeFields, eq, fields, sql, users } from "@openlaw/db";
 import type { FormNode, FormRow, FormModule } from "@openlaw/shared";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
 
+import { projectCustomFields, selectAttachedFields } from "./custom-fields.js";
 import { provisionUser } from "../auth/instance.js";
 
 let h: TestHarness;
@@ -383,3 +384,18 @@ it.each([true, false])(
     );
   },
 );
+
+it("projects Entity Fields through each type's Visible on Portal switch", async () => {
+  const row = await field("entity");
+  for (const visibleOnPortal of [false, true]) {
+    const typeId = await createType("entity");
+    const saved = await put(typeId, [{ ...row, visibleOnPortal }], "entity");
+    expect(saved.statusCode, saved.body).toBe(200);
+    const attached = await selectAttachedFields(h.db, entityTypeFields, typeId);
+    const values = { [row.rowRef]: "Entity context" };
+    expect(projectCustomFields("business_user", attached, values).customFields).toEqual(
+      visibleOnPortal ? values : {},
+    );
+    expect(projectCustomFields("legal_team_member", attached, values).customFields).toEqual(values);
+  }
+});

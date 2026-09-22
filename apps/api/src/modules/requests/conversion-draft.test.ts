@@ -1205,6 +1205,21 @@ it("keeps Contract paper and conversation evidence through one concurrent conver
     cookies: cast.otherMemberCookies,
   });
   expect(read.json().available).toBe(true);
+  const businessEvidence = () =>
+    harness.app.inject({
+      url: `/api/v1/contracts/${contract!.number}/conversion-evidence/field:contract_opening`,
+      cookies: cast.requesterCookies,
+    });
+  expect((await businessEvidence()).json().available).toBe(true);
+  await harness.db
+    .update(contractTypeFields)
+    .set({ visibleOnPortal: false })
+    .where(eq(contractTypeFields.fieldId, field!.id));
+  expect((await businessEvidence()).json()).toEqual({ available: false, citations: [] });
+  await harness.db
+    .update(contractTypeFields)
+    .set({ visibleOnPortal: true })
+    .where(eq(contractTypeFields.fieldId, field!.id));
   const [promoted] = await harness.db
     .select()
     .from(requestAttachments)
