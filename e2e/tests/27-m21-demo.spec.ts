@@ -341,9 +341,9 @@ test.describe.serial("M21 demo path", () => {
       await expect(portal).toHaveURL(new RegExp(`/portal/new/${REQUEST_TYPE_SLUG}$`));
 
       await portal.getByLabel("Title").fill(TITLE);
-      await portal.getByLabel("Description").fill(DESCRIPTION);
+      await portal.getByLabel(/^Description/).fill(DESCRIPTION);
       await portal.getByLabel("Urgency").selectOption("high");
-      await portal.getByLabel(FIELD_NAME).fill(FIELD_ANSWER);
+      await portal.getByRole("textbox", { name: FIELD_NAME }).fill(FIELD_ANSWER);
       await portal.getByLabel("Attachments").setInputFiles({
         name: ATTACHMENT,
         mimeType: "text/plain",
@@ -540,7 +540,7 @@ test.describe.serial("M21 demo path", () => {
 
       // The same value, on the screen a person reads it from.
       await page.goto(`/contracts/${String(contractNumber)}/fields`);
-      await expect(page.getByLabel(FIELD_NAME)).toHaveValue(FIELD_ANSWER);
+      await expect(page.getByRole("textbox", { name: FIELD_NAME })).toHaveValue(FIELD_ANSWER);
 
       // The paper is real paper: one document at version 1, filed at the
       // record root (INT-002's M21/10 addendum, DOC-008).

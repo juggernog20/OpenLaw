@@ -84,7 +84,14 @@ export async function createMatterTask(
     actorId: input.actorId,
     action: "task.added",
     visibility: RECORD_ACTIVITY_TIER,
-    payload: { taskId: created!.id, title: input.title },
+    // The due date rides the entry rather than being read back from the
+    // task: the entry says what was set then, and a task can be edited
+    // or removed afterwards.
+    payload: {
+      taskId: created!.id,
+      title: input.title,
+      ...(input.dueDate ? { dueDate: input.dueDate } : {}),
+    },
   });
   return created!;
 }

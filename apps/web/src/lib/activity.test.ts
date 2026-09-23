@@ -21,7 +21,7 @@
  * has never heard of is still in the table and still has to come out.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createIntl } from "react-intl";
 import type { ActivityAction, ActivityPayloadMap } from "@openlaw/shared";
 import { narrateActivity, type NarratableEntry } from "./activity";
@@ -75,6 +75,7 @@ const ENVELOPE_ENDING = {
  * sample here.
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
+  "contract.stage_changed": { from: "draft", to: "review" },
   "contract.portal_access_excluded": {
     number: 42,
     title: "Supply",
@@ -1123,6 +1124,31 @@ it("names a Contract Type's default people, in the order the card holds them", (
   expect(narrateActivity(intl, entry).changes).toEqual([
     { label: "Default people", from: "Not set", to: "Casey Counsel and Dana Procurement" },
   ]);
+});
+
+describe("the Portal's reading of a record's progress", () => {
+  it("says a Task's due date when it was given one, and says nothing when it was not", () => {
+    // A short date carries its year outside the current one, so pin the clock to 2026.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T12:00:00Z"));
+    try {
+      expect(
+        narrate("task.added", { taskId: "t1", title: "Send the pack", dueDate: "2026-10-01" })
+          .sentence,
+      ).toBe("Nadia Counsel added the task Send the pack, due Oct 1");
+      expect(narrate("task.added", { taskId: "t1", title: "Send the pack" }).sentence).toBe(
+        "Nadia Counsel added the task Send the pack",
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("names the Stage a Contract moved between, in the words the Portal card uses", () => {
+    const moved = narrate("contract.stage_changed", { from: "draft", to: "review" });
+    expect(moved.sentence).toBe("Nadia Counsel changed the stage");
+    expect(moved.changes).toEqual([{ label: "Stage", from: "Draft", to: "Review" }]);
+  });
 });
 
 describe("the record's own id-valued and slug-valued changes", () => {

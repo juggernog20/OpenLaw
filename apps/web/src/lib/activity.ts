@@ -121,7 +121,9 @@ import {
   formatContractValue,
   riskLabel,
   severityLabel,
+  stageLabel,
   termTypeLabel,
+  type ContractStage,
   type ContractValue,
   type SeverityLevel,
   type TermType,
@@ -906,6 +908,14 @@ function taskNamed(intl: IntlShape, payload: Payload): string {
   );
 }
 
+/** The due date a task entry carries, ready for its sentence, or the
+ * `none` arm when the task was given no date — and for every entry
+ * written before the date rode along (2026-09-23). */
+function taskDue(intl: IntlShape, payload: Payload): string {
+  const due = text(payload, "dueDate");
+  return due ? formatShortDate(due, { locale: intl.locale }) : "none";
+}
+
 /** What a Knowledge entry calls the item it names. Its own fallback
  * rather than {@link named}'s, because that one is a person's —
  * "created someone" is not a sentence, and the log is append-only, so
@@ -1429,6 +1439,31 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "status", context),
   },
+  // The Portal's reading of the same move: a Portal reader is shown the
+  // Stage, never the Status name the team moves through, so the entry
+  // names what they can see (DD-017 amendment, 2026-09-23). The Portal
+  // projection writes this action; nothing stores it.
+  "contract.stage_changed": {
+    icon: GitCommitHorizontal,
+    message: defineMessage({
+      id: "activity.contract.stageChanged",
+      defaultMessage: "{actor} changed the stage",
+    }),
+    changes: (intl, payload) => {
+      const from = text(payload, "from");
+      const to = text(payload, "to");
+      if (from === null && to === null) return [];
+      return [
+        {
+          // The Portal card's own label for the row, said once there
+          // and read here, so the entry and the value it names agree.
+          label: intl.formatMessage({ id: "portal.contract.stage", defaultMessage: "Stage" }),
+          from: from ? stageLabel(intl, from as ContractStage) : notSet(intl),
+          to: to ? stageLabel(intl, to as ContractStage) : notSet(intl),
+        },
+      ];
+    },
+  },
   // CTR-012's soft gate, pushed past (M14/5). Its own entry beside the
   // status change of the same commit: the contract moved, and somebody
   // moved it past open sign-off, and only the first of those is a fact
@@ -1899,11 +1934,17 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // its entry is the only thing left that says the task was ever there.
   "task.added": {
     icon: ListPlus,
+    // One sentence with two readings, because a task with a date and a
+    // task without one are different news to whoever waits on it. The
+    // select carries the whole clause so a translator can move it.
     message: defineMessage({
       id: "activity.task.added",
-      defaultMessage: "{actor} added the task {title}",
+      defaultMessage: "{actor} added the task {title}{due, select, none {} other {, due {due}}}",
     }),
-    values: (intl, payload) => ({ title: taskNamed(intl, payload) }),
+    values: (intl, payload) => ({
+      title: taskNamed(intl, payload),
+      due: taskDue(intl, payload),
+    }),
   },
   "task.edited": {
     icon: PenLine,

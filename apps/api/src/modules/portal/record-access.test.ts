@@ -1043,6 +1043,106 @@ describe.each(["contract", "matter"] as const)("Portal %s applets", (module) => 
     expect((await read(teamUrl)).statusCode).toBe(404);
     expect((await read(historyUrl)).statusCode).toBe(404);
   });
+
+  it("narrates the progress the Portal record shows, and nothing beside it", async () => {
+    const record = await create(module);
+    const historyUrl = `/api/v1/portal/activity?entityType=${module}&entityId=${record.id}`;
+    await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}s/${record.number}/team`,
+      cookies: admin,
+      payload: { userId: businessId },
+    });
+    await harness.db.insert(activityLog).values([
+      {
+        entityType: module,
+        entityId: record.id,
+        action: `${module}.status_changed`,
+        visibility: "working_team",
+        payload:
+          module === "contract"
+            ? {
+                from: "Internal review",
+                to: "With counterparty",
+                fromStage: "draft",
+                toStage: "review",
+              }
+            : { from: "Open", to: "Closed", closingNote: "Client dropped the claim." },
+      },
+      {
+        entityType: module,
+        entityId: record.id,
+        action: "task.added",
+        visibility: "working_team",
+        payload: { taskId: "t1", title: "Send the signature pack", dueDate: "2026-10-01" },
+      },
+      {
+        entityType: module,
+        entityId: record.id,
+        action: "task.completed",
+        visibility: "working_team",
+        payload: { taskId: "t1", title: "Send the signature pack" },
+      },
+      // Not progress the Portal draws: an internal checklist edit, an
+      // internal triage change, and a Task that was taken back.
+      {
+        entityType: module,
+        entityId: record.id,
+        action: "task.edited",
+        visibility: "working_team",
+        payload: { taskId: "t2", title: "Check the counterparty story", changed: {} },
+      },
+      {
+        entityType: module,
+        entityId: record.id,
+        action: "task.removed",
+        visibility: "working_team",
+        payload: { taskId: "t2", title: "Check the counterparty story" },
+      },
+      {
+        entityType: module,
+        entityId: record.id,
+        action: `${module}.updated`,
+        visibility: "working_team",
+        payload: { changed: { risk: { from: "low", to: "high" } } },
+      },
+    ]);
+    const answered = await harness.app.inject({
+      method: "GET",
+      url: historyUrl,
+      cookies: business,
+    });
+    expect(answered.statusCode, answered.body).toBe(200);
+    const entries = answered.json().entries as { action: string; payload: unknown }[];
+    expect(entries.map((entry) => entry.action)).toEqual([
+      "task.completed",
+      "task.added",
+      module === "contract" ? "contract.stage_changed" : "matter.status_changed",
+    ]);
+    // Priority and Risk are the team's own triage and are drawn nowhere
+    // on the Portal, so an edit to them narrates nothing.
+    expect(answered.body).not.toContain("risk");
+    expect(entries.find((entry) => entry.action === "task.added")?.payload).toEqual({
+      title: "Send the signature pack",
+      dueDate: "2026-10-01",
+    });
+    // A Task carries its title and nothing else: no id to ask the seam
+    // with, and no assignee.
+    expect(answered.body).not.toContain("t1");
+    expect(entries.find((entry) => entry.action === "task.completed")?.payload).toEqual({
+      title: "Send the signature pack",
+    });
+    // The Stage is what a Portal reader is shown, so a Contract's entry
+    // carries the Stage and never the Status name the team moves
+    // through. A Matter's Status is on its Portal card, so it stays —
+    // but the closing note is the team's own.
+    expect(entries.at(-1)?.payload).toEqual(
+      module === "contract" ? { from: "draft", to: "review" } : { from: "Open", to: "Closed" },
+    );
+    expect(answered.body).not.toContain("Internal review");
+    expect(answered.body).not.toContain("Client dropped the claim");
+    expect(answered.body).not.toContain("Check the counterparty story");
+  });
 });
 
 it("keeps Portal comment reads, mentions and unread markers within the shared audience", async () => {

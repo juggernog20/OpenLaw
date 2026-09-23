@@ -40,6 +40,18 @@ Open **Comments** in the applet bar on the right, write your reply, attach files
 
 A comment attachment belongs to the conversation. Upload under Documents when the file needs its own managed Document chain. See [Choose who can read a comment](comments-and-activity.md) for attachment limits and reply behavior.
 
+## Read what has happened
+
+Open **History** in the applet bar to read the progress you can see on the record, newest first:
+
+- the Stage a Contract moved to, and the Status a Matter moved to
+- a change to a value the Portal draws, such as the title, the owners, the Department, the Region, the term dates or the Value
+- a change to a Field whose Row has **Visible on Portal** on
+- a Task somebody added, with its due date when it has one, and a Task somebody completed
+- replies in the shared conversation
+
+History does not show work that is not yours to read: Legal Only and Working Team messages, Tasks that were edited, reordered or removed, Priority and Risk, and anything about a Field your Form keeps off the Portal. A Matter's closing note stays with Legal. Nothing here says that something was hidden, because a count of hidden entries would itself be a disclosure.
+
 ## Add team members
 
 Open **Contract team** or **Matter team** in the applet bar. Select **Add team member**, choose an existing person, then select **Add**. They join the same team shown in the full app. Each person appears once, and existing members are excluded from the picker. Business Users added this way gain Portal access to the record.

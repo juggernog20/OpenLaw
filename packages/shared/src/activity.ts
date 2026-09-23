@@ -454,7 +454,10 @@ type KeyDatePayloads = {
  * follow.
  */
 type TaskPayloads = {
-  "task.added": { taskId: string; title: string };
+  /** `dueDate` rides the entry when the task was given one, so the
+   * history says what was set then rather than what the task holds
+   * now. Entries written before 2026-09-23 carry none. */
+  "task.added": { taskId: string; title: string; dueDate?: string };
   /** `changed` holds only what moved — the `key_date.edited` shape. */
   "task.edited": { taskId: string; title: string; changed: ChangedFields };
   "task.completed": { taskId: string; title: string };
@@ -685,6 +688,11 @@ type ContractPayloads = {
     fromStage: string;
     toStage: string;
   };
+  /** Narration only, never stored. The Portal history renames a Status
+   * move that crossed a Stage boundary, because a Portal reader is
+   * shown the Stage and never the Status name (DD-017 amendment,
+   * 2026-09-23). `from` and `to` are Stage keys. */
+  "contract.stage_changed": { from: string; to: string };
   /** `approvers` names the people the push went past, because "who was
    * skipped" is the question the entry exists to answer. */
   "contract.stage_gate_overridden": {
