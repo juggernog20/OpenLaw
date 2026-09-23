@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Organization MCP pane (DD-029, SET-014, DES-092). The loader admits only
+ * Administrators (SET-002); each edited policy field saves immediately (SET-003).
+ */
 import { useRef, useState, type ReactNode } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
@@ -24,6 +29,20 @@ export async function settingsMcpLoader() {
 type Change = NonNullable<
   paths["/api/v1/mcp-settings"]["patch"]["requestBody"]
 >["content"]["application/json"];
+const errorMessages = defineMessages({
+  forbidden: {
+    id: "settings.mcp.forbidden",
+    defaultMessage: "Only an Administrator can change MCP settings. Reload to check your access.",
+  },
+  invalidLifetime: {
+    id: "settings.mcp.invalidLifetime",
+    defaultMessage: "API key lifetime must be a whole number from 1 to 365 days.",
+  },
+  saveFailed: {
+    id: "settings.mcp.saveFailed",
+    defaultMessage: "MCP settings could not be saved. Try again.",
+  },
+});
 const toolsetLabels = defineMessages({
   workspace: { id: "mcp.toolset.workspace", defaultMessage: "Workspace" },
   contracts: { id: "mcp.toolset.contracts", defaultMessage: "Contracts" },
@@ -82,21 +101,22 @@ export function SettingsMcpPage() {
     setSaved(false);
     try {
       const result = await api.PATCH("/api/v1/mcp-settings", { body });
-      if (!result.data)
-        throw new Error(
-          result.error?.errors?.map((issue) => issue.message).join(" ") || result.error?.detail,
+      if (!result.data) {
+        setError(
+          intl.formatMessage(
+            result.response.status === 401 || result.response.status === 403
+              ? errorMessages.forbidden
+              : result.error?.errors?.some((issue) => issue.path === "apiKeyLifetimeDays")
+                ? errorMessages.invalidLifetime
+                : errorMessages.saveFailed,
+          ),
         );
+        return;
+      }
       setPolicy(result.data);
       setSaved(true);
-    } catch (error) {
-      setError(
-        error instanceof Error && error.message
-          ? error.message
-          : intl.formatMessage({
-              id: "settings.mcp.saveFailed",
-              defaultMessage: "MCP settings could not be saved. Try again.",
-            }),
-      );
+    } catch {
+      setError(intl.formatMessage(errorMessages.saveFailed));
     } finally {
       saving.current = false;
       setBusy(false);
@@ -106,12 +126,7 @@ export function SettingsMcpPage() {
     const days = Number(lifetime);
     if (!Number.isInteger(days) || days < 1 || days > 365) {
       setSaved(false);
-      setError(
-        intl.formatMessage({
-          id: "settings.mcp.invalidLifetime",
-          defaultMessage: "API key lifetime must be a whole number from 1 to 365 days.",
-        }),
-      );
+      setError(intl.formatMessage(errorMessages.invalidLifetime));
       return;
     }
     if (days !== policy.apiKeyLifetimeDays) void save({ apiKeyLifetimeDays: days });

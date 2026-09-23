@@ -122,7 +122,9 @@ it("keeps the saved switch state when a write is refused and names an invalid li
   renderAt("/settings/mcp");
   const control = await screen.findByRole("switch", { name: "Enable MCP" });
   await user.click(control);
-  expect(await screen.findByRole("alert")).toHaveTextContent("Administrator access is required.");
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Only an Administrator can change MCP settings. Reload to check your access.",
+  );
   expect(control).not.toBeChecked();
   const lifetime = screen.getByLabelText("API key lifetime (days)");
   await user.clear(lifetime);
@@ -131,4 +133,20 @@ it("keeps the saved switch state when a write is refused and names an invalid li
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "API key lifetime must be a whole number from 1 to 365 days.",
   );
+});
+
+it("shows the localized route error when MCP settings cannot load", async () => {
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/mcp-settings")
+        return problem(500, "Internal failure detail");
+    },
+  });
+  renderAt("/settings/mcp");
+  expect(
+    await screen.findByText("The page could not load. Reload to try again."),
+  ).toBeInTheDocument();
+  expect(screen.queryByText("MCP settings could not be read.")).not.toBeInTheDocument();
+  expect(screen.queryByText("Internal failure detail")).not.toBeInTheDocument();
 });

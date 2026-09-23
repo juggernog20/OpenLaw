@@ -73,7 +73,8 @@ const driverOptions = defineMessages({
 const descriptions = defineMessages({
   mcp: {
     id: "settings.advanced.mcpHelp",
-    defaultMessage: "Set the number of MCP calls allowed per credential each hour.",
+    defaultMessage:
+      "Configure the MCP calls per hour per credential. This limit is saved but is not enforced yet.",
   },
   instance: {
     id: "settings.advanced.instanceHelp",

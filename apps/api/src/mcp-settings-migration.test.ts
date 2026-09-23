@@ -56,3 +56,29 @@ it("leaves MCP off on upgrade and gives new Organization settings the same defau
     await db.$client.end();
   }
 });
+
+it("rolls back a failed MCP upgrade in a multi-migration batch and permits a retry", async () => {
+  const db = await freshDb(container, "mcp_rollback");
+  try {
+    await migrateThrough(db, "0158_matter-record-preparation", migrationEntries());
+    await db.execute(
+      sql`alter table org_settings add constraint org_settings_mcp_api_key_lifetime_check check (true)`,
+    );
+    await expect(runMigrations(db)).rejects.toMatchObject({ cause: { code: "42710" } });
+    expect(
+      (
+        await db.execute(sql`select column_name from information_schema.columns
+      where table_schema = 'public' and table_name = 'org_settings' and column_name like 'mcp_%'`)
+      ).rows,
+    ).toEqual([]);
+    await db.execute(
+      sql`alter table org_settings drop constraint org_settings_mcp_api_key_lifetime_check`,
+    );
+    await runMigrations(db);
+    expect(
+      (await db.execute(sql`select mcp_enabled, mcp_api_key_lifetime_days from org_settings`)).rows,
+    ).toEqual([{ mcp_enabled: false, mcp_api_key_lifetime_days: 90 }]);
+  } finally {
+    await db.$client.end();
+  }
+});

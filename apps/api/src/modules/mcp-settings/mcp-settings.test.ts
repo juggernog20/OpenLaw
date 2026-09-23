@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { activityLog, eq } from "@openlaw/db";
+import type { LightMyRequestResponse } from "fastify";
 import {
   signInCookies,
   startHarness,
@@ -54,6 +54,26 @@ const toolsets = [
   "team",
   "administration",
 ];
+function expectProblem(response: LightMyRequestResponse, status: number) {
+  expect(response.statusCode).toBe(status);
+  expect(response.headers["content-type"]).toContain("application/problem+json");
+  expect(response.json()).toMatchObject({
+    type: "about:blank",
+    status,
+    title: expect.any(String),
+    detail: expect.any(String),
+  });
+}
+async function auditEntries() {
+  const response = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/audit-log",
+    cookies,
+    query: { action: "org_settings.updated" },
+  });
+  expect(response.statusCode, response.body).toBe(200);
+  return response.json().entries;
+}
 it("reads the fresh-install policy and server address in one call", async () => {
   const response = await harness.app.inject({ method: "GET", url, cookies });
   expect(response.statusCode).toBe(200);
@@ -70,10 +90,8 @@ it("reads the fresh-install policy and server address in one call", async () => 
 it("refuses anonymous callers and Legal Team Members for both reads and writes", async () => {
   for (const method of ["GET", "PATCH"] as const) {
     const payload = method === "PATCH" ? { enabled: true } : undefined;
-    expect((await harness.app.inject({ method, url, payload })).statusCode).toBe(401);
-    expect(
-      (await harness.app.inject({ method, url, payload, cookies: staffCookies })).statusCode,
-    ).toBe(403);
+    expectProblem(await harness.app.inject({ method, url, payload }), 401);
+    expectProblem(await harness.app.inject({ method, url, payload, cookies: staffCookies }), 403);
   }
 });
 it("applies each policy change immediately and audits it at admin_only", async () => {
@@ -97,10 +115,7 @@ it("applies each policy change immediately and audits it at admin_only", async (
     expect((await harness.app.inject({ method: "GET", url, cookies })).json()[field]).toEqual(
       value,
     );
-    const rows = await harness.db
-      .select()
-      .from(activityLog)
-      .where(eq(activityLog.action, "org_settings.updated"));
+    const rows = await auditEntries();
     expect(rows).toContainEqual(
       expect.objectContaining({
         visibility: "admin_only",
@@ -119,14 +134,14 @@ it("applies each policy change immediately and audits it at admin_only", async (
 });
 it("names an invalid API key lifetime and writes neither policy nor audit", async () => {
   for (const apiKeyLifetimeDays of [0, 366, 1.5, "90"]) {
-    const before = await harness.db.select().from(activityLog);
+    const before = await auditEntries();
     const response = await harness.app.inject({
       method: "PATCH",
       url,
       cookies,
       payload: { enabled: false, apiKeyLifetimeDays },
     });
-    expect(response.statusCode).toBe(400);
+    expectProblem(response, 400);
     expect(response.json().errors).toContainEqual(
       expect.objectContaining({
         path: "apiKeyLifetimeDays",
@@ -134,7 +149,7 @@ it("names an invalid API key lifetime and writes neither policy nor audit", asyn
       }),
     );
     expect((await harness.app.inject({ method: "GET", url, cookies })).json().enabled).toBe(true);
-    expect(await harness.db.select().from(activityLog)).toEqual(before);
+    expect(await auditEntries()).toEqual(before);
   }
 });
 it("refuses unknown, duplicate and always-on Toolsets and unknown settings", async () => {
@@ -145,8 +160,20 @@ it("refuses unknown, duplicate and always-on Toolsets and unknown settings", asy
     { serverAddress: "https://other.test/mcp" },
     {},
   ]) {
-    expect((await harness.app.inject({ method: "PATCH", url, cookies, payload })).statusCode).toBe(
-      400,
-    );
+    const response = await harness.app.inject({ method: "PATCH", url, cookies, payload });
+    expectProblem(response, 400);
+    expect(response.json().errors.length).toBeGreaterThan(0);
   }
+});
+
+it("refuses the Legal Team Member access to MCP audit rows", async () => {
+  expectProblem(
+    await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/audit-log",
+      cookies: staffCookies,
+      query: { action: "org_settings.updated" },
+    }),
+    403,
+  );
 });

@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Administrator-only MCP policy (DD-029, SET-002, SET-014).
+ * Each changed field writes an org_settings.updated row at admin_only in
+ * the same transaction as the policy update (DD-017).
+ */
 import { orgSettings, eq } from "@openlaw/db";
 import { MCP_TOOLSETS } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";

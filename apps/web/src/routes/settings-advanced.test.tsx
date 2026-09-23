@@ -134,7 +134,7 @@ describe("Advanced settings", () => {
     expect(await screen.findByText(/heartbeat is missing/)).toBeInTheDocument();
     expect(screen.getByText("Restart required")).toBeInTheDocument();
   });
-  it.each(["instance", "uploads", "storage", "document-processing", "system-status"])(
+  it.each(["instance", "uploads", "storage", "document-processing", "system-status", "mcp-limits"])(
     "keeps %s restricted to administrators",
     async (path) => {
       stubApi({ signedIn: { ...ADMIN, role: "legal_team_member" } });

@@ -8415,7 +8415,7 @@
     "defaultMessage": "MCP rate limit"
   },
   "settings.advanced.mcpHelp": {
-    "defaultMessage": "Set the number of MCP calls allowed per credential each hour."
+    "defaultMessage": "Configure the MCP calls per hour per credential. This limit is saved but is not enforced yet."
   },
   "settings.advanced.mcpRate": {
     "defaultMessage": "Calls per hour per credential"
@@ -10501,6 +10501,9 @@
   },
   "settings.mcp.enable": {
     "defaultMessage": "Enable MCP"
+  },
+  "settings.mcp.forbidden": {
+    "defaultMessage": "Only an Administrator can change MCP settings. Reload to check your access."
   },
   "settings.mcp.invalidLifetime": {
     "defaultMessage": "API key lifetime must be a whole number from 1 to 365 days."

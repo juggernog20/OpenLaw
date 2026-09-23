@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DD-029's selectable Toolsets. Guide is always on and cannot be removed from the ceiling. */
+/**
+ * DD-029's selectable Toolsets, shared by the database default, API validation
+ * and settings pane. Guide is always on and cannot be removed from the ceiling.
+ */
 export const MCP_TOOLSETS = [
   "workspace",
   "contracts",
