@@ -40,6 +40,7 @@ import {
   validDateRanges,
 } from "../../lib/record-filters.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
+import { REQUIRE_TRIAGER } from "./disposition.js";
 import {
   liveTargetContractType,
   liveTargetMatterType,
@@ -55,9 +56,10 @@ import {
   type ConversionRecordReference,
 } from "./record-reference.js";
 import { requestUrgencyRank } from "./urgency-order.js";
+/** The Inbox is a triager's read (INT-006): the same roles `disposition.ts` and
+ * `assignRequest` require, read from one list so the three cannot drift. */
 function assertMember(user: AuthenticatedUser): void {
-  if (user.role !== "administrator" && user.role !== "legal_team_member")
-    throw httpError(403, NO_PERMISSION);
+  if (!REQUIRE_TRIAGER.some((role) => role === user.role)) throw httpError(403, NO_PERMISSION);
 }
 const PAGE_SIZE = 50;
 const CursorSchema = z.string().min(1).max(64);
