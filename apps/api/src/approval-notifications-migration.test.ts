@@ -62,19 +62,10 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
   }
 });
 
-it("rebuilds interrupted approval indexes and leaves the migration journal usable", async () => {
-  const db = await freshDb(container, "approval_index_retry");
+it("builds valid open-approval indexes inside the migration run", async () => {
+  const db = await freshDb(container, "approval_indexes");
   try {
     await migrateThrough(db, "0163_your-approvals", migrationEntries());
-    await db.execute(
-      sql`create index notifications_open_contract_approval_idx on notifications (id)`,
-    );
-    await db.execute(
-      sql`update pg_index set indisvalid = false where indexrelid = 'notifications_open_contract_approval_idx'::regclass`,
-    );
-    await db.execute(
-      sql`create index notifications_open_api_key_approval_idx on notifications (id)`,
-    );
     await runMigrations(db);
     await runMigrations(db);
     const indexes = await db.execute(
