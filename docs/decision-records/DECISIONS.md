@@ -1434,7 +1434,7 @@ The codebase makes one answer cheap. Every access helper takes the database and 
 
 Toolset labels, as shown on the request form and the consent page: Guide, which is hidden because no grant can drop it, Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge, People, Team, Administration.
 
-The register as settled on 2026-09-23. The Legal User and Business User columns give each Toolset's default for that audience. "always" is the `guide` Toolset. Kind `destr` is a destructive write.
+The register as settled on 2026-09-23. The Legal User and Business User columns give each Toolset's default for that audience. The Legal User column covers Administrators and Legal Team Members alike. An Administrator differs in one way: the Administration Toolset, T35 and T40, is theirs alone, off by default, and lands in M42, so an Administrator's default count is the Legal User count. "always" is the `guide` Toolset. Kind `destr` is a destructive write.
 
 | Id  | Toolset     | Tool                          | Kind  | Legal User | Business User | What it does                                                                                                                                                                |
 | --- | ----------- | ----------------------------- | ----- | ---------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1504,7 +1504,7 @@ Rules that shaped the register:
 
 **12. Documentation.** An Administrator guide for the MCP section. One user guide per Client, Claude, ChatGPT and Microsoft 365 Copilot, with the exact connect steps and the consent page. A deployment chapter with two profiles: "LAN only", with API keys and no OAuth, and "publicly reachable", with OAuth, proxy rules and vendor IP allowlists. T3 and T4 read these same articles through DD-020.
 
-**13. Three milestones, inside v1.** M40 is API keys plus the full register, read and write, T1 to T39, T41 and T42. M41 is OAuth, Allowed Clients, the consent page, and Claude, ChatGPT and Microsoft 365 Copilot proven end to end. M42 is resources, prompts, the listen stream, and the Team and Administration Toolsets, T33 to T35 and T40. Writes are not tied to the auth path. A key with the write scope is gated by the approval flow. M40 to M42 go before M34 Release in the implementation plan, not after.
+**13. Three milestones, inside v1.** M40 is API keys plus the register, read and write: T1 to T32, T36 to T39, T41 and T42. M41 is OAuth, Allowed Clients, the consent page, and Claude, ChatGPT and Microsoft 365 Copilot proven end to end. M42 is resources, prompts, the listen stream, and the Team and Administration Toolsets, T33 to T35 and T40. Writes are not tied to the auth path. A key with the write scope is gated by the approval flow. M40 to M42 go before M34 Release in the implementation plan, not after.
 
 ### Rationale
 

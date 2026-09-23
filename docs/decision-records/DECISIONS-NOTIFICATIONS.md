@@ -96,8 +96,9 @@ The bell list gains one pinned group, "Your approvals", above every other item. 
 every open approval addressed to the person: Contract Approval requests under CTR-012,
 API key requests for an Administrator under DD-029, and any approval kind added later.
 An item enters the group when the approval is asked of the person. It leaves the group
-only when handled, which means answered or cancelled by the requester. Reading it does
-not move it. The group is hidden when it is empty. The Portal bell is the same component
+when handled, which means answered or cancelled by the requester, or when the wall
+removes it because the person can no longer see its record. Reading it does not move
+it. The group is hidden when it is empty. The Portal bell is the same component
 and follows the same rule, so a Business User with an open approval of a later kind sees
 the group too. Nothing about the group, and nothing about MCP, is on Home. Home's
 Approvals card stays the CTR-012 read it is today. The rows are ordinary notification

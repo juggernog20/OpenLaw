@@ -762,7 +762,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
       the member adds OpenLaw to Claude Code with one command and asks which Contracts expire this quarter.
   - The `/mcp` mount on SDK v2 serving both protocol eras; the api-key plugin with the approval flow
   - Personal → API keys; Organization → MCP with the group rows and the ceiling; "Your approvals" in the bell
-  - Every Tool of every default Toolset, read and write, T1 to T39, T41 and T42, with the `write` scope
+  - Every Tool of every default Toolset, read and write: T1 to T32, T36 to T39, T41 and T42, with the `write` scope
   - Via attribution on activity rows and the Tool calls tab on the Audit log
   - The browser journey and the two `DEPLOYMENT.md` profiles, "LAN only" and "publicly reachable"
   - _Decisions:_ DD-029, TECH-035, SET-014; DD-017, TECH-033, NOT-001 and NOT-005 addenda
