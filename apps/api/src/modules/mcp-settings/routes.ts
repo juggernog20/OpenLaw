@@ -77,7 +77,10 @@ export const mcpSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["mcp-settings"],
         body: Policy.partial()
           .strict()
-          .refine((body) => Object.keys(body).length > 0),
+          .refine(
+            (body) => Object.keys(body).length > 0,
+            "Name at least one MCP setting to change.",
+          ),
         response: { 200: State, default: problemResponse },
       },
     },
@@ -98,7 +101,7 @@ export const mcpSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
             actorId: request.user.id,
             action: "org_settings.updated",
             visibility: "admin_only",
-            payload: { field: `mcp.${field}`, old: row[field], new: next },
+            payload: { field: fieldColumns[field], old: row[field], new: next },
           });
         }
         if (Object.keys(changes).length)

@@ -12,6 +12,7 @@ import { MCP_TOOLSETS } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { requireUser } from "../lib/session";
+import { TOOLSET_MESSAGES } from "../lib/mcp";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { Button } from "../components/ui/button";
@@ -42,21 +43,6 @@ const errorMessages = defineMessages({
     id: "settings.mcp.saveFailed",
     defaultMessage: "MCP settings could not be saved. Try again.",
   },
-});
-const toolsetLabels = defineMessages({
-  workspace: { id: "mcp.toolset.workspace", defaultMessage: "Workspace" },
-  contracts: { id: "mcp.toolset.contracts", defaultMessage: "Contracts" },
-  matters: { id: "mcp.toolset.matters", defaultMessage: "Matters" },
-  tasks: { id: "mcp.toolset.tasks", defaultMessage: "Tasks" },
-  requests: { id: "mcp.toolset.requests", defaultMessage: "Requests" },
-  comments: { id: "mcp.toolset.comments", defaultMessage: "Comments" },
-  documents: { id: "mcp.toolset.documents", defaultMessage: "Documents" },
-  "auto-docs": { id: "mcp.toolset.autoDocs", defaultMessage: "Auto-Docs" },
-  entities: { id: "mcp.toolset.entities", defaultMessage: "Entities" },
-  knowledge: { id: "mcp.toolset.knowledge", defaultMessage: "Knowledge" },
-  people: { id: "mcp.toolset.people", defaultMessage: "People" },
-  team: { id: "mcp.toolset.team", defaultMessage: "Team" },
-  administration: { id: "mcp.toolset.administration", defaultMessage: "Administration" },
 });
 function PolicyRow({
   icon: Icon,
@@ -279,7 +265,7 @@ export function SettingsMcpPage() {
                   })
                 }
               />
-              {intl.formatMessage(toolsetLabels[id])}
+              {intl.formatMessage(TOOLSET_MESSAGES[id])}
             </label>
           ))}
         </div>

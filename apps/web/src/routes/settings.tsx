@@ -285,7 +285,6 @@ const ORGANIZATION_GROUP: SettingsGroup = {
             defaultMessage: "Audit log",
           }),
         },
-        { id: "mcp-limits", path: "/settings/mcp-limits", icon: Bot, label: advancedTitles.mcp },
         { id: "instance", path: "/settings/instance", icon: Globe, label: advancedTitles.instance },
         { id: "uploads", path: "/settings/uploads", icon: Upload, label: advancedTitles.uploads },
         { id: "storage", path: "/settings/storage", icon: Database, label: advancedTitles.storage },
@@ -295,6 +294,7 @@ const ORGANIZATION_GROUP: SettingsGroup = {
           icon: Cog,
           label: advancedTitles.processing,
         },
+        { id: "mcp-limits", path: "/settings/mcp-limits", icon: Bot, label: advancedTitles.mcp },
         {
           id: "system-status",
           path: "/settings/system-status",

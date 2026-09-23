@@ -39,6 +39,14 @@ afterAll(async () => {
 });
 
 const url = "/api/v1/mcp-settings";
+const auditFields = {
+  enabled: "mcpEnabled",
+  legalApiKeysEnabled: "mcpLegalApiKeysEnabled",
+  businessApiKeysEnabled: "mcpBusinessApiKeysEnabled",
+  toolsetCeiling: "mcpToolsetCeiling",
+  readOnly: "mcpReadOnly",
+  apiKeyLifetimeDays: "mcpApiKeyLifetimeDays",
+} as const;
 const toolsets = [
   "workspace",
   "contracts",
@@ -119,7 +127,11 @@ it("applies each policy change immediately and audits it at admin_only", async (
     expect(rows).toContainEqual(
       expect.objectContaining({
         visibility: "admin_only",
-        payload: expect.objectContaining({ field: `mcp.${field}`, new: value }),
+        payload: expect.objectContaining({
+          field: auditFields[field as keyof typeof auditFields],
+          old: expect.anything(),
+          new: value,
+        }),
       }),
     );
   }
