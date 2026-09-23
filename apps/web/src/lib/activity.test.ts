@@ -1424,6 +1424,29 @@ describe("the sentences a reader gets", () => {
     ]);
   });
 
+  it("names each MCP policy field and reads the ceiling as Toolset labels (#1048)", () => {
+    const change = (field: string, old: unknown, next: unknown) =>
+      narrate("org_settings.updated", { field, old, new: next }).changes;
+    expect(change("mcpEnabled", false, true)).toEqual([{ label: "MCP", from: "No", to: "Yes" }]);
+    expect(change("mcpLegalApiKeysEnabled", false, true)).toEqual([
+      { label: "Legal Users API keys", from: "No", to: "Yes" },
+    ]);
+    expect(change("mcpBusinessApiKeysEnabled", true, false)).toEqual([
+      { label: "Business Users API keys", from: "Yes", to: "No" },
+    ]);
+    expect(change("mcpReadOnly", false, true)).toEqual([
+      { label: "MCP read-only", from: "No", to: "Yes" },
+    ]);
+    expect(change("mcpApiKeyLifetimeDays", 90, 30)).toEqual([
+      { label: "API key lifetime (days)", from: "90", to: "30" },
+    ]);
+    // The ceiling stores slugs; the feed says "Auto-Docs", and an empty
+    // ceiling reads as unset like every other emptied list.
+    expect(change("mcpToolsetCeiling", ["contracts", "auto-docs", "retired"], [])).toEqual([
+      { label: "Toolset ceiling", from: "Contracts, Auto-Docs, and Retired", to: "Not set" },
+    ]);
+  });
+
   it("says where a folder was made, and says when it was made at the root", () => {
     expect(narrate("folder.created", SAMPLE_PAYLOADS["folder.created"]).sentence).toBe(
       "Nadia Counsel made the Exhibits folder in Drafts",

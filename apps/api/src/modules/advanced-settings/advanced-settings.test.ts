@@ -70,6 +70,35 @@ async function save(section: string, values: Record<string, string>, version?: s
   });
 }
 describe("advanced settings", () => {
+  it("saves the MCP calls-per-hour limit for the next boot", async () => {
+    expect((await read("mcp")).fields).toEqual([
+      expect.objectContaining({
+        key: "MCP_RATE_LIMIT_PER_HOUR",
+        value: "600",
+        activeValue: "600",
+        locked: false,
+      }),
+    ]);
+    const result = await save("mcp", { MCP_RATE_LIMIT_PER_HOUR: "1200" });
+    expect(result.statusCode, result.body).toBe(200);
+    expect(result.json()).toMatchObject({
+      restartRequired: true,
+      fields: [expect.objectContaining({ value: "1200", activeValue: "600" })],
+    });
+    expect((await resolveAdvancedSettings(harness.db, {})).active.MCP_RATE_LIMIT_PER_HOUR).toBe(
+      "1200",
+    );
+    expect(
+      (await resolveAdvancedSettings(harness.db, { MCP_RATE_LIMIT_PER_HOUR: "900" })).active
+        .MCP_RATE_LIMIT_PER_HOUR,
+    ).toBe("900");
+    for (const value of ["0", "-1", "1.5", "invalid", ""]) {
+      const refused = await save("mcp", { MCP_RATE_LIMIT_PER_HOUR: value });
+      expect(refused.statusCode).toBe(400);
+      expect(refused.json().detail).toContain("MCP_RATE_LIMIT_PER_HOUR");
+    }
+  });
+
   it("requires authentication for reads, writes, probes and status", async () => {
     for (const [method, url, payload] of [
       ["GET", "/api/v1/advanced-settings/instance", undefined],
@@ -118,12 +147,14 @@ describe("advanced settings", () => {
         baseline: {
           STORAGE_PATH: harness.storageRoot,
           BASE_URL: "https://pinned.corp.example",
+          MCP_RATE_LIMIT_PER_HOUR: "900",
           DOC_ENGINE_URL: "http://doc-engine:8080",
         },
         active: effectiveEnvironment(
           {
             STORAGE_PATH: harness.storageRoot,
             BASE_URL: "https://pinned.corp.example",
+            MCP_RATE_LIMIT_PER_HOUR: "900",
             DOC_ENGINE_URL: "http://doc-engine:8080",
           },
           emptySettings(),
@@ -156,6 +187,28 @@ describe("advanced settings", () => {
         }),
       ]);
       const version = instance.json().version as string;
+      const mcp = await pinnedHarness.app.inject({
+        method: "GET",
+        url: "/api/v1/advanced-settings/mcp",
+        cookies: pinnedCookies,
+      });
+      expect(mcp.json().fields).toEqual([
+        expect.objectContaining({
+          key: "MCP_RATE_LIMIT_PER_HOUR",
+          value: "900",
+          source: "deployment",
+          locked: true,
+        }),
+      ]);
+      const mcpRefused = await pinnedHarness.app.inject({
+        method: "PUT",
+        url: "/api/v1/advanced-settings/mcp",
+        cookies: pinnedCookies,
+        payload: { version, values: { MCP_RATE_LIMIT_PER_HOUR: "800" } },
+      });
+      expect(mcpRefused.statusCode).toBe(400);
+      expect(mcpRefused.json().detail).toContain("MCP_RATE_LIMIT_PER_HOUR");
+
       const refused = await pinnedHarness.app.inject({
         method: "PUT",
         url: "/api/v1/advanced-settings/instance",

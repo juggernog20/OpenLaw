@@ -10,11 +10,12 @@ import {
   DEFAULT_DOC_ENGINE_COMPARE_TIMEOUT_MS,
 } from "../../lib/doc-engine/config.js";
 
-export const sectionIds = ["instance", "uploads", "storage", "processing"] as const;
+export const sectionIds = ["instance", "uploads", "storage", "processing", "mcp"] as const;
 export type SectionId = (typeof sectionIds)[number];
 export type Environment = Readonly<Record<string, string | undefined>>;
 export const sections: Record<SectionId, readonly string[]> = {
   instance: ["BASE_URL"],
+  mcp: ["MCP_RATE_LIMIT_PER_HOUR"],
   uploads: ["MAX_UPLOAD_MB"],
   storage: [
     "STORAGE_DRIVER",
@@ -52,6 +53,7 @@ export const PLAIN_HTTP_HOSTS_VARIABLE = "OPENLAW_PLAIN_HTTP_HOSTS";
 export const defaults: Record<string, string> = {
   BASE_URL: "http://localhost:3000",
   MAX_UPLOAD_MB: "100",
+  MCP_RATE_LIMIT_PER_HOUR: "600",
   STORAGE_DRIVER: "local",
   STORAGE_PATH: "/var/lib/openlaw/files",
   S3_REGION: "us-east-1",
@@ -247,6 +249,9 @@ export function validateSettings(env: Environment): void {
         `${key} must be an HTTP or HTTPS address without credentials, query parameters or fragments${key === "BASE_URL" ? ", and without a path" : ""}.`,
       );
   }
+  const mcpRate = Number(env.MCP_RATE_LIMIT_PER_HOUR);
+  if (!Number.isSafeInteger(mcpRate) || mcpRate < 1)
+    throw new Error("MCP_RATE_LIMIT_PER_HOUR must be a positive whole number.");
   const upload = Number(env.MAX_UPLOAD_MB);
   if (!Number.isSafeInteger(upload) || upload < 1 || upload > 10240)
     throw new Error("The upload limit must be a whole number from 1 to 10,240 MiB.");

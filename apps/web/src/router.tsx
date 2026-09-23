@@ -17,6 +17,7 @@ import {
   settingsSystemStatusLoader,
 } from "./routes/settings-advanced";
 
+import { SettingsMcpPage, settingsMcpLoader } from "./routes/settings-mcp";
 import { SettingsAutoDocsPage, settingsAutoDocsLoader } from "./routes/settings-auto-docs";
 import { SettingsEmailPage, settingsEmailLoader } from "./routes/settings-email";
 import {
@@ -472,6 +473,16 @@ export const routes: RouteObject[] = [
         element: <SettingsDepartmentsPage />,
       },
       { path: "email", loader: settingsEmailLoader, element: <SettingsEmailPage /> },
+      {
+        path: "mcp",
+        loader: settingsMcpLoader,
+        element: <SettingsMcpPage />,
+      },
+      {
+        path: "mcp-limits",
+        loader: settingsAdvancedLoader("mcp"),
+        element: <SettingsAdvancedPage section="mcp" />,
+      },
       {
         path: "instance",
         loader: settingsAdvancedLoader("instance"),

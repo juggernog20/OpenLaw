@@ -1121,6 +1121,13 @@
       "when": 1790040108488,
       "tag": "0159_retire-legacy-fields",
       "breakpoints": true
+    },
+    {
+      "idx": 160,
+      "version": "7",
+      "when": 1790181643214,
+      "tag": "0160_mcp-settings",
+      "breakpoints": true
     }
   ]
 }

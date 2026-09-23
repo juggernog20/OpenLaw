@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { identifierLabel } from "./identifier-label";
+import { toolsetLabel } from "./mcp";
 
 /**
  * The narration layer (M9/6, DD-017): one activity-log entry in, one
@@ -392,6 +393,8 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "audienceUsers {Selected people} audienceDepartments {Selected Departments} " +
         "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
         "requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} " +
+        "mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} " +
+        "mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} " +
         "other {{key}}}",
     },
     { key },
@@ -458,6 +461,10 @@ function changeValue(
       { value: String(value) },
     );
   if (key === "priority") return severityLabel(intl, value as SeverityLevel);
+  // DD-029's ceiling stores Toolset slugs, so the feed says "Auto-Docs"
+  // where the column says `auto-docs`. A slug this build no longer has
+  // reads as itself.
+  if (key === "mcpToolsetCeiling" && typeof value === "string") return toolsetLabel(intl, value);
   if (key === "risk") return riskLabel(intl, value as SeverityLevel);
   // CTR-006's term type is a stored slug, so the feed says "Evergreen"
   // where the column says `evergreen`. Its ICU message carries an
