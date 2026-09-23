@@ -1608,6 +1608,14 @@ One `onRequest` hook on the root context, registered before any route so no modu
 
 `apps/api/src/origin-check.test.ts` holds the rule, container-free. The web bundle is served same-origin (TECH-017) and its client uses `window.location.origin`, so no fetch changes. In development Vite proxies `/api` and sets `Origin` to the API's own origin, which passes.
 
+### Addendum (2026-09-23, DD-029): `/mcp` and the well-known paths are outside the origin check
+
+DD-029 mounts an MCP server at `/mcp`. The check above stays on `/api/v1/*` and does not extend to it. `/mcp`, `/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource` and its path-suffixed form, and the `/oauth2/*` endpoints better-auth serves are exempt. An MCP Client connects from a vendor's cloud or from a terminal. It sends no `Origin`, or a foreign one, and it never sends the session cookie. The check exists to stop a browser form from riding the cookie, and on `/mcp` the cookie is never a credential. The bearer token or the API key is the credential. A request on `/mcp` with neither is refused with 401 and a `WWW-Authenticate` challenge, whatever cookie it carries. TECH-035 holds the challenge and the verifiers.
+
+The consent page is a browser page. Its POST keeps the check, because it is the one MCP surface where the cookie is the credential.
+
+`BASE_URL` gains a second job. The `resource` value the server advertises, the issuer in the authorization server metadata and the well-known documents all derive from it, and the reachability guard of DD-029 reads it when an Administrator turns OAuth Clients on. SET-013 pins it from the environment, so the deployment decides the address the clients see. A change of `BASE_URL` changes the audience of every issued token, so every OAuth grant is made again after a move.
+
 ## TECH-034: Web Push with VAPID and a service worker without offline caching
 
 - **Status:** Accepted
@@ -1684,6 +1692,63 @@ enrolment and preferences without relying on an external push service or an OS a
 
 The subscription route stores any HTTPS URL a signed-in person posts, and the worker connects to it. Left alone, that is a way to make the worker open a socket inside the install's own network. The control is at the connection, in `push-endpoint.ts`. The sender's HTTPS agent resolves the host when the socket opens, refuses every answer that is not a public address, and connects to the address it checked, so a name that changes its answer between a check and the connect gains nothing. An IP literal is judged before the socket, because `net.connect` does not resolve one. A refused endpoint is pruned as a gone endpoint is, and the row settles as it does with no live subscription, with one warning line naming the subscription. Loopback, private, shared, link-local, multicast, documentation and NAT64 ranges are refused for both IP versions; an IPv4-mapped IPv6 address is judged by the IPv4 rules. One consequence: an install that reaches the internet only through NAT64 cannot push, because every synthesized answer is refused. Tests reach a loopback relay through the handler's `any` policy, which production never sets.
 
+## TECH-035: The MCP server and its authentication stack
+
+- **Status:** Accepted
+- **Date:** 2026-09-23
+- **Origin:** DD-029; `MCP-RESEARCH.md` sections 1 to 4, 10 and 11, read on 2026-09-23
+
+### Context
+
+DD-029 puts an MCP server in OpenLaw. Three chat clients must reach it: Claude, ChatGPT and Microsoft 365 Copilot. They disagree on the protocol era, on how a client registers, and on where a credential goes. The stack must serve all three from one endpoint, with better-auth as the authorization server, and admit an API key as a second credential on the same endpoint. The current stack pins are zod 4.6, Fastify 5.12, better-auth 1.7.5 and Node 24. SDK v2 needs zod 4.2 or later and Fastify 5.2 or later, so no upgrade blocks this.
+
+### Decision
+
+**The protocol and the SDK.** OpenLaw serves spec revision 2026-07-28 and the legacy era on one Streamable HTTP endpoint at `/mcp`. Claude already sends `server/discover` and per-request `_meta`. ChatGPT and every Microsoft client still open with `initialize`. Research section 10. The SDK is v2: `@modelcontextprotocol/server` 2.0.0 with `@modelcontextprotocol/fastify` and `@modelcontextprotocol/node`, mounted on the existing Fastify app rather than on a second instance. `createMcpHandler` builds a fresh `McpServer` per request from a factory that receives the era and the verified `authInfo`, so the instance is built for one caller and the handler holds nothing between requests. Its default `legacy: 'stateless'` posture answers `initialize` for the legacy clients and per-request `_meta` for the modern ones. Research section 3. There is no `/sse` endpoint and no session. Copilot Studio dropped SSE, Claude Code falls back on its own, and ChatGPT accepts Streamable HTTP. `tools/list` returns the register in a fixed order. Research section 10.
+
+**The authentication plugins.** better-auth gains `@better-auth/mcp` with `jwt()`, `@better-auth/cimd` with `metadataProfile: "mcp-2026-07-28"`, and `@better-auth/api-key`, all at 1.7.5. `mcp()` makes better-auth the OAuth 2.1 authorization server and publishes the protected resource document. `jwt()` provides the signing key and the `/jwks` endpoint the resource server verifies against. `oauthProvider()` is not registered beside `mcp()`, because the docs forbid the pair. Dynamic client registration is never implicit. better-auth never enables it on its own, and OpenLaw exposes it only behind the separate switch of DD-029, off by default. The `resource` is `${BASE_URL}/mcp`. Keys are hashed at rest, and `disableKeyHashing` is never set. Research section 4. A person signs in on the consent page through whatever TECH-008 method the organization runs.
+
+**Two kinds of Allowed Client.** A published identity is a Client ID Metadata Document URL. Claude is `https://claude.ai/oauth/mcp-oauth-client-metadata`, Claude Code is `https://claude.ai/oauth/claude-code-client-metadata`, and ChatGPT is `https://chatgpt.com/oauth/client.json`. These are seeded and not editable. A registered client is a client id with a generated one-time secret and pasted callback URLs. Microsoft 365 Copilot ships as a template of this kind and needs three callbacks: the `https://global.consent.azure-apim.net/redirect/<connector-id>` URL the Copilot Studio wizard shows after Create, `https://teams.microsoft.com/api/platform/v1.0/oAuthRedirect` for Microsoft 365 declarative agents, and `https://vscode.dev/redirect` for the Agents Toolkit tool fetch. The redirect allowlist for the published identities is fixed in code: `https://claude.ai/api/mcp/auth_callback`; `http://localhost/callback` and `http://127.0.0.1/callback` with the port ignored; `https://chatgpt.com/connector_platform_oauth_redirect` and `https://chatgpt.com/connector/oauth/{callback_id}`. Research section 10.
+
+**What the authorization server metadata must say.** `client_id_metadata_document_supported: true` and `none` in `token_endpoint_auth_methods_supported`, or Claude falls back to DCR. `S256` in `code_challenge_methods_supported`, or ChatGPT refuses the server. `authorization_response_iss_parameter_supported: true` with `iss` in every authorization response, or ChatGPT uses its per-connection redirect and Claude Code fails the sign-in. `offline_access` in `scopes_supported`, so Claude and ChatGPT ask for refresh tokens. The protected resource metadata is published at `/.well-known/oauth-protected-resource` and at the path-suffixed form, and a 401 carries `WWW-Authenticate: Bearer resource_metadata="..." scope="..."`. A call outside the grant answers 403 with `error="insufficient_scope"`, which is the step-up DD-029 relies on. The server validates the token audience, and it does not require the RFC 8707 `resource` parameter at the authorization server, because Claude and ChatGPT send it and no Microsoft page mentions it. Discovery and token endpoints answer within 10 seconds. Research sections 2 and 10.
+
+**The header slots.** An OAuth access token arrives as `Authorization: Bearer`. An API key arrives as `x-api-key`, the plugin's default header, or as `Authorization: Bearer`. Claude Code, the Messages API, the Responses API and Copilot Studio all send a static header, and some of them fill only the Authorization slot. Research section 10. A key carries a fixed prefix, which the plugin supports at creation, so the guard tells a key from a JWT before it picks a verifier. A cookie is never a credential on `/mcp`; the TECH-033 addendum holds the origin rule. Verification runs in front of the handler and passes `authInfo` through. A verified key resolves to its owner's `AuthenticatedUser` through OpenLaw's own guard chain, the shape the worker already reuses. The plugin's `enableSessionForAPIKeys` stays off, because better-auth warns that a mock session from a key is a way to impersonate a user. Research section 4.
+
+**The reachability guard warns.** When an Administrator turns OAuth Clients on and `BASE_URL` resolves to a private address or has no IPv4 record, OpenLaw shows the failed checks and lets the Administrator proceed, because a proxy may front the API. Claude rejects both conditions, so the warning names them. Research section 10.
+
+**One definition per Tool, adapted to MCP.** Each Tool is a plain function with its zod input and output schemas and its annotations, in a module that knows nothing about the transport. The `/mcp` mount adapts that module to the SDK. This is the shape Neon's tools package takes, and it keeps the parked "AI connector consumes the Tool register" row cheap, because a second adapter is all it needs.
+
+**Register rules, enforced by tests.** A Tool name is 64 characters or fewer. A description is 2,048 characters or fewer. Every Tool carries `title`, `readOnlyHint`, `destructiveHint`, `openWorldHint` and `idempotentHint`. No input schema uses `$ref`, a `type` array or an integer `exclusiveMinimum`. Enums are strings, with the values named in the description, because Copilot Studio reads an enum as a string. Every Tool declares an `outputSchema` and returns `structuredContent` beside a text content item, because ChatGPT wants the pair and Copilot Studio documents only text. The server instructions are self-contained in the first 512 characters. The number of Tools visible to one audience is pinned to the count DD-029 accepted, so a new Tool must move the number in the test. Tool names are a public contract, because ChatGPT freezes a published app and the Microsoft registry pins a snapshot. Research sections 1 and 10.
+
+**Limits.** The rate limit is calls per hour per credential, org default 600, configured in Advanced settings. The default is a starting number. A Client in code mode runs a script that calls Tools in a loop, so the deployment guide tells a deployer what to raise it to and the refusal names the number. Result size is a hard-coded byte budget with paging. Claude Code warns at 10,000 tokens and refuses at 25,000. A Tool call completes within 30 seconds, which is the Cowork bound. Research sections 10 and 11.
+
+**The upload URL of T27.** `openlaw_document_upload` returns a short-lived upload URL, the headers and form field to use, and a pending Version id. The Client sends the file to that URL. The upload completes the Version under the bounded-blob limit and the never-overwrite key of DOC-012. No file bytes ride a tool argument. Research section 11 found no chat client that can put an attached file's bytes into an argument, and this is the shape Notion MCP documents.
+
+**Egress ranges to document.** The deployment chapter's "publicly reachable" profile names three allowlists. Anthropic's MCP calls come from `160.79.104.0/21`. OpenAI publishes `https://openai.com/chatgpt-connectors.json` and asks deployers to refresh it on a schedule. Copilot Studio calls leave through the regional `AzureConnectors` and `PowerPlatformPlex` service tags, refreshed at least every 90 days. The ranges for Microsoft 365 Copilot chat and the Agent 365 gateway are not published. The host is a public IPv4 HTTPS address with no cross-host redirects. Research section 10.
+
+### Rationale
+
+One endpoint that speaks both eras is the only shape that serves all three clients on 2026-09-23. Claude has moved to the modern era, ChatGPT and Microsoft have not, and the SDK's default posture already answers both. SDK v2 is what better-auth's `mcp()` plugin targets, and its stateless handler matches TECH-017's single app container. The plugin trio is the vendor's own recommended set for an MCP resource server. The metadata fields are each a documented refusal from one of the three clients, so every one is a test, not a preference. The upload URL is the one file path that works from a chat client today.
+
+### Alternatives considered
+
+- **SDK v1, `@modelcontextprotocol/sdk` 1.30.** Rejected. It receives bug fixes for at least six months, but it does not speak 2026-07-28, and better-auth's `mcp()` targets v2.
+- **`oauthProvider()` on its own.** Rejected. The docs route an MCP resource server through `mcp()`, and the two must not be registered together.
+- **better-auth's `oidc-provider` plugin.** Rejected. Its docs page returns 404, no package exists on npm, and its deprecation status is unverified.
+- **The `bearer` plugin.** Rejected. It carries a session token, not an OAuth token, and better-auth says it is for APIs that cannot use cookies.
+- **`enableSessionForAPIKeys`.** Rejected. better-auth warns against it, and the guard chain already resolves an `AuthenticatedUser` without a mock session.
+- **An `/sse` endpoint beside `/mcp`.** Rejected. No target client needs it.
+- **DCR on by default.** Rejected. The spec deprecates it, Claude warns that it registers a new client on every fresh connection, and the Allowed Clients list is the control.
+- **Requiring the `resource` parameter at the authorization server.** Rejected. Microsoft does not document sending it.
+
+### Consequences
+
+- New dependencies: `@modelcontextprotocol/server`, `@modelcontextprotocol/fastify`, `@modelcontextprotocol/node`, `@better-auth/mcp`, `@better-auth/cimd`, `@better-auth/api-key`. Expect churn; the SDK README limits pull requests while v2 settles.
+- The API gains the `/mcp` mount, the OAuth and well-known routes better-auth serves, the consent page route, and a per-credential rate limiter. The register rules above become tests in the API package.
+- Tables for keys, key requests, Allowed Clients and grants land with M40 and M41 under the incremental schema rule.
+- `DEPLOYMENT.md` gains the two profiles of DD-029 and the three egress allowlists.
+- Unverified before build: whether Claude.ai completes CIMD registration when DCR is off; the revision each client negotiates; Copilot Studio's PKCE, `resource`, `WWW-Authenticate` and session handling and its exact callback URL; whether each chat client sends a file to the T27 upload URL; whether ChatGPT's `openai/fileParams` path fires for an unpublished Developer mode connector. Each is tested against a throwaway server before the milestone it gates.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -1720,5 +1785,6 @@ The subscription route stores any HTTPS URL a signed-in person posts, and the wo
 | TECH-030 | Connector calls: no redirects, DocuSign host allowlist, bounded reads         | Accepted                                                                        |
 | TECH-031 | First-run setup demands a bootstrap token from the log                        | Accepted                                                                        |
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
-| TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted                                                                        |
+| TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted                                                                        |

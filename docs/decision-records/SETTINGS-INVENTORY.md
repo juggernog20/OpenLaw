@@ -380,3 +380,12 @@ code-owned format sentence. Shared rules have no editor. Contract analysis promp
 links to Contracts → Fields for catalog prompts and their Answer style overrides.
 The pending AI analysis frame redraw must show these four cards and the Request
 conversion switches.
+
+## Amendment (2026-09-23, DD-029, SET-014, DES-092) — two panes drawn in a second file
+
+Organization → MCP and Personal → API keys are not in `settings.pen`. They are `designs/mcp.pen`
+frames MC1 (`h6Rm2`) and MC2 (`NLZJR`), with the request dialog MC3 and the once-shown key MC4
+over MC2. Both frames draw the rail with MCP after Integrations and before Advanced, and API keys
+after Notifications under Personal. Every settings frame in this file still draws the old rail,
+so the rail redraw already owed by the ST7 amendments now also owes those two entries. DES-092
+holds the drawing rules; SET-014 holds the contents and their order.

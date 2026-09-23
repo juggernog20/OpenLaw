@@ -90,6 +90,21 @@ Email remains the Requester's reach-out channel; Push adds delivery to enrolled 
 The push body names only the notification ID and its bell surface. Content is read from
 that surface through the current session and the same wall as the bell.
 
+### Addendum, 2026-09-23, DD-029: "Your approvals" is a pinned group at the top of the bell
+
+The bell list gains one pinned group, "Your approvals", above every other item. It holds
+every open approval addressed to the person: Contract Approval requests under CTR-012,
+API key requests for an Administrator under DD-029, and any approval kind added later.
+An item enters the group when the approval is asked of the person. It leaves the group
+only when handled, which means answered or cancelled by the requester. Reading it does
+not move it. The group is hidden when it is empty. The Portal bell is the same component
+and follows the same rule, so a Business User with an open approval of a later kind sees
+the group too. Nothing about the group, and nothing about MCP, is on Home. Home's
+Approvals card stays the CTR-012 read it is today. The rows are ordinary notification
+rows with an approval kind and an open-or-handled state, so the Notifier's audience,
+wall and preference steps apply unchanged. The DES record for the MCP screens draws the
+pinned row.
+
 ## NOT-002 — Event catalog: five groups, defaults by interruptiveness
 
 - **Status** — Accepted
@@ -378,6 +393,18 @@ Mark all read also close matching OS notifications through the service worker.
 The notification ID is the OS tag, with `renotify` off, so a repeated delivery replaces
 the same visible notification without another alert. The 9+ badge and the 2026-09-09
 amendment remain in force on both bells.
+
+### Addendum, 2026-09-23, DD-029: open approvals count until handled
+
+An item in "Your approvals" counts in the badge until it is handled, even when it has
+been read. The 2026-09-09 amendment stands for every other item: read on open, and the
+count falls one at a time. An open approval is the one exception, because the badge
+must keep saying that somebody is waiting on this person. Mark all read does not touch
+the group. It stamps the other items and leaves every open approval where it is, unread
+or read, until the person answers it or the requester cancels it. The read routes are
+unchanged; `POST /notifications/read` may stamp an approval item's `read_at`, and the
+badge still counts it while it is open. The wall applies as it does today: an approval
+about a record the person can no longer see leaves the group and the count.
 
 ## NOT-006 — The morning digest's anatomy and its delivery rules
 
@@ -685,11 +712,11 @@ out of scope.
 
 | #       | Decision                                                                 | Status                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| NOT-001 | One system, two surfaces: bell + email for staff and portal users        | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum; Push added as the third channel by the M38 addendum                                                                                                                                                                                       |
+| NOT-001 | One system, two surfaces: bell + email for staff and portal users        | Accepted; the portal surface built and its read rule added by the M20/8 and M20/9 addenda; the absent Administrator override recorded by the M20/10 addendum; Push added as the third channel by the M38 addendum; the pinned "Your approvals" group added by the 2026-09-23 addendum                                                                                                                   |
 | NOT-002 | Event catalog: five groups, defaults by interruptiveness                 | Accepted; group 5's four events added by M20/8 addendum; group 4's first event and its opt-in email by the M21/4 addendum; group 1's `request` arm by the M21/5 addendum; the reply promise following a conversion onto the record by the M21/11 addendum; the side default and the archived-Request arm by the M21/12 addendum; the finished Conversion draft joins group 4 by the 2026-09-19 addendum |
 | NOT-003 | Timing: direct events immediate; date reminders in a daily digest        | Accepted; the M29 close records the built cross-module briefing amendment                                                                                                                                                                                                                                                                                                                               |
 | NOT-004 | Reminder lead times: admin-configurable offsets, seeded 7/1/0            | Accepted; per-date lead times and recipients added by the 2026-09-09 focus-group addendum                                                                                                                                                                                                                                                                                                               |
-| NOT-005 | Badge: unread count, 9+ cap, read-on-open                                | Accepted; read-on-open withdrawn by the 2026-09-09 amendment, an item is read when opened; OS notification click, read and close rules added by the M38 addendum                                                                                                                                                                                                                                        |
+| NOT-005 | Badge: unread count, 9+ cap, read-on-open                                | Accepted; read-on-open withdrawn by the 2026-09-09 amendment, an item is read when opened; OS notification click, read and close rules added by the M38 addendum; open approvals count until handled per the 2026-09-23 addendum                                                                                                                                                                        |
 | NOT-006 | The morning digest's anatomy and its delivery rules                      | Accepted; the M29 close records the built six-section anatomy amendment                                                                                                                                                                                                                                                                                                                                 |
 | NOT-007 | Email delivery is at-least-once; duplicate accepted over drop            | Accepted; Push placed under the same trade by the M38 addendum                                                                                                                                                                                                                                                                                                                                          |
 | NOT-008 | The daily briefing: cross-module morning email replaces the digest       | Accepted; Knowledge built in M28/6 and the six-section briefing completed in M29/7                                                                                                                                                                                                                                                                                                                      |

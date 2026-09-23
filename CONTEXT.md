@@ -435,6 +435,44 @@ _Avoid_: primary file, attachment, executed pin
 One named person's sign-off on one Contract. A Member+ user asks; the named approver alone answers, with an approval or a rejection and an optional note; and the answer is final. Requests run in parallel — there are no chains and no order — and at most one is pending per approver per Contract. Asking again after a rejection makes a new request rather than reopening the old one. The requester, the Contract's Owner, or an Administrator cancels a pending one, which deletes it and leaves the activity entry as the record that it was made [CTR-012].
 _Avoid_: approval task, sign-off item, approval step, reviewer
 
+### MCP
+
+**MCP**:
+The capability that lets a person's AI agent work in OpenLaw as that person, over the Model Context Protocol. An Administrator turns it on for the organization. An agent never reads or writes anything the person could not [DD-029].
+_Avoid_: agent access, integration API, agent API, automation API
+
+**Client**:
+One connected program acting for one person through MCP, such as Claude, ChatGPT, Microsoft 365 Copilot, or a script. A Client authenticates with an OAuth grant or an API key and is named in the activity it causes. Only a Client on the Administrator-managed Allowed Clients list may ask for an OAuth grant [DD-029].
+_Avoid_: agent client, bot, integration, connector (that is a Signing or AI connector)
+
+**Allowed Client**:
+A Client the Administrator has listed as permitted to ask for an OAuth grant. One of two kinds: a published identity, which holds the vendor's Client ID Metadata Document URL and is seeded, not editable; or a registered client, which OpenLaw generates as a client id and a one-time secret with the vendor's pasted callback URLs. Seeded with Claude, ChatGPT and Microsoft 365 Copilot [DD-029].
+_Avoid_: trusted client, registered app, OAuth app, connector
+
+**API key**:
+A long-lived credential issued to one person for a headless Client after an Administrator approves their API key request. It is bound to that person and carries the Toolsets and the read or write scope the Client may use. The outbound AI provider credential is a Saved key, not an API key [DD-029].
+_Avoid_: token, personal access token, agent key, Saved key (that is the AI provider's)
+
+**API key request**:
+A person's ask for an API key, naming the Client, the Toolsets, and the read or write scope they want from the organization's ceiling. An Administrator approves or denies it. Approval issues the key to the requester, shown once [DD-029].
+_Avoid_: key application, access request, token request
+
+**Tool**:
+One named action a Client may call, with a description written for the model, a read or write kind, and the record scopes of the person behind the call [DD-029].
+_Avoid_: endpoint, command, skill, function
+
+**Toolset**:
+A named group of Tools that a deployer switches on or off as one unit, and that a person may narrow further on an API key or an OAuth grant [DD-029].
+_Avoid_: scope (that is read or write), tool group, feature flag
+
+**Tool register**:
+The code-owned catalog of every Tool with its Toolset, kind, and description. It is curated by hand, not generated from the API document, and it is not Administrator-editable [DD-029].
+_Avoid_: tool registry, tool catalog, generated tools, the OpenAPI document
+
+**Your approvals**:
+The pinned group at the top of the bell that lists every open approval the person can act on: Contract Approval requests, API key requests for an Administrator, and any approval kind added later. An item leaves the group only when handled, and it counts in the badge until then, read or not [NOT-001].
+_Avoid_: pending approvals, approval inbox, approvals queue, to-do
+
 ## Relationships
 
 - A **Matter** contains many **Contracts** and many **Documents**
