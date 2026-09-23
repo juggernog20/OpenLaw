@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-029's selectable Toolsets. Guide is always on and cannot be removed from the ceiling. */
+export const MCP_TOOLSETS = [
+  "workspace",
+  "contracts",
+  "matters",
+  "tasks",
+  "requests",
+  "comments",
+  "documents",
+  "auto-docs",
+  "entities",
+  "knowledge",
+  "people",
+  "team",
+  "administration",
+] as const;
+export type McpToolset = (typeof MCP_TOOLSETS)[number];

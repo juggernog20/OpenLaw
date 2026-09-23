@@ -122,6 +122,7 @@ import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
+import { mcpSettingsRoutes } from "./modules/mcp-settings/routes.js";
 import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
 import {
   effectiveEnvironment,
@@ -575,6 +576,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     ),
     { prefix: "/api/v1" },
   );
+  await app.register(mcpSettingsRoutes, { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
   await app.register(aiConnectorRoutes, { prefix: "/api/v1" });

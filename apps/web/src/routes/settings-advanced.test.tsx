@@ -143,3 +143,20 @@ describe("Advanced settings", () => {
     },
   );
 });
+
+it("shows the MCP limit and respects deployment pinning", async () => {
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/advanced-settings/mcp")
+        return json(
+          200,
+          state([field("MCP_RATE_LIMIT_PER_HOUR", "600", { locked: true, source: "deployment" })]),
+        );
+    },
+  });
+  renderAt("/settings/mcp-limits");
+  expect(await screen.findByLabelText("Calls per hour per credential")).toHaveValue(600);
+  expect(screen.getByLabelText("Calls per hour per credential")).toHaveAttribute("readonly");
+  expect(screen.getByText(/Deployment configuration/)).toBeInTheDocument();
+});

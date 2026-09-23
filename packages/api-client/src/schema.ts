@@ -614,6 +614,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/mcp-settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getMcpSettings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["updateMcpSettings"];
+    trace?: never;
+  };
   "/api/v1/email-settings": {
     parameters: {
       query?: never;
@@ -8943,7 +8959,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        section: "instance" | "uploads" | "storage" | "processing";
+        section: "instance" | "uploads" | "storage" | "processing" | "mcp";
       };
       cookie?: never;
     };
@@ -8987,7 +9003,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        section: "instance" | "uploads" | "storage" | "processing";
+        section: "instance" | "uploads" | "storage" | "processing" | "mcp";
       };
       cookie?: never;
     };
@@ -9040,7 +9056,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        section: "instance" | "uploads" | "storage" | "processing";
+        section: "instance" | "uploads" | "storage" | "processing" | "mcp";
       };
       cookie?: never;
     };
@@ -9105,6 +9121,133 @@ export interface operations {
               online: boolean;
               current: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMcpSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            enabled: boolean;
+            legalApiKeysEnabled: boolean;
+            businessApiKeysEnabled: boolean;
+            toolsetCeiling: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            readOnly: boolean;
+            apiKeyLifetimeDays: number;
+            serverAddress: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMcpSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          enabled?: boolean;
+          legalApiKeysEnabled?: boolean;
+          businessApiKeysEnabled?: boolean;
+          toolsetCeiling?: (
+            | "workspace"
+            | "contracts"
+            | "matters"
+            | "tasks"
+            | "requests"
+            | "comments"
+            | "documents"
+            | "auto-docs"
+            | "entities"
+            | "knowledge"
+            | "people"
+            | "team"
+            | "administration"
+          )[];
+          readOnly?: boolean;
+          apiKeyLifetimeDays?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            enabled: boolean;
+            legalApiKeysEnabled: boolean;
+            businessApiKeysEnabled: boolean;
+            toolsetCeiling: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            readOnly: boolean;
+            apiKeyLifetimeDays: number;
+            serverAddress: string;
           };
         };
       };

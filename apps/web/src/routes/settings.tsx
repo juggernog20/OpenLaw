@@ -28,6 +28,7 @@ import { advancedTitles } from "./settings-advanced";
 import { useState } from "react";
 import {
   Activity,
+  Bot,
   Database,
   Upload,
   Cog,
@@ -250,6 +251,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       label: defineMessage({ id: "settings.section.integrations", defaultMessage: "Integrations" }),
     },
     {
+      id: "mcp",
+      path: "/settings/mcp",
+      icon: Bot,
+      label: defineMessage({ id: "settings.section.mcp", defaultMessage: "MCP" }),
+    },
+    {
       id: "advanced",
       label: defineMessage({ id: "settings.group.advanced", defaultMessage: "Advanced" }),
       icon: Settings2,
@@ -278,6 +285,7 @@ const ORGANIZATION_GROUP: SettingsGroup = {
             defaultMessage: "Audit log",
           }),
         },
+        { id: "mcp-limits", path: "/settings/mcp-limits", icon: Bot, label: advancedTitles.mcp },
         { id: "instance", path: "/settings/instance", icon: Globe, label: advancedTitles.instance },
         { id: "uploads", path: "/settings/uploads", icon: Upload, label: advancedTitles.uploads },
         { id: "storage", path: "/settings/storage", icon: Database, label: advancedTitles.storage },

@@ -661,3 +661,5 @@ export {
   pinnedFormRows,
   type FormModule,
 } from "./form-builtins.js";
+
+export { MCP_TOOLSETS, type McpToolset } from "./mcp.js";
