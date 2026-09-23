@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Matter Task reach, archive guards and updates (MTR-005). Assignment changes
+ * keep team membership, activity and notifications in one transaction.
+ */
+
 import type { Db } from "@openlaw/db";
 import {
   and,

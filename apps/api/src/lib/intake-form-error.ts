@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Named Intake Row refusals for service callers (DD-028, INT-002). The HTTP
+ * Problem envelope keeps its existing message and omits the Row metadata.
+ */
+
 import { HttpError } from "./problem.js";
 
 export interface IntakeFormRowIssue {

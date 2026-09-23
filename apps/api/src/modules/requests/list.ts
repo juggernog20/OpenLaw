@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Staff Inbox listing (INT-006, INT-007). Filters and cursors apply before
+ * paging; converted record references use the caller's reach (DD-014).
+ */
+
 import type { Db } from "@openlaw/db";
 import {
   and,

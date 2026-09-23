@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Contract Task reach, checklist reads and writes (CTR-017). Assignments,
+ * activity and notifications commit in the same transaction.
+ */
+
 import type { Db } from "@openlaw/db";
 import {
   and,
@@ -241,7 +246,7 @@ export async function updateContractTask(
 ) {
   assertMember(user);
   const body = UpdateContractTaskBody.parse(input);
-  // The seam's transaction, for the reason the add route opens one:
+  // The seam's transaction, for the reason createContractTask opens one:
   // this is the other way a task gets a name on it.
   return await notifier.notifying(async (tx) => {
     const task = await reachedTask(tx, user, taskId);

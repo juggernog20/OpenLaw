@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Request submission, assignment and Portal listing (INT-002, INT-007, DD-013).
+ * Intake answers use the destination Form (DD-028); writes and notifications
+ * commit together.
+ */
+
 import type { Db } from "@openlaw/db";
 import {
   and,
@@ -46,12 +52,12 @@ import type { Notifier } from "../../lib/notifications/notifier.js";
 import { assertPortalEntity } from "../../lib/portal-entities.js";
 import { HttpError, httpError } from "../../lib/problem.js";
 import { departmentName, lockedDepartment } from "../departments/references.js";
+import { REQUIRE_TRIAGER } from "./disposition.js";
 import { publishInboxTotal } from "./live-inbox.js";
 import { NO_REQUEST, requestAssignees, staffRequestRow, toStaffRequest } from "./projection.js";
 
 function assertMember(user: AuthenticatedUser): void {
-  if (user.role !== "administrator" && user.role !== "legal_team_member")
-    throw httpError(403, NO_PERMISSION);
+  if (!REQUIRE_TRIAGER.some((role) => role === user.role)) throw httpError(403, NO_PERMISSION);
 }
 
 export const SubmitRequestBody = z.strictObject({
@@ -483,11 +489,7 @@ export async function assignRequest(
     let name: string | null = null;
     if (assigneeId !== null) {
       const [person] = await tx.select().from(users).where(eq(users.id, assigneeId)).for("update");
-      if (
-        !person ||
-        person.archivedAt ||
-        (person.role !== "administrator" && person.role !== "legal_team_member")
-      ) {
+      if (!person || person.archivedAt || !REQUIRE_TRIAGER.some((role) => role === person.role)) {
         throw httpError(
           400,
           "Choose an active Administrator or Legal Team Member to triage this request.",

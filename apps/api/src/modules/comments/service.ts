@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Comment listing and projection (CMT-001, DD-016). Thread reach and audience
+ * tiers constrain the query and its cursor before paging.
+ */
+
 import type { Db } from "@openlaw/db";
 import {
   and,
@@ -21,7 +26,7 @@ import {
 import { z } from "zod";
 import { type AuthenticatedUser } from "../../auth/guards.js";
 import { documentAudienceScope } from "../../lib/contract-access.js";
-import { COMMENT_ENTITY_TYPES, reachedThread, type CommentEntityType } from "./audience.js";
+import { COMMENT_ENTITY_TYPES, reachedThread, commentEntityType } from "./audience.js";
 /**
  * What a comment can hang off, as the API accepts it — the entity types
  * that have an arm in `audience.ts`, drawn from that list so the schema
@@ -284,12 +289,12 @@ export function toComment(
   mentions: readonly Mention[] = [],
   attachments: readonly Attachment[] = [],
 ) {
+  const entityType = commentEntityType(row.entityType);
+  if (!entityType) throw new Error("A comment projection requires a supported thread type.");
   const carriesPaper = row.deletedAt === null && row.redactedAt === null && attachments.length > 0;
   return {
     id: row.id,
-    // Narrowed for the response schema: the column admits four types,
-    // and only a type with an arm can have reached this far.
-    entityType: row.entityType as CommentEntityType,
+    entityType,
     entityId: row.entityId,
     author: {
       id: row.author.id,

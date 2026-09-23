@@ -4,6 +4,7 @@ import {
   activityLog,
   comments,
   contractTasks,
+  contractTypeBuiltinRows,
   contractTypes,
   eq,
   matterTypes,
@@ -274,6 +275,63 @@ it("rolls back Task creation and activity if its notification fails", async () =
   expect(
     await h.db.select().from(activityLog).where(eq(activityLog.entityId, contract.id)),
   ).toHaveLength(before.length);
+});
+
+it("keeps native Intake Row refusals in the HTTP Problem envelope", async () => {
+  const type = (
+    await h.db.select().from(requestTypes).where(eq(requestTypes.slug, "contract_review"))
+  )[0]!;
+  const destination = (
+    await h.db
+      .select()
+      .from(contractTypes)
+      .where(
+        type.targetContractTypeId
+          ? eq(contractTypes.id, type.targetContractTypeId)
+          : eq(contractTypes.isDefault, true),
+      )
+  )[0]!;
+  for (const [displayOrder, builtinKey] of [
+    "effective_date",
+    "term_type",
+    "expiry_date",
+    "renewal_period_months",
+    "value",
+  ].entries()) {
+    await h.db
+      .insert(contractTypeBuiltinRows)
+      .values({ typeId: destination.id, builtinKey, displayOrder, onIntakeForm: true })
+      .onConflictDoUpdate({
+        target: [contractTypeBuiltinRows.typeId, contractTypeBuiltinRows.builtinKey],
+        set: { onIntakeForm: true, isRequired: false },
+      });
+  }
+  for (const [customFields, detail] of [
+    [{ effective_date: "2026-02-30" }, "Effective date: enter a valid calendar date."],
+    [
+      { term_type: "evergreen", expiry_date: "2026-12-31" },
+      "An evergreen contract has no expiry date.",
+    ],
+    [{ renewal_period_months: -1 }, "Renewal period: enter a whole number between 1 and 1200."],
+    [{ value_amount: 100 }, "Value: enter an amount, currency and frequency."],
+  ] as const) {
+    const response = await h.app.inject({
+      method: "POST",
+      url: "/api/v1/requests",
+      cookies,
+      payload: {
+        requestTypeId: type.id,
+        departmentId,
+        title: "Invalid native answer",
+        urgency: "medium",
+        customFields,
+      },
+    });
+    expect(response.statusCode, response.body).toBe(400);
+    expect(response.headers["content-type"]).toMatch(/^application\/problem\+json/);
+    expect(response.json()).toMatchObject({ type: "about:blank", status: 400, detail });
+    expect(response.json()).not.toHaveProperty("rows");
+  }
 });
 
 it("names invalid and missing Intake Rows and leaves refused submissions unwritten", async () => {
