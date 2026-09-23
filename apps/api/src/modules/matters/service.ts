@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Matter list, get, update and status operations admit Administrators and
+ * Legal Team Members (DD-013, DD-023). The shared PATCH keeps field edits,
+ * status moves and their activity in one transaction (MTR-002, DD-017).
+ */
+
 import type { Db } from "@openlaw/db";
 import {
   and,

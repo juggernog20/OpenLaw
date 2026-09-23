@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Contract list, get, update and status operations admit Administrators and
+ * Legal Team Members (DD-013, DD-023). The shared PATCH keeps field edits,
+ * status moves, activity and notifications atomic (DD-017, CTR-012).
+ */
+
 import type { Db } from "@openlaw/db";
 import {
   and,
@@ -48,6 +54,7 @@ import {
   assertMayChangeTeam,
   assertMayFlagConfidential,
   attachedFieldsOf,
+  BUILTIN_ANALYSIS_SLUGS,
   ContractListQuery,
   ContractPatchBody,
   ContractStatusBody,
@@ -71,6 +78,14 @@ import {
   toValue,
   type SortRequest,
 } from "./record.js";
+
+const RETYPE_RETAINED_CONVERSION_SLUGS: ReadonlySet<string> = new Set([
+  "title",
+  "description",
+  "priority",
+  "counterparties",
+  "needed_by",
+]);
 
 function assertReader(user: AuthenticatedUser): void {
   if (user.role !== "administrator" && user.role !== "legal_team_member")
@@ -560,7 +575,7 @@ export async function patchContract(
         if (
           flag.draftId &&
           flag.targetTypeId !== body.contractTypeId &&
-          !["title", "description", "priority", "counterparties", "needed_by"].includes(slug)
+          !RETYPE_RETAINED_CONVERSION_SLUGS.has(slug)
         )
           humanWrittenSlugs.add(slug);
     }
@@ -575,23 +590,7 @@ export async function patchContract(
     for (const slug of Object.keys(body.customFields ?? {})) {
       // Older analysis markers use bare custom slugs. A legacy Field
       // named like a built-in must only clear its namespaced marker.
-      if (
-        ![
-          "title",
-          "description",
-          "priority",
-          "contract_type",
-          "counterparties",
-          "needed_by",
-          "term_type",
-          "effective_date",
-          "expiry_date",
-          "renewal_period_months",
-          "notice_period_days",
-          "value",
-        ].includes(slug)
-      )
-        humanWrittenSlugs.add(slug);
+      if (!BUILTIN_ANALYSIS_SLUGS.has(slug)) humanWrittenSlugs.add(slug);
       humanWrittenSlugs.add(`field:${slug}`);
     }
     // A term-type write may clear a dependent even when the body did

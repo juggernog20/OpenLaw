@@ -30,6 +30,8 @@ import {
   updateMatter,
 } from "./matters/service.js";
 import { SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
+import { ContractEnvelope } from "./contracts/record.js";
+import { MatterEnvelope } from "./matters/record.js";
 
 let harness: TestHarness;
 let actor: AuthenticatedUser;
@@ -90,7 +92,10 @@ async function create(kind: "contract" | "matter", isConfidential = false) {
     },
   });
   expect(response.statusCode, response.body).toBe(201);
-  return response.json()[kind] as { id: string; number: number; statusId: string; title: string };
+  const payload: unknown = response.json();
+  return kind === "contract"
+    ? ContractEnvelope.parse(payload).contract
+    : MatterEnvelope.parse(payload).matter;
 }
 
 async function activity(id: string) {

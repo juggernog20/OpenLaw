@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Contract schemas, projections and queries shared by routes and services.
+ * Paging applies the viewer's scope before limits (CTR-021, CTR-024).
+ * Locked reads and audience guards preserve the Confidential wall (DD-014).
+ */
+
 import {
   activityLog,
   alias,
@@ -42,7 +48,7 @@ import {
   type SortDirection,
 } from "@openlaw/shared";
 import { z } from "zod";
-import { type AuthenticatedUser } from "../../auth/guards.js";
+import type { AuthenticatedUser } from "../../auth/guards.js";
 import {
   confidentialityWrite,
   contractTeamScope,
@@ -81,6 +87,21 @@ import { CONTRACT_RENEWAL_VEHICLES } from "./create.js";
  * not a feed somebody reads.
  */
 export const PAGE_SIZE = 50;
+
+export const BUILTIN_ANALYSIS_SLUGS: ReadonlySet<string> = new Set([
+  "title",
+  "description",
+  "priority",
+  "contract_type",
+  "counterparties",
+  "needed_by",
+  "term_type",
+  "effective_date",
+  "expiry_date",
+  "renewal_period_months",
+  "notice_period_days",
+  "value",
+]);
 
 /**
  * How many confirmed rolls the record envelope carries (CTR-006).
@@ -736,20 +757,7 @@ export function toRow(
                 slug.startsWith("key_date:") ||
                 (slug.startsWith("field:")
                   ? visibleSlugs.has(slug.slice(6))
-                  : [
-                      "title",
-                      "description",
-                      "priority",
-                      "contract_type",
-                      "counterparties",
-                      "needed_by",
-                      "term_type",
-                      "effective_date",
-                      "expiry_date",
-                      "renewal_period_months",
-                      "notice_period_days",
-                      "value",
-                    ].includes(slug) || visibleSlugs.has(slug)),
+                  : BUILTIN_ANALYSIS_SLUGS.has(slug) || visibleSlugs.has(slug)),
             ),
           )
         : null,

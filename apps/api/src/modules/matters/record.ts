@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Matter schemas, row projections and queries shared by routes and services.
+ * Scope and locked reads enforce the Confidential wall (DD-014); keyset
+ * ordering preserves each saved list's order (DD-019).
+ */
+
 import {
   and,
   asc,
@@ -29,7 +35,7 @@ import {
   type SortDirection,
 } from "@openlaw/shared";
 import { z } from "zod";
-import { type AuthenticatedUser } from "../../auth/guards.js";
+import type { AuthenticatedUser } from "../../auth/guards.js";
 import { civilToday } from "../../lib/contract-term.js";
 import { ConversionProvenanceSchema } from "../../lib/conversion-draft.js";
 import {
