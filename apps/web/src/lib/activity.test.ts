@@ -1375,6 +1375,15 @@ describe("the sentences a reader gets", () => {
     ).toBe("Nadia Counsel chose to show record names on their devices");
   });
 
+  it("narrates a person's own reminder lead times and the return to the default", () => {
+    expect(
+      narrate("user.notification_preference_changed", { reminderOffsetDays: [3, 1] }).sentence,
+    ).toBe("Nadia Counsel set their own reminder lead times");
+    expect(
+      narrate("user.notification_preference_changed", { reminderOffsetDays: null }).sentence,
+    ).toBe("Nadia Counsel went back to the organization's reminder lead times");
+  });
+
   it("narrates both kinds behind a version-kind correction", () => {
     const narration = narrate(
       "document.version_kind_changed",

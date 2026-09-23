@@ -2609,6 +2609,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         "browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} " +
         "devices {{actor} {state, select, on {chose to show} off {chose to hide} " +
         "other {changed whether to show}} record names on their devices} " +
+        "leadTimes {{actor} {state, select, on {set their own reminder lead times} " +
+        "off {went back to the organization's reminder lead times} " +
+        "other {changed their reminder lead times}}} " +
         "other {{actor} turned " +
         "{channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} " +
         "{state, select, on {on} off {off} other {{state}}} for " +
@@ -2629,7 +2632,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
           ? "browser"
           : "showRecordNamesOnDevices" in payload
             ? "devices"
-            : "group",
+            : "reminderOffsetDays" in payload
+              ? "leadTimes"
+              : "group",
       // Their own fallbacks rather than {@link named}'s, because that
       // one is a person's — "turned someone off for someone" is not a
       // sentence. Either fallback lands in the select's `other` arm.
@@ -2660,7 +2665,11 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
               id: "activity.notificationPreference.unknownState",
               defaultMessage: "on or off",
             }))(
-        "showRecordNamesOnDevices" in payload ? payload.showRecordNamesOnDevices : payload.enabled,
+        "showRecordNamesOnDevices" in payload
+          ? payload.showRecordNamesOnDevices
+          : "reminderOffsetDays" in payload
+            ? payload.reminderOffsetDays !== null
+            : payload.enabled,
       ),
     }),
   },

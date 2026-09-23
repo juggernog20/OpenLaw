@@ -14,7 +14,11 @@ import { eq, orgSettings } from "@openlaw/db";
 import { LOGO_BYTE_LIMIT, LOGO_DATA_URI_LIMIT } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
-import { MAX_REMINDER_OFFSET_DAYS, savedOffsets } from "../../lib/notifications/offsets.js";
+import {
+  MAX_REMINDER_OFFSET_DAYS,
+  MAX_REMINDER_OFFSETS,
+  savedOffsets,
+} from "../../lib/notifications/offsets.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
 
@@ -55,17 +59,6 @@ const GeneralPatchSchema = z
   .partial();
 
 type GeneralField = keyof z.infer<typeof GeneralPatchSchema>;
-
-/**
- * How many lead times one install may hold (NOT-004).
- *
- * A reminder schedule is a handful of numbers — a week out, the day
- * before, the day itself. Twenty is far past any real ladder and still
- * small enough that the round reads the whole column without thinking
- * about it. The bound exists so a scripted caller cannot turn one
- * settings row into a thousand reminders a day.
- */
-const MAX_REMINDER_OFFSETS = 20;
 
 /**
  * What both offset routes answer.

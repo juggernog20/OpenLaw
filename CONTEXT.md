@@ -378,7 +378,7 @@ How a team chooses to record a renewal. There are four and OpenLaw imposes none 
 _Avoid_: renewal type, renewal method, renewal path
 
 **Key date**:
-A named deadline on a Matter or Contract — a date, a label, and an optional note. Key dates feed deadline surfaces and carry no owner. A Key date may add reminder lead times to the global list and select recipients from the record team; no selection uses the usual audience [MTR-004, CTR-009, NOT-004 addendum, 2026-09-10].
+A named deadline on a Matter or Contract — a date, a label, and an optional note. Key dates feed deadline surfaces and carry no owner. A Key date may add reminder lead times to each recipient's list and select recipients from the record team; no selection uses the usual audience [MTR-004, CTR-009, NOT-004 addendum, 2026-09-10].
 _Avoid_: milestone, custom date, important date
 
 **Next deadline**:

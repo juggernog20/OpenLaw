@@ -759,7 +759,7 @@
     "defaultMessage": "{actor} invited {email} as {role}"
   },
   "activity.user.notificationPreferenceChanged": {
-    "defaultMessage": "{kind, select, browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} devices {{actor} {state, select, on {chose to show} off {chose to hide} other {changed whether to show}} record names on their devices} other {{actor} turned {channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}}}"
+    "defaultMessage": "{kind, select, browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} devices {{actor} {state, select, on {chose to show} off {chose to hide} other {changed whether to show}} record names on their devices} leadTimes {{actor} {state, select, on {set their own reminder lead times} off {went back to the organization's reminder lead times} other {changed their reminder lead times}}} other {{actor} turned {channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
@@ -10505,6 +10505,18 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.myReminders.description": {
+    "defaultMessage": "How far ahead you hear about expiries, notice deadlines, Key dates and obligations."
+  },
+  "settings.myReminders.listLabel": {
+    "defaultMessage": "Your reminder lead times"
+  },
+  "settings.myReminders.title": {
+    "defaultMessage": "Reminder lead times"
+  },
+  "settings.myReminders.useDefault": {
+    "defaultMessage": "Use the organization's default lead times"
+  },
   "settings.notifications.briefing.approvals": {
     "defaultMessage": "Approvals"
   },
@@ -10833,7 +10845,7 @@
     "defaultMessage": "{count, plural, one {# lead time} other {# lead times}}"
   },
   "settings.reminders.help": {
-    "defaultMessage": "Drag a row, or focus its handle and use the arrow keys, to reorder. One list covers every tracked date — key dates, notice deadlines, and expiries — and the reminders arrive in the daily digest. Keep at least one lead time."
+    "defaultMessage": "These are the default lead times for expiries, notice deadlines, Key dates and obligations. People can set their own in Notifications. Keep at least one lead time."
   },
   "settings.reminders.lastOne": {
     "defaultMessage": "{label} is the only lead time and can't be removed"

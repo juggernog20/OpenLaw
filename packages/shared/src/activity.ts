@@ -128,7 +128,8 @@ type UserPayloads = {
   "user.notification_preference_changed":
     | { eventGroup: string; channel: string; enabled: boolean }
     | { channel: "push"; subscriptionId: string; enabled: boolean }
-    | { showRecordNamesOnDevices: boolean };
+    | { showRecordNamesOnDevices: boolean }
+    | { reminderOffsetDays: number[] | null };
   "user.display_name_changed": FieldChangePayload;
   /** Presence-only: both sides are `[image]` or null, never the encoded
    * image — a data: URI in a payload would bloat every later query. */

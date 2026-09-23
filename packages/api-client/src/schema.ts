@@ -7253,7 +7253,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Save a channel choice for an event group, an email-only briefing section, or showRecordNamesOnDevices for the signed-in person. Each request applies one preference immediately and records user.notification_preference_changed. Channel choices are stored as overrides; restoring a group default removes the override. Turning in-app off silences all channels for that group. showRecordNamesOnDevices controls whether device notifications may show record names. Returns the effective event-group choices, briefing sections, and device setting */
+    /** Save a channel choice for an event group, an email-only briefing section, showRecordNamesOnDevices, or reminderOffsetDays for the signed-in person. Each request applies one preference immediately and records user.notification_preference_changed. Channel choices are stored as overrides; restoring a group default removes the override. Turning in-app off silences all channels for that group. showRecordNamesOnDevices controls whether device notifications may show record names. reminderOffsetDays sets the person's own reminder lead times, or null to use the organization's list (NOT-004). Returns the effective event-group choices, briefing sections, and device setting */
     patch: operations["updateMyNotificationPreferences"];
     trace?: never;
   };
@@ -40972,6 +40972,8 @@ export interface operations {
           "application/json": {
             vapidPublicKey: string;
             showRecordNamesOnDevices: boolean;
+            reminderOffsetDays: number[] | null;
+            organizationReminderOffsetDays: number[];
             groups: {
               /** @enum {string} */
               eventGroup:
@@ -41023,6 +41025,9 @@ export interface operations {
               showRecordNamesOnDevices: boolean;
             }
           | {
+              reminderOffsetDays: number[] | null;
+            }
+          | {
               /** @enum {string} */
               eventGroup:
                 | "assigned_to_you"
@@ -41059,6 +41064,8 @@ export interface operations {
           "application/json": {
             vapidPublicKey: string;
             showRecordNamesOnDevices: boolean;
+            reminderOffsetDays: number[] | null;
+            organizationReminderOffsetDays: number[];
             groups: {
               /** @enum {string} */
               eventGroup:

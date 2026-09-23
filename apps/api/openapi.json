@@ -94381,6 +94381,29 @@
                     "showRecordNamesOnDevices": {
                       "type": "boolean"
                     },
+                    "reminderOffsetDays": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "organizationReminderOffsetDays": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
                     "groups": {
                       "type": "array",
                       "items": {
@@ -94435,7 +94458,14 @@
                       }
                     }
                   },
-                  "required": ["vapidPublicKey", "showRecordNamesOnDevices", "groups", "briefing"],
+                  "required": [
+                    "vapidPublicKey",
+                    "showRecordNamesOnDevices",
+                    "reminderOffsetDays",
+                    "organizationReminderOffsetDays",
+                    "groups",
+                    "briefing"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -94455,7 +94485,7 @@
       },
       "patch": {
         "operationId": "updateMyNotificationPreferences",
-        "summary": "Save a channel choice for an event group, an email-only briefing section, or showRecordNamesOnDevices for the signed-in person. Each request applies one preference immediately and records user.notification_preference_changed. Channel choices are stored as overrides; restoring a group default removes the override. Turning in-app off silences all channels for that group. showRecordNamesOnDevices controls whether device notifications may show record names. Returns the effective event-group choices, briefing sections, and device setting",
+        "summary": "Save a channel choice for an event group, an email-only briefing section, showRecordNamesOnDevices, or reminderOffsetDays for the signed-in person. Each request applies one preference immediately and records user.notification_preference_changed. Channel choices are stored as overrides; restoring a group default removes the override. Turning in-app off silences all channels for that group. showRecordNamesOnDevices controls whether device notifications may show record names. reminderOffsetDays sets the person's own reminder lead times, or null to use the organization's list (NOT-004). Returns the effective event-group choices, briefing sections, and device setting",
         "tags": ["notifications"],
         "requestBody": {
           "required": true,
@@ -94471,6 +94501,30 @@
                       }
                     },
                     "required": ["showRecordNamesOnDevices"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reminderOffsetDays": {
+                        "anyOf": [
+                          {
+                            "minItems": 1,
+                            "maxItems": 20,
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 730
+                            }
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["reminderOffsetDays"],
                     "additionalProperties": false
                   },
                   {
@@ -94541,6 +94595,29 @@
                     "showRecordNamesOnDevices": {
                       "type": "boolean"
                     },
+                    "reminderOffsetDays": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "organizationReminderOffsetDays": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
                     "groups": {
                       "type": "array",
                       "items": {
@@ -94595,7 +94672,14 @@
                       }
                     }
                   },
-                  "required": ["vapidPublicKey", "showRecordNamesOnDevices", "groups", "briefing"],
+                  "required": [
+                    "vapidPublicKey",
+                    "showRecordNamesOnDevices",
+                    "reminderOffsetDays",
+                    "organizationReminderOffsetDays",
+                    "groups",
+                    "briefing"
+                  ],
                   "additionalProperties": false
                 }
               }

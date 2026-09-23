@@ -108,6 +108,12 @@ import {
   saveChannelChoice,
 } from "../../lib/notifications/preferences.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+import {
+  MAX_REMINDER_OFFSET_DAYS,
+  MAX_REMINDER_OFFSETS,
+  personalOffsets,
+  reminderOffsets,
+} from "../../lib/notifications/offsets.js";
 
 /**
  * How many items one request answers. A server constant rather than a
@@ -136,6 +142,24 @@ async function recordNamesChoice(db: Executor, userId: string): Promise<boolean>
     .from(users)
     .where(eq(users.id, userId));
   return user!.enabled;
+}
+
+/**
+ * The person's own reminder lead times, furthest first, or null where
+ * they use the organization's list (NOT-004 addendum).
+ */
+async function leadTimesChoice(
+  db: Executor,
+  userId: string,
+): Promise<{ reminderOffsetDays: number[] | null; organizationReminderOffsetDays: number[] }> {
+  const [[user], organization] = await Promise.all([
+    db.select({ own: users.reminderOffsetDays }).from(users).where(eq(users.id, userId)),
+    reminderOffsets(db),
+  ]);
+  return {
+    reminderOffsetDays: user!.own == null ? null : personalOffsets(user!.own, organization),
+    organizationReminderOffsetDays: organization,
+  };
 }
 
 const UnreadEnvelope = z.object({ unread: z.number().int().nonnegative() });
@@ -225,6 +249,12 @@ const BriefingPreferenceSchema = z.object({
 const PreferencesEnvelope = z.object({
   vapidPublicKey: z.string(),
   showRecordNamesOnDevices: z.boolean(),
+  /** The person's own lead times, furthest first; null means the
+   * organization's list applies. */
+  reminderOffsetDays: z.array(z.number().int()).nullable(),
+  /** The organization's list, furthest first, so the pane can show what
+   * "use the organization's lead times" means. */
+  organizationReminderOffsetDays: z.array(z.number().int()),
   groups: z.array(PreferenceSchema),
   briefing: z.array(BriefingPreferenceSchema),
 });
@@ -719,6 +749,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         briefing,
         vapidPublicKey: await app.resolveVapid.publicKey(),
         showRecordNamesOnDevices: await recordNamesChoice(app.db, request.user.id),
+        ...(await leadTimesChoice(app.db, request.user.id)),
       };
     },
   );
@@ -731,15 +762,25 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "updateMyNotificationPreferences",
         summary:
           "Save a channel choice for an event group, an email-only briefing section, " +
-          "or showRecordNamesOnDevices for the signed-in person. Each request applies " +
+          "showRecordNamesOnDevices, or reminderOffsetDays for the signed-in person. " +
+          "Each request applies " +
           "one preference immediately and records user.notification_preference_changed. " +
           "Channel choices are stored as overrides; restoring a group default removes " +
           "the override. Turning in-app off silences all channels for that group. " +
           "showRecordNamesOnDevices controls whether device notifications may show record names. " +
+          "reminderOffsetDays sets the person's own reminder lead times, or null to use " +
+          "the organization's list (NOT-004). " +
           "Returns the effective event-group choices, briefing sections, and device setting",
         tags: ["notifications"],
         body: z.union([
           z.strictObject({ showRecordNamesOnDevices: z.boolean() }),
+          z.strictObject({
+            reminderOffsetDays: z
+              .array(z.number().int().min(0).max(MAX_REMINDER_OFFSET_DAYS))
+              .min(1)
+              .max(MAX_REMINDER_OFFSETS)
+              .nullable(),
+          }),
           z.strictObject({
             eventGroup: z.enum(NOTIFICATION_EVENT_GROUPS),
             channel: z.enum(NOTIFICATION_CHANNELS),
@@ -764,6 +805,17 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           await tx
             .update(users)
             .set({ showRecordNamesOnDevices: request.body.showRecordNamesOnDevices })
+            .where(eq(users.id, request.user.id));
+        } else if ("reminderOffsetDays" in request.body) {
+          // Stored furthest first and without duplicates. Null hands the
+          // person back to the organization's list.
+          const own = request.body.reminderOffsetDays;
+          await tx
+            .update(users)
+            .set({
+              reminderOffsetDays:
+                own === null ? null : [...new Set(own)].sort((left, right) => right - left),
+            })
             .where(eq(users.id, request.user.id));
         } else {
           const { eventGroup, channel, enabled } = request.body;
@@ -804,6 +856,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           briefing,
           vapidPublicKey: await app.resolveVapid.publicKey(),
           showRecordNamesOnDevices: await recordNamesChoice(tx, request.user.id),
+          ...(await leadTimesChoice(tx, request.user.id)),
         };
       }),
   );

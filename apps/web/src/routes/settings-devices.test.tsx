@@ -45,6 +45,8 @@ function extra(call: StubCall) {
       briefing: [],
       vapidPublicKey: "AQID",
       showRecordNamesOnDevices: call.method === "PATCH" ? false : true,
+      reminderOffsetDays: null,
+      organizationReminderOffsetDays: [7, 1, 0],
     });
   }
   if (call.url.pathname === "/api/v1/notifications/subscriptions") {
