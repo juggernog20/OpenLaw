@@ -111,6 +111,9 @@ export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
  * list — M20/8 names all four of group 5's and fires two.
  */
 export const NOTIFICATION_EVENT_TYPES = [
+  "api_key.requested",
+  "api_key.approved",
+  "api_key.denied",
   // Group 1 — assigned to you.
   /** A contract was handed to somebody as its Owner (CTR-004, MTR-003). */
   "contract.owner_assigned",
@@ -175,6 +178,7 @@ export const NOTIFICATION_ENTITY_TYPES = [
   "request",
   "entity",
   "knowledge_item",
+  "api_key_request",
 ] as const;
 export type NotificationEntityType = (typeof NOTIFICATION_ENTITY_TYPES)[number];
 

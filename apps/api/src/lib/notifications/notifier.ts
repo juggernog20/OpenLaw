@@ -57,6 +57,7 @@
 
 import { approvalRecipients } from "../approval-access.js";
 import {
+  isNull,
   commentMentions,
   and,
   inArray,
@@ -516,7 +517,16 @@ export interface RequestDeclinedEvent extends RequestEvent {
   reason: string;
 }
 
+export interface ApiKeyEvent {
+  requestId: string;
+  requesterId: string;
+  clientName: string;
+  actorId: string;
+  event: "requested" | "approved" | "denied";
+}
+
 export interface Notifier {
+  apiKeyEvent(tx: NotifyingTransaction, event: ApiKeyEvent): Promise<void>;
   /**
    * Runs one mutation and everything it has to tell people about, in
    * one transaction.
@@ -819,6 +829,7 @@ interface PendingNotification {
  * names it. Which arm answers the wall question is read from `type`,
  * so an entity added later is an arm rather than a branch at a route. */
 type NotificationEntity =
+  | { type: "api_key_request"; id: string }
   | { type: typeof MATTER_ENTITY; id: string }
   | { type: typeof CONTRACT_ENTITY; id: string }
   | { type: typeof ENTITY_ENTITY; id: string }
@@ -889,22 +900,24 @@ async function fanOut(
   // 2. The wall (DD-014, and the Request's own two facts). Applied here
   // so no event can skip it, whichever record it is about.
   const reachable =
-    entity.type === CONTRACT_ENTITY
-      ? eventType === "approval.requested"
-        ? await approvalRecipients(tx, entity.id, [...byUser.keys()])
-        : await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-      : entity.type === MATTER_ENTITY
-        ? await matterReachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-        : entity.type === ENTITY_ENTITY
-          ? await entityReachedBy(tx, entity.id, [...byUser.keys()])
-          : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
-              ...narrowing,
-              // Which standing this event addressed (M21/4, M21/5). It is
-              // read from the catalog rather than passed by the method, so
-              // an event added to a group later inherits that group's side
-              // and cannot be the one that forgets to ask for it.
-              side: requestSideOf(eventType),
-            });
+    entity.type === "api_key_request"
+      ? new Set(byUser.keys())
+      : entity.type === CONTRACT_ENTITY
+        ? eventType === "approval.requested"
+          ? await approvalRecipients(tx, entity.id, [...byUser.keys()])
+          : await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
+        : entity.type === MATTER_ENTITY
+          ? await matterReachedBy(tx, entity.id, [...byUser.keys()], narrowing)
+          : entity.type === ENTITY_ENTITY
+            ? await entityReachedBy(tx, entity.id, [...byUser.keys()])
+            : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
+                ...narrowing,
+                // Which standing this event addressed (M21/4, M21/5). It is
+                // read from the catalog rather than passed by the method, so
+                // an event added to a group later inherits that group's side
+                // and cannot be the one that forgets to ask for it.
+                side: requestSideOf(eventType),
+              });
 
   if (entity.type === CONTRACT_ENTITY || entity.type === MATTER_ENTITY) {
     const businessPeople = await tx
@@ -1434,6 +1447,31 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         }),
       );
       return result;
+    },
+
+    async apiKeyEvent(tx, event) {
+      const people = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          and(
+            isNull(users.archivedAt),
+            event.event === "requested"
+              ? eq(users.role, "administrator")
+              : eq(users.id, event.requesterId),
+          ),
+        );
+      await fanOut(
+        tx,
+        `api_key.${event.event}`,
+        { type: "api_key_request", id: event.requestId },
+        event.actorId,
+        people.map((person) => ({
+          userId: person.id,
+          payload: { requestId: event.requestId, clientName: event.clientName },
+        })),
+        { tellTheActor: true },
+      );
     },
 
     async approvalRequested(

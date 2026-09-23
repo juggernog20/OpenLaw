@@ -11,6 +11,13 @@
  */
 
 import {
+  SettingsApiKeysPage,
+  settingsApiKeysLoader,
+  PortalApiKeysPage,
+  portalApiKeysLoader,
+} from "./routes/settings-api-keys";
+
+import {
   SettingsAdvancedPage,
   settingsAdvancedLoader,
   SettingsSystemStatusPage,
@@ -458,6 +465,12 @@ export const routes: RouteObject[] = [
         loader: settingsNotificationsLoader,
         element: <SettingsNotificationsPage />,
       },
+      {
+        // SET-014: the Personal rail's API keys, after Notifications.
+        path: "api-keys",
+        loader: settingsApiKeysLoader,
+        element: <SettingsApiKeysPage />,
+      },
       // SET-002: the loaders bounce non-Administrators; the API's own
       // role gate stands behind them.
       { path: "general", loader: settingsGeneralLoader, element: <SettingsGeneralPage /> },
@@ -768,6 +781,7 @@ export const routes: RouteObject[] = [
       // The lightweight settings surface NOT-001 promised a business
       // user (M20/9): NOT-002's group 5 and nothing else, reached from
       // the gear in the portal header.
+      { path: "settings/api-keys", loader: portalApiKeysLoader, element: <PortalApiKeysPage /> },
       { path: "settings", loader: portalSettingsLoader, element: <PortalSettingsPage /> },
       {
         path: "knowledge/:id",

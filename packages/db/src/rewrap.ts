@@ -42,6 +42,7 @@ import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 // Type-only, so this module never imports the package root at runtime:
 // the root re-exports this one, and a value import would close the loop.
 import type { Db } from "./index.js";
+import { apiKeyRequests } from "./schema/api-keys.js";
 import { ssoProviders } from "./schema/auth.js";
 import { aiSavedKeys } from "./schema/ai-connector.js";
 import { orgSettings } from "./schema/org.js";
@@ -79,6 +80,7 @@ interface SecretColumn {
  * See TECH-022's #387 addendum.
  */
 const SEALED_COLUMNS: SecretColumn[] = [
+  { table: apiKeyRequests, id: apiKeyRequests.id, column: apiKeyRequests.sealedKey },
   { table: aiSavedKeys, id: aiSavedKeys.id, column: aiSavedKeys.apiKey },
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.privateKey },
   { table: signingConnectors, id: signingConnectors.id, column: signingConnectors.webhookSecret },

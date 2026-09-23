@@ -22,6 +22,8 @@
  * one maintainer rather than one per replica.
  */
 
+import { sweepApiKeyExpiry, API_KEY_EXPIRY_CRON } from "./api-key-expiry.js";
+
 import { createVapidResolver, type VapidResolver } from "../lib/notifications/vapid.js";
 import { handleNotificationPush, PushDeliveryError } from "./notification-push.js";
 import {
@@ -656,6 +658,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     // wasteful; this one asks a third party about every live envelope,
     // so two at once would be two sets of provider requests for one
     // set of answers.
+    await boss.createQueue(JOB_QUEUES.apiKeyExpiry, {
+      policy: "singleton",
+      ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
+    });
     await boss.createQueue(JOB_QUEUES.reconciliationSweep, {
       policy: "singleton",
       ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
@@ -989,6 +995,9 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // must not sit in front of the executed copy a person is waiting
       // on. It takes the signing resolver, which is what makes it a
       // handler here rather than a timer in the worker entrypoint.
+      await work(JOB_QUEUES.apiKeyExpiry, { batchSize: 1 }, async () => {
+        await sweepApiKeyExpiry(handlers.db, new Date(), sweeping.signal);
+      });
       await work(JOB_QUEUES.reconciliationSweep, { batchSize: 1 }, async () => {
         const summary = await runReconciliationSweep(
           {
@@ -1031,6 +1040,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // The same upsert, and the reason #277 moved this sweep here: an
       // in-process timer ran a full round per replica, and this round
       // asks a third party about every live envelope.
+      await boss.schedule(JOB_QUEUES.apiKeyExpiry, API_KEY_EXPIRY_CRON);
       await boss.schedule(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_CRON);
       // The same upsert, and the reason it is here at all: one round per
       // install, however many workers boot (NOT-003's one briefing a

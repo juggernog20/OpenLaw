@@ -20,3 +20,10 @@ export const MCP_TOOLSETS = [
   "administration",
 ] as const;
 export type McpToolset = (typeof MCP_TOOLSETS)[number];
+
+export const API_KEY_PROBLEMS = [
+  "urn:openlaw:problem:mcp-disabled",
+  "urn:openlaw:problem:api-keys-disabled",
+  "urn:openlaw:problem:toolset-outside-ceiling",
+  "urn:openlaw:problem:mcp-read-only",
+] as const;

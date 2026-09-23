@@ -138,6 +138,12 @@ const PERSONAL_GROUP: SettingsGroup = {
         defaultMessage: "Notifications",
       }),
     },
+    {
+      id: "api-keys",
+      path: "/settings/api-keys",
+      icon: KeyRound,
+      label: defineMessage({ id: "apiKeys.title", defaultMessage: "API keys" }),
+    },
   ],
 };
 

@@ -90,6 +90,7 @@ export const JOB_QUEUES = {
    * question every round, so a second replica doubled the requests
    * against the endpoint DocuSign rate-limits hardest.
    */
+  apiKeyExpiry: "api-key.expiry-sweep",
   reconciliationSweep: "envelope.reconciliation-sweep",
   /**
    * One notification's immediate email (NOT-002 group 1, NOT-003).

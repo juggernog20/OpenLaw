@@ -614,6 +614,118 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/api-key-requests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listApiKeyRequests"];
+    put?: never;
+    post: operations["requestApiKey"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/api-keys": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listOrganizationApiKeys"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-key-requests/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["readApiKeyRequest"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-key-requests/{id}/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["approveApiKeyRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-key-requests/{id}/deny": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["denyApiKeyRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-key-requests/{id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["cancelApiKeyRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/api-key-requests/{id}/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["revokeApiKeyRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/mcp-settings": {
     parameters: {
       query?: never;
@@ -9121,6 +9233,599 @@ export interface operations {
               online: boolean;
               current: boolean;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listApiKeyRequests: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            policy: {
+              enabled: boolean;
+              groupEnabled: boolean;
+              toolsetCeiling: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
+              readOnly: boolean;
+              apiKeyLifetimeDays: number;
+            };
+            requests: {
+              id: string;
+              requesterId: string;
+              owner: string;
+              clientName: string;
+              toolsets: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
+              /** @enum {string} */
+              scope: "read" | "write";
+              note: string | null;
+              /** @enum {string} */
+              status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+              decisionNote: string | null;
+              decidedAt: string | null;
+              approvedBy: string | null;
+              createdAt: string;
+              expiresAt: string | null;
+              lastUsedAt: string | null;
+              keyAvailable: boolean;
+              key?: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  requestApiKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          clientName: string;
+          toolsets: (
+            | "workspace"
+            | "contracts"
+            | "matters"
+            | "tasks"
+            | "requests"
+            | "comments"
+            | "documents"
+            | "auto-docs"
+            | "entities"
+            | "knowledge"
+            | "people"
+            | "team"
+            | "administration"
+          )[];
+          /** @enum {string} */
+          scope: "read" | "write";
+          note?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            requesterId: string;
+            owner: string;
+            clientName: string;
+            toolsets: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            /** @enum {string} */
+            scope: "read" | "write";
+            note: string | null;
+            /** @enum {string} */
+            status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+            decisionNote: string | null;
+            decidedAt: string | null;
+            approvedBy: string | null;
+            createdAt: string;
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            keyAvailable: boolean;
+            key?: string;
+          };
+        };
+      };
+      /** @description MCP policy refused this API key request. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:mcp-disabled"
+              | "urn:openlaw:problem:api-keys-disabled"
+              | "urn:openlaw:problem:toolset-outside-ceiling"
+              | "urn:openlaw:problem:mcp-read-only"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listOrganizationApiKeys: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            requesterId: string;
+            owner: string;
+            clientName: string;
+            toolsets: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            /** @enum {string} */
+            scope: "read" | "write";
+            note: string | null;
+            /** @enum {string} */
+            status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+            decisionNote: string | null;
+            decidedAt: string | null;
+            approvedBy: string | null;
+            createdAt: string;
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            keyAvailable: boolean;
+            key?: string;
+          }[];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  readApiKeyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            requesterId: string;
+            owner: string;
+            clientName: string;
+            toolsets: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            /** @enum {string} */
+            scope: "read" | "write";
+            note: string | null;
+            /** @enum {string} */
+            status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+            decisionNote: string | null;
+            decidedAt: string | null;
+            approvedBy: string | null;
+            createdAt: string;
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            keyAvailable: boolean;
+            key?: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  approveApiKeyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          note?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            requesterId: string;
+            owner: string;
+            clientName: string;
+            toolsets: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            /** @enum {string} */
+            scope: "read" | "write";
+            note: string | null;
+            /** @enum {string} */
+            status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+            decisionNote: string | null;
+            decidedAt: string | null;
+            approvedBy: string | null;
+            createdAt: string;
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            keyAvailable: boolean;
+            key?: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  denyApiKeyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          note?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            requesterId: string;
+            owner: string;
+            clientName: string;
+            toolsets: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            /** @enum {string} */
+            scope: "read" | "write";
+            note: string | null;
+            /** @enum {string} */
+            status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+            decisionNote: string | null;
+            decidedAt: string | null;
+            approvedBy: string | null;
+            createdAt: string;
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            keyAvailable: boolean;
+            key?: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  cancelApiKeyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            requesterId: string;
+            owner: string;
+            clientName: string;
+            toolsets: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            /** @enum {string} */
+            scope: "read" | "write";
+            note: string | null;
+            /** @enum {string} */
+            status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+            decisionNote: string | null;
+            decidedAt: string | null;
+            approvedBy: string | null;
+            createdAt: string;
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            keyAvailable: boolean;
+            key?: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  revokeApiKeyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            requesterId: string;
+            owner: string;
+            clientName: string;
+            toolsets: (
+              | "workspace"
+              | "contracts"
+              | "matters"
+              | "tasks"
+              | "requests"
+              | "comments"
+              | "documents"
+              | "auto-docs"
+              | "entities"
+              | "knowledge"
+              | "people"
+              | "team"
+              | "administration"
+            )[];
+            /** @enum {string} */
+            scope: "read" | "write";
+            note: string | null;
+            /** @enum {string} */
+            status: "pending" | "active" | "denied" | "cancelled" | "revoked" | "expired";
+            decisionNote: string | null;
+            decidedAt: string | null;
+            approvedBy: string | null;
+            createdAt: string;
+            expiresAt: string | null;
+            lastUsedAt: string | null;
+            keyAvailable: boolean;
+            key?: string;
           };
         };
       };

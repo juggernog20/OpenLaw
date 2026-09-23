@@ -141,7 +141,10 @@ export * from "./schema/signing-connectors.js";
 export * from "./migration-journal.js";
 export * from "./rewrap.js";
 export * from "./secrets.js";
+import * as apiKeysSchema from "./schema/api-keys.js";
+export * from "./schema/api-keys.js";
 export const schema = {
+  ...apiKeysSchema,
   ...typeFormsSchema,
   ...activitySchema,
   ...aiConnectorSchema,
