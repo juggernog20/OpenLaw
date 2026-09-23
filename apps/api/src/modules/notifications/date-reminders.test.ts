@@ -1419,3 +1419,60 @@ describe.each([
     ).not.toBeNull();
   });
 });
+
+describe("a person's own reminder lead times (NOT-004 addendum)", () => {
+  const TODAY = "2026-11-18";
+  let contract: ContractRow;
+
+  const setOwn = (fixture: { email: string }, reminderOffsetDays: number[] | null) =>
+    harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/me/notification-preferences",
+      cookies: as(fixture),
+      payload: { reminderOffsetDays },
+    });
+
+  beforeAll(async () => {
+    const saved = await setOwn(OWNER, [1, 3, 3]);
+    expect(saved.statusCode, saved.body).toBe(200);
+    // Stored furthest first, once each; the organization's list rides along.
+    expect(saved.json()).toMatchObject({
+      reminderOffsetDays: [3, 1],
+      organizationReminderOffsetDays: [7, 1, 0],
+    });
+
+    contract = await newContract("Northwind reseller agreement");
+    await addToTeam(contract.number, idOf(OUTSIDER));
+    await addKeyDate(contract.number, plusDays(TODAY, 3), "Price review");
+    await addKeyDate(contract.number, plusDays(TODAY, 7), "Renewal call");
+    await round(at(TODAY, 8));
+  });
+
+  it("fires on the person's own list, which replaces the organization's", async () => {
+    const items = await bellFor(OWNER, contract);
+    expect(items.map((row) => row.payload.offsetDays)).toEqual([3]);
+  });
+
+  it("leaves a teammate on the organization's list", async () => {
+    const items = await bellFor(OUTSIDER, contract);
+    expect(items.map((row) => row.payload.offsetDays)).toEqual([7]);
+  });
+
+  it("refuses a Business User, who keeps the organization's list", async () => {
+    const refused = await setOwn(BUSINESS_OWNER, [3]);
+    expect(refused.statusCode, refused.body).toBe(403);
+  });
+
+  it("refuses an empty list and returns the person to the default on null", async () => {
+    expect((await setOwn(OWNER, [])).statusCode).toBe(400);
+    expect((await setOwn(OWNER, [731])).statusCode).toBe(400);
+    const reset = await setOwn(OWNER, null);
+    expect(reset.statusCode, reset.body).toBe(200);
+    expect(reset.json().reminderOffsetDays).toBeNull();
+    const [row] = await harness.db
+      .select({ own: users.reminderOffsetDays })
+      .from(users)
+      .where(eq(users.id, idOf(OWNER)));
+    expect(row!.own).toBeNull();
+  });
+});

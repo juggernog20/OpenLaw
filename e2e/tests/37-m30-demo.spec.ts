@@ -35,6 +35,7 @@ import {
   startsWithName,
   sweepOrSay,
   type OnboardedMember,
+  pickDocumentType,
 } from "./helpers.js";
 import { SigningStub } from "./docusign.js";
 
@@ -202,7 +203,7 @@ async function uploadPrimaryDocument(page: Page, stamp: number): Promise<void> {
     mimeType: "text/plain",
     buffer: Buffer.from("M30 services agreement ready for signature.\n", "utf8"),
   });
-  await dialog.getByLabel("Kind").selectOption("draft_ours");
+  await pickDocumentType(dialog, "draft_ours");
   const uploaded = page.waitForResponse(
     (response) =>
       /\/api\/v1\/contracts\/\d+\/documents$/.test(response.url()) &&

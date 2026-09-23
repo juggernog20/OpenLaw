@@ -70,23 +70,31 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
   },
   {
     key: "kind",
-    header: <FormattedMessage id="documents.list.column.kind" defaultMessage="Kind" />,
+    header: <FormattedMessage id="documents.list.column.type" defaultMessage="Type" />,
     label: (intl) =>
-      intl.formatMessage({ id: "documents.list.column.kind", defaultMessage: "Kind" }),
+      intl.formatMessage({ id: "documents.list.column.type", defaultMessage: "Type" }),
     defaultWidth: 144,
     minWidth: 96,
     clip: true,
     sortKey: "kind",
-    render: (row, intl) =>
-      row.owner.kind === "matter" || row.owner.kind === "entity" ? (
+    // DOC-015: the current Version's type name. A fixed Contract type
+    // keeps its negotiation colour through the kind it stores.
+    render: (row, intl) => {
+      const label =
+        row.currentVersion.documentType ??
+        (row.currentVersion.kind === "generated_redline"
+          ? documentKindLabel(intl, row.currentVersion.kind)
+          : null);
+      return label === null ? (
         <span className="text-muted">—</span>
       ) : (
         <span
           className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[row.currentVersion.kind]}`}
         >
-          {documentKindLabel(intl, row.currentVersion.kind)}
+          {label}
         </span>
-      ),
+      );
+    },
   },
   {
     key: "format",

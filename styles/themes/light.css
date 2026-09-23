@@ -13,6 +13,9 @@
  */
 
 :root {
+  /* The browser draws scroll bars and form parts in this mode. */
+  color-scheme: light;
+
   /* Surfaces */
   --bg-canvas: #ffffff;
   --bg-raised: #ffffff; /* cards on white body collapse to same hex */

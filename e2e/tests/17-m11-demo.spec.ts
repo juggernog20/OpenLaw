@@ -75,6 +75,7 @@ import {
   signInAs,
   sweepOrSay,
   type OnboardedMember,
+  pickDocumentType,
 } from "./helpers.js";
 
 /**
@@ -422,7 +423,7 @@ async function uploadThroughComposer(
     await chooser
   ).setFiles({ name: round.name, mimeType: "text/plain", buffer: Buffer.from(round.body, "utf8") });
   await expect(dialog.getByText(round.name)).toBeVisible();
-  await dialog.getByLabel("Kind").selectOption(round.kind);
+  await pickDocumentType(dialog, round.kind);
   await dialog.getByLabel("Note").fill(round.note);
   const uploaded = page.waitForResponse(
     (response) =>

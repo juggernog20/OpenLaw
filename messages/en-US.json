@@ -308,6 +308,9 @@
   "activity.document.versionKindChanged": {
     "defaultMessage": "{version, select, unknown {{actor} changed the kind of a version of {title}} other {{actor} changed the kind of version {version} of {title}}}"
   },
+  "activity.document.versionTypeChanged": {
+    "defaultMessage": "{version, select, unknown {{actor} changed the type of a version of {title}} other {{actor} changed the type of version {version} of {title}}}"
+  },
   "activity.empty": {
     "defaultMessage": "Nothing has happened to this record yet. Every change to it shows up here."
   },
@@ -423,7 +426,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -690,25 +693,25 @@
     "defaultMessage": "(untitled)"
   },
   "activity.taxonomy.archived": {
-    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
+    "defaultMessage": "{actor} archived the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.created": {
-    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
+    "defaultMessage": "{actor} added the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.deleted": {
-    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
+    "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.renamed": {
-    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
+    "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.reordered": {
-    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} list"
+    "defaultMessage": "{actor} reordered the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} list"
   },
   "activity.taxonomy.restored": {
-    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
+    "defaultMessage": "{actor} restored the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.taxonomy.updated": {
-    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
+    "defaultMessage": "{actor} changed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
   "activity.teamRole": {
     "defaultMessage": "{role, select, member {Member} watcher {Watcher} creator {Creator} contributor {Contributor} other {{role}}}"
@@ -756,7 +759,7 @@
     "defaultMessage": "{actor} invited {email} as {role}"
   },
   "activity.user.notificationPreferenceChanged": {
-    "defaultMessage": "{kind, select, browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} devices {{actor} {state, select, on {chose to show} off {chose to hide} other {changed whether to show}} record names on their devices} other {{actor} turned {channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}}}"
+    "defaultMessage": "{kind, select, browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} devices {{actor} {state, select, on {chose to show} off {chose to hide} other {changed whether to show}} record names on their devices} leadTimes {{actor} {state, select, on {set their own reminder lead times} off {went back to the organization's reminder lead times} other {changed their reminder lead times}}} other {{actor} turned {channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} {state, select, on {on} off {off} other {{state}}} for {group, select, assigned_to_you {direct asks} activity_on_your_records {activity on their records} dates_approaching {approaching dates} new_requests {new requests} knowledge {knowledge items} requester_events {requester events} briefing_approvals {approvals in their briefing} briefing_tasks {Tasks in their briefing} briefing_dates {dates in their briefing} briefing_obligations {obligations in their briefing} briefing_intake {Intake in their briefing} other {{group}}}}}"
   },
   "activity.user.otherSessionsRevoked": {
     "defaultMessage": "{actor} signed out their other sessions"
@@ -2090,12 +2093,6 @@
   "comments.filing.error": {
     "defaultMessage": "That attachment could not be filed. Try again."
   },
-  "comments.filing.kind": {
-    "defaultMessage": "Kind"
-  },
-  "comments.filing.kindOption": {
-    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} amendment {Amendment} executed {Executed} other {{kind}}}"
-  },
   "comments.filing.name": {
     "defaultMessage": "Document name"
   },
@@ -2116,6 +2113,9 @@
   },
   "comments.filing.title": {
     "defaultMessage": "File attachment"
+  },
+  "comments.filing.type": {
+    "defaultMessage": "Type"
   },
   "comments.loadError": {
     "defaultMessage": "The conversation could not be read. Reopen the panel to try again."
@@ -3245,9 +3245,6 @@
   "createAttachments.failed": {
     "defaultMessage": "The file could not be uploaded."
   },
-  "createAttachments.kind": {
-    "defaultMessage": "Document kind"
-  },
   "createAttachments.label": {
     "defaultMessage": "Documents"
   },
@@ -3259,6 +3256,9 @@
   },
   "createAttachments.retry": {
     "defaultMessage": "Retry failed uploads"
+  },
+  "createAttachments.type": {
+    "defaultMessage": "Document type"
   },
   "createAttachments.uploaded": {
     "defaultMessage": "Uploaded"
@@ -3902,12 +3902,6 @@
   "documents.batch.keepOpen": {
     "defaultMessage": "Keep this dialog open until the import finishes."
   },
-  "documents.batch.kind": {
-    "defaultMessage": "Version kind"
-  },
-  "documents.batch.kindHelp": {
-    "defaultMessage": "Applied to every file in this import. Notes are not collected in bulk."
-  },
   "documents.batch.more": {
     "defaultMessage": "…and {count, plural, one {# more file} other {# more files}}"
   },
@@ -3956,6 +3950,12 @@
   "documents.batch.summaryList": {
     "defaultMessage": "What this import will create"
   },
+  "documents.batch.type": {
+    "defaultMessage": "Type"
+  },
+  "documents.batch.typeHelp": {
+    "defaultMessage": "Applied to every file in this import. Notes are not collected in bulk."
+  },
   "documents.batch.unreadable": {
     "defaultMessage": "{count, plural, one {# folder could not be read} other {# folders could not be read}}: {names}. Check the list below — it may be missing files."
   },
@@ -3995,14 +3995,14 @@
   "documents.column.actions": {
     "defaultMessage": "Actions"
   },
-  "documents.column.kind": {
-    "defaultMessage": "Kind"
-  },
   "documents.column.modified": {
     "defaultMessage": "Modified"
   },
   "documents.column.name": {
     "defaultMessage": "Name"
+  },
+  "documents.column.type": {
+    "defaultMessage": "Type"
   },
   "documents.column.uploadedBy": {
     "defaultMessage": "Uploaded by"
@@ -4031,9 +4031,6 @@
   "documents.composer.folder": {
     "defaultMessage": "Folder"
   },
-  "documents.composer.kind": {
-    "defaultMessage": "Kind"
-  },
   "documents.composer.noFile": {
     "defaultMessage": "No file chosen"
   },
@@ -4045,6 +4042,9 @@
   },
   "documents.composer.submit": {
     "defaultMessage": "Upload"
+  },
+  "documents.composer.type": {
+    "defaultMessage": "Type"
   },
   "documents.composer.uploadTitle": {
     "defaultMessage": "Upload document"
@@ -4271,9 +4271,6 @@
   "documents.list.column.format": {
     "defaultMessage": "Format"
   },
-  "documents.list.column.kind": {
-    "defaultMessage": "Kind"
-  },
   "documents.list.column.owner": {
     "defaultMessage": "Owning record"
   },
@@ -4282,6 +4279,9 @@
   },
   "documents.list.column.title": {
     "defaultMessage": "Title"
+  },
+  "documents.list.column.type": {
+    "defaultMessage": "Type"
   },
   "documents.list.column.uploaded": {
     "defaultMessage": "Uploaded"
@@ -4379,6 +4379,9 @@
   "documents.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "documents.type.none": {
+    "defaultMessage": "No type"
+  },
   "documents.upload": {
     "defaultMessage": "Upload"
   },
@@ -4388,11 +4391,11 @@
   "documents.uploadedBy": {
     "defaultMessage": "Uploaded by {name}"
   },
-  "documents.versionKindLabel": {
-    "defaultMessage": "Kind of version {number} of {title}"
-  },
   "documents.versionNumber": {
     "defaultMessage": "v{number}"
+  },
+  "documents.versionTypeLabel": {
+    "defaultMessage": "Type of version {number} of {title}"
   },
   "entities.archivedPill": {
     "defaultMessage": "Archived"
@@ -8315,6 +8318,9 @@
   "settings.advanced.activeStorage": {
     "defaultMessage": "Active storage: {driver}"
   },
+  "settings.advanced.allLocked": {
+    "defaultMessage": "The deployment configuration sets this value. Change it there, then restart the API and worker."
+  },
   "settings.advanced.azureEndpoint": {
     "defaultMessage": "Azure endpoint (optional for Azure)"
   },
@@ -8418,7 +8424,7 @@
     "defaultMessage": "Restart required"
   },
   "settings.advanced.restartHelp": {
-    "defaultMessage": "Changes take effect after both the API and worker restart. Values saved here override deployment defaults."
+    "defaultMessage": "Values saved here replace OpenLaw's defaults. A value set in the deployment configuration is read only here. Changes take effect after both the API and worker restart."
   },
   "settings.advanced.role.api": {
     "defaultMessage": "API"
@@ -8964,7 +8970,16 @@
     "defaultMessage": "{frequency, select, none {No acknowledgement required} every_use {Before every generation} once_per_auto_doc {Once per person for each Auto-Doc} other {Once per person across all Auto-Docs}}"
   },
   "settings.autoDocs.acknowledgementHelp": {
-    "defaultMessage": "Choose how often Business Users must acknowledge the statement before generating documents. This frequency applies to all Auto-Docs. Each Auto-Doc can use its own text. Changing the text requires a new acknowledgement."
+    "defaultMessage": "Choose how often Business Users must acknowledge the \"Auto-Doc disclaimer statement\" before generating documents."
+  },
+  "settings.autoDocs.acknowledgementHelp.frequency": {
+    "defaultMessage": "This frequency applies to all Auto-Docs."
+  },
+  "settings.autoDocs.acknowledgementHelp.newText": {
+    "defaultMessage": "When an acknowledgement is required, changing the text asks for a new one."
+  },
+  "settings.autoDocs.acknowledgementHelp.ownText": {
+    "defaultMessage": "Each Auto-Doc can use its own text."
   },
   "settings.autoDocs.acknowledgementScopeHelp": {
     "defaultMessage": "When acknowledgement is required, a person must accept each distinct statement, including any custom text on an Auto-Doc."
@@ -9353,9 +9368,6 @@
   "settings.departments.count": {
     "defaultMessage": "{count, plural, one {# Department} other {# Departments}}"
   },
-  "settings.departments.help": {
-    "defaultMessage": "Find Departments in alphabetical order. Archive a Department to remove it from pickers and keep existing references."
-  },
   "settings.departments.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"
   },
@@ -9423,7 +9435,7 @@
     "defaultMessage": "Reading devices…"
   },
   "settings.devices.recordNames": {
-    "defaultMessage": "Show record names on devices"
+    "defaultMessage": "Show details in notifications"
   },
   "settings.devices.retry": {
     "defaultMessage": "Try again"
@@ -9448,6 +9460,84 @@
   },
   "settings.devices.workerUnavailable": {
     "defaultMessage": "Device notifications could not start in this browser. Reload to try again, or update your browser and try again."
+  },
+  "settings.documentTypes.add": {
+    "defaultMessage": "Add type"
+  },
+  "settings.documentTypes.addName": {
+    "defaultMessage": "New type name"
+  },
+  "settings.documentTypes.archive": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.documentTypes.archiveError": {
+    "defaultMessage": "The type could not be archived."
+  },
+  "settings.documentTypes.archiveSubmit": {
+    "defaultMessage": "Archive type"
+  },
+  "settings.documentTypes.archiveTitle": {
+    "defaultMessage": "Archive {name}"
+  },
+  "settings.documentTypes.archiveWarning": {
+    "defaultMessage": "{count, plural, =0 {No version uses {name}.} one {# version keeps {name} as its type.} other {# versions keep {name} as their type.}} It leaves the upload pickers."
+  },
+  "settings.documentTypes.auditNote": {
+    "defaultMessage": "The change applies immediately and is recorded in the audit log."
+  },
+  "settings.documentTypes.count": {
+    "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.documentTypes.fixed": {
+    "defaultMessage": "{name} is fixed. Contract workflows depend on it."
+  },
+  "settings.documentTypes.help": {
+    "defaultMessage": "People pick a type when they upload a file, or leave it blank. Drag to reorder."
+  },
+  "settings.documentTypes.inUse": {
+    "defaultMessage": "{count, plural, one {# version} other {# versions}}"
+  },
+  "settings.documentTypes.moved": {
+    "defaultMessage": "{name} moved to position {position} of {total}."
+  },
+  "settings.documentTypes.noCandidates": {
+    "defaultMessage": "No other active type can take its versions."
+  },
+  "settings.documentTypes.pageTitle": {
+    "defaultMessage": "Document types"
+  },
+  "settings.documentTypes.reassignLabel": {
+    "defaultMessage": "Reassign versions to"
+  },
+  "settings.documentTypes.reassignNone": {
+    "defaultMessage": "No reassignment"
+  },
+  "settings.documentTypes.renameLabel": {
+    "defaultMessage": "Rename {name}"
+  },
+  "settings.documentTypes.reorder": {
+    "defaultMessage": "Reorder {name}, position {position} of {total}. Use the arrow keys to move it."
+  },
+  "settings.documentTypes.restore": {
+    "defaultMessage": "Restore {name}"
+  },
+  "settings.documentTypes.title": {
+    "defaultMessage": "Document types"
+  },
+  "settings.documents.tab.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "settings.documents.tab.entities": {
+    "defaultMessage": "Entities"
+  },
+  "settings.documents.tab.matters": {
+    "defaultMessage": "Matters"
+  },
+  "settings.documents.tabsLabel": {
+    "defaultMessage": "Document type lists"
+  },
+  "settings.documents.title": {
+    "defaultMessage": "Documents"
   },
   "settings.eSignature.chip.connected": {
     "defaultMessage": "Connected"
@@ -9579,7 +9669,7 @@
     "defaultMessage": "Fields"
   },
   "settings.entities.tab.officerRoles": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "settings.entities.tab.types": {
     "defaultMessage": "Types"
@@ -9970,9 +10060,6 @@
   },
   "settings.knowledgeTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
-  },
-  "settings.knowledgeTypes.help": {
-    "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement."
   },
   "settings.knowledgeTypes.inUse": {
     "defaultMessage": "{count, plural, one {# knowledge item} other {# knowledge items}}"
@@ -10424,6 +10511,18 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.myReminders.description": {
+    "defaultMessage": "How far ahead you hear about expiries, notice deadlines, Key dates and obligations."
+  },
+  "settings.myReminders.listLabel": {
+    "defaultMessage": "Your reminder lead times"
+  },
+  "settings.myReminders.title": {
+    "defaultMessage": "Reminder lead times"
+  },
+  "settings.myReminders.useDefault": {
+    "defaultMessage": "Use the organization's default lead times"
+  },
   "settings.notifications.briefing.approvals": {
     "defaultMessage": "Approvals"
   },
@@ -10560,7 +10659,7 @@
     "defaultMessage": "No other active role can take its officers. Add or restore another role first."
   },
   "settings.officerRoles.pageTitle": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "settings.officerRoles.reassignLabel": {
     "defaultMessage": "Reassign {count, plural, =0 {officers} one {# officer} other {# officers}} to"
@@ -10578,7 +10677,7 @@
     "defaultMessage": "Restore {name}"
   },
   "settings.officerRoles.title": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "settings.profile.businessView.action": {
     "defaultMessage": "View as business user"
@@ -10706,9 +10805,6 @@
   "settings.regions.count": {
     "defaultMessage": "{count, plural, one {# Region} other {# Regions}}"
   },
-  "settings.regions.help": {
-    "defaultMessage": "Regions are listed alphabetically. Archiving a Region removes it from pickers and keeps existing references."
-  },
   "settings.regions.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"
   },
@@ -10752,7 +10848,7 @@
     "defaultMessage": "{count, plural, one {# lead time} other {# lead times}}"
   },
   "settings.reminders.help": {
-    "defaultMessage": "Drag a row, or focus its handle and use the arrow keys, to reorder. One list covers every tracked date — key dates, notice deadlines, and expiries — and the reminders arrive in the daily digest. Keep at least one lead time."
+    "defaultMessage": "These are the default lead times for expiries, notice deadlines, Key dates and obligations. People can set their own in Notifications. Keep at least one lead time."
   },
   "settings.reminders.lastOne": {
     "defaultMessage": "{label} is the only lead time and can't be removed"
@@ -10940,6 +11036,9 @@
   "settings.section.departments": {
     "defaultMessage": "Departments"
   },
+  "settings.section.documents": {
+    "defaultMessage": "Documents"
+  },
   "settings.section.email": {
     "defaultMessage": "Outbound email"
   },
@@ -11093,6 +11192,9 @@
   "settings.users.invited": {
     "defaultMessage": "Invited"
   },
+  "settings.users.moreActions": {
+    "defaultMessage": "More actions for {email}"
+  },
   "settings.users.neverActive": {
     "defaultMessage": "—"
   },
@@ -11104,9 +11206,6 @@
   },
   "settings.users.revoke": {
     "defaultMessage": "Revoke the invite to {email}"
-  },
-  "settings.users.revokeSessions": {
-    "defaultMessage": "Revoke all sessions of {email}"
   },
   "settings.users.showArchived": {
     "defaultMessage": "Show archived"
@@ -12147,7 +12246,7 @@
     "defaultMessage": "Matter types"
   },
   "welcome.review.officerRoles": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "welcome.review.reminders": {
     "defaultMessage": "Reminder offsets"

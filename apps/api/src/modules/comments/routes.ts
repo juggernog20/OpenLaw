@@ -126,6 +126,7 @@ import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
 import { documentAudienceScope, documentConfidentialityWrite } from "../../lib/contract-access.js";
 import {
   insertDocumentVersion,
+  resolveDocumentType,
   nextVersionNumber,
   requestDerivations,
   versionStorageKey,
@@ -339,14 +340,18 @@ const HandSetKindSchema = z.enum(HAND_SET_DOCUMENT_VERSION_KINDS);
 const FilingBody = z.discriminatedUnion("destination", [
   z.strictObject({
     destination: z.literal("new_document"),
-    kind: HandSetKindSchema,
+    /** DOC-015: a type from the record's list, or null for none. Wins
+     * over `kind`, which older clients still send. */
+    documentTypeId: RecordIdSchema.nullable().optional(),
+    kind: HandSetKindSchema.optional(),
     name: z.string().trim().min(1).max(200),
     isConfidential: z.boolean(),
   }),
   z.strictObject({
     destination: z.literal("new_version"),
     documentId: RecordIdSchema,
-    kind: HandSetKindSchema,
+    documentTypeId: RecordIdSchema.nullable().optional(),
+    kind: HandSetKindSchema.optional(),
     note: z.string().trim().max(2000).optional(),
   }),
 ]);
@@ -1481,12 +1486,20 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
             versionNumber = await nextVersionNumber(tx, documentId);
           }
 
+          const typed = await resolveDocumentType(
+            tx,
+            documentId,
+            request.body.documentTypeId !== undefined
+              ? { documentTypeId: request.body.documentTypeId }
+              : { kind: request.body.kind ?? "general" },
+          );
           await insertDocumentVersion(tx, {
             documentId,
             versionId,
             versionNumber,
             fileRef: copied.fileRef,
-            kind: request.body.kind,
+            kind: typed.kind,
+            documentTypeId: typed.documentTypeId,
             source: "uploaded",
             comparedFromVersionId: null,
             comparedToVersionId: null,
@@ -1561,7 +1574,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
                 versionId,
                 title,
                 versionNumber,
-                kind: request.body.kind,
+                kind: typed.kind,
                 sourceCommentId: held.id,
               },
             });

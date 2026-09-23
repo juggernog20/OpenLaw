@@ -7,7 +7,7 @@
  * fire-and-forget. Inviting happens here through a dialog. Every
  * people-facing action lives on the person's row: invite rows carry
  * resend and revoke; active rows carry the in-place role select,
- * session revocation, and archive; archived rows sit greyed behind the
+ * archive, and a row menu with session revocation; archived rows sit greyed behind the
  * Show-archived filter with restore. The loader is the client half of
  * SET-002's gate; the API's 403 is the real refusal.
  */
@@ -15,7 +15,16 @@
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { Archive, ArchiveRestore, ChevronDown, LogOut, Plus, Send, Trash2 } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  LogOut,
+  MoreHorizontal,
+  Plus,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { api } from "../lib/api";
 import { field } from "../lib/forms";
 import { problem as readProblem } from "../lib/problem";
@@ -32,6 +41,7 @@ import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -395,8 +405,6 @@ export function SettingsUsersPage() {
           <FormattedMessage id="settings.users.action.resend" defaultMessage="Resend invite" />
         ) : Icon === Trash2 ? (
           <FormattedMessage id="settings.users.action.revoke" defaultMessage="Revoke invite" />
-        ) : Icon === LogOut ? (
-          <FormattedMessage id="settings.users.action.signOut" defaultMessage="Sign out user" />
         ) : Icon === Archive ? (
           <FormattedMessage id="settings.users.action.archive" defaultMessage="Archive" />
         ) : (
@@ -606,18 +614,6 @@ export function SettingsUsersPage() {
                             row,
                             intl.formatMessage(
                               {
-                                id: "settings.users.revokeSessions",
-                                defaultMessage: "Revoke all sessions of {email}",
-                              },
-                              { email: row.email },
-                            ),
-                            LogOut,
-                            revokeSessions,
-                          )}
-                          {rowAction(
-                            row,
-                            intl.formatMessage(
-                              {
                                 id: "settings.users.archive",
                                 defaultMessage: "Archive {email}",
                               },
@@ -626,6 +622,38 @@ export function SettingsUsersPage() {
                             Archive,
                             archive,
                           )}
+                          {/* Signing a person out everywhere is rare: a lost
+                              device or a suspected break-in. It sits behind
+                              the row menu so it does not weigh the same as
+                              Archive (SET-005). */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                disabled={rowStatus[row.id] === "saving"}
+                                aria-label={intl.formatMessage(
+                                  {
+                                    id: "settings.users.moreActions",
+                                    defaultMessage: "More actions for {email}",
+                                  },
+                                  { email: row.email },
+                                )}
+                              >
+                                <MoreHorizontal size={16} aria-hidden="true" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onSelect={() => void revokeSessions(row)}>
+                                <LogOut size={16} aria-hidden="true" className="text-muted" />
+                                <FormattedMessage
+                                  id="settings.users.action.signOut"
+                                  defaultMessage="Sign out user"
+                                />
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </>
                       )}
                       {row.status === "archived" &&

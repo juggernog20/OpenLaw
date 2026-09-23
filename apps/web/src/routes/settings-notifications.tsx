@@ -27,6 +27,7 @@ import {
 } from "../components/notification-preferences";
 import { SettingsCard } from "../components/settings-card";
 import { NotificationDevices } from "../components/notification-devices";
+import { MyReminderLeadTimes } from "../components/my-reminder-lead-times";
 import { StatusNote } from "../components/status-note";
 
 export async function settingsNotificationsLoader() {
@@ -96,6 +97,10 @@ export function SettingsNotificationsPage() {
       <NotificationDevices
         vapidPublicKey={loaded.vapidPublicKey}
         showRecordNames={loaded.showRecordNamesOnDevices}
+      />
+      <MyReminderLeadTimes
+        own={loaded.reminderOffsetDays}
+        organization={loaded.organizationReminderOffsetDays}
       />
       <SettingsCard
         title={

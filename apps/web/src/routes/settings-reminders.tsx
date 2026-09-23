@@ -28,8 +28,9 @@
 
 import { useRef, useState } from "react";
 import { redirect, useLoaderData } from "react-router";
-import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
+import { MAX_OFFSET_DAYS, MAX_OFFSETS, offsetLabel } from "../lib/reminder-offsets";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { InlineAddForm } from "../components/inline-add-form";
@@ -47,27 +48,6 @@ export async function settingsRemindersLoader() {
   if (!data) throw new Error("The reminder lead times could not be read.");
   return { offsets: data.offsets };
 }
-
-/** The furthest ahead one lead time may look, as the API bounds it
- * (NOT-004): two years, which covers a long notice window and stops a
- * mistyped number becoming a schedule. */
-const MAX_OFFSET_DAYS = 730;
-
-/** How many lead times one list holds, as the API bounds it: far past
- * any real ladder, and stated here so the draft row refuses before a
- * request rather than after one. */
-const MAX_OFFSETS = 20;
-
-/** How one lead time reads. Day-of is a phrase rather than "0 days",
- * because nobody says nought days before. */
-const offsetLabel = (intl: IntlShape, days: number): string =>
-  intl.formatMessage(
-    {
-      id: "settings.reminders.offset",
-      defaultMessage: "{days, plural, =0 {On the day} one {# day before} other {# days before}}",
-    },
-    { days },
-  );
 
 export function SettingsRemindersPage() {
   const intl = useIntl();
@@ -285,9 +265,9 @@ export function SettingsRemindersPage() {
             <FormattedMessage
               id="settings.reminders.help"
               defaultMessage={
-                "Drag a row, or focus its handle and use the arrow keys, to reorder. One list " +
-                "covers every tracked date — key dates, notice deadlines, and expiries — and " +
-                "the reminders arrive in the daily digest. Keep at least one lead time."
+                "These are the default lead times for expiries, notice deadlines, Key dates " +
+                "and obligations. People can set their own in Notifications. Keep at least one " +
+                "lead time."
               }
             />
           }

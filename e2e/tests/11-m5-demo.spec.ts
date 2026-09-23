@@ -135,7 +135,8 @@ test.describe.serial("M5 demo path", () => {
       await rail.getByRole("link", { name: "Users" }).click();
       await expect(page).toHaveURL(/\/settings\/users$/);
       const row = page.getByRole("row", { name: new RegExp(email) });
-      await row.getByRole("button", { name: `Revoke all sessions of ${email}` }).click();
+      await row.getByRole("button", { name: `More actions for ${email}` }).click();
+      await page.getByRole("menuitem", { name: "Sign out user" }).click();
       await expect(row.getByText("Saved")).toBeVisible();
       await member.page.goto("/settings/appearance");
       await expect(member.page).toHaveURL(/\/auth\/login/);

@@ -225,7 +225,7 @@ export function CreateMatterDialog({
         )}
         {attachments.created ? (
           <div className="mt-4">
-            <CreateAttachments showKind={false} uploads={attachments} />
+            <CreateAttachments module="matter" uploads={attachments} />
           </div>
         ) : (
           <form
@@ -354,7 +354,7 @@ export function CreateMatterDialog({
               confidential={confidential}
               onChange={setConfidential}
             />
-            <CreateAttachments showKind={false} uploads={attachments} disabled={busy} />
+            <CreateAttachments module="matter" uploads={attachments} disabled={busy} />
             {error && (
               <p role="alert" className="text-xs text-status-danger-fg">
                 {error}

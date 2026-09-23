@@ -116,6 +116,11 @@ import {
   settingsEntityTypesLoader,
 } from "./routes/settings-entity-types";
 import {
+  SettingsDocumentTypesPage,
+  settingsDocumentsIndexLoader,
+  settingsDocumentTypesLoader,
+} from "./routes/settings-document-types";
+import {
   SettingsKnowledgeTypesPage,
   settingsKnowledgeIndexLoader,
   settingsKnowledgeTypesLoader,
@@ -637,6 +642,23 @@ export const routes: RouteObject[] = [
         path: "knowledge/types",
         loader: settingsKnowledgeTypesLoader,
         element: <SettingsKnowledgeTypesPage />,
+      },
+      // DOC-015: one Document type list per owning module but Knowledge.
+      { path: "documents", loader: settingsDocumentsIndexLoader, element: <></> },
+      {
+        path: "documents/matters",
+        loader: settingsDocumentTypesLoader("matter"),
+        element: <SettingsDocumentTypesPage />,
+      },
+      {
+        path: "documents/contracts",
+        loader: settingsDocumentTypesLoader("contract"),
+        element: <SettingsDocumentTypesPage />,
+      },
+      {
+        path: "documents/entities",
+        loader: settingsDocumentTypesLoader("entity"),
+        element: <SettingsDocumentTypesPage />,
       },
       {
         // #322: Organization · Notifications — the NOT-004 reminder

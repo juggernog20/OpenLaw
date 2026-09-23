@@ -250,7 +250,12 @@ function SettingsFieldsPage({
     }
   }
 
-  /** The table cells after the name: type and extraction prompt. */
+  // Only Contract fields carry an AI extraction prompt: analysis reads
+  // Contract fields alone, and the editor offers the prompt nowhere else.
+  const promptable = module === "contract";
+
+  /** The table cells after the name: type and, on Contracts, the
+   * extraction prompt. */
   function rowDetails(row: FieldRow) {
     return (
       <>
@@ -260,34 +265,36 @@ function SettingsFieldsPage({
           </span>
           {typeLabel(intl, row.fieldType)}
         </span>
-        <span className="flex w-16 shrink-0 items-center">
-          {row.aiPrompt && !isReferenceFieldType(row.fieldType) ? (
-            <Sparkles
-              size={16}
-              role="img"
-              aria-label={intl.formatMessage(
-                {
-                  id: "settings.contractFields.hasPrompt",
-                  defaultMessage: "{name} has an AI extraction prompt",
-                },
-                { name: row.displayName },
-              )}
-              className="text-status-info-fg"
-            />
-          ) : (
-            <>
-              <span aria-hidden="true" className="text-sm text-muted">
-                —
-              </span>
-              <span className="sr-only">
-                <FormattedMessage
-                  id="settings.contractFields.noPrompt"
-                  defaultMessage="No AI prompt"
-                />
-              </span>
-            </>
-          )}
-        </span>
+        {promptable && (
+          <span className="flex w-16 shrink-0 items-center">
+            {row.aiPrompt && !isReferenceFieldType(row.fieldType) ? (
+              <Sparkles
+                size={16}
+                role="img"
+                aria-label={intl.formatMessage(
+                  {
+                    id: "settings.contractFields.hasPrompt",
+                    defaultMessage: "{name} has an AI extraction prompt",
+                  },
+                  { name: row.displayName },
+                )}
+                className="text-status-info-fg"
+              />
+            ) : (
+              <>
+                <span aria-hidden="true" className="text-sm text-muted">
+                  —
+                </span>
+                <span className="sr-only">
+                  <FormattedMessage
+                    id="settings.contractFields.noPrompt"
+                    defaultMessage="No AI prompt"
+                  />
+                </span>
+              </>
+            )}
+          </span>
+        )}
       </>
     );
   }
@@ -338,12 +345,14 @@ function SettingsFieldsPage({
                 <span className="w-24 shrink-0">
                   <FormattedMessage id="settings.contractFields.typeColumn" defaultMessage="Type" />
                 </span>
-                <span className="w-16 shrink-0">
-                  <FormattedMessage
-                    id="settings.contractFields.promptColumn"
-                    defaultMessage="AI prompt"
-                  />
-                </span>
+                {promptable && (
+                  <span className="w-16 shrink-0">
+                    <FormattedMessage
+                      id="settings.contractFields.promptColumn"
+                      defaultMessage="AI prompt"
+                    />
+                  </span>
+                )}
               </span>
               {/* The trailing-action column has no header (ST11). */}
               <span className="w-15" aria-hidden="true" />

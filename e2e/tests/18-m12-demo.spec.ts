@@ -85,6 +85,7 @@ import {
   signInAs,
   sweepOrSay,
   type OnboardedMember,
+  pickDocumentType,
 } from "./helpers.js";
 
 /**
@@ -455,7 +456,7 @@ async function uploadThroughComposer(page: Page, upload: Upload): Promise<Docume
     await chooser
   ).setFiles({ name: upload.name, mimeType: upload.mimeType, buffer: upload.body });
   await expect(dialog.getByText(upload.name)).toBeVisible();
-  await dialog.getByLabel("Kind").selectOption(upload.kind);
+  await pickDocumentType(dialog, upload.kind);
   await dialog.getByLabel("Note").fill(upload.note);
   const uploaded = page.waitForResponse(
     (response) =>

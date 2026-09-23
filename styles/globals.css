@@ -278,6 +278,11 @@
     font-family: var(--font-sans);
     color: var(--text-primary);
     background-color: var(--bg-canvas);
+    /* Scroll bars take the theme's muted text colour on a clear track,
+     * so they sit on any surface and the thumb clears WCAG's 3:1 for UI
+     * parts in every theme (the strong border does not). The property
+     * inherits into every scrolling box. */
+    scrollbar-color: var(--text-muted) transparent;
   }
 
   body {

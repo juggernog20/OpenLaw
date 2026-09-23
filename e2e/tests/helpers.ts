@@ -492,3 +492,24 @@ export async function ensureIntakeDepartment(request: APIRequestContext): Promis
   return z.object({ department: z.object({ id: z.string() }) }).parse(await created.json())
     .department.id;
 }
+
+/**
+ * The fixed Contract Document types by the kind each stands for
+ * (DOC-015). The upload pickers list types by name, so a journey that
+ * thinks in kinds picks the type that carries the kind.
+ */
+export const FIXED_DOCUMENT_TYPES: Record<string, string> = {
+  draft_ours: "Draft · ours",
+  draft_theirs: "Draft · theirs",
+  redline_theirs: "Redline · theirs",
+  redline_ours: "Redline · ours",
+  executed: "Executed",
+  amendment: "Amendment",
+};
+
+/** Picks the fixed Document type for a kind in an upload or filing form. */
+export async function pickDocumentType(scope: Locator, kind: string): Promise<void> {
+  const label = FIXED_DOCUMENT_TYPES[kind];
+  if (!label) throw new Error(`No fixed Document type stands for the kind ${kind}.`);
+  await scope.getByLabel("Type", { exact: true }).selectOption({ label });
+}

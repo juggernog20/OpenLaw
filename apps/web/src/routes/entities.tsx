@@ -1343,7 +1343,7 @@ function RegisterEntityDialog({
         </DialogTitle>
         {attachments.created ? (
           <div className="mt-4">
-            <CreateAttachments uploads={attachments} />
+            <CreateAttachments module="entity" uploads={attachments} />
           </div>
         ) : (
           <form
@@ -1528,7 +1528,7 @@ function RegisterEntityDialog({
               native={{}}
               onNative={() => {}}
             />
-            <CreateAttachments uploads={attachments} disabled={busy} />
+            <CreateAttachments module="entity" uploads={attachments} disabled={busy} />
             {error && (
               <p role="alert" className="text-xs text-status-danger-fg">
                 {error}

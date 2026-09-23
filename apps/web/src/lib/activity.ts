@@ -361,7 +361,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
         "noticePeriodDays {Notice period (days)} " +
-        "date {Date} label {Event} note {Note} kind {Kind} " +
+        "date {Date} label {Event} note {Note} kind {Kind} documentType {Type} " +
         "primaryCounterparty {Primary counterparty} " +
         "primaryDocument {Primary document} " +
         "displayName {Name} display_name {Display name} name {Name} " +
@@ -1105,7 +1105,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} added the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
-      "request_type {request type} " +
+      "request_type {request type} document_type {document type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
@@ -1114,7 +1114,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} renamed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
-      "request_type {request type} " +
+      "request_type {request type} document_type {document type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
@@ -1123,7 +1123,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} changed the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
-      "request_type {request type} " +
+      "request_type {request type} document_type {document type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
@@ -1132,7 +1132,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} reordered the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
-      "request_type {request type} " +
+      "request_type {request type} document_type {document type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} list",
   }),
@@ -1141,7 +1141,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} archived the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
-      "request_type {request type} " +
+      "request_type {request type} document_type {document type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
@@ -1150,7 +1150,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} restored the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
-      "request_type {request type} " +
+      "request_type {request type} document_type {document type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
@@ -1159,7 +1159,7 @@ const TAXONOMY = {
     defaultMessage:
       "{actor} deleted the {kind, select, contract_type {contract type} " +
       "matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} " +
-      "request_type {request type} " +
+      "request_type {request type} document_type {document type} " +
       "contract_status {contract status} field {field} " +
       "approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}",
   }),
@@ -2149,6 +2149,21 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     changes: (intl, payload, context) => directChange(intl, payload, "kind", context),
   },
+  // DOC-015: the type names as they read at the time; null is no type.
+  "document.version_type_changed": {
+    icon: FilePen,
+    message: defineMessage({
+      id: "activity.document.versionTypeChanged",
+      defaultMessage:
+        "{version, select, unknown {{actor} changed the type of a version of {title}} " +
+        "other {{actor} changed the type of version {version} of {title}}}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: versionNumber(payload),
+    }),
+    changes: (intl, payload, context) => directChange(intl, payload, "documentType", context),
+  },
   // The metadata edit (DOC-007). It says the document's details changed,
   // never that a file did: the stored versions are immutable, and a
   // rename touches none of them. The old→new pairs come off the
@@ -2594,6 +2609,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         "browser {{actor} turned push {state, select, on {on} off {off} other {{state}}} for a browser} " +
         "devices {{actor} {state, select, on {chose to show} off {chose to hide} " +
         "other {changed whether to show}} record names on their devices} " +
+        "leadTimes {{actor} {state, select, on {set their own reminder lead times} " +
+        "off {went back to the organization's reminder lead times} " +
+        "other {changed their reminder lead times}}} " +
         "other {{actor} turned " +
         "{channel, select, in_app {bell items} email {emails} push {push} other {{channel}}} " +
         "{state, select, on {on} off {off} other {{state}}} for " +
@@ -2614,7 +2632,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
           ? "browser"
           : "showRecordNamesOnDevices" in payload
             ? "devices"
-            : "group",
+            : "reminderOffsetDays" in payload
+              ? "leadTimes"
+              : "group",
       // Their own fallbacks rather than {@link named}'s, because that
       // one is a person's — "turned someone off for someone" is not a
       // sentence. Either fallback lands in the select's `other` arm.
@@ -2645,7 +2665,11 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
               id: "activity.notificationPreference.unknownState",
               defaultMessage: "on or off",
             }))(
-        "showRecordNamesOnDevices" in payload ? payload.showRecordNamesOnDevices : payload.enabled,
+        "showRecordNamesOnDevices" in payload
+          ? payload.showRecordNamesOnDevices
+          : "reminderOffsetDays" in payload
+            ? payload.reminderOffsetDays !== null
+            : payload.enabled,
       ),
     }),
   },
@@ -2895,6 +2919,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   ...taxonomyArms("region", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("request_type", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("knowledge_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("document_type", Tag, TAXONOMY_VERBS),
   // A status has a stage rather than a description, so it never writes
   // the `updated` verb.
   ...taxonomyArms("contract_status", GitCommitHorizontal, [

@@ -21,6 +21,7 @@ import {
   signInAs,
   sweepOrSay,
   switchTheme,
+  pickDocumentType,
 } from "./helpers.js";
 
 test.setTimeout(480_000);
@@ -113,7 +114,7 @@ async function uploadRound(
   await dialog.getByRole("button", { name: "File Choose file" }).click();
   await (await chooser).setFiles({ name: file.name, mimeType: DOCX_MIME, buffer: file.body });
   await expect(dialog.getByText(file.name)).toBeVisible();
-  await dialog.getByLabel("Kind").selectOption(file.kind);
+  await pickDocumentType(dialog, file.kind);
   await dialog.getByLabel("Note").fill(file.note);
   const uploading = page.waitForResponse(
     (response) =>

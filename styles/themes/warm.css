@@ -28,6 +28,9 @@
  */
 
 [data-theme="warm"] {
+  /* The browser draws scroll bars and form parts in this mode. */
+  color-scheme: light;
+
   /* Surfaces */
   --bg-canvas: #fbfaf7;
   --bg-raised: #ffffff;

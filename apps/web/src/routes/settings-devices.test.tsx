@@ -45,6 +45,8 @@ function extra(call: StubCall) {
       briefing: [],
       vapidPublicKey: "AQID",
       showRecordNamesOnDevices: call.method === "PATCH" ? false : true,
+      reminderOffsetDays: null,
+      organizationReminderOffsetDays: [7, 1, 0],
     });
   }
   if (call.url.pathname === "/api/v1/notifications/subscriptions") {
@@ -139,7 +141,7 @@ it("shows the blocked note when the prompt is denied", async () => {
 it("saves record names immediately and restores them on refusal", async () => {
   failSave = true;
   renderAt("/settings/notifications");
-  const toggle = await screen.findByRole("switch", { name: "Show record names on devices" });
+  const toggle = await screen.findByRole("switch", { name: "Show details in notifications" });
   expect(toggle).toBeChecked();
   await userEvent.setup().click(toggle);
   expect(await screen.findByText("The change could not be saved.")).toBeVisible();
@@ -148,7 +150,7 @@ it("saves record names immediately and restores them on refusal", async () => {
 });
 it("saves the record-name choice", async () => {
   renderAt("/settings/notifications");
-  const toggle = await screen.findByRole("switch", { name: "Show record names on devices" });
+  const toggle = await screen.findByRole("switch", { name: "Show details in notifications" });
   await userEvent.setup().click(toggle);
   expect(await screen.findByText("Saved")).toBeVisible();
   expect(toggle).not.toBeChecked();

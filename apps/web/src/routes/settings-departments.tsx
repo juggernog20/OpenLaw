@@ -28,11 +28,6 @@ const MESSAGES = defineMessages({
   },
   add: { id: "settings.departments.add", defaultMessage: "Add Department" },
   addName: { id: "settings.departments.addName", defaultMessage: "New Department name" },
-  help: {
-    id: "settings.departments.help",
-    defaultMessage:
-      "Find Departments in alphabetical order. Archive a Department to remove it from pickers and keep existing references.",
-  },
   renameLabel: { id: "settings.departments.renameLabel", defaultMessage: "Rename {name}" },
   inUse: {
     id: "settings.departments.inUse",
