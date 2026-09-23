@@ -3593,7 +3593,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Full Thread history for a reached Portal record. Other tiers leave no entries or counts. */
+    /** History for a reached Portal record: Full Thread comments and the record progress the Portal draws. Other comment tiers leave no entries or counts. */
     get: operations["listPortalActivity"];
     put?: never;
     post?: never;

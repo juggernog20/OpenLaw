@@ -42,7 +42,7 @@ A comment attachment belongs to the conversation. Upload under Documents when th
 
 ## Read what has happened
 
-Open **History** in the applet bar. It narrates the progress you can see on the record, newest first:
+Open **History** in the applet bar to read the progress you can see on the record, newest first:
 
 - the Stage a Contract moved to, and the Status a Matter moved to
 - a change to a value the Portal draws, such as the title, the owners, the Department, the Region, the term dates or the Value
@@ -50,7 +50,7 @@ Open **History** in the applet bar. It narrates the progress you can see on the 
 - a Task somebody added, with its due date when it has one, and a Task somebody completed
 - replies in the shared conversation
 
-It leaves out the work that is not yours to read: Legal Only and internal team messages, Tasks that were edited, reordered or removed, Priority and Risk, and anything about a Field your Form keeps off the Portal. A Matter's closing note stays with Legal. Nothing here says that something was hidden, because a count of hidden entries would itself be a disclosure.
+History does not show work that is not yours to read: Legal Only and Working Team messages, Tasks that were edited, reordered or removed, Priority and Risk, and anything about a Field your Form keeps off the Portal. A Matter's closing note stays with Legal. Nothing here says that something was hidden, because a count of hidden entries would itself be a disclosure.
 
 ## Add team members
 

@@ -38234,7 +38234,7 @@
     "/api/v1/portal/activity": {
       "get": {
         "operationId": "listPortalActivity",
-        "summary": "Full Thread history for a reached Portal record. Other tiers leave no entries or counts.",
+        "summary": "History for a reached Portal record: Full Thread comments and the record progress the Portal draws. Other comment tiers leave no entries or counts.",
         "tags": ["portal"],
         "parameters": [
           {

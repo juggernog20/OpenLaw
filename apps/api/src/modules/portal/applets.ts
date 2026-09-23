@@ -213,7 +213,7 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listPortalActivity",
         tags: ["portal"],
         summary:
-          "Full Thread history for a reached Portal record. Other tiers leave no entries or counts.",
+          "History for a reached Portal record: Full Thread comments and the record progress the Portal draws. Other comment tiers leave no entries or counts.",
         querystring: z.object({
           entityType: z.enum(["contract", "matter", "request"]),
           entityId: z.string().min(1).max(64),
