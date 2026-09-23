@@ -178,7 +178,7 @@ export const apiKeyRoutes: FastifyPluginAsyncZod = async (app) => {
         keyId: key.id,
         decidedBy: actorId,
         decidedAt: new Date(),
-        decisionNote: note ?? null,
+        decisionNote: note || null,
         sealedKey: selfApproved ? null : sealSecret(key.key, "sealed_key"),
       })
       .where(eq(apiKeyRequests.id, row.id))
@@ -262,7 +262,7 @@ export const apiKeyRoutes: FastifyPluginAsyncZod = async (app) => {
         assertPolicy(await readPolicy(tx, req.user.role), req.body);
         const [row] = await tx
           .insert(apiKeyRequests)
-          .values({ ...req.body, requesterId: req.user.id })
+          .values({ ...req.body, note: req.body.note || null, requesterId: req.user.id })
           .returning();
         await audit(tx, row!, "requested", req.user.id);
         if (req.user.role === "administrator") return approve(tx, row!, req.user.id);
@@ -366,7 +366,7 @@ export const apiKeyRoutes: FastifyPluginAsyncZod = async (app) => {
               status: action === "deny" ? "denied" : "cancelled",
               decidedBy: req.user.id,
               decidedAt: new Date(),
-              decisionNote: note ?? null,
+              decisionNote: note || null,
             })
             .where(eq(apiKeyRequests.id, row.id))
             .returning();

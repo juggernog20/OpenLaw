@@ -12,6 +12,16 @@ import type { FastifyPluginAsync } from "fastify";
 import { httpError } from "../lib/problem.js";
 import { fromNodeHeaders } from "better-auth/node";
 
+function isApiKeyPluginPath(pathname: string): boolean {
+  let decoded = pathname;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    // A malformed escape cannot spell the plugin's path; better-auth answers it.
+  }
+  return decoded.replace(/\/+/g, "/").startsWith("/api/auth/api-key/");
+}
+
 export const authHandler: FastifyPluginAsync = async (app) => {
   // better-auth parses its own bodies (JSON, and form-urlencoded per
   // RFC 6749 for OIDC callbacks) — hand it the raw payload untouched.
@@ -28,7 +38,8 @@ export const authHandler: FastifyPluginAsync = async (app) => {
     schema: { hide: true },
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
-      if (decodeURIComponent(url.pathname).replace(/\/+/g, "/").startsWith("/api/auth/api-key/"))
+      // DD-029: keys are minted by an approved request, never by the plugin's own endpoints.
+      if (isApiKeyPluginPath(url.pathname))
         throw httpError(403, "API keys require an approved API key request.");
       const body = request.body as Buffer | undefined;
       const headers = fromNodeHeaders(request.headers);

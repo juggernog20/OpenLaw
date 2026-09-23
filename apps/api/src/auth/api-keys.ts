@@ -16,6 +16,9 @@ export const apiKeyPlugin = () =>
   apiKey({
     defaultPrefix: API_KEY_PREFIX,
     enableSessionForAPIKeys: false,
+    // TECH-035 limits calls per hour per credential from Advanced settings. The
+    // plugin's own limiter would otherwise write 10 requests a day onto every row.
+    rateLimit: { enabled: false },
     maximumNameLength: 200,
     minimumNameLength: 1,
     keyExpiration: { minExpiresIn: 1, maxExpiresIn: 365 },

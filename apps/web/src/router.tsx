@@ -461,14 +461,15 @@ export const routes: RouteObject[] = [
         // #320: the ST3 pane, every signed-in person's own. No role
         // gate — a preference is addressed to one person, and the
         // API answers only for the signed-in one.
-        path: "api-keys",
-        loader: settingsApiKeysLoader,
-        element: <SettingsApiKeysPage />,
-      },
-      {
         path: "notifications",
         loader: settingsNotificationsLoader,
         element: <SettingsNotificationsPage />,
+      },
+      {
+        // SET-014: the Personal rail's API keys, after Notifications.
+        path: "api-keys",
+        loader: settingsApiKeysLoader,
+        element: <SettingsApiKeysPage />,
       },
       // SET-002: the loaders bounce non-Administrators; the API's own
       // role gate stands behind them.

@@ -899,6 +899,9 @@
   "apiKeys.readDescription": {
     "defaultMessage": "Read. Find and read what you can access."
   },
+  "apiKeys.readFailed": {
+    "defaultMessage": "The API key could not be read. Reload to try again."
+  },
   "apiKeys.readyTitle": {
     "defaultMessage": "Your key is ready"
   },

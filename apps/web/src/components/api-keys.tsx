@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { FormattedMessage, defineMessages, useIntl } from "react-intl";
+import { FormattedMessage, defineMessage, defineMessages, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import type { McpToolset } from "@openlaw/shared";
 import { api } from "../lib/api";
@@ -26,6 +26,10 @@ const actions = defineMessages({
   deny: { id: "apiKeys.deny", defaultMessage: "Deny" },
   cancel: { id: "apiKeys.cancelRequest", defaultMessage: "Cancel request" },
   revoke: { id: "apiKeys.revoke", defaultMessage: "Revoke" },
+});
+const readFailed = defineMessage({
+  id: "apiKeys.readFailed",
+  defaultMessage: "The API key could not be read. Reload to try again.",
 });
 const statuses = defineMessages({
   pending: { id: "apiKeys.pending", defaultMessage: "Pending approval" },
@@ -89,7 +93,7 @@ export function ApiKeys({
       .GET("/api/v1/api-key-requests/{id}", { params: { path: { id: row.id } } })
       .then(({ data, error }) => {
         if (!data) {
-          setError(error?.detail ?? "The API key could not be read. Reload to try again.");
+          setError(error?.detail ?? intl.formatMessage(readFailed));
           return;
         }
         setState((s) => ({
@@ -101,11 +105,11 @@ export function ApiKeys({
           setReady(data);
         }
       })
-      .catch(() => setError("The API key could not be read. Reload to try again."))
+      .catch(() => setError(intl.formatMessage(readFailed)))
       .finally(() => {
         collecting.current = false;
       });
-  }, [state.requests, organization, ready]);
+  }, [state.requests, organization, ready, intl]);
   async function mutate(work: () => Promise<void>) {
     if (lock.current) return;
     lock.current = true;
@@ -593,7 +597,7 @@ function Note({ value, onChange }: { value: string; onChange: (value: string) =>
     <label className="flex flex-col gap-1">
       <FormattedMessage id="apiKeys.note" defaultMessage="Note (Optional)" />
       <textarea
-        className="rounded-button border border-border-default bg-control p-2"
+        className="rounded-button border border-border-default bg-raised p-2.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         maxLength={2000}

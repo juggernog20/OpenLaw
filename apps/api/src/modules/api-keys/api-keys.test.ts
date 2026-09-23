@@ -402,12 +402,64 @@ it("records every lifecycle action at admin_only and keeps keys hashed", async (
   expect(rows.rows.every((r) => r.visibility === "admin_only")).toBe(true);
   const approved = await request(admin);
   const stored = await h.db.$client.query(
-    "select key from api_keys where id = (select key_id from api_key_requests where id = $1)",
+    "select key, rate_limit_enabled from api_keys where id = (select key_id from api_key_requests where id = $1)",
     [approved.id],
   );
   expect(stored.rows[0].key).not.toBe(approved.key);
+  // TECH-035: the calls-per-hour limit lives in Advanced, not on the plugin row.
+  expect(stored.rows[0].rate_limit_enabled).toBe(false);
   const verified = await h.app.auth.api.verifyApiKey({ body: { key: approved.key } });
   expect(verified.valid).toBe(true);
   await h.app.inject({ method: "POST", url: `${url}/${approved.id}/revoke`, cookies: admin });
   expect((await h.app.auth.api.verifyApiKey({ body: { key: approved.key } })).valid).toBe(false);
+});
+it("lets only an Administrator list and revoke another person's key", async () => {
+  const pending = await request();
+  await h.app.inject({
+    method: "POST",
+    url: `${url}/${pending.id}/approve`,
+    cookies: admin,
+    payload: {},
+  });
+  expect(
+    (await h.app.inject({ method: "GET", url: "/api/v1/mcp-settings/api-keys", cookies: member }))
+      .statusCode,
+  ).toBe(403);
+  const listed = await h.app.inject({
+    method: "GET",
+    url: "/api/v1/mcp-settings/api-keys",
+    cookies: admin,
+  });
+  expect(listed.statusCode, listed.body).toBe(200);
+  expect(listed.json()).toContainEqual(
+    expect.objectContaining({ id: pending.id, status: "active", keyAvailable: false }),
+  );
+  expect(
+    (await h.app.inject({ method: "POST", url: `${url}/${pending.id}/revoke`, cookies: business }))
+      .statusCode,
+  ).toBe(404);
+  const revoked = await h.app.inject({
+    method: "POST",
+    url: `${url}/${pending.id}/revoke`,
+    cookies: admin,
+  });
+  expect(revoked.statusCode, revoked.body).toBe(200);
+  expect(revoked.json().status).toBe("revoked");
+  expect(
+    (await h.app.inject({ method: "GET", url: `${url}/${pending.id}`, cookies: member })).json(),
+  ).toMatchObject({ status: "revoked", keyAvailable: false });
+});
+it("stores an empty note as null", async () => {
+  const pending = await request();
+  await h.app.inject({
+    method: "POST",
+    url: `${url}/${pending.id}/deny`,
+    cookies: admin,
+    payload: { note: "   " },
+  });
+  const rows = await h.db.$client.query(
+    "select decision_note from api_key_requests where id = $1",
+    [pending.id],
+  );
+  expect(rows.rows).toEqual([{ decision_note: null }]);
 });
