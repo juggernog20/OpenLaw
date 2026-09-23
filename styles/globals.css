@@ -278,6 +278,10 @@
     font-family: var(--font-sans);
     color: var(--text-primary);
     background-color: var(--bg-canvas);
+    /* Scroll bars take the theme's strong border on a clear track, so
+     * they sit on any surface. The property inherits into every
+     * scrolling box. */
+    scrollbar-color: var(--border-strong) transparent;
   }
 
   body {
