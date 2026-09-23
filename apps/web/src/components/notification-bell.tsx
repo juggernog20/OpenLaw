@@ -336,8 +336,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     [markRead, onOpenChange],
   );
 
-  /** The one deliberate sweep (NOT-005). Reachable whenever the badge
-   * is above zero, because opening the centre no longer clears it. */
+  /** The deliberate sweep reads ordinary items and leaves open approvals alone. */
   const markAllRead = useCallback(async () => {
     const { data } = await (
       surface === "portal"
@@ -428,7 +427,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
             {/* Drawn only while there is something to clear: a control
               that can only ever do nothing is chrome, not an
               affordance. */}
-            {unread > 0 && (
+            {unread > approvals.length && (
               <Button
                 variant="ghost"
                 size="sm"

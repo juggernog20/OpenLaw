@@ -1211,6 +1211,7 @@ describe("Your approvals", () => {
         within(group).getByText("Casey Counsel requested an API key for Research script"),
       ).toBeVisible();
       expect(within(group).getByText("Write")).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Mark all read" })).not.toBeInTheDocument();
       await userEvent.click(
         within(group).getByRole("button", { name: action === "approve" ? "Approve" : "Deny" }),
       );

@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Pin and settle approval notifications (NOT-001).
+ * Reading does not handle an approval. An answer or cancellation stamps
+ * handledAt and reads every copy, then tells each recipient to refresh their bell.
+ */
 import { and, eq, isNotNull, isNull, notifications, sql, type Transaction } from "@openlaw/db";
 
 import { publishLiveEvents } from "../live-events.js";

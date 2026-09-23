@@ -474,24 +474,34 @@ it.each(["approve", "deny", "cancel"] as const)(
         .json()
         .notifications.find((row: { entityId: string }) => row.entityId === pending.id);
       expect(item).toMatchObject({ approvalKind: "api_key", handledAt: null });
-      await h.app.inject({
+      const before = await h.app.inject({
+        method: "GET",
+        url: `${root}/unread-count`,
+        cookies: admin,
+      });
+      expect(before.statusCode, before.body).toBe(200);
+      const read = await h.app.inject({
         method: "POST",
         url: `${root}/read`,
         cookies: admin,
         payload: { ids: [item.id] },
       });
-      const badge = await h.app.inject({
-        method: "GET",
-        url: `${root}/unread-count`,
-        cookies: admin,
-      });
+      expect(read.statusCode, read.body).toBe(200);
+      expect(read.json().unread).toBe(before.json().unread);
       const readAll = await h.app.inject({
         method: "POST",
         url: `${root}/read-all`,
         cookies: admin,
       });
-      expect(readAll.json().unread).toBeGreaterThan(0);
-      expect(badge.json().unread).toBeGreaterThanOrEqual(readAll.json().unread);
+      expect(readAll.statusCode, readAll.body).toBe(200);
+      const openItems = list
+        .json()
+        .notifications.filter(
+          (row: { approvalKind: string | null; handledAt: string | null }) =>
+            row.approvalKind !== null && row.handledAt === null,
+        );
+      expect(openItems.map((row: { id: string }) => row.id)).toContain(item.id);
+      expect(readAll.json().unread).toBe(openItems.length);
     }
     const response = await h.app.inject({
       method: "POST",

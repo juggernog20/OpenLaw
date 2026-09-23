@@ -61,3 +61,33 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
     await db.$client.end();
   }
 });
+
+it("rebuilds interrupted approval indexes and leaves the migration journal usable", async () => {
+  const db = await freshDb(container, "approval_index_retry");
+  try {
+    await migrateThrough(db, "0163_your-approvals", migrationEntries());
+    await db.execute(
+      sql`create index notifications_open_contract_approval_idx on notifications (id)`,
+    );
+    await db.execute(
+      sql`update pg_index set indisvalid = false where indexrelid = 'notifications_open_contract_approval_idx'::regclass`,
+    );
+    await db.execute(
+      sql`create index notifications_open_api_key_approval_idx on notifications (id)`,
+    );
+    await runMigrations(db);
+    await runMigrations(db);
+    const indexes = await db.execute(
+      sql`select c.relname, i.indisvalid, pg_get_indexdef(i.indexrelid) as definition from pg_index i join pg_class c on c.oid = i.indexrelid where c.relname in ('notifications_open_contract_approval_idx', 'notifications_open_api_key_approval_idx') order by c.relname`,
+    );
+    expect(indexes.rows).toHaveLength(2);
+    expect(indexes.rows.every((row) => row.indisvalid)).toBe(true);
+    expect(indexes.rows[0]!.definition).toContain("entity_id");
+    expect(indexes.rows[1]!.definition).toContain("approvalId");
+    expect(indexes.rows.every((row) => String(row.definition).includes("handled_at IS NULL"))).toBe(
+      true,
+    );
+  } finally {
+    await db.$client.end();
+  }
+});
