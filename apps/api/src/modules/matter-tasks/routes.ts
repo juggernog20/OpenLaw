@@ -1,39 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The lightweight checklist on a Matter (MTR-005, M23/4). */
+
+import { and, eq, matterTasks } from "@openlaw/db";
+import { MAX_TASK_DESCRIPTION_LENGTH, MAX_TASK_TITLE_LENGTH } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import {
-  and,
-  asc,
-  eq,
-  matters,
-  matterTasks,
-  users,
-  type Executor,
-  type Matter,
-  type Transaction,
-} from "@openlaw/db";
-import {
-  MAX_TASK_DESCRIPTION_LENGTH,
-  MAX_TASK_TITLE_LENGTH,
-  type ChangedFields,
-} from "@openlaw/shared";
-import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
+import { requireRole } from "../../auth/guards.js";
+import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
+import { NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
+import { httpError, problemResponse } from "../../lib/problem.js";
 import { prepareTaskAssignee } from "../../lib/task-assignment.js";
 import { removeTaskThread } from "../comments/audience.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
-import { assertValidMatterTaskAssignee, createMatterTask } from "./create.js";
+import { createMatterTask } from "./create.js";
+import {
+  assertTaskWritable,
+  assertWritable,
+  checklistOf,
+  reachedTask,
+  updateMatterTask,
+  UpdateMatterTaskBody,
+} from "./service.js";
 
 const requireReader = requireRole("administrator", "legal_team_member");
 const requireMember = requireRole("administrator", "legal_team_member");
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 const TaskParams = z.object({ taskId: z.string().min(1).max(64) });
 const TitleSchema = z.string().trim().min(1).max(MAX_TASK_TITLE_LENGTH);
-const NO_TASK = "No Matter Task exists with this id.";
-const FROZEN = "This matter is archived. Restore it before changing its Tasks.";
 
 const TaskSchema = z.object({
   id: z.string(),
@@ -53,76 +46,7 @@ const TasksEnvelope = z.object({
   totalCount: z.int(),
 });
 
-interface ReachedTask {
-  id: string;
-  title: string;
-  description: string | null;
-  isDone: boolean;
-  assigneeId: string | null;
-  dueDate: string | null;
-  displayOrder: number;
-  matter: Matter;
-}
-
 export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
-  async function checklistOf(db: Executor, matterId: string) {
-    const tasks = await db
-      .select({
-        id: matterTasks.id,
-        title: matterTasks.title,
-        description: matterTasks.description,
-        isDone: matterTasks.isDone,
-        assigneeId: matterTasks.assigneeId,
-        assigneeName: users.displayName,
-        assigneeImage: users.image,
-        dueDate: matterTasks.dueDate,
-        displayOrder: matterTasks.displayOrder,
-      })
-      .from(matterTasks)
-      .leftJoin(users, eq(matterTasks.assigneeId, users.id))
-      .where(eq(matterTasks.matterId, matterId))
-      .orderBy(asc(matterTasks.dueDate), asc(matterTasks.displayOrder), asc(matterTasks.id));
-    return {
-      tasks,
-      doneCount: tasks.filter((task) => task.isDone).length,
-      totalCount: tasks.length,
-    };
-  }
-
-  async function reachedTask(
-    tx: Transaction,
-    user: AuthenticatedUser,
-    taskId: string,
-  ): Promise<ReachedTask | null> {
-    const [row] = await tx
-      .select({
-        id: matterTasks.id,
-        title: matterTasks.title,
-        description: matterTasks.description,
-        isDone: matterTasks.isDone,
-        assigneeId: matterTasks.assigneeId,
-        dueDate: matterTasks.dueDate,
-        displayOrder: matterTasks.displayOrder,
-        matter: matters,
-      })
-      .from(matterTasks)
-      .innerJoin(matters, eq(matterTasks.matterId, matters.id))
-      .where(and(eq(matterTasks.id, taskId), matterTeamScope(tx, user)))
-      .limit(1)
-      .for("update", { of: matters });
-    return row ?? null;
-  }
-
-  function assertWritable(matter: Matter | null): asserts matter is Matter {
-    if (!matter) throw httpError(404, NO_MATTER);
-    if (matter.archivedAt) throw httpError(409, FROZEN);
-  }
-
-  function assertTaskWritable(task: ReachedTask | null): asserts task is ReachedTask {
-    if (!task) throw httpError(404, NO_TASK);
-    if (task.matter.archivedAt) throw httpError(409, FROZEN);
-  }
-
   app.get(
     "/matters/:number/tasks",
     {
@@ -216,83 +140,12 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
         summary: "Edit a Task's title, assignee, or internal due date on a reached Matter",
         tags: ["matter-tasks"],
         params: TaskParams,
-        body: z
-          .strictObject({
-            title: TitleSchema.optional(),
-            description: z.string().trim().max(MAX_TASK_DESCRIPTION_LENGTH).nullable().optional(),
-            assigneeId: z.string().nullable().optional(),
-            addToTeam: z.boolean().optional(),
-            dueDate: z.iso.date().nullable().optional(),
-          })
-          .meta({ minProperties: 1 })
-          .refine((body) => Object.keys(body).length > 0, {
-            message: "Send at least one of title, description, assigneeId, or dueDate.",
-          }),
+        body: UpdateMatterTaskBody,
         response: { 200: TasksEnvelope, default: problemResponse },
       },
     },
     async (request) =>
-      app.notifier.notifying(async (tx) => {
-        const task = await reachedTask(tx, request.user, request.params.taskId);
-        assertTaskWritable(task);
-        const assigneeId =
-          request.body.assigneeId === undefined ? task.assigneeId : request.body.assigneeId;
-        await prepareTaskAssignee(
-          tx,
-          app.notifier,
-          "matter",
-          task.matter,
-          request.user,
-          request.body.assigneeId,
-          request.body.addToTeam,
-        );
-        if (request.body.assigneeId !== undefined) {
-          await assertValidMatterTaskAssignee(tx, task.matter, assigneeId);
-        }
-        const wanted = {
-          title: request.body.title ?? task.title,
-          description:
-            request.body.description === undefined
-              ? task.description
-              : request.body.description || null,
-          assigneeId,
-          dueDate: request.body.dueDate === undefined ? task.dueDate : request.body.dueDate,
-        };
-        const changed: ChangedFields = {};
-        if (wanted.description !== task.description)
-          changed.description = { from: task.description, to: wanted.description };
-        if (wanted.title !== task.title) changed.title = { from: task.title, to: wanted.title };
-        if (wanted.assigneeId !== task.assigneeId) {
-          changed.assigneeId = { from: task.assigneeId, to: wanted.assigneeId };
-        }
-        if (wanted.dueDate !== task.dueDate) {
-          changed.dueDate = { from: task.dueDate, to: wanted.dueDate };
-        }
-        if (Object.keys(changed).length > 0) {
-          await tx.update(matterTasks).set(wanted).where(eq(matterTasks.id, task.id));
-          await recordActivity(tx, {
-            entityType: "matter",
-            entityId: task.matter.id,
-            actorId: request.user.id,
-            action: "task.edited",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: { taskId: task.id, title: wanted.title, changed },
-          });
-        }
-        if (changed.assigneeId && wanted.assigneeId) {
-          await app.notifier.matterTaskAssigned(tx, {
-            matterId: task.matter.id,
-            matterNumber: task.matter.number,
-            matterTitle: task.matter.title,
-            actorId: request.user.id,
-            actorName: request.user.displayName,
-            taskId: task.id,
-            taskTitle: wanted.title,
-            assigneeId: wanted.assigneeId,
-          });
-        }
-        return checklistOf(tx, task.matter.id);
-      }),
+      updateMatterTask(app.db, request.user, request.params.taskId, request.body, app.notifier),
   );
 
   app.post(
