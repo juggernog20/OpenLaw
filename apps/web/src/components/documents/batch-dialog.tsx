@@ -209,6 +209,7 @@ export function BatchDialog({
   emptyFolders,
   unreadable,
   destination,
+  initialDocumentTypeId,
   onLanded,
   onClose,
 }: Readonly<{
@@ -229,6 +230,8 @@ export function BatchDialog({
   /** The folder the gesture landed on, or null for the record root. */
   destination: BatchDestination | null;
   source: BatchSource;
+  /** The type the upload composer had picked when it handed over. */
+  initialDocumentTypeId?: string;
   /** The record's paper and its folders, read again. Called once a run
    * settles rather than per file, because a 200-file import would
    * otherwise re-read the section 200 times. */
@@ -245,7 +248,7 @@ export function BatchDialog({
   });
   const [rows, setRows] = useState<BatchRow[]>(() => batchOf(files));
   const typeOptions = useDocumentTypeOptions(documentTypeModuleOf(record.entityType));
-  const [typeId, setTypeId] = useState("");
+  const [typeId, setTypeId] = useState(initialDocumentTypeId ?? "");
   /** Whether Import has been pressed. Before it, nothing has been sent
    * and Cancel creates nothing. */
   const [started, setStarted] = useState(false);

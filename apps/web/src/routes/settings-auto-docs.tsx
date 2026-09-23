@@ -82,7 +82,7 @@ export function SettingsAutoDocsPage() {
           <li>
             <FormattedMessage
               id="settings.autoDocs.acknowledgementHelp.newText"
-              defaultMessage="Changing the text requires a new acknowledgement."
+              defaultMessage="When an acknowledgement is required, changing the text asks for a new one."
             />
           </li>
         </ul>

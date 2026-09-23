@@ -108,9 +108,11 @@ const DocumentTypeOptionSchema = z.object({
 
 /**
  * The live types of one module in display order, for every picker.
- * Anyone who can upload reads it: a Contributor and a Business User
- * choose a type too, and the names are not confidential. The settings
- * routes above stay Administrator-only.
+ * Every signed-in role reads the Matter and Contract lists, because a
+ * Business User uploads to those records too. The Entity list is for
+ * Administrators and Legal Team Members only: a Business User reaches no
+ * Entity paper (ENT-004). The settings routes above stay
+ * Administrator-only.
  */
 export const documentTypeOptionsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -121,7 +123,9 @@ export const documentTypeOptionsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listDocumentTypeOptions",
         summary:
           "One module's live Document types in display order, for upload and " +
-          "correction pickers (DOC-015); the settings list stays Administrator-only",
+          "correction pickers (DOC-015). Every role reads the matter and contract " +
+          "lists; the entity list is for Administrators and Legal Team Members. " +
+          "The settings list stays Administrator-only",
         tags: ["document-types"],
         querystring: z.object({ module: z.enum(DOCUMENT_TYPE_MODULES) }),
         response: {
@@ -131,6 +135,9 @@ export const documentTypeOptionsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
+      if (request.query.module === "entity" && request.user.role === "business_user") {
+        throw httpError(403, "Entity Document types are for Legal Team Members.");
+      }
       const rows = await app.db
         .select({
           id: documentTypes.id,

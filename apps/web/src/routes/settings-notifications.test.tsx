@@ -83,6 +83,49 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
 }
 
 describe("Personal · Notifications (#320)", () => {
+  it("puts the lead-time switch back and says so when the save is refused", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: capturePreferenceWrites(writes, problem(500, "The change could not be saved.")),
+    });
+    renderAt("/settings/notifications");
+
+    const useDefault = await screen.findByRole("switch", {
+      name: "Use the organization's default lead times",
+    });
+    await user.click(useDefault);
+    expect(await screen.findByText("The change could not be saved.")).toBeVisible();
+    expect(useDefault).toBeChecked();
+    expect(screen.queryByRole("button", { name: "Add lead time" })).not.toBeInTheDocument();
+  });
+
+  it("refuses a duplicate or out-of-range lead time without saving", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites(writes) });
+    renderAt("/settings/notifications");
+
+    await user.click(
+      await screen.findByRole("switch", { name: "Use the organization's default lead times" }),
+    );
+    await screen.findByRole("button", { name: "Remove On the day" });
+    const saved = writes.length;
+    const days = screen.getByRole("spinbutton", { name: "days before the date" });
+
+    await user.type(days, "7");
+    await user.click(screen.getByRole("button", { name: "Add lead time" }));
+    expect(await screen.findByText("7 days before is already on the list.")).toBeVisible();
+
+    await user.clear(days);
+    await user.type(days, "731");
+    await user.click(screen.getByRole("button", { name: "Add lead time" }));
+    // The field's own bound stops the form before the card's check runs.
+    expect(days).toBeInvalid();
+    expect(writes).toHaveLength(saved);
+  });
+
   it("lets a person set their own reminder lead times and go back to the default", async () => {
     const user = userEvent.setup();
     const writes: unknown[] = [];

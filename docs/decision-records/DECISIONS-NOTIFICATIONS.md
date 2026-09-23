@@ -360,7 +360,8 @@ Blair asked for reminder lead times to be a user setting, not only an organizati
 - **Storage.** The list is stored in `users.reminder_offset_days` (`jsonb`, nullable, migration 0162). Null means the person uses the organization's list. The same bounds apply: 1 to 20 lead times, each between 0 and 730 days. The API stores the list furthest first, with no duplicates. `PATCH /me/notification-preferences` accepts `reminderOffsetDays` (a list or null) and writes `user.notification_preference_changed`.
 - **The round.** The morning round groups the people it serves by their local date and by the list that applies to them. It reads due dates once for each group. A stored list with no usable value falls back to the organization's list, not to the seed.
 - **Order.** A person's list has no drag order, because the round ignores order. The organization's pane keeps its drag handles for now.
-- **Portal.** Business Users have no card. They use the organization's list.
+- **Portal.** Business Users have no card, and the API refuses their write. They use the organization's list.
+- **Cost.** Before this, the round read due dates once per local date. Now it reads them once per local date and list. Each extra cohort repeats the due-date queries and the audience lookup for each due record, so the work grows with the number of distinct personal lists. For a team of 2 to 10 people, that is a few extra queries an hour. Revisit if a tick regularly serves more than about 20 cohorts. The fix then is one due-date query over the union of all lists, filtered per person.
 
 ## NOT-005 — Badge: unread count, 9+ cap, read-on-open
 

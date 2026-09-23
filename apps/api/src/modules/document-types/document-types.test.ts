@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DOC-015 Document types: four lists in one table, fixed Contract rows,
+/** DOC-015 Document types: three lists in one table, fixed Contract rows,
  * and the type a Version carries through upload and correction. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { documentVersions, eq, users } from "@openlaw/db";
@@ -15,6 +15,12 @@ import {
 const MEMBER = {
   email: "document-types-member@example.com",
   displayName: "Dana Types",
+  password: "correct-horse-battery",
+} as const;
+
+const BUSINESS = {
+  email: "document-types-business@example.com",
+  displayName: "Bo Business",
   password: "correct-horse-battery",
 } as const;
 
@@ -37,6 +43,7 @@ let harness: TestHarness;
 let adminCookies: Record<string, string>;
 let memberCookies: Record<string, string>;
 let memberId: string;
+let businessCookies: Record<string, string>;
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -51,6 +58,9 @@ beforeAll(async () => {
   memberId = member.id;
   adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
   memberCookies = await signInCookies(harness.app, MEMBER.email, MEMBER.password);
+  // provisionUser leaves the default role, business_user.
+  await provisionUser(harness.app.auth, BUSINESS);
+  businessCookies = await signInCookies(harness.app, BUSINESS.email, BUSINESS.password);
 });
 
 afterAll(async () => harness.stop());
@@ -180,6 +190,21 @@ describe("the Document type lists", () => {
     });
     expect(options.statusCode, options.body).toBe(200);
     expect(options.json().documentTypes).toHaveLength(6);
+
+    // A Business User uploads to Contracts and Matters but reaches no
+    // Entity paper (ENT-004), so the Entity list is refused.
+    const businessContract = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/documents/type-options?module=contract",
+      cookies: businessCookies,
+    });
+    expect(businessContract.statusCode, businessContract.body).toBe(200);
+    const businessEntity = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/documents/type-options?module=entity",
+      cookies: businessCookies,
+    });
+    expect(businessEntity.statusCode).toBe(403);
   });
 
   it("refuses to rename, archive, or delete a fixed type", async () => {

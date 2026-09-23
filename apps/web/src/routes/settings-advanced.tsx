@@ -269,6 +269,7 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                   {options ? (
                     <select
                       id={id}
+                      disabled={field.locked}
                       className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm"
                       value={values[field.key]}
                       onChange={(event) => {

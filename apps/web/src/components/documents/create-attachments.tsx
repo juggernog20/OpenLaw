@@ -164,7 +164,15 @@ export function CreateAttachments({
   const typeOptions = useDocumentTypeOptions(module);
   const { typeId, setTypeId } = uploads;
   // A module switch (the Convert dialog's target) leaves a type from the
-  // other list behind; the seam would refuse it, so it is dropped here.
+  // other list behind; the seam would refuse it. It is dropped when the
+  // module changes, without waiting for the new list to answer, and
+  // again if the answered list does not hold it.
+  const shownModule = useRef(module);
+  useEffect(() => {
+    if (shownModule.current === module) return;
+    shownModule.current = module;
+    setTypeId("");
+  }, [module, setTypeId]);
   useEffect(() => {
     if (typeOptions && typeId && !typeOptions.some((option) => option.id === typeId)) {
       setTypeId("");

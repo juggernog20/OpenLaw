@@ -239,11 +239,13 @@ function boundaryValue(expression: SQL, cursor: string, scope: SQL | undefined):
     inner join ${documentVersions}
       on ${and(eq(documentVersions.documentId, documents.id), currentVersion)}
     inner join ${users} on ${users.id} = ${documentVersions.createdBy}
+    left join ${documentTypes} on ${documentTypes.id} = ${documentVersions.documentTypeId}
     left join ${documentVersionText} on ${documentVersionText.versionId} = ${documentVersions.id}
     left join ${contracts} on ${contracts.id} = ${documents.contractId}
     left join ${matters} on ${matters.id} = ${documents.matterId}
     left join ${entities} on ${entities.id} = ${documents.entityId}
     left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
+    left join ${knowledgeTypes} on ${knowledgeTypes.id} = ${knowledgeItems.knowledgeTypeId}
     left join ${autoDocs} on ${autoDocs.id} = ${documents.autoDocId}
     where ${and(eq(documents.id, cursor), scope)}
     limit 1

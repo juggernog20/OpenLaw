@@ -37,13 +37,15 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 - **Alternatives considered** — DAG with branches: git-for-lawyers UI for a rare case. Self-referencing single table (`prev_version_id`): no stable identity to link from; every query collapses chains.
 - **Consequences** — Two tables in SCHEMA.md: `documents` carries the four nullable owner FKs (`matter_id` / `contract_id` / `entity_id` / `knowledge_item_id`) with the exactly-one-owner invariant application-enforced per DOC-008; `generated_redline` added to CTR-014's kind list (SCHEMA note updated). Storage question (Q5) deals in immutable blobs — enables content-addressing/dedup. K.H3 unblocked.
 - **Addendum (2026-08-19, [#326](https://github.com/juggernog20/OpenLaw/issues/326))** — CTR-014 added the hand-set `draft_theirs` kind for a negotiation that opens on the counterparty's paper. It is an ordinary uploaded version kind; the chain and generated-redline provenance rules above are unchanged.
-- **Addendum (2026-08-22, M21A, [#438](https://github.com/juggernog20/OpenLaw/issues/438))** — CTR-014 made one part of a Version correctable: a Member+ may change a hand-set `kind`, and only that judgement. The bytes, order, note, author, and provenance remain immutable; `generated_redline` is refused as both source and target, and every correction is narrated.
+- **Addendum (2026-08-22, M21A, [#438](https://github.com/juggernog20/OpenLaw/issues/438))** — CTR-014 made one part of a Version correctable: a Member+ may change a hand-set `kind`, and only that judgement. The bytes, order, note, author, and provenance remain immutable; `generated_redline` is refused as both source and target, and every correction is narrated. _Revised by **DOC-015** (2026-09-23): the correctable field is now the Document type, and the kind follows it. The correction writes `document.version_type_changed`._
 
 ### Addendum (2026-09-06, UX review) — Matter documents have no negotiation Kind
 
 Matter uploads do not ask for a contract negotiation Kind. This applies to single files, new versions, batch imports, creation attachments, and comment-attachment filing. Matter document rows omit the Kind column; the global repository leaves that cell blank for Matter-owned documents. Contract negotiation labels remain available on Contracts.
 
 New Matter uploads and versions use the neutral stored `general` kind. Existing classifications and generated-redline provenance remain intact; this change does not rewrite earlier versions or add a Matter document taxonomy. Migration 0093 extends the allowed stored values without changing document contents.
+
+_Revised by **DOC-015** (2026-09-23): Matters now have an optional Document type list, and the Type column shows on Matter documents. The stored kind stays `general`._
 
 ## DOC-002 — Module identity: the legal file layer, made browsable
 

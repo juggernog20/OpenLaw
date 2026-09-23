@@ -1458,6 +1458,11 @@ describe("a person's own reminder lead times (NOT-004 addendum)", () => {
     expect(items.map((row) => row.payload.offsetDays)).toEqual([7]);
   });
 
+  it("refuses a Business User, who keeps the organization's list", async () => {
+    const refused = await setOwn(BUSINESS_OWNER, [3]);
+    expect(refused.statusCode, refused.body).toBe(403);
+  });
+
   it("refuses an empty list and returns the person to the default on null", async () => {
     expect((await setOwn(OWNER, [])).statusCode).toBe(400);
     expect((await setOwn(OWNER, [731])).statusCode).toBe(400);

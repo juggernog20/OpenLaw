@@ -589,6 +589,9 @@ export function DocumentsCard({
     unreadable: (readonly string[])[];
     destination: BatchDestination | null;
     source: BatchSource;
+    /** The type picked in the composer before it handed over; a drop
+     * starts on no type. */
+    documentTypeId?: string;
   } | null>(null);
   /** A drag carrying files is over the section, so the surface says it
    * is a target rather than leaving the reader to guess (DES-033 §7).
@@ -1749,7 +1752,7 @@ export function DocumentsCard({
           typeOptions={typeOptions ?? []}
           supportingOnly={supportingUploads && frozen}
           onClose={() => setComposer(null)}
-          onBatch={(files) => {
+          onBatch={(files, documentTypeId) => {
             // More than one file is a batch, wherever it came from
             // (DOC-011). The composer's own fields are a round's — one
             // note about one change — and a batch is not a round, so it
@@ -1769,6 +1772,7 @@ export function DocumentsCard({
               unreadable: [],
               destination: null,
               source: "picker",
+              documentTypeId,
             });
           }}
           onSaved={(document) => {
@@ -1786,6 +1790,7 @@ export function DocumentsCard({
           unreadable={batch.unreadable}
           destination={batch.destination}
           source={batch.source}
+          initialDocumentTypeId={batch.documentTypeId}
           // Every listing on screen, read again — the record root and
           // each open folder — with every cached listing the refresh
           // did not re-read evicted. A batch is a write over the
@@ -3760,7 +3765,7 @@ function UploadDialog({
    * keyboard reaches bulk intake, so it has to reach the same dialog —
    * and the directory picker beside it is folder drop's twin, handing
    * over the same shape with a path on each file. */
-  onBatch: (files: DroppedFile[]) => void;
+  onBatch: (files: DroppedFile[], documentTypeId: string) => void;
   onSaved: (document: ContractDocument) => void;
 }>) {
   const intl = useIntl();
@@ -3801,7 +3806,12 @@ function UploadDialog({
     }
     setBusy(true);
     setError(null);
-    const draft: UploadDraft = { file, documentTypeId: typeId || null, note };
+    // A seeded amendment sent before the type list answers carries its
+    // kind, which the API maps to the fixed Amendment type (DOC-015).
+    const draft: UploadDraft =
+      !typeId && picked === null && seedKind
+        ? { file, kind: seedKind, note }
+        : { file, documentTypeId: typeId || null, note };
     const outcome = document
       ? await uploadDocumentVersion(document.id, draft)
       : await uploadRecordDocument(record, draft);
@@ -3865,7 +3875,10 @@ function UploadDialog({
                     // Picked flat, so every file lands at the record
                     // root — the batch's shape is the drop's, with an
                     // empty path on each row.
-                    onBatch(chosen.map((one) => ({ file: one, path: [] })));
+                    onBatch(
+                      chosen.map((one) => ({ file: one, path: [] })),
+                      typeId,
+                    );
                     return;
                   }
                   const one = chosen[0] ?? null;
@@ -3899,7 +3912,7 @@ function UploadDialog({
                   {...{ webkitdirectory: "" }}
                   onChange={(event) => {
                     const chosen = [...(event.target.files ?? [])];
-                    if (chosen.length > 0) onBatch(filesFromDirectoryPicker(chosen));
+                    if (chosen.length > 0) onBatch(filesFromDirectoryPicker(chosen), typeId);
                   }}
                 />
               )}

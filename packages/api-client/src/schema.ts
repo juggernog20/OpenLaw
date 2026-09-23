@@ -6940,7 +6940,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One module's live Document types in display order, for upload and correction pickers (DOC-015); the settings list stays Administrator-only */
+    /** One module's live Document types in display order, for upload and correction pickers (DOC-015). Every role reads the matter and contract lists; the entity list is for Administrators and Legal Team Members. The settings list stays Administrator-only */
     get: operations["listDocumentTypeOptions"];
     put?: never;
     post?: never;
@@ -7253,7 +7253,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Save a channel choice for an event group, an email-only briefing section, showRecordNamesOnDevices, or reminderOffsetDays for the signed-in person. Each request applies one preference immediately and records user.notification_preference_changed. Channel choices are stored as overrides; restoring a group default removes the override. Turning in-app off silences all channels for that group. showRecordNamesOnDevices controls whether device notifications may show record names. reminderOffsetDays sets the person's own reminder lead times, or null to use the organization's list (NOT-004). Returns the effective event-group choices, briefing sections, and device setting */
+    /** Save a channel choice for an event group, an email-only briefing section, showRecordNamesOnDevices, or reminderOffsetDays for the signed-in person. Each request applies one preference immediately and records user.notification_preference_changed. Channel choices are stored as overrides; restoring a group default removes the override. Turning in-app off silences all channels for that group. showRecordNamesOnDevices controls whether device notifications may show record names. reminderOffsetDays sets the person's own reminder lead times, or null to use the organization's list (NOT-004); Business Users are refused. Returns the effective event-group choices, briefing sections, and device setting */
     patch: operations["updateMyNotificationPreferences"];
     trace?: never;
   };

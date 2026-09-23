@@ -769,7 +769,7 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           "the override. Turning in-app off silences all channels for that group. " +
           "showRecordNamesOnDevices controls whether device notifications may show record names. " +
           "reminderOffsetDays sets the person's own reminder lead times, or null to use " +
-          "the organization's list (NOT-004). " +
+          "the organization's list (NOT-004); Business Users are refused. " +
           "Returns the effective event-group choices, briefing sections, and device setting",
         tags: ["notifications"],
         body: z.union([
@@ -807,6 +807,11 @@ export const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
             .set({ showRecordNamesOnDevices: request.body.showRecordNamesOnDevices })
             .where(eq(users.id, request.user.id));
         } else if ("reminderOffsetDays" in request.body) {
+          // NOT-004 addendum: Administrators and Legal Team Members keep
+          // their own list. A Business User uses the organization's.
+          if (request.user.role === "business_user") {
+            throw httpError(403, "Business Users use the organization's reminder lead times.");
+          }
           // Stored furthest first and without duplicates. Null hands the
           // person back to the organization's list.
           const own = request.body.reminderOffsetDays;

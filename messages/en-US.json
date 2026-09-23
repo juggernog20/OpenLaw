@@ -8976,7 +8976,7 @@
     "defaultMessage": "This frequency applies to all Auto-Docs."
   },
   "settings.autoDocs.acknowledgementHelp.newText": {
-    "defaultMessage": "Changing the text requires a new acknowledgement."
+    "defaultMessage": "When an acknowledgement is required, changing the text asks for a new one."
   },
   "settings.autoDocs.acknowledgementHelp.ownText": {
     "defaultMessage": "Each Auto-Doc can use its own text."
