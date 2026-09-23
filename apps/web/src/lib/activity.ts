@@ -2705,6 +2705,84 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // the change line names the field. Naming the field in the sentence
   // would need the label lowercased into prose, which is a translation
   // trap for the sake of one word.
+  "api_key.requested": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.requested",
+      defaultMessage: "{actor} requested an API key for {client}",
+    }),
+    values: (_intl, payload) => ({
+      client: String(payload.clientName ?? "Client"),
+      selfApproved: payload.selfApproved ? "yes" : "no",
+    }),
+  },
+  "api_key.minted": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.minted",
+      defaultMessage: "{actor} issued an API key for {client}",
+    }),
+    values: (_intl, payload) => ({
+      client: String(payload.clientName ?? "Client"),
+      selfApproved: payload.selfApproved ? "yes" : "no",
+    }),
+  },
+  "api_key.approved": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.approved",
+      defaultMessage:
+        "{selfApproved, select, yes {{actor} approved their own API key request for {client}} other {{actor} approved the API key request for {client}}}",
+    }),
+    values: (_intl, payload) => ({
+      client: String(payload.clientName ?? "Client"),
+      selfApproved: payload.selfApproved ? "yes" : "no",
+    }),
+  },
+  "api_key.denied": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.denied",
+      defaultMessage: "{actor} denied the API key request for {client}",
+    }),
+    values: (_intl, payload) => ({
+      client: String(payload.clientName ?? "Client"),
+      selfApproved: payload.selfApproved ? "yes" : "no",
+    }),
+  },
+  "api_key.cancelled": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.cancelled",
+      defaultMessage: "{actor} cancelled the API key request for {client}",
+    }),
+    values: (_intl, payload) => ({
+      client: String(payload.clientName ?? "Client"),
+      selfApproved: payload.selfApproved ? "yes" : "no",
+    }),
+  },
+  "api_key.revoked": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.revoked",
+      defaultMessage: "{actor} revoked the API key for {client}",
+    }),
+    values: (_intl, payload) => ({
+      client: String(payload.clientName ?? "Client"),
+      selfApproved: payload.selfApproved ? "yes" : "no",
+    }),
+  },
+  "api_key.expired": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.expired",
+      defaultMessage: "{actor} recorded expiry of the API key for {client}",
+    }),
+    values: (_intl, payload) => ({
+      client: String(payload.clientName ?? "Client"),
+      selfApproved: payload.selfApproved ? "yes" : "no",
+    }),
+  },
   "org_settings.updated": {
     icon: Settings,
     message: defineMessage({

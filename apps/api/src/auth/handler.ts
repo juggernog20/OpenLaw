@@ -9,6 +9,7 @@
  */
 
 import type { FastifyPluginAsync } from "fastify";
+import { httpError } from "../lib/problem.js";
 import { fromNodeHeaders } from "better-auth/node";
 
 export const authHandler: FastifyPluginAsync = async (app) => {
@@ -27,6 +28,8 @@ export const authHandler: FastifyPluginAsync = async (app) => {
     schema: { hide: true },
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
+      if (decodeURIComponent(url.pathname).replace(/\/+/g, "/").startsWith("/api/auth/api-key/"))
+        throw httpError(403, "API keys require an approved API key request.");
       const body = request.body as Buffer | undefined;
       const headers = fromNodeHeaders(request.headers);
       // better-auth keys its sign-in rate limiter on `X-Forwarded-For`

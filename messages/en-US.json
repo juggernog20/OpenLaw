@@ -86,6 +86,27 @@
   "activity.aiSavedKey.stored": {
     "defaultMessage": "{actor} stored a Saved key for {provider} at {baseUrl}"
   },
+  "activity.apiKey.approved": {
+    "defaultMessage": "{selfApproved, select, yes {{actor} approved their own API key request for {client}} other {{actor} approved the API key request for {client}}}"
+  },
+  "activity.apiKey.cancelled": {
+    "defaultMessage": "{actor} cancelled the API key request for {client}"
+  },
+  "activity.apiKey.denied": {
+    "defaultMessage": "{actor} denied the API key request for {client}"
+  },
+  "activity.apiKey.expired": {
+    "defaultMessage": "{actor} recorded expiry of the API key for {client}"
+  },
+  "activity.apiKey.minted": {
+    "defaultMessage": "{actor} issued an API key for {client}"
+  },
+  "activity.apiKey.requested": {
+    "defaultMessage": "{actor} requested an API key for {client}"
+  },
+  "activity.apiKey.revoked": {
+    "defaultMessage": "{actor} revoked the API key for {client}"
+  },
   "activity.applet": {
     "defaultMessage": "History"
   },
@@ -784,6 +805,141 @@
   },
   "activity.user.unarchived": {
     "defaultMessage": "{actor} restored {email}"
+  },
+  "apiKeys.actions": {
+    "defaultMessage": "Actions"
+  },
+  "apiKeys.active": {
+    "defaultMessage": "Active"
+  },
+  "apiKeys.activeTitle": {
+    "defaultMessage": "Active keys"
+  },
+  "apiKeys.approve": {
+    "defaultMessage": "Approve"
+  },
+  "apiKeys.cancelRequest": {
+    "defaultMessage": "Cancel request"
+  },
+  "apiKeys.cancelled": {
+    "defaultMessage": "Cancelled"
+  },
+  "apiKeys.client": {
+    "defaultMessage": "Client"
+  },
+  "apiKeys.clientName": {
+    "defaultMessage": "Client name"
+  },
+  "apiKeys.copied": {
+    "defaultMessage": "Copied"
+  },
+  "apiKeys.copy": {
+    "defaultMessage": "Copy"
+  },
+  "apiKeys.copyFailed": {
+    "defaultMessage": "Copy failed. Select and copy the key before closing this dialog."
+  },
+  "apiKeys.denied": {
+    "defaultMessage": "Denied"
+  },
+  "apiKeys.deny": {
+    "defaultMessage": "Deny"
+  },
+  "apiKeys.done": {
+    "defaultMessage": "Done"
+  },
+  "apiKeys.empty": {
+    "defaultMessage": "No API keys to show."
+  },
+  "apiKeys.expired": {
+    "defaultMessage": "Expired"
+  },
+  "apiKeys.expires": {
+    "defaultMessage": "Expires"
+  },
+  "apiKeys.expiryFact": {
+    "defaultMessage": "Expires {days} days after approval. The organization sets this lifetime."
+  },
+  "apiKeys.failed": {
+    "defaultMessage": "API keys could not be updated. Try again."
+  },
+  "apiKeys.guide": {
+    "defaultMessage": "Connect a headless Client"
+  },
+  "apiKeys.header": {
+    "defaultMessage": "Send this key in the x-api-key header."
+  },
+  "apiKeys.lastUsed": {
+    "defaultMessage": "Last used"
+  },
+  "apiKeys.lifetime": {
+    "defaultMessage": "Keys expire {days} days after approval and are shown once."
+  },
+  "apiKeys.note": {
+    "defaultMessage": "Note (Optional)"
+  },
+  "apiKeys.nothingSelected": {
+    "defaultMessage": "Nothing is selected for you."
+  },
+  "apiKeys.once": {
+    "defaultMessage": "Approved by {name} on {date}. OpenLaw will not show this key again."
+  },
+  "apiKeys.owner": {
+    "defaultMessage": "Owner"
+  },
+  "apiKeys.pending": {
+    "defaultMessage": "Pending approval"
+  },
+  "apiKeys.pendingTitle": {
+    "defaultMessage": "API key requests"
+  },
+  "apiKeys.read": {
+    "defaultMessage": "Read"
+  },
+  "apiKeys.readDescription": {
+    "defaultMessage": "Read. Find and read what you can access."
+  },
+  "apiKeys.readyTitle": {
+    "defaultMessage": "Your key is ready"
+  },
+  "apiKeys.request": {
+    "defaultMessage": "Request a key"
+  },
+  "apiKeys.requestTitle": {
+    "defaultMessage": "Request an API key"
+  },
+  "apiKeys.revoke": {
+    "defaultMessage": "Revoke"
+  },
+  "apiKeys.revokeTitle": {
+    "defaultMessage": "Revoke API key"
+  },
+  "apiKeys.revokeWarning": {
+    "defaultMessage": "This Client will lose access immediately. You will need a new request for another key."
+  },
+  "apiKeys.revoked": {
+    "defaultMessage": "Revoked"
+  },
+  "apiKeys.scope": {
+    "defaultMessage": "Scope"
+  },
+  "apiKeys.send": {
+    "defaultMessage": "Send request"
+  },
+  "apiKeys.status": {
+    "defaultMessage": "Status"
+  },
+  "apiKeys.title": {
+    "defaultMessage": "API keys"
+  },
+  "apiKeys.toolsets": {
+    "defaultMessage": "Toolsets"
+  },
+  "apiKeys.write": {
+    "defaultMessage": "Write"
+  },
+  "apiKeys.writeDescription": {
+    "defaultMessage": "Write. Every change is recorded as you, via this Client."
   },
   "app.pageTitle": {
     "defaultMessage": "{screen} · OpenLaw"
@@ -7024,6 +7180,24 @@
   },
   "notFound.title": {
     "defaultMessage": "Page not found"
+  },
+  "notifications.apiKey.approved.generic": {
+    "defaultMessage": "Your API key request was approved"
+  },
+  "notifications.apiKey.denied.generic": {
+    "defaultMessage": "Your API key request was denied"
+  },
+  "notifications.apiKey.requested.generic": {
+    "defaultMessage": "An API key request needs your approval"
+  },
+  "notifications.apiKeyApproved": {
+    "defaultMessage": "Your API key request was approved. Open API keys to copy your key."
+  },
+  "notifications.apiKeyDenied": {
+    "defaultMessage": "Your API key request was denied. Open API keys to read the note."
+  },
+  "notifications.apiKeyRequested": {
+    "defaultMessage": "An API key request needs your approval"
   },
   "notifications.approval.requested": {
     "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"

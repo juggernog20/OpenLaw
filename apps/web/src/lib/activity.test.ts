@@ -75,6 +75,13 @@ const ENVELOPE_ENDING = {
  * sample here.
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
+  "api_key.requested": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.minted": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.approved": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.denied": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.cancelled": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.revoked": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.expired": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
   "contract.stage_changed": { from: "draft", to: "review" },
   "contract.portal_access_excluded": {
     number: 42,

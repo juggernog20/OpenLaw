@@ -123,6 +123,9 @@ export const EVENT_GROUP_POLICY: Record<NotificationEventGroup, EventGroupPolicy
  * somebody chooses.
  */
 export const EVENT_GROUP: Record<NotificationEventType, NotificationEventGroup> = {
+  "api_key.requested": "assigned_to_you",
+  "api_key.approved": "assigned_to_you",
+  "api_key.denied": "assigned_to_you",
   // Group 1 — assigned to you. The mention is here rather than in
   // group 2 because a mention is done *to* you: somebody addressed a
   // question to you by name (settled in the M18 spec's grill).

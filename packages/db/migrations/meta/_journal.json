@@ -1128,6 +1128,20 @@
       "when": 1790181643214,
       "tag": "0160_mcp-settings",
       "breakpoints": true
+    },
+    {
+      "idx": 161,
+      "version": "7",
+      "when": 1790198164007,
+      "tag": "0161_api-key-requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 162,
+      "version": "7",
+      "when": 1790198357796,
+      "tag": "0162_api-key-notifications",
+      "breakpoints": true
     }
   ]
 }

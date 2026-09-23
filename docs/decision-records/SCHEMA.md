@@ -74,6 +74,41 @@ No `archived_at`: sessions are revoked by deletion, not archived.
 
 ---
 
+### `api_keys` and `api_key_requests`
+
+Source: **DD-029**, **TECH-035**, **SET-014**. Added by M40/2, #1049.
+
+`api_keys` holds the better-auth 1.7 api-key plugin schema. `reference_id` references
+`users.id`; the plugin dictates that name. `key` is the unique hash, never the plain
+key. The row also holds the fixed `ol_` prefix, Client name, creation and update
+timestamps, `expires_at`, `last_request`, `enabled`, and the plugin's rate-limit,
+refill, permissions and metadata fields. Revocation sets `enabled` false. The auth
+adapter suppresses the plugin's automatic deletion of expired keys so history remains.
+
+`api_key_requests` holds the person's chosen grant and the approval history:
+
+| Column                                      | Meaning                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `id`, `requester_id`                        | UUID v7 primary key and owner reference to `users.id`                                             |
+| `client_name`, `toolsets`, `scope`, `note`  | Immutable request facts; scope is `read` or `write`                                               |
+| `status`                                    | `pending`, `approved`, `denied` or `cancelled`                                                    |
+| `key_id`                                    | Unique reference to `api_keys.id`, present exactly when approved                                  |
+| `sealed_key`                                | TECH-022 sealed plain key, cleared by the owner's first detail read; always null on self-approval |
+| `decided_by`, `decision_note`, `decided_at` | Decision actor, optional note and timestamp                                                       |
+| `revoked_at`                                | Null until revoked                                                                                |
+| `expiry_audited_at`                         | Null until the daily sweep writes the expiry audit row                                            |
+| `created_at`                                | Request timestamp                                                                                 |
+
+The request facts are never edited. Decision, revocation and expiry timestamps record
+its transitions. Active, Revoked and Expired are read statuses, derived from the approved
+request and its retained credential. The sweep clears an uncollected expired secret
+and writes `api_key.expired` once in the same transaction as `expiry_audited_at`.
+Approval, mint and self-approval audit entries share the transaction that writes the key.
+All lifecycle audit rows are `admin_only` system events. The notification record uses
+`entity_type = api_key_request` with this request's id; it never contains the key.
+
+---
+
 ### `accounts`
 
 Source: **TECH-008**

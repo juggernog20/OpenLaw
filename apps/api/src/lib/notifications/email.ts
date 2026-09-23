@@ -51,6 +51,7 @@ import { requestSideOf } from "./catalog.js";
  * and this is the one place that knows which is which.
  */
 export type MailRecord =
+  | { entityType: "api_key_request"; title: string }
   | { entityType: "matter"; number: number; title: string }
   | { entityType: "contract"; number: number; title: string }
   | { entityType: "request"; number: number; title: string };
@@ -180,6 +181,24 @@ export function renderNotificationMail(
   baseUrl: string,
 ): MailMessage | null {
   const { record } = notification;
+  if (record.entityType === "api_key_request") {
+    const requested = notification.eventType === "api_key.requested";
+    const outcome = requested
+      ? "needs approval"
+      : notification.eventType === "api_key.approved"
+        ? "was approved"
+        : "was denied";
+    const path = requested
+      ? "/settings/mcp"
+      : notification.recipientRole === "business_user"
+        ? "/portal/settings/api-keys"
+        : "/settings/api-keys";
+    return {
+      to,
+      subject: `API key request ${outcome}`,
+      text: `The API key request for ${record.title} ${outcome}.\n\n${baseUrl.replace(/\/$/, "")}${path}`,
+    };
+  }
   if (record.entityType === "matter") return matterMail(notification, record, to, baseUrl);
   if (record.entityType === "contract") return contractMail(notification, record, to, baseUrl);
   // A Request is read from two sides, so the group is what says which

@@ -14,6 +14,7 @@ import { api } from "../lib/api";
 import { requireUser } from "../lib/session";
 import { TOOLSET_MESSAGES } from "../lib/mcp";
 import { PageTitle } from "../components/page-title";
+import { ApiKeys } from "../components/api-keys";
 import { SettingsCard } from "../components/settings-card";
 import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
@@ -25,7 +26,9 @@ export async function settingsMcpLoader() {
   if (user.role !== "administrator") return redirect("/settings/profile");
   const { data } = await api.GET("/api/v1/mcp-settings");
   if (!data) throw new Error("MCP settings could not be read.");
-  return data;
+  const { data: keys } = await api.GET("/api/v1/mcp-settings/api-keys");
+  if (!keys) throw new Error("API key requests could not be read.");
+  return { ...data, keys };
 }
 type Change = NonNullable<
   paths["/api/v1/mcp-settings"]["patch"]["requestBody"]
@@ -99,7 +102,7 @@ export function SettingsMcpPage() {
         );
         return;
       }
-      setPolicy(result.data);
+      setPolicy({ ...result.data, keys: loaded.keys });
       setSaved(true);
     } catch {
       setError(intl.formatMessage(errorMessages.saveFailed));
@@ -337,6 +340,19 @@ export function SettingsMcpPage() {
           <FormattedMessage id="settings.mcp.saved" defaultMessage="Settings saved." />
         </p>
       )}
+      <ApiKeys
+        organization
+        initial={{
+          requests: loaded.keys,
+          policy: {
+            enabled: policy.enabled,
+            groupEnabled: policy.legalApiKeysEnabled,
+            toolsetCeiling: policy.toolsetCeiling,
+            readOnly: policy.readOnly,
+            apiKeyLifetimeDays: policy.apiKeyLifetimeDays,
+          },
+        }}
+      />
     </>
   );
 }

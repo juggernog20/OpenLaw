@@ -173,6 +173,39 @@ interface Arm {
  * it cannot see.
  */
 const ARMS: Readonly<Record<string, Arm>> = {
+  "api_key.requested": {
+    icon: Stamp,
+    generic: defineMessage({
+      id: "notifications.apiKey.requested.generic",
+      defaultMessage: "An API key request needs your approval",
+    }),
+    message: defineMessage({
+      id: "notifications.apiKeyRequested",
+      defaultMessage: "An API key request needs your approval",
+    }),
+  },
+  "api_key.approved": {
+    icon: Stamp,
+    generic: defineMessage({
+      id: "notifications.apiKey.approved.generic",
+      defaultMessage: "Your API key request was approved",
+    }),
+    message: defineMessage({
+      id: "notifications.apiKeyApproved",
+      defaultMessage: "Your API key request was approved. Open API keys to copy your key.",
+    }),
+  },
+  "api_key.denied": {
+    icon: Stamp,
+    generic: defineMessage({
+      id: "notifications.apiKey.denied.generic",
+      defaultMessage: "Your API key request was denied",
+    }),
+    message: defineMessage({
+      id: "notifications.apiKeyDenied",
+      defaultMessage: "Your API key request was denied. Open API keys to read the note.",
+    }),
+  },
   // Group 1 — done *to* you. Every sentence here says "you", because
   // that is what puts the event in this group (NOT-002).
   "approval.requested": {
@@ -641,6 +674,12 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * written for, and the reader's role does not come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined, surface: "staff" | "portal"): string | null {
+  if (item.entityType === "api_key_request")
+    return item.eventType === "api_key.requested"
+      ? "/settings/mcp"
+      : surface === "portal"
+        ? "/portal/settings/api-keys"
+        : "/settings/api-keys";
   if (
     surface === "portal" &&
     item.eventType === "approval.requested" &&

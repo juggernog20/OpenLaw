@@ -11,6 +11,13 @@
  */
 
 import {
+  SettingsApiKeysPage,
+  settingsApiKeysLoader,
+  PortalApiKeysPage,
+  portalApiKeysLoader,
+} from "./routes/settings-api-keys";
+
+import {
   SettingsAdvancedPage,
   settingsAdvancedLoader,
   SettingsSystemStatusPage,
@@ -454,6 +461,11 @@ export const routes: RouteObject[] = [
         // #320: the ST3 pane, every signed-in person's own. No role
         // gate — a preference is addressed to one person, and the
         // API answers only for the signed-in one.
+        path: "api-keys",
+        loader: settingsApiKeysLoader,
+        element: <SettingsApiKeysPage />,
+      },
+      {
         path: "notifications",
         loader: settingsNotificationsLoader,
         element: <SettingsNotificationsPage />,
@@ -768,6 +780,7 @@ export const routes: RouteObject[] = [
       // The lightweight settings surface NOT-001 promised a business
       // user (M20/9): NOT-002's group 5 and nothing else, reached from
       // the gear in the portal header.
+      { path: "settings/api-keys", loader: portalApiKeysLoader, element: <PortalApiKeysPage /> },
       { path: "settings", loader: portalSettingsLoader, element: <PortalSettingsPage /> },
       {
         path: "knowledge/:id",

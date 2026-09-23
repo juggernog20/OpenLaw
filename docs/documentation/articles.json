@@ -712,7 +712,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P1",
       "contexts": ["reference"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "versions-and-support",
