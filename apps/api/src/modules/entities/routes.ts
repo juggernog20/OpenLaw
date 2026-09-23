@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { EntityListQuery, listEntities, getEntity, toRow, primaryOwnerIds } from "./service.js";
+
 import { assertCreationForm } from "../../lib/creation-form.js";
 import { formForTouchpoint } from "@openlaw/shared";
 import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
@@ -24,13 +26,10 @@ import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
-  alias,
   and,
   asc,
   entities,
   entityGrants,
-  entityHoldings,
-  entityObligations,
   entityTypeFields,
   entityTypes,
   eq,
@@ -40,14 +39,7 @@ import {
   officerRoles,
   users,
   type Entity,
-  type SQL,
 } from "@openlaw/db";
-import {
-  ENTITY_LIST_SORT_KEYS,
-  SORT_DIRECTIONS,
-  type EntityListSortKey,
-  type SortDirection,
-} from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import {
@@ -65,7 +57,6 @@ import {
   NO_ENTITY,
   reachedEntity,
 } from "../../lib/entity-access.js";
-import { escapeLikePattern } from "../../lib/like.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { entityRecordChildRoutes } from "./record-routes.js";
@@ -76,14 +67,12 @@ import { entityGrantRoutes } from "./grant-routes.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");
-const PAGE_SIZE = 50;
 const ISO_4217 = new Set(Intl.supportedValuesOf("currency"));
 const CurrencySchema = z
   .string()
   .trim()
   .transform((code) => code.toUpperCase())
   .refine((code) => ISO_4217.has(code), { message: "Choose a valid currency." });
-const CursorSchema = z.string().min(1).max(64);
 
 const EntityRowSchema = z.object({
   id: z.string(),
@@ -159,142 +148,6 @@ const CardTextSchema = z.string().trim().max(200);
 const AddressSchema = z.string().trim().max(500);
 const ShareCapitalSchema = z.number().int().nonnegative();
 
-function toRow(row: Entity, entityTypeName: string) {
-  return {
-    id: row.id,
-    legalName: row.legalName,
-    entityTypeId: row.entityTypeId,
-    entityTypeName,
-    jurisdiction: row.jurisdiction,
-    formedOn: row.formedOn,
-    registrationNumber: row.registrationNumber,
-    taxId: row.taxId,
-    registeredAgent: row.registeredAgent,
-    registeredAddress: row.registeredAddress,
-    status: row.status,
-    sharesAuthorized: row.sharesAuthorized,
-    sharesIssued: row.sharesIssued,
-    parValue: row.parValue,
-    parValueCurrency: row.parValueCurrency,
-    customFields: row.customFields ?? {},
-    isConfidential: row.isConfidential,
-    portalListed: row.portalListed,
-    archivedAt: row.archivedAt?.toISOString() ?? null,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
-
-const majorityOwnerEntities = alias(entities, "majority_owner_entities");
-const majorityOwnerId = sql<string | null>`(
-  select ${entityHoldings.ownerEntityId}
-  from ${entityHoldings}
-  inner join ${entities} as ${majorityOwnerEntities}
-    on ${majorityOwnerEntities.id} = ${entityHoldings.ownerEntityId}
-  where ${entityHoldings.ownedEntityId} = ${entities.id}
-  order by
-    ${entityHoldings.ownershipPercent} desc,
-    lower(${majorityOwnerEntities.legalName}) asc,
-    ${majorityOwnerEntities.id} asc
-  limit 1
-)`;
-
-/** Every reachable, unarchived Entity's top holder, one row per owned
- * side. The same first-by-percent pick as majorityOwnerId, taken over
- * the whole registry at once, so the filter only offers owners that a
- * row can answer to. */
-function primaryOwnerIds(
-  db: Parameters<typeof entityReachScope>[0],
-  user: Parameters<typeof entityReachScope>[1],
-): SQL {
-  return sql`(
-    select distinct on (${entityHoldings.ownedEntityId}) ${entityHoldings.ownerEntityId}
-    from ${entityHoldings}
-    inner join ${entities} on ${entities.id} = ${entityHoldings.ownedEntityId}
-    inner join ${entities} as ${majorityOwnerEntities}
-      on ${majorityOwnerEntities.id} = ${entityHoldings.ownerEntityId}
-    where ${and(isNull(entities.archivedAt), entityReachScope(db, user))}
-    order by
-      ${entityHoldings.ownedEntityId},
-      ${entityHoldings.ownershipPercent} desc,
-      lower(${majorityOwnerEntities.legalName}) asc,
-      ${majorityOwnerEntities.id} asc
-  )`;
-}
-
-const nextObligationDueOn = sql<string | null>`(
-  select ${entityObligations.nextDueOn}
-  from ${entityObligations}
-  where ${entityObligations.entityId} = ${entities.id}
-    and ${entityObligations.completedOn} is null
-  order by ${entityObligations.nextDueOn} asc, ${entityObligations.id} asc
-  limit 1
-)`;
-
-const nextObligationLabel = sql<string | null>`(
-  select ${entityObligations.label}
-  from ${entityObligations}
-  where ${entityObligations.entityId} = ${entities.id}
-    and ${entityObligations.completedOn} is null
-  order by ${entityObligations.nextDueOn} asc, ${entityObligations.id} asc
-  limit 1
-)`;
-
-interface EntitySortRequest {
-  key: EntityListSortKey;
-  dir: SortDirection;
-}
-
-const ENTITY_SORTS: Record<EntityListSortKey, SQL> = {
-  name: sql`lower(${entities.legalName})`,
-  type: sql`lower(${entityTypes.displayName})`,
-  jurisdiction: sql`lower(${entities.jurisdiction})`,
-  status: sql`${entities.status}`,
-  nextObligation: nextObligationDueOn,
-  created: sql`${entities.createdAt}`,
-};
-
-function entityListOrder(sort: EntitySortRequest | null): SQL[] {
-  const expression = sort ? ENTITY_SORTS[sort.key] : ENTITY_SORTS.name;
-  const direction = sort?.dir ?? "asc";
-  return [sql`${expression} ${sql.raw(direction)} nulls last`, sql`${entities.id} asc`];
-}
-
-/** The cursor remains an opaque Entity id. Its sort value is recovered
- * under the same reach predicate, then the id is the stable tie-break. */
-function furtherDownThan(
-  db: Parameters<typeof entityReachScope>[0],
-  cursor: string,
-  user: Parameters<typeof entityReachScope>[1],
-  sort: EntitySortRequest | null,
-): SQL {
-  const expression = sort ? ENTITY_SORTS[sort.key] : ENTITY_SORTS.name;
-  const direction = sort?.dir ?? "asc";
-  const cursorId = sql`(
-    select ${entities.id}
-    from ${entities}
-    where ${and(eq(entities.id, cursor), entityReachScope(db, user))}
-    limit 1
-  )`;
-  const cursorValue = sql`(
-    select ${expression}
-    from ${entities}
-    inner join ${entityTypes} on ${entityTypes.id} = ${entities.entityTypeId}
-    where ${and(eq(entities.id, cursor), entityReachScope(db, user))}
-    limit 1
-  )`;
-  const later = sql.raw(direction === "asc" ? ">" : "<");
-  return sql`case
-    when ${cursorValue} is null
-      then (${expression} is null and ${entities.id} > ${cursorId})
-    else (
-      ${expression} is null
-      or ${expression} ${later} ${cursorValue}
-      or (${expression} = ${cursorValue} and ${entities.id} > ${cursorId})
-    )
-  end`;
-}
-
 export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(entityObligationRoutes);
   await app.register(entityGrantRoutes);
@@ -313,17 +166,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           "soonest open obligation; the entities array remains the M8 " +
           "signing-entity picker seam",
         tags: ["entities"],
-        querystring: z.object({
-          q: z.string().trim().min(1).max(200).optional(),
-          includeArchived: z.enum(["true", "false"]).optional(),
-          type: z.string().min(1).max(64).optional(),
-          status: z.enum(ENTITY_STATUSES).optional(),
-          jurisdiction: z.string().min(1).max(200).optional(),
-          majorityOwner: z.string().min(1).max(64).optional(),
-          sort: z.enum(ENTITY_LIST_SORT_KEYS).optional(),
-          dir: z.enum(SORT_DIRECTIONS).optional(),
-          cursor: CursorSchema.optional(),
-        }),
+        querystring: EntityListQuery,
         response: {
           200: z.object({
             entities: z.array(EntityListRowSchema),
@@ -333,57 +176,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      if (request.query.majorityOwner) {
-        const owner = await reachedEntity(app.db, request.user, request.query.majorityOwner);
-        if (!owner || owner.archivedAt) return { entities: [], nextCursor: null };
-      }
-      const sort: EntitySortRequest | null = request.query.sort
-        ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
-        : null;
-      const rows = await app.db
-        .select({
-          entity: entities,
-          entityTypeName: entityTypes.displayName,
-          nextObligationLabel,
-          nextObligationDueOn,
-        })
-        .from(entities)
-        .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
-        .where(
-          and(
-            request.query.includeArchived === "true" ? undefined : isNull(entities.archivedAt),
-            request.query.q
-              ? sql`${entities.legalName} ilike ${`%${escapeLikePattern(request.query.q)}%`}`
-              : undefined,
-            request.query.type ? eq(entities.entityTypeId, request.query.type) : undefined,
-            request.query.status ? eq(entities.status, request.query.status) : undefined,
-            request.query.jurisdiction
-              ? eq(entities.jurisdiction, request.query.jurisdiction)
-              : undefined,
-            request.query.majorityOwner
-              ? eq(majorityOwnerId, request.query.majorityOwner)
-              : undefined,
-            entityReachScope(app.db, request.user),
-            request.query.cursor
-              ? furtherDownThan(app.db, request.query.cursor, request.user, sort)
-              : undefined,
-          ),
-        )
-        .orderBy(...entityListOrder(sort))
-        .limit(PAGE_SIZE + 1);
-      const page = rows.slice(0, PAGE_SIZE);
-      return {
-        entities: page.map((row) => ({
-          ...toRow(row.entity, row.entityTypeName),
-          nextObligation:
-            row.nextObligationLabel && row.nextObligationDueOn
-              ? { label: row.nextObligationLabel, dueOn: row.nextObligationDueOn }
-              : null,
-        })),
-        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.entity.id ?? null) : null,
-      };
-    },
+    async (request) => listEntities(app.db, request.user, request.query),
   );
 
   app.get(
@@ -543,32 +336,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const [row] = await app.db
-        .select({ entity: entities, entityTypeName: entityTypes.displayName })
-        .from(entities)
-        .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
-        .where(and(eq(entities.id, request.params.id), entityReachScope(app.db, request.user)))
-        .limit(1);
-      if (!row) throw httpError(404, NO_ENTITY);
-      const attached = await selectAttachedFields(
-        app.db,
-        entityTypeFields,
-        row.entity.entityTypeId,
-      );
-      return {
-        form: await readTypeForm(app.db, "entity", row.entity.entityTypeId),
-        entity: toRow(row.entity, row.entityTypeName),
-        canManageAccess: await canManageEntityAccess(app.db, request.user, row.entity),
-        fields: attached,
-        customFieldRefs: await resolveStaffRefs(
-          app.db,
-          attached,
-          row.entity.customFields ?? {},
-          request.user,
-        ),
-      };
-    },
+    async (request) => getEntity(app.db, request.user, request.params.id),
   );
 
   app.post(

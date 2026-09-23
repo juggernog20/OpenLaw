@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { listPortalAutoDocs } from "../auto-docs/service.js";
+
 /** ADO-008–010: current audience gates each Portal use and the generator's own history. */
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -7,9 +9,7 @@ import {
   AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
   AUTO_DOC_FORMATS,
   and,
-  asc,
   autoDocGenerations,
-  autoDocs,
   desc,
   eq,
   lt,
@@ -38,7 +38,6 @@ import {
   lockPortalPerson,
   portalAutoDocScope,
   portalWarnings,
-  portalWarningsFor,
   PORTAL_UNAVAILABLE,
   readPortalAutoDoc,
 } from "../auto-docs/portal-policy.js";
@@ -98,27 +97,7 @@ export const portalAutoDocRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const rows = await app.db
-        .select()
-        .from(autoDocs)
-        .where(and(eq(autoDocs.state, "published"), portalAutoDocScope(request.user)))
-        .orderBy(asc(autoDocs.name), asc(autoDocs.id));
-      const warnings =
-        request.user.role === "business_user"
-          ? await portalWarningsFor(app.db, rows)
-          : new Map<string, string[]>();
-      return {
-        autoDocs: rows.map((row) => {
-          const ready = !warnings.get(row.id)?.length;
-          return {
-            ...row,
-            createsContract: row.targetContractTypeId !== null,
-            availability: { ready, message: ready ? null : PORTAL_UNAVAILABLE },
-          };
-        }),
-      };
-    },
+    async (request) => listPortalAutoDocs(app.db, request.user),
   );
 
   app.get(
@@ -171,7 +150,7 @@ export const portalAutoDocRoutes: FastifyPluginAsyncZod = async (app) => {
             contractAttribute: field.contractAttribute ?? null,
           }));
         const choices = fields.some((field) => field.fieldType === "entity")
-          ? await listPortalEntities(tx)
+          ? await listPortalEntities(tx, request.user)
           : [];
         return { ...base, form: { pair: live.pair, fields, entities: choices } };
       }),

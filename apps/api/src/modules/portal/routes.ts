@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { readPortalKnowledgeItem } from "../knowledge/service.js";
+
 /** Portal reads require a session. Request forms read the destination type's Intake tree; archived Request types take no submissions. */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -18,7 +20,6 @@ import {
   knowledgeItems,
   or,
   requestTypes,
-  type Executor,
 } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import { documentAudienceScope } from "../../lib/contract-access.js";
@@ -78,27 +79,6 @@ const PortalKnowledgeItemSchema = z.object({
 
 const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
 const PORTAL_KNOWLEDGE_NOT_FOUND = "No portal Knowledge Item exists with this id.";
-
-async function portalKnowledgeItem(db: Executor, id: string) {
-  const [item] = await db
-    .select({
-      id: knowledgeItems.id,
-      title: knowledgeItems.title,
-      body: knowledgeItems.body,
-      primaryDocumentId: knowledgeItems.primaryDocumentId,
-    })
-    .from(knowledgeItems)
-    .where(
-      and(
-        eq(knowledgeItems.id, id),
-        eq(knowledgeItems.state, "published"),
-        eq(knowledgeItems.audience, "everyone"),
-        isNull(knowledgeItems.archivedAt),
-      ),
-    )
-    .limit(1);
-  return item ?? null;
-}
 
 /**
  * Deliberately hand-written rather than thrown through `httpError`: the
@@ -308,7 +288,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const item = await portalKnowledgeItem(app.db, request.params.id);
+      const item = await readPortalKnowledgeItem(app.db, request.user, request.params.id);
       if (!item) return portalKnowledgeNotFound(reply);
       // The Document's own Confidential flag (DOC-008) narrows the paper
       // one level below the item gate. The same predicate every staff
@@ -387,7 +367,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const item = await portalKnowledgeItem(app.db, request.params.id);
+      const item = await readPortalKnowledgeItem(app.db, request.user, request.params.id);
       if (!item) return portalKnowledgeNotFound(reply);
       const [version] = await app.db
         .select({
