@@ -341,7 +341,7 @@ test.describe.serial("M21 demo path", () => {
       await expect(portal).toHaveURL(new RegExp(`/portal/new/${REQUEST_TYPE_SLUG}$`));
 
       await portal.getByLabel("Title").fill(TITLE);
-      await portal.getByLabel("Description").fill(DESCRIPTION);
+      await portal.getByLabel(/^Description/).fill(DESCRIPTION);
       await portal.getByLabel("Urgency").selectOption("high");
       await portal.getByLabel(FIELD_NAME).fill(FIELD_ANSWER);
       await portal.getByLabel("Attachments").setInputFiles({

@@ -172,7 +172,7 @@ describe("the request type's form", () => {
     const input = await screen.findByLabelText(/^Counterparty/);
     expect(input).toHaveAccessibleDescription("Company on the other side of the contract.");
     expect(screen.getByText("Company on the other side of the contract.")).toHaveClass("sr-only");
-    await user.hover(input);
+    await user.hover(screen.getByRole("button", { name: /^Show description for Counterparty/ }));
     expect(await screen.findByRole("tooltip")).toHaveTextContent(
       "Company on the other side of the contract.",
     );

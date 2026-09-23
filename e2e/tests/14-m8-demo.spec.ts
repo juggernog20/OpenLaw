@@ -399,7 +399,7 @@ test.describe.serial("M8 demo path", () => {
       const dialog = page.getByRole("dialog");
       await dialog.getByLabel("Title").fill(title);
       await dialog.getByLabel("Contract type").selectOption({ label: TYPE_NAME });
-      await dialog.getByLabel(REQUIRED_FIELD.label).fill(GOVERNING_LAW);
+      await dialog.getByRole("textbox", { name: REQUIRED_FIELD.label }).fill(GOVERNING_LAW);
       const created = page.waitForResponse(
         (response) =>
           response.url().endsWith("/api/v1/contracts") && response.request().method() === "POST",

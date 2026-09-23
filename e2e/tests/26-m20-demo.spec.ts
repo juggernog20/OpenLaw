@@ -253,7 +253,7 @@ test.describe.serial("M20 demo path", () => {
       // The five basics are drawn as facts about every form (INT-002's
       // M19/4 addendum), and the attached field follows them.
       await expect(portal.getByLabel("Title")).toBeVisible();
-      await expect(portal.getByLabel("Description")).toBeVisible();
+      await expect(portal.getByLabel(/^Description/)).toBeVisible();
       await expect(portal.getByRole("button", { name: "Choose files" })).toBeVisible();
       await expect(portal.getByLabel("Urgency")).toBeVisible();
       await expect(portal.getByLabel("Department")).not.toHaveValue("");
@@ -273,7 +273,7 @@ test.describe.serial("M20 demo path", () => {
       // ---- The ask, with its paper ----
 
       await portal.getByLabel("Title").fill(TITLE);
-      await portal.getByLabel("Description").fill(DESCRIPTION);
+      await portal.getByLabel(/^Description/).fill(DESCRIPTION);
       await portal.getByLabel("Urgency").selectOption("high");
       await portal.getByLabel(FIELD_NAME).fill(FIELD_ANSWER);
       // The dropzone's input is out of the tab order and out of sight,
