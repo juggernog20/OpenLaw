@@ -58,6 +58,7 @@
 import { approvalRecipients } from "../approval-access.js";
 import {
   isNull,
+  apiKeyRequests,
   commentMentions,
   and,
   inArray,
@@ -959,6 +960,12 @@ async function fanOut(
       {
         userId,
         eventType,
+        approvalKind:
+          eventType === "approval.requested"
+            ? "contract"
+            : eventType === "api_key.requested"
+              ? "api_key"
+              : null,
         entityType: entity.type satisfies NotificationEntityType,
         entityId: entity.id,
         payload: byUser.get(userId)!.payload,
@@ -1450,6 +1457,15 @@ export function createNotifier(deps: NotifierDeps): Notifier {
     },
 
     async apiKeyEvent(tx, event) {
+      const [request] = await tx
+        .select({
+          requesterName: users.displayName,
+          toolsets: apiKeyRequests.toolsets,
+          scope: apiKeyRequests.scope,
+        })
+        .from(apiKeyRequests)
+        .innerJoin(users, eq(users.id, apiKeyRequests.requesterId))
+        .where(eq(apiKeyRequests.id, event.requestId));
       const people = await tx
         .select({ id: users.id })
         .from(users)
@@ -1468,7 +1484,7 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         event.actorId,
         people.map((person) => ({
           userId: person.id,
-          payload: { requestId: event.requestId, clientName: event.clientName },
+          payload: { requestId: event.requestId, clientName: event.clientName, ...request },
         })),
         { tellTheActor: true },
       );

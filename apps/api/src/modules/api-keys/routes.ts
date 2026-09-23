@@ -5,6 +5,7 @@
  * commit together. Only the owner detail read opens and clears a sealed key.
  */
 
+import { handleApprovalItems } from "../../lib/notifications/approvals.js";
 import {
   apiKeyRequests,
   apikeys,
@@ -183,6 +184,7 @@ export const apiKeyRoutes: FastifyPluginAsyncZod = async (app) => {
       })
       .where(eq(apiKeyRequests.id, row.id))
       .returning();
+    await handleApprovalItems(tx, "api_key", row.id);
     await audit(tx, approved!, "minted", actorId);
     await audit(tx, approved!, "approved", actorId, selfApproved);
     await app.notifier.apiKeyEvent(tx, {
@@ -370,6 +372,7 @@ export const apiKeyRoutes: FastifyPluginAsyncZod = async (app) => {
             })
             .where(eq(apiKeyRequests.id, row.id))
             .returning();
+          await handleApprovalItems(tx, "api_key", row.id);
           await audit(tx, changed!, action === "deny" ? "denied" : "cancelled", req.user.id);
           if (action === "deny")
             await app.notifier.apiKeyEvent(tx, {

@@ -206,8 +206,10 @@ export const notifications = pgTable(
      * shows current truth; the item says what was true when it fired.
      */
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
-    /** NULL until the notification center has shown it (NOT-005:
-     * opening the center marks the visible items read). */
+    /** A non-null kind pins the item until handled (NOT-001). */
+    approvalKind: text("approval_kind"),
+    handledAt: timestamp("handled_at", { withTimezone: true }),
+    /** First opened, marked read, or handled. Independent of approval state. */
     readAt: timestamp("read_at", { withTimezone: true }),
     /** Push delivery is owed independently of the email timing. */
     pushOwed: boolean("push_owed").notNull().default(false),

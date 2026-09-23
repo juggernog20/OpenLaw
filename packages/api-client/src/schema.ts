@@ -7025,7 +7025,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The signed-in person's staff notifications, newest first (NOT-001). There is no way to ask for anybody else's: a notification is addressed to one person and the address is the whole scope. This is the **staff** notification centre, so it answers items about contracts and never a Requester's group-5 items — those are the portal bell's, at `/portal/notifications`. An item about a record the reader can no longer reach — a contract walled off after the item was written (DD-014) — is silently omitted: no row, no gap, and no number that says something was left out. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A cursor naming nothing in this person's bell answers an empty page rather than an error */
+    /** The signed-in person's staff bell. Open approvals come first on the first page, followed by ordinary notifications, newest first. nextCursor pages ordinary notifications. Every read applies the record wall. */
     get: operations["listNotifications"];
     put?: never;
     post?: never;
@@ -7042,7 +7042,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** How many unread staff notifications the signed-in person has (NOT-005) — the number behind the top-nav badge. It is the whole count, not the capped one: NOT-005's '9+' is how the badge draws it, and the cap belongs to the surface. It is computed over exactly the items the list would answer with, through the same confidentiality predicate, so an item about a since-walled-off record leaves the count as silently as it leaves the list */
+    /** Count unread notifications and open approvals once each, through the same reach predicate as the list. Reading an open approval does not remove it from the badge. */
     get: operations["unreadNotificationCount"];
     put?: never;
     post?: never;
@@ -7061,7 +7061,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark the named items read — what opening one from the notification centre does (NOT-005, 2026-09-09 amendment). Drawing the centre writes nothing; the click on an item is the read, so the centre sends that one id. The body is a list of up to one page's worth, because a page is the most the centre ever holds. Ids that are not this person's, are already read, are about a record they can no longer reach, or belong to their portal bell match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains: what was not sent, plus whatever landed in the meantime */
+    /** Mark named reachable notifications read. Open approvals keep their badge count until handled. Returns the remaining badge count. */
     post: operations["markNotificationsRead"];
     delete?: never;
     options?: never;
@@ -7078,7 +7078,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark every unread staff item read — the affordance that zeroes the badge after a holiday (NOT-005). It covers exactly what the badge counts, so an item about a record the reader can no longer reach is left alone: it is already outside the count, and clearing it would be a write on a record they cannot see. A group-5 item on the same person's portal bell is left alone too, for the stronger reason that it is not on this surface at all. Answers the unread count that remains, which is zero unless something landed while the request was in flight */
+    /** Mark ordinary reachable notifications read. Leave open approvals unchanged and return the remaining badge count. */
     post: operations["markAllNotificationsRead"];
     delete?: never;
     options?: never;
@@ -7159,7 +7159,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Portal notifications for the signed-in person's Requests and current Contract or Matter team memberships. Legal content, archived work, and revoked memberships are omitted before pagination. */
+    /** The signed-in person's Portal bell. Open approvals come first on the first page, then ordinary Portal news, newest first. nextCursor pages ordinary news. Each item requires current access. */
     get: operations["listPortalNotifications"];
     put?: never;
     post?: never;
@@ -7176,7 +7176,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Unread count over exactly the Portal notifications the current user may read. */
+    /** Count unread Portal notifications and open approvals once each, through the same reach predicate as the list. */
     get: operations["unreadPortalNotificationCount"];
     put?: never;
     post?: never;
@@ -7212,7 +7212,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark every currently reachable Portal notification read and return the remaining unread count. */
+    /** Mark ordinary reachable Portal notifications read. Leave open approvals unchanged and return the remaining badge count. */
     post: operations["markAllPortalNotificationsRead"];
     delete?: never;
     options?: never;
@@ -39890,6 +39890,8 @@ export interface operations {
           "application/json": {
             id: string;
             eventType: string;
+            approvalKind: string | null;
+            handledAt: string | null;
             entityType: string;
             entityId: string;
             payload: {
@@ -39933,6 +39935,8 @@ export interface operations {
             notifications: {
               id: string;
               eventType: string;
+              approvalKind: string | null;
+              handledAt: string | null;
               entityType: string;
               entityId: string;
               payload: {
@@ -40338,6 +40342,8 @@ export interface operations {
           "application/json": {
             id: string;
             eventType: string;
+            approvalKind: string | null;
+            handledAt: string | null;
             entityType: string;
             entityId: string;
             payload: {
@@ -40381,6 +40387,8 @@ export interface operations {
             notifications: {
               id: string;
               eventType: string;
+              approvalKind: string | null;
+              handledAt: string | null;
               entityType: string;
               entityId: string;
               payload: {

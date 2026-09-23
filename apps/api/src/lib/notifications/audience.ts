@@ -729,6 +729,7 @@ function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
               eq(contractApprovals.contractId, notifications.entityId),
               eq(contractApprovals.status, "pending"),
               isNull(contracts.archivedAt),
+              user.role === "business_user" ? undefined : contractTeamScope(db, user),
             ),
           ),
       ),
@@ -788,9 +789,7 @@ export function apiKeyNotificationScope(
     eq(notifications.entityType, "api_key_request"),
     eq(notifications.userId, user.id),
     or(
-      surface === "staff" && user.role === "administrator"
-        ? eq(notifications.eventType, "api_key.requested")
-        : sql`false`,
+      user.role === "administrator" ? eq(notifications.eventType, "api_key.requested") : sql`false`,
       (surface === "portal") === (user.role === "business_user")
         ? and(
             inArray(notifications.eventType, ["api_key.approved", "api_key.denied"]),

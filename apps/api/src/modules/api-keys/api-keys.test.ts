@@ -463,3 +463,50 @@ it("stores an empty note as null", async () => {
   );
   expect(rows.rows).toEqual([{ decision_note: null }]);
 });
+
+it.each(["approve", "deny", "cancel"] as const)(
+  "%s handles every Administrator's open item on both bells",
+  async (action) => {
+    const pending = await request();
+    for (const root of ["/api/v1/notifications", "/api/v1/portal/notifications"]) {
+      const list = await h.app.inject({ method: "GET", url: root, cookies: admin });
+      const item = list
+        .json()
+        .notifications.find((row: { entityId: string }) => row.entityId === pending.id);
+      expect(item).toMatchObject({ approvalKind: "api_key", handledAt: null });
+      await h.app.inject({
+        method: "POST",
+        url: `${root}/read`,
+        cookies: admin,
+        payload: { ids: [item.id] },
+      });
+      const badge = await h.app.inject({
+        method: "GET",
+        url: `${root}/unread-count`,
+        cookies: admin,
+      });
+      const readAll = await h.app.inject({
+        method: "POST",
+        url: `${root}/read-all`,
+        cookies: admin,
+      });
+      expect(readAll.json().unread).toBeGreaterThan(0);
+      expect(badge.json().unread).toBeGreaterThanOrEqual(readAll.json().unread);
+    }
+    const response = await h.app.inject({
+      method: "POST",
+      url: `${url}/${pending.id}/${action}`,
+      cookies: action === "cancel" ? member : admin,
+      ...(action !== "cancel" ? { payload: {} } : {}),
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    const rows = await h.db.$client.query(
+      "select approval_kind, handled_at, read_at from notifications where event_type = 'api_key.requested' and entity_id = $1",
+      [pending.id],
+    );
+    expect(rows.rows.length).toBeGreaterThan(1);
+    expect(
+      rows.rows.every((row) => row.approval_kind === "api_key" && row.handled_at && row.read_at),
+    ).toBe(true);
+  },
+);
