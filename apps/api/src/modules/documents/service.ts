@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { NO_PERMISSION } from "../../auth/guards.js";
+/**
+ * Per-record Document lists and Version text reads enforce owning-record reach and the
+ * Document audience (DOC-008, DD-014). Staff lists also enforce their role floor.
+ */
+
+import { NO_PERMISSION, type AuthenticatedUser } from "../../auth/guards.js";
 import { z } from "zod";
 import {
   and,
@@ -25,7 +30,6 @@ import {
   type SQL,
 } from "@openlaw/db";
 import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
-import { type AuthenticatedUser } from "../../auth/guards.js";
 import {
   contractTeamScope,
   documentAudienceScope,
@@ -54,8 +58,23 @@ function assertReader(user: AuthenticatedUser): void {
  * enough to matter on its own is a bound of its own, and this is not it.
  */
 const PAGE_SIZE = 50;
-const ROOT_FOLDER = "root";
-const NO_DOCUMENT = "No document exists with this reference.";
+/**
+ * The listing context the record root is asked for by name (M13/3).
+ *
+ * A folder filter has three answers — every document on the record, the
+ * documents in one folder, and the documents filed nowhere — and the
+ * third has no id to be addressed by. So it is addressed by a word, and
+ * the word is safe to reserve: every id in this API is a uuidv7, so no
+ * folder can ever be called this.
+ */
+
+export const ROOT_FOLDER = "root";
+/** A document on a contract this viewer cannot reach answers exactly as
+ * `NO_CONTRACT` has the record itself answer. Its own id says nothing
+ * about which record it belongs to, so a refusal here would be the leak
+ * the 404 exists to prevent. */
+
+export const NO_DOCUMENT = "No document exists with this reference.";
 export function ownerReachScope(
   owner: DocumentOwner,
   db: Executor,

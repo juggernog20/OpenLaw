@@ -30,7 +30,7 @@ import {
   type SQL,
 } from "@openlaw/db";
 import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
-import { type AuthenticatedUser } from "../../auth/guards.js";
+import type { AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { documentRepositoryScope } from "../../lib/document-access.js";
 import { entityReachScope } from "../../lib/entity-access.js";

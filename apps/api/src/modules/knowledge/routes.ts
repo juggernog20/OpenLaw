@@ -1,14 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import {
-  KnowledgeListQuery,
-  listKnowledgeItems,
-  getKnowledgeItem,
-  creators,
-  project,
-  readItem,
-} from "./service.js";
-
 /** M28/3's shared Knowledge library: items, managed-list reads, and folders. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -30,12 +21,20 @@ import {
   type KnowledgeItem,
   type Transaction,
 } from "@openlaw/db";
-import { type ChangedFields } from "@openlaw/shared";
+import type { ChangedFields } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { folderName } from "../documents/folders.js";
 import { RENDER_FAMILIES } from "../../lib/render-family.js";
+import {
+  KnowledgeListQuery,
+  listKnowledgeItems,
+  getKnowledgeItem,
+  creators,
+  project,
+  readItem,
+} from "./service.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const IdSchema = z.string().min(1).max(64);

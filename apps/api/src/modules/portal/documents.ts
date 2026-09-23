@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { listPortalDocuments } from "./document-service.js";
-
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { DOCUMENT_VERSION_KINDS } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import { problemResponse } from "../../lib/problem.js";
 import { RENDER_FAMILIES } from "../../lib/render-family.js";
+import { listPortalDocuments } from "./document-service.js";
 
 const Version = z.object({
   id: z.string(),

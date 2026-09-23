@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { EntityListQuery, listEntities, getEntity, toRow, primaryOwnerIds } from "./service.js";
-
 import { assertCreationForm } from "../../lib/creation-form.js";
 import { formForTouchpoint } from "@openlaw/shared";
 import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
@@ -64,6 +62,7 @@ import { entityHoldingRoutes } from "./holding-routes.js";
 import { entityShareRegisterRoutes } from "./share-register-routes.js";
 import { entityObligationRoutes } from "./obligation-routes.js";
 import { entityGrantRoutes } from "./grant-routes.js";
+import { EntityListQuery, listEntities, getEntity, toRow, primaryOwnerIds } from "./service.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
 const requireMember = requireRole("administrator", "legal_team_member");

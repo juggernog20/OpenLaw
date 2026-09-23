@@ -19,6 +19,7 @@ import {
 } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/user.js";
 import { NO_PERMISSION } from "../auth/guards.js";
+import { provisionUser } from "../auth/instance.js";
 import { signInCookies, startHarness, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
 import { getEntity, listEntities } from "./entities/service.js";
 import {
@@ -36,6 +37,7 @@ import { listPortalDocuments } from "./portal/document-service.js";
 let h: TestHarness;
 let user: AuthenticatedUser;
 let cookies: Record<string, string>;
+let businessCookies: Record<string, string>;
 let entityId: string;
 let itemId: string;
 
@@ -49,6 +51,14 @@ beforeAll(async () => {
   expect(setup.statusCode, setup.body).toBe(201);
   cookies = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
   user = (await h.db.select().from(users).where(eq(users.email, TEST_ADMIN.email)))[0]!;
+  const business = {
+    email: "read-service-business@example.com",
+    displayName: "Read service Business User",
+    password: "correct-horse-battery",
+  };
+  const person = await provisionUser(h.app.auth, business);
+  await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, person.id));
+  businessCookies = await signInCookies(h.app, business.email, business.password);
   const type = (await h.db.select().from(entityTypes).limit(1))[0]!;
   entityId = (
     await h.db
@@ -105,6 +115,14 @@ it("enforces the staff floor without HTTP guards", async () => {
     () => listContractDocuments(h.db, business, 1),
   ])
     await expect(read()).rejects.toMatchObject({ statusCode: 403, message: NO_PERMISSION });
+  const response = await h.app.inject({
+    method: "GET",
+    url: "/api/v1/auto-docs",
+    cookies: businessCookies,
+  });
+  expect(response.statusCode, response.body).toBe(403);
+  expect(response.headers["content-type"]).toContain("application/problem+json");
+  expect(response.json()).toMatchObject({ status: 403, detail: NO_PERMISSION });
 });
 
 it("keeps Confidential Entities out of staff reads and Portal name reads", async () => {
@@ -123,6 +141,13 @@ it("keeps Confidential Entities out of staff reads and Portal name reads", async
   expect(grouped.results.map((row) => row.id)).not.toContain(entityId);
   const flat = await flatSearch(h.db, user, "Service", { kind: "entity" });
   expect(flat.results).toEqual([]);
+  const response = await h.app.inject({
+    method: "GET",
+    url: "/api/v1/search?q=Service",
+    cookies,
+  });
+  expect(response.statusCode, response.body).toBe(200);
+  expect(response.json()).toEqual(grouped);
 });
 
 it("shares the published, Everyone, live Knowledge predicate with direct reads", async () => {

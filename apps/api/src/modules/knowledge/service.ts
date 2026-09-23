@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Staff Knowledge reads enforce the Member+ floor (KNW-002). Portal reads require a
+ * published, Everyone, live item for every signed-in role (KNW-004).
+ */
+
 import { z } from "zod";
 import {
   alias,

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { AutoDocListQuery, AutoDocRow, rowView, listAutoDocs } from "./service.js";
-
 /** ADO-001–004: Legal maintains Auto-Docs and their two version chains. */
 import { departmentOptions } from "../departments/references.js";
 import { createHash } from "node:crypto";
@@ -87,6 +85,7 @@ import {
   revokeAcknowledgements,
   textHash,
 } from "./portal-policy.js";
+import { AutoDocListQuery, AutoDocRow, rowView, listAutoDocs } from "./service.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const Params = z.object({ id: z.string() });

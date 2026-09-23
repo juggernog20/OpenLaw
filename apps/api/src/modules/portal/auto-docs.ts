@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { listPortalAutoDocs } from "../auto-docs/service.js";
-
 /** ADO-008–010: current audience gates each Portal use and the generator's own history. */
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -42,6 +40,7 @@ import {
   readPortalAutoDoc,
 } from "../auto-docs/portal-policy.js";
 import { AutoDocFieldRow } from "../auto-docs/routes.js";
+import { listPortalAutoDocs } from "../auto-docs/service.js";
 
 const Params = z.object({ id: z.string() });
 const GenerationParams = Params.extend({ generationId: z.string() });

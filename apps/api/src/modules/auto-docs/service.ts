@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Auto-Doc lists preserve the staff floor and the Portal audience and availability rules
+ * (ADO-008, ADO-009).
+ */
+
 import {
   AUTO_DOC_AUDIENCES,
   AUTO_DOC_FORMATS,

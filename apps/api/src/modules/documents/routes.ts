@@ -1,21 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import {
-  selectVersions,
-  toVersion,
-  documentWithChain,
-  paperOf,
-  ownerReachScope,
-  reachedVersion,
-  type ReachedVersion,
-  listAutoDocDocuments,
-  listKnowledgeItemDocuments,
-  listContractDocuments,
-  listMatterDocuments,
-  listEntityDocuments,
-  readDocumentVersionText,
-} from "./service.js";
-
 /**
  * A contract's paper (M11/2, M11/3, M11/4, M11/5) — the first path in
  * the codebase that puts a file anywhere: upload a draft, append the
@@ -252,6 +236,23 @@ import {
 import { requestAutomaticContractAnalysis } from "../../pipeline/automatic-contract-analysis.js";
 import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
+import {
+  ROOT_FOLDER,
+  NO_DOCUMENT,
+  selectVersions,
+  toVersion,
+  documentWithChain,
+  paperOf,
+  ownerReachScope,
+  reachedVersion,
+  type ReachedVersion,
+  listAutoDocDocuments,
+  listKnowledgeItemDocuments,
+  listContractDocuments,
+  listMatterDocuments,
+  listEntityDocuments,
+  readDocumentVersionText,
+} from "./service.js";
 
 /** Uploads, Versions and record paper reads are the Document surface a
  * Business User receives (DD-024). Reach still comes from the owning
@@ -272,12 +273,6 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * every other role plainly — a viewer who reaches the record already
  * knows the document is there, so a 404 would read as a bug. */
 const requireAdministrator = requireRole("administrator");
-
-/** A document on a contract this viewer cannot reach answers exactly as
- * `NO_CONTRACT` has the record itself answer. Its own id says nothing
- * about which record it belongs to, so a refusal here would be the leak
- * the 404 exists to prevent. */
-const NO_DOCUMENT = "No document exists with this reference.";
 
 /** CTR-003's reference, as every contract route takes it. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
@@ -795,17 +790,6 @@ const ArchivedQuery = z.object({
 
 /** A cursor is a document id, and nothing longer is worth reading. */
 const CursorSchema = z.string().min(1).max(64);
-
-/**
- * The listing context the record root is asked for by name (M13/3).
- *
- * A folder filter has three answers — every document on the record, the
- * documents in one folder, and the documents filed nowhere — and the
- * third has no id to be addressed by. So it is addressed by a word, and
- * the word is safe to reserve: every id in this API is a uuidv7, so no
- * folder can ever be called this.
- */
-const ROOT_FOLDER = "root";
 
 /**
  * Which listing this read is about (DOC-006, DES-031).

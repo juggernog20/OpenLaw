@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Entity registry reads enforce the Member+ floor and apply entityReachScope before paging
+ * or returning a record (ENT-001, ENT-004).
+ */
+
 import { readTypeForm } from "../../lib/type-form-routes.js";
 import { z } from "zod";
 import {

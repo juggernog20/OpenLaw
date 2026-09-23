@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { readPortalKnowledgeItem } from "../knowledge/service.js";
-
 /** Portal reads require a session. Request forms read the destination type's Intake tree; archived Request types take no submissions. */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -20,8 +18,9 @@ import {
   knowledgeItems,
   or,
   requestTypes,
+  type Executor,
 } from "@openlaw/db";
-import { requireAuth } from "../../auth/guards.js";
+import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { documentAudienceScope } from "../../lib/contract-access.js";
 import { AttachedCustomFieldSchema } from "../../lib/custom-fields.js";
 import { httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
@@ -29,6 +28,7 @@ import { attachmentDisposition } from "../../lib/uploads.js";
 
 import { readIntakeForm } from "../../lib/intake-form.js";
 import { FormNodeSchema } from "../../lib/type-form-routes.js";
+import { portalKnowledgeScope, readPortalKnowledgeItem } from "../knowledge/service.js";
 
 const PortalRequestTypeSchema = z.object({
   turnaroundDays: z.number().int().nullable(),
@@ -113,14 +113,9 @@ function portalLink(row: {
     : { id: row.id, label: row.label, url: row.url!, displayOrder: row.displayOrder };
 }
 
-const reachableLink = or(
-  isNull(intakeLinks.knowledgeItemId),
-  and(
-    eq(knowledgeItems.state, "published"),
-    eq(knowledgeItems.audience, "everyone"),
-    isNull(knowledgeItems.archivedAt),
-  ),
-);
+function reachableLink(db: Executor, user: AuthenticatedUser) {
+  return or(isNull(intakeLinks.knowledgeItemId), portalKnowledgeScope(db, user));
+}
 
 export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -177,7 +172,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
+    async (request) => {
       const rows = await app.db
         .select({
           id: intakeLinks.id,
@@ -188,7 +183,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .from(intakeLinks)
         .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
-        .where(and(isNull(intakeLinks.requestTypeId), reachableLink))
+        .where(and(isNull(intakeLinks.requestTypeId), reachableLink(app.db, request.user)))
         .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt));
       return { intakeLinks: rows.map(portalLink) };
     },
@@ -251,7 +246,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           })
           .from(intakeLinks)
           .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
-          .where(and(eq(intakeLinks.requestTypeId, type.id), reachableLink))
+          .where(and(eq(intakeLinks.requestTypeId, type.id), reachableLink(app.db, request.user)))
           .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt)),
       ]);
       return {

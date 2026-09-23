@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Portal Document lists enforce portalRecordScope and documentAudienceScope (DD-014,
+ * DD-024). Callers authenticate the reader. A cursor outside the result set returns an
+ * empty page.
+ */
+
 import {
   and,
   contracts,
@@ -19,7 +25,7 @@ import { documentAudienceScope } from "../../lib/contract-access.js";
 import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError } from "../../lib/problem.js";
 import { renderFamilyOf } from "../../lib/render-family.js";
-import { type AuthenticatedUser } from "../../auth/guards.js";
+import type { AuthenticatedUser } from "../../auth/guards.js";
 import type { Db } from "@openlaw/db";
 
 export async function listPortalDocuments(
