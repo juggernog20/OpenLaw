@@ -896,6 +896,16 @@ The read is therefore an allowlist, not a predicate over the stored row:
 
 Deferred rather than declined: Documents appearing in or leaving the Portal Documents section, and Approval decisions the Business User is party to. Both are Portal-visible and both belong under the same rule; each needs its own scope mirrored in the query, which is the work, not the decision.
 
+### Addendum (2026-09-23, DD-029) — via attribution and the Tool calls tab
+
+DD-029 lets a person's agent work in OpenLaw as that person. The ledger keeps the person as the actor. It gains a "via".
+
+**The actor stays the person, with a via.** Activity rows gain three columns: `via_kind` with the values `ui`, `api_key` and `oauth_client`, `via_id`, and `via_client_name`. A row written through MCP carries the person as `actor_id`, the credential in `via_id`, and the Client's name in `via_client_name`. The feed reads "Jonas Weber (via Claude) changed status". A row written from the browser carries `via_kind = ui` and nothing else. The tier is the tier of the same action in the UI. A status move through T41 writes `working_team` through `RECORD_ACTIVITY_TIER`, as the UI does. A comment posted through T24 rides the comment's own tier, as the UI does. The SIEM line carries the via fields. The Client name comes from the OAuth client id or the key's Client name first, then from the protocol's `clientInfo`; research section 10 says vendor `clientInfo` strings vary and must not gate anything.
+
+**Key events are audit events.** Mint, approve, deny, cancel, revoke and expiry of an API key, and grant and revocation of an OAuth Client, land in the audit log at `admin_only`. An Administrator's self-approval of their own request is one such row.
+
+**The Tool calls view is a tab on the Audit log.** It is Administrator-only and exportable, like the log it sits on. It lists every Tool call with the actor, the Client, the Tool, the outcome and the duration. The MCP section links to it filtered to the last day. It is a ledger of calls, not of record reads. The rule above that read events are not logged stands for the feed and the audit log. A read Tool's row in the Tool calls view names the Tool and the outcome and never the records it returned.
+
 ---
 
 ## DD-018: Work-model doctrine — dual workspaces with the deliverable rule
@@ -1391,6 +1401,146 @@ The pain was not two catalogs. It was one catalog with five attachment points an
 - The Field editor dialog and the catalog pages drop the tag. The convert dialog drops its Counterparty and Needed by boxes. The Request type editor drops the Form fields card.
 - MTR-018 is superseded whole. DD-015 is superseded for the tag. INT-002 no longer defines the Request form's contents. MTR-014's deferral of conditional logic ends. CTR-025's "do not depend on a Field attachment" reads as "are built-in Rows". CONTEXT.md gains Form, Row, Branch, Touchpoint, Intake form and Default type, and the three switch names.
 
+## DD-029: MCP — a person's agent works in OpenLaw as that person
+
+- **Status:** Accepted
+- **Date:** 2026-09-23
+- **Source:** The MCP grill, Rounds 1 to 6, settled on 2026-09-23. The decision log is `MCP-GRILL-PLAN.md` and the evidence is `MCP-RESEARCH.md`, sections 1 to 11. Sibling records of the same date: TECH-035, SET-014, and the DD-017, TECH-033, NOT-001 and NOT-005 addenda. A DES record for the two screens follows.
+
+### Context
+
+Nothing outside a browser can sign in to OpenLaw today. The only non-browser callers are the DocuSign webhook with its HMAC and the first-run setup token. There is no API key, no bearer token, no service account and no bot user. The OpenAPI document holds 507 operations on 385 paths and declares no security scheme.
+
+People now run AI agents. Claude, ChatGPT and Microsoft 365 Copilot each connect to a remote server over the Model Context Protocol, and each acts for the signed-in person. A legal team that keeps its Contracts and Matters in OpenLaw wants to ask its agent which Contracts expire this quarter, or to open a Matter from a Request, without leaving the chat. The grill answered one question: how OpenLaw admits an agent without a second permission model.
+
+The codebase makes one answer cheap. Every access helper takes the database and an `AuthenticatedUser` and returns a SQL scope or an audience. An agent that resolves to an `AuthenticatedUser` inherits DD-014, DD-016 and DD-023 with no new code. Research section 9 found no vendor that documents MCP access for portal users. The Portal scopes make that free here.
+
+### Decision
+
+**1. A person's agent works in OpenLaw as that person.** The feature is MCP. A Client is one connected program acting for one person. The Client is a new way into an existing account. There is no bot identity, no service account and no organization-owned credential. The server reads and writes only what the person could in the UI. It restricts nothing further, except by default: a comment Tool defaults to the most restrictive tier the person may use. All three account types of DD-013, as amended by DD-023, may use MCP from day one: Administrators, Legal Team Members and Business Users. A Business User's Tools run through the Portal scopes.
+
+**2. MCP is apart from the AI connector.** Outbound AI analysis and inbound MCP are separate glossary terms and separate settings. The AI provider credential stays a Saved key. The inbound credential is an API key.
+
+**3. Two credential paths.** Both are v1 scope. Both are off until an Administrator turns them on.
+
+- **An OAuth grant for a Client on the Allowed Clients list.** This is the main path and the only path for chat clients. The Administrator manages the Allowed Clients list. It is seeded with Claude, ChatGPT and Microsoft 365 Copilot. A Client not on the list cannot reach the consent page. An Allowed Client is one of two kinds. A published identity holds the vendor's Client ID Metadata Document URL and is seeded, not editable: Claude, Claude Code and ChatGPT. A registered client is generated by OpenLaw as a client id and a one-time secret, and the Administrator pastes the vendor's callback URLs. Microsoft 365 Copilot ships as a template of this kind and covers Copilot Studio and Microsoft 365 declarative agents. Dynamic client registration is a separate switch, off by default. This path needs public reachability. Turning it on names the exposed paths, `/mcp`, `/.well-known/oauth-*` and the consent page, and links the deployment note. TECH-035 holds the stack.
+- **An API key after an Administrator approves an API key request.** This is the power-user path. It works on a LAN. Keys serve Claude Code, Copilot Studio, the Claude and OpenAI developer APIs, and scripts. ChatGPT has no place for a key, so ChatGPT users take the OAuth path, and the guides say so. A key is bound to one person and works on the MCP endpoint only. REST does not open. A Tool calls the same internal code as the route it mirrors, and the OpenAPI document stays the SPA contract.
+
+**4. Switches, ceiling and per-grant choice.** The MCP section carries a master switch and one row per group, Legal Users and Business Users, each with an "OAuth Clients" toggle and an "API keys" toggle. All are off by default. The organization sets a Toolset ceiling and an org-wide read-only switch. A person requesting a key or consenting to a Client picks Toolsets and read or write within that ceiling. Nothing is pre-selected on the key request form or the consent page. The person picks each Toolset and the scope. Read-only always wins.
+
+**5. Approval of API key requests.** A person fills the Client name, Toolsets and scope, and may add a note. The expiry is shown as a fact from the organization key lifetime. Every Administrator gets a bell item, and email per preferences. Any Administrator approves or denies, with an optional note. An Administrator's own request approves itself, and the audit log records that. Approval sends the requester a bell item, and the key shows once on the requester's pane. Denial is final. The person asks again with a new request. The requester may cancel a pending request, and the audit log records that too. The organization sets the key lifetime, default 90 days, hard cap 365 days. Renewal is a new request. OAuth grants need no per-grant approval. The Allowed Clients list, the group toggle and the ceiling are the Administrator's controls. Every grant and every key is visible to an Administrator and revocable by one.
+
+**6. The Tool register is code-owned and curated.** Hand-written, task-shaped Tools sit in Toolsets, plus a `guide` Toolset that is always on. No Tool is generated from the OpenAPI document. The register is not Administrator-editable. `tools/list` returns only the Tools in the person's grant: account type, org ceiling, chosen Toolsets, and read or write. A call outside the grant fails with a clear tool error and, for OAuth, a `403 insufficient_scope` step-up. This covers ChatGPT's frozen workspace lists and Claude's hourly cache. Business Users use the same server and the same Tool names. They see the subset their account type permits. Confirmation is the Client's job. Every Tool carries `title`, `readOnlyHint`, `destructiveHint`, `openWorldHint: false` and `idempotentHint`, so Claude and Microsoft 365 Copilot skip confirmation for reads and always confirm destructive Tools, and ChatGPT accepts the app. OpenLaw adds no second confirmation for ordinary writes. Hard deletes and settings writes never become Tools. Team removal sits in an off-by-default `team` Toolset. Server-side approval tokens for destructive Tools are a later milestone.
+
+Toolset labels, as shown on the request form and the consent page: Guide, which is hidden because no grant can drop it, Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge, People, Team, Administration.
+
+The register as settled on 2026-09-23. The Legal User and Business User columns give each Toolset's default for that audience. The Legal User column covers Administrators and Legal Team Members alike. An Administrator differs in one way: the Administration Toolset, T35 and T40, is theirs alone, off by default, and lands in M42, so an Administrator's default count is the Legal User count. "always" is the `guide` Toolset. Kind `destr` is a destructive write.
+
+| Id  | Toolset     | Tool                          | Kind  | Legal User | Business User | What it does                                                                                                                                                                |
+| --- | ----------- | ----------------------------- | ----- | ---------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | `guide`     | `openlaw_whoami`              | read  | always     | always        | Who I am, my account type, enabled Toolsets, organization name, a short glossary block.                                                                                     |
+| T2  | `guide`     | `openlaw_vocabulary`          | read  | always     | always        | The organization's configured Contract types, Matter types, Request types, statuses, Departments, Regions, and each type's Fields.                                          |
+| T3  | `guide`     | `openlaw_docs_search`         | read  | always     | always        | Search the product documentation (DD-020).                                                                                                                                  |
+| T4  | `guide`     | `openlaw_docs_read`           | read  | always     | always        | Read one documentation article.                                                                                                                                             |
+| T5  | `guide`     | `openlaw_form_get`            | read  | always     | always        | The type Form (DD-028) for a Request type or a creation form for a Contract or Matter type.                                                                                 |
+| T6  | `workspace` | `openlaw_search`              | read  | on         | on            | Global search over the seven kinds, scoped like the UI.                                                                                                                     |
+| T7  | `workspace` | `openlaw_activity_recent`     | read  | on         | off           | What happened since a date, across records I can reach, at my visibility tiers.                                                                                             |
+| T8  | `contracts` | `openlaw_contracts_list`      | read  | on         | on            | Filtered list: status, type, counterparty, owner, expiring within N days.                                                                                                   |
+| T9  | `contracts` | `openlaw_contract_get`        | read  | on         | on            | One Contract: overview, Fields, team, Key dates, Documents, latest Analysis run answers, open Approval requests.                                                            |
+| T10 | `contracts` | `openlaw_contract_create`     | write | on         | off           | Create from a creation form answer set.                                                                                                                                     |
+| T11 | `contracts` | `openlaw_contract_update`     | write | on         | off           | Change Fields, owners, department, region. Status moves are T41.                                                                                                            |
+| T12 | `contracts` | `openlaw_analysis_run`        | write | on         | off           | Start an Analysis run on the pinned or named Version.                                                                                                                       |
+| T13 | `matters`   | `openlaw_matters_list`        | read  | on         | on            | Filtered list: status, type, Matter Manager, Key date within N days.                                                                                                        |
+| T14 | `matters`   | `openlaw_matter_get`          | read  | on         | on            | One Matter: overview, Fields, team, Key dates, tasks, relations, Documents.                                                                                                 |
+| T15 | `matters`   | `openlaw_matter_create`       | write | on         | off           | Create, optionally from a Matter template.                                                                                                                                  |
+| T16 | `matters`   | `openlaw_matter_update`       | write | on         | off           | Change Fields, Matter Manager. Status moves are T42.                                                                                                                        |
+| T17 | `tasks`     | `openlaw_task_create`         | write | on         | off           | A task on a Contract or Matter, with assignee and due date.                                                                                                                 |
+| T18 | `tasks`     | `openlaw_task_update`         | write | on         | off           | Complete, reassign, reschedule.                                                                                                                                             |
+| T19 | `requests`  | `openlaw_requests_list`       | read  | on         | on            | The Inbox for Legal Users; own Requests for a Business User.                                                                                                                |
+| T20 | `requests`  | `openlaw_request_get`         | read  | on         | on            | The original submission and its Form answers.                                                                                                                               |
+| T21 | `requests`  | `openlaw_request_submit`      | write | off        | on            | Submit a Request through the type Form. Business Users' front door.                                                                                                         |
+| T22 | `requests`  | `openlaw_request_assign`      | write | on         | off           | Assign a Request to a Legal User.                                                                                                                                           |
+| T23 | `comments`  | `openlaw_comments_list`       | read  | on         | on            | Comments on a record at the tiers I may read.                                                                                                                               |
+| T24 | `comments`  | `openlaw_comment_post`        | write | on         | on            | Post at a named tier; Business Users at Full Thread only.                                                                                                                   |
+| T25 | `documents` | `openlaw_documents_list`      | read  | on         | on            | Documents and Versions on a record.                                                                                                                                         |
+| T26 | `documents` | `openlaw_document_read`       | read  | on         | on            | The extracted text of one Version, paged, from the doc engine.                                                                                                              |
+| T27 | `documents` | `openlaw_document_upload`     | write | on         | on            | Returns a short-lived upload URL and a pending Version id; the Client sends the file there. Bounded-blob limit and DOC-012 key apply.                                       |
+| T28 | `entities`  | `openlaw_entities_list`       | read  | on         | on            | Entities I can reach; Portal-listed ones for a Business User (DD-027).                                                                                                      |
+| T29 | `entities`  | `openlaw_entity_get`          | read  | on         | off           | Officers, statutory Documents, compliance calendar, share register summary.                                                                                                 |
+| T30 | `knowledge` | `openlaw_knowledge_search`    | read  | on         | on            | Published Knowledge Items; portal-readable only for Business Users.                                                                                                         |
+| T31 | `knowledge` | `openlaw_knowledge_get`       | read  | on         | on            | One Knowledge Item and its Documents.                                                                                                                                       |
+| T32 | `people`    | `openlaw_people_list`         | read  | on         | off           | Users and Departments, for assignment by name.                                                                                                                              |
+| T33 | `team`      | `openlaw_team_add`            | write | off        | off           | Add a person to a record's roster under DD-023.                                                                                                                             |
+| T34 | `team`      | `openlaw_team_remove`         | destr | off        | off           | Remove a person from a roster.                                                                                                                                              |
+| T35 | `admin`     | `openlaw_audit_log_query`     | read  | off        | off           | Administrator only, after the audience gap is fixed.                                                                                                                        |
+| T36 | `tasks`     | `openlaw_tasks_list`          | read  | on         | off           | Tasks assigned to me (or a named person) across reachable Contracts and Matters; filters: due within N days, overdue, include completed. Mirrors Home's list.               |
+| T37 | `auto-docs` | `openlaw_auto_docs_list`      | read  | on         | on            | Auto-Docs within my reach (ADO-009).                                                                                                                                        |
+| T38 | `auto-docs` | `openlaw_auto_doc_generate`   | write | on         | on            | Submit an answer set against the form T5 returns; creates a Generation. ADO-013 caps apply; an owed ADO-008 acknowledgement returns a named refusal pointing at the Portal. |
+| T39 | `auto-docs` | `openlaw_generations_list`    | read  | on         | on            | My Generations with state and download links. The Tool never carries the file.                                                                                              |
+| T40 | `admin`     | `openlaw_settings_get`        | read  | off        | off           | Administrator only; reads Organization settings. No settings writes in v1 (SET-002).                                                                                        |
+| T41 | `contracts` | `openlaw_contract_set_status` | write | on         | off           | Move a Contract's status (the CTR soft gate applies). Separate from T11 so the annotations stay honest.                                                                     |
+| T42 | `matters`   | `openlaw_matter_set_status`   | write | on         | off           | Move a Matter's status. Separate from T16.                                                                                                                                  |
+
+By this table, a Legal User with every default-on Toolset sees 37 Tools and a Business User sees 24. The round counted 35 and 25 before T41 and T42 landed. Q41 accepts a count above Microsoft's advice of 25 to 30 per agent. Toolsets are the pressure valve at request time, and Copilot Studio's hard limit of 128 counts every server on the agent.
+
+Rules that shaped the register:
+
+- **Forms are read; creates are generic.** T5 returns the type Form of DD-028, or the creation form of a Contract or Matter type. T10, T15, T21 and T38 take an answer set. There is no generated create Tool per configured type, so the count stays fixed and T2 names the types. A create Tool's description tells the agent to ask the person for missing answers with the Client's own question tool. A create call with missing or invalid Fields returns a named validation error that lists them.
+- **Status moves are their own Tools.** T41 and T42 exist so the annotations on T11 and T16 stay honest.
+- **Upload is a URL, never bytes in an argument.** T27 returns a short-lived upload URL and a pending Version id, and the Client sends the file there. The upload completes the Version under the bounded-blob limit and DOC-012's never-overwrite key. Research section 11 found no chat client that puts an attached file's bytes into a tool argument. Which chat clients complete the send is on the unverified list.
+- **Business User search stays on.** The search endpoint already applies audience predicates per kind. A Business User gets the Contracts and Matters they are on, portal-readable Knowledge, and their own Requests. Entities, Counterparties and other people's Requests stay out. The Portal has no search box, but every result is already on a Portal list.
+- **Auto-Docs Tools respect the Portal rules.** T38 creates a Generation under the ADO-013 caps. An owed ADO-008 acknowledgement returns a named refusal that points at the Portal. T39 returns download links and never carries the file.
+- **The Administration Toolset waits.** The audit log routes read the whole table with no record-level audience filter today. T35 and T40 land in M42, after that fix.
+
+**7. Not in v1, and why.** Request conversion: a multi-step workflow with a Conversion draft, better as a prompt than a Tool. Signing: side effects in another company's system. Hard deletes and settings writes: SET-002 keeps them interactive. A Portal-shaped activity Tool for Business Users: nothing in v1, because a later briefing Tool would be "my unread notifications", which the Portal already shows. Cursor and VS Code as Allowed Clients: not seeded. Resources, prompts and change subscriptions are M42.
+
+**8. The two screens.** The consent page follows the sign-in page frame, outside the app shell, on the application design system, so it looks like OpenLaw. Its header names the Client and its published identity, says "wants to work in OpenLaw as you", and names the person and the organization. Below the header: Toolset checkboxes from the ceiling, none pre-selected, with the labels above; read or write radios, none pre-selected, with write hidden when the org read-only switch is on; one fixed line, "This Client can never see or change what you cannot."; Allow and Deny. Deny returns a plain refusal to the Client. Grant lifetime is not on the page. The API key request form sits under Personal → API keys. It takes the Client name as free text, required and not picked from Allowed Clients; the same Toolset checkboxes and read or write radios as consent; an optional note to the Administrator; and it shows the expiry as a fact from the organization key lifetime. On approval the key shows once on the requester's pane with a copy button and a not-shown-again warning. The DES record for both screens is written separately.
+
+**9. "Your approvals".** An open API key request joins the pinned "Your approvals" group at the top of each Administrator's bell; the NOT-001 and NOT-005 addenda of this date define the group.
+
+**10. Attribution.** An action through MCP is recorded as the person, via the named Client, at the same tier as the UI action, and the Administrator gets a Tool calls view; the DD-017 addendum of this date defines both.
+
+**11. Rate limit and result size.** Calls per hour per credential, org default 600, configured in Advanced settings. Result size is a hard-coded byte budget with paging.
+
+**12. Documentation.** An Administrator guide for the MCP section. One user guide per Client, Claude, ChatGPT and Microsoft 365 Copilot, with the exact connect steps and the consent page. A deployment chapter with two profiles: "LAN only", with API keys and no OAuth, and "publicly reachable", with OAuth, proxy rules and vendor IP allowlists. T3 and T4 read these same articles through DD-020.
+
+**13. Three milestones, inside v1.** M40 is API keys plus the register, read and write: T1 to T32, T36 to T39, T41 and T42. M41 is OAuth, Allowed Clients, the consent page, and Claude, ChatGPT and Microsoft 365 Copilot proven end to end. M42 is resources, prompts, the listen stream, and the Team and Administration Toolsets, T33 to T35 and T40. Writes are not tied to the auth path. A key with the write scope is gated by the approval flow. M40 to M42 go before M34 Release in the implementation plan, not after.
+
+### Rationale
+
+One identity model is the whole point. An agent that is the person needs no second permission scheme, no bot role in DD-013 and no rule about what a bot may see on a Confidential record. Every scope helper already answers for an `AuthenticatedUser`. The cost of a bot identity would be a parallel copy of DD-014, DD-016 and DD-023 that drifts.
+
+Two credential paths because the clients split two ways. The chat clients run OAuth and nothing else. ChatGPT cannot present a key at all. Claude Code, the developer APIs, Copilot Studio and scripts send a static header and work on a LAN with no public address. One path would exclude half the field.
+
+Administrator approval on keys, none on grants. A key is long-lived, leaves the browser and can be pasted anywhere. A grant is bound to a listed Client, the group toggle and the ceiling, and it can be revoked from one table. The approval is spent where the risk is.
+
+A curated register because the OpenAPI document is the SPA's contract, not a description of tasks. 507 operations generated into Tools would swamp every client's list, break Copilot Studio's schema rules and expose routes no person would ask for by name. Forty task-shaped Tools with honest annotations are what a model can pick from.
+
+The list varies by grant and the call is enforced too, because a list alone is not a control. ChatGPT freezes a workspace's list and Claude caches for an hour, so a Tool a person dropped can still be called by name. Only the call gate holds.
+
+### Alternatives considered
+
+- **"Agent access" as the feature name.** Rejected. The protocol is the name the clients use, and the glossary already avoids "agent access", "integration API" and "automation API".
+- **Member+ first, Business Users later.** Rejected. The Portal scopes already answer for a Business User's `AuthenticatedUser`, so the second audience costs nothing but the group toggle. No vendor documents portal-user MCP access, and OpenLaw is ahead of the field here.
+- **A bot identity or service accounts.** Rejected for v1 and parked. Unattended automation waits for a deployer to ask.
+- **Generate Tools from the OpenAPI document, or meta-tools over it.** Rejected for v1. Meta-tools over the REST API are a recorded later step.
+- **One generated create Tool per configured type.** Rejected. The count would move with every type an Administrator adds, and ChatGPT and the Microsoft registry freeze the list.
+- **Status moves inside the update Tools.** Rejected. One Tool with two behaviours cannot carry honest `idempotentHint` and `destructiveHint` values.
+- **Cursor and VS Code as day-one Allowed Clients.** Rejected. The reference persona works in a chat client. An editor takes an API key like any script.
+- **Base64 file bytes in the upload argument.** Rejected. It works only for a script and, at a token cost, for Claude Code. The upload-URL shape is the one Notion MCP documents, and the same shape serves every Client.
+- **Per-grant Administrator approval of OAuth grants.** Rejected. The Allowed Clients list, the group toggle and the ceiling already say who may connect what.
+- **A second confirmation inside OpenLaw for ordinary writes.** Rejected. The annotations are what the clients act on, and a second prompt would appear on every write in every Client.
+- **Trim the Legal User default list to 30.** Rejected. Toolsets at request time are the trim.
+
+### Consequences
+
+- **Records.** TECH-035 holds the server and the authentication stack. SET-014 holds the two settings panes. The DD-017 addendum holds via attribution and the Tool calls tab. The TECH-033 addendum holds the origin rule for `/mcp`. The NOT-001 and NOT-005 addenda hold "Your approvals". A DES record holds the consent page, the API keys pane, the MCP section and the pinned bell group.
+- **Glossary.** `CONTEXT.md` carries MCP, Client, Allowed Client, API key, API key request, Tool, Toolset, Tool register and Your approvals.
+- **Schema, grown with each milestone.** Activity rows gain the via columns in M40. Keys, key requests, Allowed Clients and grants land with the milestone that reads them, under the incremental rule.
+- **Existing gaps become blockers.** The audit log's missing audience filter blocks T35. Rate limits exist only on sign-in and grow a per-credential limit in M40.
+- **FUTURE-FEATURES rows.** The ChatGPT `openai/fileParams` download-URL variant and SEP-2631 file objects for T27. Unattended automation and service accounts. The AI connector consuming the Tool register. Meta-tools over the REST API. Server-side approval tokens for destructive Tools. The Microsoft admin-center BYO registry.
+- **Unverified before build, tested against a throwaway server.** Whether Claude.ai completes registration through CIMD when DCR is off. Whether ChatGPT's Developer mode is exposed in the desktop app. The protocol revision each client negotiates. Copilot Studio's PKCE, `resource`, `WWW-Authenticate` and session handling, and its exact callback URL. Egress ranges for Microsoft 365 Copilot chat and the Agent 365 gateway. The deprecation status of better-auth's `oidc-provider` plugin. Whether claude.ai, ChatGPT and Microsoft 365 Copilot send an attached chat file to the upload URL T27 returns. Whether ChatGPT's `openai/fileParams` path fires for an unpublished Developer mode connector.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status                                                                      |
@@ -1411,7 +1561,7 @@ The pain was not two catalogs. It was one catalog with five attachment points an
 | DD-014 | Sensitive matter gating — confidential flag, opt-in restriction                           | Accepted                                                                    |
 | DD-015 | Contributor permission grid — read, comment, upload, edit business fields                 | Accepted                                                                    |
 | DD-016 | Comment visibility — three audience tiers (Legal Only / Working Team / Full Thread)       | Accepted                                                                    |
-| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted                                                                    |
+| DD-017 | Activity tracking — two-layer model (per-entity activity feed + system-wide audit log)    | Accepted; via attribution and the Tool calls tab added on 2026-09-23        |
 | DD-018 | Work-model doctrine — dual workspaces with the deliverable rule                           | Accepted                                                                    |
 | DD-019 | Saved list views — private to one person, one `jsonb` config, saving is an act            | Accepted                                                                    |
 | DD-020 | Product documentation is public, versioned, and separate from Knowledge                   | Accepted                                                                    |
@@ -1423,3 +1573,4 @@ The pain was not two catalogs. It was one catalog with five attachment points an
 | DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |
 | DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |
 | DD-028 | The type Form — one tree per type decides intake, creation, record and Portal             | Accepted                                                                    |
+| DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted                                                                    |

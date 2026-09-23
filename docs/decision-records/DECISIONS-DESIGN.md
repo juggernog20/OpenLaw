@@ -5322,6 +5322,8 @@ The later builder, Request type editor and preview tickets use this record and t
 | DES-088 | The Ownership tab is a share register read as of a date                                                                                                              | Accepted                                                                                                   |
 | DES-089 | Device notifications on the preferences pane, addendum to DES-050                                                                                                    | Accepted                                                                                                   |
 | DES-090 | The type Form is one tree with inline Branch conditions                                                                                                              | Accepted; the builder picked A from two HTML mocks, not Blair                                              |
+| DES-091 | One file tile wherever a file is picked, staged or carried in                                                                                                        | Accepted                                                                                                   |
+| DES-092 | The MCP screens, the consent page, and the pinned "Your approvals" group                                                                                             | Accepted; drawn as `designs/mcp.pen` MC1 to MC6 before the record                                          |
 
 ### DES-016 addendum (2026-09-11, #827) — Request source reading above Convert
 
@@ -5370,3 +5372,49 @@ The Convert dialog names no source under the tiles. The files sit inside the sam
 ### Consequences
 
 `FileTile` and `FileTileGrid` are the one implementation. The comment composer keeps its chips, because a comment attachment is written inline with text and a grid of cards would outweigh the comment.
+
+## DES-092: The MCP screens, the consent page, and the pinned "Your approvals" group (extends DES-054, DES-020, DES-005; amends NOT-001's bell list)
+
+- **Status:** Accepted
+- **Date:** 2026-09-23
+- **Source:** DD-029, SET-014 and the NOT-001 and NOT-005 addenda of the same date, drawn as `designs/mcp.pen` frames MC1 to MC6 before this record was written.
+
+### Context
+
+DD-029 adds four surfaces that did not exist: the Organization → MCP section, the Personal → API keys pane with its request form and its once-shown key, the consent page a Client opens in the browser, and a pinned group at the top of the bell. Three of them are settings panes and take the settings anatomy as it stands. The consent page is the first OpenLaw page a person reaches from inside another company's product, and it has no shell to borrow. The pinned group is the first bell item that does not clear when read.
+
+### The frames
+
+| Frame | Node ID | Screen                                         | Ships in |
+| ----- | ------- | ---------------------------------------------- | -------- |
+| MC1   | `h6Rm2` | Organization · MCP                             | M40      |
+| MC2   | `NLZJR` | Personal · API keys, with Connected Clients    | M40      |
+| MC3   | `JrAIc` | Request an API key, the dialog over MC2        | M40      |
+| MC4   | `zWb4A` | Your key is ready, the once-shown key over MC2 | M40      |
+| MC5   | `VR2I8` | Consent page, outside the shell                | M41      |
+| MC6   | `ZwtOy` | The bell open, with "Your approvals" pinned    | M40      |
+
+All six are 1440×940 at x-spacing 1520. The chrome is built as plain frames from the settings mocks, and the file keeps the local token set every module file keeps.
+
+### Decision
+
+**The two settings panes take DES-054 whole.** MC1 is a column of collapsible cards in the SET-014 order: MCP, with the master switch, the server address and one row per group, Legal Users and Business Users, each with an "OAuth Clients" toggle and an "API keys" toggle; Allowed Clients, one row per Client with its kind as a pill, its published identity or secret date as the caption, and an on-off toggle, with Edit only on a registered client, because a published identity is seeded and not editable (DD-029); MC1 draws Edit on every row and this record normalises it; an Add Client button in the header; Toolset ceiling, collapsed, with its summary in the header; API key requests, one row per request with the requester, the Client name, the Toolsets, a scope pill, the age, and Deny then Approve on the right; Active keys and grants, collapsed, with the counts in the header. The rail gains MCP after Integrations and before Advanced, and API keys after Notifications in the Personal group. Every row is a DsRow of ST7: a square glyph, a two-line meta, and the controls on the right. The reachability state is a status pill beside the address, never a banner.
+
+**A key is a table row.** MC2's API keys card is a full-width ST5 table: Client, Toolsets, Scope, Status, Expires, and one action cell. Status is a pill: Pending approval and Revoked in the neutral family, Active in the success family. Scope is a pill in every place it appears: Read in the info family, Write in the warning family, because a write grant is the thing a person should notice. A pending row carries an X to cancel the request, an active row a trash glyph to revoke, and a revoked row nothing. The footer line under the table states the lifetime and that the key is shown once. Connected Clients is a 720 card of DsRows, one per OAuth grant, with Disconnect on the right.
+
+**The request form is a dialog, and nothing in it is chosen.** MC3 opens over MC2 in the C10 overlay. Client name is a text input with an example as placeholder. Toolsets are a three-column grid of checkboxes, all off, with a right-aligned caption that says nothing is selected for you. Scope is two radios, both off, each with a one-line description; the write line says every change is recorded as the person, via the Client. The note is an optional text area, marked Optional in the label. The expiry is a fact line on the control surface with an info glyph, not a field. The footer is Cancel and Send request.
+
+**The key is shown once, in a box the person can only copy.** MC4 opens over MC2 after approval. One sentence names who approved and when and says OpenLaw will not show the key again. The key sits in a control-surface box in the mono face with a Copy button on its right. A label-value list repeats the Client, Toolsets, scope and expiry. A second fact line names the header the Client needs and the docs article. The only footer action is Done.
+
+**The consent page is a card on the canvas.** MC5 has no header, no nav and no rail. A 520 card sits centred on the canvas. Its top block carries the wordmark and the organization name on one line; a 40 square glyph with the Client's initials, the title "Claude wants to work in OpenLaw as you", and under it the Client's identity caption and an Allowed Client pill in the success family; then the person on a control-surface strip with their avatar, name, account type and email, so a person signed into the wrong account sees it before they choose. The choices block repeats the request form's Toolset grid and scope radios, both empty, under the headings "What Claude may use" and "How far Claude may go". Under them one fixed line on the legal-only surface with a lock glyph: "This Client can never see or change what you cannot." The actions strip on the section-header surface carries a caption that says where to disconnect later, and Deny then Allow on the right. Allow is the CTA. There is no grant lifetime on the page. The page uses the application tokens and type scale unchanged, so it is the app without its chrome, not a third-party look.
+
+**"Your approvals" is a group inside the list, on the legal-only surface.** MC6 opens the bell popover, 400 wide, under the header bell. The first group under the popover header is "Your approvals", with a pin glyph, the count of waiting items on the right, and the legal-only surface behind the whole group so it reads as pinned and not as unread. Each row is an ordinary notification row with its actions under the text: Deny and Approve for an API key request, Review for a Contract Approval. An open approval keeps its unread dot until it is handled. "Earlier" follows as a plain group. The popover footer states that Mark all read leaves Your approvals in place, so the rule from the NOT-005 addendum is visible where the person would expect the button to act. A row caused through MCP names the Client: "Claude, via Sarah Chen, updated CT-2041", which is DD-017's via attribution in the bell.
+
+**Business Users.** A Business User is refused the `/settings` tree under SET-002, and DD-029 lets them hold API keys. Their request form and their connected Clients live on the Portal settings surface the NOT-001 M20/9 addendum opened, as MC2 and MC3 rebuilt on the Portal shell with the same cards, table and dialog. No frame is drawn for it; the Portal takes the staff frames as they are, as it does for the notification pane.
+
+### Consequences
+
+- `designs/mcp.pen` is the visual spec for M40 and M41. `SETTINGS-INVENTORY.md` gains an amendment that points at MC1 and MC2 for the two new panes and records the rail redraw both owe.
+- Scope pills, Read in the info family and Write in the warning family, are one rule across the section, the table, the dialogs and the bell.
+- The consent page is a new route with no shell. The app's document title, favicon and tokens apply; the header, nav and rail do not.
+- The bell list gains its first group with a surface fill and its first rows with inline actions. The NOT-001 addendum holds the behaviour; this record holds the drawing.

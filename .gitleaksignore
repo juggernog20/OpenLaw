@@ -26,3 +26,7 @@ fb3c9439823e9d0e824e596d393fb7e96d1e130b:apps/api/src/modules/auth/profile.test.
 # "access". The current records use separate articleId and contentSha256 fields.
 294cc3175d1e5c747b3a1ee9790ae622b8caab6b:docs/documentation/batches/DOC-010/author-recovery.json:generic-api-key:6
 294cc3175d1e5c747b3a1ee9790ae622b8caab6b:docs/documentation/batches/DOC-010/author-discovery.json:generic-api-key:7
+
+# The Pencil document id of designs/mcp.pen. Every .pen file carries a fileToken;
+# it names the document and unlocks nothing.
+aeb038aa69b65f2cdec50b9eafb2f3e3a6b8be19:designs/mcp.pen:generic-api-key:13996

@@ -41,14 +41,14 @@ document is the map, not the territory.
 
 ## Where we are
 
-**M39 is shipped, omnibus [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).** Each Contract, Matter and Entity type owns a Form of Rows and Branches. Contract and Matter Rows carry On intake form, Required for creation and Visible on Portal; Entity Rows omit On intake form. The switches decide the touchpoint and what a Business User reads. Request types read their destination Form; conversion and direct creation use the same conditions. The legacy intake catalog and Field tag are retired.
+**M39 is shipped, omnibus [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).** Each Contract, Matter and Entity type owns a Form of Rows and Branches. Contract and Matter Rows carry On intake form, Required for creation and Visible on Portal; Entity Rows omit On intake form. The switches decide the touchpoint and what a Business User reads. Request types read their destination Form; conversion and direct creation use the same conditions. The legacy intake catalog and Field tag are retired. **M40 to M42, MCP, are grilled and next.** DD-029 and its sibling records are written, and the three milestones go before M34 Release.
 
 **M37 Answer style is built.** Administrators choose the organization Answer style and override it on Contract text Fields. Prompt cards separate editable extraction instructions from fixed format sentences.
 
 **M38 adds device notifications on the staff app and the Portal.** Push joins In-app and Email,
 with browser enrolment, a Devices list, revocation, and a choice to hide record names. The push
 service carries only a notification ID and its bell surface; the service worker reads the item
-through the signed-in API. M36 added the share register and cap table. M34 Release remains next.
+through the signed-in API. M36 added the share register and cap table. M34 Release follows M42.
 
 **M35 delivered Auto-Docs.** Legal publishes a Word template and form as one Live pair, and selected Business Users generate documents through the Portal. Generations deliver Word and PDF, create draft Contracts with their default people and assigned Legal Owner, and can be Filed to reached records. Departments and the Portal first run complete SET-011's pre-launch obligation. M33 closed the app first run. Then, for the record: **M32 added Redline compare to the Document chain.** A reader opens a stored Comparison of two Versions, reads its change model in the compare screen, and moves through the change pane. Word pairs run through the existing doc-engine sidecar and export once per pair as a Generated redline with both operands on the chain. Other pairs use extracted text and state that formatting and export are unavailable. **M31 ships AI Contract analysis.** One runtime BYO-key connector supports Anthropic Messages, OpenAI-compatible chat completions, and Gemini through presets or a custom endpoint. An executed primary Document automatically queues extraction against the seven core targets plus prompted catalog Fields; the evidence-checked writer preserves human values, marks every AI write unverified, and carries that marker onto derived deadline surfaces until a person confirms. The Contract record revalidates from the completion frame, so another open browser sees the run and its writes land without a refresh. **M30 makes the open record live.** One `GET /api/events` connection per signed-in tab carries prompts, never payloads, and Postgres `LISTEN`/`NOTIFY` fans them out across the API and the worker. The bell, an open comment thread, an open Activity feed, the Approvals & signing card, the Envelope row, and the Home Inbox count re-read their existing routes when a frame names them, so a live update passes the same reach and tier gates as a page load. The 60-second bell poll is gone. **M29 makes Home the personal state summary and completes the daily briefing.** A Member+ user lands on pending Approvals, assigned Tasks, approaching Dates, Entity Obligations, the Inbox, managed Contracts, and managed Matters. The morning email carries its six cross-module sections, and one daily bell summary opens Home. Reporting remains deferred as a destination.
 
@@ -756,6 +756,33 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - [x] Conversion carry-through, AI preparation by Touchpoint, and Row-level Visible on Portal
   - [x] Legacy storage retirement, schema and decision addenda, glossary and Administrator and Portal guides
   - _Decisions:_ DD-028, DES-090
+
+- [ ] **M40 — MCP: API keys and the register**
+      _Demo:_ A Legal Team Member requests an API key, an Administrator approves it from "Your approvals",
+      the member adds OpenLaw to Claude Code with one command and asks which Contracts expire this quarter.
+  - The `/mcp` mount on SDK v2 serving both protocol eras; the api-key plugin with the approval flow
+  - Personal → API keys; Organization → MCP with the group rows and the ceiling; "Your approvals" in the bell
+  - Every Tool of every default Toolset, read and write: T1 to T32, T36 to T39, T41 and T42, with the `write` scope
+  - Via attribution on activity rows and the Tool calls tab on the Audit log
+  - The browser journey and the two `DEPLOYMENT.md` profiles, "LAN only" and "publicly reachable"
+  - _Decisions:_ DD-029, TECH-035, SET-014; DD-017, TECH-033, NOT-001 and NOT-005 addenda
+
+- [ ] **M41 — MCP: OAuth Clients**
+      _Demo:_ An Administrator lists ChatGPT as an Allowed Client, a Legal Team Member adds OpenLaw in
+      ChatGPT Developer mode, consents to Matters with write, and asks ChatGPT to open a Matter from a Request.
+  - The `mcp()`, `jwt()` and `cimd()` plugins; Allowed Clients with both entry kinds
+  - The consent page, connected Clients on the API keys pane, and the reachability warning
+  - Claude.ai, ChatGPT and Copilot Studio proven end to end, with one user guide per Client
+  - _Decisions:_ DD-029, TECH-035, SET-014, the DES record for the consent page
+
+- [ ] **M42 — MCP: resources, prompts, subscriptions**
+      _Demo:_ In Claude Code, attach a Contract as a resource, run the triage prompt on the Inbox, and see
+      the tool list refresh when an Administrator turns a Toolset on; an Administrator asks the audit log
+      a question from the chat.
+  - Record resources and the triage and summary prompts
+  - The listen stream on the event hub for change notifications
+  - The `team` and `admin` Toolsets, T33 to T35 and T40, after the audit-log audience fix
+  - _Decisions:_ DD-029, TECH-035
 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.
