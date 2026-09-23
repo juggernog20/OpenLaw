@@ -494,7 +494,7 @@ test.describe.serial("M8 demo path", () => {
       // own (CTR-016, DES-017). A select is a decision, so it commits
       // the moment it changes.
       const fieldSaved = contractPatched(page);
-      await page.getByLabel(OPTIONAL_FIELD.label).selectOption(OUR_POSITION);
+      await page.getByLabel(OPTIONAL_FIELD.label, { exact: true }).selectOption(OUR_POSITION);
       expect((await fieldSaved).ok()).toBe(true);
 
       // And find it again in the list, reading as the C1 mock draws it:

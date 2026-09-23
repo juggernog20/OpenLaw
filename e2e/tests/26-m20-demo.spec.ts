@@ -257,7 +257,7 @@ test.describe.serial("M20 demo path", () => {
       await expect(portal.getByRole("button", { name: "Choose files" })).toBeVisible();
       await expect(portal.getByLabel("Urgency")).toBeVisible();
       await expect(portal.getByLabel("Department")).not.toHaveValue("");
-      await expect(portal.getByLabel(FIELD_NAME)).toBeVisible();
+      await expect(portal.getByRole("textbox", { name: FIELD_NAME })).toBeVisible();
 
       // One refusal names every gap, basics and attached field together
       // (the INT-002 M20/4 addendum). Urgency is answered already: it is
@@ -275,7 +275,7 @@ test.describe.serial("M20 demo path", () => {
       await portal.getByLabel("Title").fill(TITLE);
       await portal.getByLabel(/^Description/).fill(DESCRIPTION);
       await portal.getByLabel("Urgency").selectOption("high");
-      await portal.getByLabel(FIELD_NAME).fill(FIELD_ANSWER);
+      await portal.getByRole("textbox", { name: FIELD_NAME }).fill(FIELD_ANSWER);
       // The dropzone's input is out of the tab order and out of sight,
       // and its label still points at it — so the file goes in by the
       // name on the screen rather than by an id only the markup knows.
