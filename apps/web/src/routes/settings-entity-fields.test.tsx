@@ -41,6 +41,9 @@ describe("the Entities Fields pane", () => {
     expect(screen.getByRole("button", { name: "Rename Region" })).toBeInTheDocument();
     expect(screen.queryByText("Term")).not.toBeInTheDocument();
     expect(screen.queryByText("Tag")).not.toBeInTheDocument();
+    // Only Contract fields carry an AI extraction prompt.
+    expect(screen.queryByText("AI prompt")).not.toBeInTheDocument();
+    expect(screen.queryByText("No AI prompt")).not.toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole("button", { name: "Edit LEI" }));
     expect(
       within(screen.getByRole("dialog")).queryByRole("combobox", { name: "Tag" }),

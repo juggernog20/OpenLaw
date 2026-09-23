@@ -198,7 +198,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
           "Contract statuses",
           "Contract fields",
           "Entity types",
-          "Officer roles",
+          "Director & Officer roles",
           "Entity fields",
           "Knowledge types",
           "Request types",

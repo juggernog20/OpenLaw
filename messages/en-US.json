@@ -8318,6 +8318,9 @@
   "settings.advanced.activeStorage": {
     "defaultMessage": "Active storage: {driver}"
   },
+  "settings.advanced.allLocked": {
+    "defaultMessage": "The deployment configuration sets this value. Change it there, then restart the API and worker."
+  },
   "settings.advanced.azureEndpoint": {
     "defaultMessage": "Azure endpoint (optional for Azure)"
   },
@@ -8421,7 +8424,7 @@
     "defaultMessage": "Restart required"
   },
   "settings.advanced.restartHelp": {
-    "defaultMessage": "Changes take effect after both the API and worker restart. Values saved here override deployment defaults."
+    "defaultMessage": "Values saved here replace OpenLaw's defaults. A value set in the deployment configuration is read only here. Changes take effect after both the API and worker restart."
   },
   "settings.advanced.role.api": {
     "defaultMessage": "API"
@@ -8967,7 +8970,16 @@
     "defaultMessage": "{frequency, select, none {No acknowledgement required} every_use {Before every generation} once_per_auto_doc {Once per person for each Auto-Doc} other {Once per person across all Auto-Docs}}"
   },
   "settings.autoDocs.acknowledgementHelp": {
-    "defaultMessage": "Choose how often Business Users must acknowledge the statement before generating documents. This frequency applies to all Auto-Docs. Each Auto-Doc can use its own text. Changing the text requires a new acknowledgement."
+    "defaultMessage": "Choose how often Business Users must acknowledge the \"Auto-Doc disclaimer statement\" before generating documents."
+  },
+  "settings.autoDocs.acknowledgementHelp.frequency": {
+    "defaultMessage": "This frequency applies to all Auto-Docs."
+  },
+  "settings.autoDocs.acknowledgementHelp.newText": {
+    "defaultMessage": "Changing the text requires a new acknowledgement."
+  },
+  "settings.autoDocs.acknowledgementHelp.ownText": {
+    "defaultMessage": "Each Auto-Doc can use its own text."
   },
   "settings.autoDocs.acknowledgementScopeHelp": {
     "defaultMessage": "When acknowledgement is required, a person must accept each distinct statement, including any custom text on an Auto-Doc."
@@ -9356,9 +9368,6 @@
   "settings.departments.count": {
     "defaultMessage": "{count, plural, one {# Department} other {# Departments}}"
   },
-  "settings.departments.help": {
-    "defaultMessage": "Find Departments in alphabetical order. Archive a Department to remove it from pickers and keep existing references."
-  },
   "settings.departments.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"
   },
@@ -9426,7 +9435,7 @@
     "defaultMessage": "Reading devices…"
   },
   "settings.devices.recordNames": {
-    "defaultMessage": "Show record names on devices"
+    "defaultMessage": "Show details in notifications"
   },
   "settings.devices.retry": {
     "defaultMessage": "Try again"
@@ -9660,7 +9669,7 @@
     "defaultMessage": "Fields"
   },
   "settings.entities.tab.officerRoles": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "settings.entities.tab.types": {
     "defaultMessage": "Types"
@@ -10051,9 +10060,6 @@
   },
   "settings.knowledgeTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
-  },
-  "settings.knowledgeTypes.help": {
-    "defaultMessage": "Drag to reorder. Archiving a type in use asks for a replacement."
   },
   "settings.knowledgeTypes.inUse": {
     "defaultMessage": "{count, plural, one {# knowledge item} other {# knowledge items}}"
@@ -10653,7 +10659,7 @@
     "defaultMessage": "No other active role can take its officers. Add or restore another role first."
   },
   "settings.officerRoles.pageTitle": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "settings.officerRoles.reassignLabel": {
     "defaultMessage": "Reassign {count, plural, =0 {officers} one {# officer} other {# officers}} to"
@@ -10671,7 +10677,7 @@
     "defaultMessage": "Restore {name}"
   },
   "settings.officerRoles.title": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "settings.profile.businessView.action": {
     "defaultMessage": "View as business user"
@@ -10798,9 +10804,6 @@
   },
   "settings.regions.count": {
     "defaultMessage": "{count, plural, one {# Region} other {# Regions}}"
-  },
-  "settings.regions.help": {
-    "defaultMessage": "Regions are listed alphabetically. Archiving a Region removes it from pickers and keeps existing references."
   },
   "settings.regions.inUse": {
     "defaultMessage": "{count, plural, one {# reference} other {# references}}"
@@ -11189,6 +11192,9 @@
   "settings.users.invited": {
     "defaultMessage": "Invited"
   },
+  "settings.users.moreActions": {
+    "defaultMessage": "More actions for {email}"
+  },
   "settings.users.neverActive": {
     "defaultMessage": "—"
   },
@@ -11200,9 +11206,6 @@
   },
   "settings.users.revoke": {
     "defaultMessage": "Revoke the invite to {email}"
-  },
-  "settings.users.revokeSessions": {
-    "defaultMessage": "Revoke all sessions of {email}"
   },
   "settings.users.showArchived": {
     "defaultMessage": "Show archived"
@@ -12243,7 +12246,7 @@
     "defaultMessage": "Matter types"
   },
   "welcome.review.officerRoles": {
-    "defaultMessage": "Officer roles"
+    "defaultMessage": "Director & Officer roles"
   },
   "welcome.review.reminders": {
     "defaultMessage": "Reminder offsets"

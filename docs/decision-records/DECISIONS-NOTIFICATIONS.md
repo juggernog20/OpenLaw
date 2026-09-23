@@ -697,7 +697,7 @@ neither email nor Push. Email timing does not delay Push. Briefing section prefe
 remain email-only, and `briefing.ready` owes no Push because the individual reminders
 already supply it.
 
-"Show record names on devices" is one per-user switch, on by default, shared across
+"Show details in notifications" is one per-user switch, on by default, shared across
 devices and both panes. The worker reads it at display time. When on, OS text uses the
 bell's narration. When off, it uses the event's generic sentence without record names.
 An unreadable preference also hides names. Device enrolment, revoke and changes to this

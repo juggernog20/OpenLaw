@@ -59,12 +59,34 @@ export function SettingsAutoDocsPage() {
     <div className="max-w-2xl space-y-6">
       <PageTitle title={title} />
       <h1 className="text-xl font-semibold">{title}</h1>
-      <p className="text-muted">
-        <FormattedMessage
-          id="settings.autoDocs.acknowledgementHelp"
-          defaultMessage="Choose how often Business Users must acknowledge the statement before generating documents. This frequency applies to all Auto-Docs. Each Auto-Doc can use its own text. Changing the text requires a new acknowledgement."
-        />
-      </p>
+      <div className="space-y-2 text-muted">
+        <p>
+          <FormattedMessage
+            id="settings.autoDocs.acknowledgementHelp"
+            defaultMessage='Choose how often Business Users must acknowledge the "Auto-Doc disclaimer statement" before generating documents.'
+          />
+        </p>
+        <ul className="list-disc space-y-1 ps-5">
+          <li>
+            <FormattedMessage
+              id="settings.autoDocs.acknowledgementHelp.frequency"
+              defaultMessage="This frequency applies to all Auto-Docs."
+            />
+          </li>
+          <li>
+            <FormattedMessage
+              id="settings.autoDocs.acknowledgementHelp.ownText"
+              defaultMessage="Each Auto-Doc can use its own text."
+            />
+          </li>
+          <li>
+            <FormattedMessage
+              id="settings.autoDocs.acknowledgementHelp.newText"
+              defaultMessage="Changing the text requires a new acknowledgement."
+            />
+          </li>
+        </ul>
+      </div>
       <form
         className="space-y-4"
         onSubmit={(event) => {

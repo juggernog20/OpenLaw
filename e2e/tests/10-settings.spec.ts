@@ -321,7 +321,8 @@ test.describe.serial("the settings destination", () => {
 
       // Standalone revocation, the lost-laptop case: the member's live
       // session dies mid-flight and their next navigation lands on login.
-      await row.getByRole("button", { name: `Revoke all sessions of ${email}` }).click();
+      await row.getByRole("button", { name: `More actions for ${email}` }).click();
+      await page.getByRole("menuitem", { name: "Sign out user" }).click();
       await expect(row.getByText("Saved")).toBeVisible();
       await memberPage.goto("/settings/appearance");
       await expect(memberPage).toHaveURL(/\/auth\/login/);

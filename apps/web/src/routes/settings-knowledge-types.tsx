@@ -32,10 +32,6 @@ const MESSAGES = defineMessages({
   },
   add: { id: "settings.knowledgeTypes.add", defaultMessage: "Add type" },
   addName: { id: "settings.knowledgeTypes.addName", defaultMessage: "New type name" },
-  help: {
-    id: "settings.knowledgeTypes.help",
-    defaultMessage: "Drag to reorder. Archiving a type in use asks for a replacement.",
-  },
   renameLabel: { id: "settings.knowledgeTypes.renameLabel", defaultMessage: "Rename {name}" },
   inUse: {
     id: "settings.knowledgeTypes.inUse",

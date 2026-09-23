@@ -204,10 +204,10 @@ test("staff and a Business User enrol devices, save Push choices and record-name
       await expect(pane.getByRole("switch", { name: `${group} Email`, exact: true })).toBeChecked();
       await flipPreference(pane, `${group} Push`, true);
       await expect(
-        pane.getByRole("switch", { name: "Show record names on devices" }),
+        pane.getByRole("switch", { name: "Show details in notifications" }),
       ).toBeChecked();
-      await flipPreference(pane, "Show record names on devices", false);
-      await flipPreference(pane, "Show record names on devices", true);
+      await flipPreference(pane, "Show details in notifications", false);
+      await flipPreference(pane, "Show details in notifications", true);
       await revoke(pane, mount);
     }
   } catch (error) {
