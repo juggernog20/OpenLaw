@@ -5552,6 +5552,9 @@
   "error.title": {
     "defaultMessage": "Something went wrong."
   },
+  "fields.descriptionFor": {
+    "defaultMessage": "Show description for {field}"
+  },
   "fields.notSet": {
     "defaultMessage": "Not set"
   },
