@@ -304,7 +304,7 @@ test.describe.serial("M19 demo path", () => {
       await card.getByRole("button", { name: "Preview intake form" }).click();
       const preview = page.getByRole("dialog", { name: "Preview intake form" });
       await expect(preview.getByRole("heading", { name: typeName, exact: true })).toBeVisible();
-      await expect(preview.getByLabel(FIRST_FIELD, { exact: false })).toBeVisible();
+      await expect(preview.getByRole("textbox", { name: FIRST_FIELD })).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(preview).toBeHidden();
 
