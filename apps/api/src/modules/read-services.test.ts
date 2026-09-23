@@ -126,6 +126,10 @@ it("enforces the staff floor without HTTP guards", async () => {
 });
 
 it("keeps Confidential Entities out of staff reads and Portal name reads", async () => {
+  expect(await getPortalEntity(h.db, user, entityId)).toEqual({
+    id: entityId,
+    name: "Service registry",
+  });
   await h.db
     .update(entities)
     .set({ isConfidential: true, portalListed: false })

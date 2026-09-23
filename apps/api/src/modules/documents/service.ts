@@ -515,14 +515,18 @@ export async function listAutoDocDocuments(db: Db, user: AuthenticatedUser, id: 
   if (!row) throw httpError(404, "No Auto-Doc exists with this id.");
   return paperOf(db, user, { id: row.id, primaryDocumentId: null }, "auto_doc");
 }
+/** A Knowledge Item's paper has no folder listing, so the read takes
+ * none: a caller that passed one would otherwise have it dropped
+ * without a word. */
+const KnowledgeDocumentListQuery = DocumentListQuery.omit({ folder: true });
 export async function listKnowledgeItemDocuments(
   db: Db,
   user: AuthenticatedUser,
   id: string,
-  input: z.input<typeof DocumentListQuery> = {},
+  input: z.input<typeof KnowledgeDocumentListQuery> = {},
 ) {
   assertReader(user);
-  const query = DocumentListQuery.parse(input);
+  const query = KnowledgeDocumentListQuery.parse(input);
   const [item] = await db
     .select({
       id: knowledgeItems.id,
