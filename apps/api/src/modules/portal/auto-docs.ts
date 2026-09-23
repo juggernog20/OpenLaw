@@ -7,9 +7,7 @@ import {
   AUTO_DOC_ACKNOWLEDGEMENT_FREQUENCIES,
   AUTO_DOC_FORMATS,
   and,
-  asc,
   autoDocGenerations,
-  autoDocs,
   desc,
   eq,
   lt,
@@ -38,11 +36,11 @@ import {
   lockPortalPerson,
   portalAutoDocScope,
   portalWarnings,
-  portalWarningsFor,
   PORTAL_UNAVAILABLE,
   readPortalAutoDoc,
 } from "../auto-docs/portal-policy.js";
 import { AutoDocFieldRow } from "../auto-docs/routes.js";
+import { listPortalAutoDocs } from "../auto-docs/service.js";
 
 const Params = z.object({ id: z.string() });
 const GenerationParams = Params.extend({ generationId: z.string() });
@@ -98,27 +96,7 @@ export const portalAutoDocRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const rows = await app.db
-        .select()
-        .from(autoDocs)
-        .where(and(eq(autoDocs.state, "published"), portalAutoDocScope(request.user)))
-        .orderBy(asc(autoDocs.name), asc(autoDocs.id));
-      const warnings =
-        request.user.role === "business_user"
-          ? await portalWarningsFor(app.db, rows)
-          : new Map<string, string[]>();
-      return {
-        autoDocs: rows.map((row) => {
-          const ready = !warnings.get(row.id)?.length;
-          return {
-            ...row,
-            createsContract: row.targetContractTypeId !== null,
-            availability: { ready, message: ready ? null : PORTAL_UNAVAILABLE },
-          };
-        }),
-      };
-    },
+    async (request) => listPortalAutoDocs(app.db, request.user),
   );
 
   app.get(
@@ -171,7 +149,7 @@ export const portalAutoDocRoutes: FastifyPluginAsyncZod = async (app) => {
             contractAttribute: field.contractAttribute ?? null,
           }));
         const choices = fields.some((field) => field.fieldType === "entity")
-          ? await listPortalEntities(tx)
+          ? await listPortalEntities(tx, request.user)
           : [];
         return { ...base, form: { pair: live.pair, fields, entities: choices } };
       }),

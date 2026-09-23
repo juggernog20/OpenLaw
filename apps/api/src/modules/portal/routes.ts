@@ -20,7 +20,7 @@ import {
   requestTypes,
   type Executor,
 } from "@openlaw/db";
-import { requireAuth } from "../../auth/guards.js";
+import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { documentAudienceScope } from "../../lib/contract-access.js";
 import { AttachedCustomFieldSchema } from "../../lib/custom-fields.js";
 import { httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
@@ -28,6 +28,7 @@ import { attachmentDisposition } from "../../lib/uploads.js";
 
 import { readIntakeForm } from "../../lib/intake-form.js";
 import { FormNodeSchema } from "../../lib/type-form-routes.js";
+import { portalKnowledgeScope, readPortalKnowledgeItem } from "../knowledge/service.js";
 
 const PortalRequestTypeSchema = z.object({
   turnaroundDays: z.number().int().nullable(),
@@ -79,27 +80,6 @@ const PortalKnowledgeItemSchema = z.object({
 const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
 const PORTAL_KNOWLEDGE_NOT_FOUND = "No portal Knowledge Item exists with this id.";
 
-async function portalKnowledgeItem(db: Executor, id: string) {
-  const [item] = await db
-    .select({
-      id: knowledgeItems.id,
-      title: knowledgeItems.title,
-      body: knowledgeItems.body,
-      primaryDocumentId: knowledgeItems.primaryDocumentId,
-    })
-    .from(knowledgeItems)
-    .where(
-      and(
-        eq(knowledgeItems.id, id),
-        eq(knowledgeItems.state, "published"),
-        eq(knowledgeItems.audience, "everyone"),
-        isNull(knowledgeItems.archivedAt),
-      ),
-    )
-    .limit(1);
-  return item ?? null;
-}
-
 /**
  * Deliberately hand-written rather than thrown through `httpError`: the
  * shared handler stamps `instance` with the request URL, which carries
@@ -133,14 +113,9 @@ function portalLink(row: {
     : { id: row.id, label: row.label, url: row.url!, displayOrder: row.displayOrder };
 }
 
-const reachableLink = or(
-  isNull(intakeLinks.knowledgeItemId),
-  and(
-    eq(knowledgeItems.state, "published"),
-    eq(knowledgeItems.audience, "everyone"),
-    isNull(knowledgeItems.archivedAt),
-  ),
-);
+function reachableLink(db: Executor, user: AuthenticatedUser) {
+  return or(isNull(intakeLinks.knowledgeItemId), portalKnowledgeScope(db, user));
+}
 
 export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -197,7 +172,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
+    async (request) => {
       const rows = await app.db
         .select({
           id: intakeLinks.id,
@@ -208,7 +183,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .from(intakeLinks)
         .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
-        .where(and(isNull(intakeLinks.requestTypeId), reachableLink))
+        .where(and(isNull(intakeLinks.requestTypeId), reachableLink(app.db, request.user)))
         .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt));
       return { intakeLinks: rows.map(portalLink) };
     },
@@ -271,7 +246,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           })
           .from(intakeLinks)
           .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
-          .where(and(eq(intakeLinks.requestTypeId, type.id), reachableLink))
+          .where(and(eq(intakeLinks.requestTypeId, type.id), reachableLink(app.db, request.user)))
           .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt)),
       ]);
       return {
@@ -308,7 +283,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const item = await portalKnowledgeItem(app.db, request.params.id);
+      const item = await readPortalKnowledgeItem(app.db, request.user, request.params.id);
       if (!item) return portalKnowledgeNotFound(reply);
       // The Document's own Confidential flag (DOC-008) narrows the paper
       // one level below the item gate. The same predicate every staff
@@ -387,7 +362,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const item = await portalKnowledgeItem(app.db, request.params.id);
+      const item = await readPortalKnowledgeItem(app.db, request.user, request.params.id);
       if (!item) return portalKnowledgeNotFound(reply);
       const [version] = await app.db
         .select({

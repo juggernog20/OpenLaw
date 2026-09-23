@@ -20,8 +20,6 @@ import {
   and,
   inArray,
   isNull,
-  ne,
-  AUTO_DOC_STATES,
   autoDocFormVersions,
   autoDocs,
   autoDocAssignmentRules,
@@ -32,7 +30,6 @@ import {
   documents,
   documentVersions,
   eq,
-  sql,
   type Executor,
   type Transaction,
 } from "@openlaw/db";
@@ -66,7 +63,6 @@ import {
 
 import { entityReachScope } from "../../lib/entity-access.js";
 import { contractPublicationGaps } from "./contract-destination.js";
-import { escapeLikePattern } from "../../lib/like.js";
 import { diffForms, FormChange } from "./form-diff.js";
 import { readTemplate } from "../../lib/auto-doc-reading.js";
 import type { ChangedFields } from "@openlaw/shared";
@@ -89,30 +85,10 @@ import {
   revokeAcknowledgements,
   textHash,
 } from "./portal-policy.js";
+import { AutoDocListQuery, AutoDocRow, rowView, listAutoDocs } from "./service.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const Params = z.object({ id: z.string() });
-const AutoDocRow = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().nullable(),
-  formats: z.enum(AUTO_DOC_FORMATS),
-  coverNote: z.string().nullable(),
-  state: z.enum(AUTO_DOC_STATES),
-  templateDocumentId: z.string().nullable(),
-  audience: z.enum(AUTO_DOC_AUDIENCES),
-  acknowledgementText: z.string().nullable(),
-  targetContractTypeId: z.string().nullable(),
-  titlePattern: z.string().nullable(),
-  fixedEntityId: z.string().nullable(),
-  defaultLegalOwnerId: z.string().nullable(),
-  publishedDocumentVersionId: z.string().nullable(),
-  publishedFormVersionId: z.string().nullable(),
-  publishedAt: z.iso.datetime().nullable(),
-  archivedAt: z.iso.datetime().nullable(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
 export const AutoDocFieldRow = z.object({
   slug: z.string(),
   label: z.string(),
@@ -196,15 +172,6 @@ async function readAutoDoc(db: Executor, id: string, lock = false) {
   const [row] = lock ? await query.for("update") : await query;
   if (!row) throw httpError(404, "No Auto-Doc exists with this id.");
   return row;
-}
-function rowView(row: Awaited<ReturnType<typeof readAutoDoc>>) {
-  return {
-    ...row,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    publishedAt: row.publishedAt?.toISOString() ?? null,
-    archivedAt: row.archivedAt?.toISOString() ?? null,
-  };
 }
 async function recordView(db: Executor, id: string) {
   const row = await readAutoDoc(db, id);
@@ -867,42 +834,12 @@ export const autoDocsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listAutoDocs",
         summary: "Member+ searches and filters Auto-Docs; archived records are hidden by default",
-        querystring: z.object({
-          q: z.string().trim().max(200).optional(),
-          state: z.enum([...AUTO_DOC_STATES, "all"]).optional(),
-          audience: z.enum(AUTO_DOC_AUDIENCES).optional(),
-          targetContractTypeId: z.string().min(1).optional(),
-        }),
+        querystring: AutoDocListQuery,
         tags: ["auto-docs"],
         response: { 200: z.object({ autoDocs: z.array(AutoDocRow) }), default: problemResponse },
       },
     },
-    async (request) => ({
-      autoDocs: (
-        await app.db
-          .select()
-          .from(autoDocs)
-          .where(
-            and(
-              request.query.state === "all"
-                ? undefined
-                : request.query.state
-                  ? eq(autoDocs.state, request.query.state)
-                  : ne(autoDocs.state, "archived"),
-              request.query.audience ? eq(autoDocs.audience, request.query.audience) : undefined,
-              request.query.targetContractTypeId
-                ? request.query.targetContractTypeId === "none"
-                  ? isNull(autoDocs.targetContractTypeId)
-                  : eq(autoDocs.targetContractTypeId, request.query.targetContractTypeId)
-                : undefined,
-              request.query.q
-                ? sql`${autoDocs.name} ilike ${`%${escapeLikePattern(request.query.q)}%`}`
-                : undefined,
-            ),
-          )
-          .orderBy(asc(sql`lower(${autoDocs.name})`), asc(autoDocs.id))
-      ).map(rowView),
-    }),
+    async (request) => listAutoDocs(app.db, request.user, request.query),
   );
   app.post(
     "/auto-docs",

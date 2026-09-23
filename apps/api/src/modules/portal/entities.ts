@@ -24,8 +24,8 @@ export const portalEntityRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => ({
-      entities: await listPortalEntities(app.db),
+    async (request) => ({
+      entities: await listPortalEntities(app.db, request.user),
     }),
   );
 };
