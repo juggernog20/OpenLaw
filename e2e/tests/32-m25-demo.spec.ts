@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
+import { ADMIN, ensureAdminExists, signInAs, pickDocumentType } from "./helpers.js";
 
 test.setTimeout(240_000);
 
@@ -81,7 +81,7 @@ async function uploadPdf(page: Page) {
   await dialog.getByRole("button", { name: "File Choose file" }).click();
   await (await chooser).setFiles({ name: PDF_NAME, mimeType: "application/pdf", buffer: PDF });
   await expect(dialog.getByText(PDF_NAME)).toBeVisible();
-  await dialog.getByLabel("Kind").selectOption("draft_ours");
+  await pickDocumentType(dialog, "draft_ours");
   await dialog.getByLabel("Note").fill("The source paper for the M25 search journey.");
 
   const uploaded = page.waitForResponse(

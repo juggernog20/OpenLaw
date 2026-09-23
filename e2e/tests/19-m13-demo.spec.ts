@@ -131,9 +131,10 @@ const CONTRACT_PREFIX = "E2E M13 Ashworth acquisition";
 /** The person the milestone is written for (stories 8, 10 and 12). */
 const IMPORTER_NAME = "Rhea Counsel";
 
-/** The kind the batch applies to every file in it, as the confirmation
- * offers it and the seam records it. One batch, one kind (DOC-011). */
-const BATCH_KIND = "draft_ours";
+/** The kind the batch records on every file in it. The confirmation
+ * starts on no type (DOC-015), which the seam stores as the neutral
+ * kind. One batch, one type (DOC-011). */
+const BATCH_KIND = "general";
 
 /**
  * How long the 200-file import may take before the demo calls it broken.
@@ -812,9 +813,9 @@ test.describe.serial("M13 demo path", () => {
       for (const folder of BOOK_FOLDERS) {
         await expect(summary.getByText(folder.split("/").at(-1)!, { exact: true })).toBeVisible();
       }
-      // One kind for the whole import, defaulting to our own draft, and
-      // no note field at all (DOC-011).
-      await expect(batch.getByLabel("Version kind")).toHaveValue(BATCH_KIND);
+      // One type for the whole import, starting on no type (DOC-015),
+      // and no note field at all (DOC-011).
+      await expect(batch.getByLabel("Type", { exact: true })).toHaveValue("");
       await expect(batch.getByLabel("Note")).toHaveCount(0);
 
       // The confirmation is a surface this milestone added, so a finding
@@ -875,7 +876,7 @@ test.describe.serial("M13 demo path", () => {
         // Every dropped file is a new document at version 1: a batch
         // never appends a round to a chain it guessed at.
         expect(document.versions.map((version) => version.versionNumber)).toEqual([1]);
-        // One batch, one kind (DOC-011).
+        // One batch, one type (DOC-011); no type stores the neutral kind.
         expect(document.versions[0]!.kind).toBe(BATCH_KIND);
         expect(document.versions[0]!.originalFilename).toBe(document.title);
       }
