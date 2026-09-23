@@ -236,6 +236,9 @@
   "activity.contract.restored": {
     "defaultMessage": "{actor} restored this contract"
   },
+  "activity.contract.stageChanged": {
+    "defaultMessage": "{actor} changed the stage"
+  },
   "activity.contract.stageGateOverridden": {
     "defaultMessage": "{count, plural, =0 {{actor} moved this contract past approval, overriding the soft gate} other {{actor} moved this contract past approval, overriding {approvers}}}"
   },
@@ -666,7 +669,7 @@
     "defaultMessage": "{module, select, matter {Matter} contract {Contract} other {{module}}}"
   },
   "activity.task.added": {
-    "defaultMessage": "{actor} added the task {title}"
+    "defaultMessage": "{actor} added the task {title}{due, select, none {} other {, due {due}}}"
   },
   "activity.task.completed": {
     "defaultMessage": "{actor} completed the task {title}"
@@ -5551,6 +5554,9 @@
   },
   "error.title": {
     "defaultMessage": "Something went wrong."
+  },
+  "fields.descriptionFor": {
+    "defaultMessage": "Show description for {field}"
   },
   "fields.notSet": {
     "defaultMessage": "Not set"

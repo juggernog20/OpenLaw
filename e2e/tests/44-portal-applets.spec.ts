@@ -133,8 +133,9 @@ test("Portal uses shared applets with private history omitted, read-only Fields 
       expect(response.ok()).toBe(true);
       const entries = (await response.json()).entries;
       expect(sharedCommentId).toBeDefined();
-      // Newest first: the Portal's own comment, then Legal's shared one. The
-      // two private comments leave no entry at all.
+      // Newest first: the Portal's own comment, Legal's shared one, then the
+      // Description edit, which the Portal record draws (DD-017 amendment,
+      // 2026-09-23). The two private comments leave no entry at all.
       expect(entries).toMatchObject([
         {
           action: "comment.posted",
@@ -145,6 +146,10 @@ test("Portal uses shared applets with private history omitted, read-only Fields 
           action: "comment.posted",
           visibility: "full_thread",
           payload: { commentId: sharedCommentId },
+        },
+        {
+          action: `${module}.updated`,
+          payload: { changed: { description: { from: null, to: "Shared business context" } } },
         },
       ]);
       await reportAxeViolations(portal, testInfo, `portal-${module}-applets-desktop`);

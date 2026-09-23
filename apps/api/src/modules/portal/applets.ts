@@ -213,7 +213,7 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listPortalActivity",
         tags: ["portal"],
         summary:
-          "Full Thread history for a reached Portal record. Other tiers leave no entries or counts.",
+          "History for a reached Portal record: Full Thread comments and the record progress the Portal draws. Other comment tiers leave no entries or counts.",
         querystring: z.object({
           entityType: z.enum(["contract", "matter", "request"]),
           entityId: z.string().min(1).max(64),
@@ -231,11 +231,28 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       reply.header("cache-control", "private, no-store");
       const { entityType, entityId, cursor } = request.query;
+      // The Portal narrates changes to what the Portal shows (DD-017
+      // amendment, 2026-09-23). Every key below is drawn on the Portal
+      // record; a key that is not drawn there is not narrated here.
       const keys = [
+        "title",
         "description",
+        "businessOwner",
+        "region",
         ...(entityType === "contract"
-          ? ["value", "effectiveDate", "owningDepartment", "region"]
+          ? [
+              "contractType",
+              "owner",
+              "owningDepartment",
+              "termType",
+              "effectiveDate",
+              "expiryDate",
+              "renewalPeriodMonths",
+              "noticePeriodDays",
+              "value",
+            ]
           : []),
+        ...(entityType === "matter" ? ["matterManager", "department"] : []),
       ];
       const entityKeys: string[] = [];
       if (entityType === "request") {
@@ -289,12 +306,29 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
             and not exists (select 1 from ${entities} where ${entities.id} = ref.value #>> '{}'
               and not ${entities.isConfidential} and ${entities.archivedAt} is null)
         ))), '{}'::jsonb)`;
+      // Comments are read by their tier, because a tier is who may hear
+      // what a person said. Record progress is read by this allowlist
+      // instead: the record actions are written at Working Team, and
+      // the Portal narrates the ones whose subject the Portal already
+      // draws (DD-017 amendment, 2026-09-23). Nothing outside the list
+      // reaches this surface, and no action brings its stored payload.
+      const progress =
+        entityType === "request"
+          ? sql`false`
+          : sql`(
+        (${activityLog.action} = ${`${entityType}.updated`} and ${changed} <> '{}'::jsonb)
+        or (${activityLog.action} = ${`${entityType}.status_changed`}
+          ${
+            entityType === "contract"
+              ? sql`and ${activityLog.payload}->>'fromStage' is distinct from ${activityLog.payload}->>'toStage'`
+              : sql``
+          })
+        or ${activityLog.action} in ('task.added', 'task.completed'))`;
       const scope = and(
         eq(activityLog.entityType, entityType),
         eq(activityLog.entityId, entityId),
-        eq(activityLog.visibility, "full_thread"),
-        sql`(${inArray(activityLog.action, COMMENT_ACTIONS)} or
-        (${activityLog.action} = ${`${entityType}.updated`} and ${entityType} <> 'request' and ${changed} <> '{}'::jsonb))`,
+        sql`((${activityLog.visibility} = 'full_thread' and ${inArray(activityLog.action, COMMENT_ACTIONS)})
+        or ${progress})`,
       );
       const before = cursor
         ? sql`(${activityLog.createdAt}, ${activityLog.id}) < (
@@ -304,13 +338,31 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
       const rows = await app.db
         .select({
           id: activityLog.id,
-          action: activityLog.action,
+          // A Contract's Portal card draws the Stage, never the Status
+          // name the team moves through, so the entry says what the
+          // reader can see. This name is narration and is never stored.
+          action: sql<string>`case when ${activityLog.action} = 'contract.status_changed'
+        then 'contract.stage_changed' else ${activityLog.action} end`,
           createdAt: activityLog.createdAt,
           actor: PersonColumns,
-          // Unknown action families are closed by the scope above. In particular,
-          // no raw Document, AI, Task, or internal comment payload reaches Portal.
-          payload: sql<Record<string, unknown>>`case when ${activityLog.action} like 'comment.%'
-        then jsonb_build_object('commentId', ${activityLog.payload}->'commentId')
+          // One payload per narrated family, built here rather than
+          // passed through. Unknown families are closed by the scope
+          // above; a stored payload never reaches the Portal, so a
+          // Matter's closing note and a Task's assignee stay inside.
+          payload: sql<Record<string, unknown>>`case
+        when ${activityLog.action} like 'comment.%'
+          then jsonb_build_object('commentId', ${activityLog.payload}->'commentId')
+        when ${activityLog.action} = 'contract.status_changed'
+          then jsonb_build_object('from', ${activityLog.payload}->'fromStage',
+            'to', ${activityLog.payload}->'toStage')
+        when ${activityLog.action} = 'matter.status_changed'
+          then jsonb_build_object('from', ${activityLog.payload}->'from',
+            'to', ${activityLog.payload}->'to')
+        when ${activityLog.action} = 'task.added'
+          then jsonb_build_object('title', ${activityLog.payload}->'title',
+            'dueDate', ${activityLog.payload}->'dueDate')
+        when ${activityLog.action} = 'task.completed'
+          then jsonb_build_object('title', ${activityLog.payload}->'title')
         else jsonb_build_object('changed', ${changed}) end`,
         })
         .from(activityLog)

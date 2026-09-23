@@ -300,7 +300,10 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "task.added",
           visibility: RECORD_ACTIVITY_TIER,
-          payload: { taskId: created!.id, title },
+          // The due date rides the entry rather than being read back
+          // from the task: the entry says what was set then, and a task
+          // can be edited or removed afterwards.
+          payload: { taskId: created!.id, title, ...(dueDate ? { dueDate } : {}) },
         });
 
         // Being given a task is done *to* you, so it is NOT-002's group

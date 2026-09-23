@@ -877,6 +877,25 @@ The narration layer now covers the whole vocabulary rather than a record feed's 
 
 Matter business-Field edits, supporting-Document uploads and Versions, Key-date and Task mutations, hierarchy and related-link changes, Contract link changes, and Status transitions append their established action slugs with record ids and bounded metadata. The Matter feed applies DD-014 reach and DD-016 tiers; the Administrator audit log keeps the same rows. Closing neither rewrites nor truncates history, and the M22-to-M23 rehearsal asserts that a populated Matter feed never shrinks.
 
+### Amendment (2026-09-23, from live review) — the Portal history is a narration, not a tier read
+
+Blair, reading a Contract in the Portal: "I'd like more to be shared with the business user in the history... substantive contract / matter progression like tasks... stage changes... etc". The surface was nearly empty, and the reason is structural. Every record action is written at Working Team through `RECORD_ACTIVITY_TIER`, a Business User hears only Full Thread on a record, and the Portal history filtered on that tier. So it showed comments and nothing else. Its field-change projection could never match a row.
+
+**The Portal history narrates changes to what the Portal shows.** That is the whole rule, and it is a rule about the surface rather than about a tier. An action whose subject the Portal record draws is narrated; an action whose subject it does not draw is not. A tier still decides who hears what a person said, because that is what a tier is for: comments keep the tier filter unchanged, and Legal Only and Working Team comments remain out of the Portal.
+
+The read is therefore an allowlist, not a predicate over the stored row:
+
+- `${module}.updated`, projected to the keys the Portal record draws. The list grows from Description alone to the title, both owners, the Department, the Region, the Contract type, the term type and dates, the Value, and every Field whose Row has Visible on Portal on. Priority, Risk, confidentiality and the rest stay out because the Portal draws none of them.
+- `contract.status_changed`, only where the move crossed a Stage boundary, renamed to `contract.stage_changed` and carrying the two Stage keys. A Portal reader is shown the Stage and never the Status name the team moves through, so the entry says the Stage. This name is narration and is never stored; the web narration table carries an arm for it.
+- `matter.status_changed`, carrying its two Status names. A Matter's Status is on its Portal card. The closing note is not, so the projection leaves it behind.
+- `task.added` and `task.completed`, carrying the Task's title and, on an addition, its due date. `task.edited`, `task.reordered` and `task.removed` stay internal: an edit and a removal are the team managing its own checklist.
+
+**No stored payload reaches the Portal.** Each narrated family gets a payload built in the query, key by key. That is how a Matter's closing note, a Task's id and assignee, and every unknown future key stay inside, and it is why an action that is not on the list cannot leak by being written at the wrong tier later.
+
+**`task.added` carries the due date it was given.** The date rides the entry rather than being read back from the Task, because the entry says what was set then and a Task can be edited or removed afterwards. Rows written before this carry no date and narrate without one.
+
+Deferred rather than declined: Documents appearing in or leaving the Portal Documents section, and Approval decisions the Business User is party to. Both are Portal-visible and both belong under the same rule; each needs its own scope mirrored in the query, which is the work, not the decision.
+
 ---
 
 ## DD-018: Work-model doctrine — dual workspaces with the deliverable rule
