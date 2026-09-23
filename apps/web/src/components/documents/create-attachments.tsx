@@ -7,11 +7,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Check, Download, FileText, Loader, Paperclip, X } from "lucide-react";
 import {
-  DOCUMENT_VERSION_KINDS,
-  documentKindLabel,
   uploadRecordDocument,
+  useDocumentTypeOptions,
   type DocumentRecord,
-  type HandSetDocumentVersionKind,
+  type DocumentTypeModule,
 } from "../../lib/documents";
 import { formatFileSize } from "../../lib/format";
 import { CONTROL_CLASS } from "../../lib/form-controls";
@@ -29,7 +28,8 @@ type Attachment = {
 export function useCreateAttachments() {
   const intl = useIntl();
   const [rows, setRows] = useState<Attachment[]>([]);
-  const [kind, setKind] = useState<HandSetDocumentVersionKind>("draft_ours");
+  /** DOC-015: one type for every staged file; empty is no type. */
+  const [typeId, setTypeId] = useState("");
   const [created, setCreated] = useState(false);
   const [pending, setPending] = useState(false);
   const nextId = useRef(0);
@@ -78,7 +78,7 @@ export function useCreateAttachments() {
       );
       const result = await uploadRecordDocument(record, {
         file: row.file,
-        kind: record.entityType === "matter" ? "general" : kind,
+        documentTypeId: typeId || null,
         note: "",
       });
       if (!result.ok) failed = true;
@@ -107,8 +107,8 @@ export function useCreateAttachments() {
 
   return {
     rows,
-    kind,
-    setKind,
+    typeId,
+    setTypeId,
     created,
     pending,
     add,
@@ -147,18 +147,29 @@ export type ExistingAttachment = {
 export function CreateAttachments({
   uploads,
   disabled = false,
-  showKind = true,
+  module,
   existing = [],
 }: Readonly<{
   uploads: ReturnType<typeof useCreateAttachments>;
   disabled?: boolean;
-  showKind?: boolean;
+  /** Which Document type list the staged files take their type from;
+   * null for a Knowledge Item, whose files take the item's type. */
+  module: DocumentTypeModule | null;
   /** Files already on the way to the record, shown read-only before
    * anything staged here. */
   existing?: readonly ExistingAttachment[];
 }>) {
   const intl = useIntl();
   const id = useId();
+  const typeOptions = useDocumentTypeOptions(module);
+  const { typeId, setTypeId } = uploads;
+  // A module switch (the Convert dialog's target) leaves a type from the
+  // other list behind; the seam would refuse it, so it is dropped here.
+  useEffect(() => {
+    if (typeOptions && typeId && !typeOptions.some((option) => option.id === typeId)) {
+      setTypeId("");
+    }
+  }, [typeOptions, typeId, setTypeId]);
   const input = useRef<HTMLInputElement>(null);
   const blocked = disabled || uploads.pending;
   const failures = uploads.rows.some((row) => row.state === "failed");
@@ -266,24 +277,24 @@ export function CreateAttachments({
           />
         </div>
       )}
-      {uploads.rows.length > 0 && !uploads.created && showKind && (
+      {uploads.rows.length > 0 && !uploads.created && typeOptions && typeOptions.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${id}-kind`}>
-            <FormattedMessage id="createAttachments.kind" defaultMessage="Document kind" />
+          <Label htmlFor={`${id}-type`}>
+            <FormattedMessage id="createAttachments.type" defaultMessage="Document type" />
           </Label>
           <select
-            id={`${id}-kind`}
+            id={`${id}-type`}
             className={CONTROL_CLASS}
-            value={uploads.kind}
+            value={typeId}
             disabled={blocked}
-            onChange={(event) => {
-              const kind = DOCUMENT_VERSION_KINDS.find((kind) => kind === event.target.value);
-              if (kind) uploads.setKind(kind);
-            }}
+            onChange={(event) => setTypeId(event.target.value)}
           >
-            {DOCUMENT_VERSION_KINDS.map((kind) => (
-              <option key={kind} value={kind}>
-                {documentKindLabel(intl, kind)}
+            <option value="">
+              {intl.formatMessage({ id: "documents.type.none", defaultMessage: "No type" })}
+            </option>
+            {typeOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.displayName}
               </option>
             ))}
           </select>

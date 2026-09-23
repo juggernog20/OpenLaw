@@ -65,7 +65,8 @@ export type TaxonomyActionPrefix =
   | "entity_type"
   | "officer_role"
   | "request_type"
-  | "knowledge_type";
+  | "knowledge_type"
+  | "document_type";
 /** The catalogs of fields attached to a type — two type editors, and
  * the request type's form definition (INT-002), which is the same
  * machinery over the same catalog. */
@@ -1024,6 +1025,16 @@ type DocumentPayloads = {
     from: string;
     to: string;
   };
+  /** DOC-015: the type names before and after, as they read then; null
+   * is no type. */
+  "document.version_type_changed": {
+    documentId: string;
+    versionId: string;
+    title: string;
+    versionNumber: number;
+    from: string | null;
+    to: string | null;
+  };
   "document.updated": { documentId: string; title: string; changed: ChangedFields };
   /** Both titles, because hard deletion takes the rows and the entry has
    * to keep saying which document the instrument moved from and to. */
@@ -1378,6 +1389,7 @@ export type ActivityPayloadMap = AutoDocPayloads &
   Prefixed<"officer_role", TaxonomyPayloads> &
   Prefixed<"request_type", TaxonomyPayloads> &
   Prefixed<"knowledge_type", TaxonomyPayloads> &
+  Prefixed<"document_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"entity_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &

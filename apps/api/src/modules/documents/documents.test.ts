@@ -106,6 +106,7 @@ interface VersionRow {
   id: string;
   versionNumber: number;
   kind: string;
+  documentType: { id: string; displayName: string; archived: boolean } | null;
   note: string | null;
   originalFilename: string;
   mimeType: string;
@@ -531,8 +532,9 @@ describe("uploading a draft", () => {
     expect(currentOf(document).byteSize).toBe(content.byteLength);
     expect(currentOf(document).checksumSha256).toBe(sha256(content));
     expect(currentOf(document).uploadedBy.id).toBe(idOf(ADMIN));
-    // The default kind, and no note: the M11/2 control sends neither.
-    expect(currentOf(document).kind).toBe("draft_ours");
+    // No type, and no note: the M11/2 control sends neither (DOC-015).
+    expect(currentOf(document).kind).toBe("general");
+    expect(currentOf(document).documentType).toBeNull();
     expect(currentOf(document).note).toBeNull();
   });
 
@@ -697,7 +699,10 @@ describe("appending the next version", () => {
 
   it("runs the chain 1..n with the highest number current", async () => {
     const contract = await newContract("Orion Cloud — six rounds");
-    const document = await uploaded(adminCookies, contract.number, { filename: "v1.docx" });
+    const document = await uploaded(adminCookies, contract.number, {
+      filename: "v1.docx",
+      kind: "draft_ours",
+    });
     for (const kind of [
       "draft_theirs",
       "redline_theirs",
@@ -930,7 +935,8 @@ describe("correcting a version's kind", () => {
       .select()
       .from(documentVersions)
       .where(eq(documentVersions.id, version.id));
-    expect(after).toEqual({ ...before, kind: "draft_theirs" });
+    expect(after).toEqual({ ...before, kind: "draft_theirs", documentTypeId: expect.any(String) });
+    expect(after!.documentTypeId).not.toBe(before!.documentTypeId);
     expect(after!.versionNumber).toBe(before!.versionNumber);
     expect(after!.note).toBe(before!.note);
     expect(after!.createdBy).toBe(before!.createdBy);
@@ -941,15 +947,15 @@ describe("correcting a version's kind", () => {
     );
 
     const entries = await feed(adminCookies, contract.id);
-    const entry = entries.find((row) => row.action === "document.version_kind_changed");
+    const entry = entries.find((row) => row.action === "document.version_type_changed");
     expect(entry, "a version-kind correction on the contract").toBeDefined();
     expect(entry!.payload).toMatchObject({
       documentId: document.id,
       versionId: version.id,
       title: "orion_round_one.docx",
       versionNumber: 1,
-      from: "draft_ours",
-      to: "draft_theirs",
+      from: "Draft · ours",
+      to: "Draft · theirs",
     });
   });
 
@@ -967,7 +973,7 @@ describe("correcting a version's kind", () => {
 
     expect(res.statusCode, res.body).toBe(400);
     const [row] = await paper(adminCookies, contract.number);
-    expect(currentOf(row!).kind).toBe("draft_ours");
+    expect(currentOf(row!).kind).toBe("general");
     expect(currentOf(row!).note).toBe("This note stays.");
   });
 
@@ -983,7 +989,7 @@ describe("correcting a version's kind", () => {
 
     expect(res.statusCode, res.body).toBe(404);
     const [unchanged] = await paper(adminCookies, firstContract.number);
-    expect(currentOf(unchanged!).kind).toBe("draft_ours");
+    expect(currentOf(unchanged!).kind).toBe("general");
   });
 
   it("refuses a no-op without narrating a change", async () => {
@@ -998,7 +1004,7 @@ describe("correcting a version's kind", () => {
     expect(res.statusCode, res.body).toBe(409);
     expect(
       (await feed(adminCookies, contract.id)).find(
-        (row) => row.action === "document.version_kind_changed",
+        (row) => row.action === "document.version_type_changed",
       ),
     ).toBeUndefined();
   });
@@ -1072,7 +1078,7 @@ describe("correcting a version's kind", () => {
       .select({ kind: documentVersions.kind })
       .from(documentVersions)
       .where(eq(documentVersions.id, version.id));
-    expect(row!.kind).toBe("draft_ours");
+    expect(row!.kind).toBe("general");
   });
 
   it("keeps Version correction staff-only", async () => {

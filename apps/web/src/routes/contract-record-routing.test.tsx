@@ -155,6 +155,14 @@ function recordApi(
     if (call.url.pathname === "/api/v1/entities" && call.method === "GET") {
       return json(200, { entities: [] });
     }
+    if (call.url.pathname === "/api/v1/documents/type-options" && call.method === "GET") {
+      return json(200, {
+        documentTypes: [
+          { id: "dt-draft_ours", displayName: "Draft · ours", systemKind: "draft_ours" },
+          { id: "dt-amendment", displayName: "Amendment", systemKind: "amendment" },
+        ],
+      });
+    }
     if (call.url.pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
       return json(200, {
         documents: call.url.searchParams.get("folder") === "root" ? paper : landingPaper,
@@ -272,7 +280,7 @@ describe("the amendment vehicle (CTR-007 §2)", () => {
     // The record's own Documents section, and the composer on its chain.
     await waitFor(() => expect(router.state.location.pathname).toBe("/contracts/42/documents"));
     expect(await screen.findByRole("heading", { name: "Add version" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Kind")).toHaveValue("amendment");
+    expect(await screen.findByLabelText("Type")).toHaveValue("dt-amendment");
     // Nothing was written: the amendment is the M11 upload, and the
     // person has not chosen a file yet.
     expect(api.creates).toEqual([]);

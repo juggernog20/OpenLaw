@@ -320,7 +320,7 @@ export function CreateContractDialog({
         </DialogTitle>
         {attachments.created ? (
           <div className="mt-4">
-            <CreateAttachments uploads={attachments} />
+            <CreateAttachments module="contract" uploads={attachments} />
           </div>
         ) : (
           <form
@@ -530,7 +530,7 @@ export function CreateContractDialog({
                 />
               </p>
             )}
-            <CreateAttachments uploads={attachments} disabled={busy} />
+            <CreateAttachments module="contract" uploads={attachments} disabled={busy} />
             {error && (
               <p role="alert" className="text-xs text-status-danger-fg">
                 {error}

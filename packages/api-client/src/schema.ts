@@ -5162,8 +5162,8 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Correct one version's kind (CTR-014). This is the only per-version update. It changes only the kind: the bytes, number, note, author, order, and executed pin stay where they are. The target must be one of the six hand-set kinds. A generated redline cannot be corrected or selected because its kind records how the file was made. Appends document.version_kind_changed on the owning contract with the kind before and after (DD-017). Member+ may correct a kind; a Contributor who reaches the record is refused 403 */
-    patch: operations["updateDocumentVersionKind"];
+    /** Correct one version's Document type (CTR-014, DOC-015). This is the only per-version update. It changes only the type and the kind that follows it: the bytes, number, note, author, order, and executed pin stay where they are. The target is a live type from the owning module's list, null for no type, or a hand-set kind that maps to the list's fixed row. A generated Version cannot be corrected because its kind records how the file was made. Appends document.version_type_changed on the owning record with the type names before and after (DD-017). Member+ may correct a type; a Contributor who reaches the record is refused 403 */
+    patch: operations["updateDocumentVersionType"];
     trace?: never;
   };
   "/api/v1/documents/{documentId}": {
@@ -6667,6 +6667,287 @@ export interface paths {
     options?: never;
     head?: never;
     patch: operations["updateKnowledgeFolder"];
+    trace?: never;
+  };
+  "/api/v1/documents/types/matter": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The document type taxonomy in display order (DOC-015); archived rows only with includeArchived=true */
+    get: operations["listMatterDocumentTypes"];
+    put?: never;
+    /** Add a document type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createMatterDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/matter/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One document type — the read behind the type editor */
+    get: operations["getMatterDocumentType"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a document type (DOC-015); a type still used by versions refuses */
+    delete: operations["deleteMatterDocumentType"];
+    options?: never;
+    head?: never;
+    /** Rename a document type's display name (DES-017 in-place rename) or edit its description; the slug never changes */
+    patch: operations["updateMatterDocumentType"];
+    trace?: never;
+  };
+  "/api/v1/documents/types/matter/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderMatterDocumentTypes"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/matter/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a document type; it leaves pickers and retains every reference */
+    post: operations["archiveMatterDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/matter/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived document type (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreMatterDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/contract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The document type taxonomy in display order (DOC-015); archived rows only with includeArchived=true */
+    get: operations["listContractDocumentTypes"];
+    put?: never;
+    /** Add a document type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createContractDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/contract/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One document type — the read behind the type editor */
+    get: operations["getContractDocumentType"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a document type (DOC-015); a type still used by versions refuses */
+    delete: operations["deleteContractDocumentType"];
+    options?: never;
+    head?: never;
+    /** Rename a document type's display name (DES-017 in-place rename) or edit its description; the slug never changes */
+    patch: operations["updateContractDocumentType"];
+    trace?: never;
+  };
+  "/api/v1/documents/types/contract/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderContractDocumentTypes"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/contract/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a document type; it leaves pickers and retains every reference */
+    post: operations["archiveContractDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/contract/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived document type (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreContractDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/entity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The document type taxonomy in display order (DOC-015); archived rows only with includeArchived=true */
+    get: operations["listEntityDocumentTypes"];
+    put?: never;
+    /** Add a document type: the slug is derived here, once, and is immutable after creation; the row appends to the display order */
+    post: operations["createEntityDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/entity/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One document type — the read behind the type editor */
+    get: operations["getEntityDocumentType"];
+    put?: never;
+    post?: never;
+    /** Hard-delete a document type (DOC-015); a type still used by versions refuses */
+    delete: operations["deleteEntityDocumentType"];
+    options?: never;
+    head?: never;
+    /** Rename a document type's display name (DES-017 in-place rename) or edit its description; the slug never changes */
+    patch: operations["updateEntityDocumentType"];
+    trace?: never;
+  };
+  "/api/v1/documents/types/entity/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs */
+    put: operations["reorderEntityDocumentTypes"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/entity/{id}/archive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Archive a document type; it leaves pickers and retains every reference */
+    post: operations["archiveEntityDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/types/entity/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Restore an archived document type (SET-003's recovery story) to the end of the display order */
+    post: operations["restoreEntityDocumentType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/type-options": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One module's live Document types in display order, for upload and correction pickers (DOC-015); the settings list stays Administrator-only */
+    get: operations["listDocumentTypeOptions"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/search": {
@@ -28416,6 +28697,7 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: string | null;
                 originalFilename: string;
                 mimeType: string;
                 byteSize: number;
@@ -28524,6 +28806,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -28614,6 +28901,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -28682,8 +28974,10 @@ export interface operations {
            * @description The file itself. Any type is accepted (DOC-004).
            */
           file: string;
+          /** @description DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part. */
+          documentTypeId?: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -28725,6 +29019,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -28815,6 +29114,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -28883,8 +29187,10 @@ export interface operations {
            * @description The file itself. Any type is accepted (DOC-004).
            */
           file: string;
+          /** @description DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part. */
+          documentTypeId?: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -28930,6 +29236,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29020,6 +29331,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29088,8 +29404,10 @@ export interface operations {
            * @description The file itself. Any type is accepted (DOC-004).
            */
           file: string;
+          /** @description DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part. */
+          documentTypeId?: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -29135,6 +29453,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29225,6 +29548,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29293,8 +29621,10 @@ export interface operations {
            * @description The file itself. Any type is accepted (DOC-004).
            */
           file: string;
+          /** @description DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part. */
+          documentTypeId?: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -29340,6 +29670,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29407,8 +29742,10 @@ export interface operations {
            * @description The file itself. Any type is accepted (DOC-004).
            */
           file: string;
+          /** @description DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part. */
+          documentTypeId?: string;
           /**
-           * @description What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.
+           * @description What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part.
            * @enum {string}
            */
           kind?:
@@ -29450,6 +29787,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29500,7 +29842,7 @@ export interface operations {
       };
     };
   };
-  updateDocumentVersionKind: {
+  updateDocumentVersionType: {
     parameters: {
       query?: never;
       header?: never;
@@ -29512,17 +29854,21 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          /** @enum {string} */
-          kind:
-            | "general"
-            | "draft_ours"
-            | "draft_theirs"
-            | "redline_theirs"
-            | "redline_ours"
-            | "executed"
-            | "amendment";
-        };
+        "application/json":
+          | {
+              documentTypeId: string | null;
+            }
+          | {
+              /** @enum {string} */
+              kind:
+                | "general"
+                | "draft_ours"
+                | "draft_theirs"
+                | "redline_theirs"
+                | "redline_ours"
+                | "executed"
+                | "amendment";
+            };
       };
     };
     responses: {
@@ -29551,6 +29897,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29643,6 +29994,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29739,6 +30095,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29830,6 +30191,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29865,6 +30231,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -29936,6 +30307,11 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  documentType: {
+                    id: string;
+                    displayName: string;
+                    archived: boolean;
+                  } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
                   comparedFromVersionNumber: number | null;
@@ -30023,6 +30399,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30058,6 +30439,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30129,6 +30515,11 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  documentType: {
+                    id: string;
+                    displayName: string;
+                    archived: boolean;
+                  } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
                   comparedFromVersionNumber: number | null;
@@ -30187,6 +30578,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30222,6 +30618,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30293,6 +30694,11 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  documentType: {
+                    id: string;
+                    displayName: string;
+                    archived: boolean;
+                  } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
                   comparedFromVersionNumber: number | null;
@@ -30374,6 +30780,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30409,6 +30820,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30480,6 +30896,11 @@ export interface operations {
                     | "executed"
                     | "amendment"
                     | "generated_redline";
+                  documentType: {
+                    id: string;
+                    displayName: string;
+                    archived: boolean;
+                  } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
                   comparedFromVersionNumber: number | null;
@@ -30554,6 +30975,11 @@ export interface operations {
                 | "executed"
                 | "amendment"
                 | "generated_redline";
+              documentType: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               source: "uploaded" | "generated";
               comparedFromVersionNumber: number | null;
@@ -30599,6 +31025,11 @@ export interface operations {
                 | "executed"
                 | "amendment"
                 | "generated_redline";
+              documentType: {
+                id: string;
+                displayName: string;
+                archived: boolean;
+              } | null;
               /** @enum {string} */
               source: "uploaded" | "generated";
               comparedFromVersionNumber: number | null;
@@ -30671,6 +31102,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30764,6 +31200,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30850,6 +31291,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -30936,6 +31382,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -31022,6 +31473,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
                 comparedFromVersionNumber: number | null;
@@ -32013,8 +32469,9 @@ export interface operations {
           | {
               /** @enum {string} */
               destination: "new_document";
+              documentTypeId?: string | null;
               /** @enum {string} */
-              kind:
+              kind?:
                 | "general"
                 | "draft_ours"
                 | "draft_theirs"
@@ -32029,8 +32486,9 @@ export interface operations {
               /** @enum {string} */
               destination: "new_version";
               documentId: string;
+              documentTypeId?: string | null;
               /** @enum {string} */
-              kind:
+              kind?:
                 | "general"
                 | "draft_ours"
                 | "draft_theirs"
@@ -37885,6 +38343,1294 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listMatterDocumentTypes: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createMatterDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getMatterDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteMatterDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateMatterDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderMatterDocumentTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveMatterDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreMatterDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listContractDocumentTypes: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createContractDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getContractDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteContractDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateContractDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderContractDocumentTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveContractDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreContractDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityDocumentTypes: {
+    parameters: {
+      query?: {
+        includeArchived?: "true" | "false";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getEntityDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          displayName?: string;
+          description?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  reorderEntityDocumentTypes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          ids: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentTypes: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  archiveEntityDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          reassignToId?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  restoreEntityDocumentType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listDocumentTypeOptions: {
+    parameters: {
+      query: {
+        module: "matter" | "contract" | "entity";
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documentTypes: {
+              id: string;
+              displayName: string;
+              systemKind:
+                | (
+                    | "draft_ours"
+                    | "draft_theirs"
+                    | "redline_theirs"
+                    | "redline_ours"
+                    | "executed"
+                    | "amendment"
+                  )
+                | null;
             }[];
           };
         };

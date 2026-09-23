@@ -60244,6 +60244,9 @@
                                   "generated_redline"
                                 ]
                               },
+                              "documentType": {
+                                "type": ["string", "null"]
+                              },
                               "originalFilename": {
                                 "type": "string"
                               },
@@ -60284,6 +60287,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "originalFilename",
                               "mimeType",
                               "byteSize",
@@ -60481,6 +60485,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -60565,6 +60592,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -60756,6 +60784,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -60840,6 +60891,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -60959,6 +61011,10 @@
                     "format": "binary",
                     "description": "The file itself. Any type is accepted (DOC-004)."
                   },
+                  "documentTypeId": {
+                    "type": "string",
+                    "description": "DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part."
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -60970,7 +61026,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -61042,6 +61098,29 @@
                                   "executed",
                                   "amendment",
                                   "generated_redline"
+                                ]
+                              },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "source": {
@@ -61128,6 +61207,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -61333,6 +61413,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -61417,6 +61520,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -61536,6 +61640,10 @@
                     "format": "binary",
                     "description": "The file itself. Any type is accepted (DOC-004)."
                   },
+                  "documentTypeId": {
+                    "type": "string",
+                    "description": "DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part."
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -61547,7 +61655,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -61629,6 +61737,29 @@
                                   "executed",
                                   "amendment",
                                   "generated_redline"
+                                ]
+                              },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "source": {
@@ -61715,6 +61846,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -61920,6 +62052,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -62004,6 +62159,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -62123,6 +62279,10 @@
                     "format": "binary",
                     "description": "The file itself. Any type is accepted (DOC-004)."
                   },
+                  "documentTypeId": {
+                    "type": "string",
+                    "description": "DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part."
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -62134,7 +62294,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -62216,6 +62376,29 @@
                                   "executed",
                                   "amendment",
                                   "generated_redline"
+                                ]
+                              },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "source": {
@@ -62302,6 +62485,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -62507,6 +62691,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -62591,6 +62798,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -62710,6 +62918,10 @@
                     "format": "binary",
                     "description": "The file itself. Any type is accepted (DOC-004)."
                   },
+                  "documentTypeId": {
+                    "type": "string",
+                    "description": "DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part."
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -62721,7 +62933,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -62803,6 +63015,29 @@
                                   "executed",
                                   "amendment",
                                   "generated_redline"
+                                ]
+                              },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "source": {
@@ -62889,6 +63124,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -63006,6 +63242,10 @@
                     "format": "binary",
                     "description": "The file itself. Any type is accepted (DOC-004)."
                   },
+                  "documentTypeId": {
+                    "type": "string",
+                    "description": "DOC-015: a live Document type from the owning module's list. Empty or absent means no type. Wins over `kind` when both are sent. Must be sent before the file part."
+                  },
                   "kind": {
                     "type": "string",
                     "enum": [
@@ -63017,7 +63257,7 @@
                       "executed",
                       "amendment"
                     ],
-                    "description": "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part."
+                    "description": "What this version is in the negotiation (CTR-014), for clients that speak kinds. It maps to the owner list's fixed Document type; a kind the list has no row for stores `general` with no type. Must be sent before the file part."
                   },
                   "note": {
                     "type": "string",
@@ -63089,6 +63329,29 @@
                                   "executed",
                                   "amendment",
                                   "generated_redline"
+                                ]
+                              },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "source": {
@@ -63175,6 +63438,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -63277,31 +63541,54 @@
     },
     "/api/v1/documents/{documentId}/versions/{versionId}": {
       "patch": {
-        "operationId": "updateDocumentVersionKind",
-        "summary": "Correct one version's kind (CTR-014). This is the only per-version update. It changes only the kind: the bytes, number, note, author, order, and executed pin stay where they are. The target must be one of the six hand-set kinds. A generated redline cannot be corrected or selected because its kind records how the file was made. Appends document.version_kind_changed on the owning contract with the kind before and after (DD-017). Member+ may correct a kind; a Contributor who reaches the record is refused 403",
+        "operationId": "updateDocumentVersionType",
+        "summary": "Correct one version's Document type (CTR-014, DOC-015). This is the only per-version update. It changes only the type and the kind that follows it: the bytes, number, note, author, order, and executed pin stay where they are. The target is a live type from the owning module's list, null for no type, or a hand-set kind that maps to the list's fixed row. A generated Version cannot be corrected because its kind records how the file was made. Appends document.version_type_changed on the owning record with the type names before and after (DD-017). Member+ may correct a type; a Contributor who reaches the record is refused 403",
         "tags": ["documents"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "general",
-                      "draft_ours",
-                      "draft_theirs",
-                      "redline_theirs",
-                      "redline_ours",
-                      "executed",
-                      "amendment"
-                    ]
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "documentTypeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": ["documentTypeId"],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "general",
+                          "draft_ours",
+                          "draft_theirs",
+                          "redline_theirs",
+                          "redline_ours",
+                          "executed",
+                          "amendment"
+                        ]
+                      }
+                    },
+                    "required": ["kind"],
+                    "additionalProperties": false
                   }
-                },
-                "required": ["kind"],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -63375,6 +63662,29 @@
                                   "executed",
                                   "amendment",
                                   "generated_redline"
+                                ]
+                              },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
                                 ]
                               },
                               "source": {
@@ -63461,6 +63771,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -63670,6 +63981,29 @@
                                   "generated_redline"
                                 ]
                               },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "source": {
                                 "type": "string",
                                 "enum": ["uploaded", "generated"]
@@ -63754,6 +64088,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -63938,6 +64273,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -64022,6 +64380,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -64214,6 +64573,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -64298,6 +64680,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -64338,6 +64721,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -64422,6 +64828,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -64623,6 +65030,29 @@
                                           "generated_redline"
                                         ]
                                       },
+                                      "documentType": {
+                                        "anyOf": [
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "id": {
+                                                "type": "string"
+                                              },
+                                              "displayName": {
+                                                "type": "string"
+                                              },
+                                              "archived": {
+                                                "type": "boolean"
+                                              }
+                                            },
+                                            "required": ["id", "displayName", "archived"],
+                                            "additionalProperties": false
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      },
                                       "source": {
                                         "type": "string",
                                         "enum": ["uploaded", "generated"]
@@ -64714,6 +65144,7 @@
                                       "id",
                                       "versionNumber",
                                       "kind",
+                                      "documentType",
                                       "source",
                                       "comparedFromVersionNumber",
                                       "comparedToVersionNumber",
@@ -64895,6 +65326,29 @@
                                 "generated_redline"
                               ]
                             },
+                            "documentType": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "archived"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "source": {
                               "type": "string",
                               "enum": ["uploaded", "generated"]
@@ -64979,6 +65433,7 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "documentType",
                             "source",
                             "comparedFromVersionNumber",
                             "comparedToVersionNumber",
@@ -65019,6 +65474,29 @@
                                 "generated_redline"
                               ]
                             },
+                            "documentType": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "archived"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "source": {
                               "type": "string",
                               "enum": ["uploaded", "generated"]
@@ -65103,6 +65581,7 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "documentType",
                             "source",
                             "comparedFromVersionNumber",
                             "comparedToVersionNumber",
@@ -65292,6 +65771,29 @@
                                       "generated_redline"
                                     ]
                                   },
+                                  "documentType": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "displayName": {
+                                            "type": "string"
+                                          },
+                                          "archived": {
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": ["id", "displayName", "archived"],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
                                   "source": {
                                     "type": "string",
                                     "enum": ["uploaded", "generated"]
@@ -65383,6 +65885,7 @@
                                   "id",
                                   "versionNumber",
                                   "kind",
+                                  "documentType",
                                   "source",
                                   "comparedFromVersionNumber",
                                   "comparedToVersionNumber",
@@ -65506,6 +66009,29 @@
                                 "generated_redline"
                               ]
                             },
+                            "documentType": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "archived"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "source": {
                               "type": "string",
                               "enum": ["uploaded", "generated"]
@@ -65590,6 +66116,7 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "documentType",
                             "source",
                             "comparedFromVersionNumber",
                             "comparedToVersionNumber",
@@ -65630,6 +66157,29 @@
                                 "generated_redline"
                               ]
                             },
+                            "documentType": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "archived"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "source": {
                               "type": "string",
                               "enum": ["uploaded", "generated"]
@@ -65714,6 +66264,7 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "documentType",
                             "source",
                             "comparedFromVersionNumber",
                             "comparedToVersionNumber",
@@ -65903,6 +66454,29 @@
                                       "generated_redline"
                                     ]
                                   },
+                                  "documentType": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "displayName": {
+                                            "type": "string"
+                                          },
+                                          "archived": {
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": ["id", "displayName", "archived"],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
                                   "source": {
                                     "type": "string",
                                     "enum": ["uploaded", "generated"]
@@ -65994,6 +66568,7 @@
                                   "id",
                                   "versionNumber",
                                   "kind",
+                                  "documentType",
                                   "source",
                                   "comparedFromVersionNumber",
                                   "comparedToVersionNumber",
@@ -66158,6 +66733,29 @@
                                 "generated_redline"
                               ]
                             },
+                            "documentType": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "archived"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "source": {
                               "type": "string",
                               "enum": ["uploaded", "generated"]
@@ -66242,6 +66840,7 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "documentType",
                             "source",
                             "comparedFromVersionNumber",
                             "comparedToVersionNumber",
@@ -66282,6 +66881,29 @@
                                 "generated_redline"
                               ]
                             },
+                            "documentType": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "displayName": {
+                                      "type": "string"
+                                    },
+                                    "archived": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": ["id", "displayName", "archived"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "source": {
                               "type": "string",
                               "enum": ["uploaded", "generated"]
@@ -66366,6 +66988,7 @@
                             "id",
                             "versionNumber",
                             "kind",
+                            "documentType",
                             "source",
                             "comparedFromVersionNumber",
                             "comparedToVersionNumber",
@@ -66555,6 +67178,29 @@
                                       "generated_redline"
                                     ]
                                   },
+                                  "documentType": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "id": {
+                                            "type": "string"
+                                          },
+                                          "displayName": {
+                                            "type": "string"
+                                          },
+                                          "archived": {
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": ["id", "displayName", "archived"],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
                                   "source": {
                                     "type": "string",
                                     "enum": ["uploaded", "generated"]
@@ -66646,6 +67292,7 @@
                                   "id",
                                   "versionNumber",
                                   "kind",
+                                  "documentType",
                                   "source",
                                   "comparedFromVersionNumber",
                                   "comparedToVersionNumber",
@@ -66793,6 +67440,29 @@
                             "generated_redline"
                           ]
                         },
+                        "documentType": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "source": {
                           "type": "string",
                           "enum": ["uploaded", "generated"]
@@ -66877,6 +67547,7 @@
                         "id",
                         "versionNumber",
                         "kind",
+                        "documentType",
                         "source",
                         "comparedFromVersionNumber",
                         "comparedToVersionNumber",
@@ -66931,6 +67602,29 @@
                             "generated_redline"
                           ]
                         },
+                        "documentType": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "displayName": {
+                                  "type": "string"
+                                },
+                                "archived": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["id", "displayName", "archived"],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "source": {
                           "type": "string",
                           "enum": ["uploaded", "generated"]
@@ -67015,6 +67709,7 @@
                         "id",
                         "versionNumber",
                         "kind",
+                        "documentType",
                         "source",
                         "comparedFromVersionNumber",
                         "comparedToVersionNumber",
@@ -67119,6 +67814,29 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "archived": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "archived"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "source": {
                                   "type": "string",
                                   "enum": ["uploaded", "generated"]
@@ -67203,6 +67921,7 @@
                                 "id",
                                 "versionNumber",
                                 "kind",
+                                "documentType",
                                 "source",
                                 "comparedFromVersionNumber",
                                 "comparedToVersionNumber",
@@ -67391,6 +68110,29 @@
                                   "generated_redline"
                                 ]
                               },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "source": {
                                 "type": "string",
                                 "enum": ["uploaded", "generated"]
@@ -67475,6 +68217,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -67639,6 +68382,29 @@
                                   "generated_redline"
                                 ]
                               },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "source": {
                                 "type": "string",
                                 "enum": ["uploaded", "generated"]
@@ -67723,6 +68489,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -67889,6 +68656,29 @@
                                   "generated_redline"
                                 ]
                               },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "source": {
                                 "type": "string",
                                 "enum": ["uploaded", "generated"]
@@ -67973,6 +68763,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -68139,6 +68930,29 @@
                                   "generated_redline"
                                 ]
                               },
+                              "documentType": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "displayName": {
+                                        "type": "string"
+                                      },
+                                      "archived": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["id", "displayName", "archived"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "source": {
                                 "type": "string",
                                 "enum": ["uploaded", "generated"]
@@ -68223,6 +69037,7 @@
                               "id",
                               "versionNumber",
                               "kind",
+                              "documentType",
                               "source",
                               "comparedFromVersionNumber",
                               "comparedToVersionNumber",
@@ -70510,6 +71325,18 @@
                         "type": "string",
                         "enum": ["new_document"]
                       },
+                      "documentTypeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
                       "kind": {
                         "type": "string",
                         "enum": [
@@ -70531,7 +71358,7 @@
                         "type": "boolean"
                       }
                     },
-                    "required": ["destination", "kind", "name", "isConfidential"],
+                    "required": ["destination", "name", "isConfidential"],
                     "additionalProperties": false
                   },
                   {
@@ -70545,6 +71372,18 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 64
+                      },
+                      "documentTypeId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       "kind": {
                         "type": "string",
@@ -70563,7 +71402,7 @@
                         "maxLength": 2000
                       }
                     },
-                    "required": ["destination", "documentId", "kind"],
+                    "required": ["destination", "documentId"],
                     "additionalProperties": false
                   }
                 ]
@@ -87302,6 +88141,2784 @@
                     }
                   },
                   "required": ["folders"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/matter": {
+      "get": {
+        "operationId": "listMatterDocumentTypes",
+        "summary": "The document type taxonomy in display order (DOC-015); archived rows only with includeArchived=true",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "systemKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount",
+                          "systemKind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documentTypes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMatterDocumentType",
+        "summary": "Add a document type: the slug is derived here, once, and is immutable after creation; the row appends to the display order",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["displayName"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/matter/{id}": {
+      "get": {
+        "operationId": "getMatterDocumentType",
+        "summary": "One document type — the read behind the type editor",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateMatterDocumentType",
+        "summary": "Rename a document type's display name (DES-017 in-place rename) or edit its description; the slug never changes",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteMatterDocumentType",
+        "summary": "Hard-delete a document type (DOC-015); a type still used by versions refuses",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/matter/order": {
+      "put": {
+        "operationId": "reorderMatterDocumentTypes",
+        "summary": "Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["ids"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "systemKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount",
+                          "systemKind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documentTypes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/matter/{id}/archive": {
+      "post": {
+        "operationId": "archiveMatterDocumentType",
+        "summary": "Archive a document type; it leaves pickers and retains every reference",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reassignToId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/matter/{id}/restore": {
+      "post": {
+        "operationId": "restoreMatterDocumentType",
+        "summary": "Restore an archived document type (SET-003's recovery story) to the end of the display order",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/contract": {
+      "get": {
+        "operationId": "listContractDocumentTypes",
+        "summary": "The document type taxonomy in display order (DOC-015); archived rows only with includeArchived=true",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "systemKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount",
+                          "systemKind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documentTypes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createContractDocumentType",
+        "summary": "Add a document type: the slug is derived here, once, and is immutable after creation; the row appends to the display order",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["displayName"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/contract/{id}": {
+      "get": {
+        "operationId": "getContractDocumentType",
+        "summary": "One document type — the read behind the type editor",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateContractDocumentType",
+        "summary": "Rename a document type's display name (DES-017 in-place rename) or edit its description; the slug never changes",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteContractDocumentType",
+        "summary": "Hard-delete a document type (DOC-015); a type still used by versions refuses",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/contract/order": {
+      "put": {
+        "operationId": "reorderContractDocumentTypes",
+        "summary": "Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["ids"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "systemKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount",
+                          "systemKind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documentTypes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/contract/{id}/archive": {
+      "post": {
+        "operationId": "archiveContractDocumentType",
+        "summary": "Archive a document type; it leaves pickers and retains every reference",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reassignToId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/contract/{id}/restore": {
+      "post": {
+        "operationId": "restoreContractDocumentType",
+        "summary": "Restore an archived document type (SET-003's recovery story) to the end of the display order",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/entity": {
+      "get": {
+        "operationId": "listEntityDocumentTypes",
+        "summary": "The document type taxonomy in display order (DOC-015); archived rows only with includeArchived=true",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "includeArchived",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "systemKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount",
+                          "systemKind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documentTypes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createEntityDocumentType",
+        "summary": "Add a document type: the slug is derived here, once, and is immutable after creation; the row appends to the display order",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["displayName"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/entity/{id}": {
+      "get": {
+        "operationId": "getEntityDocumentType",
+        "summary": "One document type — the read behind the type editor",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateEntityDocumentType",
+        "summary": "Rename a document type's display name (DES-017 in-place rename) or edit its description; the slug never changes",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteEntityDocumentType",
+        "summary": "Hard-delete a document type (DOC-015); a type still used by versions refuses",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/entity/order": {
+      "put": {
+        "operationId": "reorderEntityDocumentTypes",
+        "summary": "Apply a full permutation of the live rows (SET-003 immediate apply); display orders renumber from 1, archived rows keep theirs",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["ids"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": ["string", "null"]
+                          },
+                          "displayOrder": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "isSystemDefault": {
+                            "type": "boolean"
+                          },
+                          "archivedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "inUseCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "systemKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "displayName",
+                          "description",
+                          "displayOrder",
+                          "isSystemDefault",
+                          "archivedAt",
+                          "inUseCount",
+                          "systemKind"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documentTypes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/entity/{id}/archive": {
+      "post": {
+        "operationId": "archiveEntityDocumentType",
+        "summary": "Archive a document type; it leaves pickers and retains every reference",
+        "tags": ["document-types"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reassignToId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types/entity/{id}/restore": {
+      "post": {
+        "operationId": "restoreEntityDocumentType",
+        "summary": "Restore an archived document type (SET-003's recovery story) to the end of the display order",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": ["string", "null"]
+                        },
+                        "displayOrder": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "isSystemDefault": {
+                          "type": "boolean"
+                        },
+                        "archivedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "inUseCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "systemKind": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "draft_ours",
+                                "draft_theirs",
+                                "redline_theirs",
+                                "redline_ours",
+                                "executed",
+                                "amendment"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "displayName",
+                        "description",
+                        "displayOrder",
+                        "isSystemDefault",
+                        "archivedAt",
+                        "inUseCount",
+                        "systemKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["documentType"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/type-options": {
+      "get": {
+        "operationId": "listDocumentTypeOptions",
+        "summary": "One module's live Document types in display order, for upload and correction pickers (DOC-015); the settings list stays Administrator-only",
+        "tags": ["document-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["matter", "contract", "entity"]
+            },
+            "in": "query",
+            "name": "module",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "systemKind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "draft_ours",
+                                  "draft_theirs",
+                                  "redline_theirs",
+                                  "redline_ours",
+                                  "executed",
+                                  "amendment"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": ["id", "displayName", "systemKind"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["documentTypes"],
                   "additionalProperties": false
                 }
               }

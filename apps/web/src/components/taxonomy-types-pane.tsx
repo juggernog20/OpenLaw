@@ -122,7 +122,14 @@ export interface TaxonomyPaneEditor<Row extends TaxonomyPaneRow = TaxonomyPaneRo
  * an unreadable refusal.
  */
 export interface TaxonomyPaneProtectedRow {
-  slug: string;
+  /** The one fallback row, by slug. */
+  slug?: string;
+  /** Several locked rows, decided per row, mirroring the API's
+   * `isProtected` (DOC-015's fixed Document types). */
+  matches?: (row: TaxonomyPaneRow) => boolean;
+  /** A locked row cannot be renamed either, because code reads what
+   * it stands for. The `other` fallback may still rename. */
+  lockRename?: boolean;
   label: MessageDescriptor;
 }
 
@@ -350,6 +357,10 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   // rowMeta closure — a property access would not.
   const inUse = messages.inUse;
 
+  const isProtected = (row: Row) =>
+    protectedRow !== undefined &&
+    (row.slug === protectedRow.slug || (protectedRow.matches?.(row) ?? false));
+
   function noteRow(id: string, status: FieldStatus, detail?: string) {
     setRowStatus((current) => ({ ...current, [id]: status }));
     setRowError((current) => ({ ...current, [id]: detail }));
@@ -476,7 +487,11 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
           help={messages.help ? <FormattedMessage {...messages.help} /> : undefined}
           rowStatus={rowStatus}
           rowError={rowError}
-          renameLabel={(row) => intl.formatMessage(messages.renameLabel, { name: row.displayName })}
+          renameLabel={(row) =>
+            protectedRow?.lockRename && isProtected(row)
+              ? null
+              : intl.formatMessage(messages.renameLabel, { name: row.displayName })
+          }
           onRename={(row, displayName) => void rename(row, displayName)}
           columnsHeader={
             columns && (
@@ -536,7 +551,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
             ))
           }
           protectedLabel={(row) =>
-            protectedRow && row.slug === protectedRow.slug
+            protectedRow && isProtected(row)
               ? intl.formatMessage(protectedRow.label, { name: row.displayName })
               : null
           }

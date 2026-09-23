@@ -57,6 +57,7 @@ import * as intakeLinksSchema from "./schema/intake-links.js";
 import * as knowledgeFoldersSchema from "./schema/knowledge-folders.js";
 import * as knowledgeItemsSchema from "./schema/knowledge-items.js";
 import * as knowledgeTypesSchema from "./schema/knowledge-types.js";
+import * as documentTypesSchema from "./schema/document-types.js";
 import * as listViewsSchema from "./schema/list-views.js";
 import * as matterTypeFieldsSchema from "./schema/matter-type-fields.js";
 import * as matterTypesSchema from "./schema/matter-types.js";
@@ -120,6 +121,7 @@ export * from "./schema/intake-links.js";
 export * from "./schema/knowledge-folders.js";
 export * from "./schema/knowledge-items.js";
 export * from "./schema/knowledge-types.js";
+export * from "./schema/document-types.js";
 export * from "./schema/list-views.js";
 export * from "./schema/matter-type-fields.js";
 export * from "./schema/matter-types.js";
@@ -186,6 +188,7 @@ export const schema = {
   ...knowledgeFoldersSchema,
   ...knowledgeItemsSchema,
   ...knowledgeTypesSchema,
+  ...documentTypesSchema,
   ...listViewsSchema,
   ...matterTypeFieldsSchema,
   ...matterTypesSchema,

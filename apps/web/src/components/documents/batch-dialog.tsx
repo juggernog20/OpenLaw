@@ -84,10 +84,10 @@ import {
 } from "../../lib/batch-upload";
 import { recreateRecordFolderPath } from "../../lib/folders";
 import {
-  DOCUMENT_VERSION_KINDS,
+  documentTypeModuleOf,
   uploadRecordDocument,
+  useDocumentTypeOptions,
   type DocumentRecord,
-  type HandSetDocumentVersionKind,
 } from "../../lib/documents";
 
 /**
@@ -244,9 +244,8 @@ export function BatchDialog({
     defaultMessage: "/",
   });
   const [rows, setRows] = useState<BatchRow[]>(() => batchOf(files));
-  const [kind, setKind] = useState<HandSetDocumentVersionKind>(
-    record.entityType === "matter" || record.entityType === "entity" ? "general" : "draft_ours",
-  );
+  const typeOptions = useDocumentTypeOptions(documentTypeModuleOf(record.entityType));
+  const [typeId, setTypeId] = useState("");
   /** Whether Import has been pressed. Before it, nothing has been sent
    * and Cancel creates nothing. */
   const [started, setStarted] = useState(false);
@@ -342,14 +341,14 @@ export function BatchDialog({
         return;
       }
       mark(id, { state: "uploading", reason: null, retryable: true });
-      // The batch's one kind, no note (DOC-011), and this file's own
+      // The batch's one type, no note (DOC-011), and this file's own
       // destination: the folder the gesture landed on, plus the chain it
       // sat at in the dropped tree. The seam makes that chain under the
       // contract's row lock, so the files of one folder converge on one
       // folder without anything here co-ordinating them.
       const outcome = await uploadRecordDocument(record, {
         file: row.file,
-        kind,
+        documentTypeId: typeId || null,
         note: "",
         destination: { folderId: destination?.id ?? null, path: row.path },
       });
@@ -559,47 +558,33 @@ export function BatchDialog({
               </li>
             )}
           </ul>
-          {!started && record.entityType !== "matter" && record.entityType !== "entity" && (
+          {!started && typeOptions && typeOptions.length > 0 && (
             <div className="flex flex-col gap-1.5">
               <Label
-                htmlFor="batch-kind"
+                htmlFor="batch-type"
                 help={
-                  <>
-                    <FormattedMessage
-                      id="documents.batch.kindHelp"
-                      defaultMessage="Applied to every file in this import. Notes are not collected in bulk."
-                    />
-                  </>
+                  <FormattedMessage
+                    id="documents.batch.typeHelp"
+                    defaultMessage="Applied to every file in this import. Notes are not collected in bulk."
+                  />
                 }
-                helpId="batch-kind-help"
+                helpId="batch-type-help"
               >
-                <FormattedMessage id="documents.batch.kind" defaultMessage="Version kind" />
+                <FormattedMessage id="documents.batch.type" defaultMessage="Type" />
               </Label>
               <select
-                id="batch-kind"
-                value={kind}
+                id="batch-type"
+                value={typeId}
                 className={CONTROL_CLASS}
-                aria-describedby="batch-kind-help"
-                onChange={(event) => {
-                  const picked = DOCUMENT_VERSION_KINDS.find(
-                    (option) => option === event.target.value,
-                  );
-                  if (picked) setKind(picked);
-                }}
+                aria-describedby="batch-type-help"
+                onChange={(event) => setTypeId(event.target.value)}
               >
-                {DOCUMENT_VERSION_KINDS.map((option) => (
-                  <option key={option} value={option}>
-                    {intl.formatMessage(
-                      {
-                        id: "documents.kind",
-                        defaultMessage:
-                          "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
-                          "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
-                          "executed {Executed} amendment {Amendment} " +
-                          "general {General} generated_redline {Generated redline} other {Unknown}}",
-                      },
-                      { kind: option },
-                    )}
+                <option value="">
+                  {intl.formatMessage({ id: "documents.type.none", defaultMessage: "No type" })}
+                </option>
+                {typeOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.displayName}
                   </option>
                 ))}
               </select>

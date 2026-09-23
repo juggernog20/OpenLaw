@@ -35,10 +35,12 @@ import { seedTypeForm } from "./type-form-routes.js";
 import type { FormModule } from "@openlaw/shared";
 import { z } from "zod";
 import {
+  and,
   asc,
   eq,
   isNull,
   sql,
+  type SQL,
   type Executor,
   type TaxonomyTable,
   type Transaction,
@@ -199,6 +201,19 @@ interface TaxonomyRoutesBase<
    * fallback, never the name an Administrator happened to type.
    */
   protectedSlug?: string;
+  /**
+   * More than one locked row, decided per row. Document types lock
+   * every row that carries a system kind (DOC-015). Archive and hard
+   * delete refuse a row this answers true for, as for `protectedSlug`.
+   */
+  isProtected?: (row: TaxonomyRow) => boolean;
+  /**
+   * One list inside a shared table (DOC-015): every read, lock, and
+   * slug or order scan is limited to rows whose `key` column holds
+   * `value`, and a created row is written with it. A row outside the
+   * scope answers 404, as if it did not exist.
+   */
+  scope?: { key: string; value: string };
   /** SET-010 Departments retain references when archived. */
   archiveKeepsReferences?: boolean;
   alphabetical?: boolean;
@@ -330,6 +345,16 @@ export function taxonomyRoutes<
   // for a mount with no protected row, which then does not promise one.
   const protectedClause = config.protectedSlug ? `\`${config.protectedSlug}\` refuses` : "";
   const extras = config.extras;
+  const scope = config.scope;
+  if (scope && !(scope.key in table)) {
+    throw new Error(`The ${noun} scope names \`${scope.key}\`, which the table does not carry.`);
+  }
+  /** The scope's clause, or nothing for a table that is one list. */
+  const scopeWhere: SQL | undefined = scope
+    ? eq((table as unknown as Record<string, typeof table.slug>)[scope.key]!, scope.value)
+    : undefined;
+  /** A mount's clause beside the scope's; `and` drops an undefined arm. */
+  const scoped = (clause?: SQL) => and(scopeWhere, clause);
 
   return async (app) => {
     /**
@@ -351,7 +376,12 @@ export function taxonomyRoutes<
 
     /** Locks and returns one row, or 404s — every :id mutation starts here. */
     async function lockedType(tx: Transaction, id: string): Promise<TaxonomyRow> {
-      const [row] = await tx.select().from(table).where(eq(table.id, id)).limit(1).for("update");
+      const [row] = await tx
+        .select()
+        .from(table)
+        .where(scoped(eq(table.id, id)))
+        .limit(1)
+        .for("update");
       if (!row) throw httpError(404, `No ${noun} exists with this id.`);
       return row;
     }
@@ -377,7 +407,8 @@ export function taxonomyRoutes<
     /** The mount's fallback row, which archive and delete refuse. A
      * mount with no fallback protects nothing. */
     const isProtected = (row: TaxonomyRow) =>
-      config.protectedSlug !== undefined && row.slug === config.protectedSlug;
+      (config.protectedSlug !== undefined && row.slug === config.protectedSlug) ||
+      (config.isProtected?.(row) ?? false);
 
     app.get(
       `/${path}`,
@@ -397,7 +428,9 @@ export function taxonomyRoutes<
         const rows = await app.db
           .select()
           .from(table)
-          .where(request.query.includeArchived === "true" ? undefined : isNull(table.archivedAt))
+          .where(
+            scoped(request.query.includeArchived === "true" ? undefined : isNull(table.archivedAt)),
+          )
           .orderBy(
             ...(config.alphabetical
               ? [asc(sql`lower(${table.displayName})`), asc(table.id)]
@@ -430,7 +463,7 @@ export function taxonomyRoutes<
         const [row] = await app.db
           .select()
           .from(table)
-          .where(eq(table.id, request.params.id))
+          .where(scoped(eq(table.id, request.params.id)))
           .limit(1);
         if (!row) throw httpError(404, `No ${noun} exists with this id.`);
         return { [config.keySingular]: await rowJson(row) };
@@ -456,7 +489,7 @@ export function taxonomyRoutes<
         const row = await app.db.transaction(async (tx) => {
           if (config.uniqueNames) {
             await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
-            const names = await tx.select({ name: table.displayName }).from(table);
+            const names = await tx.select({ name: table.displayName }).from(table).where(scoped());
             if (names.some((row) => row.name.toLowerCase() === displayName.toLowerCase()))
               throw httpError(409, `A ${noun} with this name already exists.`);
           }
@@ -466,6 +499,7 @@ export function taxonomyRoutes<
           const existing = await tx
             .select({ slug: table.slug, displayOrder: table.displayOrder })
             .from(table)
+            .where(scoped())
             .for("update");
           const slug = freeSlug(
             displayName,
@@ -477,7 +511,12 @@ export function taxonomyRoutes<
 
           const [created] = await tx
             .insert(table)
-            .values({ slug, displayName, displayOrder })
+            .values({
+              slug,
+              displayName,
+              displayOrder,
+              ...(scope ? { [scope.key]: scope.value } : {}),
+            })
             .returning();
           if (config.formModule) await seedTypeForm(tx, config.formModule, created!.id);
           await recordActivity(tx, {
@@ -528,7 +567,10 @@ export function taxonomyRoutes<
           if (displayName !== undefined && displayName !== target.displayName) {
             if (config.uniqueNames) {
               await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
-              const names = await tx.select({ id: table.id, name: table.displayName }).from(table);
+              const names = await tx
+                .select({ id: table.id, name: table.displayName })
+                .from(table)
+                .where(scoped());
               if (
                 names.some(
                   (row) =>
@@ -642,7 +684,7 @@ export function taxonomyRoutes<
             const live = await tx
               .select()
               .from(table)
-              .where(isNull(table.archivedAt))
+              .where(scoped(isNull(table.archivedAt)))
               .orderBy(asc(table.displayOrder), asc(table.createdAt))
               .for("update");
             const liveById = new Map(live.map((row) => [row.id, row]));
@@ -815,7 +857,7 @@ export function taxonomyRoutes<
           const live = await tx
             .select({ displayOrder: table.displayOrder })
             .from(table)
-            .where(isNull(table.archivedAt))
+            .where(scoped(isNull(table.archivedAt)))
             .for("update");
           const displayOrder =
             live.reduce((top, candidate) => Math.max(top, candidate.displayOrder), 0) + 1;

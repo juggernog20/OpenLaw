@@ -32,6 +32,8 @@ import {
   DOCUMENT_VERSION_KINDS,
   type Db,
   type SQL,
+  documentTypes,
+  knowledgeTypes,
 } from "@openlaw/db";
 import {
   DOCUMENT_OWNER_KINDS,
@@ -166,6 +168,9 @@ const RepositoryRowSchema = z.object({
     id: z.string(),
     versionNumber: z.int().positive(),
     kind: z.enum(DOCUMENT_VERSION_KINDS),
+    /** DOC-015: the current Version's type name, or its Knowledge Item's
+     * Knowledge type, or null for none. */
+    documentType: z.string().nullable(),
     originalFilename: z.string(),
     mimeType: z.string(),
     byteSize: z.int().nonnegative(),
@@ -210,7 +215,7 @@ const recordReference = documentOwnerFilterValueSql();
 const SORTS: Record<DocumentSortKey, SQL> = {
   title: repositoryTitle,
   owner: ownerReference,
-  kind: sql`${documentVersions.kind}`,
+  kind: sql`lower(coalesce(${documentTypes.displayName}, ${knowledgeTypes.displayName}, ''))`,
   format: repositoryFormat,
   size: sql`${documentVersions.byteSize}`,
   uploader: sql`lower(${users.displayName})`,
@@ -303,55 +308,66 @@ function repositoryScope(
 }
 
 function selectRepository(db: Db) {
-  return db
-    .select({
-      id: documents.id,
-      documentTitle: documents.title,
-      emailSubject: documentVersionText.emailSubject,
-      description: documents.description,
-      isConfidential: documents.isConfidential,
-      archivedAt: documents.archivedAt,
-      contractId: documents.contractId,
-      contractNumber: contracts.number,
-      contractTitle: contracts.title,
-      matterId: documents.matterId,
-      matterNumber: matters.number,
-      matterTitle: matters.title,
-      entityId: documents.entityId,
-      entityTitle: entities.legalName,
-      autoDocId: documents.autoDocId,
-      autoDocTitle: autoDocs.name,
-      knowledgeItemId: documents.knowledgeItemId,
-      knowledgeItemTitle: knowledgeItems.title,
-      folderId: documentFolders.id,
-      folderName: documentFolders.name,
-      versionId: documentVersions.id,
-      versionNumber: documentVersions.versionNumber,
-      versionKind: documentVersions.kind,
-      originalFilename: documentVersions.originalFilename,
-      mimeType: documentVersions.mimeType,
-      byteSize: documentVersions.byteSize,
-      versionCreatedAt: documentVersions.createdAt,
-      uploaderId: users.id,
-      uploaderName: users.displayName,
-      uploaderImage: users.image,
-      uploaderArchivedAt: users.archivedAt,
-      versionCount: sql<number>`(
+  return (
+    db
+      .select({
+        id: documents.id,
+        documentTitle: documents.title,
+        emailSubject: documentVersionText.emailSubject,
+        description: documents.description,
+        isConfidential: documents.isConfidential,
+        archivedAt: documents.archivedAt,
+        contractId: documents.contractId,
+        contractNumber: contracts.number,
+        contractTitle: contracts.title,
+        matterId: documents.matterId,
+        matterNumber: matters.number,
+        matterTitle: matters.title,
+        entityId: documents.entityId,
+        entityTitle: entities.legalName,
+        autoDocId: documents.autoDocId,
+        autoDocTitle: autoDocs.name,
+        knowledgeItemId: documents.knowledgeItemId,
+        knowledgeItemTitle: knowledgeItems.title,
+        folderId: documentFolders.id,
+        folderName: documentFolders.name,
+        versionId: documentVersions.id,
+        versionNumber: documentVersions.versionNumber,
+        versionKind: documentVersions.kind,
+        documentTypeName: sql<
+          string | null
+        >`coalesce(${documentTypes.displayName}, ${knowledgeTypes.displayName})`,
+        originalFilename: documentVersions.originalFilename,
+        mimeType: documentVersions.mimeType,
+        byteSize: documentVersions.byteSize,
+        versionCreatedAt: documentVersions.createdAt,
+        uploaderId: users.id,
+        uploaderName: users.displayName,
+        uploaderImage: users.image,
+        uploaderArchivedAt: users.archivedAt,
+        versionCount: sql<number>`(
         select count(*)::int
         from document_versions counted_version
         where counted_version.document_id = ${documents.id}
       )`,
-    })
-    .from(documents)
-    .innerJoin(documentVersions, and(eq(documentVersions.documentId, documents.id), currentVersion))
-    .innerJoin(users, eq(users.id, documentVersions.createdBy))
-    .leftJoin(documentVersionText, eq(documentVersionText.versionId, documentVersions.id))
-    .leftJoin(documentFolders, eq(documentFolders.id, documents.folderId))
-    .leftJoin(contracts, eq(contracts.id, documents.contractId))
-    .leftJoin(matters, eq(matters.id, documents.matterId))
-    .leftJoin(entities, eq(entities.id, documents.entityId))
-    .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
-    .leftJoin(autoDocs, eq(autoDocs.id, documents.autoDocId));
+      })
+      .from(documents)
+      .innerJoin(
+        documentVersions,
+        and(eq(documentVersions.documentId, documents.id), currentVersion),
+      )
+      .innerJoin(users, eq(users.id, documentVersions.createdBy))
+      .leftJoin(documentTypes, eq(documentTypes.id, documentVersions.documentTypeId))
+      .leftJoin(documentVersionText, eq(documentVersionText.versionId, documentVersions.id))
+      .leftJoin(documentFolders, eq(documentFolders.id, documents.folderId))
+      .leftJoin(contracts, eq(contracts.id, documents.contractId))
+      .leftJoin(matters, eq(matters.id, documents.matterId))
+      .leftJoin(entities, eq(entities.id, documents.entityId))
+      .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
+      // DOC-015 addendum: a Knowledge Item's files show its Knowledge type.
+      .leftJoin(knowledgeTypes, eq(knowledgeTypes.id, knowledgeItems.knowledgeTypeId))
+      .leftJoin(autoDocs, eq(autoDocs.id, documents.autoDocId))
+  );
 }
 
 type RepositoryDbRow = Awaited<ReturnType<typeof selectRepository>>[number];
@@ -415,6 +431,7 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
       id: row.versionId,
       versionNumber: row.versionNumber,
       kind: row.versionKind,
+      documentType: row.documentTypeName,
       originalFilename: row.originalFilename,
       mimeType: row.mimeType,
       byteSize: row.byteSize,

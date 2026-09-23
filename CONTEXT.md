@@ -28,6 +28,10 @@ _Avoid_: file, attachment, upload
 An immutable file snapshot in a document's strictly linear chain; corrections append a new version rather than editing one [DOC-001].
 _Avoid_: revision, draft, copy
 
+**Document type**:
+What the team calls a Document Version, picked from its owning module's list (Matters, Contracts, Entities). Optional. The six Contract negotiation types are fixed because code reads the kind they stand for. A Knowledge Item's files have no list; they show the item's Knowledge type [DOC-015].
+_Avoid_: document kind (the stored kind follows the type), category, tag
+
 **Comparison**:
 One derived reading of two Versions of one Document, the older against the newer, held as a change model. A Word pair also retains a tracked-changes file. It is computed once and kept, and it is never a Version [DOC-003].
 

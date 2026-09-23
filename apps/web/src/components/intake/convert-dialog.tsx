@@ -674,7 +674,7 @@ export function ConvertDialog({
         </div>
         {attachments.created ? (
           <div className="mt-4">
-            <CreateAttachments showKind={targetModule !== "matter"} uploads={attachments} />
+            <CreateAttachments module={targetModule} uploads={attachments} />
           </div>
         ) : alreadyDecided ? (
           <div className="mt-4 flex flex-col gap-4">
@@ -1131,7 +1131,7 @@ export function ConvertDialog({
                 );
               })}
             <CreateAttachments
-              showKind={targetModule !== "matter"}
+              module={targetModule}
               uploads={attachments}
               disabled={busy}
               existing={submitted}
