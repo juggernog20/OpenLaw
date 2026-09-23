@@ -399,7 +399,7 @@ test.describe.serial("M8 demo path", () => {
       const dialog = page.getByRole("dialog");
       await dialog.getByLabel("Title").fill(title);
       await dialog.getByLabel("Contract type").selectOption({ label: TYPE_NAME });
-      await dialog.getByLabel(REQUIRED_FIELD.label).fill(GOVERNING_LAW);
+      await dialog.getByRole("textbox", { name: REQUIRED_FIELD.label }).fill(GOVERNING_LAW);
       const created = page.waitForResponse(
         (response) =>
           response.url().endsWith("/api/v1/contracts") && response.request().method() === "POST",
@@ -494,7 +494,7 @@ test.describe.serial("M8 demo path", () => {
       // own (CTR-016, DES-017). A select is a decision, so it commits
       // the moment it changes.
       const fieldSaved = contractPatched(page);
-      await page.getByLabel(OPTIONAL_FIELD.label).selectOption(OUR_POSITION);
+      await page.getByLabel(OPTIONAL_FIELD.label, { exact: true }).selectOption(OUR_POSITION);
       expect((await fieldSaved).ok()).toBe(true);
 
       // And find it again in the list, reading as the C1 mock draws it:

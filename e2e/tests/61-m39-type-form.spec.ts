@@ -187,16 +187,16 @@ test("NDA Branch answers reach the converted Contract and its Portal record", as
     await portal.goto(`/portal/new/${requestType.slug}`);
     await portal.getByLabel("Title").fill(title);
     await expect(portal.getByLabel("Expiry date")).toHaveCount(0);
-    await expect(portal.getByLabel("Governing law")).toHaveCount(0);
+    await expect(portal.getByLabel(/^Governing law/)).toHaveCount(0);
     await portal.getByLabel("Term type").selectOption("fixed");
     await portal.getByRole("button", { name: "Submit request", exact: true }).click();
     await expect(portal.getByText("Expiry date is required.", { exact: true })).toBeVisible();
     await portal.getByLabel("Expiry date").fill("2030-12-31");
-    await portal.getByLabel("Governing law").fill("England and Wales");
+    await portal.getByLabel(/^Governing law/).fill("England and Wales");
     await portal.getByLabel("Term type").selectOption("evergreen");
-    await expect(portal.getByLabel("Governing law")).toHaveCount(0);
+    await expect(portal.getByLabel(/^Governing law/)).toHaveCount(0);
     await portal.getByLabel("Term type").selectOption("fixed");
-    await expect(portal.getByLabel("Governing law")).toHaveValue("England and Wales");
+    await expect(portal.getByLabel(/^Governing law/)).toHaveValue("England and Wales");
     const submitted = portal.waitForResponse(
       (response) =>
         response.url().endsWith("/api/v1/requests") && response.request().method() === "POST",
@@ -215,7 +215,7 @@ test("NDA Branch answers reach the converted Contract and its Portal record", as
     await expect(dialog.getByRole("button", { name: "Expiry date", exact: true })).toHaveText(
       "Dec 31, 2030",
     );
-    await expect(dialog.getByLabel("Governing law")).toHaveValue("England and Wales");
+    await expect(dialog.getByLabel(/^Governing law/)).toHaveValue("England and Wales");
     await dialog.getByRole("button", { name: "Convert to contract", exact: true }).click();
     await expect(dialog).toBeHidden();
     const link = page
@@ -228,7 +228,7 @@ test("NDA Branch answers reach the converted Contract and its Portal record", as
       "Dec 31, 2030",
     );
     await page.goto(`/contracts/${contractNumber}/fields`);
-    await expect(page.getByLabel("Governing law")).toHaveValue("England and Wales");
+    await expect(page.getByLabel(/^Governing law/)).toHaveValue("England and Wales");
     await portal.goto(`/portal/requests/${requestNumber}`);
     await expect(portal).toHaveURL(`/portal/contracts/${contractNumber}`);
     const fields = portal.getByRole("region", { name: "Fields", exact: true });
