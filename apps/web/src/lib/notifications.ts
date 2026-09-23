@@ -181,7 +181,7 @@ const ARMS: Readonly<Record<string, Arm>> = {
     }),
     message: defineMessage({
       id: "notifications.apiKeyRequested",
-      defaultMessage: "An API key request needs your approval",
+      defaultMessage: "{requester} requested an API key for {client}",
     }),
   },
   "api_key.approved": {
@@ -784,6 +784,12 @@ export function narrateNotification(
       // `hasActor` below relies on.
       contract: record,
       request: record,
+      requester:
+        text(item.payload, "requesterName") ??
+        intl.formatMessage({ id: "notifications.keyRequester", defaultMessage: "A person" }),
+      client:
+        text(item.payload, "clientName") ??
+        intl.formatMessage({ id: "notifications.keyClient", defaultMessage: "a Client" }),
       obligation: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_OBLIGATION),
       // The same `label` key under the noun a Key date's sentence uses,
       // on the `contract`/`request` rule two lines up.

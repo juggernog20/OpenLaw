@@ -206,8 +206,13 @@ export const notifications = pgTable(
      * shows current truth; the item says what was true when it fired.
      */
     payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
-    /** NULL until the notification center has shown it (NOT-005:
-     * opening the center marks the visible items read). */
+    /** A non-null kind pins the item until handled (NOT-001). Like eventType,
+     * this stays open text so stored rows can outlive their writer's catalog. */
+    approvalKind: text("approval_kind"),
+    /** NULL means open when approvalKind is set: pinned and badge-counted.
+     * On ordinary notifications this column has no meaning. */
+    handledAt: timestamp("handled_at", { withTimezone: true }),
+    /** First opened, marked read, or handled. Independent of approval state. */
     readAt: timestamp("read_at", { withTimezone: true }),
     /** Push delivery is owed independently of the email timing. */
     pushOwed: boolean("push_owed").notNull().default(false),
@@ -268,6 +273,13 @@ export const notifications = pgTable(
     /** "This person's bell, newest first" — the list's keyset order,
      * and the only read the center makes. */
     index("notifications_user_idx").on(table.userId, table.createdAt, table.id),
+    /** Handling an approval finds every recipient's open copy by its request ID. */
+    index("notifications_open_contract_approval_idx")
+      .on(sql`(${table.payload}->>'approvalId')`)
+      .where(sql`${table.approvalKind} = 'contract' and ${table.handledAt} is null`),
+    index("notifications_open_api_key_approval_idx")
+      .on(table.entityId)
+      .where(sql`${table.approvalKind} = 'api_key' and ${table.handledAt} is null`),
     /** The badge (NOT-005). Partial, because the count is only ever
      * asked of the unread ones and they are the small end of the
      * table. */

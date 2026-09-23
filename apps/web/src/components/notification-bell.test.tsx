@@ -55,6 +55,8 @@ function item(index: number, over: Partial<BellItem> = {}): BellItem {
       contractTitle: `Acme MSA ${index}`,
       actorName: "Nadia Counsel",
     },
+    approvalKind: null,
+    handledAt: null,
     readAt: null,
     // Fixed and descending, so the rows are stable and the timestamps
     // read as a feed does.
@@ -1137,4 +1139,137 @@ it("closes read OS items beyond the loaded page after Mark all read", async () =
   await waitFor(() =>
     expect(postMessage).toHaveBeenCalledWith({ type: "notifications-read", ids: ["n1", "n99"] }),
   );
+});
+
+describe("Your approvals", () => {
+  it.each(["staff", "portal"] as const)(
+    "pins the group on %s and leaves it after Mark all read",
+    async (surface) => {
+      const approval = item(1, {
+        approvalKind: "contract",
+        handledAt: null,
+        readAt: new Date().toISOString(),
+        payload: { contractNumber: 41, contractTitle: "Acme MSA 1", approvalId: "approval-1" },
+      });
+      bellApi({
+        unread: 2,
+        surface,
+        pages: { first: { notifications: [approval, item(2)], nextCursor: null } },
+      });
+      renderAt(surface === "portal" ? "/portal" : "/");
+      await userEvent.click(await bell("2 unread"));
+      const group = await screen.findByRole("region", { name: "Your approvals" });
+      expect(within(group).getByRole("link", { name: "Review" })).toHaveAttribute(
+        "href",
+        surface === "portal" ? "/portal/approvals/approval-1" : "/contracts/41/approvals",
+      );
+      expect(within(group).getByText("Unread")).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "Mark all read" }));
+      expect(group).toBeVisible();
+      expect(within(group).getByRole("link", { name: "Review" })).toBeVisible();
+    },
+  );
+
+  it.each(["approve", "deny"] as const)(
+    "can %s an API key request inline and refreshes the group",
+    async (action) => {
+      let handled = false;
+      const approval = item(1, {
+        eventType: "api_key.requested",
+        payload: {
+          requesterName: "Casey Counsel",
+          clientName: "Research script",
+          toolsets: ["contracts"],
+          scope: "write",
+        },
+        entityType: "api_key_request",
+        entityId: "key-request",
+        approvalKind: "api_key",
+        handledAt: null,
+      });
+      stubApi({
+        signedIn: { ...MEMBER, role: "administrator" },
+        extra: (call) => {
+          if (
+            call.url.pathname === `/api/v1/api-key-requests/key-request/${action}` &&
+            call.method === "POST"
+          ) {
+            handled = true;
+            return json(200, {});
+          }
+          if (call.url.pathname === "/api/v1/notifications/unread-count")
+            return json(200, { unread: handled ? 0 : 1 });
+          if (call.url.pathname === "/api/v1/notifications")
+            return json(200, { notifications: handled ? [] : [approval], nextCursor: null });
+          return undefined;
+        },
+      });
+      renderAt("/");
+      await userEvent.click(await bell("1 unread"));
+      const group = await screen.findByRole("region", { name: "Your approvals" });
+      expect(
+        within(group).getByText("Casey Counsel requested an API key for Research script"),
+      ).toBeVisible();
+      expect(within(group).getByText("Write")).toBeVisible();
+      expect(screen.queryByRole("button", { name: "Mark all read" })).not.toBeInTheDocument();
+      await userEvent.click(
+        within(group).getByRole("button", { name: action === "approve" ? "Approve" : "Deny" }),
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole("region", { name: "Your approvals" })).not.toBeInTheDocument(),
+      );
+      expect(handled).toBe(true);
+      expect(await bell("none unread")).toBeVisible();
+    },
+  );
+});
+
+it("shows a once-issued key when a newly promoted Administrator approves their own earlier request", async () => {
+  const user = userEvent.setup();
+  let handled = false;
+  stubApi({
+    signedIn: { ...MEMBER, role: "administrator" },
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/api-key-requests/own-request/approve") {
+        handled = true;
+        return json(200, {
+          id: "own-request",
+          key: "once-shown-key",
+          clientName: "Research script",
+          toolsets: ["contracts"],
+          scope: "read",
+          approvedBy: "Casey Counsel",
+          decidedAt: "2026-09-24T00:00:00Z",
+          expiresAt: null,
+        });
+      }
+      if (call.url.pathname === "/api/v1/notifications/unread-count")
+        return json(200, { unread: handled ? 0 : 1 });
+      if (call.url.pathname === "/api/v1/notifications")
+        return json(200, {
+          notifications: handled
+            ? []
+            : [
+                item(1, {
+                  entityType: "api_key_request",
+                  entityId: "own-request",
+                  eventType: "api_key.requested",
+                  approvalKind: "api_key",
+                  handledAt: null,
+                }),
+              ],
+          nextCursor: null,
+        });
+      return undefined;
+    },
+  });
+  renderAt("/");
+  await user.click(await bell("1 unread"));
+  await user.click(await screen.findByRole("button", { name: "Approve" }));
+  const dialog = await screen.findByRole("dialog", { name: "Your key is ready" });
+  expect(within(dialog).getByText("once-shown-key")).toBeVisible();
+  await user.click(within(dialog).getByRole("button", { name: "Copy" }));
+  expect(await navigator.clipboard.readText()).toBe("once-shown-key");
+  await user.click(within(dialog).getByRole("button", { name: "Done" }));
+  expect(screen.queryByText("once-shown-key")).not.toBeInTheDocument();
 });

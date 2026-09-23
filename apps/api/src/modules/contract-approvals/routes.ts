@@ -10,6 +10,7 @@
  * at Contract creation. Decisions are final and recorded in activity history.
  */
 
+import { handleApprovalItems } from "../../lib/notifications/approvals.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -673,6 +674,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           )
           .returning({ id: contractApprovals.id });
         if (!decided) throw httpError(409, "This approval request has already been decided.");
+        await handleApprovalItems(tx, "contract", approval.id);
 
         await recordActivity(tx, {
           entityType: "contract",
@@ -742,6 +744,7 @@ export const contractApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           throw httpError(409, "This approval request has been decided. It cannot be cancelled.");
         }
 
+        await handleApprovalItems(tx, "contract", approval.id);
         await tx.delete(contractApprovals).where(eq(contractApprovals.id, approval.id));
 
         // The row is gone, so this entry is the only thing left that

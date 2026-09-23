@@ -7200,10 +7200,19 @@
     "defaultMessage": "Your API key request was denied. Open API keys to read the note."
   },
   "notifications.apiKeyRequested": {
-    "defaultMessage": "An API key request needs your approval"
+    "defaultMessage": "{requester} requested an API key for {client}"
   },
   "notifications.approval.requested": {
     "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
+  },
+  "notifications.approvalError": {
+    "defaultMessage": "The request could not be handled. Try again."
+  },
+  "notifications.approvalsStay": {
+    "defaultMessage": "Mark all read leaves Your approvals in place."
+  },
+  "notifications.approve": {
+    "defaultMessage": "Approve"
   },
   "notifications.badgeCapped": {
     "defaultMessage": "{cap}+"
@@ -7256,11 +7265,17 @@
   "notifications.date.obligation": {
     "defaultMessage": "{obligation} on {contract} is coming up"
   },
+  "notifications.deny": {
+    "defaultMessage": "Deny"
+  },
   "notifications.document.added": {
     "defaultMessage": "{hasActor, select, yes {{actor} added a document to {contract}} other {A document was added to {contract}}}"
   },
   "notifications.document.versionAdded": {
     "defaultMessage": "{hasActor, select, yes {{actor} added a version to {contract}} other {A version was added to {contract}}}"
+  },
+  "notifications.earlier": {
+    "defaultMessage": "Earlier"
   },
   "notifications.empty": {
     "defaultMessage": "Nothing to catch up on. News about your records shows up here."
@@ -7270,6 +7285,12 @@
   },
   "notifications.envelope.ended": {
     "defaultMessage": "Signing ended on {contract}"
+  },
+  "notifications.keyClient": {
+    "defaultMessage": "a Client"
+  },
+  "notifications.keyRequester": {
+    "defaultMessage": "A person"
   },
   "notifications.loadError": {
     "defaultMessage": "Notifications could not be read. Close this and open it again."
@@ -7391,6 +7412,9 @@
   "notifications.requestNumber": {
     "defaultMessage": "R-{number}"
   },
+  "notifications.review": {
+    "defaultMessage": "Review"
+  },
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
   },
@@ -7405,6 +7429,9 @@
   },
   "notifications.unreadRow": {
     "defaultMessage": "Unread"
+  },
+  "notifications.yourApprovals": {
+    "defaultMessage": "Your approvals"
   },
   "portal.approvals.approve": {
     "defaultMessage": "Approve"

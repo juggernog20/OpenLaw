@@ -58,7 +58,6 @@ export function ApiKeys({
   const [decision, setDecision] = useState<{ row: KeyRow; action: Action }>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
-  const [copied, setCopied] = useState(false);
   const [name, setName] = useState("");
   const [toolsets, setToolsets] = useState<McpToolset[]>([]);
   const [scope, setScope] = useState<"read" | "write">();
@@ -101,7 +100,6 @@ export function ApiKeys({
           requests: s.requests.map((r) => (r.id === data.id ? { ...data, key: undefined } : r)),
         }));
         if (data.key) {
-          setCopied(false);
           setReady(data);
         }
       })
@@ -134,7 +132,6 @@ export function ApiKeys({
       if (!data) throw new Error(error?.detail ?? fail());
       setRequesting(false);
       if (data.key) {
-        setCopied(false);
         setReady(data);
       }
     });
@@ -154,7 +151,6 @@ export function ApiKeys({
       if (!result.data) throw new Error(result.error?.detail ?? fail());
       setDecision(undefined);
       if (result.data.key) {
-        setCopied(false);
         setReady(result.data);
       }
     });
@@ -441,92 +437,7 @@ export function ApiKeys({
           </form>
         </DialogContent>
       </Dialog>
-      <Dialog
-        open={!!ready}
-        onOpenChange={(open) => {
-          if (!open) setReady(undefined);
-        }}
-      >
-        <DialogContent aria-describedby={undefined}>
-          <DialogTitle>
-            <FormattedMessage id="apiKeys.readyTitle" defaultMessage="Your key is ready" />
-          </DialogTitle>
-          {ready && (
-            <div className="mt-4 flex flex-col gap-4">
-              <p>
-                <FormattedMessage
-                  id="apiKeys.once"
-                  defaultMessage="Approved by {name} on {date}. OpenLaw will not show this key again."
-                  values={{ name: ready.approvedBy, date: date(ready.decidedAt) }}
-                />
-              </p>
-              <div className="flex items-center gap-2 rounded-button bg-control p-3">
-                <code className="min-w-0 flex-1 break-all">{ready.key}</code>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    void navigator.clipboard
-                      .writeText(ready.key!)
-                      .then(() => setCopied(true))
-                      .catch(() =>
-                        setError(
-                          intl.formatMessage({
-                            id: "apiKeys.copyFailed",
-                            defaultMessage:
-                              "Copy failed. Select and copy the key before closing this dialog.",
-                          }),
-                        ),
-                      );
-                  }}
-                >
-                  {copied ? (
-                    <FormattedMessage id="apiKeys.copied" defaultMessage="Copied" />
-                  ) : (
-                    <FormattedMessage id="apiKeys.copy" defaultMessage="Copy" />
-                  )}
-                </Button>
-              </div>
-              <dl className="grid grid-cols-2 gap-2">
-                <dt>
-                  <FormattedMessage id="apiKeys.client" defaultMessage="Client" />
-                </dt>
-                <dd>{ready.clientName}</dd>
-                <dt>
-                  <FormattedMessage id="apiKeys.toolsets" defaultMessage="Toolsets" />
-                </dt>
-                <dd>{listToolsets(ready)}</dd>
-                <dt>
-                  <FormattedMessage id="apiKeys.scope" defaultMessage="Scope" />
-                </dt>
-                <dd>
-                  <Scope scope={ready.scope} />
-                </dd>
-                <dt>
-                  <FormattedMessage id="apiKeys.expires" defaultMessage="Expires" />
-                </dt>
-                <dd>{date(ready.expiresAt)}</dd>
-              </dl>
-              <p className="text-sm text-muted">
-                <FormattedMessage
-                  id="apiKeys.header"
-                  defaultMessage="Send this key in the x-api-key header."
-                />{" "}
-                <a href="/help/reference#connect-a-headless-client" className="text-link underline">
-                  <FormattedMessage id="apiKeys.guide" defaultMessage="Connect a headless Client" />
-                </a>
-              </p>
-              {error && (
-                <p role="alert" className="text-status-danger-fg">
-                  {error}
-                </p>
-              )}
-              <Button onClick={() => setReady(undefined)}>
-                <FormattedMessage id="apiKeys.done" defaultMessage="Done" />
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {ready && <ApiKeyReadyDialog ready={ready} onClose={() => setReady(undefined)} />}
       <Dialog
         open={!!decision}
         onOpenChange={(open) => {
@@ -604,5 +515,103 @@ function Note({ value, onChange }: { value: string; onChange: (value: string) =>
         rows={3}
       />
     </label>
+  );
+}
+
+/** Keeps a once-shown key available when approval happens outside the API keys pane. */
+export function ApiKeyReadyDialog({ ready, onClose }: { ready: KeyRow; onClose: () => void }) {
+  const intl = useIntl();
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string>();
+  const date = (value: string | null) =>
+    value ? intl.formatDate(value, { dateStyle: "medium" }) : "—";
+  const listToolsets = (row: KeyRow) => row.toolsets.map((t) => toolsetLabel(intl, t)).join(", ");
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent aria-describedby={undefined}>
+        <DialogTitle>
+          <FormattedMessage id="apiKeys.readyTitle" defaultMessage="Your key is ready" />
+        </DialogTitle>
+        {ready && (
+          <div className="mt-4 flex flex-col gap-4">
+            <p>
+              <FormattedMessage
+                id="apiKeys.once"
+                defaultMessage="Approved by {name} on {date}. OpenLaw will not show this key again."
+                values={{ name: ready.approvedBy, date: date(ready.decidedAt) }}
+              />
+            </p>
+            <div className="flex items-center gap-2 rounded-button bg-control p-3">
+              <code className="min-w-0 flex-1 break-all">{ready.key}</code>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  void navigator.clipboard
+                    .writeText(ready.key!)
+                    .then(() => setCopied(true))
+                    .catch(() =>
+                      setError(
+                        intl.formatMessage({
+                          id: "apiKeys.copyFailed",
+                          defaultMessage:
+                            "Copy failed. Select and copy the key before closing this dialog.",
+                        }),
+                      ),
+                    );
+                }}
+              >
+                {copied ? (
+                  <FormattedMessage id="apiKeys.copied" defaultMessage="Copied" />
+                ) : (
+                  <FormattedMessage id="apiKeys.copy" defaultMessage="Copy" />
+                )}
+              </Button>
+            </div>
+            <dl className="grid grid-cols-2 gap-2">
+              <dt>
+                <FormattedMessage id="apiKeys.client" defaultMessage="Client" />
+              </dt>
+              <dd>{ready.clientName}</dd>
+              <dt>
+                <FormattedMessage id="apiKeys.toolsets" defaultMessage="Toolsets" />
+              </dt>
+              <dd>{listToolsets(ready)}</dd>
+              <dt>
+                <FormattedMessage id="apiKeys.scope" defaultMessage="Scope" />
+              </dt>
+              <dd>
+                <Scope scope={ready.scope} />
+              </dd>
+              <dt>
+                <FormattedMessage id="apiKeys.expires" defaultMessage="Expires" />
+              </dt>
+              <dd>{date(ready.expiresAt)}</dd>
+            </dl>
+            <p className="text-sm text-muted">
+              <FormattedMessage
+                id="apiKeys.header"
+                defaultMessage="Send this key in the x-api-key header."
+              />{" "}
+              <a href="/help/reference#connect-a-headless-client" className="text-link underline">
+                <FormattedMessage id="apiKeys.guide" defaultMessage="Connect a headless Client" />
+              </a>
+            </p>
+            {error && (
+              <p role="alert" className="text-status-danger-fg">
+                {error}
+              </p>
+            )}
+            <Button onClick={onClose}>
+              <FormattedMessage id="apiKeys.done" defaultMessage="Done" />
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
