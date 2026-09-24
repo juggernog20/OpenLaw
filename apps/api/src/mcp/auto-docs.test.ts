@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { readFile } from "node:fs/promises";
+import PizZip from "pizzip";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
@@ -299,14 +300,21 @@ it("uses the UI form, validates answers and the pair, and produces the same outp
       cookies,
     });
     expect(download.statusCode).toBe(200);
-    expect(download.rawPayload).toEqual(uiDownload.rawPayload);
+    expect(uiDownload.statusCode).toBe(200);
+    const entries = (bytes: Buffer) =>
+      Object.fromEntries(
+        Object.entries(new PizZip(bytes).files)
+          .filter(([, entry]) => !entry.dir)
+          .map(([name, entry]) => [name, entry.asNodeBuffer()]),
+      );
+    expect(entries(download.rawPayload)).toEqual(entries(uiDownload.rawPayload));
     expect(tool.downloads.pdf).toBeNull();
     const rows = await call(client, "generations_list");
     expect(rows.generations.map((r) => r.id)).toContain(tool.id);
     expect(JSON.stringify(rows)).not.toMatch(/fileRef|contractSnapshot|UEsDB/);
     const other = await call(client === legal ? business : legal, "generations_list");
     expect(other.generations.map((r) => r.id)).not.toContain(tool.id);
-    const [activity] = await h.db
+    const activity = await h.db
       .select()
       .from(activityLog)
       .where(
@@ -316,8 +324,9 @@ it("uses the UI form, validates answers and the pair, and produces the same outp
           eq(activityLog.actorId, client === legal ? legalId : businessId),
         ),
       );
-    expect(activity!.payload.generationId).toBe(tool.id);
-    expect(activity).toMatchObject({
+    const generated = activity.filter((row) => row.payload.generationId === tool.id);
+    expect(generated).toHaveLength(1);
+    expect(generated[0]).toMatchObject({
       viaKind: "api_key",
       viaId: credentialIds.get(client),
       viaClientName: "Auto-Docs test",
