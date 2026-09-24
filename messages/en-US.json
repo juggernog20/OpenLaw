@@ -1376,6 +1376,9 @@
   "autoDocs.column.legalOwner": {
     "defaultMessage": "Default Legal Owner"
   },
+  "autoDocs.column.none": {
+    "defaultMessage": "—"
+  },
   "autoDocs.column.published": {
     "defaultMessage": "Published"
   },
