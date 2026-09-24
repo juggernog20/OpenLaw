@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { activityViaFor } from "../acting-context.js";
 
 /**
  * The notification seam (NOT-001, NOT-002, TECH-007).
@@ -889,6 +890,7 @@ async function fanOut(
   options: FanOutOptions = {},
 ): Promise<number> {
   const { narrowing = {}, reminder } = options;
+  const via = activityViaFor(actorId);
   // 1. The audience, minus the person who caused it. Deduplicated: one
   // event tells one person once, however many rows named them.
   const byUser = new Map<string, PendingNotification>();
@@ -968,7 +970,10 @@ async function fanOut(
               : null,
         entityType: entity.type satisfies NotificationEntityType,
         entityId: entity.id,
-        payload: byUser.get(userId)!.payload,
+        payload: {
+          ...byUser.get(userId)!.payload,
+          ...(via ? { viaKind: via.kind, viaId: via.id, viaClientName: via.clientName } : {}),
+        },
         // The refinement: decided here, at write time, so that "owed
         // and unsent" is a state the rows can be asked about. A group
         // whose email never leaves owes none, whatever a stale

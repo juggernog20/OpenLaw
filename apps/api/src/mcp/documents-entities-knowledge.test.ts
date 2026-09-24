@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
+  activityLog,
   contracts,
   contractStatuses,
   contractTeam,
@@ -193,6 +194,18 @@ it("completes a signed upload without cookies or an API key and never overwrites
   const response = await put(upload, "Uploaded paper");
   expect(response.statusCode, response.body).toBe(201);
   expect(response.json().document.versions[0]!.id).toBe(upload.versionId);
+  const activity = await h.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.entityId, contractId));
+  expect(activity).toContainEqual(
+    expect.objectContaining({
+      action: "document.created",
+      actorId: userId,
+      viaKind: "api_key",
+      viaClientName: "Documents test",
+    }),
+  );
   expect((await put(upload, "Replacement")).statusCode).toBe(409);
   const listed = await call(legal, "documents_list", target());
   expect(listed.documents[0]!.versions[0]!.id).toBe(upload.versionId);

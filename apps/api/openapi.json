@@ -39722,6 +39722,15 @@
                               }
                             ]
                           },
+                          "viaKind": {
+                            "type": ["string", "null"]
+                          },
+                          "viaId": {
+                            "type": ["string", "null"]
+                          },
+                          "viaClientName": {
+                            "type": ["string", "null"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -39735,7 +39744,17 @@
                             "additionalProperties": {}
                           }
                         },
-                        "required": ["id", "action", "visibility", "actor", "createdAt", "payload"],
+                        "required": [
+                          "id",
+                          "action",
+                          "visibility",
+                          "actor",
+                          "viaKind",
+                          "viaId",
+                          "viaClientName",
+                          "createdAt",
+                          "payload"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -73038,6 +73057,15 @@
                               }
                             ]
                           },
+                          "viaKind": {
+                            "type": ["string", "null"]
+                          },
+                          "viaId": {
+                            "type": ["string", "null"]
+                          },
+                          "viaClientName": {
+                            "type": ["string", "null"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -73051,7 +73079,17 @@
                             "additionalProperties": {}
                           }
                         },
-                        "required": ["id", "action", "visibility", "actor", "createdAt", "payload"],
+                        "required": [
+                          "id",
+                          "action",
+                          "visibility",
+                          "actor",
+                          "viaKind",
+                          "viaId",
+                          "viaClientName",
+                          "createdAt",
+                          "payload"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -73259,6 +73297,15 @@
                               }
                             ]
                           },
+                          "viaKind": {
+                            "type": ["string", "null"]
+                          },
+                          "viaId": {
+                            "type": ["string", "null"]
+                          },
+                          "viaClientName": {
+                            "type": ["string", "null"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -73280,6 +73327,9 @@
                           "entityId",
                           "entityRef",
                           "actor",
+                          "viaKind",
+                          "viaId",
+                          "viaClientName",
                           "createdAt",
                           "payload"
                         ],

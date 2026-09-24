@@ -152,6 +152,9 @@ export const workspaceTools: readonly ToolDefinition[] = [
       const rows = await db
         .select({
           id: activityLog.id,
+          viaKind: activityLog.viaKind,
+          viaId: activityLog.viaId,
+          viaClientName: activityLog.viaClientName,
           entityId: activityLog.entityId,
           entityType: activityLog.entityType,
           action: activityLog.action,

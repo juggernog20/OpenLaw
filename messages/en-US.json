@@ -53,6 +53,9 @@
   "activity.actor.system": {
     "defaultMessage": "OpenLaw"
   },
+  "activity.actor.via": {
+    "defaultMessage": "{actor}, via {client},"
+  },
   "activity.aiConnector.answerStyle": {
     "defaultMessage": "{value, select, few_words {Few word summary} sentence {1-2 sentence summary} full_clause {Full clause text} other {{value}}}"
   },
@@ -7184,6 +7187,9 @@
   "notFound.title": {
     "defaultMessage": "Page not found"
   },
+  "notifications.actor.via": {
+    "defaultMessage": "{actor}, via {client},"
+  },
   "notifications.apiKey.approved.generic": {
     "defaultMessage": "Your API key request was approved"
   },
@@ -7395,7 +7401,7 @@
     "defaultMessage": "{outcome, select, ready {The Conversion draft for {request} is ready to review} other {The Conversion draft for {request} could not finish}}"
   },
   "notifications.request.created": {
-    "defaultMessage": "Legal has received your request {request}"
+    "defaultMessage": "{hasVia, select, yes {{actor} submitted your request {request} to Legal} other {Legal has received your request {request}}}"
   },
   "notifications.request.declined": {
     "defaultMessage": "Legal declined your request {request}"

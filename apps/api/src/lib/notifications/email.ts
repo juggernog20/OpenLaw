@@ -217,7 +217,7 @@ function matterMail(
 ): MailMessage | null {
   const named = `M-${record.number} · ${record.title}`;
   const link = matterLink(baseUrl, record.number);
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   if (notification.eventType === "matter.task_assigned") {
     const task = detail(notification, "taskTitle");
     return {
@@ -292,7 +292,7 @@ function staffRequestMail(
   const named = `${requestReference(record.number)} · ${record.title}`;
   const link = inboxRequestLink(baseUrl, record.number);
   const hello = `Hello ${notification.recipientName},`;
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   switch (notification.eventType) {
     case "request.assigned":
       return {
@@ -448,7 +448,7 @@ function contractMail(
     approvalId
       ? `${origin(baseUrl).replace(/\/portal$/, "")}/portal/approvals/${encodeURIComponent(approvalId)}`
       : recordLink(baseUrl, record.number);
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   const contractTitle = record.title;
   switch (notification.eventType) {
     case "approval.requested":
@@ -705,7 +705,7 @@ function requestMail(
 ): MailMessage | null {
   const link = portalRequestLink(baseUrl, record.number);
   const reference = requestReference(record.number);
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   const hello = `Hello ${notification.recipientName},`;
   // Reference then title, the way the portal's own detail page titles
   // itself: the reference is what a requester quotes, and the title is
@@ -722,7 +722,9 @@ function requestMail(
         text: [
           hello,
           "",
-          `Your request ${named} has reached Legal.`,
+          notificationClient(notification)
+            ? `${who} submitted your request ${named} to Legal.`
+            : `Your request ${named} has reached Legal.`,
           "",
           link,
           "",
@@ -816,4 +818,15 @@ const REQUEST_STATUS_WORDS: Record<RequestStatus, string> = {
  */
 function statusWord(status: string | null): string | null {
   return wordFor(REQUEST_STATUS_WORDS, status);
+}
+
+function notificationClient(notification: NotificationMail): string | null {
+  const kind = detail(notification, "viaKind");
+  return kind && kind !== "ui" ? detail(notification, "viaClientName") : null;
+}
+
+function notificationActor(notification: NotificationMail): string {
+  const actor = notification.actorName ?? "Somebody";
+  const client = notificationClient(notification);
+  return client ? `${actor}, via ${client},` : actor;
 }

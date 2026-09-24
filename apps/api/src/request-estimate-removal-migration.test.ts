@@ -47,7 +47,14 @@ it("drops return estimates while preserving Requests, submitted dates, ownership
     ).toEqual(before);
     expect(
       (await db.execute(sql`select * from activity_log where id = 'estimate-change'`)).rows,
-    ).toEqual(history);
+    ).toEqual(
+      history.map((row) => ({
+        ...row,
+        via_kind: null,
+        via_id: null,
+        via_client_name: null,
+      })),
+    );
     await runMigrations(db);
     expect(
       (
