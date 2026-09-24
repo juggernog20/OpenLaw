@@ -565,9 +565,8 @@ describe("group 2's email opt-in (NOT-002)", () => {
     expect(message.subject).toContain(contract.title);
     // The deep link is the whole point of the channel (NOT-005).
     expect(message.text).toContain(`http://localhost/contracts/${String(contract.number)}`);
-    // The words themselves stay on the thread: DD-016 is enforced there,
-    // and a redact (CMT-006) cannot reach a message that has left.
-    expect(message.text).not.toContain("Second look done");
+    // NOT-002 reads the current comment words when the email is sent.
+    expect(message.text).toContain("Second look done");
 
     await toggle(TARGET, "activity_on_your_records", "email", false);
   });

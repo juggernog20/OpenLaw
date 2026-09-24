@@ -6,11 +6,13 @@ Keep your organization details current and give each person the access they need
 
 1. Open **Settings → General**.
 2. Edit **Organization name** and press Enter or leave the field to save. Check the saved status; Escape restores the previous name before saving.
-3. Select **Upload** beside **Logo** and choose a PNG, JPEG, WebP, or SVG image of 5 MB or smaller. Any other file shows "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file." Choose a supported file and retry.
+3. Select **Upload** beside **Logo** and choose a PNG, JPEG, WebP, or SVG image of 5 MB or smaller. Any other file shows "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file." Choose a supported file and retry. The API also checks that the image can be read and has no more than 16 million pixels. If saving fails, resize or export the image again and retry.
 4. Select **Default timezone**. This supplies the organization default; signed-in users can set their own [account timezone](personal-settings.md).
 5. Reload to confirm the saved values. **Default locale** currently offers **English (United States)** only.
 
 The saved **Organization name** and logo also appear on the sign-in pages for staff and for the Business Portal, above the sign-in form. Anyone who opens a sign-in page can see them without an account. With no saved name, the sign-in pages show OpenLaw.
+
+Approval email headers also show your logo. Removing the logo restores the OpenLaw mark in those emails. Logos saved before this feature receive their email copy during upgrade. If the old image cannot be read, upload it again from a readable file.
 
 ## Invite a colleague
 

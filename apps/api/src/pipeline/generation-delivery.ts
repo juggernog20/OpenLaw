@@ -117,7 +117,10 @@ export async function handleGenerationDelivery(
         .select({ name: autoDocs.name })
         .from(autoDocs)
         .where(eq(autoDocs.id, ready.autoDocId));
-      const [organization] = await tx.select({ name: orgSettings.name }).from(orgSettings).limit(1);
+      const [organization] = await tx
+        .select({ name: orgSettings.name, emailLogoPng: orgSettings.emailLogoPng })
+        .from(orgSettings)
+        .limit(1);
       if (!person || person.archivedAt) {
         const failure = {
           code: "recipient_archived",
@@ -177,6 +180,8 @@ export async function handleGenerationDelivery(
           personName: person.displayName,
           autoDocName: autoDoc!.name,
           organizationName: organization?.name ?? "",
+          emailLogoPng: organization?.emailLogoPng,
+          surface: person.role === "business_user" ? "portal" : "staff",
           coverNote: ready.coverNote,
           baseUrl: deps.baseUrl,
           autoDocId: ready.autoDocId,

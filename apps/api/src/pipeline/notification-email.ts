@@ -59,8 +59,10 @@ import {
   notificationScope,
   REQUEST_ENTITY,
 } from "../lib/notifications/audience.js";
+import { COMMENT_EMAIL_EVENTS, readEmailComment } from "../lib/notifications/comment-email.js";
 import { requestSideOf } from "../lib/notifications/catalog.js";
 import { origin, renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
+import { getOrgSettings } from "../lib/org-settings.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { reasonOf } from "./derivations.js";
 import type { PipelineLogger } from "./logger.js";
@@ -311,10 +313,23 @@ async function sendNotificationEmail(
   const { mailer, from } = await deps.resolveMailer();
   if (!mailer.configured || !from) return "unconfigured";
 
+  // The header names the organization as it is at send time, not as it
+  // was when the row was written (DES-093). Read for every event, so an
+  // arm that moves onto the layout later gets the brand without a change
+  // here.
+  const { name, emailLogoPng, commentWordsInEmail } = await getOrgSettings(deps.db);
+  const brand = { name, emailLogoPng };
+  const comment =
+    commentWordsInEmail &&
+    COMMENT_EMAIL_EVENTS.has(row.eventType) &&
+    typeof payload.commentId === "string"
+      ? await readEmailComment(deps.db, payload.commentId, row.userId)
+      : undefined;
   const message = renderNotificationMail(
     {
       eventType: row.eventType as NotificationEventType,
       record,
+      comment,
       actorName: typeof payload.actorName === "string" ? payload.actorName : null,
       recipientName: row.recipientName,
       // The rest of the snapshot, for the arms that name something
@@ -330,6 +345,7 @@ async function sendNotificationEmail(
       row.entityType !== "api_key_request"
       ? `${origin(deps.baseUrl)}/portal`
       : deps.baseUrl,
+    brand,
   );
   // No copy for this event yet — group 3's words arrive with the digest
   // (NOT-003). Terminal, because no retry writes copy.

@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { describe, expect, it } from "vitest";
-import {
-  commentBodyParts,
-  documentLinkDraft,
-  serializeDocumentLinks,
-} from "./comment-document-links";
+import { commentBodyParts, documentLinkDraft, serializeDocumentLinks } from "@openlaw/shared";
 
 const href = "/matters/12/documents?doc=doc-sample&version=version-sample";
 

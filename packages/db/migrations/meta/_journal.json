@@ -1191,6 +1191,13 @@
       "when": 1790243833451,
       "tag": "0169_activity-via",
       "breakpoints": true
+    },
+    {
+      "idx": 170,
+      "version": "7",
+      "when": 1790288469379,
+      "tag": "0170_email-layout",
+      "breakpoints": true
     }
   ]
 }

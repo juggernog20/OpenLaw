@@ -779,6 +779,7 @@ export function stubApi(state: ApiState) {
         "/api/v1/knowledge/types": { knowledgeTypes: [] },
         "/api/v1/request-types": { requestTypes: [] },
         "/api/v1/fields": { fields: [] },
+        "/api/v1/org/notifications": { commentWordsInEmail: true },
         "/api/v1/org/reminder-offsets": { offsets: [7, 1, 0] },
         "/api/v1/org/currencies": {
           currencies: ["USD", "EUR", "GBP", "AED", "BHD", "JPY"],
@@ -796,6 +797,7 @@ export function stubApi(state: ApiState) {
             | "/api/v1/knowledge/types"
             | "/api/v1/request-types"
             | "/api/v1/fields"
+            | "/api/v1/org/notifications"
             | "/api/v1/org/reminder-offsets"
             | "/api/v1/org/currencies"
         ]: paths[P]["get"]["responses"][200]["content"]["application/json"];

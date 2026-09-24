@@ -28,6 +28,7 @@ import {
 } from "@openlaw/db";
 import { buildApp } from "./app.js";
 import { createAutoDocFillEngine } from "./lib/auto-doc-fill/real.js";
+import { backfillEmailLogo } from "./lib/email-logo.js";
 import { createMailerResolver } from "./lib/mailer.js";
 import { createDocEngineFromEnv } from "./lib/doc-engine/config.js";
 import { createStorageFromEnv } from "./lib/storage/config.js";
@@ -93,6 +94,12 @@ try {
 } catch (error) {
   console.error(error instanceof MigrationJournalError ? error.message : error);
   process.exit(1);
+}
+
+if ((await backfillEmailLogo(db)) === "invalid") {
+  console.warn(
+    "The organization logo could not be copied for email. Upload a readable logo in Organization settings. Email uses the OpenLaw mark until then.",
+  );
 }
 
 // Beside the migrations, and for their reason (TECH-005: the API is the

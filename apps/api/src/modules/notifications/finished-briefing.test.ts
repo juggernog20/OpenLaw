@@ -13,6 +13,7 @@ import {
   eq,
   notificationPreferences,
   notifications,
+  orgSettings,
   requests,
   requestTypes,
   sql,
@@ -253,6 +254,7 @@ beforeAll(async () => {
     },
   ]);
 
+  await harness.db.update(orgSettings).set({ name: "Briefing Legal" });
   first = await round(8);
   readyBeforeRerun = (await harness.db.select().from(notifications)).filter(
     (row) => row.eventType === "briefing.ready",
@@ -272,6 +274,27 @@ describe("the finished daily briefing", () => {
     expect(message.text).not.toContain("Future Home-only Task");
     expect(message.text).not.toContain("Briefing control date");
     expect(message.html).toContain("Overdue briefing Task");
+    expect(message.html).toContain("Briefing Legal · sent by OpenLaw");
+    expect(message.html).toContain('src="cid:openlaw-mark@openlaw"');
+    expect(message.attachments).toEqual([expect.objectContaining({ cid: "openlaw-mark@openlaw" })]);
+    expect(message.html).toMatch(/Daily briefing <span[^>]*>· /);
+    expect(message.html).toMatch(/<h1[^>]*>Your daily briefing<\/h1>/);
+    expect(message.html).toContain(`Hello ${DEFAULT_MEMBER.displayName},`);
+    expect(message.html).toContain("You get a morning briefing.");
+    expect(message.html).toContain(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "UTC",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(new Date(`${today}T00:00:00Z`)),
+    );
+    expect(message.html!.match(/width="33%" valign="top"/g)).toHaveLength(2);
+    expect(message.html).toMatch(/Approvals <span[^>]*>1<\/span>/);
+    expect(message.html).toMatch(/Tasks <span[^>]*>2<\/span>/);
+    expect(message.html).toMatch(/align="right"[^>]*color:#cf222e;">[\s\S]*?Due Jan 1, 2000/);
+    expect(message.html).not.toContain("Future Home-only Task");
+    expect(message.html).not.toContain("Briefing control date");
   });
 
   it("keeps Intake Member+ and opt-in while the other section defaults stay on", () => {
@@ -282,9 +305,9 @@ describe("the finished daily briefing", () => {
     expect(optedMail.text).toContain("Review the intake redline");
     expect(optedMail.text).toContain("Briefing control date");
     expect(optedMail.text).toMatch(/unverified — Expiry: Finished briefing contract/);
-    expect(optedMail.html).toMatch(/unverified — Expiry: Finished briefing contract/);
+    expect(optedMail.html).toContain("Expiry · unverified");
     expect(optedMail.text).not.toMatch(/unverified — Briefing control date/);
-    expect(optedMail.html).not.toMatch(/unverified — Briefing control date/);
+    expect(optedMail.html).not.toContain("Briefing control date · unverified");
     expect(optedMail.html).toContain("Review the intake redline");
     expect(harness.mailer.messagesTo(EMPTY_CONTRIBUTOR.email)).toEqual([]);
     expect(harness.mailer.messagesTo(REQUESTER.email)).toEqual([]);
