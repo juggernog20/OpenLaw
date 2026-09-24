@@ -59,6 +59,7 @@ import {
 } from "../lib/notifications/audience.js";
 import { requestSideOf } from "../lib/notifications/catalog.js";
 import { origin, renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
+import { getOrgSettings } from "../lib/org-settings.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { reasonOf } from "./derivations.js";
 import type { PipelineLogger } from "./logger.js";
@@ -290,6 +291,8 @@ async function sendNotificationEmail(
   const { mailer, from } = await deps.resolveMailer();
   if (!mailer.configured || !from) return "unconfigured";
 
+  const brand =
+    row.eventType === "approval.requested" ? { name: (await getOrgSettings(deps.db)).name } : {};
   const message = renderNotificationMail(
     {
       eventType: row.eventType as NotificationEventType,
@@ -307,6 +310,7 @@ async function sendNotificationEmail(
     row.recipientRole === "business_user" && row.entityType !== "request"
       ? `${origin(deps.baseUrl)}/portal`
       : deps.baseUrl,
+    brand,
   );
   // No copy for this event yet — group 3's words arrive with the digest
   // (NOT-003). Terminal, because no retry writes copy.

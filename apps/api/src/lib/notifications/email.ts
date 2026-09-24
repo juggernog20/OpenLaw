@@ -32,12 +32,12 @@
  * renders, and the bell's own strings arrive with the bell. What this
  * layer sends is the same class of copy as the invite email above it.
  *
- * Catalog notifications remain plain text. The cross-module daily
- * briefing has paired HTML and text parts in `briefing-template.ts`,
- * where its independently optional sections can stay in sync.
+ * Approval requests pair the authored text with the shared DES-093 layout.
  */
 
 import type { NotificationEventType, RequestStatus, SeverityLevel } from "@openlaw/db";
+import { renderEmailLayout, type EmailBrand } from "../email-layout.js";
+export { escapeHtml } from "../email-layout.js";
 import type { MailMessage } from "../mailer.js";
 import { requestSideOf } from "./catalog.js";
 
@@ -94,19 +94,6 @@ export function origin(baseUrl: string): string {
   let end = baseUrl.length;
   while (end > 0 && baseUrl[end - 1] === "/") end -= 1;
   return baseUrl.slice(0, end);
-}
-
-/** Text on its way into an HTML part, with the five characters that
- * would otherwise end the text and start markup. Every template that
- * writes HTML escapes through this one function, so a part added later
- * cannot quietly use a weaker rule. */
-export function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 /** The deep link one notification points at: the record itself. */
@@ -178,10 +165,12 @@ export function renderNotificationMail(
   notification: NotificationMail,
   to: string,
   baseUrl: string,
+  brand: EmailBrand = {},
 ): MailMessage | null {
   const { record } = notification;
   if (record.entityType === "matter") return matterMail(notification, record, to, baseUrl);
-  if (record.entityType === "contract") return contractMail(notification, record, to, baseUrl);
+  if (record.entityType === "contract")
+    return contractMail(notification, record, to, baseUrl, brand);
   // A Request is read from two sides, so the group is what says which
   // message this is. The record alone cannot: both audiences hold rows
   // about the same Request, and one of them is staff.
@@ -421,6 +410,7 @@ function contractMail(
   record: Extract<MailRecord, { entityType: "contract" }>,
   to: string,
   baseUrl: string,
+  brand: EmailBrand,
 ): MailMessage | null {
   const approvalId = detail(notification, "approvalId");
   const link =
@@ -434,6 +424,37 @@ function contractMail(
   switch (notification.eventType) {
     case "approval.requested":
       return {
+        ...renderEmailLayout(
+          {
+            subject: `Approval requested: ${contractTitle}`,
+            baseUrl,
+            surface: notification.recipientRole === "business_user" ? "portal" : "staff",
+            preheader: `${who} has asked you to approve ${contractTitle}.`,
+            tone: "warning",
+            label: "Approval requested",
+            headline: `${who} asked you to approve a contract`,
+            greeting: `Hello ${notification.recipientName},`,
+            body: [`${who} has asked you to approve ${contractTitle}.`],
+            record: {
+              kind: "Contract",
+              ref: `C-${record.number}`,
+              title: contractTitle,
+              href: link,
+              status: { label: "Pending approval", tone: "warning" },
+              ...(notification.actorName ? { actor: notification.actorName } : {}),
+            },
+            action: {
+              label: "Review approval",
+              href: link,
+              line:
+                notification.recipientRole === "business_user"
+                  ? "You can approve or reject it, with a note, on the approval page."
+                  : "You can approve or reject it, with a note, on the record.",
+            },
+            footer: { kind: "notification", why: "You are an approver on this contract." },
+          },
+          brand,
+        ),
         to,
         subject: `Approval requested: ${contractTitle}`,
         text: [

@@ -16,7 +16,7 @@ export interface MailMessage {
   text: string;
   html?: string;
   headers?: Record<string, string>;
-  attachments?: { filename: string; content: Buffer; contentType: string }[];
+  attachments?: { filename: string; content: Buffer; contentType: string; cid?: string }[];
 }
 
 export interface Mailer {
@@ -71,7 +71,14 @@ export function createSmtpMailer(url: string, from: string, source = "SMTP_URL")
   return {
     configured: true,
     async send(message) {
-      await transport.sendMail({ from, ...message });
+      await transport.sendMail({
+        from,
+        ...message,
+        attachments: message.attachments?.map((attachment) => ({
+          ...attachment,
+          ...(attachment.cid ? { contentDisposition: "inline" } : {}),
+        })),
+      });
     },
   };
 }
