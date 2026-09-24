@@ -7,6 +7,10 @@ export type SearchProperty = {
   key: string;
   label: string;
   type: "choices" | "text" | "flag" | "date";
+  /** The choices are the column's own stored strings, not record ids or
+   * viewer tokens, so any string is a valid pick and a comma inside one
+   * is data. */
+  free?: true;
 };
 
 export const SEARCH_PROPERTIES: readonly SearchProperty[] = [
@@ -44,17 +48,17 @@ export const SEARCH_PROPERTIES: readonly SearchProperty[] = [
   { kind: "document", key: "textState", label: "Text state", type: "choices" },
   { kind: "document", key: "includeArchived", label: "Show archived", type: "flag" },
   { kind: "entity", key: "type", label: "Type", type: "choices" },
-  { kind: "entity", key: "jurisdiction", label: "Jurisdiction", type: "choices" },
+  { kind: "entity", key: "jurisdiction", label: "Jurisdiction", type: "choices", free: true },
   { kind: "entity", key: "status", label: "Status", type: "choices" },
   { kind: "entity", key: "majorityOwner", label: "Majority owner", type: "choices" },
   { kind: "entity", key: "nextObligation", label: "Next obligation date", type: "date" },
   { kind: "entity", key: "includeArchived", label: "Show archived", type: "flag" },
+  { kind: "counterparty", key: "jurisdiction", label: "Jurisdiction", type: "text" },
   { kind: "request", key: "type", label: "Type", type: "choices" },
   { kind: "request", key: "urgency", label: "Urgency", type: "choices" },
   { kind: "request", key: "status", label: "Status", type: "choices" },
   { kind: "request", key: "requester", label: "Requester", type: "choices" },
   { kind: "request", key: "received", label: "Received date", type: "date" },
-  { kind: "counterparty", key: "jurisdiction", label: "Jurisdiction", type: "text" },
   { kind: "knowledge_item", key: "type", label: "Type", type: "choices" },
   { kind: "knowledge_item", key: "state", label: "State", type: "choices" },
   { kind: "knowledge_item", key: "folder", label: "Knowledge Folder", type: "choices" },
@@ -75,6 +79,7 @@ const choices = z
   .array(z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/))
   .min(1)
   .max(50);
+const freeChoices = z.array(z.string().min(1).max(200)).min(1).max(50);
 const date = z.iso.date().refine((value) => value >= "0001-01-01");
 const range = z.tuple([date, date]).refine(([from, to]) => from <= to);
 
@@ -90,8 +95,8 @@ export function conditionProblem(condition: {
     return "The operator does not fit this property's value type.";
   const schema =
     property.type === "choices"
-      ? condition.property === "jurisdiction"
-        ? z.array(z.string().min(1).max(200)).min(1).max(50)
+      ? property.free
+        ? freeChoices
         : choices
       : property.type === "text"
         ? z.string().trim().min(1).max(200)

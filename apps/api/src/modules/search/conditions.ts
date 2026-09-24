@@ -28,6 +28,7 @@ import { incompleteMatter } from "../../lib/incomplete-matter.js";
 import { nextDeadline } from "../../lib/next-deadline.js";
 
 import { renderFamilySql } from "../../lib/render-family.js";
+import { TEXT_FAMILIES } from "../../pipeline/text-extraction.js";
 import { documentOwnerCase } from "../documents/owner.js";
 import { majorityOwnerId, nextObligationDueOn } from "../../lib/entity-search-properties.js";
 
@@ -52,32 +53,45 @@ function compile(
   const calendarDate = (column: AnyPgColumn) =>
     sql`(${column} at time zone ${timeZone ?? user.timezone ?? "UTC"})::date`;
   const family = renderFamilySql(documentVersions.mimeType, documentVersions.originalFilename);
-  const columns: Record<string, AnyPgColumn | SQL> = {
-    title: kind === "contract" ? contracts.title : matters.title,
-    status: kind === "contract" ? contracts.statusId : matters.statusId,
-    type: kind === "contract" ? contracts.contractTypeId : matters.matterTypeId,
-    owner: contracts.managerId,
-    manager: matters.managerId,
-    businessOwner: matters.businessOwnerId,
-    entity: contracts.entityId,
-    priority: matters.priority,
-    risk: matters.risk,
-    effective: contracts.effectiveDate,
-    expiry: contracts.expiryDate,
-    noticeDeadline: sql`(${contracts.expiryDate} - ${contracts.noticePeriodDays})`,
-    opened: sql`(${matters.openedAt} at time zone ${timeZone ?? user.timezone ?? "UTC"})::date`,
-    deadline: sql`((${nextDeadline("matter")}) ->> 'date')::date`,
-    confidential: kind === "contract" ? contracts.isConfidential : matters.isConfidential,
-    incomplete: incompleteMatter,
-  };
-  const otherColumns: Partial<Record<typeof kind, Record<string, AnyPgColumn | SQL>>> = {
+  // One column or expression per property, keyed by the kind it belongs to.
+  const columns: Record<typeof kind, Record<string, AnyPgColumn | SQL>> = {
+    contract: {
+      title: contracts.title,
+      status: contracts.statusId,
+      type: contracts.contractTypeId,
+      owner: contracts.managerId,
+      entity: contracts.entityId,
+      effective: contracts.effectiveDate,
+      expiry: contracts.expiryDate,
+      noticeDeadline: sql`(${contracts.expiryDate} - ${contracts.noticePeriodDays})`,
+      confidential: contracts.isConfidential,
+    },
+    matter: {
+      title: matters.title,
+      status: matters.statusId,
+      type: matters.matterTypeId,
+      manager: matters.managerId,
+      businessOwner: matters.businessOwnerId,
+      priority: matters.priority,
+      risk: matters.risk,
+      opened: calendarDate(matters.openedAt),
+      deadline: sql`((${nextDeadline("matter")}) ->> 'date')::date`,
+      confidential: matters.isConfidential,
+      incomplete: incompleteMatter,
+    },
     document: {
       owner: documentOwnerCase((owner) => owner.kindSql),
+      // The repository calls the presentation family "powerpoint".
       format: sql`replace(${family}, 'presentation', 'powerpoint')`,
       type: sql`coalesce(${documentVersions.documentTypeId}, ${knowledgeItems.knowledgeTypeId})`,
       uploader: documentVersions.createdBy,
       uploaded: calendarDate(documentVersions.createdAt),
-      textState: sql`coalesce(${documentVersionText.state}, case when ${family} in ('pdf', 'word', 'presentation', 'email') then 'pending' else 'unsupported' end)`,
+      // Same answer as the text read: no derivation row means pending for
+      // a family the pipeline reads, unsupported for every other.
+      textState: sql`coalesce(${documentVersionText.state}, case when ${family} in (${sql.join(
+        TEXT_FAMILIES.map((name) => sql`${name}`),
+        sql`, `,
+      )}) then 'pending' else 'unsupported' end)`,
     },
     entity: {
       type: entities.entityTypeId,
@@ -86,6 +100,7 @@ function compile(
       majorityOwner: majorityOwnerId,
       nextObligation: nextObligationDueOn,
     },
+    counterparty: { jurisdiction: counterparties.jurisdiction },
     request: {
       type: requests.requestTypeId,
       urgency: requests.urgency,
@@ -93,22 +108,20 @@ function compile(
       requester: requests.requesterId,
       received: calendarDate(requests.createdAt),
     },
-    counterparty: { jurisdiction: counterparties.jurisdiction },
     knowledge_item: {
       type: knowledgeItems.knowledgeTypeId,
       state: knowledgeItems.state,
       folder: knowledgeItems.folderId,
     },
   };
-  const column = (otherColumns[kind] ?? columns)[property]!;
+  const column = columns[kind][property]!;
   if (definition.type === "choices") {
-    const values = (value as string[]).join(",");
     const predicate =
       property === "counterparty"
-        ? sql`exists (select 1 from ${contractCounterparties} where ${contractCounterparties.contractId} = ${kind === "document" ? documents.contractId : contracts.id} and ${choiceFilter(contractCounterparties.counterpartyId, values)})`
-        : property === "jurisdiction"
+        ? sql`exists (select 1 from ${contractCounterparties} where ${contractCounterparties.contractId} = ${kind === "document" ? documents.contractId : contracts.id} and ${choiceFilter(contractCounterparties.counterpartyId, (value as string[]).join(","))})`
+        : definition.free
           ? inArray(sql`${column}`, value as string[])
-          : choiceFilter(column, values, user.id)!;
+          : choiceFilter(column, (value as string[]).join(","), user.id)!;
     return operator === "is_none_of" ? sql`not coalesce(${predicate}, false)` : predicate;
   }
   if (definition.type === "text") {

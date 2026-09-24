@@ -51,7 +51,7 @@ import {
   type TextSource,
 } from "@openlaw/db";
 import { emailBodyText, isEmail, parseStoredEmail } from "../lib/email/parse.js";
-import { conversionFormatOf, renderFamilyOf } from "../lib/render-family.js";
+import { conversionFormatOf, renderFamilyOf, type RenderFamily } from "../lib/render-family.js";
 import {
   errorCode,
   FOREIGN_KEY_VIOLATION,
@@ -116,6 +116,11 @@ export function hasUsableTextLayer(text: string): boolean {
   return wordCharacters(text) >= MIN_NATIVE_TEXT_CHARACTERS;
 }
 
+/** The families {@link extractsText} answers yes for. Search reads the
+ * same list to call a version with no derivation row pending rather
+ * than unsupported. */
+export const TEXT_FAMILIES = ["pdf", "word", "presentation", "email"] as const;
+
 /**
  * Whether the pipeline will ever produce text for this version.
  *
@@ -132,8 +137,7 @@ export function hasUsableTextLayer(text: string): boolean {
  * something that is never coming.
  */
 export function extractsText(mimeType: string, filename: string): boolean {
-  const family = renderFamilyOf(mimeType, filename);
-  return family === "pdf" || family === "word" || family === "presentation" || family === "email";
+  return (TEXT_FAMILIES as readonly RenderFamily[]).includes(renderFamilyOf(mimeType, filename));
 }
 
 /** The text with every U+0000 removed. */

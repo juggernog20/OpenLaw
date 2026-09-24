@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { majorityOwnerId, nextObligationDueOn } from "../../lib/entity-search-properties.js";
 
 import { assertCreationForm } from "../../lib/creation-form.js";
+import { majorityOwnerId, nextObligationDueOn } from "../../lib/entity-search-properties.js";
 import { formForTouchpoint } from "@openlaw/shared";
 import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
 
