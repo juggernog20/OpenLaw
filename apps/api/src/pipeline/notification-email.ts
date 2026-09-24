@@ -291,8 +291,11 @@ async function sendNotificationEmail(
   const { mailer, from } = await deps.resolveMailer();
   if (!mailer.configured || !from) return "unconfigured";
 
-  const brand =
-    row.eventType === "approval.requested" ? { name: (await getOrgSettings(deps.db)).name } : {};
+  // The header names the organization as it is at send time, not as it
+  // was when the row was written (DES-093). Read for every event, so an
+  // arm that moves onto the layout later gets the name without a change
+  // here.
+  const brand = { name: (await getOrgSettings(deps.db)).name };
   const message = renderNotificationMail(
     {
       eventType: row.eventType as NotificationEventType,
