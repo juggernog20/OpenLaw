@@ -50,7 +50,7 @@ function ReferenceValue({ id, name }: { id: string | null; name: string | null }
         (id ? (
           <FormattedMessage id="autoDocs.column.unavailable" defaultMessage="Unavailable" />
         ) : (
-          "—"
+          <FormattedMessage id="autoDocs.column.none" defaultMessage="—" />
         ))}
     </span>
   );
@@ -154,7 +154,9 @@ export const AUTO_DOCS_CATALOGUE: TableCatalogue<AutoDocTableRow> = {
         row.publishedAt ? (
           <time dateTime={row.publishedAt}>{formatShortDate(row.publishedAt)}</time>
         ) : (
-          <span className="text-muted">—</span>
+          <span className="text-muted">
+            <FormattedMessage id="autoDocs.column.none" defaultMessage="—" />
+          </span>
         ),
       128,
     ),
