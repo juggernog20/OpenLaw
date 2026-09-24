@@ -30,7 +30,6 @@ import { z } from "zod";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { requireAuth } from "../../auth/guards.js";
 import { AttachedCustomFieldSchema, CustomFieldsSchema } from "../../lib/custom-fields.js";
-import { readMyRequest } from "./read.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   asUploadRefusal,
@@ -50,6 +49,7 @@ import {
   sendAttachment,
   toAttachment,
 } from "./projection.js";
+import { readMyRequest } from "./read.js";
 import { convertedContractOf, convertedRecordOf } from "./record-reference.js";
 import { listMyRequests, lockPerson, submitRequest, SubmitRequestBody } from "./service.js";
 

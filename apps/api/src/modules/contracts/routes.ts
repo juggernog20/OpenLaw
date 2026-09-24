@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { listAssignableUsers } from "../../lib/assignable-users.js";
 
 import { formForTouchpoint } from "@openlaw/shared";
+import { listAssignableUsers } from "../../lib/assignable-users.js";
 import { readTypeForm } from "../../lib/type-form-routes.js";
 
 import { regionOptions } from "../regions/references.js";

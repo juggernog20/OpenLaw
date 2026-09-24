@@ -4,6 +4,7 @@ import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/cli
 import {
   fields,
   matterTypes,
+  matterTypeBuiltinRows,
   matterTypeFields,
   users,
   orgSettings,
@@ -374,4 +375,45 @@ it("pages assignable users and Departments and excludes archived users", async (
   });
   await h.db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, archived.id));
   expect((await call(legal, "people_list")).users.map((row) => row.id)).not.toContain(archived.id);
+});
+
+it("answers a builtin Department Row from the one department answer", async () => {
+  const mt = (
+    await h.db
+      .insert(matterTypes)
+      .values({ slug: "mcp-department", displayName: "MCP department", displayOrder: 98 })
+      .returning()
+  )[0]!;
+  await h.db.insert(matterTypeBuiltinRows).values({
+    typeId: mt.id,
+    builtinKey: "department",
+    displayOrder: 0,
+    isRequired: true,
+    onIntakeForm: true,
+  });
+  const rt = (
+    await h.db
+      .insert(requestTypes)
+      .values({
+        slug: "mcp-department",
+        displayName: "MCP department",
+        targetModule: "matter",
+        targetMatterTypeId: mt.id,
+        displayOrder: 98,
+      })
+      .returning()
+  )[0]!;
+  const input = { ...submission(), requestTypeId: rt.id };
+  const born = (await call(business, "request_submit", input)).request;
+  expect(born.customFields).toEqual({ department: departmentId });
+  const [stored] = await h.db.select().from(requests).where(eq(requests.id, born.id));
+  expect(stored?.departmentId).toBe(departmentId);
+  expect(
+    await refused(
+      business,
+      "request_submit",
+      { ...input, answers: { title: "No department", urgency: "medium" } },
+      "validation_error",
+    ),
+  ).toContain("Department");
 });

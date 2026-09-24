@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { z } from "zod";
+import type { Db } from "@openlaw/db";
 import {
   assignRequest,
   AssignRequestBody,
@@ -18,6 +19,8 @@ import {
 import { MyRequestSchema, MyRequestRowSchema, RequestSchema } from "../modules/requests/routes.js";
 import { InboxRowSchema } from "../modules/requests/inbox.js";
 import { AttachedCustomFieldSchema } from "../lib/custom-fields.js";
+import { readIntakeForm } from "../lib/intake-form.js";
+import { HttpError } from "../lib/problem.js";
 import { creationAnswerParser } from "./answers.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
 import { readTool, writeTool } from "./workspace.js";
@@ -47,6 +50,29 @@ const parseAnswers = creationAnswerParser({
   schema: SubmitRequestBody.omit({ requestTypeId: true }),
 });
 const assignInput = AssignRequestBody.extend(numberInput.shape);
+/**
+ * The Form Tool lists Department as a basic, and a Matter-bound Form may
+ * carry the builtin department Row as well. The agent keys one answer;
+ * the Portal fills both the Request column and the Row from its own two
+ * controls, so the Tool fills both from the one answer. The service
+ * re-reads the Form under its lock; this read only shapes the answer.
+ */
+async function withDepartmentRow(
+  db: Db,
+  requestTypeId: string,
+  body: ReturnType<typeof parseAnswers>,
+) {
+  if (!body.departmentId || body.customFields?.department !== undefined) return body;
+  try {
+    const { fields } = await readIntakeForm(db, requestTypeId);
+    if (!fields.some((field) => field.builtInKey === "department")) return body;
+  } catch (error) {
+    // The service names the refusal for a missing or archived type.
+    if (error instanceof HttpError) return body;
+    throw error;
+  }
+  return { ...body, customFields: { ...body.customFields, department: body.departmentId } };
+}
 const detailOutput = z.object({
   request: z.union([StaffRequestSchema, MyRequestSchema]),
   fields: z.array(AttachedCustomFieldSchema),
@@ -125,18 +151,18 @@ export const requestTools: readonly ToolDefinition[] = [
     name: "openlaw_request_submit",
     title: "Submit a Request",
     description:
-      "Business Users submit through the Request type Form. Read openlaw_form_get with kind request first and ask the person for missing answers. Supply requestTypeId and answers keyed by Form rowRef or Field slug. Basics are title, department (Department id) and urgency (low, medium, high, critical). Counterparties take a list of {counterpartyId} or {name}. Uses Portal Required, Branch, live-reference and quota validation. Attachments are uploaded through the Portal separately. Each call creates a new Request.",
+      "Business Users submit through the Request type Form. Read openlaw_form_get with kind request first and ask the person for missing answers. Supply requestTypeId and answers keyed by Form rowRef or Field slug. Basics are title, department (Department id; it also answers a Department Row on the Form) and urgency (low, medium, high, critical). Counterparties take a list of {counterpartyId} or {name}. Uses Portal Required, Branch, live-reference and quota validation. Attachments are uploaded through the Portal separately. Each call creates a new Request.",
     inputSchema: submitInput,
     outputSchema: z.object({ request: RequestSchema }),
     run: async (input, { db, user, notifier }) =>
       serviceResult(async () => {
         const { requestTypeId, answers } = submitInput.parse(input);
-        return submitRequest(
+        const body = await withDepartmentRow(
           db,
-          user,
-          { requestTypeId, ...parseAnswers(answers, requestTypeId) },
-          notifier,
+          requestTypeId,
+          parseAnswers(answers, requestTypeId),
         );
+        return submitRequest(db, user, { requestTypeId, ...body }, notifier);
       }),
   },
   {
