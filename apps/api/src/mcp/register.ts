@@ -44,6 +44,17 @@ export interface ToolDefinition {
   businessUser: "always" | "on" | "off";
   run: (input: Record<string, unknown>, context: ToolContext) => Promise<Record<string, unknown>>;
 }
+/**
+ * The JSON Schema forms tools/list serves. The input form keeps a defaulted or
+ * optional argument optional; the output form describes what run returns after
+ * parsing. The SDK's own registerTool converts the same way.
+ */
+export function toolInputJsonSchema(tool: ToolDefinition) {
+  return z.toJSONSchema(tool.inputSchema, { io: "input" });
+}
+export function toolOutputJsonSchema(tool: ToolDefinition) {
+  return z.toJSONSchema(tool.outputSchema, { io: "output" });
+}
 export class ToolError extends Error {
   constructor(
     readonly code: string,

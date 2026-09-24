@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { expect, it } from "vitest";
 import { z } from "zod";
-import { toolRegister, instructions, toolRefusal } from "./register.js";
+import {
+  toolRegister,
+  instructions,
+  toolRefusal,
+  toolInputJsonSchema,
+  toolOutputJsonSchema,
+} from "./register.js";
 import { MCP_TOOLSETS } from "@openlaw/shared";
 
 function inspectSchema(value: unknown, description: string) {
@@ -40,16 +46,20 @@ it("keeps every Tool within the client schema and annotation rules", () => {
     expect(tool.annotations.openWorldHint).toBe(false);
     expect(tool.annotations.readOnlyHint).toBe(tool.kind === "read");
     expect(tool.annotations.destructiveHint).toBe(tool.kind === "destr");
-    inspectSchema(z.toJSONSchema(tool.inputSchema), tool.description);
-    expect(z.toJSONSchema(tool.outputSchema).type).toBe("object");
-    inspectSchema(
-      z.toJSONSchema(tool.outputSchema),
-      JSON.stringify(z.toJSONSchema(tool.outputSchema)),
-    );
+    inspectSchema(toolInputJsonSchema(tool), tool.description);
+    expect(toolOutputJsonSchema(tool).type).toBe("object");
+    inspectSchema(toolOutputJsonSchema(tool), JSON.stringify(toolOutputJsonSchema(tool)));
   }
   expect(instructions.length).toBeLessThanOrEqual(512);
   expect(instructions).toContain("OpenLaw");
   expect(instructions).toContain("openlaw_whoami");
+});
+it("serves the input form, so a defaulted argument stays optional for the Client", () => {
+  const paged = z.object({ limit: z.number().int().default(20), q: z.string().optional() });
+  const tool = { ...toolRegister[0]!, inputSchema: paged, outputSchema: paged };
+  expect(toolInputJsonSchema(tool)).not.toHaveProperty("required");
+  expect(toolInputJsonSchema(tool)).not.toHaveProperty("additionalProperties");
+  expect(toolOutputJsonSchema(tool).required).toEqual(["limit"]);
 });
 it.each(["administrator", "legal_team_member", "business_user"] as const)(
   "pins the current default count for %s",

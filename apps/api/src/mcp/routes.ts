@@ -14,7 +14,6 @@ import {
 } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import type { FastifyPluginAsync } from "fastify";
-import { z } from "zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { loggable } from "../logging.js";
 import { HttpError } from "../lib/problem.js";
@@ -23,6 +22,8 @@ import { authenticateKey } from "./auth.js";
 import { callTool } from "./calls.js";
 import {
   instructions,
+  toolInputJsonSchema,
+  toolOutputJsonSchema,
   toolRefusal,
   toolRegister,
   type ToolDefinition,
@@ -80,8 +81,8 @@ export function mcpRoutes(
                   title: tool.title,
                   description: tool.description,
                   annotations: tool.annotations,
-                  inputSchema: z.toJSONSchema(tool.inputSchema) as Tool["inputSchema"],
-                  outputSchema: z.toJSONSchema(tool.outputSchema) as Tool["outputSchema"],
+                  inputSchema: toolInputJsonSchema(tool) as Tool["inputSchema"],
+                  outputSchema: toolOutputJsonSchema(tool) as Tool["outputSchema"],
                 })),
             }));
             // Dispatch before schema validation so refused and invalid calls also enter the ledger.
