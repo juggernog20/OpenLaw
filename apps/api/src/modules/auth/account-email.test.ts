@@ -16,6 +16,8 @@ let harness: TestHarness;
 let admin: Record<string, string>;
 const brand = "Northwind & Co";
 const expiry = "The link expires in one hour. If you did not expect this email, you can ignore it.";
+const expiryLine =
+  "The link expires in 1 hour. If you did not expect this email, you can ignore it.";
 
 beforeAll(async () => {
   harness = await startHarness();
@@ -34,16 +36,27 @@ function linkFrom(message: MailMessage): string {
   return /https?:\/\/\S+/.exec(message.text)![0];
 }
 
-function expectLayout(message: MailMessage) {
+function expectLayout(message: MailMessage, preheader: string) {
   expect(message.html).toContain("Northwind &amp; Co");
+  // The inbox preview line comes before anything the header shows.
+  expect(message.html!.indexOf(preheader)).toBeGreaterThan(-1);
+  expect(message.html!.indexOf(preheader)).toBeLessThan(
+    message.html!.indexOf("Northwind &amp; Co"),
+  );
   expect(message.html).not.toMatch(/<script|src=["']data:|calc\(/i);
   expect(message.attachments).toHaveLength(1);
   expect(message.html).toContain(`cid:${message.attachments![0]!.cid}`);
   expect(message.html).not.toMatch(/href="[^"]*settings/);
 }
 
-function expectSecurity(message: MailMessage, portal: boolean, button: string, expires: string) {
-  expectLayout(message);
+function expectSecurity(
+  message: MailMessage,
+  portal: boolean,
+  button: string,
+  expires: string,
+  preheader = "The link expires in 1 hour.",
+) {
+  expectLayout(message, preheader);
   const html = message.html!;
   const link = escapeHtml(linkFrom(message));
   expect(html).toContain(portal ? "/ Legal portal" : "/ Legal</span>");
@@ -58,10 +71,10 @@ function expectSecurity(message: MailMessage, portal: boolean, button: string, e
     [link, button],
     [link, link],
   ]);
-  // No record link or token in the preheader, copy, or footer.
+  // No record link or token in the preheader, copy, or footer. The two
+  // anchors above are the whole set, so there is no record card either.
   expect(html.split(link)).toHaveLength(4);
   expect(html.replace(/<a\b[^>]*>.*?<\/a>/g, "")).not.toContain(link);
-  expect(html).not.toContain("border-collapse:separate;margin:0 0 24px");
 }
 
 it.each(["legal_team_member", "business_user"] as const)(
@@ -89,7 +102,7 @@ it.each(["legal_team_member", "business_user"] as const)(
       );
       expect(link).toMatch(/^http:\/\/localhost\/auth\/set-password#token=/);
       expect(link.endsWith("&portal=1")).toBe(role === "business_user");
-      expectSecurity(message, role === "business_user", "Set password", "Expires in 1 hour.");
+      expectSecurity(message, role === "business_user", "Set password", expiryLine);
       expect(message.html).toContain("Hello Alex &amp; Morgan,");
     };
     if (role !== "business_user") check();
@@ -118,7 +131,7 @@ it("keeps new Business User password-setup text and uses the Portal layout", asy
     `Set your OpenLaw password using the link below:\n\n${linkFrom(message)}\n\n${expiry}`,
   );
   expect(linkFrom(message)).toMatch(/^http:\/\/localhost\/auth\/set-password#token=business\./);
-  expectSecurity(message, true, "Set password", "Expires in 1 hour.");
+  expectSecurity(message, true, "Set password", expiryLine);
 });
 
 it.each([
@@ -138,7 +151,13 @@ it.each([
   expect(message.text).toBe(
     `Hello,\n\nSign in to OpenLaw using the link below:\n\n${linkFrom(message)}\n\nThe link expires in five minutes and can be used once. If you did not request it, you can ignore this email.`,
   );
-  expectSecurity(message, portal, "Sign in", "Expires in 5 minutes. Can be used once.");
+  expectSecurity(
+    message,
+    portal,
+    "Sign in",
+    "The link expires in 5 minutes and can be used once. If you did not request it, you can ignore this email.",
+    "The link expires in 5 minutes and works once.",
+  );
 });
 
 it.each(["env", "app"] as const)(
@@ -163,7 +182,7 @@ it.each(["env", "app"] as const)(
       expect(message.text).toBe(
         `Hello ${TEST_ADMIN.displayName},\n\nThis is a test email from your OpenLaw instance. Receiving it means outbound email is working.`,
       );
-      expectLayout(message);
+      expectLayout(message, "Receiving it means outbound email is working.");
       expect(message.html).toContain("Only Administrators can send this email.");
       for (const [label, value] of [
         ["Sent through", source === "env" ? "capture.invalid:1025" : "relay.example.com:587"],

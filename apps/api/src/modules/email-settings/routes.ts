@@ -185,6 +185,7 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
               subject: "OpenLaw test email",
               baseUrl: app.baseUrl,
               surface: "staff",
+              preheader: "Receiving it means outbound email is working.",
               tone: "success",
               label: "Email settings",
               headline: "Outbound email works",
@@ -192,9 +193,11 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
               body: [
                 "This is a test email from your OpenLaw instance. Receiving it means outbound email is working.",
               ],
+              // A configured mailer always has both. A resolver that
+              // supplies neither gets no empty rows.
               facts: [
-                { label: "Sent through", value: sentThrough ?? "SMTP" },
-                { label: "From", value: from ?? "" },
+                ...(sentThrough ? [{ label: "Sent through", value: sentThrough }] : []),
+                ...(from ? [{ label: "From", value: from }] : []),
               ],
               footer: { kind: "system" },
             },
