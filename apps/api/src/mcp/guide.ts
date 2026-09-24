@@ -5,9 +5,11 @@
  * article cursors index plain text. The TECH-035 byte budget leaves room for
  * the text copy of each result. Under DD-013, Business Users read Request
  * Forms; Contract and Matter creation Forms require a Legal User. Auto-Doc
- * Forms belong to #1060.
+ * Forms use the same Generation definition as the app and Portal.
  */
 import { z } from "zod";
+import { AutoDocFormOutput, readAutoDocForm } from "./auto-docs.js";
+import { serviceResult } from "./results.js";
 import {
   and,
   asc,
@@ -106,7 +108,10 @@ export const VocabularyOutput = z.object({
   nextCursor,
 });
 const formInput = z
-  .object({ kind: z.enum(["request", "contract", "matter"]), typeId: z.string().min(1).max(128) })
+  .object({
+    kind: z.enum(["request", "contract", "matter", "auto_doc"]),
+    typeId: z.string().min(1).max(128),
+  })
   .strict();
 const scalar = z.union([z.string(), z.number(), z.boolean()]);
 const row = z.object({
@@ -385,13 +390,23 @@ export const guideTools: readonly ToolDefinition[] = [
   {
     ...guide,
     name: "openlaw_form_get",
-    title: "Read a type Form",
+    title: "Read a Form",
     description:
-      "Read the Intake Form for kind request, or the creation Form for kind contract or matter, by typeId from openlaw_vocabulary. Business Users may read request Forms. nodes are in document order; parentBranchId preserves Branch nesting. Conditions govern visibility and Required. Ask the person for missing answers before creating or submitting. Auto-Doc Forms are not supported yet.",
+      "Read the Intake Form for kind request, or the creation Form for kind contract or matter, by typeId from openlaw_vocabulary. Business Users may read request Forms. nodes are in document order; parentBranchId preserves Branch nesting. Conditions govern visibility and Required. Ask the person for missing answers before creating or submitting. For kind auto_doc, typeId is the Auto-Doc id from openlaw_auto_docs_list; autoDocForm returns its Live pair, fields and Entity choices. Owed acknowledgements require a visit to the Portal.",
     inputSchema: formInput,
-    outputSchema: FormOutput,
-    run: async (input, { db, user }) => {
+    outputSchema: FormOutput.partial().extend({
+      kind: z.string(),
+      typeId: z.string(),
+      autoDocForm: AutoDocFormOutput.optional(),
+    }),
+    run: async (input, { db, user, baseUrl }) => {
       const { kind, typeId } = formInput.parse(input);
+      if (kind === "auto_doc")
+        return serviceResult(async () => ({
+          kind,
+          typeId,
+          autoDocForm: await db.transaction((tx) => readAutoDocForm(tx, user, typeId, baseUrl)),
+        }));
       if (user.role === "business_user" && kind !== "request")
         throw new ToolError(
           "forbidden",

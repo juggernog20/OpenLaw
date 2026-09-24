@@ -8,6 +8,7 @@ import type { AppDeps } from "../app.js";
 import type { Db, UserRole } from "@openlaw/db";
 import type { McpToolset } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../auth/user.js";
+import type { GenerationSubmission } from "../modules/auto-docs/generations.js";
 import type { uploadInput } from "./documents.js";
 
 export interface Grant {
@@ -22,6 +23,8 @@ export interface ToolContext extends Pick<AppDeps, "notifier" | "jobs" | "resolv
   credentialId: string;
   clientName: string;
   organizationName: string;
+  baseUrl: string;
+  generateAutoDoc?: (id: string, submission: GenerationSubmission) => Promise<unknown>;
   prepareDocumentUpload?: (
     input: z.infer<typeof uploadInput>,
     context: ToolContext,
