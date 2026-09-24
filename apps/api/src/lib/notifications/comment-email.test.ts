@@ -20,6 +20,16 @@ it("counts Unicode characters, handles whitespace, and bounds an unbroken word",
   const prefix = "a".repeat(270);
   expect(wordsOf(prefix + "\n\t longerword after")).toEqual({ text: prefix, cut: true });
 });
+it("shows a document reference as its title and counts the title, not the link", () => {
+  const href = "/contracts/7/documents?doc=doc-a&version=ver-a";
+  const body = `See [@Brief \\[v2\\].pdf](${href}) and [@Other](https://example.com).`;
+  expect(wordsOf(body)).toEqual({
+    text: "See @Brief [v2].pdf and [@Other](https://example.com).",
+    cut: false,
+  });
+  const long = `${"a ".repeat(133)}[@${"b".repeat(8)}](${href}) tail`;
+  expect(wordsOf(long)).toEqual({ text: `${"a ".repeat(133)}@${"b".repeat(8)} tail`, cut: false });
+});
 it("marks only the recipient's recorded mention and leaves longer names intact", () => {
   const mentions = [
     { id: "reader", name: "Sam (Legal)" },

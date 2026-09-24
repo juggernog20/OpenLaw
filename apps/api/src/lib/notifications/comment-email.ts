@@ -10,6 +10,7 @@ import {
   type Db,
   type CommentVisibility,
 } from "@openlaw/db";
+import { documentLinkDraft } from "@openlaw/shared";
 import type { EmailRecord } from "../email-layout.js";
 
 export const COMMENT_EMAIL_EVENTS: ReadonlySet<string> = new Set([
@@ -30,7 +31,12 @@ export async function readEmailComment(
   recipientId: string,
 ): Promise<EmailRecord["comment"]> {
   const [comment] = await db
-    .select({ body: comments.body, visibility: comments.visibility, author: users.displayName })
+    .select({
+      body: comments.body,
+      visibility: comments.visibility,
+      entityType: comments.entityType,
+      author: users.displayName,
+    })
     .from(comments)
     .innerJoin(users, eq(users.id, comments.authorId))
     .where(and(eq(comments.id, commentId), isNull(comments.deletedAt), isNull(comments.redactedAt)))
@@ -41,19 +47,26 @@ export async function readEmailComment(
     .from(commentMentions)
     .innerJoin(users, eq(users.id, commentMentions.userId))
     .where(eq(commentMentions.commentId, commentId));
+  // A Task thread shows no tier badge (CMT-003), so its email shows none.
+  const onTask = comment.entityType === "contract_task" || comment.entityType === "matter_task";
   return {
     author: comment.author,
-    tier: TIERS[comment.visibility],
+    ...(onTask ? {} : { tier: TIERS[comment.visibility] }),
     ...commentExcerpt(comment.body, mentions, recipientId),
   };
 }
 
-/** Count Unicode characters before escaping HTML. A single long word is cut at the limit. */
+/**
+ * Count Unicode characters before escaping HTML. A single long word is cut
+ * at the limit. A document reference (CMT-011) is stored as a Markdown
+ * link; the email shows its `@Title` and never the link syntax.
+ */
 export function commentExcerpt(
   body: string,
   mentions: readonly { id: string; name: string }[],
   recipientId: string,
 ): Pick<NonNullable<EmailRecord["comment"]>, "words" | "cut"> {
+  body = documentLinkDraft(body).draft;
   const characters = Array.from(body);
   const cut = characters.length > 280;
   let text = body;

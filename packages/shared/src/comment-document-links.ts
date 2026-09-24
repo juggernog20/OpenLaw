@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Document references use ordinary internal Markdown links in the stored comment body. */
+/**
+ * Document references use ordinary internal Markdown links in the stored
+ * comment body (CMT-011). The web composer writes and reads them; the
+ * comment email flattens them back to `@Title` so no link syntax reaches
+ * a reader.
+ */
 export interface CommentDocumentLink {
   displayName: string;
   href: string;

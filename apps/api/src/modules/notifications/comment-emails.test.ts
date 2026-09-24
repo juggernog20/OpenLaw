@@ -123,9 +123,14 @@ it.each(arms.flatMap((arm) => states.map((state) => ({ portal: false, ...arm, st
     const portal = recordPortal || event === "request.replied";
     const reader = portal ? requester : staff;
     const recipientId = portal ? requesterId : staffId;
-    const short = `@${reader.displayName} check <this> & that.\nThe second line.`;
+    // The reader sees a document reference (CMT-011) as its title.
+    const short = `@${reader.displayName} check <this> & that. Read @Brief [v2].pdf first.\nThe second line.`;
+    const stored = short.replace(
+      "@Brief [v2].pdf",
+      `[@Brief \\[v2\\].pdf](/${kind === "request" ? "matter" : kind}s/7/documents?doc=doc-a&version=ver-a)`,
+    );
     const prefix = "word ".repeat(54).trimEnd();
-    const original = state === "cut" ? `${prefix} extraordinary omitted ending` : short;
+    const original = state === "cut" ? `${prefix} extraordinary omitted ending` : stored;
     const posted = await app.inject({
       method: "POST",
       url: "/api/v1/comments",
@@ -206,8 +211,10 @@ it.each(arms.flatMap((arm) => states.map((state) => ({ portal: false, ...arm, st
           .join("\n"),
       );
       expect(message.html).toContain(
-        state === "present" ? "check &lt;this&gt; &amp; that." : words,
+        state === "present" ? "check &lt;this&gt; &amp; that. Read @Brief [v2].pdf first." : words,
       );
+      expect(message.text).not.toContain("?doc=");
+      expect(message.html).not.toContain("?doc=");
       expect(message.html).toContain(TEST_ADMIN.displayName);
       expect(message.html).toContain('width="20" height="20"');
       expect(message.text.indexOf("> ")).toBeLessThan(message.text.indexOf(link));
@@ -240,3 +247,48 @@ it.each(arms.flatMap((arm) => states.map((state) => ({ portal: false, ...arm, st
     }
   },
 );
+
+it("shows no tier on a Task comment's email, as the Task thread shows no badge", async () => {
+  const contract = records.get("contract")!;
+  const task = await app.inject({
+    method: "POST",
+    url: `/api/v1/contracts/${contract.number}/tasks`,
+    cookies,
+    payload: { title: "Check the indemnity" },
+  });
+  expect(task.statusCode, task.body).toBe(201);
+  const posted = await app.inject({
+    method: "POST",
+    url: "/api/v1/comments",
+    cookies,
+    payload: {
+      entityType: "contract_task",
+      entityId: task.json().createdTaskId,
+      body: `@${staff.displayName} the task note.`,
+      visibility: "legal_only",
+      mentions: [staffId],
+    },
+  });
+  expect(posted.statusCode, posted.body).toBe(201);
+  const commentId = posted.json().comment.id as string;
+  const rows = await h.db.select().from(notifications).where(eq(notifications.userId, staffId));
+  const notification = rows.find(
+    (item) => item.eventType === "comment.mentioned" && item.payload.commentId === commentId,
+  );
+  expect(notification?.emailOwed).toBe(true);
+  const before = h.mailer.messages.length;
+  await handleNotificationEmail(
+    {
+      db: h.db,
+      resolveMailer: async () => ({ source: "env", from: "legal@example.com", mailer: h.mailer }),
+      baseUrl: "http://localhost",
+      log: { info() {}, warn() {}, error() {} },
+    },
+    { notificationId: notification!.id, retryCount: 0, retryLimit: 3 },
+  );
+  expect(h.mailer.messages).toHaveLength(before + 1);
+  const message = h.mailer.messages[before]!;
+  expect(message.html).toContain("the task note.");
+  expect(message.text).toContain("> @Sam Reader the task note.");
+  expect(message.html).not.toMatch(/Legal Only|Working Team|Full Thread/);
+});
