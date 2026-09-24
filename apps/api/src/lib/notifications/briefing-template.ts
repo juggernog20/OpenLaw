@@ -330,18 +330,17 @@ export function renderBriefingMail(
   // Digits, sentence case, no full stop — a subject is a fragment
   // (DES-015 rules 6, 7, 9). The one-section subjects say what the
   // section holds; a briefing with both is just the briefing.
-  const subject =
-    !hasWorkSections && knowledgeItems.length === 0
-      ? `${BRIEFING_COUNT.format(dateCount)} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
-      : !hasWorkSections && dateCount === 0
-        ? `${BRIEFING_COUNT.format(knowledgeItems.length)} new Knowledge ${knowledgeItems.length === 1 ? "item" : "items"}`
-        : "Your daily briefing";
-  const introduction =
-    !hasWorkSections && knowledgeItems.length === 0
-      ? `These dates are coming up on ${destination}, nearest first.`
-      : !hasWorkSections && dateCount === 0
-        ? "These Knowledge items were published since your previous briefing."
-        : "Here is your daily briefing.";
+  const datesOnly = !hasWorkSections && knowledgeItems.length === 0;
+  const subject = datesOnly
+    ? `${BRIEFING_COUNT.format(dateCount)} ${dateCount === 1 ? "date" : "dates"} on ${destination}`
+    : !hasWorkSections && dateCount === 0
+      ? `${BRIEFING_COUNT.format(knowledgeItems.length)} new Knowledge ${knowledgeItems.length === 1 ? "item" : "items"}`
+      : "Your daily briefing";
+  const introduction = datesOnly
+    ? `These dates are coming up on ${destination}, nearest first.`
+    : !hasWorkSections && dateCount === 0
+      ? "These Knowledge items were published since your previous briefing."
+      : "Here is your daily briefing.";
 
   const approvalsMore = moreOnHome(briefing.approvals?.total ?? 0, approvals.length, baseUrl);
   const tasksMore = moreOnHome(briefing.tasks?.total ?? 0, tasks.length, baseUrl);
@@ -435,8 +434,7 @@ export function renderBriefingMail(
         href: intakeLink(row, baseUrl),
         ref: `R-${row.number}`,
         meta: row.requestType.displayName,
-        due: URGENCY[row.urgency].label,
-        tone: URGENCY[row.urgency].tone,
+        status: URGENCY[row.urgency],
       })),
     },
   ];
@@ -457,15 +455,24 @@ export function renderBriefingMail(
       "Change what reaches you in your notification settings:",
       settingsLink,
     ].join("\n"),
+    // The HTML part says the same things in the same order (DES-093
+    // clause 1): label and headline, then the greeting, the framing
+    // sentence, and the sections. A dates-only briefing is labelled by
+    // what it holds, in the warning tone, as the #1080 table has it.
     ...renderEmailLayout(
       {
         subject,
         baseUrl,
         surface,
-        label: "Daily briefing",
+        preheader: introduction,
+        tone: datesOnly ? "warning" : "neutral",
+        label: datesOnly ? "Dates" : "Daily briefing",
         dateline: civilDateLabel(briefing.localDate),
+        headline: subject,
+        greeting: `Hello ${briefing.recipientName},`,
+        body: [introduction],
         sections: sections.filter((section) => section.rows.length > 0),
-        footer: { kind: "notification", why: "This is your daily briefing." },
+        footer: { kind: "notification", why: "You get a morning briefing." },
       },
       brand,
     ),

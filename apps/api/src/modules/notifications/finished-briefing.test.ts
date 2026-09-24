@@ -278,6 +278,9 @@ describe("the finished daily briefing", () => {
     expect(message.html).toContain('src="cid:openlaw-mark@openlaw"');
     expect(message.attachments).toEqual([expect.objectContaining({ cid: "openlaw-mark@openlaw" })]);
     expect(message.html).toMatch(/Daily briefing <span[^>]*>· /);
+    expect(message.html).toMatch(/<h1[^>]*>Your daily briefing<\/h1>/);
+    expect(message.html).toContain(`Hello ${DEFAULT_MEMBER.displayName},`);
+    expect(message.html).toContain("You get a morning briefing.");
     expect(message.html).toContain(
       new Intl.DateTimeFormat("en-US", {
         timeZone: "UTC",

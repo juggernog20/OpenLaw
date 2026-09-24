@@ -467,7 +467,9 @@ describe("a notice deadline at a seeded offset", () => {
     const sent = lastDigestTo(OWNER);
     expect(sent.subject).toBe("1 date on your contracts");
     expect(sent.text).toContain(OWNER.displayName);
-    expect(sent.html).toMatch(/Daily briefing <span[^>]*>· Mar 12, 2026<\/span>/);
+    expect(sent.html).toMatch(/Dates <span[^>]*>· Mar 12, 2026<\/span>/);
+    expect(sent.html).toMatch(/<h1[^>]*>1 date on your contracts<\/h1>/);
+    expect(sent.html).toContain(`Hello ${OWNER.displayName},`);
     expect(sent.html).not.toContain('width="33%"');
     expect(sent.html).toMatch(/Dates <span[^>]*>1<\/span>/);
     expect(sent.html).toMatch(/width="100"[^>]*>In 7 days<br>/);

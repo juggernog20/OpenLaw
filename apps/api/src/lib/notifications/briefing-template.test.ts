@@ -170,7 +170,14 @@ describe("the full daily briefing template", () => {
   it("uses the shared layout with six tiles in two rows and structured row facts", () => {
     const message = renderBriefingMail(FULL_BRIEFING, "casey@example.com", "https://openlaw.test");
     const html = message!.html!;
-    expect(html).toMatch(/Daily briefing <span[^>]*>· Sep 1, 2026<\/span>/);
+    expect(html).toMatch(
+      /color:#57606a;">&#9679;&nbsp; Daily briefing <span[^>]*>· Sep 1, 2026<\/span>/,
+    );
+    expect(html).toMatch(/<h1[^>]*>Your daily briefing<\/h1>/);
+    expect(html).toContain("Hello Casey Counsel,");
+    expect(html).toContain("Here is your daily briefing.");
+    expect(html.indexOf("Hello Casey Counsel,")).toBeGreaterThan(html.indexOf("</h1>"));
+    expect(html.indexOf("Here is your daily briefing.")).toBeLessThan(html.indexOf('width="33%"'));
     const tileRows = html.match(
       /<tr><td width="33%"[\s\S]*?<\/p><\/td><\/tr><\/table><\/td><\/tr>/g,
     )!;
@@ -186,7 +193,8 @@ describe("the full daily briefing template", () => {
     expect(html).toContain("Requested by Nadia Counsel on Aug 31, 2026");
     expect(html).toContain("Atlas acquisition");
     expect(html).toMatch(/align="right"[^>]*color:#9a6700;">[\s\S]*?Due Sep 1, 2026/);
-    expect(html).toMatch(/align="right"[^>]*color:#bc4c00;">[\s\S]*?High/);
+    // Urgency is a pill, as the Inbox shows it, not a date in the due slot.
+    expect(html).toMatch(/background:#fff1e5;color:#bc4c00;[^"]*">High<\/span>/);
     expect(html).toContain("Contract review");
     expect(html).toContain("Published Sep 1, 2026");
     expect(html).toContain('src="cid:openlaw-mark@openlaw"');
@@ -211,6 +219,13 @@ describe("the full daily briefing template", () => {
       "https://openlaw.test",
     );
     expect(message!.html).not.toContain('width="33%"');
+    // Labelled by what it holds, in the warning tone (#1080's table).
+    expect(message!.html).toMatch(
+      /color:#9a6700;">&#9679;&nbsp; Dates <span[^>]*>· Sep 1, 2026<\/span>/,
+    );
+    expect(message!.html).not.toContain("Daily briefing");
+    expect(message!.html).toMatch(/<h1[^>]*>1 date on your contracts<\/h1>/);
+    expect(message!.html).toContain("These dates are coming up on your contracts, nearest first.");
     expect(message!.html).toContain("Legal portal");
     expect(message!.html).toContain('href="https://openlaw.test/portal/contracts/41"');
     expect(message!.html).toContain('href="https://openlaw.test/portal/settings"');
@@ -261,6 +276,11 @@ describe("the full daily briefing template", () => {
       "https://openlaw.test",
     );
     expect(knowledgeOnly!.subject).toBe("1 new Knowledge item");
+    expect(knowledgeOnly!.html).toMatch(/Daily briefing <span[^>]*>· Sep 1, 2026<\/span>/);
+    expect(knowledgeOnly!.html).toMatch(/<h1[^>]*>1 new Knowledge item<\/h1>/);
+    expect(knowledgeOnly!.html).toContain(
+      "These Knowledge items were published since your previous briefing.",
+    );
   });
 
   it("places an approval's instant on the reader's own calendar", () => {
