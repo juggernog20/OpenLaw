@@ -680,6 +680,8 @@ export {
   needsRelativeDayCount,
   searchProperty,
   conditionProblem,
+  FIELD_OPERATORS,
+  fieldProperty,
   type SearchProperty,
 } from "./search-conditions.js";
 

@@ -47,7 +47,6 @@ export function PropertyList({
                   )}
                   <button
                     type="button"
-                    key={item.key}
                     disabled={busy}
                     onClick={() => onSelect(item.key)}
                     className="flex w-full items-center justify-between gap-3 rounded-button px-3 py-2 text-start text-sm hover:bg-control focus-visible:outline-2 focus-visible:outline-link"

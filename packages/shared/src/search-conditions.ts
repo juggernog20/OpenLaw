@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { z } from "zod";
 import {
-  fieldProperty,
-  SearchFieldSchema,
+  SEARCH_FIELD_KINDS,
+  SEARCH_FIELD_TYPES,
   isValuelessOperator,
   type SearchField,
 } from "./search-fields.js";
@@ -98,6 +98,46 @@ export const SEARCH_OPERATORS = {
   date: ["before", "after", "on", "between", ...RELATIVE_DATE_OPERATORS],
 } as const;
 
+/** The operator set per Field type (#1092). A currency Field stores an
+ * ISO code, not an amount, so it takes the choice operators; numeric
+ * comparison is for number Fields only. */
+export const FIELD_OPERATORS = {
+  text: ["contains", "does_not_contain", "is_empty", "is_not_empty"],
+  long_text: ["contains", "does_not_contain", "is_empty", "is_not_empty"],
+  number: [...SEARCH_OPERATORS.number, "is_empty", "is_not_empty"],
+  currency: ["is_any_of", "is_none_of", "is_empty", "is_not_empty"],
+  date: [...SEARCH_OPERATORS.date, "is_empty", "is_not_empty"],
+  boolean: ["is_yes", "is_no", "is_empty"],
+  single_select: ["is_any_of", "is_none_of", "is_empty", "is_not_empty"],
+  multi_select: ["includes_any", "includes_all", "includes_none", "is_empty"],
+  user: ["is_any_of", "is_none_of", "is_empty"],
+  entity: ["is_any_of", "is_none_of", "is_empty"],
+} as const;
+
+/** A live Field as a search property: `field:<slug>` under its module's kind. */
+export function fieldProperty(field: SearchField): SearchProperty {
+  const type = field.fieldType;
+  return {
+    kind: field.moduleScope,
+    key: `field:${field.slug}`,
+    label: field.displayName,
+    type:
+      type === "text" || type === "long_text"
+        ? "text"
+        : type === "number"
+          ? "number"
+          : type === "date"
+            ? "date"
+            : type === "boolean"
+              ? "flag"
+              : "choices",
+    // Option labels are free strings, so a comma inside one is data.
+    free: type === "single_select" || type === "multi_select" ? true : undefined,
+    operators: FIELD_OPERATORS[type],
+    options: field.options ?? undefined,
+  };
+}
+
 export function searchProperty(kind: string, key: string): SearchProperty | undefined {
   return SEARCH_PROPERTIES.find((property) => property.kind === kind && property.key === key);
 }
@@ -121,12 +161,12 @@ export function conditionProblem(
 ): string | null {
   if (condition.property.startsWith("field:") && catalog === undefined) {
     if (
-      !["contract", "matter", "entity"].includes(condition.kind) ||
+      !(SEARCH_FIELD_KINDS as readonly string[]).includes(condition.kind) ||
       !/^field:[a-z0-9_-]+$/.test(condition.property)
     )
       return "Unknown search Field.";
     // The codec checks the operand shape; the server resolves the live type.
-    return SearchFieldSchema.shape.fieldType.options.some(
+    return SEARCH_FIELD_TYPES.some(
       (fieldType) =>
         conditionProblem(condition, [
           {

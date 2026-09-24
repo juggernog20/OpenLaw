@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useState } from "react";
-import { type SearchQuestion, type SearchField } from "@openlaw/shared";
+import { SEARCH_FIELD_KINDS, type SearchQuestion, type SearchField } from "@openlaw/shared";
 import { defineMessages, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { useOtherConditionDefinitions } from "./other-condition-definitions";
 import { useSearchFields } from "./field-definitions";
@@ -186,7 +186,7 @@ export function useConditionDefinitions(
   const intl = useIntl();
   const other = useOtherConditionDefinitions(kinds);
   const fields = useSearchFields(
-    kinds.some((kind) => ["contract", "matter", "entity"].includes(kind)),
+    kinds.some((kind) => (SEARCH_FIELD_KINDS as readonly string[]).includes(kind)),
     onFieldsLoaded,
   );
   const contracts = kinds.includes("contract");
