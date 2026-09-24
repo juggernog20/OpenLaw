@@ -926,9 +926,24 @@ it("carries credential attribution through Contract writes, feeds, audit and not
     expect.objectContaining({
       actorId: legalId,
       action: "contract.updated",
+      payload: expect.objectContaining({
+        changed: expect.objectContaining({ title: expect.objectContaining({ to: "UI edit" }) }),
+      }),
       viaKind: null,
       viaId: null,
       viaClientName: null,
+    }),
+  );
+  expect(afterUi).toContainEqual(
+    expect.objectContaining({
+      actorId: legalId,
+      action: "contract.updated",
+      ...via,
+      payload: expect.objectContaining({
+        changed: expect.objectContaining({
+          description: expect.objectContaining({ to: "Concurrent MCP edit" }),
+        }),
+      }),
     }),
   );
 });

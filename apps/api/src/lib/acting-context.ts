@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * MCP credential attribution follows its asynchronous execution (TECH-035).
+ * Only entries whose actor matches the scoped user inherit the Client.
+ */
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { AuthenticatedUser } from "../auth/user.js";
 
