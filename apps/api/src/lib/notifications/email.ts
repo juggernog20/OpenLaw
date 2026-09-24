@@ -32,11 +32,16 @@
  * renders, and the bell's own strings arrive with the bell. What this
  * layer sends is the same class of copy as the invite email above it.
  *
- * Approval requests pair the authored text with the shared DES-093 layout.
+ * Contract and Matter events pair the authored text with the DES-093 layout.
  */
 
 import type { NotificationEventType, RequestStatus, SeverityLevel } from "@openlaw/db";
-import { renderEmailLayout, type EmailBrand } from "../email-layout.js";
+import {
+  renderEmailLayout,
+  type EmailBrand,
+  type EmailModel,
+  type EmailRecord,
+} from "../email-layout.js";
 export { escapeHtml } from "../email-layout.js";
 import type { MailMessage } from "../mailer.js";
 import { requestSideOf } from "./catalog.js";
@@ -168,7 +173,7 @@ export function renderNotificationMail(
   brand: EmailBrand = {},
 ): MailMessage | null {
   const { record } = notification;
-  if (record.entityType === "matter") return matterMail(notification, record, to, baseUrl);
+  if (record.entityType === "matter") return matterMail(notification, record, to, baseUrl, brand);
   if (record.entityType === "contract")
     return contractMail(notification, record, to, baseUrl, brand);
   // A Request is read from two sides, so the group is what says which
@@ -179,11 +184,44 @@ export function renderNotificationMail(
     : requestMail(notification, record, to, baseUrl);
 }
 
+/** The shared record facts; each event supplies its own copy and extra facts. */
+function recordLayout(
+  notification: NotificationMail,
+  baseUrl: string,
+  brand: EmailBrand,
+  model: Omit<EmailModel, "baseUrl" | "surface" | "greeting" | "record"> & {
+    record?: Partial<EmailRecord>;
+  },
+): ReturnType<typeof renderEmailLayout> {
+  const matter = notification.record.entityType === "matter";
+  return renderEmailLayout(
+    {
+      ...model,
+      baseUrl,
+      surface: notification.recipientRole === "business_user" ? "portal" : "staff",
+      greeting: `Hello ${notification.recipientName},`,
+      preheader: model.preheader ?? model.body?.join(" "),
+      record: {
+        kind: matter ? "Matter" : "Contract",
+        ref: `${matter ? "M" : "C"}-${notification.record.number}`,
+        title: notification.record.title,
+        href: matter
+          ? matterLink(baseUrl, notification.record.number)
+          : recordLink(baseUrl, notification.record.number),
+        ...(notification.actorName ? { actor: notification.actorName } : {}),
+        ...model.record,
+      },
+    },
+    brand,
+  );
+}
+
 function matterMail(
   notification: NotificationMail,
   record: Extract<MailRecord, { entityType: "matter" }>,
   to: string,
   baseUrl: string,
+  brand: EmailBrand,
 ): MailMessage | null {
   const named = `M-${record.number} · ${record.title}`;
   const link = matterLink(baseUrl, record.number);
@@ -191,6 +229,24 @@ function matterMail(
   if (notification.eventType === "matter.task_assigned") {
     const task = detail(notification, "taskTitle");
     return {
+      ...recordLayout(notification, baseUrl, brand, {
+        subject: task ? `Task assigned: ${task} (${named})` : `Task assigned on ${named}`,
+        tone: "assigned",
+        label: "Task assigned",
+        headline: task ?? "Task assigned",
+        body: [
+          task
+            ? `${who} has given you a Task on ${named}: ${task}.`
+            : `${who} has given you a Task on ${named}.`,
+        ],
+        record: { facts: task ? [{ label: "Task", value: task }] : [] },
+        action: {
+          label: "Open tasks",
+          href: `${link}/tasks`,
+          line: "The checklist is on the Matter record.",
+        },
+        footer: { kind: "notification", why: "The task is assigned to you." },
+      }),
       to,
       subject: task ? `Task assigned: ${task} (${named})` : `Task assigned on ${named}`,
       text: [
@@ -469,6 +525,15 @@ function contractMail(
       };
     case "contract.team_added":
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `You were added to ${contractTitle}`,
+          tone: "assigned",
+          label: "Added to team",
+          headline: "You were added to a contract team",
+          body: [`${who} added you to the team on ${contractTitle}.`],
+          action: { label: "Open contract", href: link },
+          footer: { kind: "notification", why: "You are on the team for this contract." },
+        }),
         to,
         subject: `You were added to ${contractTitle}`,
         text: [
@@ -484,6 +549,34 @@ function contractMail(
       const autoDoc = detail(notification, "autoDocName") ?? "an Auto-Doc";
       const assigned = notification.eventType === "contract.generated";
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: assigned
+            ? `Generated Contract assigned to you: ${contractTitle}`
+            : `Unassigned generated Contract: ${contractTitle}`,
+          tone: assigned ? "success" : "warning",
+          label: assigned ? "Generated contract" : "Needs an owner",
+          headline: assigned
+            ? "A generated contract is yours"
+            : "A generated contract needs an owner",
+          body: [
+            `${who} generated ${contractTitle} from ${autoDoc}.`,
+            assigned
+              ? "You are the Owner of this Contract."
+              : "This Contract needs an Owner. Claim it in the Inbox.",
+          ],
+          record: {
+            facts: detail(notification, "autoDocName")
+              ? [{ label: "Auto-Doc", value: autoDoc }]
+              : [],
+          },
+          action: { label: assigned ? "Open contract" : "Claim it", href: link },
+          footer: {
+            kind: "notification",
+            why: assigned
+              ? "You are the owner of this contract."
+              : "You triage generated contracts.",
+          },
+        }),
         to,
         subject: assigned
           ? `Generated Contract assigned to you: ${contractTitle}`
@@ -502,6 +595,19 @@ function contractMail(
     }
     case "contract.owner_assigned":
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `You are now the owner of ${contractTitle}`,
+          tone: "assigned",
+          label: "Owner assigned",
+          headline: "You are now the owner",
+          body: [`${who} has made you the owner of ${contractTitle}.`],
+          action: {
+            label: "Open contract",
+            href: link,
+            line: "The owner is the accountable person on a contract.",
+          },
+          footer: { kind: "notification", why: "You are the owner of this contract." },
+        }),
         to,
         subject: `You are now the owner of ${contractTitle}`,
         text: [
@@ -520,6 +626,22 @@ function contractMail(
       // record, so it says "a task" rather than nothing at all.
       const task = detail(notification, "taskTitle");
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: task
+            ? `Task assigned: ${task} (${contractTitle})`
+            : `Task assigned on ${contractTitle}`,
+          tone: "assigned",
+          label: "Task assigned",
+          headline: task ?? "Task assigned",
+          body: [
+            task
+              ? `${who} has given you a task on ${contractTitle}: ${task}.`
+              : `${who} has given you a task on ${contractTitle}.`,
+          ],
+          record: { facts: task ? [{ label: "Task", value: task }] : [] },
+          action: { label: "Open tasks", href: link, line: "The checklist is on the record." },
+          footer: { kind: "notification", why: "The task is assigned to you." },
+        }),
         to,
         subject: task
           ? `Task assigned: ${task} (${contractTitle})`
@@ -568,6 +690,27 @@ function contractMail(
       // `to`, which is the recipient's address in this scope.
       const status = detail(notification, "to");
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `${contractTitle} moved${status ? ` to ${status}` : ""}`,
+          tone: "info",
+          label: "Status changed",
+          headline: status ? `Moved to ${status}` : "Status changed",
+          body: [
+            status
+              ? `${who} moved ${contractTitle} to ${status}.`
+              : `${who} moved ${contractTitle} to another status.`,
+          ],
+          record: {
+            previousStatus: detail(notification, "from") ?? undefined,
+            status: status ? { label: status, tone: "info" } : undefined,
+          },
+          action: {
+            label: "Open contract",
+            href: link,
+            line: "The record's own feed has the full history.",
+          },
+          footer: { kind: "notification", why: "You turned on activity emails." },
+        }),
         to,
         subject: `${contractTitle} moved${status ? ` to ${status}` : ""}`,
         text: [
@@ -603,6 +746,26 @@ function contractMail(
     case "document.added": {
       const document = detail(notification, "documentTitle");
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: document
+            ? `New document: ${document} (${contractTitle})`
+            : `New document on ${contractTitle}`,
+          tone: "neutral",
+          label: "New document",
+          headline: document ?? "New document",
+          body: [
+            document
+              ? `${who} added ${document} to ${contractTitle}.`
+              : `${who} added a document to ${contractTitle}.`,
+          ],
+          record: { document: document ? { name: document } : undefined },
+          action: {
+            label: "Open documents",
+            href: link,
+            line: "The document list is on the record. Files are never attached, so the record's access rules still apply.",
+          },
+          footer: { kind: "notification", why: "You turned on activity emails." },
+        }),
         to,
         subject: document
           ? `New document: ${document} (${contractTitle})`
@@ -628,6 +791,32 @@ function contractMail(
       const version = count(notification, "versionNumber");
       const round = version ? `v${version}` : "a new version";
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: document
+            ? `New version of ${document} (${contractTitle})`
+            : `New document version on ${contractTitle}`,
+          tone: "info",
+          label: "New version",
+          headline: document
+            ? `${version ? `v${version}` : "New version"} of ${document}`
+            : "New document version",
+          body: [
+            document
+              ? `${who} added ${round} of ${document} on ${contractTitle}.`
+              : `${who} added ${round} of a document on ${contractTitle}.`,
+          ],
+          record: {
+            document: document
+              ? { name: document, version: version ? `v${version}` : undefined }
+              : undefined,
+          },
+          action: {
+            label: "Open version history",
+            href: link,
+            line: "The version history is on the record.",
+          },
+          footer: { kind: "notification", why: "You turned on activity emails." },
+        }),
         to,
         subject: document
           ? `New version of ${document} (${contractTitle})`
@@ -659,6 +848,30 @@ function contractMail(
               ? "was voided"
               : "has ended";
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `Signature ${status === "signed" ? "complete" : "update"}: ${contractTitle}`,
+          tone:
+            status === "signed"
+              ? "success"
+              : status === "declined" || status === "voided"
+                ? "danger"
+                : "neutral",
+          label:
+            status === "signed"
+              ? "Signed"
+              : status === "declined" || status === "voided"
+                ? `Signature ${status}`
+                : "Signature update",
+          headline:
+            status === "signed" ? `${contractTitle} is signed` : `The signature envelope ${ending}`,
+          body: [`The signature envelope on ${contractTitle} ${ending}.`],
+          action: {
+            label: "Open contract",
+            href: link,
+            line: "The signature panel on the record has the detail.",
+          },
+          footer: { kind: "notification", why: "You turned on activity emails." },
+        }),
         to,
         subject: `Signature ${status === "signed" ? "complete" : "update"}: ${contractTitle}`,
         text: [
