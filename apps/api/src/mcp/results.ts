@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Cursor pages and named service failures for TECH-035's MCP response budget.
+ * Count both structured content and its text copy against the wire limit.
+ */
 import { z } from "zod";
 import { HttpError } from "../lib/problem.js";
-import { ToolError } from "./register.js";
+import { ToolError } from "./tool.js";
 
 // Both structuredContent and its escaped text copy must fit the Client's 64 KiB limit.
 export const RESULT_BYTE_BUDGET = 30_000;

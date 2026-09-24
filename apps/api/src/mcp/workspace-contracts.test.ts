@@ -27,6 +27,7 @@ import {
   orgSettings,
   activityLog,
   eq,
+  sql,
 } from "@openlaw/db";
 import { provisionUser } from "../auth/instance.js";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
@@ -280,6 +281,67 @@ it("pages search and Contract filters without gaps under the byte budget", async
     cursor: first.nextCursor,
   });
   expect(second.results).not.toEqual(first.results);
+});
+it("continues Contract pages when the cursor record leaves the filter", async () => {
+  const older = await call(legal, "openlaw_contract_create", {
+    contractTypeId: typeId,
+    answers: { title: "Older cursor record" },
+    managerId: legalId,
+  });
+  const newer = await call(legal, "openlaw_contract_create", {
+    contractTypeId: typeId,
+    answers: { title: "Newer cursor record" },
+    managerId: legalId,
+  });
+  const filters = { ownerId: legalId, limit: 1 };
+  const first = await call(legal, "openlaw_contracts_list", filters);
+  expect(first.contracts).toEqual([expect.objectContaining({ number: newer.number })]);
+  const wideBoundary = await call(legal, "openlaw_contracts_list", {
+    ...filters,
+    cursor: String(Number.MAX_SAFE_INTEGER),
+  });
+  expect(wideBoundary.contracts).toEqual(first.contracts);
+  const invalid = await legal.callTool({
+    name: "openlaw_contracts_list",
+    arguments: { cursor: "-1" },
+  });
+  expect(invalid.isError).toBe(true);
+  expect(JSON.stringify(invalid)).toContain("validation_error");
+  await call(legal, "openlaw_contract_update", {
+    number: newer.number,
+    changes: { managerId: adminId },
+  });
+  const second = await call(legal, "openlaw_contracts_list", {
+    ...filters,
+    cursor: first.nextCursor,
+  });
+  expect(second.contracts).toEqual([expect.objectContaining({ number: older.number })]);
+});
+it("preserves sub-millisecond activity boundaries between pages", async () => {
+  const entries = [];
+  for (const fraction of ["123400", "123500"]) {
+    const [entry] = await h.db
+      .insert(activityLog)
+      .values({
+        entityType: "contract",
+        entityId: visible.id,
+        actorId: legalId,
+        action: "contract.updated",
+        visibility: "working_team",
+        payload: {},
+        createdAt: sql`${`2035-01-01T00:00:00.${fraction}Z`}::timestamptz`,
+      })
+      .returning({ id: activityLog.id });
+    entries.push(entry!.id);
+  }
+  const filters = { since: "2035-01-01T00:00:00Z", limit: 1 };
+  const first = await call(legal, "openlaw_activity_recent", filters);
+  expect(first.entries).toEqual([expect.objectContaining({ id: entries[1] })]);
+  const second = await call(legal, "openlaw_activity_recent", {
+    ...filters,
+    cursor: first.nextCursor,
+  });
+  expect(second.entries).toEqual([expect.objectContaining({ id: entries[0] })]);
 });
 it("returns named creation errors and preserves create-service behavior", async () => {
   const r = await h.app.inject({

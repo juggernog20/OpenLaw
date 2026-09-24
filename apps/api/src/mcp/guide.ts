@@ -33,7 +33,7 @@ import {
 import { readFormFields, readIntakeForm } from "../lib/intake-form.js";
 import { readTypeForm } from "../lib/type-form-routes.js";
 import { HttpError } from "../lib/problem.js";
-import { ToolError, type ToolDefinition } from "./register.js";
+import { ToolError, type ToolDefinition } from "./tool.js";
 import { documentationBundle } from "./documentation.js";
 import {
   documentationExcerpt,

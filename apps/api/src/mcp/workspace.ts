@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Workspace search and recent activity (DD-029, TECH-035). Legal Users read
+ * Legal Only, Working Team and Full Thread activity on reachable records.
+ * Confidential Document events require the named audience; references to
+ * unreachable Contracts and Matters are redacted by the shared activity rules.
+ */
 import { z } from "zod";
 import {
   activityLog,
@@ -35,7 +41,7 @@ import { matterTeamScope } from "../lib/matter-access.js";
 import { entityReachScope } from "../lib/entity-access.js";
 import { redactUnreachedReferences } from "../lib/activity-redaction.js";
 import type { AuthenticatedUser } from "../auth/user.js";
-import type { ToolDefinition } from "./register.js";
+import type { ToolDefinition } from "./tool.js";
 import { bounded, boundedPage, pageInput } from "./results.js";
 
 export const readTool = {
@@ -122,12 +128,12 @@ export const workspaceTools: readonly ToolDefinition[] = [
       let before;
       if (cursor) {
         const [boundary] = await db
-          .select({ id: activityLog.id, createdAt: activityLog.createdAt })
+          .select({ id: activityLog.id })
           .from(activityLog)
           .where(and(scope, eq(activityLog.id, cursor)))
           .limit(1);
         if (!boundary) return { entries: [], nextCursor: null };
-        before = sql`(${activityLog.createdAt}, ${activityLog.id}) < (${boundary.createdAt.toISOString()}::timestamptz, ${boundary.id})`;
+        before = sql`(${activityLog.createdAt}, ${activityLog.id}) < (select b.created_at, b.id from ${activityLog} b where b.id = ${boundary.id})`;
       }
       const rows = await db
         .select({

@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Contract Tools in TECH-035's register reuse the Contract services. DD-029 gives
+ * Business Users the Portal projection and excludes every mutation.
+ */
 import { z } from "zod";
 import {
   and,
@@ -46,7 +50,7 @@ import { listContractDocuments } from "../modules/documents/service.js";
 import { listPortalDocuments } from "../modules/portal/document-service.js";
 import { AnalysisRunSchema, toAnalysisRun } from "../modules/contract-analysis/routes.js";
 import { runContractAnalysis } from "../modules/contract-analysis/service.js";
-import { ToolError, type ToolDefinition } from "./register.js";
+import { ToolError, type ToolDefinition } from "./tool.js";
 import { readTool } from "./workspace.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
 
@@ -254,15 +258,14 @@ export const contractTools: readonly ToolDefinition[] = [
           ? sql`${contracts.expiryDate} between current_date and current_date + ${expiringWithinDays}::integer`
           : undefined,
       );
-      let boundary;
-      if (cursor) {
-        const [row] = await db
-          .select({ number: contracts.number })
-          .from(contracts)
-          .where(and(scope, eq(contracts.id, cursor)));
-        if (!row) return { contracts: [], nextCursor: null };
-        boundary = lt(contracts.number, row.number);
-      }
+      const cursorNumber = cursor === undefined ? undefined : Number(cursor);
+      if (
+        cursorNumber !== undefined &&
+        (!/^\d+$/.test(cursor!) || !Number.isSafeInteger(cursorNumber) || cursorNumber < 1)
+      )
+        throw new ToolError("validation_error", "cursor must be a positive Contract number.");
+      const boundary =
+        cursorNumber === undefined ? undefined : lt(contracts.number, sql`${cursorNumber}::bigint`);
       const rows = await selectContracts(db, user)
         .where(and(scope, boundary))
         .orderBy(sql`${contracts.number} desc`)
@@ -274,7 +277,7 @@ export const contractTools: readonly ToolDefinition[] = [
             : ContractRowSchema.parse(await memberRow(db, r)),
         ),
       );
-      const page = boundedPage(projected, limit, (r) => r.id);
+      const page = boundedPage(projected, limit, (r) => String(r.number));
       return bounded({ contracts: page.items, nextCursor: page.nextCursor });
     },
   },
@@ -292,16 +295,30 @@ export const contractTools: readonly ToolDefinition[] = [
         const { number, documentsCursor, documentsLimit } = getInput.parse(input);
         const { db, user } = context;
         const portal = user.role === "business_user";
-        const [row] = await selectContracts(db, user)
-          .where(
-            and(
-              eq(contracts.number, number),
-              portal ? portalContractScope(db, user) : contractTeamScope(db, user),
-            ),
-          )
-          .limit(1);
-        if (!row) throw httpError(404, NO_CONTRACT);
-        const custom = await customFieldsEnvelope(db, row, user);
+        let result;
+        if (portal) {
+          const [row] = await selectContracts(db, user)
+            .where(and(eq(contracts.number, number), portalContractScope(db, user)))
+            .limit(1);
+          if (!row) throw httpError(404, NO_CONTRACT);
+          const custom = await customFieldsEnvelope(db, row, user);
+          result = {
+            contract: portalRow.parse(toRow(row, {}, [])),
+            fields: custom.fields,
+            customFields: custom.customFields,
+            team: await selectTeam(db, row.row.id),
+          };
+        } else {
+          const details = await getContract(db, user, number, context.resolveAiProvider);
+          result = {
+            contract: ContractRowSchema.parse(details.contract),
+            fields: details.fields,
+            customFields: details.contract.customFields,
+            team: details.team,
+            analysis: details.analysis,
+            counterparties: details.counterparties,
+          };
+        }
         const paper = portal
           ? await listPortalDocuments(db, user, "contract", number, { cursor: documentsCursor })
           : await listContractDocuments(db, user, number, { cursor: documentsCursor });
@@ -311,20 +328,17 @@ export const contractTools: readonly ToolDefinition[] = [
           (d) => d.id,
           paper.nextCursor,
         );
-        const result = {
-          contract: portal
-            ? portalRow.parse(toRow(row, {}, []))
-            : ContractRowSchema.parse(toRow(row, custom.customFields, custom.fields)),
-          fields: custom.fields,
-          customFields: custom.customFields,
-          team: await selectTeam(db, row.row.id),
+        const withDocuments = {
+          ...result,
           documents: documentPage.items,
           documentsNextCursor: documentPage.nextCursor,
         };
         if (portal)
-          return bounded({ ...result, approvals: await pendingApprovals(db, row.row.id, user.id) });
-        const [details, keyDates, approvals] = await Promise.all([
-          getContract(db, user, number, context.resolveAiProvider),
+          return bounded({
+            ...withDocuments,
+            approvals: await pendingApprovals(db, result.contract.id, user.id),
+          });
+        const [keyDates, approvals] = await Promise.all([
           db
             .select({
               id: contractKeyDates.id,
@@ -333,15 +347,13 @@ export const contractTools: readonly ToolDefinition[] = [
               note: contractKeyDates.note,
             })
             .from(contractKeyDates)
-            .where(eq(contractKeyDates.contractId, row.row.id))
+            .where(eq(contractKeyDates.contractId, result.contract.id))
             .orderBy(asc(contractKeyDates.date), asc(contractKeyDates.id)),
-          pendingApprovals(db, row.row.id),
+          pendingApprovals(db, result.contract.id),
         ]);
         return bounded({
-          ...result,
+          ...withDocuments,
           keyDates,
-          analysis: details.analysis,
-          counterparties: details.counterparties,
           approvals,
         });
       }),

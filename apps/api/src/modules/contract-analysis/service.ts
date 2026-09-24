@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Shared manual Analysis entry point for the HTTP route and MCP Tool (CTR-008).
+ * Authorize and snapshot the selected Version before queuing the existing worker.
+ */
 import {
   and,
   contractAnalysisRuns,

@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import type { DocumentationBundle } from "../../../../scripts/documentation/reader.mjs";
-import { ToolError } from "./register.js";
+import { ToolError } from "./tool.js";
 
 const strings = z.array(z.string());
 const bundleSchema: z.ZodType<DocumentationBundle> = z.object({
