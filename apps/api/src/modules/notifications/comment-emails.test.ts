@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, it } from "vitest";
 import { activityLog, commentAttachments, eq, notifications, users } from "@openlaw/db";
 import { buildApp } from "../../app.js";
 import { provisionUser } from "../../auth/instance.js";
@@ -93,6 +93,16 @@ afterAll(async () => {
   await h?.stop();
 });
 
+afterEach(async () => {
+  const saved = await app.inject({
+    method: "PATCH",
+    url: "/api/v1/org/notifications",
+    cookies,
+    payload: { commentWordsInEmail: true },
+  });
+  expect(saved.statusCode, saved.body).toBe(200);
+});
+
 const arms = [
   { kind: "contract", event: "comment.mentioned", tier: "legal_only", label: "Legal Only" },
   { kind: "contract", event: "comment.posted", tier: "working_team", label: "Working Team" },
@@ -115,7 +125,7 @@ const arms = [
     portal: true,
   },
 ] as const;
-const states = ["present", "edited", "deleted", "redacted", "cut"] as const;
+const states = ["present", "edited", "deleted", "redacted", "cut", "disabled"] as const;
 it.each(arms.flatMap((arm) => states.map((state) => ({ portal: false, ...arm, state }))))(
   "$kind $event carries the send-time words when $state",
   async ({ kind, event, tier, label, state, portal: recordPortal }) => {
@@ -174,6 +184,15 @@ it.each(arms.flatMap((arm) => states.map((state) => ({ portal: false, ...arm, st
       });
       expect(changed.statusCode, changed.body).toBe(200);
     }
+    if (state === "disabled") {
+      const saved = await app.inject({
+        method: "PATCH",
+        url: "/api/v1/org/notifications",
+        cookies,
+        payload: { commentWordsInEmail: false },
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+    }
     const before = h.mailer.messages.length;
     await handleNotificationEmail(
       {
@@ -197,10 +216,11 @@ it.each(arms.flatMap((arm) => states.map((state) => ({ portal: false, ...arm, st
       message.attachments?.some((file) => file.filename === "do-not-email-this-attachment.pdf"),
     ).toBe(false);
     expect(message.attachments?.[0]?.cid).toBeTruthy();
-    if (state === "deleted" || state === "redacted") {
+    if (state === "deleted" || state === "redacted" || state === "disabled") {
       expect(message.text).not.toContain("check <this>");
       expect(message.html).not.toContain("check &lt;this&gt;");
       expect(message.text).not.toContain("> ");
+      expect(message.html).not.toContain("Read the full comment");
     } else {
       const words =
         state === "edited" ? "Changed before delivery." : state === "cut" ? `${prefix}…` : short;

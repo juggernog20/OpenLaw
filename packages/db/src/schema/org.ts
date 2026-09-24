@@ -73,6 +73,7 @@ export const orgSettings = pgTable(
     defaultLocale: text("default_locale").notNull().default("en-US"),
     /** IANA zone name; the display timezone until a user sets their own (DES-014). */
     defaultTimezone: text("default_timezone").notNull().default("UTC"),
+    commentWordsInEmail: boolean("comment_words_in_email").notNull().default(true),
     /**
      * NOT-004's one reminder-offset list: how many days ahead of a
      * tracked date the morning round fires, seeded `7 / 1 / day-of`.

@@ -61,6 +61,8 @@ const GeneralPatchSchema = z
 
 type GeneralField = keyof z.infer<typeof GeneralPatchSchema>;
 
+const NotificationSettingsSchema = z.object({ commentWordsInEmail: z.boolean() });
+
 /**
  * What both offset routes answer.
  *
@@ -208,6 +210,66 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
           defaultTimezone: updated.defaultTimezone,
         },
       };
+    },
+  );
+
+  app.get(
+    "/org/notifications",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getOrgNotifications",
+        summary: "Organization notification settings",
+        tags: ["org"],
+        response: { 200: NotificationSettingsSchema, default: problemResponse },
+      },
+    },
+    async () => {
+      const [row] = await app.db
+        .select({ commentWordsInEmail: orgSettings.commentWordsInEmail })
+        .from(orgSettings)
+        .limit(1);
+      if (!row) throw httpError(500, "org_settings has no row to read.");
+      return row;
+    },
+  );
+
+  app.patch(
+    "/org/notifications",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "updateOrgNotifications",
+        summary: "Save comment words in email for the organization",
+        tags: ["org"],
+        body: NotificationSettingsSchema.strict(),
+        response: { 200: NotificationSettingsSchema, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { commentWordsInEmail } = request.body;
+      return app.db.transaction(async (tx) => {
+        const [current] = await tx.select().from(orgSettings).limit(1).for("update");
+        if (!current) throw httpError(500, "org_settings has no row to update.");
+        if (current.commentWordsInEmail !== commentWordsInEmail) {
+          await tx
+            .update(orgSettings)
+            .set({ commentWordsInEmail, updatedAt: new Date() })
+            .where(eq(orgSettings.id, current.id));
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: {
+              field: "commentWordsInEmail",
+              old: current.commentWordsInEmail,
+              new: commentWordsInEmail,
+            },
+          });
+        }
+        return { commentWordsInEmail };
+      });
     },
   );
 
