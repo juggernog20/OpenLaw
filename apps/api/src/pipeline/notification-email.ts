@@ -57,6 +57,7 @@ import {
   notificationScope,
   REQUEST_ENTITY,
 } from "../lib/notifications/audience.js";
+import { COMMENT_EMAIL_EVENTS, readEmailComment } from "../lib/notifications/comment-email.js";
 import { requestSideOf } from "../lib/notifications/catalog.js";
 import { origin, renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
 import { getOrgSettings } from "../lib/org-settings.js";
@@ -297,10 +298,15 @@ async function sendNotificationEmail(
   // here.
   const { name, emailLogoPng } = await getOrgSettings(deps.db);
   const brand = { name, emailLogoPng };
+  const comment =
+    COMMENT_EMAIL_EVENTS.has(row.eventType) && typeof payload.commentId === "string"
+      ? await readEmailComment(deps.db, payload.commentId, row.userId)
+      : undefined;
   const message = renderNotificationMail(
     {
       eventType: row.eventType as NotificationEventType,
       record,
+      comment,
       actorName: typeof payload.actorName === "string" ? payload.actorName : null,
       recipientName: row.recipientName,
       // The rest of the snapshot, for the arms that name something

@@ -63,6 +63,8 @@ export type MailRecord =
 /** One notification, as the template layer needs it described. */
 export interface NotificationMail {
   recipientRole?: string;
+  /** Read from the live comment for this send, never from the notification payload. */
+  comment?: EmailRecord["comment"];
   eventType: NotificationEventType;
   /** The record the item is about — its number is its address. */
   record: MailRecord;
@@ -173,6 +175,12 @@ export function renderNotificationMail(
   brand: EmailBrand = {},
 ): MailMessage | null {
   const { record } = notification;
+  if (
+    notification.eventType === "comment.mentioned" ||
+    (notification.eventType === "comment.posted" && record.entityType !== "request") ||
+    (notification.eventType === "request.replied" && record.entityType === "request")
+  )
+    return commentMail(notification, to, baseUrl, brand);
   if (record.entityType === "matter") return matterMail(notification, record, to, baseUrl, brand);
   if (record.entityType === "contract")
     return contractMail(notification, record, to, baseUrl, brand);
@@ -182,6 +190,109 @@ export function renderNotificationMail(
   return requestSideOf(notification.eventType) === "inbox"
     ? staffRequestMail(notification, record, to, baseUrl)
     : requestMail(notification, record, to, baseUrl);
+}
+
+/** Comment and reply copy shares the same card on each record and bell surface. */
+function commentMail(
+  notification: NotificationMail,
+  to: string,
+  baseUrl: string,
+  brand: EmailBrand,
+): MailMessage {
+  const { record } = notification;
+  const kind = record.entityType;
+  const portal =
+    kind === "request"
+      ? requestSideOf(notification.eventType) !== "inbox"
+      : notification.recipientRole === "business_user";
+  const link =
+    kind === "contract"
+      ? recordLink(baseUrl, record.number)
+      : kind === "matter"
+        ? matterLink(baseUrl, record.number)
+        : portal
+          ? portalRequestLink(baseUrl, record.number)
+          : inboxRequestLink(baseUrl, record.number);
+  const ref = `${kind === "contract" ? "C" : kind === "matter" ? "M" : "R"}-${record.number}`;
+  const named = kind === "contract" ? record.title : `${ref} · ${record.title}`;
+  const who = notification.actorName ?? "Somebody";
+  const mentioned = notification.eventType === "comment.mentioned";
+  const replied = notification.eventType === "request.replied";
+  const subject = mentioned
+    ? `You were mentioned on ${named}`
+    : replied
+      ? `Legal replied on ${named}`
+      : `New comment on ${named}`;
+  const sentence = mentioned
+    ? `${who} mentioned you in a comment on ${kind === "request" ? "the request " : ""}${named}.`
+    : replied
+      ? `${who} replied on your request ${named}.`
+      : `${who} commented on ${named}.`;
+  const line = replied
+    ? "The reply is on the request, and you can answer it there."
+    : `The comment is on the ${kind === "contract" ? "record" : kind}.`;
+  const comment = notification.comment;
+  const words = comment
+    ? comment.words.map((word) => word.text).join("") + (comment.cut ? "…" : "")
+    : "";
+  return {
+    ...renderEmailLayout(
+      {
+        subject,
+        baseUrl,
+        surface: portal ? "portal" : "staff",
+        preheader: sentence,
+        tone: mentioned ? "assigned" : "info",
+        label: mentioned ? "You were mentioned" : replied ? "Legal replied" : "New comment",
+        headline: mentioned
+          ? `${who} mentioned you`
+          : replied
+            ? `${who} replied to you`
+            : `${who} added a comment`,
+        greeting: `Hello ${notification.recipientName},`,
+        body: [sentence],
+        record: {
+          kind: kind === "contract" ? "Contract" : kind === "matter" ? "Matter" : "Request",
+          ref,
+          title: record.title,
+          href: link,
+          actor: notification.actorName ?? undefined,
+          comment,
+        },
+        action: { label: `Reply on the ${kind}`, href: link, line },
+        footer: {
+          kind: "notification",
+          why: mentioned
+            ? "You were mentioned in this comment."
+            : replied
+              ? "This is a reply on your request."
+              : "You follow activity on this record.",
+        },
+      },
+      brand,
+    ),
+    to,
+    subject,
+    text: [
+      `Hello ${notification.recipientName},`,
+      "",
+      sentence,
+      ...(words
+        ? [
+            "",
+            words
+              .split("\n")
+              .map((word) => `> ${word}`)
+              .join("\n"),
+          ]
+        : []),
+      ...(comment?.cut ? ["", `Read the full comment → ${link}`] : []),
+      "",
+      link,
+      "",
+      line,
+    ].join("\n"),
+  };
 }
 
 /** The shared record facts; each event supplies its own copy and extra facts. */
@@ -262,36 +373,6 @@ function matterMail(
       ].join("\n"),
     };
   }
-  if (notification.eventType === "comment.mentioned") {
-    return {
-      to,
-      subject: `You were mentioned on ${named}`,
-      text: [
-        `Hello ${notification.recipientName},`,
-        "",
-        `${who} mentioned you in a comment on ${named}.`,
-        "",
-        link,
-        "",
-        "The comment is on the matter.",
-      ].join("\n"),
-    };
-  }
-  if (notification.eventType === "comment.posted") {
-    return {
-      to,
-      subject: `New comment on ${named}`,
-      text: [
-        `Hello ${notification.recipientName},`,
-        "",
-        `${who} commented on ${named}.`,
-        "",
-        link,
-        "",
-        "The comment is on the matter.",
-      ].join("\n"),
-    };
-  }
   return null;
 }
 
@@ -355,26 +436,6 @@ function staffRequestMail(
         ].join("\n"),
       };
     }
-    case "comment.mentioned":
-      // On by default and interrupting, because being named is done *to*
-      // you whatever record it happened on (NOT-002's M18/1 addendum).
-      return {
-        to,
-        subject: `You were mentioned on ${named}`,
-        text: [
-          hello,
-          "",
-          `${who} mentioned you in a comment on the request ${named}.`,
-          "",
-          link,
-          "",
-          // The comment itself is deliberately not here, for the
-          // contract mention's reason: the tier (DD-016) is enforced on
-          // the thread, and a redact (CMT-006) cannot reach an email
-          // that has already left.
-          "The comment is on the request.",
-        ].join("\n"),
-      };
     case "request.conversion_draft_finished": {
       // Opt-in through group 4, and addressed to the one person who asked
       // for the draft and then closed the dialog (INT-008). The link
@@ -659,23 +720,6 @@ function contractMail(
         ].join("\n"),
       };
     }
-    case "comment.mentioned":
-      return {
-        to,
-        subject: `You were mentioned on ${contractTitle}`,
-        text: [
-          `Hello ${notification.recipientName},`,
-          "",
-          `${who} mentioned you in a comment on ${contractTitle}.`,
-          "",
-          link,
-          "",
-          // The comment itself is deliberately not here. The tier
-          // (DD-016) is enforced on the thread, and a redact (CMT-006)
-          // cannot reach an email that has already left.
-          "The comment is on the record.",
-        ].join("\n"),
-      };
     // ---------------------------------------------------------------
     // Group 2 — activity on your records (NOT-002).
     //
@@ -726,23 +770,6 @@ function contractMail(
         ].join("\n"),
       };
     }
-    case "comment.posted":
-      return {
-        to,
-        subject: `New comment on ${contractTitle}`,
-        text: [
-          `Hello ${notification.recipientName},`,
-          "",
-          `${who} commented on ${contractTitle}.`,
-          "",
-          link,
-          "",
-          // The words stay on the thread, for the mention arm's reason:
-          // DD-016 is enforced there, and a redact (CMT-006) cannot
-          // reach an email that has already left.
-          "The comment is on the record.",
-        ].join("\n"),
-      };
     case "document.added": {
       const document = detail(notification, "documentTitle");
       return {
@@ -920,7 +947,6 @@ function requestMail(
 ): MailMessage | null {
   const link = portalRequestLink(baseUrl, record.number);
   const reference = requestReference(record.number);
-  const who = notification.actorName ?? "Somebody";
   const hello = `Hello ${notification.recipientName},`;
   // Reference then title, the way the portal's own detail page titles
   // itself: the reference is what a requester quotes, and the title is
@@ -962,23 +988,6 @@ function requestMail(
         ].join("\n"),
       };
     }
-    case "request.replied":
-      return {
-        to,
-        subject: `Legal replied on ${named}`,
-        text: [
-          hello,
-          "",
-          `${who} replied on your request ${named}.`,
-          "",
-          link,
-          "",
-          // The words stay on the thread, for the contract thread's
-          // reason: DD-016 is enforced there, and a redact (CMT-006)
-          // cannot reach an email that has already left.
-          "The reply is on the request, and you can answer it there.",
-        ].join("\n"),
-      };
     case "request.declined": {
       // The reason itself, because INT-006 makes "no" arrive with a why
       // and a line *about* a reason is not the reason. A row written
