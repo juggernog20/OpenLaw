@@ -123,6 +123,7 @@ import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
 import { apiKeyRoutes } from "./modules/api-keys/routes.js";
+import { mcpRoutes } from "./mcp/routes.js";
 import { mcpSettingsRoutes } from "./modules/mcp-settings/routes.js";
 import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
 import {
@@ -556,6 +557,9 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   });
 
   await app.register(authHandler);
+  await app.register(
+    mcpRoutes(deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings())),
+  );
   // The stream owns its full path and bypasses JSON response
   // serialization. Its session and optional record gates still run
   // before it writes the first byte.

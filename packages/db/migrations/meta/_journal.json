@@ -1156,6 +1156,13 @@
       "when": 1790205250569,
       "tag": "0164_approval-indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 165,
+      "version": "7",
+      "when": 1790207955532,
+      "tag": "0165_mcp-tool-calls",
+      "breakpoints": true
     }
   ]
 }
