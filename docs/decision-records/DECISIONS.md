@@ -906,6 +906,8 @@ DD-029 lets a person's agent work in OpenLaw as that person. The ledger keeps th
 
 **The Tool calls view is a tab on the Audit log.** It is Administrator-only and exportable, like the log it sits on. It lists every Tool call with the actor, the Client, the Tool, the outcome and the duration. The MCP section links to it filtered to the last day. It is a ledger of calls, not of record reads. The rule above that read events are not logged stands for the feed and the audit log. A read Tool's row in the Tool calls view names the Tool and the outcome and never the records it returned.
 
+**The columns as shipped (2026-09-24, [#1061](https://github.com/juggernog20/OpenLaw/issues/1061)).** The three columns are nullable, and a row the browser writes carries NULL in all three, as does every row written before M40; no row carries `via_kind = ui`, and every reader treats NULL as the UI. The writer takes an optional via and otherwise reads it from the MCP call's execution context, so service code is unchanged and a write Tool landed later inherits it. The feed, the audit log, its CSV export (three trailing columns) and a notification caused through MCP read "Sarah Chen, via Claude Code, changed status". That wording replaces the "(via Claude)" form above.
+
 ---
 
 ## DD-018: Work-model doctrine — dual workspaces with the deliverable rule

@@ -773,15 +773,17 @@ export function narrateNotification(
     };
   }
   const actorName = text(item.payload, "actorName");
-  const viaClient = text(item.payload, "viaClientName");
+  // The Client the actor acted through (DD-017's via). A browser act
+  // carries no via at all, and the activity feed reads `ui` as none.
   const viaKind = text(item.payload, "viaKind");
-  const actor =
-    actorName && viaClient && viaKind && viaKind !== "ui"
-      ? intl.formatMessage(
-          { id: "notifications.actor.via", defaultMessage: "{actor}, via {client}," },
-          { actor: actorName, client: viaClient },
-        )
-      : actorName;
+  const viaClient =
+    actorName && viaKind && viaKind !== "ui" ? text(item.payload, "viaClientName") : null;
+  const actor = viaClient
+    ? intl.formatMessage(
+        { id: "notifications.actor.via", defaultMessage: "{actor}, via {client}," },
+        { actor: actorName, client: viaClient },
+      )
+    : actorName;
   const status = newStatus(intl, item);
   return {
     icon: arm.icon,
@@ -809,7 +811,7 @@ export function narrateNotification(
       // Every arm gets these whether or not its sentence selects on
       // them.
       hasActor: actor ? "yes" : "no",
-      hasVia: actorName && viaClient && viaKind && viaKind !== "ui" ? "yes" : "no",
+      hasVia: viaClient ? "yes" : "no",
       status: status ?? "",
       hasStatus: status ? "yes" : "no",
       outcome: text(item.payload, "outcome") ?? "",

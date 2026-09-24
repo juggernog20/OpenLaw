@@ -1421,16 +1421,19 @@ Source: **DD-017**
 
 Source-of-truth for both the per-entity activity feed and the system-wide audit log.
 
-| Column        | Type        | Notes                                                                                                                   |
-| ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `id`          | UUID        | PK                                                                                                                      |
-| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `entity` \| `knowledge_item` \| `user` \| `system`                 |
-| `entity_id`   | UUID        | nullable — `system`-typed entries (login, role change, intake-config change) have no entity                             |
-| `actor_id`    | UUID        | nullable — system-emitted events (cron jobs, external webhooks) have no human actor                                     |
-| `action`      | text        | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
-| `visibility`  | text (enum) | `legal_only` \| `working_team` \| `full_thread` \| `admin_only` per **DD-017**                                          |
-| `payload`     | jsonb       | action-specific data (old/new values for edits, etc.)                                                                   |
-| `created_at`  | timestamptz |                                                                                                                         |
+| Column            | Type        | Notes                                                                                                                   |
+| ----------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`              | UUID        | PK                                                                                                                      |
+| `entity_type`     | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `entity` \| `knowledge_item` \| `user` \| `system`                 |
+| `entity_id`       | UUID        | nullable — `system`-typed entries (login, role change, intake-config change) have no entity                             |
+| `actor_id`        | UUID        | nullable — system-emitted events (cron jobs, external webhooks) have no human actor                                     |
+| `via_kind`        | text (enum) | nullable — `ui` \| `api_key` \| `oauth_client` under a CHECK; NULL means the browser (DD-017's DD-029 addendum)         |
+| `via_id`          | text        | nullable — the credential the act came through; a snapshot, so it outlives the key's revocation                         |
+| `via_client_name` | text        | nullable — the Client's name when the act happened, a snapshot for the same reason                                      |
+| `action`          | text        | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
+| `visibility`      | text (enum) | `legal_only` \| `working_team` \| `full_thread` \| `admin_only` per **DD-017**                                          |
+| `payload`         | jsonb       | action-specific data (old/new values for edits, etc.)                                                                   |
+| `created_at`      | timestamptz |                                                                                                                         |
 
 Append-only at the application layer. **Corrections are appended as new entries, never written over** — that is DD-017's rule and it has no exception.
 

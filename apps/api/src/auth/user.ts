@@ -19,11 +19,9 @@
  */
 
 import type { Theme, UserRole } from "@openlaw/db";
-
 import type { ActivityVia } from "@openlaw/shared";
 
 export interface AuthenticatedUser {
-  via?: ActivityVia;
   id: string;
   email: string;
   displayName: string;
@@ -31,6 +29,12 @@ export interface AuthenticatedUser {
   theme: Theme;
   /** IANA zone override; null = use the browser's (DES-014). */
   timezone: string | null;
+  /**
+   * What the person acts through. Set by the MCP mount for a credential
+   * (DD-017's via); absent on a browser session, which the activity
+   * writer records as NULL.
+   */
+  via?: ActivityVia;
 }
 
 export interface AuthenticatedSession {

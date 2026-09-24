@@ -1170,13 +1170,6 @@
       "when": 1790243833451,
       "tag": "0166_activity-via",
       "breakpoints": true
-    },
-    {
-      "idx": 167,
-      "version": "7",
-      "when": 1790247584844,
-      "tag": "0167_validate-activity-via",
-      "breakpoints": true
     }
   ]
 }
