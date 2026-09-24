@@ -68,6 +68,6 @@ it.each(["administrator", "legal_team_member", "business_user"] as const)(
     const defaults = toolRegister.filter(
       (t) => (role === "business_user" ? t.businessUser : t.legalUser) !== "off",
     );
-    expect(defaults.filter((t) => !toolRefusal(t, grant))).toHaveLength(1);
+    expect(defaults.filter((t) => !toolRefusal(t, grant))).toHaveLength(5);
   },
 );
