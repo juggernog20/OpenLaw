@@ -8228,14 +8228,35 @@
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
   },
+  "search.advanced.button": {
+    "defaultMessage": "Advanced"
+  },
+  "search.advanced.close": {
+    "defaultMessage": "Close Advanced search"
+  },
+  "search.advanced.entry": {
+    "defaultMessage": "Advanced search…"
+  },
+  "search.advanced.title": {
+    "defaultMessage": "Advanced search"
+  },
   "search.autoDoc": {
     "defaultMessage": "Auto-Doc"
+  },
+  "search.build": {
+    "defaultMessage": "Build your search"
+  },
+  "search.build.body": {
+    "defaultMessage": "Add words, choose a kind, or add a condition to see matching records."
   },
   "search.chip.remove": {
     "defaultMessage": "Remove {label}"
   },
   "search.chip.words": {
     "defaultMessage": "{label}: {value}"
+  },
+  "search.clear": {
+    "defaultMessage": "Clear"
   },
   "search.error.body": {
     "defaultMessage": "The server did not answer. Try again in a moment."
@@ -8276,6 +8297,12 @@
   "search.kind.request": {
     "defaultMessage": "Request"
   },
+  "search.kinds": {
+    "defaultMessage": "Kinds"
+  },
+  "search.kinds.help": {
+    "defaultMessage": "No kinds selected searches every kind."
+  },
   "search.noMatches": {
     "defaultMessage": "No matches"
   },
@@ -8300,17 +8327,41 @@
   "search.page.showMore": {
     "defaultMessage": "Show more"
   },
+  "search.preview": {
+    "defaultMessage": "Preview"
+  },
+  "search.preview.help": {
+    "defaultMessage": "Preview updates as you change the question."
+  },
+  "search.preview.limit": {
+    "defaultMessage": "Showing the first {count} of {total} matches"
+  },
+  "search.properties": {
+    "defaultMessage": "Properties"
+  },
   "search.question.noMatches": {
     "defaultMessage": "No records match this question."
   },
+  "search.recent": {
+    "defaultMessage": "Recent searches"
+  },
   "search.result.knowledgeDraft": {
     "defaultMessage": "Draft · Knowledge Item"
+  },
+  "search.saved": {
+    "defaultMessage": "Saved searches"
+  },
+  "search.scope": {
+    "defaultMessage": "Search in"
   },
   "search.scope.chip": {
     "defaultMessage": "Search in: {scope}"
   },
   "search.scope.contents": {
     "defaultMessage": "Document contents"
+  },
+  "search.scope.required": {
+    "defaultMessage": "Choose at least one search scope."
   },
   "search.scope.text": {
     "defaultMessage": "Record text"
@@ -8330,6 +8381,9 @@
   "search.total": {
     "defaultMessage": "{total, plural, one {# match} other {# matches}}"
   },
+  "search.words": {
+    "defaultMessage": "Words"
+  },
   "search.words.all": {
     "defaultMessage": "All of these words"
   },
@@ -8341,6 +8395,9 @@
   },
   "search.words.phrase": {
     "defaultMessage": "This exact phrase"
+  },
+  "search.words.tooLong": {
+    "defaultMessage": "Search words rows must be 200 characters or fewer."
   },
   "settings.advanced.accessKey": {
     "defaultMessage": "S3 access key ID"

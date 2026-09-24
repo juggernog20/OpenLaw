@@ -275,9 +275,11 @@ export function SearchResultRow({
   result,
   query,
   option,
+  onNavigate,
 }: Readonly<{
   result: SearchResult;
   query: string;
+  onNavigate?: () => void;
   option?: {
     id: string;
     active: boolean;
@@ -311,6 +313,7 @@ export function SearchResultRow({
     <Link
       className={cn(ROW_CLASS, "bg-raised hover:bg-control")}
       to={searchResultPath(result, query)}
+      onClick={onNavigate}
     >
       <RowBody result={result} />
     </Link>

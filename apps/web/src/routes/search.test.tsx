@@ -261,7 +261,7 @@ describe("the header search box", () => {
     );
   });
 
-  it("ends with a See all results option that carries the query", async () => {
+  it("offers a See all results option that carries the query", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call) => (searchCall(call) ? searchAnswer([CONTRACT]) : undefined),
