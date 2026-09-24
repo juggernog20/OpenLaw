@@ -8645,8 +8645,23 @@
   "search.result.knowledgeDraft": {
     "defaultMessage": "Draft · Knowledge Item"
   },
+  "search.save": {
+    "defaultMessage": "Save search"
+  },
   "search.saved": {
     "defaultMessage": "Saved searches"
+  },
+  "search.saved.actions": {
+    "defaultMessage": "Saved search actions"
+  },
+  "search.saved.conditionsRemoved": {
+    "defaultMessage": "Unavailable search conditions were removed."
+  },
+  "search.saved.manage": {
+    "defaultMessage": "Manage {name}"
+  },
+  "search.saved.openError": {
+    "defaultMessage": "This saved search could not open. Try again."
   },
   "search.scope": {
     "defaultMessage": "Search in"

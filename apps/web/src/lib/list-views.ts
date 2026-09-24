@@ -20,7 +20,7 @@
 
 import type { ReactNode } from "react";
 import type { IntlShape } from "react-intl";
-import type { ListViewSurface, SortDirection } from "@openlaw/shared";
+import type { ListViewSurface, SortDirection, SearchQuestion } from "@openlaw/shared";
 import { api } from "./api";
 
 /** One column a surface can draw. */
@@ -125,11 +125,11 @@ export interface Layout {
 export type StoredLayout = Omit<Layout, "flexKey"> & { flexKey?: string | null };
 
 /** One saved view as the API answers it. */
-export interface SavedView {
+export interface SavedView<Config extends StoredLayout | SearchQuestion = StoredLayout> {
   id: string;
   name: string;
   isDefault: boolean;
-  layout: StoredLayout;
+  layout: Config;
 }
 
 /** The layout a surface draws when no view is active. */
@@ -269,56 +269,62 @@ interface ViewResponse {
   id: string;
   name: string;
   isDefault: boolean;
-  config: StoredLayout;
+  config: StoredLayout | SearchQuestion;
 }
 
-const toView = (row: ViewResponse): SavedView => ({
+const toView = <Config extends StoredLayout | SearchQuestion>(
+  row: ViewResponse,
+): SavedView<Config> => ({
   id: row.id,
   name: row.name,
   isDefault: row.isDefault,
-  layout: row.config,
+  layout: row.config as Config,
 });
 
 /** This person's views of one surface. A failed read answers an empty
  * list rather than throwing: views are a convenience, and a list that
  * would not render because a preference read failed is worse than a list
  * with no saved views in its menu. */
-export async function readViews(surface: ListViewSurface): Promise<SavedView[]> {
+export async function readViews<Config extends StoredLayout | SearchQuestion = StoredLayout>(
+  surface: ListViewSurface,
+): Promise<SavedView<Config>[]> {
   const { data } = await api
     .GET("/api/v1/list-views", { params: { query: { surface } } })
     .catch(() => ({ data: undefined }));
-  return (data?.views ?? []).map((row) => toView(row as ViewResponse));
+  return (data?.views ?? []).map((row) => toView<Config>(row));
 }
 
-export async function createView(
+export async function createView<Config extends StoredLayout | SearchQuestion = Layout>(
   surface: ListViewSurface,
   name: string,
-  layout: Layout,
+  layout: Config,
   isDefault = false,
-): Promise<SavedView[]> {
+): Promise<SavedView<Config>[]> {
   const result = await api.POST("/api/v1/list-views", {
     body: { surface, name, config: layout, isDefault },
   });
   if (!result.data) throw result;
-  return result.data.views.map((row) => toView(row as ViewResponse));
+  return result.data.views.map((row) => toView<Config>(row));
 }
 
-export async function updateView(
+export async function updateView<Config extends StoredLayout | SearchQuestion = Layout>(
   viewId: string,
-  changes: { name?: string; config?: Layout; isDefault?: boolean },
-): Promise<SavedView[]> {
+  changes: { name?: string; config?: Config; isDefault?: boolean },
+): Promise<SavedView<Config>[]> {
   const result = await api.PATCH("/api/v1/list-views/{viewId}", {
     params: { path: { viewId } },
     body: changes,
   });
   if (!result.data) throw result;
-  return result.data.views.map((row) => toView(row as ViewResponse));
+  return result.data.views.map((row) => toView<Config>(row));
 }
 
-export async function deleteView(viewId: string): Promise<SavedView[]> {
+export async function deleteView<Config extends StoredLayout | SearchQuestion = StoredLayout>(
+  viewId: string,
+): Promise<SavedView<Config>[]> {
   const result = await api.DELETE("/api/v1/list-views/{viewId}", {
     params: { path: { viewId } },
   });
   if (!result.data) throw result;
-  return result.data.views.map((row) => toView(row as ViewResponse));
+  return result.data.views.map((row) => toView<Config>(row));
 }

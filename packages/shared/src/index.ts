@@ -397,6 +397,7 @@ export const LIST_VIEW_SURFACES = [
   "documents",
   "entities",
   "knowledge",
+  "search",
 ] as const;
 export type ListViewSurface = (typeof LIST_VIEW_SURFACES)[number];
 
@@ -666,6 +667,8 @@ export {
   SEARCH_KINDS,
   DEFAULT_SEARCH_SCOPE,
   SearchQuestionSchema,
+  StoredSearchQuestionSchema,
+  resolveSearchQuestion,
   simpleSearchQuestion,
   encodeSearchQuestion,
   decodeSearchQuestion,

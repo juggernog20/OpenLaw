@@ -7128,10 +7128,10 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Your saved views of one list (DD-019), ordered by name. A view is private: this answers only your own, and never reveals that anybody else has one. At most one carries isDefault, which is the view the list opens on; none doing so means the list opens on its built-in layout */
+    /** Your saved views of one list (DD-019), ordered by name. A view is private: this answers only your own, and never reveals that anybody else has one. At most one carries isDefault, which is the view the list opens on; none doing so means the list opens on its built-in layout. The search surface holds question configs and has no default */
     get: operations["listSavedViews"];
     put?: never;
-    /** Save the list you are looking at as a named view (DD-019). The name must be one you are not already using on this list, compared case-insensitively — 409 if it is. Pass isDefault to make this the view the list opens on, which clears whichever view held that. Answers your whole view list, so the menu needs no second read */
+    /** Save the list you are looking at as a named view (DD-019). The name must be one you are not already using on this list, compared case-insensitively — 409 if it is. Pass isDefault to make this the view the list opens on, which clears whichever view held that. Answers your whole view list, so the menu needs no second read. Search accepts a question config and refuses isDefault true with 400 */
     post: operations["createSavedView"];
     delete?: never;
     options?: never;
@@ -7153,7 +7153,7 @@ export interface paths {
     delete: operations["deleteSavedView"];
     options?: never;
     head?: never;
-    /** Change one of your saved views (DD-019): overwrite its config with the list you are looking at, rename it, or make it the view the list opens on. Every field is optional and an omitted one is left alone. Somebody else's view id answers 404, the same as an id that was never issued — a view is private, and access is not advertised. isDefault false on the view that holds it leaves the surface with no default, which opens the built-in layout */
+    /** Change one of your saved views (DD-019): overwrite its config with the list you are looking at, rename it, or make it the view the list opens on. Every field is optional and an omitted one is left alone. Somebody else's view id answers 404, the same as an id that was never issued — a view is private, and access is not advertised. isDefault false on the view that holds it leaves the surface with no default, which opens the built-in layout. Search refuses isDefault true with 400 */
     patch: operations["updateSavedView"];
     trace?: never;
   };
@@ -40626,7 +40626,8 @@ export interface operations {
   listSavedViews: {
     parameters: {
       query: {
-        surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
+        surface:
+          "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge" | "search";
       };
       header?: never;
       path?: never;
@@ -40644,23 +40645,73 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface:
+                | "inbox"
+                | "contracts"
+                | "matters"
+                | "documents"
+                | "entities"
+                | "knowledge"
+                | "search";
               name: string;
-              config: {
-                columns: {
-                  key: string;
-                  width: number | null;
-                }[];
-                flexKey?: string | null;
-                sort: {
-                  key: string;
-                  /** @enum {string} */
-                  dir: "asc" | "desc";
-                } | null;
-                filters: {
-                  [key: string]: boolean | string;
-                };
-              };
+              config:
+                | {
+                    columns: {
+                      key: string;
+                      width: number | null;
+                    }[];
+                    flexKey?: string | null;
+                    sort: {
+                      key: string;
+                      /** @enum {string} */
+                      dir: "asc" | "desc";
+                    } | null;
+                    filters: {
+                      [key: string]: boolean | string;
+                    };
+                  }
+                | {
+                    /** @enum {number} */
+                    version: 1;
+                    words: {
+                      all: string;
+                      phrase: string;
+                      any: string;
+                      none: string;
+                    };
+                    scope: {
+                      titles: boolean;
+                      text: boolean;
+                      contents: boolean;
+                    };
+                    kinds: (
+                      | "contract"
+                      | "matter"
+                      | "document"
+                      | "entity"
+                      | "counterparty"
+                      | "request"
+                      | "knowledge_item"
+                    )[];
+                    conditions: {
+                      /** @enum {string} */
+                      kind:
+                        | "contract"
+                        | "matter"
+                        | "document"
+                        | "entity"
+                        | "counterparty"
+                        | "request"
+                        | "knowledge_item";
+                      property: string;
+                      operator: string;
+                      value?: unknown;
+                    }[];
+                    /** @enum {string} */
+                    match: "all" | "any";
+                    /** @enum {string} */
+                    sort: "relevance" | "newest" | "oldest" | "expiry" | "title";
+                  };
               isDefault: boolean;
             }[];
           };
@@ -40688,23 +40739,67 @@ export interface operations {
       content: {
         "application/json": {
           /** @enum {string} */
-          surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
+          surface:
+            "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge" | "search";
           name: string;
-          config: {
-            columns: {
-              key: string;
-              width: number | null;
-            }[];
-            flexKey?: string | null;
-            sort: {
-              key: string;
-              /** @enum {string} */
-              dir: "asc" | "desc";
-            } | null;
-            filters: {
-              [key: string]: boolean | string;
-            };
-          };
+          config:
+            | {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              }
+            | {
+                /** @enum {number} */
+                version: 1;
+                words: {
+                  all: string;
+                  phrase: string;
+                  any: string;
+                  none: string;
+                };
+                scope: {
+                  titles: boolean;
+                  text: boolean;
+                  contents: boolean;
+                };
+                kinds: (
+                  | "contract"
+                  | "matter"
+                  | "document"
+                  | "entity"
+                  | "counterparty"
+                  | "request"
+                  | "knowledge_item"
+                )[];
+                conditions: {
+                  /** @enum {string} */
+                  kind:
+                    | "contract"
+                    | "matter"
+                    | "document"
+                    | "entity"
+                    | "counterparty"
+                    | "request"
+                    | "knowledge_item";
+                  property: string;
+                  operator: string;
+                  value?: unknown;
+                }[];
+                /** @enum {string} */
+                match: "all" | "any";
+                /** @enum {string} */
+                sort: "relevance" | "newest" | "oldest" | "expiry" | "title";
+              };
           isDefault?: boolean;
         };
       };
@@ -40720,23 +40815,73 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface:
+                | "inbox"
+                | "contracts"
+                | "matters"
+                | "documents"
+                | "entities"
+                | "knowledge"
+                | "search";
               name: string;
-              config: {
-                columns: {
-                  key: string;
-                  width: number | null;
-                }[];
-                flexKey?: string | null;
-                sort: {
-                  key: string;
-                  /** @enum {string} */
-                  dir: "asc" | "desc";
-                } | null;
-                filters: {
-                  [key: string]: boolean | string;
-                };
-              };
+              config:
+                | {
+                    columns: {
+                      key: string;
+                      width: number | null;
+                    }[];
+                    flexKey?: string | null;
+                    sort: {
+                      key: string;
+                      /** @enum {string} */
+                      dir: "asc" | "desc";
+                    } | null;
+                    filters: {
+                      [key: string]: boolean | string;
+                    };
+                  }
+                | {
+                    /** @enum {number} */
+                    version: 1;
+                    words: {
+                      all: string;
+                      phrase: string;
+                      any: string;
+                      none: string;
+                    };
+                    scope: {
+                      titles: boolean;
+                      text: boolean;
+                      contents: boolean;
+                    };
+                    kinds: (
+                      | "contract"
+                      | "matter"
+                      | "document"
+                      | "entity"
+                      | "counterparty"
+                      | "request"
+                      | "knowledge_item"
+                    )[];
+                    conditions: {
+                      /** @enum {string} */
+                      kind:
+                        | "contract"
+                        | "matter"
+                        | "document"
+                        | "entity"
+                        | "counterparty"
+                        | "request"
+                        | "knowledge_item";
+                      property: string;
+                      operator: string;
+                      value?: unknown;
+                    }[];
+                    /** @enum {string} */
+                    match: "all" | "any";
+                    /** @enum {string} */
+                    sort: "relevance" | "newest" | "oldest" | "expiry" | "title";
+                  };
               isDefault: boolean;
             }[];
           };
@@ -40774,23 +40919,73 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface:
+                | "inbox"
+                | "contracts"
+                | "matters"
+                | "documents"
+                | "entities"
+                | "knowledge"
+                | "search";
               name: string;
-              config: {
-                columns: {
-                  key: string;
-                  width: number | null;
-                }[];
-                flexKey?: string | null;
-                sort: {
-                  key: string;
-                  /** @enum {string} */
-                  dir: "asc" | "desc";
-                } | null;
-                filters: {
-                  [key: string]: boolean | string;
-                };
-              };
+              config:
+                | {
+                    columns: {
+                      key: string;
+                      width: number | null;
+                    }[];
+                    flexKey?: string | null;
+                    sort: {
+                      key: string;
+                      /** @enum {string} */
+                      dir: "asc" | "desc";
+                    } | null;
+                    filters: {
+                      [key: string]: boolean | string;
+                    };
+                  }
+                | {
+                    /** @enum {number} */
+                    version: 1;
+                    words: {
+                      all: string;
+                      phrase: string;
+                      any: string;
+                      none: string;
+                    };
+                    scope: {
+                      titles: boolean;
+                      text: boolean;
+                      contents: boolean;
+                    };
+                    kinds: (
+                      | "contract"
+                      | "matter"
+                      | "document"
+                      | "entity"
+                      | "counterparty"
+                      | "request"
+                      | "knowledge_item"
+                    )[];
+                    conditions: {
+                      /** @enum {string} */
+                      kind:
+                        | "contract"
+                        | "matter"
+                        | "document"
+                        | "entity"
+                        | "counterparty"
+                        | "request"
+                        | "knowledge_item";
+                      property: string;
+                      operator: string;
+                      value?: unknown;
+                    }[];
+                    /** @enum {string} */
+                    match: "all" | "any";
+                    /** @enum {string} */
+                    sort: "relevance" | "newest" | "oldest" | "expiry" | "title";
+                  };
               isDefault: boolean;
             }[];
           };
@@ -40820,21 +41015,64 @@ export interface operations {
       content: {
         "application/json": {
           name?: string;
-          config?: {
-            columns: {
-              key: string;
-              width: number | null;
-            }[];
-            flexKey?: string | null;
-            sort: {
-              key: string;
-              /** @enum {string} */
-              dir: "asc" | "desc";
-            } | null;
-            filters: {
-              [key: string]: boolean | string;
-            };
-          };
+          config?:
+            | {
+                columns: {
+                  key: string;
+                  width: number | null;
+                }[];
+                flexKey?: string | null;
+                sort: {
+                  key: string;
+                  /** @enum {string} */
+                  dir: "asc" | "desc";
+                } | null;
+                filters: {
+                  [key: string]: boolean | string;
+                };
+              }
+            | {
+                /** @enum {number} */
+                version: 1;
+                words: {
+                  all: string;
+                  phrase: string;
+                  any: string;
+                  none: string;
+                };
+                scope: {
+                  titles: boolean;
+                  text: boolean;
+                  contents: boolean;
+                };
+                kinds: (
+                  | "contract"
+                  | "matter"
+                  | "document"
+                  | "entity"
+                  | "counterparty"
+                  | "request"
+                  | "knowledge_item"
+                )[];
+                conditions: {
+                  /** @enum {string} */
+                  kind:
+                    | "contract"
+                    | "matter"
+                    | "document"
+                    | "entity"
+                    | "counterparty"
+                    | "request"
+                    | "knowledge_item";
+                  property: string;
+                  operator: string;
+                  value?: unknown;
+                }[];
+                /** @enum {string} */
+                match: "all" | "any";
+                /** @enum {string} */
+                sort: "relevance" | "newest" | "oldest" | "expiry" | "title";
+              };
           isDefault?: boolean;
         };
       };
@@ -40850,23 +41088,73 @@ export interface operations {
             views: {
               id: string;
               /** @enum {string} */
-              surface: "inbox" | "contracts" | "matters" | "documents" | "entities" | "knowledge";
+              surface:
+                | "inbox"
+                | "contracts"
+                | "matters"
+                | "documents"
+                | "entities"
+                | "knowledge"
+                | "search";
               name: string;
-              config: {
-                columns: {
-                  key: string;
-                  width: number | null;
-                }[];
-                flexKey?: string | null;
-                sort: {
-                  key: string;
-                  /** @enum {string} */
-                  dir: "asc" | "desc";
-                } | null;
-                filters: {
-                  [key: string]: boolean | string;
-                };
-              };
+              config:
+                | {
+                    columns: {
+                      key: string;
+                      width: number | null;
+                    }[];
+                    flexKey?: string | null;
+                    sort: {
+                      key: string;
+                      /** @enum {string} */
+                      dir: "asc" | "desc";
+                    } | null;
+                    filters: {
+                      [key: string]: boolean | string;
+                    };
+                  }
+                | {
+                    /** @enum {number} */
+                    version: 1;
+                    words: {
+                      all: string;
+                      phrase: string;
+                      any: string;
+                      none: string;
+                    };
+                    scope: {
+                      titles: boolean;
+                      text: boolean;
+                      contents: boolean;
+                    };
+                    kinds: (
+                      | "contract"
+                      | "matter"
+                      | "document"
+                      | "entity"
+                      | "counterparty"
+                      | "request"
+                      | "knowledge_item"
+                    )[];
+                    conditions: {
+                      /** @enum {string} */
+                      kind:
+                        | "contract"
+                        | "matter"
+                        | "document"
+                        | "entity"
+                        | "counterparty"
+                        | "request"
+                        | "knowledge_item";
+                      property: string;
+                      operator: string;
+                      value?: unknown;
+                    }[];
+                    /** @enum {string} */
+                    match: "all" | "any";
+                    /** @enum {string} */
+                    sort: "relevance" | "newest" | "oldest" | "expiry" | "title";
+                  };
               isDefault: boolean;
             }[];
           };

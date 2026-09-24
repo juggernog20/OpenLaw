@@ -25,7 +25,9 @@
  *
  * **The config is held, not interpreted.** This module bounds its shape —
  * how many columns, how wide, how long a key — and reads nothing out of
- * it. Which column keys are real, and which sort keys the list can
+ * it. Search configs use the shared question schema on writes and its
+ * stored shape on reads, so removed properties reach the read-past rule.
+ * Which column keys are real, and which sort keys the list can
  * actually order by, are the surface's own question, answered against
  * the column catalogue that surface ships (DD-019 clause 7). A view
  * naming a column the build dropped is a view the page reads past, so it
@@ -45,6 +47,8 @@ import {
   MAX_LIST_VIEW_NAME_LENGTH,
   MAX_LIST_VIEWS_PER_SURFACE,
   SORT_DIRECTIONS,
+  SearchQuestionSchema,
+  StoredSearchQuestionSchema,
 } from "@openlaw/shared";
 import { requireAuth } from "../../auth/guards.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -111,11 +115,24 @@ const ViewConfigSchema = z.strictObject({
   filters: z.record(z.string().min(1).max(64), z.union([z.boolean(), z.string().max(2000)])),
 });
 
+const ConfigSchema = z.union([ViewConfigSchema, SearchQuestionSchema]);
+
+function validateConfig(surface: string, config: z.infer<typeof ConfigSchema>) {
+  const schema = surface === "search" ? SearchQuestionSchema : ViewConfigSchema;
+  if (!schema.safeParse(config).success)
+    throw httpError(400, "The config does not fit this surface.");
+}
+
+function refuseSearchDefault(surface: string, isDefault?: boolean) {
+  if (surface === "search" && isDefault === true)
+    throw httpError(400, "Saved searches cannot be set as default.");
+}
+
 const ViewSchema = z.object({
   id: z.string(),
   surface: z.enum(LIST_VIEW_SURFACES),
   name: z.string(),
-  config: ViewConfigSchema,
+  config: z.union([ViewConfigSchema, StoredSearchQuestionSchema]),
   isDefault: z.boolean(),
 });
 
@@ -211,7 +228,8 @@ export const listViewsRoutes: FastifyPluginAsyncZod = async (app) => {
           "view is private: this answers only your own, and never " +
           "reveals that anybody else has one. At most one carries " +
           "isDefault, which is the view the list opens on; none doing " +
-          "so means the list opens on its built-in layout",
+          "so means the list opens on its built-in layout. The search surface " +
+          "holds question configs and has no default",
         tags: ["list-views"],
         querystring: SurfaceQuery,
         response: { 200: ViewsEnvelope, default: problemResponse },
@@ -235,12 +253,13 @@ export const listViewsRoutes: FastifyPluginAsyncZod = async (app) => {
           "list, compared case-insensitively — 409 if it is. Pass " +
           "isDefault to make this the view the list opens on, which " +
           "clears whichever view held that. Answers your whole view " +
-          "list, so the menu needs no second read",
+          "list, so the menu needs no second read. Search accepts a question " +
+          "config and refuses isDefault true with 400",
         tags: ["list-views"],
         body: z.strictObject({
           surface: z.enum(LIST_VIEW_SURFACES),
           name: NameSchema,
-          config: ViewConfigSchema,
+          config: ConfigSchema,
           isDefault: z.boolean().optional(),
         }),
         response: { 201: ViewsEnvelope, default: problemResponse },
@@ -248,9 +267,13 @@ export const listViewsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const { surface, name, config } = request.body;
+      validateConfig(surface, config);
+      refuseSearchDefault(surface, request.body.isDefault);
       const answer = await app.db.transaction(async (tx) => {
-        // Counted inside the transaction, so two saves racing at the
-        // ceiling cannot both find room.
+        // Serialize creates for this owner and surface before counting.
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtextextended(${request.user.id + ":" + surface}, 0))`,
+        );
         const [count] = await tx
           .select({ total: sql<number>`count(*)::int` })
           .from(listViews)
@@ -287,13 +310,13 @@ export const listViewsRoutes: FastifyPluginAsyncZod = async (app) => {
           "answers 404, the same as an id that was never issued — a " +
           "view is private, and access is not advertised. isDefault " +
           "false on the view that holds it leaves the surface with no " +
-          "default, which opens the built-in layout",
+          "default, which opens the built-in layout. Search refuses isDefault true with 400",
         tags: ["list-views"],
         params: ViewIdParams,
         body: z
           .strictObject({
             name: NameSchema.optional(),
-            config: ViewConfigSchema.optional(),
+            config: ConfigSchema.optional(),
             isDefault: z.boolean().optional(),
           })
           .refine((body) => Object.keys(body).length > 0, {
@@ -306,6 +329,8 @@ export const listViewsRoutes: FastifyPluginAsyncZod = async (app) => {
       app.db.transaction(async (tx) => {
         const view = await ownedView(tx, request.user.id, request.params.viewId, { lock: true });
         const { name, config, isDefault } = request.body;
+        refuseSearchDefault(view.surface, isDefault);
+        if (config !== undefined) validateConfig(view.surface, config);
 
         if (name !== undefined || config !== undefined) {
           await tx
