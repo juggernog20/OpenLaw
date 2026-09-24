@@ -293,9 +293,10 @@ async function sendNotificationEmail(
 
   // The header names the organization as it is at send time, not as it
   // was when the row was written (DES-093). Read for every event, so an
-  // arm that moves onto the layout later gets the name without a change
+  // arm that moves onto the layout later gets the brand without a change
   // here.
-  const brand = { name: (await getOrgSettings(deps.db)).name };
+  const { name, emailLogoPng } = await getOrgSettings(deps.db);
+  const brand = { name, emailLogoPng };
   const message = renderNotificationMail(
     {
       eventType: row.eventType as NotificationEventType,

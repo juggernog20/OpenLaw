@@ -12,6 +12,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { eq, orgSettings } from "@openlaw/db";
 import { LOGO_BYTE_LIMIT, LOGO_DATA_URI_LIMIT } from "@openlaw/shared";
+import { makeEmailLogo } from "../../lib/email-logo.js";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import {
@@ -141,6 +142,17 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const patch = request.body;
+      let emailLogoPng: string | null | undefined;
+      if (patch.logo !== undefined) {
+        try {
+          emailLogoPng = patch.logo === null ? null : await makeEmailLogo(patch.logo);
+        } catch {
+          throw httpError(
+            400,
+            "The logo must be a readable PNG, JPEG, WebP or SVG with no more than 16 million pixels.",
+          );
+        }
+      }
       // The mutation and its audit entries commit or roll back together;
       // the row lock keeps a concurrent PATCH from reading a stale "old"
       // into its audit payload.
@@ -158,7 +170,11 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         // the WHERE binds the write to the row the lock-read locked.
         const [row] = await tx
           .update(orgSettings)
-          .set({ ...patch, updatedAt: new Date() })
+          .set({
+            ...patch,
+            ...(emailLogoPng !== undefined ? { emailLogoPng } : {}),
+            updatedAt: new Date(),
+          })
           .where(eq(orgSettings.id, current.id))
           .returning();
         if (!row) throw httpError(500, "org_settings has no row to update.");
