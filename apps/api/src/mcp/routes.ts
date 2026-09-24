@@ -3,7 +3,8 @@
 /**
  * TECH-035 stateless /mcp mount. Only a verified credential reaches the factory,
  * which creates one server for that caller and protocol era per request.
- * The route is outside the session origin check and hidden from OpenAPI.
+ * The route is outside the session origin check and hidden from OpenAPI, and so
+ * is the /mcp/uploads PUT that completes a T27 upload under its signed URL.
  */
 
 import {
@@ -20,6 +21,7 @@ import { HttpError } from "../lib/problem.js";
 import type { Environment } from "../modules/advanced-settings/config.js";
 import { authenticateKey } from "./auth.js";
 import { callTool } from "./calls.js";
+import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 import {
   instructions,
   toolInputJsonSchema,
@@ -39,9 +41,11 @@ declare module "fastify" {
 export function mcpRoutes(
   active: Environment,
   tools: readonly ToolDefinition[] = toolRegister,
+  uploadConfig?: { baseUrl: string; secret: string },
 ): FastifyPluginAsync {
   return async (app) => {
     app.decorateRequest("mcpContext", null);
+    if (uploadConfig) await app.register(documentUploadRoutes(uploadConfig.secret));
     app.route({
       method: ["POST", "GET", "DELETE"],
       url: "/mcp",
@@ -55,6 +59,7 @@ export function mcpRoutes(
       },
       handler: async (request, reply) => {
         const context = request.mcpContext!;
+        if (uploadConfig) context.prepareDocumentUpload = documentUploadIssuer(app, uploadConfig);
         const authInfo = {
           token: context.credentialId,
           clientId: context.credentialId,

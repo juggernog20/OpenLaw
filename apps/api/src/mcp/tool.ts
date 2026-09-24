@@ -8,6 +8,7 @@ import type { AppDeps } from "../app.js";
 import type { Db, UserRole } from "@openlaw/db";
 import type { McpToolset } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../auth/user.js";
+import type { uploadInput } from "./documents.js";
 
 export interface Grant {
   role: UserRole;
@@ -21,6 +22,17 @@ export interface ToolContext extends Pick<AppDeps, "notifier" | "jobs" | "resolv
   credentialId: string;
   clientName: string;
   organizationName: string;
+  prepareDocumentUpload?: (
+    input: z.infer<typeof uploadInput>,
+    context: ToolContext,
+  ) => Promise<{
+    uploadUrl: string;
+    headers: Record<string, string>;
+    versionId: string;
+    documentId: string;
+    expiresAt: string;
+    maxUploadBytes: number;
+  }>;
 }
 export interface ToolDefinition {
   name: string;

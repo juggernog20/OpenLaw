@@ -551,7 +551,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // plugin, so a module registered later cannot forget it. The better-auth
   // handler lives outside /api/v1 and runs its own origin check. /mcp is
   // outside too, on purpose: it authenticates by API key, never by cookie,
-  // so a foreign Origin has nothing to forge (TECH-035).
+  // so a foreign Origin has nothing to forge (TECH-035). /mcp/uploads sits
+  // with it: its only credential is the signed URL T27 issued.
   const ownOrigin = new URL(deps.config.baseUrl).origin;
   app.addHook("onRequest", async (request) => {
     if (!UNSAFE_METHODS.has(request.method)) return;
@@ -566,6 +567,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     mcpRoutes(
       deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings()),
       deps.mcpTools,
+      { baseUrl: deps.config.baseUrl, secret: deps.config.secret },
     ),
   );
   // The stream owns its full path and bypasses JSON response

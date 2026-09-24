@@ -16,6 +16,9 @@ import { taskTools } from "./tasks.js";
 import { requestTools } from "./requests.js";
 import { commentTools } from "./comments.js";
 import { peopleTools } from "./people.js";
+import { documentTools } from "./documents.js";
+import { entityTools } from "./entities.js";
+import { knowledgeTools } from "./knowledge.js";
 import { guideTools } from "./guide.js";
 
 export const instructions =
@@ -127,4 +130,7 @@ export const toolRegister: readonly ToolDefinition[] = [
   ...requestTools,
   ...commentTools,
   ...peopleTools,
+  ...documentTools,
+  ...entityTools,
+  ...knowledgeTools,
 ];
