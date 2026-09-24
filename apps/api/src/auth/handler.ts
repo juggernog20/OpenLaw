@@ -12,14 +12,14 @@ import type { FastifyPluginAsync } from "fastify";
 import { httpError } from "../lib/problem.js";
 import { fromNodeHeaders } from "better-auth/node";
 
-function isApiKeyPluginPath(pathname: string): boolean {
+function normalizedAuthPath(pathname: string): string {
   let decoded = pathname;
   try {
     decoded = decodeURIComponent(pathname);
   } catch {
     // A malformed escape cannot spell the plugin's path; better-auth answers it.
   }
-  return decoded.replace(/\/+/g, "/").startsWith("/api/auth/api-key/");
+  return decoded.replace(/\/+/g, "/");
 }
 
 export const authHandler: FastifyPluginAsync = async (app) => {
@@ -38,8 +38,14 @@ export const authHandler: FastifyPluginAsync = async (app) => {
     schema: { hide: true },
     handler: async (request, reply) => {
       const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
+      const path = normalizedAuthPath(url.pathname);
+      const endpoint = path.replace(/\/$/, "");
+      if (endpoint === "/api/auth/oauth2/create-client")
+        throw httpError(403, "Client registration requires the Allowed Clients list.");
+      if (endpoint === "/api/auth/oauth2/register")
+        throw httpError(403, "Dynamic Client registration is disabled.");
       // DD-029: keys are minted by an approved request, never by the plugin's own endpoints.
-      if (isApiKeyPluginPath(url.pathname))
+      if (path.startsWith("/api/auth/api-key/"))
         throw httpError(403, "API keys require an approved API key request.");
       const body = request.body as Buffer | undefined;
       const headers = fromNodeHeaders(request.headers);

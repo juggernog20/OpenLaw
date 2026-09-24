@@ -5056,6 +5056,9 @@
                     },
                     "serverAddress": {
                       "type": "string"
+                    },
+                    "authorizationServerAvailable": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -5065,7 +5068,8 @@
                     "toolsetCeiling",
                     "readOnly",
                     "apiKeyLifetimeDays",
-                    "serverAddress"
+                    "serverAddress",
+                    "authorizationServerAvailable"
                   ],
                   "additionalProperties": false
                 }
@@ -5188,6 +5192,9 @@
                     },
                     "serverAddress": {
                       "type": "string"
+                    },
+                    "authorizationServerAvailable": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -5197,7 +5204,8 @@
                     "toolsetCeiling",
                     "readOnly",
                     "apiKeyLifetimeDays",
-                    "serverAddress"
+                    "serverAddress",
+                    "authorizationServerAvailable"
                   ],
                   "additionalProperties": false
                 }

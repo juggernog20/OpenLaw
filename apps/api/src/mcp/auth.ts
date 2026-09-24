@@ -8,10 +8,58 @@
 
 import { and, apiKeyRequests, apikeys, eq, isNull, orgSettings } from "@openlaw/db";
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import { createLocalJWKSet, jwtVerify } from "jose";
+import { MCP_TOOLSETS } from "@openlaw/shared";
+import { authorizationServerAvailable, mcpResource } from "../auth/oauth.js";
 import { API_KEY_PREFIX } from "../auth/api-keys.js";
 import { readLiveUser } from "../auth/guards.js";
 import { httpError } from "../lib/problem.js";
 import type { ToolContext } from "./register.js";
+
+/** Verify locally against the same public keys published by better-auth at /jwks. */
+export async function verifyMcpJwt(server: FastifyInstance, token: string) {
+  if (!authorizationServerAvailable(server.baseUrl))
+    throw httpError(401, "Authentication required.");
+  const keys = await server.auth.api.getJwks();
+  try {
+    const verified = await jwtVerify(token, createLocalJWKSet(keys), {
+      issuer: `${server.baseUrl.replace(/\/$/, "")}/api/auth`,
+      audience: mcpResource(server.baseUrl),
+      requiredClaims: ["exp"],
+    });
+    return verified.payload;
+  } catch {
+    throw httpError(401, "Authentication required.");
+  }
+}
+
+export async function authenticateMcp(request: FastifyRequest): Promise<ToolContext> {
+  const header = request.headers["x-api-key"];
+  const bearer = /^Bearer\s+(\S+)$/i.exec(request.headers.authorization ?? "")?.[1];
+  const token = typeof header === "string" ? header : bearer;
+  if (!token) throw httpError(401, "Authentication required.");
+  if (token.startsWith(API_KEY_PREFIX)) return authenticateKey(request);
+  await verifyMcpJwt(request.server, token);
+  // M41/4 will resolve a verified token to its live grant and person.
+  throw httpError(401, "Authentication required.");
+}
+
+export async function mcpChallenge(server: FastifyInstance): Promise<string> {
+  const [policy] = await server.db
+    .select({
+      ceiling: orgSettings.mcpToolsetCeiling,
+      readOnly: orgSettings.mcpReadOnly,
+    })
+    .from(orgSettings)
+    .limit(1);
+  const scopes = [
+    ...MCP_TOOLSETS.filter((id) => policy?.ceiling.includes(id)).map((id) => `toolset:${id}`),
+    ...(policy && !policy.readOnly ? ["write"] : []),
+    "offline_access",
+  ];
+  const metadata = new URL("/.well-known/oauth-protected-resource", server.baseUrl).href;
+  return `Bearer resource_metadata="${metadata}" scope="${scopes.join(" ")}"`;
+}
 
 export async function authenticateKey(request: FastifyRequest): Promise<ToolContext> {
   const header = request.headers["x-api-key"];

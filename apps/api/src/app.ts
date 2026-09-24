@@ -142,6 +142,7 @@ import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { eventRoutes } from "./modules/events/routes.js";
 import { searchRoutes } from "./modules/search/routes.js";
 import { homeRoutes } from "./modules/home/routes.js";
+import { oauthDiscoveryRoutes } from "./auth/discovery.js";
 import { authHandler } from "./auth/handler.js";
 import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
@@ -321,7 +322,12 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("baseUrl", deps.config.baseUrl);
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
-  app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer, app.log));
+  // OAuth seeds its resource during initialization. Route-only consumers such as
+  // OpenAPI emission must not open a database; production awaits $context at boot.
+  let auth: Auth | undefined;
+  app.decorate("auth", {
+    getter: () => (auth ??= createAuth(deps.db, deps.config, deps.resolveMailer, app.log)),
+  });
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
   app.decorateRequest("session", undefined as unknown as AuthenticatedSession);
@@ -551,7 +557,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // context before any route, and scoped by path rather than mounted per
   // plugin, so a module registered later cannot forget it. The better-auth
   // handler lives outside /api/v1 and runs its own origin check. /mcp is
-  // outside too, on purpose: it authenticates by API key, never by cookie,
+  // outside too, on purpose: it authenticates by bearer credentials, never by cookie,
   // so a foreign Origin has nothing to forge (TECH-035). /mcp/uploads sits
   // with it: its only credential is the signed URL T27 issued.
   const ownOrigin = new URL(deps.config.baseUrl).origin;
@@ -564,6 +570,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   });
 
   await app.register(authHandler);
+  await app.register(oauthDiscoveryRoutes);
   await app.register(
     mcpRoutes(
       deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings()),

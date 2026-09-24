@@ -19,7 +19,7 @@ import { OPENLAW_VERSION } from "@openlaw/shared";
 import { loggable } from "../logging.js";
 import { HttpError } from "../lib/problem.js";
 import type { Environment } from "../modules/advanced-settings/config.js";
-import { authenticateKey } from "./auth.js";
+import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
 import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
@@ -52,9 +52,9 @@ export function mcpRoutes(
       url: "/mcp",
       schema: { hide: true },
       onRequest: async (request, reply) => {
-        request.mcpContext = await authenticateKey(request).catch((error: unknown) => {
+        request.mcpContext = await authenticateMcp(request).catch(async (error: unknown) => {
           if (error instanceof HttpError && error.statusCode === 401)
-            reply.header("WWW-Authenticate", "Bearer");
+            reply.header("WWW-Authenticate", await mcpChallenge(app));
           throw error;
         });
       },
