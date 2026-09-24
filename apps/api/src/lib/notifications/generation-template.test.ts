@@ -46,6 +46,7 @@ it("puts the label, headline, greeting and sentence above a formatted Legal note
   expect(html).toMatch(
     />[^<]*Auto-Doc<\/p>[\s\S]*<h1[^>]*>Mutual NDA<\/h1>[\s\S]*Hello Dana,[\s\S]*Your generated Mutual NDA is attached\./,
   );
+  expect(html).toContain(">Your generated Mutual NDA is attached.</div>");
   expect(html).toContain("Note from Northwind Legal");
   expect(html).toMatch(/<p[^>]*>Read <strong>clause 7<\/strong>\.<\/p>/);
   expect(html).toMatch(/<p[^>]*>Keep a copy\.<\/p>/);

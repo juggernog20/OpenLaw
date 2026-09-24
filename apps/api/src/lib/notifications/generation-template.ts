@@ -62,6 +62,8 @@ export function renderGenerationMail(input: {
       subject,
       baseUrl: input.baseUrl,
       surface: input.surface,
+      // The inbox preview shows the sentence. The subject already carries the name.
+      preheader: message,
       tone: "success",
       label: "Auto-Doc",
       headline: input.autoDocName,
