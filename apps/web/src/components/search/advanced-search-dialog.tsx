@@ -286,10 +286,17 @@ export function AdvancedSearchDialog({
                 })}
               </div>
               <p className="mt-3 text-sm text-muted">
-                <FormattedMessage
-                  id="search.kinds.help"
-                  defaultMessage="No kinds selected searches every kind."
-                />
+                {question.kinds.length > 0 ? (
+                  <FormattedMessage
+                    id="search.kinds.help.selected"
+                    defaultMessage="Only selected kinds are searched."
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="search.kinds.help"
+                    defaultMessage="No kinds selected searches every kind."
+                  />
+                )}
               </p>
             </fieldset>
             <section className="min-h-12">

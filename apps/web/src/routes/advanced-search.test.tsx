@@ -154,9 +154,11 @@ describe("Advanced search", () => {
     const search = within(dialog).getByRole("button", { name: "Search" });
     expect(search).toBeDisabled();
     expect(within(dialog).getByText("Build your search")).toBeVisible();
+    expect(within(dialog).getByText("No kinds selected searches every kind.")).toBeVisible();
     await user.click(within(dialog).getByRole("button", { name: "Contract" }));
     await screen.findByText("No matches");
     expect(reads.at(-1)?.kinds).toEqual(["contract"]);
+    expect(within(dialog).getByText("Only selected kinds are searched.")).toBeVisible();
     expect(search).toBeEnabled();
     for (const scope of within(dialog).getAllByRole("checkbox")) await user.click(scope);
     expect(within(dialog).getByText("Choose at least one search scope.")).toBeVisible();
@@ -169,9 +171,10 @@ describe("Advanced search", () => {
       "aria-pressed",
       "false",
     );
+    expect(within(dialog).getByText("No kinds selected searches every kind.")).toBeVisible();
   });
 
-  it("shows a refusal and opens a matching record after a corrected question", async () => {
+  it("shows a refusal, keeps the dialog on a modifier click, and opens a matching record after a corrected question", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call) =>
@@ -191,7 +194,14 @@ describe("Advanced search", () => {
     );
     await user.clear(words);
     await user.type(words, "good");
-    await user.click(await within(dialog).findByRole("link", { name: /Orion agreement/ }));
+    const row = await within(dialog).findByRole("link", { name: /Orion agreement/ });
+    // A ctrl-click opens the record in a new tab. jsdom cannot navigate,
+    // so the default action is cancelled after React has run its handlers.
+    document.addEventListener("click", (event) => event.preventDefault(), { once: true });
+    fireEvent.click(row, { ctrlKey: true });
+    expect(screen.getByRole("dialog")).toBeVisible();
+    expect(router.state.location.pathname).toBe("/");
+    await user.click(row);
     await waitFor(() => expect(router.state.location.pathname).toBe("/contracts/58"));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

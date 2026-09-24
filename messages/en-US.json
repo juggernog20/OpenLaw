@@ -8303,6 +8303,9 @@
   "search.kinds.help": {
     "defaultMessage": "No kinds selected searches every kind."
   },
+  "search.kinds.help.selected": {
+    "defaultMessage": "Only selected kinds are searched."
+  },
   "search.noMatches": {
     "defaultMessage": "No matches"
   },
