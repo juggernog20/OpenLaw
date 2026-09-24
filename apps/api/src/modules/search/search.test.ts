@@ -896,7 +896,7 @@ describe("the versioned question endpoint", () => {
         kinds: ["contract"],
         conditions: [{ kind: "contract", property: "status", operator: "is", value: ["ended"] }],
       },
-      { sort: "newest" },
+      { sort: "unsupported" },
       { timeZone: "Not/AZone" },
       { cursor: "invalid" },
     ]) {

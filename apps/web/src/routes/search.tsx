@@ -24,6 +24,7 @@ import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Button } from "../components/ui/button";
 
+import { SearchSort } from "../components/search/search-sort";
 import { AdvancedSearchButton } from "../components/search/advanced-search";
 import {
   questionFromSearch,
@@ -283,6 +284,11 @@ export function SearchPage() {
                 <QuestionFilters question={loaded.question} />
               )}
               <AdvancedSearchButton />
+              {SearchQuestionSchema.safeParse(loaded.question).success && (
+                <div className="ml-auto shrink-0">
+                  <SearchSort question={loaded.question} />
+                </div>
+              )}
             </div>
           }
         />
