@@ -3,6 +3,8 @@ import {
   SEARCH_PROPERTIES,
   SEARCH_OPERATORS,
   searchProperty,
+  isRelativeDateOperator,
+  needsRelativeDayCount,
   type SearchQuestion,
 } from "@openlaw/shared";
 import { useEffect, useRef, useState } from "react";
@@ -93,12 +95,21 @@ function ConditionRow({
               operator,
               value:
                 property.type === "date"
-                  ? operator === "between"
-                    ? [
-                        typeof condition.value === "string" ? condition.value : (values[0] ?? ""),
-                        values[1] ?? "",
-                      ]
-                    : (values[0] ?? condition.value)
+                  ? needsRelativeDayCount(operator)
+                    ? typeof condition.value === "number"
+                      ? condition.value
+                      : ""
+                    : isRelativeDateOperator(operator)
+                      ? null
+                      : operator === "between"
+                        ? [
+                            typeof condition.value === "string"
+                              ? condition.value
+                              : (values[0] ?? ""),
+                            values[1] ?? "",
+                          ]
+                        : (values[0] ??
+                          (typeof condition.value === "string" ? condition.value : ""))
                   : condition.value,
             });
           }}
@@ -173,6 +184,23 @@ function ConditionRow({
               {intl.formatMessage({ id: "search.condition.no", defaultMessage: "No" })}
             </option>
           </select>
+        ) : property.type === "date" && isRelativeDateOperator(condition.operator) ? (
+          needsRelativeDayCount(condition.operator) ? (
+            <Input
+              type="number"
+              aria-label={intl.formatMessage({
+                id: "search.condition.days",
+                defaultMessage: "Number of days",
+              })}
+              min={1}
+              max={3650}
+              step={1}
+              value={typeof condition.value === "number" ? condition.value : ""}
+              onChange={(event) =>
+                setValue(event.target.value === "" ? "" : event.target.valueAsNumber)
+              }
+            />
+          ) : null
         ) : property.type === "date" && condition.operator === "between" ? (
           <div className="flex min-w-0 gap-2">
             <Input

@@ -33,7 +33,14 @@ function Preview({
   const empty = questionIsEmpty(question);
   const noScope = !Object.values(question.scope).some(Boolean);
   const tooLong = Object.values(question.words).some((words) => words.trim().length > 200);
-  const runnable = !empty && !noScope && !tooLong;
+  const validation = SearchQuestionSchema.safeParse(question);
+  const conditionError = validation.success
+    ? null
+    : validation.error.issues
+        .filter((issue) => issue.path[0] === "conditions")
+        .map((issue) => issue.message)
+        .join(" ");
+  const runnable = !empty && !noScope && !tooLong && !conditionError;
   const outcome = settled?.question === question ? settled.outcome : null;
 
   useEffect(() => {
@@ -99,6 +106,10 @@ function Preview({
               id="search.words.tooLong"
               defaultMessage="Search words rows must be 200 characters or fewer."
             />
+          </p>
+        ) : conditionError ? (
+          <p role="alert" className="p-6 text-sm text-status-danger-fg">
+            {conditionError}
           </p>
         ) : !outcome ? (
           <p

@@ -35,9 +35,7 @@ export const SearchQuestionSchema = z
           kind: z.enum(SEARCH_KINDS),
           property: z.string().min(1).max(200),
           operator: z.string().min(1).max(100),
-          value: z
-            .unknown()
-            .refine((value) => value !== undefined, "A condition value is required."),
+          value: z.unknown().optional(),
         }),
       )
       .max(20, "A search can have at most 20 conditions."),

@@ -675,6 +675,9 @@ export {
 export {
   SEARCH_PROPERTIES,
   SEARCH_OPERATORS,
+  RELATIVE_DATE_OPERATORS,
+  isRelativeDateOperator,
+  needsRelativeDayCount,
   searchProperty,
   conditionProblem,
   type SearchProperty,

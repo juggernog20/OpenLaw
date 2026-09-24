@@ -91132,7 +91132,7 @@
                         },
                         "value": {}
                       },
-                      "required": ["kind", "property", "operator", "value"]
+                      "required": ["kind", "property", "operator"]
                     }
                   },
                   "match": {
