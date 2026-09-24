@@ -171,6 +171,7 @@ import {
   SettingsAuthenticationPage,
   settingsAuthenticationLoader,
 } from "./routes/settings-authentication";
+import { SettingsToolCallsPage, settingsToolCallsLoader } from "./routes/settings-tool-calls";
 import { SettingsAuditLogPage, settingsAuditLogLoader } from "./routes/settings-audit-log";
 import {
   SettingsESignaturePage,
@@ -532,6 +533,11 @@ export const routes: RouteObject[] = [
         path: "audit-log",
         loader: settingsAuditLogLoader,
         element: <SettingsAuditLogPage />,
+      },
+      {
+        path: "audit-log/tool-calls",
+        loader: settingsToolCallsLoader,
+        element: <SettingsToolCallsPage />,
       },
       // Each section URL forwards to its first pane, so the rail's
       // entries and deep links share one canonical address.

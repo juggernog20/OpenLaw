@@ -14,6 +14,7 @@ import { cn } from "../lib/utils";
 
 export interface SectionTab {
   path: string;
+  end?: boolean;
   label: ReactNode;
 }
 
@@ -35,6 +36,7 @@ export function SettingsSectionTabs({
           <NavLink
             key={tab.path}
             to={tab.path}
+            end={tab.end}
             className={({ isActive }) =>
               cn(
                 "flex h-9 items-center px-3 text-base whitespace-nowrap",

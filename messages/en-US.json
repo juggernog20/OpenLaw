@@ -1100,6 +1100,9 @@
   "approvals.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
   },
+  "audit.activityTab": {
+    "defaultMessage": "Activity"
+  },
   "audit.col.audience": {
     "defaultMessage": "Audience"
   },
@@ -1163,8 +1166,53 @@
   "audit.older": {
     "defaultMessage": "Show older"
   },
+  "audit.panes": {
+    "defaultMessage": "Audit log panes"
+  },
   "audit.tier": {
     "defaultMessage": "{tier, select, legal_only {Legal only} working_team {Working team} full_thread {Full thread} admin_only {Administrators} other {{tier}}}"
+  },
+  "audit.toolCalls": {
+    "defaultMessage": "Tool calls"
+  },
+  "audit.toolCalls.client": {
+    "defaultMessage": "Client"
+  },
+  "audit.toolCalls.duration": {
+    "defaultMessage": "{duration, number} ms"
+  },
+  "audit.toolCalls.durationLabel": {
+    "defaultMessage": "Duration"
+  },
+  "audit.toolCalls.empty": {
+    "defaultMessage": "No Tool calls match these filters."
+  },
+  "audit.toolCalls.error": {
+    "defaultMessage": "Tool calls could not be read."
+  },
+  "audit.toolCalls.filters": {
+    "defaultMessage": "Narrow Tool calls"
+  },
+  "audit.toolCalls.lastDay": {
+    "defaultMessage": "Last 24 hours: {from} to {to}"
+  },
+  "audit.toolCalls.loading": {
+    "defaultMessage": "Loading Tool calls…"
+  },
+  "audit.toolCalls.more": {
+    "defaultMessage": "Load more"
+  },
+  "audit.toolCalls.outcome": {
+    "defaultMessage": "{outcome, select, success {Success} error {Error} pending {Pending} rate_limited {Rate limited} forbidden {Forbidden} other {{outcome}}}"
+  },
+  "audit.toolCalls.outcomeLabel": {
+    "defaultMessage": "Outcome"
+  },
+  "audit.toolCalls.retry": {
+    "defaultMessage": "Retry"
+  },
+  "audit.toolCalls.tool": {
+    "defaultMessage": "Tool"
   },
   "auth.backToSignIn": {
     "defaultMessage": "Back to sign-in"
@@ -10756,6 +10804,9 @@
   },
   "settings.mcp.serverAddress": {
     "defaultMessage": "Server address"
+  },
+  "settings.mcp.toolCalls": {
+    "defaultMessage": "Tool calls in the last day"
   },
   "settings.notifications.briefing.approvals": {
     "defaultMessage": "Approvals"

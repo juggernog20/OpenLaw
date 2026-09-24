@@ -41,6 +41,7 @@
  * last place to add the first one.
  */
 
+import { toolCallRoutes } from "./tool-calls.js";
 import { Readable } from "node:stream";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -533,6 +534,7 @@ const CSV_COLUMNS = [
 ] as const;
 
 export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(toolCallRoutes);
   app.get(
     "/audit-log",
     {
