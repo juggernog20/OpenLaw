@@ -49,6 +49,10 @@ it("puts MCP between Integrations and Advanced and saves each control immediatel
   const user = userEvent.setup();
   renderAt("/settings/mcp");
   expect(await screen.findByText(initial.serverAddress)).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Tool calls in the last day" })).toHaveAttribute(
+    "href",
+    "/settings/audit-log/tool-calls?range=last-day",
+  );
   const rail = screen.getByRole("navigation", { name: "Settings sections" });
   const mcp = within(rail).getByRole("link", { name: "MCP" });
   expect(

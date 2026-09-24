@@ -80,6 +80,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { problemResponse } from "../../lib/problem.js";
 import { csvRow } from "../../lib/csv.js";
+import { toolCallRoutes } from "./tool-calls.js";
 
 /** SET-002: every Organization surface is Administrator-only, and this
  * is the one that reads every other one's entries. */
@@ -533,6 +534,7 @@ const CSV_COLUMNS = [
 ] as const;
 
 export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(toolCallRoutes);
   app.get(
     "/audit-log",
     {

@@ -595,7 +595,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.reminders", "settings.audit"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "configure-signing",

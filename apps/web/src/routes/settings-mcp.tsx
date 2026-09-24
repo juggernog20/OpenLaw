@@ -5,7 +5,7 @@
  * Administrators (SET-002); each edited policy field saves immediately (SET-003).
  */
 import { useRef, useState, type ReactNode } from "react";
-import { redirect, useLoaderData } from "react-router";
+import { Link as RouterLink, redirect, useLoaderData } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { Bot, Clock, Link, Shield, Users, type LucideIcon } from "lucide-react";
 import { MCP_TOOLSETS } from "@openlaw/shared";
@@ -340,6 +340,14 @@ export function SettingsMcpPage() {
           <FormattedMessage id="settings.mcp.saved" defaultMessage="Settings saved." />
         </p>
       )}
+      <Button asChild variant="secondary" className="self-start">
+        <RouterLink to="/settings/audit-log/tool-calls?range=last-day">
+          <FormattedMessage
+            id="settings.mcp.toolCalls"
+            defaultMessage="Tool calls in the last day"
+          />
+        </RouterLink>
+      </Button>
       <ApiKeys
         organization
         initial={{

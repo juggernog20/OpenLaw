@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { AuditSettingsTabs } from "../components/audit-settings-tabs";
 import { identifierLabel } from "../lib/identifier-label";
 
 /**
@@ -7,11 +8,9 @@ import { identifierLabel } from "../lib/identifier-label";
  * surface over the activity log, and the one an Administrator opens to
  * answer "who changed this user's role last quarter?"
  *
- * It shows every entry in the system: every entity type, every tier,
- * and the `admin_only` settings, user administration, and security
- * entries that no record feed carries. The record feed is a working
- * group's account of one record; this is the compliance surface, and
- * the only gate on it is the Administrator role.
+ * It shows reachable record entries and Administrator-only settings,
+ * user administration and security entries. The API applies record
+ * reach checks to both reads and exports.
  *
  * **The pane is absent for everyone else, not refused** (SET-002). The
  * rail entry sits in the Security group, inside the Organization group
@@ -363,6 +362,7 @@ export function SettingsAuditLogPage() {
       <PageTitle
         title={intl.formatMessage({ id: "settings.section.auditLog", defaultMessage: "Audit log" })}
       />
+      <AuditSettingsTabs />
       <SettingsCard
         title={<FormattedMessage id="settings.section.auditLog" defaultMessage="Audit log" />}
         // The log spans the pane; the shared card's max width is for

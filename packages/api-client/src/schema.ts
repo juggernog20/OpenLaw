@@ -5779,6 +5779,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/audit-log/tool-calls": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Tool call metadata, newest first. Administrator-only, date-filtered, with 50 calls per page */
+    get: operations["listAuditToolCalls"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/audit-log/tool-calls/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Export all date-filtered Tool calls as CSV in bounded chunks. Administrator-only; records an audit event */
+    get: operations["exportAuditToolCalls"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/audit-log": {
     parameters: {
       query?: never;
@@ -33258,6 +33292,76 @@ export interface operations {
           };
         };
       };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listAuditToolCalls: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entries: {
+              id: string;
+              createdAt: string;
+              person: {
+                id: string;
+                displayName: string;
+              };
+              clientName: string;
+              tool: string;
+              outcome: string;
+              durationMs: number;
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportAuditToolCalls: {
+    parameters: {
+      query?: {
+        from?: string;
+        to?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
