@@ -95,6 +95,8 @@ it.each([false, true])(
       "openlaw_docs_search",
       "openlaw_docs_read",
       "openlaw_form_get",
+      "openlaw_contracts_list",
+      "openlaw_contract_get",
     ]);
     const result = await client.callTool({ name: "openlaw_whoami", arguments: {} });
     expect(result.isError).not.toBe(true);
