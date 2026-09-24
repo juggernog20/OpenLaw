@@ -10,6 +10,8 @@ it.each([
   ["http://127.0.0.1:3000", true],
   ["http://127.255.10.1:3000", true],
   ["http://[::1]:3000", true],
+  ["http://app.localhost:3000", false],
+  ["http://0.0.0.0:3000", false],
   ["http://10.0.0.5:3000", false],
   ["http://openlaw.example", false],
   ["http://localhost.example", false],

@@ -9,7 +9,12 @@ import { MCP_TOOLSETS } from "@openlaw/shared";
 export const MCP_SCOPES = [...MCP_TOOLSETS.map((id) => `toolset:${id}`), "write", "offline_access"];
 export const mcpResource = (baseUrl: string) => `${baseUrl.replace(/\/$/, "")}/mcp`;
 
-/** Matches validateMcpResource in @better-auth/mcp 1.7.5 before its throwing factory runs. */
+/**
+ * Matches validateMcpResource in @better-auth/mcp 1.7.5 before its throwing
+ * factory runs. The plugin ships its own loopback test, narrower than the one
+ * in @better-auth/core. It accepts `localhost` itself, `[::1]` and 127.0.0.0/8
+ * and refuses a `.localhost` subdomain. oauth-resource.test.ts pins the agreement.
+ */
 export function authorizationServerAvailable(baseUrl: string): boolean {
   const resource = mcpResource(baseUrl);
   let url: URL;

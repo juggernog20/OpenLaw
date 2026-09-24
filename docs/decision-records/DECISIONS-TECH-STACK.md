@@ -1793,6 +1793,9 @@ endpoints under `/api/auth`.
 The JWT, MCP and CIMD plugins register together only when `${BASE_URL}/mcp`
 passes the MCP resource rule. The URL must use HTTPS, or HTTP on `localhost`,
 IPv4 loopback or IPv6 loopback, and must contain no credentials, query or fragment.
+The plugin's loopback test is its own and narrower than the `@better-auth/core`
+one. A `.localhost` subdomain such as `app.localhost` is refused. The API copies
+that rule and a test pins the copy against the pinned plugin.
 Plain HTTP on a LAN address still boots with API keys. It serves 404 for all six
 root documents. The MCP settings response reports `authorizationServerAvailable`
 so the OAuth Clients settings can refuse an unavailable server by name.
@@ -1801,6 +1804,9 @@ CIMD uses the Node transport and the `mcp-2026-07-28` profile. Until M41/3 insta
 the Allowed Clients gate, its URL policy refuses every published identity before
 fetching. Dynamic registration stays disabled, discovery omits
 `registration_endpoint`, and the auth handler refuses `/oauth2/register` with 403.
+The handler also refuses the plugin's `/oauth2/create-client` endpoint with 403,
+so until M41/3 ships its Allowed Clients routes only the server API can create a
+Client.
 The JWT verifier checks the signature, issuer, `/mcp` audience and expiry against
 the same signing keys served at `/api/auth/jwks`. A verified JWT still receives 401
 until M41/4 can resolve its grant. API keys retain their M40 verifier and guards.
