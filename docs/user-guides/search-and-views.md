@@ -20,7 +20,11 @@ Open **Advanced search** from the sliders beside the header search box, or selec
 
 **Match all** requires every condition for that kind. **Match any** requires at least one. Values within **is any of** always match any selected value. Contract conditions apply only to Contracts; Matter conditions apply only to Matters. You can add up to 20 conditions.
 
-Dates offer **before**, **after**, **on**, and **between**. Between includes both endpoints. **Show ended**, **Show closed**, and **Show archived** set to Yes include those records; they do not limit the answer to those records. Search includes ended Contracts and closed Matters by default, and excludes archived records until a condition includes them. Record access always applies, including to the match total.
+Dates offer **before**, **after**, **on**, and **between**. Between includes both endpoints. Every date property also offers **in the last N days**, **in the next N days**, **today**, **this week**, **this month**, **this quarter**, and **this year**. Enter a whole number from 1 to 3650 for N. The preview names an invalid or missing N and waits for you to correct it.
+
+For example, select **Expiry date**, choose **in the next N days**, and enter **90** to find Contracts expiring from today through the date 90 days away, including both dates. The chip keeps that relative phrase. Running the question again recalculates the dates in your display timezone. **This week** runs Monday through Sunday. Month, quarter, and year use the full calendar period that contains today.
+
+**Show ended**, **Show closed**, and **Show archived** set to Yes include those records; they do not limit the answer to those records. Search includes ended Contracts and closed Matters by default, and excludes archived records until a condition includes them. Record access always applies, including to the match total.
 
 Select **Search** to open the results. Select a condition chip to edit its row, or its remove control to run the question without that condition. The address keeps the question through reload and browser Back.
 

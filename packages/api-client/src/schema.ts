@@ -39731,7 +39731,7 @@ export interface operations {
               | "knowledge_item";
             property: string;
             operator: string;
-            value: unknown;
+            value?: unknown;
           }[];
           /** @enum {string} */
           match: "all" | "any";

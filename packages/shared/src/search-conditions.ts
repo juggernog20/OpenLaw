@@ -64,11 +64,29 @@ export const SEARCH_PROPERTIES: readonly SearchProperty[] = [
   { kind: "knowledge_item", key: "folder", label: "Knowledge Folder", type: "choices" },
 ];
 
+export const RELATIVE_DATE_OPERATORS = [
+  "in_last_days",
+  "in_next_days",
+  "today",
+  "this_week",
+  "this_month",
+  "this_quarter",
+  "this_year",
+] as const;
+
+export function isRelativeDateOperator(operator: string): boolean {
+  return (RELATIVE_DATE_OPERATORS as readonly string[]).includes(operator);
+}
+
+export function needsRelativeDayCount(operator: string): boolean {
+  return operator === "in_last_days" || operator === "in_next_days";
+}
+
 export const SEARCH_OPERATORS = {
   choices: ["is_any_of", "is_none_of"],
   text: ["contains", "does_not_contain"],
   flag: ["is"],
-  date: ["before", "after", "on", "between"],
+  date: ["before", "after", "on", "between", ...RELATIVE_DATE_OPERATORS],
 } as const;
 
 export function searchProperty(kind: string, key: string): SearchProperty | undefined {
@@ -87,12 +105,20 @@ export function conditionProblem(condition: {
   kind: string;
   property: string;
   operator: string;
-  value: unknown;
+  value?: unknown;
 }): string | null {
   const property = searchProperty(condition.kind, condition.property);
   if (!property) return "Unknown search property.";
   if (!(SEARCH_OPERATORS[property.type] as readonly string[]).includes(condition.operator))
     return "The operator does not fit this property's value type.";
+  if (property.type === "date" && isRelativeDateOperator(condition.operator)) {
+    if (needsRelativeDayCount(condition.operator))
+      return z.number().int().min(1).max(3650).safeParse(condition.value).success
+        ? null
+        : "Relative day count N must be a whole number from 1 to 3650.";
+    return condition.value == null ? null : "This relative date operator takes no value.";
+  }
+  if (condition.value === undefined) return "A condition value is required.";
   const schema =
     property.type === "choices"
       ? property.free

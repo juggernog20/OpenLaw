@@ -25,6 +25,7 @@ import type { AuthenticatedUser } from "../../auth/guards.js";
 import { choiceFilter } from "../../lib/record-filters.js";
 import { escapeLikePattern } from "../../lib/like.js";
 import { incompleteMatter } from "../../lib/incomplete-matter.js";
+import { relativeDateRange } from "./relative-dates.js";
 import { nextDeadline } from "../../lib/next-deadline.js";
 
 import { renderFamilySql } from "../../lib/render-family.js";
@@ -45,13 +46,15 @@ const RECORDS = {
 function compile(
   condition: SearchQuestion["conditions"][number],
   user: AuthenticatedUser,
-  timeZone?: string,
+  timeZone: string | undefined,
+  now: Date,
 ): SQL {
   const { kind, property, operator, value } = condition;
   const record = RECORDS[kind];
   const definition = searchProperty(kind, property)!;
-  const calendarDate = (column: AnyPgColumn) =>
-    sql`(${column} at time zone ${timeZone ?? user.timezone ?? "UTC"})::date`;
+  // The Inbox's Received filter chain: the request, then the profile, then UTC.
+  const zone = timeZone ?? user.timezone ?? "UTC";
+  const calendarDate = (column: AnyPgColumn) => sql`(${column} at time zone ${zone})::date`;
   const family = renderFamilySql(documentVersions.mimeType, documentVersions.originalFilename);
   // One column or expression per property, keyed by the kind it belongs to.
   const columns: Record<typeof kind, Record<string, AnyPgColumn | SQL>> = {
@@ -140,6 +143,11 @@ function compile(
       return value ? sql`true` : sql`${matterStatuses.category} = 'open'`;
     return sql`${column} = ${value as boolean}`;
   }
+  const relative = relativeDateRange(operator, value, now, zone);
+  if (relative) {
+    const [from, to] = relative;
+    return sql`${column} between ${from}::date and ${to}::date`;
+  }
   if (operator === "between") {
     const [from, to] = value as [string, string];
     return sql`${column} between ${from}::date and ${to}::date`;
@@ -155,6 +163,7 @@ export function conditionScope(
   question: SearchQuestion | undefined,
   user: AuthenticatedUser,
   timeZone?: string,
+  now = new Date(),
 ): SQL {
   const conditions = question?.conditions.filter((condition) => condition.kind === kind) ?? [];
   const record = RECORDS[kind];
@@ -166,7 +175,7 @@ export function conditionScope(
         ? undefined
         : isNull(record.archivedAt),
       (question?.match === "any" ? or : and)(
-        ...conditions.map((condition) => compile(condition, user, timeZone)),
+        ...conditions.map((condition) => compile(condition, user, timeZone, now)),
       ),
     ) ?? sql`true`
   );

@@ -8273,6 +8273,9 @@
   "search.condition.choose": {
     "defaultMessage": "Choose values"
   },
+  "search.condition.days": {
+    "defaultMessage": "Number of days"
+  },
   "search.condition.limit": {
     "defaultMessage": "A search can have at most 20 conditions."
   },
@@ -8281,6 +8284,9 @@
   },
   "search.condition.operator": {
     "defaultMessage": "Operator"
+  },
+  "search.condition.relativeChip": {
+    "defaultMessage": "{kind} {property} {operator}"
   },
   "search.condition.remove": {
     "defaultMessage": "Remove {kind} {property} condition"
@@ -8378,6 +8384,18 @@
   "search.operator.is": {
     "defaultMessage": "is"
   },
+  "search.operator.lastDays": {
+    "defaultMessage": "in the last N days"
+  },
+  "search.operator.lastDays.count": {
+    "defaultMessage": "in the last {days, plural, one {# day} other {# days}}"
+  },
+  "search.operator.nextDays": {
+    "defaultMessage": "in the next N days"
+  },
+  "search.operator.nextDays.count": {
+    "defaultMessage": "in the next {days, plural, one {# day} other {# days}}"
+  },
   "search.operator.none": {
     "defaultMessage": "is none of"
   },
@@ -8386,6 +8404,21 @@
   },
   "search.operator.on": {
     "defaultMessage": "on"
+  },
+  "search.operator.thisMonth": {
+    "defaultMessage": "this month"
+  },
+  "search.operator.thisQuarter": {
+    "defaultMessage": "this quarter"
+  },
+  "search.operator.thisWeek": {
+    "defaultMessage": "this week"
+  },
+  "search.operator.thisYear": {
+    "defaultMessage": "this year"
+  },
+  "search.operator.today": {
+    "defaultMessage": "today"
   },
   "search.page.error": {
     "defaultMessage": "Search could not load. Try again."

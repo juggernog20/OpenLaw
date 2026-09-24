@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useState } from "react";
 import { type SearchQuestion } from "@openlaw/shared";
-import { defineMessages, useIntl, type IntlShape } from "react-intl";
+import { defineMessages, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { useOtherConditionDefinitions } from "./other-condition-definitions";
 import { api } from "../../lib/api";
 import { problem } from "../../lib/problem";
@@ -20,8 +20,33 @@ export const OPERATOR_LABELS = defineMessages({
   after: { id: "search.operator.after", defaultMessage: "after" },
   on: { id: "search.operator.on", defaultMessage: "on" },
   between: { id: "search.operator.between", defaultMessage: "between" },
+  today: { id: "search.operator.today", defaultMessage: "today" },
+  this_week: { id: "search.operator.thisWeek", defaultMessage: "this week" },
+  this_month: { id: "search.operator.thisMonth", defaultMessage: "this month" },
+  this_quarter: { id: "search.operator.thisQuarter", defaultMessage: "this quarter" },
+  this_year: { id: "search.operator.thisYear", defaultMessage: "this year" },
 });
-export function operatorLabel(intl: IntlShape, operator: string) {
+type DayOperator = "in_last_days" | "in_next_days";
+// The operator list names N; a chip carries the typed count.
+const DAY_OPERATOR_LABELS: Record<DayOperator, MessageDescriptor> = defineMessages({
+  in_last_days: { id: "search.operator.lastDays", defaultMessage: "in the last N days" },
+  in_next_days: { id: "search.operator.nextDays", defaultMessage: "in the next N days" },
+});
+const DAY_COUNT_LABELS: Record<DayOperator, MessageDescriptor> = defineMessages({
+  in_last_days: {
+    id: "search.operator.lastDays.count",
+    defaultMessage: "in the last {days, plural, one {# day} other {# days}}",
+  },
+  in_next_days: {
+    id: "search.operator.nextDays.count",
+    defaultMessage: "in the next {days, plural, one {# day} other {# days}}",
+  },
+});
+export function operatorLabel(intl: IntlShape, operator: string, days?: number) {
+  if (operator === "in_last_days" || operator === "in_next_days")
+    return typeof days === "number"
+      ? intl.formatMessage(DAY_COUNT_LABELS[operator], { days })
+      : intl.formatMessage(DAY_OPERATOR_LABELS[operator]);
   return operator in OPERATOR_LABELS
     ? intl.formatMessage(OPERATOR_LABELS[operator as keyof typeof OPERATOR_LABELS])
     : operator;

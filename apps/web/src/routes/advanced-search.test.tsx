@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import {
+  SEARCH_PROPERTIES,
   decodeSearchQuestion,
   encodeSearchQuestion,
   simpleSearchQuestion,
@@ -521,7 +522,19 @@ describe("condition values and refusals", () => {
         within(date)
           .getAllByRole("option")
           .map((option) => option.textContent),
-      ).toEqual(["before", "after", "on", "between"]);
+      ).toEqual([
+        "before",
+        "after",
+        "on",
+        "between",
+        "in the last N days",
+        "in the next N days",
+        "today",
+        "this week",
+        "this month",
+        "this quarter",
+        "this year",
+      ]);
       await user.selectOptions(within(date).getByRole("combobox"), "between");
       expect(within(date).getByLabelText("From")).toHaveValue("2026-01-10");
       fireEvent.change(within(date).getByLabelText("To"), { target: { value: "2026-01-20" } });
@@ -733,4 +746,157 @@ it("loads the new kinds' choices, displays their labels on chips, and preserves 
         ?.conditions,
     ).toEqual(conditions),
   );
+});
+
+it("previews relative expiry dates, refuses invalid N, and keeps the phrase through chips and reload", async () => {
+  const reads: (SearchQuestion & { timeZone: string })[] = [];
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/filter-options"))
+        return json(200, { types: [], statuses: [], people: [] });
+      if (call.url.pathname === "/api/v1/search/query") {
+        reads.push(call.body as SearchQuestion & { timeZone: string });
+        return answer([CONTRACT]);
+      }
+      return undefined;
+    },
+  });
+  const { router, view } = renderAt("/");
+  const dialog = await openDialog();
+  const user = userEvent.setup();
+  await user.click(within(dialog).getByRole("button", { name: "Contract" }));
+  await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
+  await user.click(screen.getByRole("button", { name: "Expiry date" }));
+  const row = within(dialog).getByRole("group", { name: "Contract Expiry date condition" });
+  const operator = within(row).getByRole("combobox", { name: "Operator" });
+  await user.selectOptions(operator, "in_next_days");
+  const count = within(row).getByRole("spinbutton", { name: "Number of days" });
+  expect(count).toHaveAttribute("min", "1");
+  expect(count).toHaveAttribute("max", "3650");
+  for (const value of ["", "0", "3651", "1.5"]) {
+    fireEvent.change(count, { target: { value } });
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(/N.*1.*3650/);
+    expect(within(dialog).getByRole("button", { name: "Search" })).toBeDisabled();
+  }
+  for (const value of ["1", "3650", "90"]) {
+    fireEvent.change(count, { target: { value } });
+    await waitFor(() =>
+      expect(reads.at(-1)?.conditions).toEqual([
+        { kind: "contract", property: "expiry", operator: "in_next_days", value: Number(value) },
+      ]),
+    );
+  }
+  expect(reads.at(-1)?.timeZone).toBeTruthy();
+  expect(
+    reads
+      .flatMap((read) => read.conditions)
+      .every(
+        (condition) =>
+          condition.operator !== "in_next_days" ||
+          [1, 3650, 90].includes(condition.value as number),
+      ),
+  ).toBe(true);
+  await user.click(within(dialog).getByRole("button", { name: "Search" }));
+  expect(
+    await screen.findByRole("button", { name: "Edit Contract Expiry date in the next 90 days" }),
+  ).toBeVisible();
+  const reloadPath = router.state.location.pathname + router.state.location.search;
+  view.unmount();
+  router.dispose();
+  renderAt(reloadPath);
+  await user.click(
+    await screen.findByRole("button", { name: "Edit Contract Expiry date in the next 90 days" }),
+  );
+  const reopened = screen.getByRole("group", { name: "Contract Expiry date condition" });
+  expect(within(reopened).getByRole("combobox", { name: "Operator" })).toHaveValue("in_next_days");
+  expect(within(reopened).getByRole("spinbutton", { name: "Number of days" })).toHaveValue(90);
+});
+
+it.each([
+  ["in_last_days", 90, "in the last 90 days"],
+  ["in_last_days", 1, "in the last 1 day"],
+  ["today", null, "today"],
+  ["this_week", null, "this week"],
+  ["this_month", null, "this month"],
+  ["this_quarter", null, "this quarter"],
+  ["this_year", null, "this year"],
+] as const)(
+  "shows and previews %s without resolving it in the browser",
+  async (operator, value, phrase) => {
+    const reads: SearchQuestion[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/search/query") {
+          reads.push(call.body as SearchQuestion);
+          return answer();
+        }
+        return undefined;
+      },
+    });
+    const conditions = [{ kind: "contract" as const, property: "expiry", operator, value }];
+    renderAt(
+      `/search?aq=${encodeSearchQuestion({ ...simpleSearchQuestion("", ["contract"]), conditions })}`,
+    );
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: `Edit Contract Expiry date ${phrase}` }),
+    );
+    const row = screen.getByRole("group", { name: "Contract Expiry date condition" });
+    const select = within(row).getByRole("combobox", { name: "Operator" });
+    expect(select).toHaveValue(operator);
+    expect(within(row).queryByLabelText("Value")).not.toBeInTheDocument();
+    await waitFor(() => expect(reads.at(-1)?.conditions).toEqual(conditions));
+    await user.selectOptions(select, "today");
+    expect(within(row).queryByRole("spinbutton")).not.toBeInTheDocument();
+    await user.selectOptions(select, "in_next_days");
+    expect(within(row).getByRole("spinbutton")).toHaveValue(null);
+    await user.selectOptions(select, "between");
+    expect(within(row).getByLabelText("From")).toHaveValue("");
+    expect(within(row).getByLabelText("To")).toHaveValue("");
+  },
+);
+
+it("offers relative operators on every date property", async () => {
+  const conditions = SEARCH_PROPERTIES.filter((property) => property.type === "date").map(
+    (property) => ({
+      kind: property.kind,
+      property: property.key,
+      operator: "today",
+      value: null,
+    }),
+  );
+  const kinds = [...new Set(conditions.map((condition) => condition.kind))];
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => (call.url.pathname === "/api/v1/search/query" ? answer() : undefined),
+  });
+  renderAt(
+    `/search?aq=${encodeSearchQuestion({ ...simpleSearchQuestion("", kinds), conditions })}`,
+  );
+  await userEvent.setup().click(await screen.findByRole("button", { name: "Advanced" }));
+  const rows = within(screen.getByRole("dialog")).getAllByRole("group", { name: / condition$/ });
+  expect(rows).toHaveLength(conditions.length);
+  for (const row of rows) {
+    expect(
+      within(row)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "before",
+      "after",
+      "on",
+      "between",
+      "in the last N days",
+      "in the next N days",
+      "today",
+      "this week",
+      "this month",
+      "this quarter",
+      "this year",
+    ]);
+    expect(within(row).getByRole("combobox", { name: "Operator" })).toHaveValue("today");
+    expect(within(row).queryByLabelText("Value")).not.toBeInTheDocument();
+  }
 });
