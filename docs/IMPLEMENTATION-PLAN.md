@@ -812,7 +812,8 @@ leaves a coherent product; none of them is optional in the sense that we intend 
     ANDing them regardless of the switch is a possible follow-up. DES-094 records the mock departures
   - Browser close journey and dialog/results axe scans against the Compose build; unchanged upgrade gate,
     because no migration or index is added
-  - _Decisions:_ DOC-009, DD-019, CTR-016 and DES-010 addenda; DES-094, DES-046, DD-014 and ENT-004
+  - _Decisions:_ DES-094 (new); DOC-009, DD-019, CTR-016 and DES-010 addenda of 2026-09-25; DES-046,
+    DD-014 and ENT-004 apply unchanged
   - _Issues:_ #1081–#1100, eleven sub-tasks under [#1068](https://github.com/juggernog20/OpenLaw/issues/1068)
 
 - [ ] **M34 — Release**
