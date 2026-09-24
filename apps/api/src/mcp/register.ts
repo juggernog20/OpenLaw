@@ -19,6 +19,7 @@ import { peopleTools } from "./people.js";
 import { documentTools } from "./documents.js";
 import { entityTools } from "./entities.js";
 import { knowledgeTools } from "./knowledge.js";
+import { autoDocTools } from "./auto-docs.js";
 import { guideTools } from "./guide.js";
 
 export const instructions =
@@ -133,4 +134,5 @@ export const toolRegister: readonly ToolDefinition[] = [
   ...documentTools,
   ...entityTools,
   ...knowledgeTools,
+  ...autoDocTools,
 ];

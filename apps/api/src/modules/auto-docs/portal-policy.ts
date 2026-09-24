@@ -415,6 +415,7 @@ export async function authorisePortalGeneration(
     throw httpError(
       409,
       "Acknowledge the current text before generating. Your answers have not been submitted.",
+      { type: "urn:openlaw:acknowledgement-required" },
     );
   if (words.frequency === "every_use")
     await tx

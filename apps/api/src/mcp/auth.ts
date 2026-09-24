@@ -66,6 +66,7 @@ export async function readCredentialContext(
     credentialId: approved.credential.id,
     clientName: approved.request.clientName,
     organizationName: policy.name,
+    baseUrl: server.baseUrl,
     grant: {
       role: user.role,
       toolsets: [

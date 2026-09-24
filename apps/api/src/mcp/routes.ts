@@ -20,6 +20,7 @@ import { loggable } from "../logging.js";
 import { HttpError } from "../lib/problem.js";
 import type { Environment } from "../modules/advanced-settings/config.js";
 import { authenticateKey } from "./auth.js";
+import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
 import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 import {
@@ -59,6 +60,8 @@ export function mcpRoutes(
       },
       handler: async (request, reply) => {
         const context = request.mcpContext!;
+        context.generateAutoDoc = (id, submission) =>
+          generateForTool(app, request.log, context.user, id, submission, context.baseUrl);
         if (uploadConfig) context.prepareDocumentUpload = documentUploadIssuer(app, uploadConfig);
         const authInfo = {
           token: context.credentialId,
