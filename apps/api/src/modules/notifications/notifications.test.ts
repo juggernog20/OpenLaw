@@ -38,10 +38,20 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { and, contracts, desc, eq, notifications, users, type Notification } from "@openlaw/db";
+import {
+  and,
+  contracts,
+  desc,
+  eq,
+  notifications,
+  orgSettings,
+  users,
+  type Notification,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import { buildApp } from "../../app.js";
 import { createNotifier } from "../../lib/notifications/notifier.js";
+import { handleNotificationEmail } from "../../pipeline/notification-email.js";
 import { createUnconfiguredJobQueue } from "../../pipeline/jobs.js";
 import { testDeps } from "../../testing/deps.js";
 import {
@@ -779,3 +789,66 @@ it("collects committed push wake-ups for immediate and digest rows, once per rem
   expect(push).toHaveBeenCalledTimes(2);
   expect(logError).not.toHaveBeenCalled();
 });
+
+it.each(["legal_team_member", "business_user"] as const)(
+  "reads the brand at send time and delivers inline HTML to %s",
+  async (role) => {
+    const fixture = {
+      email: `brand-${role}@example.com`,
+      displayName: "Brand Reviewer",
+      password: "correct-horse-battery",
+    };
+    const user = await provisionUser(harness.app.auth, fixture);
+    await harness.db.update(users).set({ role }).where(eq(users.id, user.id));
+    const contract = await newContract(`Brand at send ${role}`);
+    const [previous] = await harness.db.select().from(orgSettings).limit(1);
+    const app = await buildApp(testDeps({ db: harness.db, jobs: createUnconfiguredJobQueue() }));
+    try {
+      await harness.db.update(orgSettings).set({ name: "Before the send" });
+      const asked = await app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${contract.number}/approvals`,
+        cookies: as(MEMBER),
+        payload: { approverIds: [user.id] },
+      });
+      expect(asked.statusCode, asked.body).toBe(201);
+      const [row] = await harness.db
+        .select()
+        .from(notifications)
+        .where(and(eq(notifications.userId, user.id), eq(notifications.entityId, contract.id)));
+      expect(row).toBeDefined();
+      await harness.db.update(orgSettings).set({ name: "Northwind at send" });
+      await handleNotificationEmail(
+        {
+          db: harness.db,
+          resolveMailer: async () => ({
+            source: "env",
+            from: "legal@example.com",
+            mailer: harness.mailer,
+          }),
+          baseUrl: "http://localhost",
+          log: { info() {}, warn() {}, error() {} },
+        },
+        { notificationId: row!.id, retryCount: 0, retryLimit: 3 },
+      );
+      const message = harness.mailer
+        .messagesTo(fixture.email)
+        .find((m) => m.subject.startsWith("Approval requested:"));
+      expect(message?.html).toContain("Northwind at send");
+      expect(message?.html).not.toContain("Before the send");
+      expect(message?.html).toContain(
+        role === "business_user" ? "/portal/settings" : "/settings/notifications",
+      );
+      expect(message?.attachments).toHaveLength(1);
+      const mark = message?.attachments?.[0];
+      expect(mark).toMatchObject({ filename: "openlaw-192.png", contentType: "image/png" });
+      expect(mark?.content.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+      expect(mark?.cid).toBeTruthy();
+      expect(message?.html).toContain(`src="cid:${mark?.cid}"`);
+      expect(message?.headers?.["X-OpenLaw-Notification-Event"]).toBe("approval.requested");
+    } finally {
+      await app.close();
+      await harness.db.update(orgSettings).set({ name: previous!.name });
+    }
+  },
+);

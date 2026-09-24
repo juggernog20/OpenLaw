@@ -5,7 +5,8 @@
  * URL when it cannot parse it. The password is in that URL (TECH-029).
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import nodemailer from "nodemailer";
 import { createSmtpMailer, envPinnedMailer } from "./mailer.js";
 
 describe("a malformed relay URL", () => {
@@ -50,4 +51,43 @@ describe("SMTP_URL set with SMTP_FROM unset (#889)", () => {
   it("leaves resolution to the database when the environment sets no URL", () => {
     expect(envPinnedMailer({ from: "OpenLaw <openlaw@example.com>" })).toBeNull();
   });
+});
+
+it("sends a content id inline while keeping ordinary attachments downloadable", async () => {
+  const transport = nodemailer.createTransport({ streamTransport: true, buffer: true });
+  const create = vi.spyOn(nodemailer, "createTransport").mockReturnValue(transport);
+  const send = vi.spyOn(transport, "sendMail");
+  try {
+    await createSmtpMailer("smtp://localhost:1025", "legal@example.com").send({
+      to: "approver@example.com",
+      subject: "Approval",
+      text: "Text stays here.",
+      html: '<img src="cid:mark@openlaw">',
+      attachments: [
+        {
+          filename: "mark.png",
+          content: Buffer.from("mark"),
+          contentType: "image/png",
+          cid: "mark@openlaw",
+        },
+        {
+          filename: "document.pdf",
+          content: Buffer.from("document"),
+          contentType: "application/pdf",
+        },
+      ],
+    });
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: [
+          expect.objectContaining({ cid: "mark@openlaw", contentDisposition: "inline" }),
+          expect.not.objectContaining({ contentDisposition: "inline" }),
+        ],
+      }),
+    );
+  } finally {
+    create.mockRestore();
+    send.mockRestore();
+    transport.close();
+  }
 });

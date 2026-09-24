@@ -62,6 +62,7 @@ COPY --from=build /app/packages/db/migrations packages/db/migrations
 # docs/DEPLOYMENT.md, "A stranded migration journal".
 COPY --from=build /app/scripts/lint-migration-journal.mjs scripts/
 COPY --from=build /app/apps/api/dist apps/api/dist
+COPY --from=build /app/apps/api/assets apps/api/assets
 COPY --from=build /app/apps/worker/dist apps/worker/dist
 COPY --from=build /app/apps/web/dist apps/web/dist
 
