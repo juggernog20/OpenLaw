@@ -8456,6 +8456,60 @@
   "search.property.contract.type": {
     "defaultMessage": "Type"
   },
+  "search.property.counterparty.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "search.property.document.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "search.property.document.format": {
+    "defaultMessage": "Format"
+  },
+  "search.property.document.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.document.owner": {
+    "defaultMessage": "Owning module"
+  },
+  "search.property.document.textState": {
+    "defaultMessage": "Text state"
+  },
+  "search.property.document.type": {
+    "defaultMessage": "Document type"
+  },
+  "search.property.document.uploaded": {
+    "defaultMessage": "Uploaded date"
+  },
+  "search.property.document.uploader": {
+    "defaultMessage": "Uploader"
+  },
+  "search.property.entity.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.entity.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "search.property.entity.majorityOwner": {
+    "defaultMessage": "Majority owner"
+  },
+  "search.property.entity.nextObligation": {
+    "defaultMessage": "Next obligation date"
+  },
+  "search.property.entity.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.entity.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.knowledge_item.folder": {
+    "defaultMessage": "Knowledge Folder"
+  },
+  "search.property.knowledge_item.state": {
+    "defaultMessage": "State"
+  },
+  "search.property.knowledge_item.type": {
+    "defaultMessage": "Type"
+  },
   "search.property.matter.businessOwner": {
     "defaultMessage": "Business Owner"
   },
@@ -8494,6 +8548,21 @@
   },
   "search.property.matter.type": {
     "defaultMessage": "Type"
+  },
+  "search.property.request.received": {
+    "defaultMessage": "Received date"
+  },
+  "search.property.request.requester": {
+    "defaultMessage": "Requester"
+  },
+  "search.property.request.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.request.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.request.urgency": {
+    "defaultMessage": "Urgency"
   },
   "search.question.noMatches": {
     "defaultMessage": "No records match this question."
@@ -8551,6 +8620,18 @@
   },
   "search.sort.title": {
     "defaultMessage": "Title"
+  },
+  "search.textState.failed": {
+    "defaultMessage": "Failed"
+  },
+  "search.textState.pending": {
+    "defaultMessage": "Pending"
+  },
+  "search.textState.ready": {
+    "defaultMessage": "Ready"
+  },
+  "search.textState.unsupported": {
+    "defaultMessage": "Unsupported"
   },
   "search.total": {
     "defaultMessage": "{total, plural, one {# match} other {# matches}}"

@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import {
   and,
+  inArray,
+  documents,
+  documentVersions,
+  documentVersionText,
+  entities,
+  requests,
+  counterparties,
+  knowledgeItems,
   or,
   sql,
   isNull,
@@ -16,9 +24,23 @@ import { searchProperty, type SearchQuestion } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { choiceFilter } from "../../lib/record-filters.js";
 import { escapeLikePattern } from "../../lib/like.js";
+import { incompleteMatter } from "../../lib/incomplete-matter.js";
 import { nextDeadline } from "../../lib/next-deadline.js";
 
-import { incompleteMatter } from "../../lib/incomplete-matter.js";
+import { renderFamilySql } from "../../lib/render-family.js";
+import { TEXT_FAMILIES } from "../../pipeline/text-extraction.js";
+import { documentOwnerCase } from "../documents/owner.js";
+import { majorityOwnerId, nextObligationDueOn } from "../../lib/entity-search-properties.js";
+
+const RECORDS = {
+  contract: contracts,
+  matter: matters,
+  document: documents,
+  entity: entities,
+  request: requests,
+  counterparty: counterparties,
+  knowledge_item: knowledgeItems,
+};
 
 function compile(
   condition: SearchQuestion["conditions"][number],
@@ -26,33 +48,80 @@ function compile(
   timeZone?: string,
 ): SQL {
   const { kind, property, operator, value } = condition;
-  const record = kind === "contract" ? contracts : matters;
+  const record = RECORDS[kind];
   const definition = searchProperty(kind, property)!;
-  const columns: Record<string, AnyPgColumn | SQL> = {
-    title: record.title,
-    status: record.statusId,
-    type: kind === "contract" ? contracts.contractTypeId : matters.matterTypeId,
-    owner: contracts.managerId,
-    manager: matters.managerId,
-    businessOwner: matters.businessOwnerId,
-    entity: contracts.entityId,
-    priority: matters.priority,
-    risk: matters.risk,
-    effective: contracts.effectiveDate,
-    expiry: contracts.expiryDate,
-    noticeDeadline: sql`(${contracts.expiryDate} - ${contracts.noticePeriodDays})`,
-    opened: sql`(${matters.openedAt} at time zone ${timeZone ?? user.timezone ?? "UTC"})::date`,
-    deadline: sql`((${nextDeadline("matter")}) ->> 'date')::date`,
-    confidential: record.isConfidential,
-    incomplete: incompleteMatter,
+  const calendarDate = (column: AnyPgColumn) =>
+    sql`(${column} at time zone ${timeZone ?? user.timezone ?? "UTC"})::date`;
+  const family = renderFamilySql(documentVersions.mimeType, documentVersions.originalFilename);
+  // One column or expression per property, keyed by the kind it belongs to.
+  const columns: Record<typeof kind, Record<string, AnyPgColumn | SQL>> = {
+    contract: {
+      title: contracts.title,
+      status: contracts.statusId,
+      type: contracts.contractTypeId,
+      owner: contracts.managerId,
+      entity: contracts.entityId,
+      effective: contracts.effectiveDate,
+      expiry: contracts.expiryDate,
+      noticeDeadline: sql`(${contracts.expiryDate} - ${contracts.noticePeriodDays})`,
+      confidential: contracts.isConfidential,
+    },
+    matter: {
+      title: matters.title,
+      status: matters.statusId,
+      type: matters.matterTypeId,
+      manager: matters.managerId,
+      businessOwner: matters.businessOwnerId,
+      priority: matters.priority,
+      risk: matters.risk,
+      opened: calendarDate(matters.openedAt),
+      deadline: sql`((${nextDeadline("matter")}) ->> 'date')::date`,
+      confidential: matters.isConfidential,
+      incomplete: incompleteMatter,
+    },
+    document: {
+      owner: documentOwnerCase((owner) => owner.kindSql),
+      // The repository calls the presentation family "powerpoint".
+      format: sql`replace(${family}, 'presentation', 'powerpoint')`,
+      type: sql`coalesce(${documentVersions.documentTypeId}, ${knowledgeItems.knowledgeTypeId})`,
+      uploader: documentVersions.createdBy,
+      uploaded: calendarDate(documentVersions.createdAt),
+      // Same answer as the text read: no derivation row means pending for
+      // a family the pipeline reads, unsupported for every other.
+      textState: sql`coalesce(${documentVersionText.state}, case when ${family} in (${sql.join(
+        TEXT_FAMILIES.map((name) => sql`${name}`),
+        sql`, `,
+      )}) then 'pending' else 'unsupported' end)`,
+    },
+    entity: {
+      type: entities.entityTypeId,
+      jurisdiction: entities.jurisdiction,
+      status: entities.status,
+      majorityOwner: majorityOwnerId,
+      nextObligation: nextObligationDueOn,
+    },
+    counterparty: { jurisdiction: counterparties.jurisdiction },
+    request: {
+      type: requests.requestTypeId,
+      urgency: requests.urgency,
+      status: requests.status,
+      requester: requests.requesterId,
+      received: calendarDate(requests.createdAt),
+    },
+    knowledge_item: {
+      type: knowledgeItems.knowledgeTypeId,
+      state: knowledgeItems.state,
+      folder: knowledgeItems.folderId,
+    },
   };
-  const column = columns[property]!;
+  const column = columns[kind][property]!;
   if (definition.type === "choices") {
-    const values = (value as string[]).join(",");
     const predicate =
       property === "counterparty"
-        ? sql`exists (select 1 from ${contractCounterparties} where ${contractCounterparties.contractId} = ${contracts.id} and ${choiceFilter(contractCounterparties.counterpartyId, values)})`
-        : choiceFilter(column as AnyPgColumn, values, user.id)!;
+        ? sql`exists (select 1 from ${contractCounterparties} where ${contractCounterparties.contractId} = ${kind === "document" ? documents.contractId : contracts.id} and ${choiceFilter(contractCounterparties.counterpartyId, (value as string[]).join(","))})`
+        : definition.free
+          ? inArray(sql`${column}`, value as string[])
+          : choiceFilter(column, (value as string[]).join(","), user.id)!;
     return operator === "is_none_of" ? sql`not coalesce(${predicate}, false)` : predicate;
   }
   if (definition.type === "text") {
@@ -82,13 +151,13 @@ function compile(
 
 /** The caller ANDs this with reach inside the candidate read. */
 export function conditionScope(
-  kind: "contract" | "matter",
+  kind: SearchQuestion["kinds"][number],
   question: SearchQuestion | undefined,
   user: AuthenticatedUser,
   timeZone?: string,
 ): SQL {
   const conditions = question?.conditions.filter((condition) => condition.kind === kind) ?? [];
-  const record = kind === "contract" ? contracts : matters;
+  const record = RECORDS[kind];
   return (
     and(
       conditions.some(

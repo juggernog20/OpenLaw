@@ -18,7 +18,7 @@ export const FilterChoices = z
   );
 
 export function choiceFilter(
-  column: AnyPgColumn,
+  column: AnyPgColumn | SQL,
   value?: string,
   viewer?: string,
 ): SQL | undefined {
@@ -28,7 +28,7 @@ export function choiceFilter(
   ];
   const assigned = values.filter((item) => item !== "unassigned");
   return or(
-    assigned.length ? inArray(column, assigned) : undefined,
+    assigned.length ? inArray(sql`${column}`, assigned) : undefined,
     values.includes("unassigned") ? isNull(column) : undefined,
   );
 }

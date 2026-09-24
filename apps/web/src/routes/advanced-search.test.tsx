@@ -595,3 +595,142 @@ describe("condition values and refusals", () => {
     expect(await within(dialog).findByRole("alert")).toHaveTextContent(detail);
   });
 });
+
+it("offers all seven property groups and drops each kind's conditions from preview and URL with a notice", async () => {
+  const reads: SearchQuestion[] = [];
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/search/query") {
+        reads.push(call.body as SearchQuestion);
+        return answer();
+      }
+      return undefined;
+    },
+  });
+  const conditions: SearchQuestion["conditions"] = [
+    { kind: "contract", property: "title", operator: "contains", value: "Alpha" },
+    { kind: "matter", property: "title", operator: "contains", value: "Alpha" },
+    { kind: "document", property: "textState", operator: "is_any_of", value: ["pending"] },
+    { kind: "entity", property: "status", operator: "is_any_of", value: ["active"] },
+    { kind: "request", property: "urgency", operator: "is_any_of", value: ["high"] },
+    { kind: "counterparty", property: "jurisdiction", operator: "contains", value: "France" },
+    { kind: "knowledge_item", property: "state", operator: "is_any_of", value: ["draft"] },
+  ];
+  const labels = [
+    "Contract",
+    "Matter",
+    "Document",
+    "Entity",
+    "Request",
+    "Counterparty",
+    "Knowledge Item",
+  ];
+  const question = {
+    ...simpleSearchQuestion(
+      "paper",
+      conditions.map((c) => c.kind),
+    ),
+    conditions,
+  };
+  const { router } = renderAt(`/search?aq=${encodeSearchQuestion(question)}`);
+  const user = userEvent.setup();
+  for (const label of labels)
+    expect(
+      await screen.findByRole("button", { name: new RegExp(`^Edit ${label} `) }),
+    ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Advanced" }));
+  const dialog = screen.getByRole("dialog");
+  await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
+  for (const label of labels) expect(screen.getByRole("group", { name: label })).toBeVisible();
+  await user.keyboard("{Escape}");
+  for (let i = 0; i < labels.length; i++) {
+    await user.click(within(dialog).getByRole("button", { name: labels[i] }));
+    expect(within(dialog).getByText(`Conditions for ${labels[i]} were removed.`)).toBeVisible();
+    await waitFor(() => expect(reads.at(-1)?.conditions).toEqual(conditions.slice(i + 1)));
+  }
+  await user.click(within(dialog).getByRole("button", { name: "Search" }));
+  await waitFor(() =>
+    expect(
+      decodeSearchQuestion(new URLSearchParams(router.state.location.search).get("aq")!)
+        ?.conditions,
+    ).toEqual([]),
+  );
+});
+
+it("loads the new kinds' choices, displays their labels on chips, and preserves a jurisdiction containing a comma", async () => {
+  const choices: Record<string, unknown> = {
+    "/api/v1/documents/options": {
+      counterparties: [{ id: "party", name: "Orion" }],
+      uploaders: [{ id: "person", displayName: "Alex", archived: false }],
+      records: [],
+    },
+    "/api/v1/documents/type-options": {
+      documentTypes: [{ id: "paper", displayName: "Agreement" }],
+    },
+    "/api/v1/entities/list-options": {
+      jurisdictions: ["Bonaire, Sint Eustatius and Saba"],
+      majorityOwners: [{ id: "parent", legalName: "Parent company" }],
+    },
+    "/api/v1/entities/types": { entityTypes: [{ id: "company", displayName: "Company" }] },
+    "/api/v1/requests/filter-options": {
+      types: [{ id: "ask", displayName: "Legal advice" }],
+      people: [{ id: "person", displayName: "Alex" }],
+      statuses: [],
+    },
+    "/api/v1/knowledge/type-options": {
+      knowledgeTypes: [{ id: "playbook", displayName: "Playbook" }],
+    },
+    "/api/v1/knowledge/folders": { folders: [{ id: "folder", name: "Guidance", parentId: null }] },
+  };
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/search/query"
+        ? answer()
+        : choices[call.url.pathname]
+          ? json(200, choices[call.url.pathname])
+          : undefined,
+  });
+  const conditions: SearchQuestion["conditions"] = [
+    { kind: "document", property: "type", operator: "is_any_of", value: ["paper"] },
+    { kind: "entity", property: "majorityOwner", operator: "is_any_of", value: ["parent"] },
+    { kind: "request", property: "requester", operator: "is_any_of", value: ["person"] },
+    { kind: "knowledge_item", property: "folder", operator: "is_any_of", value: ["folder"] },
+    {
+      kind: "entity",
+      property: "jurisdiction",
+      operator: "is_any_of",
+      value: ["Bonaire, Sint Eustatius and Saba"],
+    },
+  ];
+  const { router } = renderAt(
+    `/search?aq=${encodeSearchQuestion({ ...simpleSearchQuestion("", ["document", "entity", "request", "knowledge_item"]), conditions })}`,
+  );
+  for (const label of [
+    "Document Document type is any of Agreement",
+    "Entity Majority owner is any of Parent company",
+    "Request Requester is any of Alex",
+    "Knowledge Item Knowledge Folder is any of Guidance",
+  ])
+    expect(await screen.findByRole("button", { name: `Edit ${label}` })).toBeVisible();
+  const user = userEvent.setup();
+  await user.click(
+    screen.getByRole("button", {
+      name: "Edit Entity Jurisdiction is any of Bonaire, Sint Eustatius and Saba",
+    }),
+  );
+  const row = screen.getByRole("group", { name: "Entity Jurisdiction condition" });
+  await user.click(within(row).getByRole("button", { name: "Choose values" }));
+  expect(
+    await screen.findByRole("checkbox", { name: "Bonaire, Sint Eustatius and Saba" }),
+  ).toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Apply" }));
+  await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Search" }));
+  await waitFor(() =>
+    expect(
+      decodeSearchQuestion(new URLSearchParams(router.state.location.search).get("aq")!)
+        ?.conditions,
+    ).toEqual(conditions),
+  );
+});

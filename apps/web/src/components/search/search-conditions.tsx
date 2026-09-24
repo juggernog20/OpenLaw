@@ -137,13 +137,22 @@ function ConditionRow({
             </PopoverTrigger>
             <PopoverContent className="w-80 max-w-[calc(100vw-2rem)] p-0" aria-label={label}>
               <FilterEditor
-                filter={{ key: condition.property, label, kind: "choices", choices }}
-                values={{ [condition.property]: values.join(",") }}
+                filter={{
+                  key: condition.property,
+                  label,
+                  kind: "choices",
+                  choices: choices.map((choice) => ({
+                    ...choice,
+                    id: encodeURIComponent(choice.id),
+                  })),
+                }}
+                values={{ [condition.property]: values.map(encodeURIComponent).join(",") }}
                 onApply={(next) => {
                   setValue(
                     String(next[condition.property] ?? "")
                       .split(",")
-                      .filter(Boolean),
+                      .filter(Boolean)
+                      .map(decodeURIComponent),
                   );
                   setOpen(false);
                 }}

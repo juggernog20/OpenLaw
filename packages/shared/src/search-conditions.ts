@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { z } from "zod";
+import type { SEARCH_KINDS } from "./search-question.js";
 
 export type SearchProperty = {
-  kind: "contract" | "matter";
+  kind: (typeof SEARCH_KINDS)[number];
   key: string;
   label: string;
   type: "choices" | "text" | "flag" | "date";
+  /** The choices are the column's own stored strings, not record ids or
+   * viewer tokens, so any string is a valid pick and a comma inside one
+   * is data. */
+  free?: true;
 };
 
 export const SEARCH_PROPERTIES: readonly SearchProperty[] = [
@@ -34,6 +39,29 @@ export const SEARCH_PROPERTIES: readonly SearchProperty[] = [
   { kind: "matter", key: "includeClosed", label: "Show closed", type: "flag" },
   { kind: "matter", key: "includeArchived", label: "Show archived", type: "flag" },
   { kind: "matter", key: "title", label: "Title", type: "text" },
+  { kind: "document", key: "owner", label: "Owning module", type: "choices" },
+  { kind: "document", key: "format", label: "Format", type: "choices" },
+  { kind: "document", key: "type", label: "Document type", type: "choices" },
+  { kind: "document", key: "counterparty", label: "Counterparty", type: "choices" },
+  { kind: "document", key: "uploader", label: "Uploader", type: "choices" },
+  { kind: "document", key: "uploaded", label: "Uploaded date", type: "date" },
+  { kind: "document", key: "textState", label: "Text state", type: "choices" },
+  { kind: "document", key: "includeArchived", label: "Show archived", type: "flag" },
+  { kind: "entity", key: "type", label: "Type", type: "choices" },
+  { kind: "entity", key: "jurisdiction", label: "Jurisdiction", type: "choices", free: true },
+  { kind: "entity", key: "status", label: "Status", type: "choices" },
+  { kind: "entity", key: "majorityOwner", label: "Majority owner", type: "choices" },
+  { kind: "entity", key: "nextObligation", label: "Next obligation date", type: "date" },
+  { kind: "entity", key: "includeArchived", label: "Show archived", type: "flag" },
+  { kind: "counterparty", key: "jurisdiction", label: "Jurisdiction", type: "text" },
+  { kind: "request", key: "type", label: "Type", type: "choices" },
+  { kind: "request", key: "urgency", label: "Urgency", type: "choices" },
+  { kind: "request", key: "status", label: "Status", type: "choices" },
+  { kind: "request", key: "requester", label: "Requester", type: "choices" },
+  { kind: "request", key: "received", label: "Received date", type: "date" },
+  { kind: "knowledge_item", key: "type", label: "Type", type: "choices" },
+  { kind: "knowledge_item", key: "state", label: "State", type: "choices" },
+  { kind: "knowledge_item", key: "folder", label: "Knowledge Folder", type: "choices" },
 ];
 
 export const SEARCH_OPERATORS = {
@@ -51,6 +79,7 @@ const choices = z
   .array(z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/))
   .min(1)
   .max(50);
+const freeChoices = z.array(z.string().min(1).max(200)).min(1).max(50);
 const date = z.iso.date().refine((value) => value >= "0001-01-01");
 const range = z.tuple([date, date]).refine(([from, to]) => from <= to);
 
@@ -66,7 +95,9 @@ export function conditionProblem(condition: {
     return "The operator does not fit this property's value type.";
   const schema =
     property.type === "choices"
-      ? choices
+      ? property.free
+        ? freeChoices
+        : choices
       : property.type === "text"
         ? z.string().trim().min(1).max(200)
         : property.type === "flag"
