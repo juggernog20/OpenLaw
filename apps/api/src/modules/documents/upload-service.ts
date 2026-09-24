@@ -698,69 +698,67 @@ export async function completeVersionUpload(
 ) {
   const reached = await reachedDocument(app.db, user, documentId);
   assertOpenDocument(reached);
-  return (async () => {
-    const detection = reached.autoDocId
-      ? await detectStoredTemplate(app.storage, file.fileRef, file.filename, app.maxUploadBytes)
-      : null;
-    return app.notifier.notifying(async (tx) => {
-      // The owning contract's row is held here, and this is the lock
-      // the version number is assigned under: two uploaders reading
-      // the chain's high-water mark at the same moment would both see
-      // the same number, so the second one waits here until the first
-      // has committed its row and then reads the number it wrote.
-      const locked = await reachedDocument(tx, user, documentId, true);
-      assertOpenDocument(locked);
+  const detection = reached.autoDocId
+    ? await detectStoredTemplate(app.storage, file.fileRef, file.filename, app.maxUploadBytes)
+    : null;
+  return app.notifier.notifying(async (tx) => {
+    // The owning contract's row is held here, and this is the lock
+    // the version number is assigned under: two uploaders reading
+    // the chain's high-water mark at the same moment would both see
+    // the same number, so the second one waits here until the first
+    // has committed its row and then reads the number it wrote.
+    const locked = await reachedDocument(tx, user, documentId, true);
+    assertOpenDocument(locked);
 
-      const versionNumber = await nextVersionNumber(tx, documentId);
+    const versionNumber = await nextVersionNumber(tx, documentId);
 
-      await insertVersion(tx, { documentId, versionId, versionNumber, file, by: user });
-      // The document's own row is touched so that "when did this
-      // document last change" answers with the new round rather than
-      // with the day it was created.
-      await tx.update(documents).set({ updatedAt: new Date() }).where(eq(documents.id, documentId));
-      if (locked.autoDocId && detection) {
-        await applyTemplateVersion(tx, {
-          autoDocId: locked.autoDocId,
-          name: locked.ownerTitle,
-          actorId: user.id,
+    await insertVersion(tx, { documentId, versionId, versionNumber, file, by: user });
+    // The document's own row is touched so that "when did this
+    // document last change" answers with the new round rather than
+    // with the day it was created.
+    await tx.update(documents).set({ updatedAt: new Date() }).where(eq(documents.id, documentId));
+    if (locked.autoDocId && detection) {
+      await applyTemplateVersion(tx, {
+        autoDocId: locked.autoDocId,
+        name: locked.ownerTitle,
+        actorId: user.id,
+        documentId,
+        versionId,
+        versionNumber,
+        detection,
+      });
+    } else
+      await recordActivity(tx, {
+        entityType: locked.owner.kind,
+        entityId: locked.owner.value,
+        actorId: user.id,
+        action: "document.version_added",
+        visibility: RECORD_ACTIVITY_TIER,
+        payload: {
           documentId,
           versionId,
+          title: locked.title,
           versionNumber,
-          detection,
-        });
-      } else
-        await recordActivity(tx, {
-          entityType: locked.owner.kind,
-          entityId: locked.owner.value,
-          actorId: user.id,
-          action: "document.version_added",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            documentId,
-            versionId,
-            title: locked.title,
-            versionNumber,
-            kind: file.kind,
-            ...(user.role === "business_user" ? { actorRole: "business_user" as const } : {}),
-          },
-        });
-      // The team hears that the paper moved (NOT-002 group 2). This is
-      // the door where the document flag bites: a round appended to a
-      // confidential document goes exactly as far as that document
-      // does (DD-014, DOC-008).
-      if (locked.contractId) {
-        await app.notifier.documentVersionAdded(tx, {
-          contractId: locked.contractId,
-          actorId: user.id,
-          actorName: user.displayName,
-          documentId,
-          documentTitle: locked.title,
-          isConfidential: locked.isConfidential,
-          versionId,
-          versionNumber,
-        });
-      }
-      return documentWithChain(tx, documentId, locked.primaryDocumentId);
-    });
-  })();
+          kind: file.kind,
+          ...(user.role === "business_user" ? { actorRole: "business_user" as const } : {}),
+        },
+      });
+    // The team hears that the paper moved (NOT-002 group 2). This is
+    // the door where the document flag bites: a round appended to a
+    // confidential document goes exactly as far as that document
+    // does (DD-014, DOC-008).
+    if (locked.contractId) {
+      await app.notifier.documentVersionAdded(tx, {
+        contractId: locked.contractId,
+        actorId: user.id,
+        actorName: user.displayName,
+        documentId,
+        documentTitle: locked.title,
+        isConfidential: locked.isConfidential,
+        versionId,
+        versionNumber,
+      });
+    }
+    return documentWithChain(tx, documentId, locked.primaryDocumentId);
+  });
 }
