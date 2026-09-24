@@ -658,15 +658,20 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
     // wasteful; this one asks a third party about every live envelope,
     // so two at once would be two sets of provider requests for one
     // set of answers.
-    await boss.createQueue(JOB_QUEUES.apiKeyExpiry, {
-      policy: "singleton",
-      ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
-    });
     await boss.createQueue(JOB_QUEUES.reconciliationSweep, {
       policy: "singleton",
       ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
     });
     await boss.updateQueue(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_QUEUE_OPTIONS);
+    // The API key expiry sweep (DD-029) walks its own rows once a day
+    // and records the first observation of each expiry. A singleton
+    // for the backfill sweep's reason: two at once would be correct, and
+    // two walks of the same rows for one walk's worth of answer.
+    await boss.createQueue(JOB_QUEUES.apiKeyExpiry, {
+      policy: "singleton",
+      ...RECONCILIATION_SWEEP_QUEUE_OPTIONS,
+    });
+    await boss.updateQueue(JOB_QUEUES.apiKeyExpiry, RECONCILIATION_SWEEP_QUEUE_OPTIONS);
     // The same singleton, for a stronger reason again. The other two
     // rounds are idempotent asks, so two at once would be wasteful and
     // correct; this one sends a person a briefing, and NOT-003 promises
@@ -995,9 +1000,6 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // must not sit in front of the executed copy a person is waiting
       // on. It takes the signing resolver, which is what makes it a
       // handler here rather than a timer in the worker entrypoint.
-      await work(JOB_QUEUES.apiKeyExpiry, { batchSize: 1 }, async () => {
-        await sweepApiKeyExpiry(handlers.db, new Date(), sweeping.signal);
-      });
       await work(JOB_QUEUES.reconciliationSweep, { batchSize: 1 }, async () => {
         const summary = await runReconciliationSweep(
           {
@@ -1010,6 +1012,14 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           { signal: sweeping.signal },
         );
         log.info({ ...summary }, "the scheduled reconciliation sweep finished");
+      });
+      // The API key expiry sweep (DD-029) reads only this install's
+      // rows and asks nobody else, so its own worker is here for the
+      // same reason as the others: a walk must not sit in front of a
+      // derivation somebody is waiting on.
+      await work(JOB_QUEUES.apiKeyExpiry, { batchSize: 1 }, async () => {
+        const expired = await sweepApiKeyExpiry(handlers.db, new Date(), sweeping.signal);
+        log.info({ expired }, "the scheduled API key expiry sweep finished");
       });
       // The morning round gets its own worker for the two sweeps'
       // reason: it spends its time on the relay's network, and a slow
@@ -1040,8 +1050,10 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
       // The same upsert, and the reason #277 moved this sweep here: an
       // in-process timer ran a full round per replica, and this round
       // asks a third party about every live envelope.
-      await boss.schedule(JOB_QUEUES.apiKeyExpiry, API_KEY_EXPIRY_CRON);
       await boss.schedule(JOB_QUEUES.reconciliationSweep, RECONCILIATION_SWEEP_CRON);
+      // The same upsert: one expiry audit per install per day (DD-029),
+      // however many workers boot.
+      await boss.schedule(JOB_QUEUES.apiKeyExpiry, API_KEY_EXPIRY_CRON);
       // The same upsert, and the reason it is here at all: one round per
       // install, however many workers boot (NOT-003's one briefing a
       // day).
@@ -1058,6 +1070,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
             JOB_QUEUES.notificationPush,
             JOB_QUEUES.backfillSweep,
             JOB_QUEUES.reconciliationSweep,
+            JOB_QUEUES.apiKeyExpiry,
             JOB_QUEUES.morningRound,
             JOB_QUEUES.contractAnalysis,
             JOB_QUEUES.conversionDraft,
@@ -1067,6 +1080,7 @@ export async function startPipeline(options: PipelineOptions): Promise<Pipeline>
           conversionSweepCron: CONVERSION_SWEEP_CRON,
           backfillSweepCron: BACKFILL_SWEEP_CRON,
           reconciliationSweepCron: RECONCILIATION_SWEEP_CRON,
+          apiKeyExpiryCron: API_KEY_EXPIRY_CRON,
           morningRoundCron: MORNING_ROUND_CRON,
         },
         "working the job queue",

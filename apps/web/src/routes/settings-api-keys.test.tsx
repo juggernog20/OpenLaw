@@ -85,6 +85,33 @@ for (const [path, role] of [
     expect(screen.queryByRole("button", { name: "Request a key" })).not.toBeInTheDocument();
   });
 }
+it("keeps the once-shown key through an outside click and leaves on Esc", async () => {
+  stubApi({
+    signedIn: {
+      id: "person",
+      email: "person@example.com",
+      displayName: "Person",
+      role: "legal_team_member",
+    },
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/api-key-requests")
+        return json(200, { policy, requests: [{ ...row, keyAvailable: true }] });
+      if (call.url.pathname.endsWith("/request-1")) return json(200, { ...row, key: "ol_stays" });
+    },
+  });
+  // Radix sets `pointer-events: none` on the body behind a modal, which
+  // user-event refuses to click through; the check is off so the click
+  // reaches the overlay the way a real pointer does.
+  const user = userEvent.setup({ pointerEventsCheck: 0 });
+  renderAt("/settings/api-keys");
+  const ready = await screen.findByRole("dialog", { name: "Your key is ready" });
+  await user.click(document.body);
+  expect(within(ready).getByText("ol_stays")).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "Your key is ready" })).not.toBeInTheDocument(),
+  );
+});
 it("collects an approved key once, copies it and confirms revocation", async () => {
   let collected = 0;
   let revoked = false;

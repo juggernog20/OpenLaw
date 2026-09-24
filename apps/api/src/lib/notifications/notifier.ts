@@ -1491,7 +1491,6 @@ export function createNotifier(deps: NotifierDeps): Notifier {
           userId: person.id,
           payload: { requestId: event.requestId, clientName: event.clientName, ...request },
         })),
-        { tellTheActor: true },
       );
     },
 

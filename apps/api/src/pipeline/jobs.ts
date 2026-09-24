@@ -90,8 +90,13 @@ export const JOB_QUEUES = {
    * question every round, so a second replica doubled the requests
    * against the endpoint DocuSign rate-limits hardest.
    */
-  apiKeyExpiry: "api-key.expiry-sweep",
   reconciliationSweep: "envelope.reconciliation-sweep",
+  /**
+   * The daily API key expiry audit (DD-029). Reads derive expiry from
+   * the credential's own timestamp; this job records the first
+   * observation of each one, once, as an audit row.
+   */
+  apiKeyExpiry: "api-key.expiry-sweep",
   /**
    * One notification's immediate email (NOT-002 group 1, NOT-003).
    *

@@ -348,7 +348,10 @@ export function ApiKeys({
                 onChange={(e) => setName(e.target.value)}
                 maxLength={200}
                 required
-                placeholder="Claude Code"
+                placeholder={intl.formatMessage({
+                  id: "apiKeys.clientNamePlaceholder",
+                  defaultMessage: "Claude Code",
+                })}
               />
             </label>
             <fieldset>
@@ -533,7 +536,13 @@ export function ApiKeyReadyDialog({ ready, onClose }: { ready: KeyRow; onClose: 
         if (!open) onClose();
       }}
     >
-      <DialogContent aria-describedby={undefined}>
+      <DialogContent
+        aria-describedby={undefined}
+        // The key shows this once and the server has already cleared its
+        // copy, so a click on the overlay must not throw it away. Esc and
+        // Done remain the exits.
+        onInteractOutside={(event) => event.preventDefault()}
+      >
         <DialogTitle>
           <FormattedMessage id="apiKeys.readyTitle" defaultMessage="Your key is ready" />
         </DialogTitle>

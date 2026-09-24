@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Completes an upload on each owning record: the reached owner is checked, the
+ * stored bytes become a Document or a Version on its chain (DOC-001), and the
+ * activity row is written in the same transaction. Bulk drops call this once per
+ * file (DOC-011); the bytes arrive through the storage adapter's `file_ref`
+ * (DOC-012). Routes and the MCP register share these functions.
+ */
+
 import {
   and,
   autoDocs,

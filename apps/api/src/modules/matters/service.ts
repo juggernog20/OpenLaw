@@ -26,11 +26,9 @@ import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
 import { civilToday } from "../../lib/contract-term.js";
 import {
   applyCustomFields,
-  assertBusinessCustomFieldWrite,
   assertRequiredCustomFields,
   projectCustomFields,
   selectAttachedFields,
-  type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { matterTeamScope, NO_MATTER } from "../../lib/matter-access.js";
 import { nextDeadline } from "../../lib/next-deadline.js";
@@ -114,34 +112,9 @@ export async function listMatters(
     .from(matters)
     .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
     .where(predicates);
-  const businessFields =
-    user.role === "business_user"
-      ? new Map(
-          await Promise.all(
-            [...new Set(page.map((context) => context.row.matterTypeId))].map(
-              async (matterTypeId) =>
-                [
-                  matterTypeId,
-                  await selectAttachedFields(db, matterTypeFields, matterTypeId),
-                ] as const,
-            ),
-          ),
-        )
-      : null;
   return {
     total: counts?.total ?? 0,
-    matters: page.map((context) =>
-      toRow(
-        context,
-        businessFields
-          ? projectCustomFields(
-              user.role,
-              businessFields.get(context.row.matterTypeId) ?? [],
-              context.row.customFields,
-            ).customFields
-          : context.row.customFields,
-      ),
-    ),
+    matters: page.map((context) => toRow(context, context.row.customFields)),
     nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
     counts: { open: counts?.open ?? 0, onHold: counts?.onHold ?? 0 },
   };
@@ -186,24 +159,6 @@ export async function patchMatter(
   const today = civilToday();
   const written = await db.transaction(async (tx) => {
     const current = await lockedMatter(tx, number, user);
-    let businessAttached: AttachedCustomField[] | null = null;
-    if (user.role === "business_user") {
-      const allowed = new Set(["description", "customFields"]);
-      if (Object.keys(body).some((key) => !allowed.has(key))) {
-        throw httpError(
-          403,
-          "Business Users can edit only the description and Fields visible on the Portal on this matter.",
-        );
-      }
-      if (body.customFields !== undefined) {
-        businessAttached = await selectAttachedFields(
-          tx,
-          matterTypeFields,
-          current.row.matterTypeId,
-        );
-        assertBusinessCustomFieldWrite(businessAttached, body.customFields);
-      }
-    }
     if (body.isConfidential !== undefined) {
       await assertAudienceActor(
         tx,
@@ -331,9 +286,11 @@ export async function patchMatter(
       matterTypeName = matterType.displayName;
     }
 
-    const attached =
-      businessAttached ??
-      (await selectAttachedFields(tx, matterTypeFields, patch.matterTypeId ?? target.matterTypeId));
+    const attached = await selectAttachedFields(
+      tx,
+      matterTypeFields,
+      patch.matterTypeId ?? target.matterTypeId,
+    );
     if (body.customFields !== undefined || retyped) {
       const applied = await applyCustomFields(
         tx,
@@ -458,7 +415,6 @@ export async function patchMatter(
           number: row.number,
           title: row.title,
           changed,
-          ...(user.role === "business_user" ? { actorRole: user.role } : {}),
         },
       });
     }
@@ -529,7 +485,8 @@ export async function updateMatter(
   number: number,
   input: z.input<typeof MatterUpdateBody>,
 ) {
-  assertReader(user);
+  // patchMatter asserts the reader; a second check here would only
+  // repeat it.
   return patchMatter(db, user, number, MatterUpdateBody.parse(input));
 }
 
@@ -541,6 +498,5 @@ export async function setMatterStatus(
   number: number,
   input: z.input<typeof MatterStatusBody>,
 ) {
-  assertReader(user);
   return patchMatter(db, user, number, MatterStatusBody.parse(input));
 }

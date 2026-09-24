@@ -1230,12 +1230,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "needs: a loose attachment such as a schedule or a " +
           "certificate is its own document with its own chain, beside " +
           "the main instrument rather than inside its history " +
-          "(CTR-014). Access is inherited from the " +
-          "contract and nothing else: a Contributor on the team reads " +
-          "the list, and anyone who cannot reach the contract — a " +
-          "Contributor who is not on it, a Legal Team Member outside a " +
-          "confidential record's audience — is answered 404, exactly as " +
-          "for a contract that does not exist. Archived documents " +
+          "(CTR-014). Administrators and Legal Team Members read the " +
+          "list; a Business User on the team is refused 403 and reads " +
+          "the contract's paper through the Portal. Reach is otherwise " +
+          "inherited from the contract and nothing else: a Legal Team " +
+          "Member outside a confidential record's audience is answered " +
+          "404, exactly as for a contract that does not exist. Archived documents " +
           "(DOC-010) are left out; includeArchived=true draws them " +
           "beside the live ones, which is where restoring one is " +
           "offered. folder narrows the read to one listing (DOC-006): a " +
@@ -1269,8 +1269,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The paper on one matter, newest first, with each document's complete version chain. " +
           "Access is inherited from the matter and a confidential document narrows to its team, " +
-          "or Matter Manager. Administrators, Legal Team Members, and Contributors " +
-          "may read matter paper. Primary and executed designations are contract concepts.",
+          "or Matter Manager. Administrators and Legal Team Members read matter paper; a " +
+          "Business User on the team is refused 403 and reads it through the Portal. " +
+          "Primary and executed designations are contract concepts.",
         tags: ["documents"],
         params: NumberParams,
         querystring: ArchivedQuery.extend(FolderQuery.shape).extend({

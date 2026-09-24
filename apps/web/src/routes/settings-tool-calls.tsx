@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Audit log → Tool calls: the MCP register's calls, one row each, with date
+ * filtering and CSV export. Only an Administrator loads the page (DD-017,
+ * SET-002). `?range=last-day` opens it on the shared last-24-hours window
+ * that the MCP settings card links to.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";

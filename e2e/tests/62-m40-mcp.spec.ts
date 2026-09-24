@@ -116,7 +116,10 @@ test("a Legal Team Member collects an approved key once and connects an SDK Clie
     const approvals = page.getByRole("region", { name: "Your approvals" });
     const approval = approvals.getByRole("listitem").filter({ hasText: clientName });
     await expect(approval).toContainText(person.displayName);
-    await page.getByRole("button", { name: "Mark all read", exact: true }).click();
+    // The bell hides "Mark all read" while the only unread items are open
+    // approvals, so the click depends on what else this instance holds.
+    const markAll = page.getByRole("button", { name: "Mark all read", exact: true });
+    if (await markAll.isVisible()) await markAll.click();
     await expect(approval).toBeVisible();
     await approval.getByRole("button", { name: "Approve", exact: true }).click();
     await expect(approval).toHaveCount(0);

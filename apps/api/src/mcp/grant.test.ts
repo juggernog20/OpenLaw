@@ -129,17 +129,32 @@ it.each([false, true])(
     const writer = await connect(["contracts"], "write", modern);
     expect(await names(writer)).toContain(write.name);
     expect((await writer.callTool({ name: write.name })).structuredContent).toEqual({ ok: true });
-    await h.db.update(orgSettings).set({ mcpReadOnly: true });
-    expect(await names(writer)).not.toContain(write.name);
-    await refusal(writer, write.name, "mcp_read_only");
-    await h.db.update(orgSettings).set({ mcpReadOnly: false, mcpToolsetCeiling: ["matters"] });
-    expect(await names(writer)).toEqual(guideNames);
-    await refusal(writer, read.name, "tool_outside_grant");
-    await h.db.update(orgSettings).set({ mcpToolsetCeiling: ["matters", "contracts"] });
-    await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, ownerId));
-    expect(await names(writer)).not.toContain(write.name);
-    await refusal(writer, write.name, "tool_outside_grant");
-    await h.db.update(users).set({ role: "administrator" }).where(eq(users.id, ownerId));
+    // The policy and the owner's role are shared with every later test,
+    // so a failed assertion below must not leave them changed.
+    const [policy] = await h.db
+      .select({
+        mcpReadOnly: orgSettings.mcpReadOnly,
+        mcpToolsetCeiling: orgSettings.mcpToolsetCeiling,
+      })
+      .from(orgSettings);
+    try {
+      await h.db.update(orgSettings).set({ mcpReadOnly: true });
+      expect(await names(writer)).not.toContain(write.name);
+      await refusal(writer, write.name, "mcp_read_only");
+      await h.db.update(orgSettings).set({ mcpReadOnly: false, mcpToolsetCeiling: ["matters"] });
+      expect(await names(writer)).toEqual(guideNames);
+      await refusal(writer, read.name, "tool_outside_grant");
+      await h.db.update(orgSettings).set({ mcpToolsetCeiling: ["matters", "contracts"] });
+      await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, ownerId));
+      expect(await names(writer)).not.toContain(write.name);
+      await refusal(writer, write.name, "tool_outside_grant");
+    } finally {
+      await h.db.update(users).set({ role: "administrator" }).where(eq(users.id, ownerId));
+      await h.db.update(orgSettings).set({
+        mcpReadOnly: policy!.mcpReadOnly,
+        mcpToolsetCeiling: policy!.mcpToolsetCeiling,
+      });
+    }
   },
 );
 it("records invalid input and output once, without recording or returning their content", async () => {

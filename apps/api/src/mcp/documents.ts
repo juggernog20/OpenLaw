@@ -14,18 +14,8 @@ import { listPortalDocuments } from "../modules/portal/document-service.js";
 import { getPortalKnowledge } from "../modules/portal/routes.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
 import { ToolError, type ToolDefinition } from "./tool.js";
+import { readTool } from "./workspace.js";
 
-export const readTool = {
-  kind: "read",
-  legalUser: "on",
-  businessUser: "on",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    openWorldHint: false,
-    idempotentHint: true,
-  },
-} as const;
 export const recordOutput = z.record(z.string(), z.unknown());
 export const ownerInput = z.object({
   ownerType: z.enum(["contract", "matter", "entity", "knowledge_item", "auto_doc"]),

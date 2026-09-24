@@ -7,7 +7,8 @@ import { listEntityObligations } from "../modules/entities/obligation-routes.js"
 import { getEntityShareRegister } from "../modules/entities/share-register-routes.js";
 import { listEntityDocuments } from "../modules/documents/service.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
-import { readTool, recordOutput } from "./documents.js";
+import { recordOutput } from "./documents.js";
+import { readTool } from "./workspace.js";
 import { ToolError, type ToolDefinition } from "./tool.js";
 const listInput = EntityListQuery.pick({ q: true, type: true, jurisdiction: true }).extend({
   ...pageInput,

@@ -110,6 +110,9 @@
   "activity.apiKey.revoked": {
     "defaultMessage": "{actor} revoked the API key for {client}"
   },
+  "activity.apiKey.unnamedClient": {
+    "defaultMessage": "a Client"
+  },
   "activity.applet": {
     "defaultMessage": "History"
   },
@@ -835,6 +838,9 @@
   },
   "apiKeys.clientName": {
     "defaultMessage": "Client name"
+  },
+  "apiKeys.clientNamePlaceholder": {
+    "defaultMessage": "Claude Code"
   },
   "apiKeys.copied": {
     "defaultMessage": "Copied"

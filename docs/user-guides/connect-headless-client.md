@@ -4,7 +4,7 @@ Connect Claude Code or a script to OpenLaw with an API key issued to your accoun
 
 ## Before you start
 
-You need a Legal Team Member account, Claude Code installed and signed in, and the Server address from your Administrator. Ask the Administrator to [enable MCP and Legal Users API keys](configure-mcp.md#enable-api-keys). Allow time for approval before the five-minute connection steps below.
+You need an OpenLaw account, Claude Code installed and signed in, and the Server address from your Administrator. Ask the Administrator to [enable MCP and API keys for your account group](configure-mcp.md#enable-api-keys). Allow time for approval before the five-minute connection steps below.
 
 For a [LAN only deployment](deployment-configuration.md#lan-only), run the Client on a device connected to the office network or VPN. The device must resolve the private hostname and trust its HTTPS certificate. No public address is needed.
 

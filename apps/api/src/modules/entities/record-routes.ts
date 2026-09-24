@@ -20,7 +20,7 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import type { Db } from "@openlaw/db";
-import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { NO_PERMISSION, requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { NO_ENTITY, reachedEntity, type LockedEntity } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -614,6 +614,11 @@ export async function listEntityOfficers(
   id: string,
   includeFormer = false,
 ) {
+  // The route above asks requireMember. A caller that is not a route
+  // (the MCP register) reaches this service directly, so the same
+  // floor is asserted here rather than trusted to the caller.
+  if (user.role !== "administrator" && user.role !== "legal_team_member")
+    throw httpError(403, NO_PERMISSION);
   const entity = await reachedEntity(db, user, id);
   if (!entity) throw httpError(404, NO_ENTITY);
   const rows = await selectOfficers(db)

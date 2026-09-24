@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The two Request reads. A requester reads their own Request through the
+ * Portal shape; an Administrator or Legal Team Member reads any Request in
+ * the staff shape that the Inbox triages (INT-006, DD-013). Routes and the
+ * MCP register share both.
+ */
+
 import {
   activityLog,
   and,

@@ -2,7 +2,19 @@
 import { Readable } from "node:stream";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { and, desc, eq, gte, lte, mcpToolCalls, sql, users, type Db, type SQL } from "@openlaw/db";
+import {
+  activityLog,
+  and,
+  desc,
+  eq,
+  gte,
+  lte,
+  mcpToolCalls,
+  sql,
+  users,
+  type Db,
+  type SQL,
+} from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { csvRow } from "../../lib/csv.js";
@@ -117,7 +129,7 @@ export const toolCallRoutes: FastifyPluginAsyncZod = async (app) => {
       const bounded = and(
         datePredicate(filters),
         sql`${mcpToolCalls.createdAt} <=
-      (select created_at from activity_log where id = ${marker!.id})`,
+      (select ${activityLog.createdAt} from ${activityLog} where ${activityLog.id} = ${marker!.id})`,
       );
       async function* rows(): AsyncGenerator<string> {
         yield csvRow([

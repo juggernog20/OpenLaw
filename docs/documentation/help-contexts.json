@@ -298,7 +298,7 @@
       "pilotEntry": false
     },
     {
-      "routes": ["/settings/audit-log"],
+      "routes": ["/settings/audit-log", "/settings/audit-log/tool-calls"],
       "contexts": ["settings.audit"],
       "surface": "staff",
       "pilotEntry": false
@@ -339,7 +339,8 @@
         "/settings/uploads",
         "/settings/storage",
         "/settings/document-processing",
-        "/settings/system-status"
+        "/settings/system-status",
+        "/settings/mcp-limits"
       ],
       "contexts": ["settings.advanced"],
       "surface": "staff",

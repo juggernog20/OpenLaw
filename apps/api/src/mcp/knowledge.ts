@@ -6,7 +6,8 @@ import { getKnowledgeItem, portalKnowledgeScope } from "../modules/knowledge/ser
 import { getPortalKnowledge } from "../modules/portal/routes.js";
 import { listKnowledgeItemDocuments } from "../modules/documents/service.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
-import { readTool, recordOutput } from "./documents.js";
+import { recordOutput } from "./documents.js";
+import { readTool } from "./workspace.js";
 import { ToolError, type ToolDefinition } from "./tool.js";
 const searchInput = z.object({
   query: z.string().trim().min(1).max(200),

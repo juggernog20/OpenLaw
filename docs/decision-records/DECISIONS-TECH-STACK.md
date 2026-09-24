@@ -730,6 +730,14 @@ Before release tags exist, upgrade CI uses the PR's recorded base or the push's
 previous revision. Local/manual rehearsal falls back to dev, or its parent when dev
 is the candidate. Baseline and candidate must be distinct immutable commits.
 
+### Addendum (2026-09-25, M40, [#1120](https://github.com/juggernog20/OpenLaw/pull/1120)) — a service with a non-HTTP caller may be asserted at the service seam
+
+API tests assert at the HTTP seam: status, headers, body. That rule assumes every caller of a module arrives through a route, where `preHandler` guards run before the handler. M40 broke that assumption on purpose. The MCP register (DD-029) calls the extracted record, read and Request services directly, so a guarantee a route's `requireRole` used to carry is now the service's own to keep.
+
+**The exception.** A service that has a caller other than a route may be asserted directly, for the guarantees the HTTP guards no longer cover: the role floor, reach, Confidential exclusion, transaction rollback, and that the service answers the same rows the route answers. `read-services.test.ts`, `record-services.test.ts` and `request-task-services.test.ts` are that seam. Each one cites this addendum at the top. A service with routes as its only callers stays under the HTTP rule.
+
+**What it costs.** A service test pins a TypeScript signature that the HTTP rule left free to change, so an extraction that renames a parameter now touches a test file too. It also reads a `Problem` as a thrown object rather than a response body, so a change to the error envelope is not caught here; the HTTP tests still hold that. The trade is accepted because the alternative, asserting every guarantee through `/mcp`, would test the register's grant logic and the service floor in one place and leave a direct caller added later with no seam at all.
+
 ## TECH-015: TypeScript 7 native compiler + TS 6 API shim for typescript-eslint
 
 - **Status:** Accepted — **temporary by design; see sunset trigger below**
@@ -1772,7 +1780,7 @@ The ticket is the only credential the route accepts. A cookie or an API key on t
 | TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted                                                                        |
 | TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted                                                                        |
 | TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted                                                                        |
-| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted                                                                        |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted; service-seam tests for non-HTTP callers by the 2026-09-25 addendum    |
 | TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)                                                            |
 | TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted                                                                        |
 | TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted                                                                        |

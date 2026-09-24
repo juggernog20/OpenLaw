@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// These tests assert at the service seam rather than over HTTP: the MCP
+// register calls these services without route guards, so the role floor,
+// reach and rollback are the service's own to keep (TECH-014 addendum,
+// 2026-09-25).
 
 import {
   activityLog,

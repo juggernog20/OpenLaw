@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+// These tests assert at the service seam rather than over HTTP: the MCP
+// register calls these services without route guards, so the role floor,
+// reach and rollback are the service's own to keep (TECH-014 addendum,
+// 2026-09-25).
 
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
@@ -22,6 +26,8 @@ import { NO_PERMISSION } from "../auth/guards.js";
 import { provisionUser } from "../auth/instance.js";
 import { signInCookies, startHarness, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
 import { getEntity, listEntities } from "./entities/service.js";
+import { listEntityOfficers } from "./entities/record-routes.js";
+import { listEntityObligations } from "./entities/obligation-routes.js";
 import {
   getKnowledgeItem,
   listKnowledgeItems,
@@ -113,6 +119,8 @@ it("enforces the staff floor without HTTP guards", async () => {
     () => getKnowledgeItem(h.db, business, itemId),
     () => listAutoDocs(h.db, business),
     () => listContractDocuments(h.db, business, 1),
+    () => listEntityOfficers(h.db, business, entityId),
+    () => listEntityObligations(h.db, business, entityId),
   ])
     await expect(read()).rejects.toMatchObject({ statusCode: 403, message: NO_PERMISSION });
   const response = await h.app.inject({

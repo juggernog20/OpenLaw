@@ -100,6 +100,6 @@ An API key belongs to your account and names one Client, such as a script. It is
 3. Enter the Client name. Choose each Toolset and choose Read or Write. Nothing is selected for you. Write is absent when the organization is read-only.
 4. Add a note if needed. Check the lifetime, then select **Send request**.
 5. After approval, open API keys. Copy the key before closing **Your key is ready**. OpenLaw will not show it again. An Administrator's own request approves itself.
-6. Put the key in your Client's `x-api-key` header. The key is intended for the organization's MCP address, not browser sign-in. Client-specific connection guides accompany the MCP transport.
+6. Put the key in your Client's `x-api-key` header. The key works only on the organization's MCP address, not for browser sign-in. Follow [Connect a headless Client](connect-headless-client.md).
 
 An Administrator answers pending requests in **Organization → MCP**, with an optional note. A denial stays in your table with its note. Cancel withdraws a pending request. Revoke ends an active key and keeps its row in the table. An expired key needs a new request, as does a key whose value you did not save.

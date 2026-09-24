@@ -29,7 +29,7 @@ People follow [Connect a headless Client](connect-headless-client.md) to submit 
 
 Expand **Active keys** to see the owner, Client, Toolsets, scope, last use, and expiry. Select **Revoke** and confirm to stop a key. Its next request is refused. People can also revoke their own keys from Personal Settings or Portal Settings. A lost or expired key needs a new request.
 
-Select **Tool calls in the last day** to open **Audit log → Tool calls**. It lists the person, Client, Tool, outcome, duration, and request ID, with date filtering and export. It records reads as well as writes, without recording Tool arguments or results. Record activity and the Audit log also identify writes as the person, via the named Client, at the same visibility tier as the corresponding app action.
+Select **Tool calls in the last day** to open **Audit log → Tool calls**. It lists the time, person, Client, Tool, outcome, and duration, with date filtering and export. It records reads as well as writes, without recording Tool arguments or results. Record activity and the Audit log also identify writes as the person, via the named Client, at the same visibility tier as the corresponding app action.
 
 The calls-per-hour limit is in **Settings → Advanced → MCP rate limit**. It defaults to 600 per credential. Unlike MCP policy switches, an Advanced change requires the app and worker to restart. An environment-pinned value cannot be changed in Settings. A refused Client call names the limit and reset time.
 

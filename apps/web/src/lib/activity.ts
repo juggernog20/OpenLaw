@@ -1297,6 +1297,19 @@ function typeFieldArms<Owner extends string>(
 }
 
 /**
+ * The seven API key sentences (DD-029) name the Client and, for an
+ * approval, whether the requester approved their own request. One
+ * function rather than seven copies, so the fallback and the strict
+ * `selfApproved` read cannot drift apart.
+ */
+const apiKeyValues: Arm["values"] = (intl, payload) => ({
+  client:
+    text(payload, "clientName") ??
+    intl.formatMessage({ id: "activity.apiKey.unnamedClient", defaultMessage: "a Client" }),
+  selfApproved: payload.selfApproved === true ? "yes" : "no",
+});
+
+/**
  * The whole vocabulary, narrated. `contract.*` is a record's own story
  * and `comment.*` the conversation on it — those two are all a record
  * feed can contain (M9/6). Everything after them is what the
@@ -2743,10 +2756,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.apiKey.requested",
       defaultMessage: "{actor} requested an API key for {client}",
     }),
-    values: (_intl, payload) => ({
-      client: String(payload.clientName ?? "Client"),
-      selfApproved: payload.selfApproved ? "yes" : "no",
-    }),
+    values: apiKeyValues,
   },
   "api_key.minted": {
     icon: Settings,
@@ -2754,10 +2764,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.apiKey.minted",
       defaultMessage: "{actor} issued an API key for {client}",
     }),
-    values: (_intl, payload) => ({
-      client: String(payload.clientName ?? "Client"),
-      selfApproved: payload.selfApproved ? "yes" : "no",
-    }),
+    values: apiKeyValues,
   },
   "api_key.approved": {
     icon: Settings,
@@ -2766,10 +2773,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage:
         "{selfApproved, select, yes {{actor} approved their own API key request for {client}} other {{actor} approved the API key request for {client}}}",
     }),
-    values: (_intl, payload) => ({
-      client: String(payload.clientName ?? "Client"),
-      selfApproved: payload.selfApproved ? "yes" : "no",
-    }),
+    values: apiKeyValues,
   },
   "api_key.denied": {
     icon: Settings,
@@ -2777,10 +2781,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.apiKey.denied",
       defaultMessage: "{actor} denied the API key request for {client}",
     }),
-    values: (_intl, payload) => ({
-      client: String(payload.clientName ?? "Client"),
-      selfApproved: payload.selfApproved ? "yes" : "no",
-    }),
+    values: apiKeyValues,
   },
   "api_key.cancelled": {
     icon: Settings,
@@ -2788,10 +2789,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.apiKey.cancelled",
       defaultMessage: "{actor} cancelled the API key request for {client}",
     }),
-    values: (_intl, payload) => ({
-      client: String(payload.clientName ?? "Client"),
-      selfApproved: payload.selfApproved ? "yes" : "no",
-    }),
+    values: apiKeyValues,
   },
   "api_key.revoked": {
     icon: Settings,
@@ -2799,10 +2797,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.apiKey.revoked",
       defaultMessage: "{actor} revoked the API key for {client}",
     }),
-    values: (_intl, payload) => ({
-      client: String(payload.clientName ?? "Client"),
-      selfApproved: payload.selfApproved ? "yes" : "no",
-    }),
+    values: apiKeyValues,
   },
   "api_key.expired": {
     icon: Settings,
@@ -2810,10 +2805,7 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       id: "activity.apiKey.expired",
       defaultMessage: "{actor} recorded expiry of the API key for {client}",
     }),
-    values: (_intl, payload) => ({
-      client: String(payload.clientName ?? "Client"),
-      selfApproved: payload.selfApproved ? "yes" : "no",
-    }),
+    values: apiKeyValues,
   },
   "org_settings.updated": {
     icon: Settings,

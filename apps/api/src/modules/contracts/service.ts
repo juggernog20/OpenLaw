@@ -33,10 +33,8 @@ import { NO_CONTRACT, OWNER_REFUSAL, OWNER_ROLES } from "../../lib/contract-acce
 import { addContractTeamMember } from "../../lib/contract-team.js";
 import {
   applyCustomFields,
-  assertBusinessCustomFieldWrite,
   assertRequiredCustomFields,
   projectCustomFields,
-  type AttachedCustomField,
 } from "../../lib/custom-fields.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import type { Notifier } from "../../lib/notifications/notifier.js";
@@ -145,7 +143,7 @@ export async function listContracts(
       [
         ...new Set(
           page
-            .filter((context) => user.role === "business_user" || hasConversionFields(context))
+            .filter((context) => hasConversionFields(context))
             .map((context) => context.row.contractTypeId),
         ),
       ].map(
@@ -229,26 +227,6 @@ export async function patchContract(
   // bell row for it belongs inside the same commit as the column.
   const updated = await notifier.notifying(async (tx) => {
     const current = await lockedContract(tx, number, user);
-    let businessAttached: AttachedCustomField[] | null = null;
-    if (user.role === "business_user") {
-      const allowed = new Set([
-        "value",
-        "effectiveDate",
-        "owningDepartmentId",
-        "region",
-        "customFields",
-      ]);
-      if (Object.keys(body).some((key) => !allowed.has(key))) {
-        throw httpError(
-          403,
-          "Business Users can edit only the value, effective date, department, region, and Fields visible on the Portal on this Contract.",
-        );
-      }
-      if (body.customFields !== undefined) {
-        businessAttached = await attachedFieldsOf(tx, current.row.contractTypeId);
-        assertBusinessCustomFieldWrite(businessAttached, body.customFields);
-      }
-    }
     // Reach was answered above, for this patch and every other one,
     // whatever the body carries. What is left is the flag's own
     // narrower actor set, and it is asked before the archived
@@ -511,9 +489,7 @@ export async function patchContract(
     // otherwise. Everything below is checked against these, so a
     // slug is only writable while the type that attaches it is the
     // type the contract will hold.
-    const attached =
-      businessAttached ??
-      (await attachedFieldsOf(tx, patch.contractTypeId ?? target.contractTypeId));
+    const attached = await attachedFieldsOf(tx, patch.contractTypeId ?? target.contractTypeId);
     if (body.customFields !== undefined || retyped) {
       const applied = await applyCustomFields(
         tx,
@@ -712,7 +688,6 @@ export async function patchContract(
           number: row!.number,
           title: row!.title,
           changed,
-          ...(user.role === "business_user" ? { actorRole: user.role } : {}),
         },
       });
     }
