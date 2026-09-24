@@ -8249,14 +8249,53 @@
   "search.build.body": {
     "defaultMessage": "Add words, choose a kind, or add a condition to see matching records."
   },
+  "search.chip.edit": {
+    "defaultMessage": "Edit {label}"
+  },
   "search.chip.remove": {
     "defaultMessage": "Remove {label}"
   },
   "search.chip.words": {
     "defaultMessage": "{label}: {value}"
   },
+  "search.choices.error": {
+    "defaultMessage": "Condition choices could not load."
+  },
   "search.clear": {
     "defaultMessage": "Clear"
+  },
+  "search.condition.add": {
+    "defaultMessage": "Add condition"
+  },
+  "search.condition.chip": {
+    "defaultMessage": "{kind} {property} {operator} {value}"
+  },
+  "search.condition.choose": {
+    "defaultMessage": "Choose values"
+  },
+  "search.condition.limit": {
+    "defaultMessage": "A search can have at most 20 conditions."
+  },
+  "search.condition.no": {
+    "defaultMessage": "No"
+  },
+  "search.condition.operator": {
+    "defaultMessage": "Operator"
+  },
+  "search.condition.remove": {
+    "defaultMessage": "Remove {kind} {property} condition"
+  },
+  "search.condition.row": {
+    "defaultMessage": "{kind} {property} condition"
+  },
+  "search.condition.value": {
+    "defaultMessage": "Value"
+  },
+  "search.condition.yes": {
+    "defaultMessage": "Yes"
+  },
+  "search.conditions.removed": {
+    "defaultMessage": "Conditions for {kind} were removed."
   },
   "search.error.body": {
     "defaultMessage": "The server did not answer. Try again in a moment."
@@ -8306,11 +8345,47 @@
   "search.kinds.help.selected": {
     "defaultMessage": "Only selected kinds are searched."
   },
+  "search.match": {
+    "defaultMessage": "Match conditions"
+  },
+  "search.match.all": {
+    "defaultMessage": "Match all"
+  },
+  "search.match.any": {
+    "defaultMessage": "Match any"
+  },
   "search.noMatches": {
     "defaultMessage": "No matches"
   },
   "search.noMatchesBody": {
     "defaultMessage": "No matches for “{query}”. Try another word or record number."
+  },
+  "search.operator.after": {
+    "defaultMessage": "after"
+  },
+  "search.operator.any": {
+    "defaultMessage": "is any of"
+  },
+  "search.operator.before": {
+    "defaultMessage": "before"
+  },
+  "search.operator.between": {
+    "defaultMessage": "between"
+  },
+  "search.operator.contains": {
+    "defaultMessage": "contains"
+  },
+  "search.operator.is": {
+    "defaultMessage": "is"
+  },
+  "search.operator.none": {
+    "defaultMessage": "is none of"
+  },
+  "search.operator.notContains": {
+    "defaultMessage": "does not contain"
+  },
+  "search.operator.on": {
+    "defaultMessage": "on"
   },
   "search.page.error": {
     "defaultMessage": "Search could not load. Try again."
@@ -8341,6 +8416,87 @@
   },
   "search.properties": {
     "defaultMessage": "Properties"
+  },
+  "search.properties.group": {
+    "defaultMessage": "{kind} properties"
+  },
+  "search.properties.search": {
+    "defaultMessage": "Search properties"
+  },
+  "search.property.contract.confidential": {
+    "defaultMessage": "Confidential"
+  },
+  "search.property.contract.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "search.property.contract.effective": {
+    "defaultMessage": "Effective date"
+  },
+  "search.property.contract.entity": {
+    "defaultMessage": "Signing Entity"
+  },
+  "search.property.contract.expiry": {
+    "defaultMessage": "Expiry date"
+  },
+  "search.property.contract.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.contract.includeEnded": {
+    "defaultMessage": "Show ended"
+  },
+  "search.property.contract.noticeDeadline": {
+    "defaultMessage": "Notice deadline"
+  },
+  "search.property.contract.owner": {
+    "defaultMessage": "Owner"
+  },
+  "search.property.contract.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.contract.title": {
+    "defaultMessage": "Title"
+  },
+  "search.property.contract.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.matter.businessOwner": {
+    "defaultMessage": "Business Owner"
+  },
+  "search.property.matter.confidential": {
+    "defaultMessage": "Confidential"
+  },
+  "search.property.matter.deadline": {
+    "defaultMessage": "Next deadline"
+  },
+  "search.property.matter.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.matter.includeClosed": {
+    "defaultMessage": "Show closed"
+  },
+  "search.property.matter.incomplete": {
+    "defaultMessage": "Incomplete"
+  },
+  "search.property.matter.manager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "search.property.matter.opened": {
+    "defaultMessage": "Opened date"
+  },
+  "search.property.matter.priority": {
+    "defaultMessage": "Priority"
+  },
+  "search.property.matter.risk": {
+    "defaultMessage": "Risk"
+  },
+  "search.property.matter.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.matter.title": {
+    "defaultMessage": "Title"
+  },
+  "search.property.matter.type": {
+    "defaultMessage": "Type"
   },
   "search.question.noMatches": {
     "defaultMessage": "No records match this question."

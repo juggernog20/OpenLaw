@@ -10,6 +10,7 @@ import { regionOptions, lockedRegionName } from "../regions/references.js";
 import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
 import { recordPerson } from "../../lib/record-person.js";
 import { originalIntake, OriginalIntakeSchema } from "../requests/original-intake.js";
+import { incompleteMatter } from "../../lib/incomplete-matter.js";
 import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
 import {
   FilterChoices,
@@ -23,7 +24,6 @@ import {
   asc,
   count,
   eq,
-  fields,
   inArray,
   isNull,
   matters,
@@ -383,20 +383,6 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
     end`;
   }
 
-  const incomplete = sql`exists (
-    select 1 from ${matterTypeFields}
-    inner join ${fields} on ${fields.id} = ${matterTypeFields.fieldId}
-    where ${matterTypeFields.typeId} = ${matters.matterTypeId}
-      and ${matterTypeFields.isRequired} = true
-      and ${fields.archivedAt} is null
-      and (
-        not jsonb_exists(${matters.customFields}, ${fields.slug})
-        or ${matters.customFields} -> ${fields.slug} = 'null'::jsonb
-        or ${matters.customFields} -> ${fields.slug} = '[]'::jsonb
-        or ${matters.customFields} ->> ${fields.slug} = ''
-      )
-  )`;
-
   app.get(
     "/matters",
     {
@@ -474,7 +460,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           request.query.deadlineFrom,
           request.query.deadlineTo,
         ),
-        request.query.incomplete === "true" ? incomplete : undefined,
+        request.query.incomplete === "true" ? incompleteMatter : undefined,
         scope(request.user),
       );
       const rows = await selectMatters(app.db, today)
@@ -561,7 +547,13 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         [...new Map(values.map((value) => [value.id, value])).values()].sort((a, b) =>
           a.displayName.localeCompare(b.displayName),
         );
+      const businessOwners = await app.db
+        .selectDistinct({ id: users.id, displayName: users.displayName })
+        .from(matters)
+        .innerJoin(users, eq(users.id, matters.businessOwnerId))
+        .where(scope(request.user));
       return {
+        businessOwners: unique(businessOwners),
         types: unique(rows.map((row) => ({ id: row.typeId, displayName: row.typeName }))),
         statuses: unique(rows.map((row) => ({ id: row.statusId, displayName: row.statusName }))),
         people: unique(

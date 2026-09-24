@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { z } from "zod";
+import { conditionProblem } from "./search-conditions.js";
 
 export const SEARCH_KINDS = [
   "contract",
@@ -39,7 +40,7 @@ export const SearchQuestionSchema = z
             .refine((value) => value !== undefined, "A condition value is required."),
         }),
       )
-      .max(20),
+      .max(20, "A search can have at most 20 conditions."),
     match: z.enum(["all", "any"]),
     sort: z.enum(["relevance", "newest", "oldest", "expiry", "title"]),
   })
@@ -56,6 +57,8 @@ export const SearchQuestionSchema = z
       ctx.addIssue({ code: "custom", message: "Enter words, choose a kind, or add a condition." });
     }
     question.conditions.forEach((condition, index) => {
+      const problem = conditionProblem(condition);
+      if (problem) ctx.addIssue({ code: "custom", path: ["conditions", index], message: problem });
       if (!question.kinds.includes(condition.kind)) {
         ctx.addIssue({
           code: "custom",

@@ -14,6 +14,16 @@ Each Document appears once in search, using only its latest Version. The result 
 
 Search covers reachable Contracts, Matters, Documents, Entities, Counterparties, Requests, and Knowledge Items. Role and record access still apply. Confidential work outside your access does not appear. Help search is separate and searches product guides.
 
+## Combine words and conditions
+
+Open **Advanced search** from the sliders beside the header search box, or select **Advanced** on the results page. Select **Contract** or **Matter**, then **Add condition**. Search the property list by label, choose a property, and set its operator and value.
+
+**Match all** requires every condition for that kind. **Match any** requires at least one. Values within **is any of** always match any selected value. Contract conditions apply only to Contracts; Matter conditions apply only to Matters. You can add up to 20 conditions.
+
+Dates offer **before**, **after**, **on**, and **between**. Between includes both endpoints. **Show ended**, **Show closed**, and **Show archived** set to Yes include those records; they do not limit the answer to those records. Search includes ended Contracts and closed Matters by default, and excludes archived records until a condition includes them. Record access always applies, including to the match total.
+
+Select **Search** to open the results. Select a condition chip to edit its row, or its remove control to run the question without that condition. The address keeps the question through reload and browser Back.
+
 ## Filter and sort a list
 
 The example below uses **Contracts**. Other managed lists offer filters suited to their own records.

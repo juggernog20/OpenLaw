@@ -16208,6 +16208,18 @@ export interface operations {
         };
         content: {
           "application/json": {
+            counterparties?: {
+              id: string;
+              displayName: string;
+            }[];
+            entities?: {
+              id: string;
+              displayName: string;
+            }[];
+            businessOwners?: {
+              id: string;
+              displayName: string;
+            }[];
             types: {
               id: string;
               displayName: string;
@@ -24433,6 +24445,18 @@ export interface operations {
         };
         content: {
           "application/json": {
+            counterparties?: {
+              id: string;
+              displayName: string;
+            }[];
+            entities?: {
+              id: string;
+              displayName: string;
+            }[];
+            businessOwners?: {
+              id: string;
+              displayName: string;
+            }[];
             types: {
               id: string;
               displayName: string;

@@ -37,6 +37,7 @@ import {
   type SearchQuestion,
   type DocumentOwner,
 } from "@openlaw/shared";
+import { conditionScope } from "./conditions.js";
 import { questionSort, readQuestionCursor, writeQuestionCursor } from "./sort.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
@@ -44,7 +45,7 @@ import { contractTeamScope } from "../../lib/contract-access.js";
 import { documentRepositoryScope } from "../../lib/document-access.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { problemResponse } from "../../lib/problem.js";
 import { documentOwnerCase } from "../documents/owner.js";
 
 type SearchKind = (typeof SEARCH_KINDS)[number];
@@ -159,6 +160,7 @@ function searchCtes(
   user: AuthenticatedUser,
   query: string,
   question?: SearchQuestion,
+  timeZone?: string,
 ): SQL {
   const exact = question && !question.scope.titles ? null : exactNumber(query);
   const kindScope = (kind: SearchKind) => {
@@ -227,7 +229,7 @@ function searchCtes(
       from ${contracts}
       inner join ${contractTypes} on ${contractTypes.id} = ${contracts.contractTypeId}
       inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
-      where ${and(isNull(contracts.archivedAt), contractTeamScope(db, user), kindScope("contract"))}
+      where ${and(conditionScope("contract", question, user, timeZone), contractTeamScope(db, user), kindScope("contract"))}
     ),
     contract_hits as (
       select
@@ -262,7 +264,7 @@ function searchCtes(
       inner join ${matterTypes} on ${matterTypes.id} = ${matters.matterTypeId}
       inner join ${matterStatuses} on ${matterStatuses.id} = ${matters.statusId}
       left join ${users} on ${users.id} = ${matters.managerId}
-      where ${and(isNull(matters.archivedAt), matterTeamScope(db, user), kindScope("matter"))}
+      where ${and(conditionScope("matter", question, user, timeZone), matterTeamScope(db, user), kindScope("matter"))}
     ),
     matter_hits as (
       select
@@ -640,11 +642,15 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { cursor, limit, ...question } = request.body;
-      if (question.conditions.length)
-        throw httpError(400, "Search conditions are not supported yet.");
       const boundary = cursor ? readQuestionCursor(cursor, question.sort) : undefined;
       const { after, order } = questionSort(question.sort, boundary);
-      const ctes = searchCtes(app.db, request.user, compileWords(question.words), question);
+      const ctes = searchCtes(
+        app.db,
+        request.user,
+        compileWords(question.words),
+        question,
+        question.timeZone,
+      );
       const answer = await app.db.execute<{ total: number; page: QuestionSearchDbRow[] }>(sql`
       with ${ctes}, sortable_hits as (
         select *, lower(title) as sort_title from all_hits
