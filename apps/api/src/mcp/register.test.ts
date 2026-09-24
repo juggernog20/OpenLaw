@@ -69,7 +69,7 @@ it.each(["administrator", "legal_team_member", "business_user"] as const)(
       (t) => (role === "business_user" ? t.businessUser : t.legalUser) !== "off",
     );
     expect(defaults.filter((t) => !toolRefusal(t, grant))).toHaveLength(
-      role === "business_user" ? 10 : 21,
+      role === "business_user" ? 15 : 27,
     );
   },
 );

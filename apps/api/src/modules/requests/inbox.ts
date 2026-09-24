@@ -87,7 +87,7 @@ const InboxRequesterSchema = z.object({ id: z.string(), displayName: z.string() 
  * is the reader's locale's business, and a server that computed it
  * would have to guess the reader's clock.
  */
-const InboxRowSchema = z.object({
+export const InboxRowSchema = z.object({
   id: z.string(),
   /** INT-002's global reference; the Inbox renders it R-###. */
   number: z.number().int(),

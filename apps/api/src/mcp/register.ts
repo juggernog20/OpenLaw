@@ -13,6 +13,9 @@ import { workspaceTools } from "./workspace.js";
 import { contractTools } from "./contracts.js";
 import { matterTools } from "./matters.js";
 import { taskTools } from "./tasks.js";
+import { requestTools } from "./requests.js";
+import { commentTools } from "./comments.js";
+import { peopleTools } from "./people.js";
 import { guideTools } from "./guide.js";
 
 export const instructions =
@@ -121,4 +124,7 @@ export const toolRegister: readonly ToolDefinition[] = [
   ...contractTools,
   ...matterTools,
   ...taskTools,
+  ...requestTools,
+  ...commentTools,
+  ...peopleTools,
 ];

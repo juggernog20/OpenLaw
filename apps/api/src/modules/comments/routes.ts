@@ -155,7 +155,7 @@ import {
   type CommentAudience,
   type CommentEntityType,
 } from "./audience.js";
-import { CommentBodySchema, postComment } from "./post.js";
+import { CommentBodySchema, postThreadComment } from "./post.js";
 import {
   attachmentsOf,
   CommentEntityTypeSchema,
@@ -665,75 +665,14 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const incoming = request.isMultipart()
         ? await receiveMultipartComment(request, mintedCommentId)
         : { body: requireJsonComment(request.body), attachments: [] };
-      const { body, visibility } = incoming.body;
-      // One person named twice is one person to reach, and the row's
-      // compound key says so too.
-      const named = [...new Set(incoming.body.mentions ?? [])];
-
       // The seam's transaction rather than the database's: a comment
       // that names somebody is done *to* them (CMT-007, NOT-002 group
       // 1), and the bell row for it belongs inside the same commit as
       // the `comment_mentions` row it is read from.
       const write = () =>
-        app.notifier.notifying(async (tx) => {
-          // Read on the same snapshot the rows are written on: a grant
-          // dropped between the check and the insert must not authorize a
-          // post onto a record the author no longer reaches. A refusal
-          // thrown here rolls the transaction back and keeps its status.
-          const audience = await reachedThread(tx, request.user, incoming.body);
-          // The composer offers a Contributor two segments; this is the
-          // refusal that holds when the request does not come from it.
-          if (!audience.tiers.includes(visibility)) {
-            throw httpError(403, "You cannot post a comment at that visibility tier.");
-          }
-
-          // Checked on that same snapshot: a grant dropped before the
-          // insert must not leave a mention nobody can hear.
-          if (named.length > 0) {
-            const candidates = await mentionCandidates(tx, audience, named);
-            const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-            // Somebody no tier on this record reaches is not addressable
-            // here at all. Mentioning a person does not grant them the
-            // record; whatever the arm's audience rule asks for does.
-            if (named.some((id) => !byId.has(id))) {
-              throw httpError(400, "That is not a person you can mention on this record.");
-            }
-            // The load-bearing refusal (CMT-007). The client's
-            // confirmation offers the promotion; this is what holds when
-            // the request did not come from it.
-            const unreachable = named
-              .map((id) => byId.get(id)!)
-              .filter((candidate) => !candidate.tiers.includes(visibility));
-            if (unreachable.length > 0) {
-              const names = unreachable.map((candidate) => candidate.displayName).join(", ");
-              throw httpError(
-                403,
-                `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
-              );
-            }
-          }
-
-          // The write itself, its `comment_mentions` rows, its activity
-          // entry, and whatever the arm raises are all one act, and
-          // `post.ts` is where that act lives — the Resolve disposition
-          // says its closing reply through the same call (INT-007).
-          const commentId = await postComment(tx, app.notifier, {
-            id: mintedCommentId,
-            audience,
-            author: request.user,
-            body,
-            visibility,
-            mentions: named,
-            attachments: incoming.attachments,
-          });
-          // Read back through the same projection the thread uses, so the
-          // row the poster gets is the row they will see on the next load.
-          const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
-          const [mentions, attachments] = await Promise.all([
-            mentionsOf(tx, [commentId]),
-            attachmentsOf(tx, request.user, [commentId]),
-          ]);
-          return toComment(posted!, mentions.get(commentId), attachments.get(commentId));
+        postThreadComment(app.notifier, request.user, incoming.body, {
+          id: mintedCommentId,
+          attachments: incoming.attachments,
         });
 
       const comment =
