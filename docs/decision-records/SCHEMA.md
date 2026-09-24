@@ -74,6 +74,41 @@ No `archived_at`: sessions are revoked by deletion, not archived.
 
 ---
 
+### `api_keys` and `api_key_requests`
+
+Source: **DD-029**, **TECH-035**, **SET-014**. Added by M40/2, #1049.
+
+`api_keys` holds the better-auth 1.7 api-key plugin schema. `reference_id` references
+`users.id`; the plugin dictates that name. `key` is the unique hash, never the plain
+key. The row also holds the fixed `ol_` prefix, Client name, creation and update
+timestamps, `expires_at`, `last_request`, `enabled`, and the plugin's rate-limit,
+refill, permissions and metadata fields. Revocation sets `enabled` false. The auth
+adapter suppresses the plugin's automatic deletion of expired keys so history remains.
+
+`api_key_requests` holds the person's chosen grant and the approval history:
+
+| Column                                      | Meaning                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `id`, `requester_id`                        | UUID v7 primary key and owner reference to `users.id`                                             |
+| `client_name`, `toolsets`, `scope`, `note`  | Immutable request facts; scope is `read` or `write`                                               |
+| `status`                                    | `pending`, `approved`, `denied` or `cancelled`                                                    |
+| `key_id`                                    | Unique reference to `api_keys.id`, present exactly when approved                                  |
+| `sealed_key`                                | TECH-022 sealed plain key, cleared by the owner's first detail read; always null on self-approval |
+| `decided_by`, `decision_note`, `decided_at` | Decision actor, optional note and timestamp                                                       |
+| `revoked_at`                                | Null until revoked                                                                                |
+| `expiry_audited_at`                         | Null until the daily sweep writes the expiry audit row                                            |
+| `created_at`                                | Request timestamp                                                                                 |
+
+The request facts are never edited. Decision, revocation and expiry timestamps record
+its transitions. Active, Revoked and Expired are read statuses, derived from the approved
+request and its retained credential. The sweep clears an uncollected expired secret
+and writes `api_key.expired` once in the same transaction as `expiry_audited_at`.
+Approval, mint and self-approval audit entries share the transaction that writes the key.
+All lifecycle audit rows are `admin_only` system events. The notification record uses
+`entity_type = api_key_request` with this request's id; it never contains the key.
+
+---
+
 ### `accounts`
 
 Source: **TECH-008**
@@ -1363,22 +1398,43 @@ Indexed on (`comment_id`, `created_at`, `id`) for the one read: a comment's atta
 
 ---
 
+### `mcp_tool_calls`
+
+Source: **DD-029**, **TECH-035**, **DD-017 MCP addendum**. Added by M40/7.
+
+One row per authenticated Tool call, including reads, refused calls and invalid arguments.
+The row stores `id`, `person_id`, `credential_id`, `client_name`, `tool`, `outcome`,
+`duration_ms`, `request_id` and `created_at`. It contains no arguments, results or record ids.
+`person_id` references `users`. `credential_id` identifies the API key and is reserved for
+OAuth credentials too. The Client name comes from the approved API key request.
+
+A call reserves a `pending` row before running and updates its outcome and duration on completion.
+A per-credential database lock serializes reservations. The hourly limit counts reserved calls
+in the current database clock hour, excluding `rate_limited` refusals. Refusals still get a row.
+The reset time is the start of the next hour. The limit uses the active Advanced configuration,
+including deployment pinning and the existing restart requirement.
+
+---
+
 ### `activity_log`
 
 Source: **DD-017**
 
 Source-of-truth for both the per-entity activity feed and the system-wide audit log.
 
-| Column        | Type        | Notes                                                                                                                   |
-| ------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `id`          | UUID        | PK                                                                                                                      |
-| `entity_type` | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `entity` \| `knowledge_item` \| `user` \| `system`                 |
-| `entity_id`   | UUID        | nullable — `system`-typed entries (login, role change, intake-config change) have no entity                             |
-| `actor_id`    | UUID        | nullable — system-emitted events (cron jobs, external webhooks) have no human actor                                     |
-| `action`      | text        | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
-| `visibility`  | text (enum) | `legal_only` \| `working_team` \| `full_thread` \| `admin_only` per **DD-017**                                          |
-| `payload`     | jsonb       | action-specific data (old/new values for edits, etc.)                                                                   |
-| `created_at`  | timestamptz |                                                                                                                         |
+| Column            | Type        | Notes                                                                                                                   |
+| ----------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`              | UUID        | PK                                                                                                                      |
+| `entity_type`     | text (enum) | `matter` \| `contract` \| `document` \| `request` \| `entity` \| `knowledge_item` \| `user` \| `system`                 |
+| `entity_id`       | UUID        | nullable — `system`-typed entries (login, role change, intake-config change) have no entity                             |
+| `actor_id`        | UUID        | nullable — system-emitted events (cron jobs, external webhooks) have no human actor                                     |
+| `via_kind`        | text (enum) | nullable — `ui` \| `api_key` \| `oauth_client` under a CHECK; NULL means the browser (DD-017's DD-029 addendum)         |
+| `via_id`          | text        | nullable — the credential the act came through; a snapshot, so it outlives the key's revocation                         |
+| `via_client_name` | text        | nullable — the Client's name when the act happened, a snapshot for the same reason                                      |
+| `action`          | text        | slug, e.g., `matter.created`, `confidentiality.set`, `user.role_changed`, `document.downloaded`, `matter_type.archived` |
+| `visibility`      | text (enum) | `legal_only` \| `working_team` \| `full_thread` \| `admin_only` per **DD-017**                                          |
+| `payload`         | jsonb       | action-specific data (old/new values for edits, etc.)                                                                   |
+| `created_at`      | timestamptz |                                                                                                                         |
 
 Append-only at the application layer. **Corrections are appended as new entries, never written over** — that is DD-017's rule and it has no exception.
 

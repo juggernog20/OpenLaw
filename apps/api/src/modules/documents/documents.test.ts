@@ -1092,7 +1092,13 @@ describe("correcting a version's kind", () => {
     });
 
     expect(res.statusCode, res.body).toBe(403);
-    expect((await listDocuments(contributorCookies, contract.number)).statusCode).toBe(403);
+    const refusedList = await listDocuments(contributorCookies, contract.number);
+    expect(refusedList.statusCode, refusedList.body).toBe(403);
+    expect(refusedList.headers["content-type"]).toContain("application/problem+json");
+    expect(refusedList.json()).toMatchObject({
+      status: 403,
+      detail: "You do not have permission to perform this action.",
+    });
   });
 });
 
@@ -1316,7 +1322,13 @@ describe("who reaches a contract's paper", () => {
     await putOnTeam(contract.number, idOf(CONTRIBUTOR));
     const content = Buffer.from("Current primary paper");
     const document = await uploaded(adminCookies, contract.number, { content });
-    expect((await listDocuments(contributorCookies, contract.number)).statusCode).toBe(403);
+    const refusedList = await listDocuments(contributorCookies, contract.number);
+    expect(refusedList.statusCode, refusedList.body).toBe(403);
+    expect(refusedList.headers["content-type"]).toContain("application/problem+json");
+    expect(refusedList.json()).toMatchObject({
+      status: 403,
+      detail: "You do not have permission to perform this action.",
+    });
     const file = await harness.app.inject({
       method: "GET",
       url: `/api/v1/portal/contracts/${contract.number}/documents/${document.id}/versions/${currentOf(document).id}/download`,

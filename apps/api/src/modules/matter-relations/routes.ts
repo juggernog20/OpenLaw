@@ -47,7 +47,7 @@ const ReachableMatterSchema = z.object({
   statusCategory: z.enum(["open", "closed"]),
 });
 const RelativeSchema = z.union([RestrictedMatterSchema, ReachableMatterSchema]);
-const RelationsEnvelope = z.object({
+export const RelationsEnvelope = z.object({
   parent: RelativeSchema.nullable(),
   children: z.array(RelativeSchema),
   related: z.array(RelativeSchema),
@@ -106,7 +106,7 @@ function relative(rows: Map<string, RelativeRow>, id: string): Relative {
     : { restricted: true };
 }
 
-async function buildRelations(
+export async function buildRelations(
   db: Executor,
   user: AuthenticatedUser,
   matterId: string,

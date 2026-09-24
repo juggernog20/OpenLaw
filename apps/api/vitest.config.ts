@@ -2,8 +2,18 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vitest/config";
 
+if (process.env.TESTCONTAINERS_RYUK_DISABLED === "true") {
+  throw new Error(
+    "API tests require Testcontainers cleanup. Unset TESTCONTAINERS_RYUK_DISABLED " +
+      "and use a container runtime that supports Ryuk (see README.md). " +
+      "Disabling Ryuk leaves databases " +
+      "running when a test worker times out or is killed.",
+  );
+}
+
 export default defineConfig({
   test: {
+    maxWorkers: 4,
     // Every suite in this package is an integration test against real
     // containers: a Postgres of its own, and for some suites MinIO,
     // Azurite, or an OIDC mock beside it. Per-suite containers are the

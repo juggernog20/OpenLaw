@@ -37,6 +37,8 @@
  * yet must not be the one thing that leaves the building unchecked.
  */
 
+import { apiKeyNotificationScope } from "../lib/notifications/audience.js";
+
 import { approvalRecipients } from "../lib/approval-access.js";
 import {
   and,
@@ -244,7 +246,26 @@ async function sendNotificationEmail(
   }
   const payload = row.payload;
   let record: MailRecord;
-  if (row.entityType === CONTRACT_ENTITY) {
+  if (row.entityType === "api_key_request") {
+    const [visible] = await deps.db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.id, row.id),
+          apiKeyNotificationScope(
+            deps.db,
+            { id: row.userId, role: row.recipientRole },
+            row.recipientRole === "business_user" ? "portal" : "staff",
+          ),
+        ),
+      );
+    if (!visible) return "unreachable";
+    record = {
+      entityType: "api_key_request",
+      title: typeof payload.clientName === "string" ? payload.clientName : "Client",
+    };
+  } else if (row.entityType === CONTRACT_ENTITY) {
     const reachable =
       row.eventType === "approval.requested"
         ? typeof payload.approvalId === "string"
@@ -319,7 +340,9 @@ async function sendNotificationEmail(
       recipientRole: row.recipientRole,
     },
     row.recipientEmail,
-    row.recipientRole === "business_user" && row.entityType !== "request"
+    row.recipientRole === "business_user" &&
+      row.entityType !== "request" &&
+      row.entityType !== "api_key_request"
       ? `${origin(deps.baseUrl)}/portal`
       : deps.baseUrl,
     brand,

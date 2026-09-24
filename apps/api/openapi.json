@@ -3562,7 +3562,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["instance", "uploads", "storage", "processing"]
+              "enum": ["instance", "uploads", "storage", "processing", "mcp"]
             },
             "in": "path",
             "name": "section",
@@ -3676,7 +3676,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["instance", "uploads", "storage", "processing"]
+              "enum": ["instance", "uploads", "storage", "processing", "mcp"]
             },
             "in": "path",
             "name": "section",
@@ -3792,7 +3792,7 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["instance", "uploads", "storage", "processing"]
+              "enum": ["instance", "uploads", "storage", "processing", "mcp"]
             },
             "in": "path",
             "name": "section",
@@ -3880,6 +3880,1412 @@
                     }
                   },
                   "required": ["database", "storageDriver", "documentEngine", "processes"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-key-requests": {
+      "get": {
+        "operationId": "listApiKeyRequests",
+        "tags": ["api-keys"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "policy": {
+                      "type": "object",
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "groupEnabled": {
+                          "type": "boolean"
+                        },
+                        "toolsetCeiling": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "workspace",
+                              "contracts",
+                              "matters",
+                              "tasks",
+                              "requests",
+                              "comments",
+                              "documents",
+                              "auto-docs",
+                              "entities",
+                              "knowledge",
+                              "people",
+                              "team",
+                              "administration"
+                            ]
+                          }
+                        },
+                        "readOnly": {
+                          "type": "boolean"
+                        },
+                        "apiKeyLifetimeDays": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "enabled",
+                        "groupEnabled",
+                        "toolsetCeiling",
+                        "readOnly",
+                        "apiKeyLifetimeDays"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "requesterId": {
+                            "type": "string"
+                          },
+                          "owner": {
+                            "type": "string"
+                          },
+                          "clientName": {
+                            "type": "string"
+                          },
+                          "toolsets": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "workspace",
+                                "contracts",
+                                "matters",
+                                "tasks",
+                                "requests",
+                                "comments",
+                                "documents",
+                                "auto-docs",
+                                "entities",
+                                "knowledge",
+                                "people",
+                                "team",
+                                "administration"
+                              ]
+                            }
+                          },
+                          "scope": {
+                            "type": "string",
+                            "enum": ["read", "write"]
+                          },
+                          "note": {
+                            "type": ["string", "null"]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "active",
+                              "denied",
+                              "cancelled",
+                              "revoked",
+                              "expired"
+                            ]
+                          },
+                          "decisionNote": {
+                            "type": ["string", "null"]
+                          },
+                          "decidedAt": {
+                            "type": ["string", "null"]
+                          },
+                          "approvedBy": {
+                            "type": ["string", "null"]
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "expiresAt": {
+                            "type": ["string", "null"]
+                          },
+                          "lastUsedAt": {
+                            "type": ["string", "null"]
+                          },
+                          "keyAvailable": {
+                            "type": "boolean"
+                          },
+                          "key": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "requesterId",
+                          "owner",
+                          "clientName",
+                          "toolsets",
+                          "scope",
+                          "note",
+                          "status",
+                          "decisionNote",
+                          "decidedAt",
+                          "approvedBy",
+                          "createdAt",
+                          "expiresAt",
+                          "lastUsedAt",
+                          "keyAvailable"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["policy", "requests"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "requestApiKey",
+        "tags": ["api-keys"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "toolsets": {
+                    "minItems": 1,
+                    "maxItems": 13,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "workspace",
+                        "contracts",
+                        "matters",
+                        "tasks",
+                        "requests",
+                        "comments",
+                        "documents",
+                        "auto-docs",
+                        "entities",
+                        "knowledge",
+                        "people",
+                        "team",
+                        "administration"
+                      ]
+                    }
+                  },
+                  "scope": {
+                    "type": "string",
+                    "enum": ["read", "write"]
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": ["clientName", "toolsets", "scope"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "requesterId": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "string"
+                    },
+                    "clientName": {
+                      "type": "string"
+                    },
+                    "toolsets": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    },
+                    "note": {
+                      "type": ["string", "null"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "active", "denied", "cancelled", "revoked", "expired"]
+                    },
+                    "decisionNote": {
+                      "type": ["string", "null"]
+                    },
+                    "decidedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "approvedBy": {
+                      "type": ["string", "null"]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": ["string", "null"]
+                    },
+                    "lastUsedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "keyAvailable": {
+                      "type": "boolean"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "requesterId",
+                    "owner",
+                    "clientName",
+                    "toolsets",
+                    "scope",
+                    "note",
+                    "status",
+                    "decisionNote",
+                    "decidedAt",
+                    "approvedBy",
+                    "createdAt",
+                    "expiresAt",
+                    "lastUsedAt",
+                    "keyAvailable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "MCP policy refused this API key request.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "urn:openlaw:problem:mcp-disabled",
+                        "urn:openlaw:problem:api-keys-disabled",
+                        "urn:openlaw:problem:toolset-outside-ceiling",
+                        "urn:openlaw:problem:mcp-read-only",
+                        "about:blank"
+                      ],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "MCP policy refused this API key request."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp-settings/api-keys": {
+      "get": {
+        "operationId": "listOrganizationApiKeys",
+        "tags": ["api-keys"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "requesterId": {
+                        "type": "string"
+                      },
+                      "owner": {
+                        "type": "string"
+                      },
+                      "clientName": {
+                        "type": "string"
+                      },
+                      "toolsets": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "workspace",
+                            "contracts",
+                            "matters",
+                            "tasks",
+                            "requests",
+                            "comments",
+                            "documents",
+                            "auto-docs",
+                            "entities",
+                            "knowledge",
+                            "people",
+                            "team",
+                            "administration"
+                          ]
+                        }
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": ["read", "write"]
+                      },
+                      "note": {
+                        "type": ["string", "null"]
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["pending", "active", "denied", "cancelled", "revoked", "expired"]
+                      },
+                      "decisionNote": {
+                        "type": ["string", "null"]
+                      },
+                      "decidedAt": {
+                        "type": ["string", "null"]
+                      },
+                      "approvedBy": {
+                        "type": ["string", "null"]
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "expiresAt": {
+                        "type": ["string", "null"]
+                      },
+                      "lastUsedAt": {
+                        "type": ["string", "null"]
+                      },
+                      "keyAvailable": {
+                        "type": "boolean"
+                      },
+                      "key": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "requesterId",
+                      "owner",
+                      "clientName",
+                      "toolsets",
+                      "scope",
+                      "note",
+                      "status",
+                      "decisionNote",
+                      "decidedAt",
+                      "approvedBy",
+                      "createdAt",
+                      "expiresAt",
+                      "lastUsedAt",
+                      "keyAvailable"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-key-requests/{id}": {
+      "get": {
+        "operationId": "readApiKeyRequest",
+        "tags": ["api-keys"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "requesterId": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "string"
+                    },
+                    "clientName": {
+                      "type": "string"
+                    },
+                    "toolsets": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    },
+                    "note": {
+                      "type": ["string", "null"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "active", "denied", "cancelled", "revoked", "expired"]
+                    },
+                    "decisionNote": {
+                      "type": ["string", "null"]
+                    },
+                    "decidedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "approvedBy": {
+                      "type": ["string", "null"]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": ["string", "null"]
+                    },
+                    "lastUsedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "keyAvailable": {
+                      "type": "boolean"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "requesterId",
+                    "owner",
+                    "clientName",
+                    "toolsets",
+                    "scope",
+                    "note",
+                    "status",
+                    "decisionNote",
+                    "decidedAt",
+                    "approvedBy",
+                    "createdAt",
+                    "expiresAt",
+                    "lastUsedAt",
+                    "keyAvailable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-key-requests/{id}/approve": {
+      "post": {
+        "operationId": "approveApiKeyRequest",
+        "tags": ["api-keys"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "requesterId": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "string"
+                    },
+                    "clientName": {
+                      "type": "string"
+                    },
+                    "toolsets": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    },
+                    "note": {
+                      "type": ["string", "null"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "active", "denied", "cancelled", "revoked", "expired"]
+                    },
+                    "decisionNote": {
+                      "type": ["string", "null"]
+                    },
+                    "decidedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "approvedBy": {
+                      "type": ["string", "null"]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": ["string", "null"]
+                    },
+                    "lastUsedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "keyAvailable": {
+                      "type": "boolean"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "requesterId",
+                    "owner",
+                    "clientName",
+                    "toolsets",
+                    "scope",
+                    "note",
+                    "status",
+                    "decisionNote",
+                    "decidedAt",
+                    "approvedBy",
+                    "createdAt",
+                    "expiresAt",
+                    "lastUsedAt",
+                    "keyAvailable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-key-requests/{id}/deny": {
+      "post": {
+        "operationId": "denyApiKeyRequest",
+        "tags": ["api-keys"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "requesterId": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "string"
+                    },
+                    "clientName": {
+                      "type": "string"
+                    },
+                    "toolsets": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    },
+                    "note": {
+                      "type": ["string", "null"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "active", "denied", "cancelled", "revoked", "expired"]
+                    },
+                    "decisionNote": {
+                      "type": ["string", "null"]
+                    },
+                    "decidedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "approvedBy": {
+                      "type": ["string", "null"]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": ["string", "null"]
+                    },
+                    "lastUsedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "keyAvailable": {
+                      "type": "boolean"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "requesterId",
+                    "owner",
+                    "clientName",
+                    "toolsets",
+                    "scope",
+                    "note",
+                    "status",
+                    "decisionNote",
+                    "decidedAt",
+                    "approvedBy",
+                    "createdAt",
+                    "expiresAt",
+                    "lastUsedAt",
+                    "keyAvailable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-key-requests/{id}/cancel": {
+      "post": {
+        "operationId": "cancelApiKeyRequest",
+        "tags": ["api-keys"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "requesterId": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "string"
+                    },
+                    "clientName": {
+                      "type": "string"
+                    },
+                    "toolsets": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    },
+                    "note": {
+                      "type": ["string", "null"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "active", "denied", "cancelled", "revoked", "expired"]
+                    },
+                    "decisionNote": {
+                      "type": ["string", "null"]
+                    },
+                    "decidedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "approvedBy": {
+                      "type": ["string", "null"]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": ["string", "null"]
+                    },
+                    "lastUsedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "keyAvailable": {
+                      "type": "boolean"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "requesterId",
+                    "owner",
+                    "clientName",
+                    "toolsets",
+                    "scope",
+                    "note",
+                    "status",
+                    "decisionNote",
+                    "decidedAt",
+                    "approvedBy",
+                    "createdAt",
+                    "expiresAt",
+                    "lastUsedAt",
+                    "keyAvailable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/api-key-requests/{id}/revoke": {
+      "post": {
+        "operationId": "revokeApiKeyRequest",
+        "tags": ["api-keys"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "requesterId": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "string"
+                    },
+                    "clientName": {
+                      "type": "string"
+                    },
+                    "toolsets": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "scope": {
+                      "type": "string",
+                      "enum": ["read", "write"]
+                    },
+                    "note": {
+                      "type": ["string", "null"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "active", "denied", "cancelled", "revoked", "expired"]
+                    },
+                    "decisionNote": {
+                      "type": ["string", "null"]
+                    },
+                    "decidedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "approvedBy": {
+                      "type": ["string", "null"]
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": ["string", "null"]
+                    },
+                    "lastUsedAt": {
+                      "type": ["string", "null"]
+                    },
+                    "keyAvailable": {
+                      "type": "boolean"
+                    },
+                    "key": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "requesterId",
+                    "owner",
+                    "clientName",
+                    "toolsets",
+                    "scope",
+                    "note",
+                    "status",
+                    "decisionNote",
+                    "decidedAt",
+                    "approvedBy",
+                    "createdAt",
+                    "expiresAt",
+                    "lastUsedAt",
+                    "keyAvailable"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mcp-settings": {
+      "get": {
+        "operationId": "getMcpSettings",
+        "tags": ["mcp-settings"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "legalApiKeysEnabled": {
+                      "type": "boolean"
+                    },
+                    "businessApiKeysEnabled": {
+                      "type": "boolean"
+                    },
+                    "toolsetCeiling": {
+                      "maxItems": 13,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "readOnly": {
+                      "type": "boolean"
+                    },
+                    "apiKeyLifetimeDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 365
+                    },
+                    "serverAddress": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "legalApiKeysEnabled",
+                    "businessApiKeysEnabled",
+                    "toolsetCeiling",
+                    "readOnly",
+                    "apiKeyLifetimeDays",
+                    "serverAddress"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateMcpSettings",
+        "tags": ["mcp-settings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "legalApiKeysEnabled": {
+                    "type": "boolean"
+                  },
+                  "businessApiKeysEnabled": {
+                    "type": "boolean"
+                  },
+                  "toolsetCeiling": {
+                    "maxItems": 13,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "workspace",
+                        "contracts",
+                        "matters",
+                        "tasks",
+                        "requests",
+                        "comments",
+                        "documents",
+                        "auto-docs",
+                        "entities",
+                        "knowledge",
+                        "people",
+                        "team",
+                        "administration"
+                      ]
+                    }
+                  },
+                  "readOnly": {
+                    "type": "boolean"
+                  },
+                  "apiKeyLifetimeDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 365
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "legalApiKeysEnabled": {
+                      "type": "boolean"
+                    },
+                    "businessApiKeysEnabled": {
+                      "type": "boolean"
+                    },
+                    "toolsetCeiling": {
+                      "maxItems": 13,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "workspace",
+                          "contracts",
+                          "matters",
+                          "tasks",
+                          "requests",
+                          "comments",
+                          "documents",
+                          "auto-docs",
+                          "entities",
+                          "knowledge",
+                          "people",
+                          "team",
+                          "administration"
+                        ]
+                      }
+                    },
+                    "readOnly": {
+                      "type": "boolean"
+                    },
+                    "apiKeyLifetimeDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 365
+                    },
+                    "serverAddress": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "legalApiKeysEnabled",
+                    "businessApiKeysEnabled",
+                    "toolsetCeiling",
+                    "readOnly",
+                    "apiKeyLifetimeDays",
+                    "serverAddress"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -38403,6 +39809,15 @@
                               }
                             ]
                           },
+                          "viaKind": {
+                            "type": ["string", "null"]
+                          },
+                          "viaId": {
+                            "type": ["string", "null"]
+                          },
+                          "viaClientName": {
+                            "type": ["string", "null"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -38416,7 +39831,17 @@
                             "additionalProperties": {}
                           }
                         },
-                        "required": ["id", "action", "visibility", "actor", "createdAt", "payload"],
+                        "required": [
+                          "id",
+                          "action",
+                          "visibility",
+                          "actor",
+                          "viaKind",
+                          "viaId",
+                          "viaClientName",
+                          "createdAt",
+                          "payload"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -61398,7 +62823,7 @@
     "/api/v1/contracts/{number}/documents": {
       "get": {
         "operationId": "listContractDocuments",
-        "summary": "The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. At most one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Access is inherited from the contract and nothing else: a Contributor on the team reads the list, and anyone who cannot reach the contract — a Contributor who is not on it, a Legal Team Member outside a confidential record's audience — is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered. folder narrows the read to one listing (DOC-006): a folder's own id answers what is filed in that folder, `root` answers the documents filed in no folder, and omitting it answers the record's whole paper. Paging applies within whichever listing was asked for, so a heavy folder pages on its own. A folder on another contract, or one that never existed, answers 404 — exactly as a folder that was never created, because a folder's id says nothing about which record it is on",
+        "summary": "The paper on one contract (DOC-008), newest first, each with its whole version chain in order 1..n and one version of it marked current. At most one document is marked primary — the instrument the contract is — and any version the team has pinned as the signed copy is marked executed. A contract holds as many documents as it needs: a loose attachment such as a schedule or a certificate is its own document with its own chain, beside the main instrument rather than inside its history (CTR-014). Administrators and Legal Team Members read the list; a Business User on the team is refused 403 and reads the contract's paper through the Portal. Reach is otherwise inherited from the contract and nothing else: a Legal Team Member outside a confidential record's audience is answered 404, exactly as for a contract that does not exist. Archived documents (DOC-010) are left out; includeArchived=true draws them beside the live ones, which is where restoring one is offered. folder narrows the read to one listing (DOC-006): a folder's own id answers what is filed in that folder, `root` answers the documents filed in no folder, and omitting it answers the record's whole paper. Paging applies within whichever listing was asked for, so a heavy folder pages on its own. A folder on another contract, or one that never existed, answers 404 — exactly as a folder that was never created, because a folder's id says nothing about which record it is on",
         "tags": ["documents"],
         "parameters": [
           {
@@ -62037,7 +63462,7 @@
     "/api/v1/matters/{number}/documents": {
       "get": {
         "operationId": "listMatterDocuments",
-        "summary": "The paper on one matter, newest first, with each document's complete version chain. Access is inherited from the matter and a confidential document narrows to its team, or Matter Manager. Administrators, Legal Team Members, and Contributors may read matter paper. Primary and executed designations are contract concepts.",
+        "summary": "The paper on one matter, newest first, with each document's complete version chain. Access is inherited from the matter and a confidential document narrows to its team, or Matter Manager. Administrators and Legal Team Members read matter paper; a Business User on the team is refused 403 and reads it through the Portal. Primary and executed designations are contract concepts.",
         "tags": ["documents"],
         "parameters": [
           {
@@ -72558,6 +73983,15 @@
                               }
                             ]
                           },
+                          "viaKind": {
+                            "type": ["string", "null"]
+                          },
+                          "viaId": {
+                            "type": ["string", "null"]
+                          },
+                          "viaClientName": {
+                            "type": ["string", "null"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -72571,7 +74005,17 @@
                             "additionalProperties": {}
                           }
                         },
-                        "required": ["id", "action", "visibility", "actor", "createdAt", "payload"],
+                        "required": [
+                          "id",
+                          "action",
+                          "visibility",
+                          "actor",
+                          "viaKind",
+                          "viaId",
+                          "viaClientName",
+                          "createdAt",
+                          "payload"
+                        ],
                         "additionalProperties": false
                       }
                     },
@@ -72585,6 +74029,166 @@
               }
             }
           },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit-log/tool-calls": {
+      "get": {
+        "operationId": "listAuditToolCalls",
+        "summary": "Tool call metadata, newest first. Administrator-only, date-filtered, with 50 calls per page",
+        "tags": ["audit-log"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "person": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "displayName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["id", "displayName"],
+                            "additionalProperties": false
+                          },
+                          "clientName": {
+                            "type": "string"
+                          },
+                          "tool": {
+                            "type": "string"
+                          },
+                          "outcome": {
+                            "type": "string"
+                          },
+                          "durationMs": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "createdAt",
+                          "person",
+                          "clientName",
+                          "tool",
+                          "outcome",
+                          "durationMs"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["entries", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit-log/tool-calls/export": {
+      "get": {
+        "operationId": "exportAuditToolCalls",
+        "summary": "Export all date-filtered Tool calls as CSV in bounded chunks. Administrator-only; records an audit event",
+        "tags": ["audit-log"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false
+          }
+        ],
+        "responses": {
           "default": {
             "description": "Problem details (RFC 9457)",
             "content": {
@@ -72779,6 +74383,15 @@
                               }
                             ]
                           },
+                          "viaKind": {
+                            "type": ["string", "null"]
+                          },
+                          "viaId": {
+                            "type": ["string", "null"]
+                          },
+                          "viaClientName": {
+                            "type": ["string", "null"]
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -72800,6 +74413,9 @@
                           "entityId",
                           "entityRef",
                           "actor",
+                          "viaKind",
+                          "viaId",
+                          "viaClientName",
                           "createdAt",
                           "payload"
                         ],
@@ -94151,6 +95767,21 @@
                     "eventType": {
                       "type": "string"
                     },
+                    "approvalKind": {
+                      "type": ["string", "null"]
+                    },
+                    "handledAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "entityType": {
                       "type": "string"
                     },
@@ -94185,6 +95816,8 @@
                   "required": [
                     "id",
                     "eventType",
+                    "approvalKind",
+                    "handledAt",
                     "entityType",
                     "entityId",
                     "payload",
@@ -94212,7 +95845,7 @@
     "/api/v1/notifications": {
       "get": {
         "operationId": "listNotifications",
-        "summary": "The signed-in person's staff notifications, newest first (NOT-001). There is no way to ask for anybody else's: a notification is addressed to one person and the address is the whole scope. This is the **staff** notification centre, so it answers items about contracts and never a Requester's group-5 items — those are the portal bell's, at `/portal/notifications`. An item about a record the reader can no longer reach — a contract walled off after the item was written (DD-014) — is silently omitted: no row, no gap, and no number that says something was left out. Paged from a server-fixed page size: pass the previous page's `nextCursor` to read further back. A cursor naming nothing in this person's bell answers an empty page rather than an error",
+        "summary": "The signed-in person's staff bell. Open approvals come first on the first page, followed by ordinary notifications, newest first. nextCursor pages ordinary notifications. Every read applies the record wall.",
         "tags": ["notifications"],
         "parameters": [
           {
@@ -94244,6 +95877,21 @@
                           },
                           "eventType": {
                             "type": "string"
+                          },
+                          "approvalKind": {
+                            "type": ["string", "null"]
+                          },
+                          "handledAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           },
                           "entityType": {
                             "type": "string"
@@ -94279,6 +95927,8 @@
                         "required": [
                           "id",
                           "eventType",
+                          "approvalKind",
+                          "handledAt",
                           "entityType",
                           "entityId",
                           "payload",
@@ -94314,7 +95964,7 @@
     "/api/v1/notifications/unread-count": {
       "get": {
         "operationId": "unreadNotificationCount",
-        "summary": "How many unread staff notifications the signed-in person has (NOT-005) — the number behind the top-nav badge. It is the whole count, not the capped one: NOT-005's '9+' is how the badge draws it, and the cap belongs to the surface. It is computed over exactly the items the list would answer with, through the same confidentiality predicate, so an item about a since-walled-off record leaves the count as silently as it leaves the list",
+        "summary": "Count unread notifications and open approvals once each, through the same reach predicate as the list. Reading an open approval does not remove it from the badge.",
         "tags": ["notifications"],
         "responses": {
           "200": {
@@ -94352,7 +96002,7 @@
     "/api/v1/notifications/read": {
       "post": {
         "operationId": "markNotificationsRead",
-        "summary": "Mark the named items read — what opening one from the notification centre does (NOT-005, 2026-09-09 amendment). Drawing the centre writes nothing; the click on an item is the read, so the centre sends that one id. The body is a list of up to one page's worth, because a page is the most the centre ever holds. Ids that are not this person's, are already read, are about a record they can no longer reach, or belong to their portal bell match nothing and are not refused — a refusal would answer whether an id exists. Answers the unread count that remains: what was not sent, plus whatever landed in the meantime",
+        "summary": "Mark named reachable notifications read. Open approvals keep their badge count until handled. Returns the remaining badge count.",
         "tags": ["notifications"],
         "requestBody": {
           "required": true,
@@ -94414,7 +96064,7 @@
     "/api/v1/notifications/read-all": {
       "post": {
         "operationId": "markAllNotificationsRead",
-        "summary": "Mark every unread staff item read — the affordance that zeroes the badge after a holiday (NOT-005). It covers exactly what the badge counts, so an item about a record the reader can no longer reach is left alone: it is already outside the count, and clearing it would be a write on a record they cannot see. A group-5 item on the same person's portal bell is left alone too, for the stronger reason that it is not on this surface at all. Answers the unread count that remains, which is zero unless something landed while the request was in flight",
+        "summary": "Mark ordinary reachable notifications read. Leave open approvals unchanged and return the remaining badge count.",
         "tags": ["notifications"],
         "responses": {
           "200": {
@@ -95019,6 +96669,21 @@
                     "eventType": {
                       "type": "string"
                     },
+                    "approvalKind": {
+                      "type": ["string", "null"]
+                    },
+                    "handledAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "entityType": {
                       "type": "string"
                     },
@@ -95053,6 +96718,8 @@
                   "required": [
                     "id",
                     "eventType",
+                    "approvalKind",
+                    "handledAt",
                     "entityType",
                     "entityId",
                     "payload",
@@ -95080,7 +96747,7 @@
     "/api/v1/portal/notifications": {
       "get": {
         "operationId": "listPortalNotifications",
-        "summary": "Portal notifications for the signed-in person's Requests and current Contract or Matter team memberships. Legal content, archived work, and revoked memberships are omitted before pagination.",
+        "summary": "The signed-in person's Portal bell. Open approvals come first on the first page, then ordinary Portal news, newest first. nextCursor pages ordinary news. Each item requires current access.",
         "tags": ["notifications"],
         "parameters": [
           {
@@ -95112,6 +96779,21 @@
                           },
                           "eventType": {
                             "type": "string"
+                          },
+                          "approvalKind": {
+                            "type": ["string", "null"]
+                          },
+                          "handledAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           },
                           "entityType": {
                             "type": "string"
@@ -95147,6 +96829,8 @@
                         "required": [
                           "id",
                           "eventType",
+                          "approvalKind",
+                          "handledAt",
                           "entityType",
                           "entityId",
                           "payload",
@@ -95182,7 +96866,7 @@
     "/api/v1/portal/notifications/unread-count": {
       "get": {
         "operationId": "unreadPortalNotificationCount",
-        "summary": "Unread count over exactly the Portal notifications the current user may read.",
+        "summary": "Count unread Portal notifications and open approvals once each, through the same reach predicate as the list.",
         "tags": ["notifications"],
         "responses": {
           "200": {
@@ -95282,7 +96966,7 @@
     "/api/v1/portal/notifications/read-all": {
       "post": {
         "operationId": "markAllPortalNotificationsRead",
-        "summary": "Mark every currently reachable Portal notification read and return the remaining unread count.",
+        "summary": "Mark ordinary reachable Portal notifications read. Leave open approvals unchanged and return the remaining badge count.",
         "tags": ["notifications"],
         "responses": {
           "200": {

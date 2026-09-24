@@ -77,3 +77,35 @@ it("escapes approval and brand text, with an OpenLaw fallback", () => {
   expect(message?.html).toContain("Sent by OpenLaw");
   expect(message?.html).not.toMatch(/<script|src=["']data:|calc\(/i);
 });
+
+it("names the acting Client in notification email text", () => {
+  const message = renderNotificationMail(
+    {
+      eventType: "contract.owner_assigned",
+      record: { entityType: "contract", number: 42, title: "Budget contract" },
+      actorName: "Sarah Chen",
+      recipientName: "Finance Reviewer",
+      recipientRole: "legal_team_member",
+      details: { viaKind: "api_key", viaClientName: "Claude Code" },
+    },
+    "finance@example.com",
+    "https://legal.example.com",
+  );
+  expect(message?.text).toContain("Sarah Chen, via Claude Code,");
+});
+
+it("names the acting Client on the Request receipt", () => {
+  const message = renderNotificationMail(
+    {
+      eventType: "request.created",
+      record: { entityType: "request", number: 42, title: "Review" },
+      actorName: "Sarah Chen",
+      recipientName: "Sarah Chen",
+      recipientRole: "business_user",
+      details: { viaKind: "api_key", viaClientName: "Claude Code" },
+    },
+    "sarah@example.com",
+    "https://legal.example.com",
+  );
+  expect(message?.text).toContain("Sarah Chen, via Claude Code, submitted your request");
+});

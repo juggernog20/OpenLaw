@@ -19,7 +19,8 @@ import {
   type EntityRegistration,
   type Transaction,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
+import type { Db } from "@openlaw/db";
+import { NO_PERMISSION, requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { NO_ENTITY, reachedEntity, type LockedEntity } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -197,23 +198,13 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: z.object({ officers: z.array(OfficerSchema) }), default: problemResponse },
       },
     },
-    async (request) => {
-      const entity = await reachedEntity(app.db, request.user, request.params.id);
-      if (!entity) throw httpError(404, NO_ENTITY);
-      const rows = await selectOfficers(app.db)
-        .where(
-          and(
-            eq(entityOfficers.entityId, entity.id),
-            request.query.includeFormer === "true" ? undefined : isNull(entityOfficers.resignedOn),
-          ),
-        )
-        .orderBy(
-          asc(sql`case when ${entityOfficers.resignedOn} is null then 0 else 1 end`),
-          desc(entityOfficers.appointedOn),
-          desc(entityOfficers.createdAt),
-        );
-      return { officers: rows.map((row) => toOfficer(row)) };
-    },
+    async (request) =>
+      listEntityOfficers(
+        app.db,
+        request.user,
+        request.params.id,
+        request.query.includeFormer === "true",
+      ),
   );
 
   app.post(
@@ -616,3 +607,31 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function listEntityOfficers(
+  db: Db,
+  user: AuthenticatedUser,
+  id: string,
+  includeFormer = false,
+) {
+  // The route above asks requireMember. A caller that is not a route
+  // (the MCP register) reaches this service directly, so the same
+  // floor is asserted here rather than trusted to the caller.
+  if (user.role !== "administrator" && user.role !== "legal_team_member")
+    throw httpError(403, NO_PERMISSION);
+  const entity = await reachedEntity(db, user, id);
+  if (!entity) throw httpError(404, NO_ENTITY);
+  const rows = await selectOfficers(db)
+    .where(
+      and(
+        eq(entityOfficers.entityId, entity.id),
+        includeFormer ? undefined : isNull(entityOfficers.resignedOn),
+      ),
+    )
+    .orderBy(
+      asc(sql`case when ${entityOfficers.resignedOn} is null then 0 else 1 end`),
+      desc(entityOfficers.appointedOn),
+      desc(entityOfficers.createdAt),
+    );
+  return { officers: rows.map((row) => toOfficer(row)) };
+}

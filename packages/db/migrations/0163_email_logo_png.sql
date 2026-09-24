@@ -1,1 +1,0 @@
-ALTER TABLE "org_settings" ADD COLUMN "email_logo_png" text;

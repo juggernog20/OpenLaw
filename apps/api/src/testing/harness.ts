@@ -32,6 +32,7 @@ import {
   useSecretKeys,
   type Db,
 } from "@openlaw/db";
+import type { ToolDefinition } from "../mcp/register.js";
 import { buildApp } from "../app.js";
 import type { AuthConfig } from "../auth/instance.js";
 import {
@@ -341,6 +342,8 @@ export interface HarnessOptions {
   /** Seed a past schema before the current app applies its migrations. */
   beforeMigrations?: (db: Db) => Promise<void>;
   advancedRuntime?: AdvancedRuntime;
+  /** Exercises the production MCP adapter with additional seam-test Tools. */
+  mcpTools?: readonly ToolDefinition[];
   /** Keep the real queue but omit consumers when a test controls worker execution. */
   runPipelineWorkers?: boolean;
   /**
@@ -511,6 +514,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     });
     const app = await buildApp({
       db,
+      mcpTools: options.mcpTools,
       config: TEST_AUTH_CONFIG,
       advancedRuntime: options.advancedRuntime ?? {
         baseline: { STORAGE_PATH: storageRoot },

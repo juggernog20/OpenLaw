@@ -11,12 +11,20 @@
  */
 
 import {
+  SettingsApiKeysPage,
+  settingsApiKeysLoader,
+  PortalApiKeysPage,
+  portalApiKeysLoader,
+} from "./routes/settings-api-keys";
+
+import {
   SettingsAdvancedPage,
   settingsAdvancedLoader,
   SettingsSystemStatusPage,
   settingsSystemStatusLoader,
 } from "./routes/settings-advanced";
 
+import { SettingsMcpPage, settingsMcpLoader } from "./routes/settings-mcp";
 import { SettingsAutoDocsPage, settingsAutoDocsLoader } from "./routes/settings-auto-docs";
 import { SettingsEmailPage, settingsEmailLoader } from "./routes/settings-email";
 import {
@@ -168,6 +176,7 @@ import {
   SettingsAuthenticationPage,
   settingsAuthenticationLoader,
 } from "./routes/settings-authentication";
+import { SettingsToolCallsPage, settingsToolCallsLoader } from "./routes/settings-tool-calls";
 import { SettingsAuditLogPage, settingsAuditLogLoader } from "./routes/settings-audit-log";
 import {
   SettingsESignaturePage,
@@ -462,6 +471,12 @@ export const routes: RouteObject[] = [
         loader: settingsNotificationsLoader,
         element: <SettingsNotificationsPage />,
       },
+      {
+        // SET-014: the Personal rail's API keys, after Notifications.
+        path: "api-keys",
+        loader: settingsApiKeysLoader,
+        element: <SettingsApiKeysPage />,
+      },
       // SET-002: the loaders bounce non-Administrators; the API's own
       // role gate stands behind them.
       { path: "general", loader: settingsGeneralLoader, element: <SettingsGeneralPage /> },
@@ -477,6 +492,16 @@ export const routes: RouteObject[] = [
         element: <SettingsDepartmentsPage />,
       },
       { path: "email", loader: settingsEmailLoader, element: <SettingsEmailPage /> },
+      {
+        path: "mcp",
+        loader: settingsMcpLoader,
+        element: <SettingsMcpPage />,
+      },
+      {
+        path: "mcp-limits",
+        loader: settingsAdvancedLoader("mcp"),
+        element: <SettingsAdvancedPage section="mcp" />,
+      },
       {
         path: "instance",
         loader: settingsAdvancedLoader("instance"),
@@ -513,6 +538,11 @@ export const routes: RouteObject[] = [
         path: "audit-log",
         loader: settingsAuditLogLoader,
         element: <SettingsAuditLogPage />,
+      },
+      {
+        path: "audit-log/tool-calls",
+        loader: settingsToolCallsLoader,
+        element: <SettingsToolCallsPage />,
       },
       // Each section URL forwards to its first pane, so the rail's
       // entries and deep links share one canonical address.
@@ -779,6 +809,7 @@ export const routes: RouteObject[] = [
       // The lightweight settings surface NOT-001 promised a business
       // user (M20/9): NOT-002's group 5 and nothing else, reached from
       // the gear in the portal header.
+      { path: "settings/api-keys", loader: portalApiKeysLoader, element: <PortalApiKeysPage /> },
       { path: "settings", loader: portalSettingsLoader, element: <PortalSettingsPage /> },
       {
         path: "knowledge/:id",

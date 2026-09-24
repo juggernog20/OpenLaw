@@ -1378,7 +1378,26 @@ type AutoDocPayloads = {
   "auto_doc.form_saved": { name: string; formVersionId: string; versionNumber: number };
 };
 
-export type ActivityPayloadMap = AutoDocPayloads &
+type ApiKeyPayloads = Record<
+  | "api_key.requested"
+  | "api_key.minted"
+  | "api_key.approved"
+  | "api_key.denied"
+  | "api_key.cancelled"
+  | "api_key.revoked"
+  | "api_key.expired",
+  {
+    requestId: string;
+    clientName: string;
+    requesterId: string;
+    keyId?: string;
+    selfApproved?: boolean;
+    note?: string | null;
+  }
+>;
+
+export type ActivityPayloadMap = ApiKeyPayloads &
+  AutoDocPayloads &
   UserPayloads &
   OrgSettingsPayloads &
   SettingsPayloads &
@@ -1422,3 +1441,10 @@ export type ActivityPayloadMap = AutoDocPayloads &
 
 /** Every slug this build writes. */
 export type ActivityAction = keyof ActivityPayloadMap & string;
+
+/** The Client used for an act. Absent attribution means the UI. */
+export interface ActivityVia {
+  kind: "ui" | "api_key" | "oauth_client";
+  id: string | null;
+  clientName: string | null;
+}

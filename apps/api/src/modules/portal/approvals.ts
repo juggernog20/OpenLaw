@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** An approval grants its named recipient a review packet, not Contract team membership. */
+import { handleApprovalItems } from "../../lib/notifications/approvals.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -322,6 +323,7 @@ export const portalApprovalsRoutes: FastifyPluginAsyncZod = async (app) => {
           )
           .returning({ id: contractApprovals.id });
         if (!decided) throw httpError(409, "This approval request has already been decided.");
+        await handleApprovalItems(tx, "contract", approval.id);
         await recordActivity(tx, {
           entityType: "contract",
           entityId: approval.contractId,

@@ -7,8 +7,18 @@
  * features that read them (TECH-014) — auth policy first.
  */
 
+import { MCP_TOOLSETS, type McpToolset } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
-import { boolean, check, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { encryptedText } from "../secrets.js";
 import { uuidPk } from "./helpers.js";
 
@@ -125,6 +135,15 @@ export const orgSettings = pgTable(
     vapidPrivateKey: encryptedText("vapid_private_key"),
     /** Startup settings, including write-only object-store credentials. */
     advancedSettings: encryptedText("advanced_settings"),
+    mcpEnabled: boolean("mcp_enabled").notNull().default(false),
+    mcpLegalApiKeysEnabled: boolean("mcp_legal_api_keys_enabled").notNull().default(false),
+    mcpBusinessApiKeysEnabled: boolean("mcp_business_api_keys_enabled").notNull().default(false),
+    mcpToolsetCeiling: jsonb("mcp_toolset_ceiling")
+      .$type<McpToolset[]>()
+      .notNull()
+      .default([...MCP_TOOLSETS]),
+    mcpReadOnly: boolean("mcp_read_only").notNull().default(false),
+    mcpApiKeyLifetimeDays: integer("mcp_api_key_lifetime_days").notNull().default(90),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // $onUpdate keeps the audit trail honest for writers that forget to
     // set it — application code owns every write here, unlike the
@@ -135,6 +154,10 @@ export const orgSettings = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    check(
+      "org_settings_mcp_api_key_lifetime_check",
+      sql`${table.mcpApiKeyLifetimeDays} between 1 and 365`,
+    ),
     check(
       "org_settings_auto_doc_acknowledgement_frequency_check",
       sql`${table.autoDocAcknowledgementFrequency} in ('none', 'every_use', 'once_per_auto_doc', 'once')`,

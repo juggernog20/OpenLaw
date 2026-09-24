@@ -4,44 +4,39 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
-  alias,
   and,
   asc,
   documents,
-  documentVersions,
   eq,
-  getTableColumns,
-  isNotNull,
   isNull,
   knowledgeFolders,
   knowledgeItems,
   knowledgeTypes,
   sql,
-  users,
   KNOWLEDGE_ITEM_AUDIENCES,
   KNOWLEDGE_ITEM_STATES,
   MAX_FOLDER_NAME_LENGTH,
   type Executor,
   type KnowledgeFolder,
   type KnowledgeItem,
-  type SQL,
   type Transaction,
 } from "@openlaw/db";
-import {
-  KNOWLEDGE_LIST_SORT_KEYS,
-  SORT_DIRECTIONS,
-  type ChangedFields,
-  type KnowledgeListSortKey,
-  type SortDirection,
-} from "@openlaw/shared";
+import type { ChangedFields } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { folderName } from "../documents/folders.js";
-import { RENDER_FAMILIES, renderFamilySql, type RenderFamily } from "../../lib/render-family.js";
+import { RENDER_FAMILIES } from "../../lib/render-family.js";
+import {
+  KnowledgeListQuery,
+  listKnowledgeItems,
+  getKnowledgeItem,
+  creators,
+  project,
+  readItem,
+} from "./service.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
-const PAGE_SIZE = 50;
 const IdSchema = z.string().min(1).max(64);
 const TitleSchema = z.string().trim().min(1).max(500);
 const BodySchema = z.string().max(100_000).nullable();
@@ -111,166 +106,6 @@ const FolderSchema = z.object({
 });
 const FoldersEnvelope = z.object({ folders: z.array(FolderSchema) });
 
-const creators = alias(users, "knowledge_item_creators");
-const editors = alias(users, "knowledge_item_editors");
-const replacements = alias(knowledgeItems, "knowledge_item_replacements");
-const primaryDocuments = alias(documents, "knowledge_item_primary_documents");
-const primaryVersions = alias(documentVersions, "knowledge_item_primary_versions");
-const primaryVersionIsCurrent = sql`${primaryVersions.versionNumber} = (
-  select max(current_primary_version.version_number)
-  from document_versions current_primary_version
-  where current_primary_version.document_id = ${primaryDocuments.id}
-)`;
-
-function withoutBody<T extends { body: unknown }>({ body: _body, ...rest }: T): Omit<T, "body"> {
-  void _body;
-  return rest;
-}
-
-/** The record's own columns, with or without the guidance body. */
-const itemColumns = {
-  full: getTableColumns(knowledgeItems),
-  summary: withoutBody(getTableColumns(knowledgeItems)),
-} as const;
-
-function itemProjection<S extends keyof typeof itemColumns>(shape: S) {
-  return {
-    item: itemColumns[shape],
-    knowledgeTypeName: knowledgeTypes.displayName,
-    folderName: knowledgeFolders.name,
-    replacementId: replacements.id,
-    replacementTitle: replacements.title,
-    primaryDocumentId: primaryDocuments.id,
-    primaryDocumentTitle: primaryDocuments.title,
-    primaryVersionId: primaryVersions.id,
-    primaryOriginalFilename: primaryVersions.originalFilename,
-    primaryMimeType: primaryVersions.mimeType,
-    primaryRenderFamily: renderFamilySql(
-      primaryVersions.mimeType,
-      primaryVersions.originalFilename,
-    ),
-    documentCount: sql<number>`(
-      select count(*)::int from documents counted_document
-      where counted_document.knowledge_item_id = ${knowledgeItems.id}
-        and counted_document.archived_at is null
-    )`,
-    deflectionLinkCount: sql<number>`(
-      select count(*)::int from intake_links counted_link
-      where counted_link.knowledge_item_id = ${knowledgeItems.id}
-    )`,
-    createdBy: {
-      id: creators.id,
-      displayName: creators.displayName,
-      image: creators.image,
-      archivedAt: creators.archivedAt,
-    },
-    updatedBy: {
-      id: editors.id,
-      displayName: editors.displayName,
-      image: editors.image,
-      archivedAt: editors.archivedAt,
-    },
-  } as const;
-}
-
-type ProjectedItem = {
-  item: Omit<KnowledgeItem, "body"> & { body?: string | null };
-  knowledgeTypeName: string;
-  folderName: string | null;
-  replacementId: string | null;
-  replacementTitle: string | null;
-  primaryDocumentId: string | null;
-  primaryDocumentTitle: string | null;
-  primaryVersionId: string | null;
-  primaryOriginalFilename: string | null;
-  primaryMimeType: string | null;
-  primaryRenderFamily: RenderFamily;
-  documentCount: number;
-  deflectionLinkCount: number;
-  createdBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
-  updatedBy: { id: string; displayName: string; image: string | null; archivedAt: Date | null };
-};
-
-function summarize(row: ProjectedItem) {
-  return {
-    id: row.item.id,
-    title: row.item.title,
-    knowledgeTypeId: row.item.knowledgeTypeId,
-    knowledgeTypeName: row.knowledgeTypeName,
-    folderId: row.item.folderId,
-    folderName: row.folderName,
-    state: row.item.state,
-    audience: row.item.audience,
-    publishedAt: row.item.publishedAt?.toISOString() ?? null,
-    archivedAt: row.item.archivedAt?.toISOString() ?? null,
-    deflectionLinkCount: row.deflectionLinkCount,
-    replacedBy:
-      row.replacementId && row.replacementTitle
-        ? { id: row.replacementId, title: row.replacementTitle }
-        : null,
-    primaryDocument:
-      row.primaryDocumentId &&
-      row.primaryDocumentTitle &&
-      row.primaryVersionId &&
-      row.primaryOriginalFilename &&
-      row.primaryMimeType
-        ? {
-            id: row.primaryDocumentId,
-            title: row.primaryDocumentTitle,
-            currentVersion: {
-              id: row.primaryVersionId,
-              originalFilename: row.primaryOriginalFilename,
-              mimeType: row.primaryMimeType,
-              renderFamily: row.primaryRenderFamily,
-            },
-          }
-        : null,
-    documentCount: row.documentCount,
-    createdBy: {
-      id: row.createdBy.id,
-      displayName: row.createdBy.displayName,
-      image: row.createdBy.image,
-      archived: row.createdBy.archivedAt !== null,
-    },
-    updatedBy: {
-      id: row.updatedBy.id,
-      displayName: row.updatedBy.displayName,
-      image: row.updatedBy.image,
-      archived: row.updatedBy.archivedAt !== null,
-    },
-    createdAt: row.item.createdAt.toISOString(),
-    updatedAt: row.item.updatedAt.toISOString(),
-  };
-}
-
-function project(row: ProjectedItem) {
-  return { ...summarize(row), body: row.item.body ?? null };
-}
-
-function itemSelect<S extends keyof typeof itemColumns = "full">(
-  db: Executor,
-  shape: S = "full" as S,
-) {
-  return db
-    .select(itemProjection(shape))
-    .from(knowledgeItems)
-    .innerJoin(knowledgeTypes, eq(knowledgeItems.knowledgeTypeId, knowledgeTypes.id))
-    .leftJoin(knowledgeFolders, eq(knowledgeItems.folderId, knowledgeFolders.id))
-    .innerJoin(creators, eq(knowledgeItems.createdBy, creators.id))
-    .innerJoin(editors, eq(knowledgeItems.updatedBy, editors.id))
-    .leftJoin(replacements, eq(knowledgeItems.replacedById, replacements.id))
-    .leftJoin(primaryDocuments, eq(knowledgeItems.primaryDocumentId, primaryDocuments.id))
-    .leftJoin(
-      primaryVersions,
-      and(eq(primaryVersions.documentId, primaryDocuments.id), primaryVersionIsCurrent),
-    );
-}
-
-async function readItem(db: Executor, id: string): Promise<ProjectedItem | null> {
-  const [row] = await itemSelect(db).where(eq(knowledgeItems.id, id)).limit(1);
-  return row ?? null;
-}
-
 /** The type's name as the log names it. No liveness check: the item's
  * current type is a fact to narrate, not a choice to validate. */
 async function typeName(db: Executor, id: string): Promise<string> {
@@ -301,108 +136,6 @@ async function namedFolder(db: Executor, id: string | null) {
     .limit(1);
   if (!row) throw httpError(400, "The folder must be a Knowledge folder.");
   return row;
-}
-
-interface ListFilters {
-  type?: string;
-  state?: (typeof KNOWLEDGE_ITEM_STATES)[number];
-  audience?: (typeof KNOWLEDGE_ITEM_AUDIENCES)[number];
-  folder?: string;
-  author?: string;
-  format?: "pdf" | "word" | "powerpoint" | "image" | "email" | "other";
-}
-
-function listScope(filters: ListFilters): SQL | undefined {
-  return and(
-    isNull(knowledgeItems.archivedAt),
-    filters.type ? eq(knowledgeItems.knowledgeTypeId, filters.type) : undefined,
-    filters.state ? eq(knowledgeItems.state, filters.state) : undefined,
-    filters.audience ? eq(knowledgeItems.audience, filters.audience) : undefined,
-    filters.author ? eq(knowledgeItems.createdBy, filters.author) : undefined,
-    // An item with no primary Document has no format: `other` names a
-    // primary the table does not preview, not the absence of one.
-    filters.format
-      ? and(
-          isNotNull(primaryVersions.id),
-          eq(
-            sql<string>`replace(${renderFamilySql(
-              primaryVersions.mimeType,
-              primaryVersions.originalFilename,
-            )}, 'presentation', 'powerpoint')`,
-            filters.format,
-          ),
-        )
-      : undefined,
-    filters.folder
-      ? sql`${knowledgeItems.folderId} in (
-          with recursive knowledge_folder_tree(id) as (
-            select ${knowledgeFolders.id}
-            from ${knowledgeFolders}
-            where ${knowledgeFolders.id} = ${filters.folder}
-            union all
-            select child.id
-            from ${knowledgeFolders} child
-            inner join knowledge_folder_tree parent on child.parent_id = parent.id
-          )
-          select id from knowledge_folder_tree
-        )`
-      : undefined,
-  );
-}
-
-const SORTS: Record<KnowledgeListSortKey, SQL> = {
-  title: sql`lower(${knowledgeItems.title})`,
-  type: sql`lower(${knowledgeTypes.displayName})`,
-  state: sql`${knowledgeItems.state}`,
-  audience: sql`${knowledgeItems.audience}`,
-  folder: sql`lower(${knowledgeFolders.name})`,
-  author: sql`lower(${creators.displayName})`,
-  created: sql`${knowledgeItems.createdAt}`,
-  updated: sql`${knowledgeItems.updatedAt}`,
-};
-
-interface SortRequest {
-  key: KnowledgeListSortKey;
-  dir: SortDirection;
-}
-
-function orderFor(sort: SortRequest): SQL[] {
-  return [sql`${SORTS[sort.key]} ${sql.raw(sort.dir)} nulls last`, sql`${knowledgeItems.id} asc`];
-}
-
-function sortValue(row: ProjectedItem, key: KnowledgeListSortKey): string | Date | null {
-  switch (key) {
-    case "title":
-      return row.item.title.toLowerCase();
-    case "type":
-      return row.knowledgeTypeName.toLowerCase();
-    case "state":
-      return row.item.state;
-    case "audience":
-      return row.item.audience;
-    case "folder":
-      return row.folderName?.toLowerCase() ?? null;
-    case "author":
-      return row.createdBy.displayName.toLowerCase();
-    case "created":
-      return row.item.createdAt;
-    case "updated":
-      return row.item.updatedAt;
-  }
-}
-
-function afterCursor(sort: SortRequest, cursor: ProjectedItem): SQL {
-  const expression = SORTS[sort.key];
-  const value = sortValue(cursor, sort.key);
-  if (value === null) {
-    return sql`${expression} is null and ${knowledgeItems.id} > ${cursor.item.id}`;
-  }
-  const later = sql.raw(sort.dir === "asc" ? ">" : "<");
-  return sql`(
-    ${expression} is null
-    or ${expression} ${later} ${value}
-    or (${expression} = ${value} and ${knowledgeItems.id} > ${cursor.item.id})
-  )`;
 }
 
 async function lockFolders(tx: Transaction): Promise<void> {
@@ -595,44 +328,11 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listKnowledgeItems",
         summary: "The filtered, sorted, keyset-paged managed Knowledge library",
         tags: ["knowledge"],
-        querystring: z.object({
-          type: IdSchema.optional(),
-          state: z.enum(KNOWLEDGE_ITEM_STATES).optional(),
-          audience: z.enum(KNOWLEDGE_ITEM_AUDIENCES).optional(),
-          folder: IdSchema.optional(),
-          author: IdSchema.optional(),
-          format: z.enum(["pdf", "word", "powerpoint", "image", "email", "other"]).optional(),
-          sort: z.enum(KNOWLEDGE_LIST_SORT_KEYS).optional(),
-          dir: z.enum(SORT_DIRECTIONS).optional(),
-          cursor: IdSchema.optional(),
-        }),
+        querystring: KnowledgeListQuery,
         response: { 200: KnowledgeItemsEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const filters = request.query;
-      const sort: SortRequest = {
-        key: request.query.sort ?? "updated",
-        dir: request.query.dir ?? "desc",
-      };
-      let cursorRow: ProjectedItem | null = null;
-      if (request.query.cursor) {
-        const [row] = await itemSelect(app.db, "summary")
-          .where(and(eq(knowledgeItems.id, request.query.cursor), listScope(filters)))
-          .limit(1);
-        if (!row) return { knowledgeItems: [], nextCursor: null };
-        cursorRow = row;
-      }
-      const rows = await itemSelect(app.db, "summary")
-        .where(and(listScope(filters), cursorRow ? afterCursor(sort, cursorRow) : undefined))
-        .orderBy(...orderFor(sort))
-        .limit(PAGE_SIZE + 1);
-      const page = rows.slice(0, PAGE_SIZE);
-      return {
-        knowledgeItems: page.map(summarize),
-        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.item.id ?? null) : null,
-      };
-    },
+    async (request) => listKnowledgeItems(app.db, request.user, request.query),
   );
 
   app.get(
@@ -735,11 +435,7 @@ export const knowledgeRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const row = await readItem(app.db, request.params.id);
-      if (!row) throw httpError(404, "No Knowledge Item exists with this id.");
-      return { knowledgeItem: project(row) };
-    },
+    async (request) => getKnowledgeItem(app.db, request.user, request.params.id),
   );
 
   app.patch(

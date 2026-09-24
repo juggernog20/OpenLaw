@@ -148,7 +148,7 @@ describe("Advanced settings", () => {
     expect(await screen.findByText(/heartbeat is missing/)).toBeInTheDocument();
     expect(screen.getByText("Restart required")).toBeInTheDocument();
   });
-  it.each(["instance", "uploads", "storage", "document-processing", "system-status"])(
+  it.each(["instance", "uploads", "storage", "document-processing", "system-status", "mcp-limits"])(
     "keeps %s restricted to administrators",
     async (path) => {
       stubApi({ signedIn: { ...ADMIN, role: "legal_team_member" } });
@@ -156,4 +156,21 @@ describe("Advanced settings", () => {
       expect(await screen.findByRole("heading", { name: "Profile" })).toBeInTheDocument();
     },
   );
+});
+
+it("shows the MCP limit and respects deployment pinning", async () => {
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/advanced-settings/mcp")
+        return json(
+          200,
+          state([field("MCP_RATE_LIMIT_PER_HOUR", "600", { locked: true, source: "deployment" })]),
+        );
+    },
+  });
+  renderAt("/settings/mcp-limits");
+  expect(await screen.findByLabelText("Calls per hour per credential")).toHaveValue(600);
+  expect(screen.getByLabelText("Calls per hour per credential")).toHaveAttribute("readonly");
+  expect(screen.getByText(/Deployment configuration/)).toBeInTheDocument();
 });

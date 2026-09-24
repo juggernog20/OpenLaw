@@ -14,7 +14,7 @@ import {
   isNull,
   type Executor,
 } from "@openlaw/db";
-import { formForTouchpoint, type Form, type FormRow } from "@openlaw/shared";
+import { formForTouchpoint, type Form, type FormRow, type FormModule } from "@openlaw/shared";
 import { readTypeForm } from "./type-form-routes.js";
 import { selectAttachedFields, type AttachedCustomField } from "./custom-fields.js";
 import { httpError } from "./problem.js";
@@ -89,6 +89,17 @@ export async function readIntakeForm(
   options: ReadOptions = {},
 ) {
   const { form, module, typeId } = await readIntakeTree(db, requestTypeId, options);
+  return { ...(await readFormFields(db, form, module, typeId)), form, module, typeId };
+}
+
+/** Row definitions shared by Intake and MCP creation Forms. */
+export async function readFormFields(
+  db: Executor,
+  form: Form,
+  module: Exclude<FormModule, "entity">,
+  typeId: string,
+  touchpoint: "intake" | "creation" = "intake",
+) {
   const attached = await selectAttachedFields(
     db,
     module === "contract" ? contractTypeFields : matterTypeFields,
@@ -96,7 +107,13 @@ export async function readIntakeForm(
   );
   const fields: AttachedCustomField[] = intakeRows(form).flatMap((row) => {
     const field = attached.find((f) => f.fieldId === row.id);
-    if (field) return [{ ...field, isRequired: row.fieldType !== "user" && row.isRequired }];
+    if (field)
+      return [
+        {
+          ...field,
+          isRequired: row.isRequired && (touchpoint !== "intake" || row.fieldType !== "user"),
+        },
+      ];
     return intakeRowKeys(row.rowRef).map((key): AttachedCustomField => ({
       fieldId: key,
       slug: key,
@@ -135,5 +152,5 @@ export async function readIntakeForm(
       field.options = departmentOptions.map((o) => o.id);
     if (field.builtInKey === "region") field.options = regionOptions.map((o) => o.id);
   }
-  return { form, fields, regions: regionOptions, module, typeId };
+  return { fields, regions: regionOptions };
 }

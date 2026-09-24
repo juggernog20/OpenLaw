@@ -44,6 +44,12 @@ const isString = (value: unknown): value is string => typeof value === "string";
 
 function farReferenceOf(action: string, payload: Payload): FarReference | null {
   switch (action) {
+    case "request.converted":
+      if (isNumber(payload.contractNumber))
+        return { kind: "contract", identity: payload.contractNumber, keys: ["contractNumber"] };
+      if (isNumber(payload.matterNumber))
+        return { kind: "matter", identity: payload.matterNumber, keys: ["matterNumber"] };
+      return null;
     case "contract.relation_added":
     case "contract.relation_removed":
       return isNumber(payload.relatedNumber)

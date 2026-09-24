@@ -13,21 +13,11 @@ import { betterAuth } from "better-auth";
 import { admin, magicLink, twoFactor } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
 import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
-import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { authAdapter, apiKeyPlugin } from "./api-keys.js";
 import { sso } from "@better-auth/sso";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
-import {
-  and,
-  eq,
-  sql,
-  sessions,
-  twoFactors,
-  schema,
-  ssoProviders,
-  users,
-  type Db,
-} from "@openlaw/db";
+import { and, eq, sql, sessions, twoFactors, ssoProviders, users, type Db } from "@openlaw/db";
 import { renderEmailLayout } from "../lib/email-layout.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
@@ -249,7 +239,7 @@ export function createAuth(
     baseURL: config.baseUrl,
     secret: config.secret,
     ...(config.disableRateLimit ? { rateLimit: { enabled: false } } : {}),
-    database: drizzleAdapter(db, { provider: "pg", usePlural: true, schema }),
+    database: authAdapter(db),
     // Registered providers' issuer origins stay trusted so the plugin can
     // re-run endpoint discovery after registration if it ever needs to;
     // the table is only consulted on SSO paths to keep the extra query
@@ -384,6 +374,7 @@ export function createAuth(
       storeIdentifier: "hashed",
     },
     plugins: [
+      apiKeyPlugin(),
       // Owns the users.role column plus ban/impersonation columns. Bans
       // carry no product semantics yet; adminRoles shields administrators
       // from ban/impersonation targeting. The roles map exists to teach

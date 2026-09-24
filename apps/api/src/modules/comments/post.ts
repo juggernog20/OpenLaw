@@ -1,37 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * Writing one comment onto one thread (CMT-001, CMT-007, DD-017).
- *
- * `POST /comments` is not the only act that says something on a thread.
- * INT-007's Resolve closes a Request with an optional Full Thread
- * closing reply, and that reply is an ordinary comment: it lands on the
- * thread, it narrates, and it raises whatever a comment on that kind of
- * record raises. A second copy of the insert would be a second place for
- * the entry or the event to be forgotten, so the write is here and both
- * callers take it.
- *
- * **What this module owns is the write, not the permission.** The caller
- * has already resolved the audience (`audience.ts`) and decided that
- * this author may post at this tier — the composer route checks the tier
- * against the viewer's rooms and checks every mention against
- * CMT-007, and a disposition route knows its own tier is Full Thread and
- * names nobody. Handing this function an audience is what says the check
- * happened: there is no way to call it with an id a client sent.
- *
- * **Everything it writes is in the caller's transaction.** The comment
- * row, the `comment_mentions` rows, the activity entry, and the events
- * commit together or not at all, which is what makes one press produce
- * one comment, one entry, and one bell row.
+ * Comment writes and thread permissions (CMT-001, CMT-007, DD-017).
+ * postThreadComment resolves access, tiers and mentions for REST and MCP.
+ * postComment accepts an already checked audience, also used by Request
+ * dispositions. The comment, activity and notifications commit together.
  */
 
 import { z } from "zod";
-import { commentAttachments, comments, commentMentions, type CommentVisibility } from "@openlaw/db";
+import { httpError } from "../../lib/problem.js";
+import { selectComments, mentionsOf, attachmentsOf, toComment } from "./service.js";
+import {
+  eq,
+  commentAttachments,
+  comments,
+  commentMentions,
+  type CommentVisibility,
+} from "@openlaw/db";
 import { MAX_COMMENT_BODY_LENGTH } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import type { Notifier, NotifyingTransaction } from "../../lib/notifications/notifier.js";
-import { notifyCommentPosted, commentActivityRef, type CommentAudience } from "./audience.js";
+import {
+  reachedThread,
+  mentionCandidates,
+  type EntityRef,
+  notifyCommentPosted,
+  commentActivityRef,
+  type CommentAudience,
+} from "./audience.js";
 
 /** Plain text, capped where every other free-text field is capped.
  * Rich text and reactions are deliberately out; CMT-011 paper travels
@@ -131,4 +128,81 @@ export async function postComment(
     mentioned,
   });
   return commentId;
+}
+
+/** Resolve and check the thread in the same transaction as the comment write. */
+export async function postThreadComment(
+  notifier: Notifier,
+  user: AuthenticatedUser,
+  input: EntityRef & { body: string; visibility?: CommentVisibility; mentions?: string[] },
+  options: { id?: string; attachments?: NewComment["attachments"] } = {},
+) {
+  const body = CommentBodySchema.parse(input.body);
+  const named = [...new Set(input.mentions ?? [])];
+  const { id, attachments: storedAttachments = [] } = options;
+  return notifier.notifying(async (tx) => {
+    // Read on the same snapshot the rows are written on: a grant
+    // dropped between the check and the insert must not authorize a
+    // post onto a record the author no longer reaches. A refusal
+    // thrown here rolls the transaction back and keeps its status.
+    const audience = await reachedThread(tx, user, input);
+    const visibility =
+      input.visibility ??
+      (["legal_only", "working_team", "full_thread"] as const).find((tier) =>
+        audience.tiers.includes(tier),
+      )!;
+    // The composer offers a Contributor two segments; this is the
+    // refusal that holds when the request does not come from it.
+    if (!audience.tiers.includes(visibility)) {
+      throw httpError(403, "You cannot post a comment at that visibility tier.");
+    }
+
+    // Checked on that same snapshot: a grant dropped before the
+    // insert must not leave a mention nobody can hear.
+    if (named.length > 0) {
+      const candidates = await mentionCandidates(tx, audience, named);
+      const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+      // Somebody no tier on this record reaches is not addressable
+      // here at all. Mentioning a person does not grant them the
+      // record; whatever the arm's audience rule asks for does.
+      if (named.some((id) => !byId.has(id))) {
+        throw httpError(400, "That is not a person you can mention on this record.");
+      }
+      // The load-bearing refusal (CMT-007). The client's
+      // confirmation offers the promotion; this is what holds when
+      // the request did not come from it.
+      const unreachable = named
+        .map((id) => byId.get(id)!)
+        .filter((candidate) => !candidate.tiers.includes(visibility));
+      if (unreachable.length > 0) {
+        const names = unreachable.map((candidate) => candidate.displayName).join(", ");
+        throw httpError(
+          403,
+          `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
+        );
+      }
+    }
+
+    // The write itself, its `comment_mentions` rows, its activity
+    // entry, and whatever the arm raises are all one act, and
+    // `post.ts` is where that act lives — the Resolve disposition
+    // says its closing reply through the same call (INT-007).
+    const commentId = await postComment(tx, notifier, {
+      id,
+      audience,
+      author: user,
+      body,
+      visibility,
+      mentions: named,
+      attachments: storedAttachments,
+    });
+    // Read back through the same projection the thread uses, so the
+    // row the poster gets is the row they will see on the next load.
+    const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
+    const [mentions, attachments] = await Promise.all([
+      mentionsOf(tx, [commentId]),
+      attachmentsOf(tx, user, [commentId]),
+    ]);
+    return toComment(posted!, mentions.get(commentId), attachments.get(commentId));
+  });
 }

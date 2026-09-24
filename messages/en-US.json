@@ -53,6 +53,9 @@
   "activity.actor.system": {
     "defaultMessage": "OpenLaw"
   },
+  "activity.actor.via": {
+    "defaultMessage": "{actor}, via {client},"
+  },
   "activity.aiConnector.answerStyle": {
     "defaultMessage": "{value, select, few_words {Few word summary} sentence {1-2 sentence summary} full_clause {Full clause text} other {{value}}}"
   },
@@ -85,6 +88,30 @@
   },
   "activity.aiSavedKey.stored": {
     "defaultMessage": "{actor} stored a Saved key for {provider} at {baseUrl}"
+  },
+  "activity.apiKey.approved": {
+    "defaultMessage": "{selfApproved, select, yes {{actor} approved their own API key request for {client}} other {{actor} approved the API key request for {client}}}"
+  },
+  "activity.apiKey.cancelled": {
+    "defaultMessage": "{actor} cancelled the API key request for {client}"
+  },
+  "activity.apiKey.denied": {
+    "defaultMessage": "{actor} denied the API key request for {client}"
+  },
+  "activity.apiKey.expired": {
+    "defaultMessage": "{actor} recorded expiry of the API key for {client}"
+  },
+  "activity.apiKey.minted": {
+    "defaultMessage": "{actor} issued an API key for {client}"
+  },
+  "activity.apiKey.requested": {
+    "defaultMessage": "{actor} requested an API key for {client}"
+  },
+  "activity.apiKey.revoked": {
+    "defaultMessage": "{actor} revoked the API key for {client}"
+  },
+  "activity.apiKey.unnamedClient": {
+    "defaultMessage": "a Client"
   },
   "activity.applet": {
     "defaultMessage": "History"
@@ -426,7 +453,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -788,6 +815,150 @@
   "activity.user.unarchived": {
     "defaultMessage": "{actor} restored {email}"
   },
+  "apiKeys.actions": {
+    "defaultMessage": "Actions"
+  },
+  "apiKeys.active": {
+    "defaultMessage": "Active"
+  },
+  "apiKeys.activeTitle": {
+    "defaultMessage": "Active keys"
+  },
+  "apiKeys.approve": {
+    "defaultMessage": "Approve"
+  },
+  "apiKeys.cancelRequest": {
+    "defaultMessage": "Cancel request"
+  },
+  "apiKeys.cancelled": {
+    "defaultMessage": "Cancelled"
+  },
+  "apiKeys.client": {
+    "defaultMessage": "Client"
+  },
+  "apiKeys.clientName": {
+    "defaultMessage": "Client name"
+  },
+  "apiKeys.clientNamePlaceholder": {
+    "defaultMessage": "Claude Code"
+  },
+  "apiKeys.copied": {
+    "defaultMessage": "Copied"
+  },
+  "apiKeys.copy": {
+    "defaultMessage": "Copy"
+  },
+  "apiKeys.copyFailed": {
+    "defaultMessage": "Copy failed. Select and copy the key before closing this dialog."
+  },
+  "apiKeys.denied": {
+    "defaultMessage": "Denied"
+  },
+  "apiKeys.deny": {
+    "defaultMessage": "Deny"
+  },
+  "apiKeys.done": {
+    "defaultMessage": "Done"
+  },
+  "apiKeys.empty": {
+    "defaultMessage": "No API keys to show."
+  },
+  "apiKeys.expired": {
+    "defaultMessage": "Expired"
+  },
+  "apiKeys.expires": {
+    "defaultMessage": "Expires"
+  },
+  "apiKeys.expiryFact": {
+    "defaultMessage": "Expires {days} days after approval. The organization sets this lifetime."
+  },
+  "apiKeys.failed": {
+    "defaultMessage": "API keys could not be updated. Try again."
+  },
+  "apiKeys.guide": {
+    "defaultMessage": "Connect a headless Client"
+  },
+  "apiKeys.header": {
+    "defaultMessage": "Send this key in the x-api-key header."
+  },
+  "apiKeys.lastUsed": {
+    "defaultMessage": "Last used"
+  },
+  "apiKeys.lifetime": {
+    "defaultMessage": "Keys expire {days} days after approval and are shown once."
+  },
+  "apiKeys.newTab": {
+    "defaultMessage": "(opens in a new tab)"
+  },
+  "apiKeys.note": {
+    "defaultMessage": "Note (Optional)"
+  },
+  "apiKeys.nothingSelected": {
+    "defaultMessage": "Nothing is selected for you."
+  },
+  "apiKeys.once": {
+    "defaultMessage": "Approved by {name} on {date}. OpenLaw will not show this key again."
+  },
+  "apiKeys.owner": {
+    "defaultMessage": "Owner"
+  },
+  "apiKeys.pending": {
+    "defaultMessage": "Pending approval"
+  },
+  "apiKeys.pendingTitle": {
+    "defaultMessage": "API key requests"
+  },
+  "apiKeys.read": {
+    "defaultMessage": "Read"
+  },
+  "apiKeys.readDescription": {
+    "defaultMessage": "Read. Find and read what you can access."
+  },
+  "apiKeys.readFailed": {
+    "defaultMessage": "The API key could not be read. Reload to try again."
+  },
+  "apiKeys.readyTitle": {
+    "defaultMessage": "Your key is ready"
+  },
+  "apiKeys.request": {
+    "defaultMessage": "Request a key"
+  },
+  "apiKeys.requestTitle": {
+    "defaultMessage": "Request an API key"
+  },
+  "apiKeys.revoke": {
+    "defaultMessage": "Revoke"
+  },
+  "apiKeys.revokeTitle": {
+    "defaultMessage": "Revoke API key"
+  },
+  "apiKeys.revokeWarning": {
+    "defaultMessage": "This Client will lose access immediately. You will need a new request for another key."
+  },
+  "apiKeys.revoked": {
+    "defaultMessage": "Revoked"
+  },
+  "apiKeys.scope": {
+    "defaultMessage": "Scope"
+  },
+  "apiKeys.send": {
+    "defaultMessage": "Send request"
+  },
+  "apiKeys.status": {
+    "defaultMessage": "Status"
+  },
+  "apiKeys.title": {
+    "defaultMessage": "API keys"
+  },
+  "apiKeys.toolsets": {
+    "defaultMessage": "Toolsets"
+  },
+  "apiKeys.write": {
+    "defaultMessage": "Write"
+  },
+  "apiKeys.writeDescription": {
+    "defaultMessage": "Write. Every change is recorded as you, via this Client."
+  },
   "app.pageTitle": {
     "defaultMessage": "{screen} · OpenLaw"
   },
@@ -941,6 +1112,9 @@
   "approvals.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
   },
+  "audit.activityTab": {
+    "defaultMessage": "Activity"
+  },
   "audit.col.audience": {
     "defaultMessage": "Audience"
   },
@@ -1004,8 +1178,53 @@
   "audit.older": {
     "defaultMessage": "Show older"
   },
+  "audit.panes": {
+    "defaultMessage": "Audit log panes"
+  },
   "audit.tier": {
     "defaultMessage": "{tier, select, legal_only {Legal only} working_team {Working team} full_thread {Full thread} admin_only {Administrators} other {{tier}}}"
+  },
+  "audit.toolCalls": {
+    "defaultMessage": "Tool calls"
+  },
+  "audit.toolCalls.client": {
+    "defaultMessage": "Client"
+  },
+  "audit.toolCalls.duration": {
+    "defaultMessage": "{duration, number} ms"
+  },
+  "audit.toolCalls.durationLabel": {
+    "defaultMessage": "Duration"
+  },
+  "audit.toolCalls.empty": {
+    "defaultMessage": "No Tool calls match these filters."
+  },
+  "audit.toolCalls.error": {
+    "defaultMessage": "Tool calls could not be read."
+  },
+  "audit.toolCalls.filters": {
+    "defaultMessage": "Narrow Tool calls"
+  },
+  "audit.toolCalls.lastDay": {
+    "defaultMessage": "Last 24 hours: {from} to {to}"
+  },
+  "audit.toolCalls.loading": {
+    "defaultMessage": "Loading Tool calls…"
+  },
+  "audit.toolCalls.more": {
+    "defaultMessage": "Load more"
+  },
+  "audit.toolCalls.outcome": {
+    "defaultMessage": "{outcome, select, success {Success} pending {Pending} rate_limited {Rate limited} forbidden {Forbidden} tool_outside_grant {Outside the grant} mcp_read_only {Read-only} unknown_tool {Unknown Tool} invalid_arguments {Invalid arguments} invalid_cursor {Invalid cursor} validation_error {Validation error} not_found {Not found} type_not_found {Type not found} article_not_found {Article not found} unavailable {Unavailable} form_unavailable {Form unavailable} documentation_unavailable {Documentation unavailable} acknowledgement_required {Acknowledgement required} generation_limit_reached {Generation limit reached} result_too_large {Result too large} internal_error {Internal error} other {{outcome}}}"
+  },
+  "audit.toolCalls.outcomeLabel": {
+    "defaultMessage": "Outcome"
+  },
+  "audit.toolCalls.retry": {
+    "defaultMessage": "Retry"
+  },
+  "audit.toolCalls.tool": {
+    "defaultMessage": "Tool"
   },
   "auth.backToSignIn": {
     "defaultMessage": "Back to sign-in"
@@ -6914,6 +7133,45 @@
   "matters.value.noDeadline": {
     "defaultMessage": "—"
   },
+  "mcp.toolset.administration": {
+    "defaultMessage": "Administration"
+  },
+  "mcp.toolset.autoDocs": {
+    "defaultMessage": "Auto-Docs"
+  },
+  "mcp.toolset.comments": {
+    "defaultMessage": "Comments"
+  },
+  "mcp.toolset.contracts": {
+    "defaultMessage": "Contracts"
+  },
+  "mcp.toolset.documents": {
+    "defaultMessage": "Documents"
+  },
+  "mcp.toolset.entities": {
+    "defaultMessage": "Entities"
+  },
+  "mcp.toolset.knowledge": {
+    "defaultMessage": "Knowledge"
+  },
+  "mcp.toolset.matters": {
+    "defaultMessage": "Matters"
+  },
+  "mcp.toolset.people": {
+    "defaultMessage": "People"
+  },
+  "mcp.toolset.requests": {
+    "defaultMessage": "Requests"
+  },
+  "mcp.toolset.tasks": {
+    "defaultMessage": "Tasks"
+  },
+  "mcp.toolset.team": {
+    "defaultMessage": "Team"
+  },
+  "mcp.toolset.workspace": {
+    "defaultMessage": "Workspace"
+  },
   "nav.autoDocs": {
     "defaultMessage": "Auto-Docs"
   },
@@ -6992,8 +7250,38 @@
   "notFound.title": {
     "defaultMessage": "Page not found"
   },
+  "notifications.actor.via": {
+    "defaultMessage": "{actor}, via {client},"
+  },
+  "notifications.apiKey.approved.generic": {
+    "defaultMessage": "Your API key request was approved"
+  },
+  "notifications.apiKey.denied.generic": {
+    "defaultMessage": "Your API key request was denied"
+  },
+  "notifications.apiKey.requested.generic": {
+    "defaultMessage": "An API key request needs your approval"
+  },
+  "notifications.apiKeyApproved": {
+    "defaultMessage": "Your API key request was approved. Open API keys to copy your key."
+  },
+  "notifications.apiKeyDenied": {
+    "defaultMessage": "Your API key request was denied. Open API keys to read the note."
+  },
+  "notifications.apiKeyRequested": {
+    "defaultMessage": "{requester} requested an API key for {client}"
+  },
   "notifications.approval.requested": {
     "defaultMessage": "{hasActor, select, yes {{actor} asked you to approve {contract}} other {You were asked to approve {contract}}}"
+  },
+  "notifications.approvalError": {
+    "defaultMessage": "The request could not be handled. Try again."
+  },
+  "notifications.approvalsStay": {
+    "defaultMessage": "Mark all read leaves Your approvals in place."
+  },
+  "notifications.approve": {
+    "defaultMessage": "Approve"
   },
   "notifications.badgeCapped": {
     "defaultMessage": "{cap}+"
@@ -7046,11 +7334,17 @@
   "notifications.date.obligation": {
     "defaultMessage": "{obligation} on {contract} is coming up"
   },
+  "notifications.deny": {
+    "defaultMessage": "Deny"
+  },
   "notifications.document.added": {
     "defaultMessage": "{hasActor, select, yes {{actor} added a document to {contract}} other {A document was added to {contract}}}"
   },
   "notifications.document.versionAdded": {
     "defaultMessage": "{hasActor, select, yes {{actor} added a version to {contract}} other {A version was added to {contract}}}"
+  },
+  "notifications.earlier": {
+    "defaultMessage": "Earlier"
   },
   "notifications.empty": {
     "defaultMessage": "Nothing to catch up on. News about your records shows up here."
@@ -7060,6 +7354,12 @@
   },
   "notifications.envelope.ended": {
     "defaultMessage": "Signing ended on {contract}"
+  },
+  "notifications.keyClient": {
+    "defaultMessage": "a Client"
+  },
+  "notifications.keyRequester": {
+    "defaultMessage": "A person"
   },
   "notifications.loadError": {
     "defaultMessage": "Notifications could not be read. Close this and open it again."
@@ -7164,7 +7464,7 @@
     "defaultMessage": "{outcome, select, ready {The Conversion draft for {request} is ready to review} other {The Conversion draft for {request} could not finish}}"
   },
   "notifications.request.created": {
-    "defaultMessage": "Legal has received your request {request}"
+    "defaultMessage": "{hasVia, select, yes {{actor} submitted your request {request} to Legal} other {Legal has received your request {request}}}"
   },
   "notifications.request.declined": {
     "defaultMessage": "Legal declined your request {request}"
@@ -7181,6 +7481,9 @@
   "notifications.requestNumber": {
     "defaultMessage": "R-{number}"
   },
+  "notifications.review": {
+    "defaultMessage": "Review"
+  },
   "notifications.unknown": {
     "defaultMessage": "{contract} — {event}"
   },
@@ -7195,6 +7498,9 @@
   },
   "notifications.unreadRow": {
     "defaultMessage": "Unread"
+  },
+  "notifications.yourApprovals": {
+    "defaultMessage": "Your approvals"
   },
   "portal.approvals.approve": {
     "defaultMessage": "Approve"
@@ -8380,6 +8686,15 @@
   },
   "settings.advanced.localPath": {
     "defaultMessage": "Local storage path"
+  },
+  "settings.advanced.mcp": {
+    "defaultMessage": "MCP rate limit"
+  },
+  "settings.advanced.mcpHelp": {
+    "defaultMessage": "Configure the MCP calls per hour per credential."
+  },
+  "settings.advanced.mcpRate": {
+    "defaultMessage": "Calls per hour per credential"
   },
   "settings.advanced.missing": {
     "defaultMessage": "An API or worker heartbeat is missing. Check that both services are running."
@@ -10514,6 +10829,84 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.mcp.apiKeys": {
+    "defaultMessage": "API keys"
+  },
+  "settings.mcp.business": {
+    "defaultMessage": "Business Users"
+  },
+  "settings.mcp.businessHelp": {
+    "defaultMessage": "Their own Requests, Auto-Docs, portal Knowledge and the records they are on."
+  },
+  "settings.mcp.businessKeys": {
+    "defaultMessage": "Business Users API keys"
+  },
+  "settings.mcp.ceiling": {
+    "defaultMessage": "Toolset ceiling"
+  },
+  "settings.mcp.ceilingSummary": {
+    "defaultMessage": "{count} of {total} Toolsets · {readOnly, select, true {read-only} other {read and write allowed}}"
+  },
+  "settings.mcp.copied": {
+    "defaultMessage": "Copied"
+  },
+  "settings.mcp.copy": {
+    "defaultMessage": "Copy address"
+  },
+  "settings.mcp.copyFailed": {
+    "defaultMessage": "The address could not be copied. Select and copy it above."
+  },
+  "settings.mcp.enable": {
+    "defaultMessage": "Enable MCP"
+  },
+  "settings.mcp.forbidden": {
+    "defaultMessage": "Only an Administrator can change MCP settings. Reload to check your access."
+  },
+  "settings.mcp.invalidLifetime": {
+    "defaultMessage": "API key lifetime must be a whole number from 1 to 365 days."
+  },
+  "settings.mcp.legal": {
+    "defaultMessage": "Legal Users"
+  },
+  "settings.mcp.legalHelp": {
+    "defaultMessage": "Administrators and Legal Team Members. Every Toolset in the ceiling."
+  },
+  "settings.mcp.legalKeys": {
+    "defaultMessage": "Legal Users API keys"
+  },
+  "settings.mcp.lifetime": {
+    "defaultMessage": "API key lifetime (days)"
+  },
+  "settings.mcp.lifetimeCard": {
+    "defaultMessage": "API key lifetime"
+  },
+  "settings.mcp.lifetimeHelp": {
+    "defaultMessage": "New API keys expire after this many days. Choose 1 to 365 days."
+  },
+  "settings.mcp.masterHelp": {
+    "defaultMessage": "Connected Clients act as the person who signed in and never see more than that person can."
+  },
+  "settings.mcp.masterState": {
+    "defaultMessage": "MCP is {enabled, select, true {on} other {off}}"
+  },
+  "settings.mcp.readOnly": {
+    "defaultMessage": "Read-only"
+  },
+  "settings.mcp.readOnlyHelp": {
+    "defaultMessage": "No Client may write, even if its API key allows writes."
+  },
+  "settings.mcp.saveFailed": {
+    "defaultMessage": "MCP settings could not be saved. Try again."
+  },
+  "settings.mcp.saved": {
+    "defaultMessage": "Settings saved."
+  },
+  "settings.mcp.serverAddress": {
+    "defaultMessage": "Server address"
+  },
+  "settings.mcp.toolCalls": {
+    "defaultMessage": "Tool calls in the last day"
+  },
   "settings.myReminders.description": {
     "defaultMessage": "How far ahead you hear about expiries, notice deadlines, Key dates and obligations."
   },
@@ -11071,6 +11464,9 @@
   },
   "settings.section.matters": {
     "defaultMessage": "Matters"
+  },
+  "settings.section.mcp": {
+    "defaultMessage": "MCP"
   },
   "settings.section.notifications": {
     "defaultMessage": "Notifications"

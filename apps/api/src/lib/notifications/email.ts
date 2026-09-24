@@ -56,6 +56,7 @@ import { requestSideOf } from "./catalog.js";
  * and this is the one place that knows which is which.
  */
 export type MailRecord =
+  | { entityType: "api_key_request"; title: string }
   | { entityType: "matter"; number: number; title: string }
   | { entityType: "contract"; number: number; title: string }
   | { entityType: "request"; number: number; title: string };
@@ -181,6 +182,24 @@ export function renderNotificationMail(
     (notification.eventType === "request.replied" && record.entityType === "request")
   )
     return commentMail(notification, to, baseUrl, brand);
+  if (record.entityType === "api_key_request") {
+    const requested = notification.eventType === "api_key.requested";
+    const outcome = requested
+      ? "needs approval"
+      : notification.eventType === "api_key.approved"
+        ? "was approved"
+        : "was denied";
+    const path = requested
+      ? "/settings/mcp"
+      : notification.recipientRole === "business_user"
+        ? "/portal/settings/api-keys"
+        : "/settings/api-keys";
+    return {
+      to,
+      subject: `API key request ${outcome}`,
+      text: `The API key request for ${record.title} ${outcome}.\n\n${baseUrl.replace(/\/$/, "")}${path}`,
+    };
+  }
   if (record.entityType === "matter") return matterMail(notification, record, to, baseUrl, brand);
   if (record.entityType === "contract")
     return contractMail(notification, record, to, baseUrl, brand);
@@ -198,8 +217,10 @@ function commentMail(
   to: string,
   baseUrl: string,
   brand: EmailBrand,
-): MailMessage {
+): MailMessage | null {
   const { record } = notification;
+  // An API key request has no thread, so no comment arm reaches it.
+  if (record.entityType === "api_key_request") return null;
   const kind = record.entityType;
   const portal =
     kind === "request"
@@ -215,7 +236,7 @@ function commentMail(
           : inboxRequestLink(baseUrl, record.number);
   const ref = `${kind === "contract" ? "C" : kind === "matter" ? "M" : "R"}-${record.number}`;
   const named = kind === "contract" ? record.title : `${ref} · ${record.title}`;
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   const mentioned = notification.eventType === "comment.mentioned";
   const replied = notification.eventType === "request.replied";
   const subject = mentioned
@@ -304,8 +325,13 @@ function recordLayout(
     record?: Partial<EmailRecord>;
   },
 ): ReturnType<typeof renderEmailLayout> {
-  const matter = notification.record.entityType === "matter";
-  const request = notification.record.entityType === "request";
+  const { record } = notification;
+  // Only numbered records have a card; an API key request never gets here.
+  if (record.entityType === "api_key_request") {
+    throw new Error("An API key request has no record card");
+  }
+  const matter = record.entityType === "matter";
+  const request = record.entityType === "request";
   const portal = request
     ? requestSideOf(notification.eventType) !== "inbox"
     : notification.recipientRole === "business_user";
@@ -326,15 +352,15 @@ function recordLayout(
       preheader: model.preheader ?? model.body?.join(" "),
       record: {
         kind: request ? "Request" : matter ? "Matter" : "Contract",
-        ref: `${request ? "R" : matter ? "M" : "C"}-${notification.record.number}`,
-        title: notification.record.title,
+        ref: `${request ? "R" : matter ? "M" : "C"}-${record.number}`,
+        title: record.title,
         href: request
           ? portal
-            ? portalRequestLink(baseUrl, notification.record.number)
-            : inboxRequestLink(baseUrl, notification.record.number)
+            ? portalRequestLink(baseUrl, record.number)
+            : inboxRequestLink(baseUrl, record.number)
           : matter
-            ? matterLink(baseUrl, notification.record.number)
-            : recordLink(baseUrl, notification.record.number),
+            ? matterLink(baseUrl, record.number)
+            : recordLink(baseUrl, record.number),
         facts: [
           ...(requestType ? [{ label: "Type", value: requestType }] : []),
           ...(urgency ? [{ label: "Urgency", value: urgency }] : []),
@@ -356,7 +382,7 @@ function matterMail(
 ): MailMessage | null {
   const named = `M-${record.number} · ${record.title}`;
   const link = matterLink(baseUrl, record.number);
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   if (notification.eventType === "matter.task_assigned") {
     const task = detail(notification, "taskTitle");
     return {
@@ -420,7 +446,7 @@ function staffRequestMail(
   const named = `${requestReference(record.number)} · ${record.title}`;
   const link = inboxRequestLink(baseUrl, record.number);
   const hello = `Hello ${notification.recipientName},`;
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   switch (notification.eventType) {
     case "request.assigned":
       return {
@@ -601,7 +627,7 @@ function contractMail(
     approvalId
       ? `${origin(baseUrl).replace(/\/portal$/, "")}/portal/approvals/${encodeURIComponent(approvalId)}`
       : recordLink(baseUrl, record.number);
-  const who = notification.actorName ?? "Somebody";
+  const who = notificationActor(notification);
   const contractTitle = record.title;
   switch (notification.eventType) {
     case "approval.requested":
@@ -1013,6 +1039,7 @@ function requestMail(
 ): MailMessage | null {
   const link = portalRequestLink(baseUrl, record.number);
   const reference = requestReference(record.number);
+  const who = notificationActor(notification);
   const hello = `Hello ${notification.recipientName},`;
   // Reference then title, the way the portal's own detail page titles
   // itself: the reference is what a requester quotes, and the title is
@@ -1043,7 +1070,9 @@ function requestMail(
         text: [
           hello,
           "",
-          `Your request ${named} has reached Legal.`,
+          notificationClient(notification)
+            ? `${who} submitted your request ${named} to Legal.`
+            : `Your request ${named} has reached Legal.`,
           "",
           link,
           "",
@@ -1167,4 +1196,15 @@ function requestSteps(status: string | null): EmailRecord["steps"] {
   return current === null
     ? undefined
     : { labels: ["Received", "In progress", "Resolved"], current };
+}
+
+function notificationClient(notification: NotificationMail): string | null {
+  const kind = detail(notification, "viaKind");
+  return kind && kind !== "ui" ? detail(notification, "viaClientName") : null;
+}
+
+function notificationActor(notification: NotificationMail): string {
+  const actor = notification.actorName ?? "Somebody";
+  const client = notificationClient(notification);
+  return client ? `${actor}, via ${client},` : actor;
 }

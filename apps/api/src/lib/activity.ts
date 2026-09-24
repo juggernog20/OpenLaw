@@ -26,12 +26,14 @@ import {
 import {
   LIVE_EVENT_VISIBILITIES,
   LIVE_RECORD_ENTITY_TYPES,
+  type ActivityVia,
   type ActivityAction,
   type ActivityPayloadMap,
   type LiveEvent,
   type LiveEventVisibility,
   type LiveRecordEntityType,
 } from "@openlaw/shared";
+import { activityViaFor } from "./acting-context.js";
 import { emitActivityEvent } from "./activity-emitter.js";
 import { publishLiveEvents } from "./live-events.js";
 
@@ -67,6 +69,7 @@ export type ActivityEntry = {
     entityId?: string;
     /** The acting user; omit for system-emitted events with no human actor. */
     actorId?: string;
+    via?: ActivityVia;
     action: A;
     visibility: ActivityVisibility;
     /** The source event's own instant when it is controlled by a
@@ -166,19 +169,25 @@ export async function recordActivity(
     const inserted = await tx
       .insert(activityLog)
       .values(
-        entries.map((entry) => ({
-          entityType: entry.entityType,
-          entityId: entry.entityId ?? null,
-          actorId: entry.actorId ?? null,
-          action: entry.action,
-          visibility: entry.visibility,
-          createdAt: entry.createdAt,
-          // The column is `Record<string, unknown>` and stays that way: a
-          // row is read back long after the shape that wrote it was
-          // typed, so the reader gets what is there rather than what the
-          // current build would have written.
-          payload: (entry.payload ?? {}) as Record<string, unknown>,
-        })),
+        entries.map((entry) => {
+          const via = entry.via ?? activityViaFor(entry.actorId);
+          return {
+            entityType: entry.entityType,
+            entityId: entry.entityId ?? null,
+            actorId: entry.actorId ?? null,
+            viaKind: via?.kind ?? null,
+            viaId: via?.id ?? null,
+            viaClientName: via?.clientName ?? null,
+            action: entry.action,
+            visibility: entry.visibility,
+            createdAt: entry.createdAt,
+            // The column is `Record<string, unknown>` and stays that way: a
+            // row is read back long after the shape that wrote it was
+            // typed, so the reader gets what is there rather than what the
+            // current build would have written.
+            payload: (entry.payload ?? {}) as Record<string, unknown>,
+          };
+        }),
       )
       // Every column, because the emitted line is built from the row and
       // not from the entry that asked for it. Nothing here pairs a
@@ -210,6 +219,9 @@ export async function recordActivity(
       entityType: row.entityType,
       entityId: row.entityId,
       actorId: row.actorId,
+      viaKind: row.viaKind,
+      viaId: row.viaId,
+      viaClientName: row.viaClientName,
       action: row.action,
       visibility: row.visibility,
       payload: row.payload,

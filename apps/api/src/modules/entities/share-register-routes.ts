@@ -28,7 +28,8 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE, type ChangedFields } from "@openlaw/shared";
-import { requireRole } from "../../auth/guards.js";
+import type { Db } from "@openlaw/db";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
@@ -1094,11 +1095,8 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: RegisterEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const entity = await reachedEntity(app.db, request.user, request.params.id);
-      if (!entity) throw httpError(404, NO_ENTITY);
-      return readRegister(app.db, request.user, entity, request.query.asOf ?? todayIsoDate());
-    },
+    async (request) =>
+      getEntityShareRegister(app.db, request.user, request.params.id, request.query.asOf),
   );
 
   app.post(
@@ -1448,3 +1446,14 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function getEntityShareRegister(
+  db: Db,
+  user: AuthenticatedUser,
+  id: string,
+  asOf = todayIsoDate(),
+) {
+  const entity = await reachedEntity(db, user, id);
+  if (!entity) throw httpError(404, NO_ENTITY);
+  return readRegister(db, user, entity, asOf);
+}

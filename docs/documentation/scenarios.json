@@ -1515,6 +1515,57 @@
       ],
       "requiredMethods": ["browser-walkthrough", "container-operation"],
       "status": "pending"
+    },
+    {
+      "id": "V-M40-MCP",
+      "coverage": ["C57"],
+      "articles": ["configure-mcp"],
+      "roles": ["administrator", "operator"],
+      "environment": "disposable",
+      "prerequisites": ["A built M40 instance and fictional accounts."],
+      "actions": [
+        "Enable MCP and Legal Users API keys; set the ceiling, read-only policy and lifetime; approve and revoke a key; inspect Tool calls."
+      ],
+      "expectedResults": [
+        "Policy saves immediately and the next Client request uses it. Only Administrators manage the section."
+      ],
+      "negativeChecks": ["An expired or revoked key cannot connect."],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M40-CLIENT",
+      "coverage": ["C58"],
+      "articles": ["connect-headless-client"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": ["A built M40 instance and fictional accounts."],
+      "actions": [
+        "Request a key, approve from Your approvals, collect once and follow the Claude Code command; read these articles through Guide."
+      ],
+      "expectedResults": [
+        "The Client connects and lists the granted Tools; a later key read returns no secret."
+      ],
+      "negativeChecks": ["An expired or revoked key cannot connect."],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M40-LAN",
+      "coverage": ["C45"],
+      "articles": ["deployment-configuration"],
+      "roles": ["operator", "administrator"],
+      "environment": "disposable",
+      "prerequisites": ["A built M40 instance and fictional accounts."],
+      "actions": [
+        "Follow the LAN only profile from a permitted device, then disconnect private access."
+      ],
+      "expectedResults": [
+        "MCP accepts an approved key only while the private address is reachable; no public forwarding is needed."
+      ],
+      "negativeChecks": ["An expired or revoked key cannot connect."],
+      "requiredMethods": ["container-operation"],
+      "status": "pending"
     }
   ]
 }

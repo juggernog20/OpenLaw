@@ -595,7 +595,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.reminders", "settings.audit"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "configure-signing",
@@ -712,7 +712,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P1",
       "contexts": ["reference"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "versions-and-support",
@@ -790,6 +790,32 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["auto-docs.template"],
+      "status": "review"
+    },
+    {
+      "id": "configure-mcp",
+      "title": "Configure MCP",
+      "section": "administration",
+      "kind": "how-to",
+      "coverage": ["C57"],
+      "ownerTask": "DOC-030",
+      "audiences": ["administrator", "operator"],
+      "destinations": ["staff-help", "formal"],
+      "priority": "P1",
+      "contexts": ["settings.mcp"],
+      "status": "review"
+    },
+    {
+      "id": "connect-headless-client",
+      "title": "Connect a headless Client",
+      "section": "reference",
+      "kind": "how-to",
+      "coverage": ["C58"],
+      "ownerTask": "DOC-030",
+      "audiences": ["legal_team_member", "administrator", "business_user"],
+      "destinations": ["staff-help", "formal", "portal-help"],
+      "priority": "P1",
+      "contexts": ["settings.api-keys"],
       "status": "review"
     }
   ]

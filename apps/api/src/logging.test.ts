@@ -234,6 +234,7 @@ describe("the logger options", () => {
     for (const path of [
       "req.headers.cookie",
       "req.headers.authorization",
+      'req.headers["x-api-key"]',
       "err.params",
       "err.query",
     ]) {

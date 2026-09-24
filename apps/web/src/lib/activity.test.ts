@@ -75,6 +75,13 @@ const ENVELOPE_ENDING = {
  * sample here.
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
+  "api_key.requested": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.minted": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.approved": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.denied": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.cancelled": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.revoked": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
+  "api_key.expired": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
   "contract.stage_changed": { from: "draft", to: "review" },
   "contract.portal_access_excluded": {
     number: 42,
@@ -1445,6 +1452,29 @@ describe("the sentences a reader gets", () => {
     expect(narration.sentence).toBe("Nadia Counsel changed the organization settings");
     expect(narration.changes).toEqual([
       { label: "Reminder lead times", from: "7 days, 1 day, and day of", to: "90 days and 7 days" },
+    ]);
+  });
+
+  it("names each MCP policy field and reads the ceiling as Toolset labels (#1048)", () => {
+    const change = (field: string, old: unknown, next: unknown) =>
+      narrate("org_settings.updated", { field, old, new: next }).changes;
+    expect(change("mcpEnabled", false, true)).toEqual([{ label: "MCP", from: "No", to: "Yes" }]);
+    expect(change("mcpLegalApiKeysEnabled", false, true)).toEqual([
+      { label: "Legal Users API keys", from: "No", to: "Yes" },
+    ]);
+    expect(change("mcpBusinessApiKeysEnabled", true, false)).toEqual([
+      { label: "Business Users API keys", from: "Yes", to: "No" },
+    ]);
+    expect(change("mcpReadOnly", false, true)).toEqual([
+      { label: "MCP read-only", from: "No", to: "Yes" },
+    ]);
+    expect(change("mcpApiKeyLifetimeDays", 90, 30)).toEqual([
+      { label: "API key lifetime (days)", from: "90", to: "30" },
+    ]);
+    // The ceiling stores slugs; the feed says "Auto-Docs", and an empty
+    // ceiling reads as unset like every other emptied list.
+    expect(change("mcpToolsetCeiling", ["contracts", "auto-docs", "retired"], [])).toEqual([
+      { label: "Toolset ceiling", from: "Contracts, Auto-Docs, and Retired", to: "Not set" },
     ]);
   });
 
