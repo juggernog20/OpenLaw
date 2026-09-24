@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { isRelativeDateOperator, type SearchQuestion } from "@openlaw/shared";
+import { isValuelessOperator, isRelativeDateOperator, type SearchQuestion } from "@openlaw/shared";
 import { Link } from "react-router";
 import { X } from "lucide-react";
 import { defineMessages, useIntl, type MessageDescriptor } from "react-intl";
@@ -16,7 +16,9 @@ const CHIP_LABELS: Record<"absolute" | "relative", MessageDescriptor> = defineMe
 export function ConditionChips({ question }: Readonly<{ question: SearchQuestion }>) {
   const intl = useIntl();
   const { open } = useAdvancedSearch();
-  const { choices } = useConditionDefinitions(question.conditions.length ? question.kinds : []);
+  const { choices, fields } = useConditionDefinitions(
+    question.conditions.length ? question.kinds : [],
+  );
   return question.conditions.map((condition, index) => {
     const options = choices(condition);
     const value = Array.isArray(condition.value)
@@ -30,10 +32,14 @@ export function ConditionChips({ question }: Readonly<{ question: SearchQuestion
           ? intl.formatMessage({ id: "search.condition.yes", defaultMessage: "Yes" })
           : intl.formatMessage({ id: "search.condition.no", defaultMessage: "No" })
         : String(condition.value);
-    const relative = isRelativeDateOperator(condition.operator);
+    const relative =
+      isRelativeDateOperator(condition.operator) || isValuelessOperator(condition.operator);
     const label = intl.formatMessage(relative ? CHIP_LABELS.relative : CHIP_LABELS.absolute, {
       kind: searchKindLabel(intl, condition.kind),
-      property: propertyLabel(intl, condition.kind, condition.property),
+      property:
+        fields.properties.find(
+          (property) => property.kind === condition.kind && property.key === condition.property,
+        )?.label ?? propertyLabel(intl, condition.kind, condition.property),
       operator: operatorLabel(
         intl,
         condition.operator,

@@ -20,7 +20,7 @@ import {
   type SQL,
   type AnyPgColumn,
 } from "@openlaw/db";
-import { searchProperty, type SearchQuestion } from "@openlaw/shared";
+import { searchProperty, type SearchQuestion, type SearchField } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { choiceFilter } from "../../lib/record-filters.js";
 import { escapeLikePattern } from "../../lib/like.js";
@@ -32,6 +32,8 @@ import { renderFamilySql } from "../../lib/render-family.js";
 import { TEXT_FAMILIES } from "../../pipeline/text-extraction.js";
 import { documentOwnerCase } from "../documents/owner.js";
 import { majorityOwnerId, nextObligationDueOn } from "../../lib/entity-search-properties.js";
+
+import { compileFieldCondition } from "./field-conditions.js";
 
 const RECORDS = {
   contract: contracts,
@@ -48,7 +50,15 @@ function compile(
   user: AuthenticatedUser,
   timeZone: string | undefined,
   now: Date,
+  catalog: readonly SearchField[],
 ): SQL {
+  if (condition.property.startsWith("field:")) {
+    const field = catalog.find(
+      (field) =>
+        field.moduleScope === condition.kind && `field:${field.slug}` === condition.property,
+    )!;
+    return compileFieldCondition(condition, field, user, timeZone, now);
+  }
   const { kind, property, operator, value } = condition;
   const record = RECORDS[kind];
   const definition = searchProperty(kind, property)!;
@@ -164,6 +174,7 @@ export function conditionScope(
   user: AuthenticatedUser,
   timeZone?: string,
   now = new Date(),
+  catalog: readonly SearchField[] = [],
 ): SQL {
   const conditions = question?.conditions.filter((condition) => condition.kind === kind) ?? [];
   const record = RECORDS[kind];
@@ -175,7 +186,7 @@ export function conditionScope(
         ? undefined
         : isNull(record.archivedAt),
       (question?.match === "any" ? or : and)(
-        ...conditions.map((condition) => compile(condition, user, timeZone, now)),
+        ...conditions.map((condition) => compile(condition, user, timeZone, now, catalog)),
       ),
     ) ?? sql`true`
   );

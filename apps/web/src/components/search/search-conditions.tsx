@@ -2,7 +2,8 @@
 import {
   SEARCH_PROPERTIES,
   SEARCH_OPERATORS,
-  searchProperty,
+  isValuelessOperator,
+  type SearchProperty,
   isRelativeDateOperator,
   needsRelativeDayCount,
   type SearchQuestion,
@@ -28,12 +29,14 @@ import { cn } from "../../lib/utils";
 
 function ConditionRow({
   condition,
+  property,
   choices,
   focus,
   onChange,
   onRemove,
 }: Readonly<{
   condition: Condition;
+  property: SearchProperty | undefined;
   choices: { id: string; displayName: string }[];
   focus: boolean;
   onChange: (condition: Condition) => void;
@@ -45,9 +48,10 @@ function ConditionRow({
   useEffect(() => {
     if (focus) row.current?.focus();
   }, [focus]);
-  const property = searchProperty(condition.kind, condition.property);
   if (!property) return null;
-  const label = propertyLabel(intl, condition.kind, condition.property);
+  const label = condition.property.startsWith("field:")
+    ? property.label
+    : propertyLabel(intl, condition.kind, condition.property);
   const kind = searchKindLabel(intl, condition.kind);
   const values = Array.isArray(condition.value) ? (condition.value as string[]) : [];
   const inputLabel = intl.formatMessage({ id: "search.condition.value", defaultMessage: "Value" });
@@ -65,7 +69,15 @@ function ConditionRow({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="flex items-baseline gap-2">
-          <span className="text-xs text-muted">{kind}</span>
+          <span className="text-xs text-muted">
+            {kind}
+            {condition.property.startsWith("field:") && (
+              <>
+                {" "}
+                · <FormattedMessage id="search.fields" defaultMessage="Fields" />
+              </>
+            )}
+          </span>
           <span className="text-sm font-medium">{label}</span>
         </span>
         <Button
@@ -93,34 +105,77 @@ function ConditionRow({
             onChange({
               ...condition,
               operator,
-              value:
-                property.type === "date"
-                  ? needsRelativeDayCount(operator)
-                    ? typeof condition.value === "number"
-                      ? condition.value
-                      : ""
-                    : isRelativeDateOperator(operator)
-                      ? null
-                      : operator === "between"
-                        ? [
-                            typeof condition.value === "string"
-                              ? condition.value
-                              : (values[0] ?? ""),
-                            values[1] ?? "",
-                          ]
-                        : (values[0] ??
-                          (typeof condition.value === "string" ? condition.value : ""))
-                  : condition.value,
+              value: isValuelessOperator(operator)
+                ? undefined
+                : property.type === "number"
+                  ? operator === "between"
+                    ? ["", ""]
+                    : ""
+                  : property.type === "choices"
+                    ? values
+                    : property.type === "date"
+                      ? needsRelativeDayCount(operator)
+                        ? typeof condition.value === "number"
+                          ? condition.value
+                          : ""
+                        : isRelativeDateOperator(operator)
+                          ? null
+                          : operator === "between"
+                            ? [
+                                typeof condition.value === "string"
+                                  ? condition.value
+                                  : (values[0] ?? ""),
+                                values[1] ?? "",
+                              ]
+                            : (values[0] ??
+                              (typeof condition.value === "string" ? condition.value : ""))
+                      : condition.value,
             });
           }}
         >
-          {SEARCH_OPERATORS[property.type].map((operator) => (
+          {(property.operators ?? SEARCH_OPERATORS[property.type]).map((operator) => (
             <option key={operator} value={operator}>
               {operatorLabel(intl, operator)}
             </option>
           ))}
         </select>
-        {property.type === "choices" ? (
+        {isValuelessOperator(condition.operator) ? null : property.type === "number" ? (
+          <div className="flex min-w-0 gap-2">
+            {(condition.operator === "between" ? [0, 1] : [0]).map((index) => (
+              <Input
+                key={index}
+                type="number"
+                step="any"
+                aria-label={
+                  condition.operator === "between"
+                    ? intl.formatMessage(
+                        index === 0
+                          ? { id: "recordFilters.from", defaultMessage: "From" }
+                          : { id: "recordFilters.to", defaultMessage: "To" },
+                      )
+                    : inputLabel
+                }
+                value={
+                  condition.operator === "between"
+                    ? String(values[index] ?? "")
+                    : typeof condition.value === "number"
+                      ? condition.value
+                      : ""
+                }
+                onChange={(event) => {
+                  const value = event.target.value === "" ? "" : event.target.valueAsNumber;
+                  setValue(
+                    condition.operator === "between"
+                      ? index === 0
+                        ? [value, values[1] ?? ""]
+                        : [values[0] ?? "", value]
+                      : value,
+                  );
+                }}
+              />
+            ))}
+          </div>
+        ) : property.type === "choices" ? (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -240,16 +295,20 @@ export function SearchConditions({
   question,
   onChange,
   focusCondition,
+  definitions,
 }: Readonly<{
   question: SearchQuestion;
   onChange: (question: SearchQuestion) => void;
   focusCondition?: number;
+  definitions: ReturnType<typeof useConditionDefinitions>;
 }>) {
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const [limitError, setLimitError] = useState(false);
-  const { choices, error } = useConditionDefinitions(question.kinds);
-  const properties = SEARCH_PROPERTIES.filter((property) => question.kinds.includes(property.kind));
+  const { choices, error, fields } = definitions;
+  const properties = [...SEARCH_PROPERTIES, ...fields.properties].filter((property) =>
+    question.kinds.includes(property.kind),
+  );
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -290,6 +349,9 @@ export function SearchConditions({
         <ConditionRow
           key={`${condition.kind}:${condition.property}:${index}`}
           condition={condition}
+          property={properties.find(
+            (property) => property.kind === condition.kind && property.key === condition.property,
+          )}
           choices={choices(condition)}
           focus={focusCondition === index}
           onChange={(next) =>
@@ -331,8 +393,13 @@ export function SearchConditions({
             })}
             items={properties.map((property) => ({
               key: `${property.kind}:${property.key}`,
-              label: propertyLabel(intl, property.kind, property.key),
+              label: property.key.startsWith("field:")
+                ? property.label
+                : propertyLabel(intl, property.kind, property.key),
               group: searchKindLabel(intl, property.kind),
+              subgroup: property.key.startsWith("field:")
+                ? intl.formatMessage({ id: "search.fields", defaultMessage: "Fields" })
+                : undefined,
             }))}
             onSelect={(key) => {
               const property = properties.find(
@@ -350,8 +417,14 @@ export function SearchConditions({
                   {
                     kind: property.kind,
                     property: property.key,
-                    operator: SEARCH_OPERATORS[property.type][0],
-                    value: property.type === "flag" ? true : property.type === "choices" ? [] : "",
+                    operator: (property.operators ?? SEARCH_OPERATORS[property.type])[0]!,
+                    value: isValuelessOperator(property.operators?.[0] ?? "")
+                      ? undefined
+                      : property.type === "flag"
+                        ? true
+                        : property.type === "choices"
+                          ? []
+                          : "",
                   },
                 ],
               });

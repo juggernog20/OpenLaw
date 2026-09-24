@@ -11,7 +11,7 @@ export function PropertyList({
   onSelect,
   busy = false,
 }: Readonly<{
-  items: { key: string; label: string; group?: string; trailing?: ReactNode }[];
+  items: { key: string; label: string; group?: string; subgroup?: string; trailing?: ReactNode }[];
   searchLabel: string;
   onSelect: (key: string) => void;
   busy?: boolean;
@@ -40,17 +40,22 @@ export function PropertyList({
             {group && <p className="px-3 py-2 text-sm font-semibold">{group}</p>}
             {visible
               .filter((item) => item.group === group)
-              .map((item) => (
-                <button
-                  type="button"
-                  key={item.key}
-                  disabled={busy}
-                  onClick={() => onSelect(item.key)}
-                  className="flex w-full items-center justify-between gap-3 rounded-button px-3 py-2 text-start text-sm hover:bg-control focus-visible:outline-2 focus-visible:outline-link"
-                >
-                  <span>{item.label}</span>
-                  {item.trailing}
-                </button>
+              .map((item, index, grouped) => (
+                <div key={item.key}>
+                  {item.subgroup && grouped[index - 1]?.subgroup !== item.subgroup && (
+                    <p className="px-3 py-2 text-xs font-semibold text-muted">{item.subgroup}</p>
+                  )}
+                  <button
+                    type="button"
+                    key={item.key}
+                    disabled={busy}
+                    onClick={() => onSelect(item.key)}
+                    className="flex w-full items-center justify-between gap-3 rounded-button px-3 py-2 text-start text-sm hover:bg-control focus-visible:outline-2 focus-visible:outline-link"
+                  >
+                    <span>{item.label}</span>
+                    {item.trailing}
+                  </button>
+                </div>
               ))}
           </div>
         ))}

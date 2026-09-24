@@ -8309,6 +8309,15 @@
   "search.error.title": {
     "defaultMessage": "Search could not load"
   },
+  "search.fields": {
+    "defaultMessage": "Fields"
+  },
+  "search.fields.error": {
+    "defaultMessage": "Search Fields could not load. Try again."
+  },
+  "search.fields.removed": {
+    "defaultMessage": "Unavailable Field conditions were removed."
+  },
   "search.filter.label": {
     "defaultMessage": "Filter search results"
   },
@@ -8381,6 +8390,24 @@
   "search.operator.contains": {
     "defaultMessage": "contains"
   },
+  "search.operator.empty": {
+    "defaultMessage": "is empty"
+  },
+  "search.operator.equals": {
+    "defaultMessage": "equals"
+  },
+  "search.operator.greaterThan": {
+    "defaultMessage": "greater than"
+  },
+  "search.operator.includesAll": {
+    "defaultMessage": "includes all"
+  },
+  "search.operator.includesAny": {
+    "defaultMessage": "includes any"
+  },
+  "search.operator.includesNone": {
+    "defaultMessage": "includes none"
+  },
   "search.operator.is": {
     "defaultMessage": "is"
   },
@@ -8390,17 +8417,26 @@
   "search.operator.lastDays.count": {
     "defaultMessage": "in the last {days, plural, one {# day} other {# days}}"
   },
+  "search.operator.lessThan": {
+    "defaultMessage": "less than"
+  },
   "search.operator.nextDays": {
     "defaultMessage": "in the next N days"
   },
   "search.operator.nextDays.count": {
     "defaultMessage": "in the next {days, plural, one {# day} other {# days}}"
   },
+  "search.operator.no": {
+    "defaultMessage": "is no"
+  },
   "search.operator.none": {
     "defaultMessage": "is none of"
   },
   "search.operator.notContains": {
     "defaultMessage": "does not contain"
+  },
+  "search.operator.notEmpty": {
+    "defaultMessage": "is not empty"
   },
   "search.operator.on": {
     "defaultMessage": "on"
@@ -8419,6 +8455,9 @@
   },
   "search.operator.today": {
     "defaultMessage": "today"
+  },
+  "search.operator.yes": {
+    "defaultMessage": "is yes"
   },
   "search.page.error": {
     "defaultMessage": "Search could not load. Try again."

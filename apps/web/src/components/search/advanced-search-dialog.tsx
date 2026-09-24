@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { SearchQuestionSchema, simpleSearchQuestion, type SearchQuestion } from "@openlaw/shared";
+import {
+  conditionProblem,
+  SearchQuestionSchema,
+  simpleSearchQuestion,
+  type SearchQuestion,
+} from "@openlaw/shared";
 import { useEffect, useId, useState } from "react";
 import { LoaderCircle, Search, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { useConditionDefinitions } from "./condition-definitions";
+import { dropUnavailableFields, FIELD_NOTICES } from "./field-definitions";
 import { SearchConditions } from "./search-conditions";
 import { querySearch, type QuestionSearchOutcome } from "../../lib/search";
 import { cn } from "../../lib/utils";
@@ -24,7 +31,8 @@ import {
 function Preview({
   question,
   onClose,
-}: Readonly<{ question: SearchQuestion; onClose: () => void }>) {
+  fieldsValid,
+}: Readonly<{ question: SearchQuestion; onClose: () => void; fieldsValid: boolean }>) {
   const intl = useIntl();
   const [settled, setSettled] = useState<{
     question: SearchQuestion;
@@ -40,7 +48,7 @@ function Preview({
         .filter((issue) => issue.path[0] === "conditions")
         .map((issue) => issue.message)
         .join(" ");
-  const runnable = !empty && !noScope && !tooLong && !conditionError;
+  const runnable = fieldsValid && !empty && !noScope && !tooLong && !conditionError;
   const outcome = settled?.question === question ? settled.outcome : null;
 
   useEffect(() => {
@@ -187,8 +195,23 @@ export function AdvancedSearchDialog({
   const intl = useIntl();
   const id = useId();
   const [notice, setNotice] = useState("");
+  const definitions = useConditionDefinitions(question.kinds, (catalog) => {
+    const next = dropUnavailableFields(question, catalog);
+    if (next !== question) {
+      setNotice(intl.formatMessage(FIELD_NOTICES.removed));
+      onChange(next);
+    }
+  });
+  const { fields } = definitions;
+  const fieldsValid = question.conditions.every(
+    (condition) =>
+      !condition.property.startsWith("field:") ||
+      (fields.ready && !conditionProblem(condition, fields.fields)),
+  );
   const valid =
-    Object.values(question.scope).some(Boolean) && SearchQuestionSchema.safeParse(question).success;
+    fieldsValid &&
+    Object.values(question.scope).some(Boolean) &&
+    SearchQuestionSchema.safeParse(question).success;
   return (
     <Dialog
       open
@@ -336,6 +359,7 @@ export function AdvancedSearchDialog({
               question={question}
               onChange={onChange}
               focusCondition={focusCondition}
+              definitions={definitions}
             />
             <section className="min-h-12">
               <h2 className="font-semibold">
@@ -348,7 +372,7 @@ export function AdvancedSearchDialog({
               </h2>
             </section>
           </div>
-          <Preview question={question} onClose={onClose} />
+          <Preview question={question} onClose={onClose} fieldsValid={fieldsValid} />
         </div>
         <footer className="flex h-16 items-center justify-between border-t border-border-default px-6">
           <Button

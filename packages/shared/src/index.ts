@@ -682,3 +682,5 @@ export {
   conditionProblem,
   type SearchProperty,
 } from "./search-conditions.js";
+
+export * from "./search-fields.js";

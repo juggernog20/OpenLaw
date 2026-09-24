@@ -1,12 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { z } from "zod";
+import {
+  fieldProperty,
+  SearchFieldSchema,
+  isValuelessOperator,
+  type SearchField,
+} from "./search-fields.js";
 import type { SEARCH_KINDS } from "./search-question.js";
 
 export type SearchProperty = {
   kind: (typeof SEARCH_KINDS)[number];
   key: string;
   label: string;
-  type: "choices" | "text" | "flag" | "date";
+  type: "choices" | "text" | "flag" | "date" | "number";
+  operators?: readonly string[];
+  options?: readonly string[];
   /** The choices are the column's own stored strings, not record ids or
    * viewer tokens, so any string is a valid pick and a comma inside one
    * is data. */
@@ -83,6 +91,7 @@ export function needsRelativeDayCount(operator: string): boolean {
 }
 
 export const SEARCH_OPERATORS = {
+  number: ["equals", "greater_than", "less_than", "between"],
   choices: ["is_any_of", "is_none_of"],
   text: ["contains", "does_not_contain"],
   flag: ["is"],
@@ -101,16 +110,58 @@ const freeChoices = z.array(z.string().min(1).max(200)).min(1).max(50);
 const date = z.iso.date().refine((value) => value >= "0001-01-01");
 const range = z.tuple([date, date]).refine(([from, to]) => from <= to);
 
-export function conditionProblem(condition: {
-  kind: string;
-  property: string;
-  operator: string;
-  value?: unknown;
-}): string | null {
-  const property = searchProperty(condition.kind, condition.property);
+export function conditionProblem(
+  condition: {
+    kind: string;
+    property: string;
+    operator: string;
+    value?: unknown;
+  },
+  catalog?: readonly SearchField[],
+): string | null {
+  if (condition.property.startsWith("field:") && catalog === undefined) {
+    if (
+      !["contract", "matter", "entity"].includes(condition.kind) ||
+      !/^field:[a-z0-9_-]+$/.test(condition.property)
+    )
+      return "Unknown search Field.";
+    // The codec checks the operand shape; the server resolves the live type.
+    return SearchFieldSchema.shape.fieldType.options.some(
+      (fieldType) =>
+        conditionProblem(condition, [
+          {
+            slug: condition.property.slice(6),
+            displayName: "",
+            moduleScope: condition.kind as SearchField["moduleScope"],
+            fieldType,
+            options: null,
+          },
+        ]) === null,
+    )
+      ? null
+      : "Invalid Field condition.";
+  }
+  const field = catalog?.find(
+    (field) => field.moduleScope === condition.kind && `field:${field.slug}` === condition.property,
+  );
+  const property = field
+    ? fieldProperty(field)
+    : searchProperty(condition.kind, condition.property);
   if (!property) return "Unknown search property.";
-  if (!(SEARCH_OPERATORS[property.type] as readonly string[]).includes(condition.operator))
+  if (
+    !((property.operators ?? SEARCH_OPERATORS[property.type]) as readonly string[]).includes(
+      condition.operator,
+    )
+  )
     return "The operator does not fit this property's value type.";
+  if (isValuelessOperator(condition.operator))
+    return condition.value == null ? null : "This operator takes no value.";
+  if (
+    property.options &&
+    Array.isArray(condition.value) &&
+    condition.value.some((value) => !property.options!.includes(value))
+  )
+    return "Choose an option from this Field.";
   if (property.type === "date" && isRelativeDateOperator(condition.operator)) {
     if (needsRelativeDayCount(condition.operator))
       return z.number().int().min(1).max(3650).safeParse(condition.value).success
@@ -120,17 +171,21 @@ export function conditionProblem(condition: {
   }
   if (condition.value === undefined) return "A condition value is required.";
   const schema =
-    property.type === "choices"
-      ? property.free
-        ? freeChoices
-        : choices
-      : property.type === "text"
-        ? z.string().trim().min(1).max(200)
-        : property.type === "flag"
-          ? z.boolean()
-          : condition.operator === "between"
-            ? range
-            : date;
+    property.type === "number"
+      ? condition.operator === "between"
+        ? z.tuple([z.number(), z.number()]).refine(([from, to]) => from <= to)
+        : z.number()
+      : property.type === "choices"
+        ? property.free
+          ? freeChoices
+          : choices
+        : property.type === "text"
+          ? z.string().trim().min(1).max(200)
+          : property.type === "flag"
+            ? z.boolean()
+            : condition.operator === "between"
+              ? range
+              : date;
   return schema.safeParse(condition.value).success
     ? null
     : "Choose a valid condition value. Date ranges must end on or after their start.";
