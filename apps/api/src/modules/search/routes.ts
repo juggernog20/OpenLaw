@@ -30,24 +30,22 @@ import {
   type Db,
   type SQL,
 } from "@openlaw/db";
-import { DOCUMENT_OWNER_KINDS, type DocumentOwner } from "@openlaw/shared";
+import {
+  DOCUMENT_OWNER_KINDS,
+  SEARCH_KINDS,
+  SearchQuestionSchema,
+  type SearchQuestion,
+  type DocumentOwner,
+} from "@openlaw/shared";
+import { TimezoneSchema } from "../../lib/timezones.js";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { documentRepositoryScope } from "../../lib/document-access.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
-import { problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse } from "../../lib/problem.js";
 import { documentOwnerCase } from "../documents/owner.js";
 
-const SEARCH_KINDS = [
-  "contract",
-  "matter",
-  "document",
-  "entity",
-  "counterparty",
-  "request",
-  "knowledge_item",
-] as const;
 type SearchKind = (typeof SEARCH_KINDS)[number];
 
 const GROUPED_LIMIT = 10;
@@ -148,9 +146,47 @@ function memberScope(user: AuthenticatedUser): SQL {
     : sql`false`;
 }
 
-/** M25's six search arms, with every audience predicate ahead of ranking. */
-function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
-  const exact = exactNumber(query);
+/** Candidate reads shared by header search and versioned questions. */
+function searchCtes(
+  db: Db,
+  user: AuthenticatedUser,
+  query: string,
+  question?: SearchQuestion,
+): SQL {
+  const exact = question && !question.scope.titles ? null : exactNumber(query);
+  const kindScope = (kind: SearchKind) => {
+    if (!question) return sql`true`;
+    const selected = question.kinds.length === 0 || question.kinds.includes(kind);
+    const scopeApplies =
+      !query || question.scope.titles || question.scope.text || kind === "document";
+    return sql`${selected && scopeApplies}`;
+  };
+  const weights = question
+    ? [
+        question.scope.titles ? "A" : "",
+        question.scope.text ? "BC" : "",
+        question.scope.contents ? "D" : "",
+      ]
+        .join("")
+        .split("")
+    : ["A", "B", "C", "D"];
+  const matchingDocument = question
+    ? sql`ts_filter(document, array[${sql.join(
+        weights.map((weight) => sql`${weight}`),
+        sql`, `,
+      )}]::"char"[])`
+    : sql`document`;
+  const noWords = question !== undefined && query === "";
+  // A row made entirely of stop words must not silently widen the other rows.
+  const meaningfulRows = question
+    ? sql.join(
+        Object.values(question.words)
+          .filter(Boolean)
+          .map((row) => sql`numnode(websearch_to_tsquery('english', ${row})) > 0`),
+        sql` and `,
+      )
+    : sql`true`;
+  const matches = sql`(${noWords} or (${Object.values(question?.words ?? {}).some(Boolean) ? meaningfulRows : sql`true`} and ${matchingDocument} @@ search_query.value))`;
   const contractExact = exactPredicate(exact, "contract");
   const matterExact = exactPredicate(exact, "matter");
   const requestExact = exactPredicate(exact, "request");
@@ -182,7 +218,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       from ${contracts}
       inner join ${contractTypes} on ${contractTypes.id} = ${contracts.contractTypeId}
       inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
-      where ${and(isNull(contracts.archivedAt), contractTeamScope(db, user))}
+      where ${and(isNull(contracts.archivedAt), contractTeamScope(db, user), kindScope("contract"))}
     ),
     contract_hits as (
       select
@@ -192,11 +228,11 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         null::text as snippet, null::text as state,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
-          else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
+          else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], ${matchingDocument}, search_query.value)
         end as rank
       from contract_candidates
       cross join search_query
-      where document @@ search_query.value or exact_number
+      where ${matches} or exact_number
     ),
     matter_candidates as (
       select
@@ -215,7 +251,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       inner join ${matterTypes} on ${matterTypes.id} = ${matters.matterTypeId}
       inner join ${matterStatuses} on ${matterStatuses.id} = ${matters.statusId}
       left join ${users} on ${users.id} = ${matters.managerId}
-      where ${and(isNull(matters.archivedAt), matterTeamScope(db, user))}
+      where ${and(isNull(matters.archivedAt), matterTeamScope(db, user), kindScope("matter"))}
     ),
     matter_hits as (
       select
@@ -225,11 +261,11 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         null::text as snippet, null::text as state,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
-          else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
+          else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], ${matchingDocument}, search_query.value)
         end as rank
       from matter_candidates
       cross join search_query
-      where document @@ search_query.value or exact_number
+      where ${matches} or exact_number
     ),
     document_version_candidates as (
       select
@@ -272,7 +308,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       left join ${entities} on ${entities.id} = ${documents.entityId}
       left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
     left join ${autoDocs} on ${autoDocs.id} = ${documents.autoDocId}
-      where ${and(isNull(documents.archivedAt), documentRepositoryScope(db, user))}
+      where ${and(isNull(documents.archivedAt), documentRepositoryScope(db, user), kindScope("document"))}
     ),
     document_version_hits as (
       select
@@ -280,10 +316,10 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         owner_kind, owner_id, owner_number, owner_title, version_id, version_number,
         document_title, document_description, original_filename,
         email_subject, extracted_text, extracted_vector, state,
-        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
+        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], ${matchingDocument}, search_query.value) as rank
       from document_version_candidates
       cross join search_query
-      where document @@ search_query.value
+      where ${matches}
     ),
     document_hits as (
       select
@@ -292,11 +328,11 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         ts_headline(
           'english',
           case
-            when coalesce(extracted_vector, ''::tsvector) @@ search_query.value
+            when ${question?.scope.contents ?? true} and coalesce(extracted_vector, ''::tsvector) @@ search_query.value
               then coalesce(extracted_text, '')
-            when to_tsvector('english', coalesce(email_subject, '')) @@ search_query.value
+            when ${question?.scope.titles ?? true} and to_tsvector('english', coalesce(email_subject, '')) @@ search_query.value
               then coalesce(email_subject, '')
-            when (
+            when ${question?.scope.text ?? true} and (
               to_tsvector('english', coalesce(original_filename, ''))
               || to_tsvector('english', regexp_replace(
                 coalesce(original_filename, ''), '[^[:alnum:]]+', ' ', 'g'
@@ -324,7 +360,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
           || setweight(to_tsvector('english', coalesce(${entityTypes.displayName}, '')), 'C') as document
       from ${entities}
       inner join ${entityTypes} on ${entityTypes.id} = ${entities.entityTypeId}
-      where ${and(isNull(entities.archivedAt), entityReachScope(db, user))}
+      where ${and(isNull(entities.archivedAt), entityReachScope(db, user), kindScope("entity"))}
     ),
     entity_hits as (
       select
@@ -332,10 +368,10 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
-        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
+        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], ${matchingDocument}, search_query.value) as rank
       from entity_candidates
       cross join search_query
-      where document @@ search_query.value
+      where ${matches}
     ),
     counterparty_candidates as (
       select
@@ -347,7 +383,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         4::integer as kind_order,
         ${counterparties.searchVector} as document
       from ${counterparties}
-      where ${and(isNull(counterparties.archivedAt), staff)}
+      where ${and(isNull(counterparties.archivedAt), staff, kindScope("counterparty"))}
     ),
     counterparty_hits as (
       select
@@ -355,10 +391,10 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
-        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
+        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], ${matchingDocument}, search_query.value) as rank
       from counterparty_candidates
       cross join search_query
-      where document @@ search_query.value
+      where ${matches}
     ),
     request_candidates as (
       select
@@ -375,7 +411,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
       from ${requests}
       inner join ${requestTypes} on ${requestTypes.id} = ${requests.requestTypeId}
       inner join ${users} on ${users.id} = ${requests.requesterId}
-      where ${and(isNull(requests.archivedAt), staff)}
+      where ${and(isNull(requests.archivedAt), staff, kindScope("request"))}
     ),
     request_hits as (
       select
@@ -385,11 +421,11 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         null::text as snippet, null::text as state,
         case when exact_number
           then ${EXACT_NUMBER_RANK}::real
-          else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value)
+          else ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], ${matchingDocument}, search_query.value)
         end as rank
       from request_candidates
       cross join search_query
-      where document @@ search_query.value or exact_number
+      where ${matches} or exact_number
     ),
     knowledge_item_candidates as (
       select
@@ -405,7 +441,7 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
           as document
       from ${knowledgeItems}
       inner join ${knowledgeTypes} on ${knowledgeTypes.id} = ${knowledgeItems.knowledgeTypeId}
-      where ${and(isNull(knowledgeItems.archivedAt), staff)}
+      where ${and(isNull(knowledgeItems.archivedAt), staff, kindScope("knowledge_item"))}
     ),
     knowledge_item_hits as (
       select
@@ -413,10 +449,10 @@ function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, state,
-        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], document, search_query.value) as rank
+        ts_rank_cd(array[0.05, 0.1, 0.5, 1.0]::real[], ${matchingDocument}, search_query.value) as rank
       from knowledge_item_candidates
       cross join search_query
-      where document @@ search_query.value
+      where ${matches}
     ),
     all_hits as (
       select * from contract_hits
@@ -540,7 +576,97 @@ async function flatSearch(
   return result.rows;
 }
 
+function compileWords(words: SearchQuestion["words"]): string {
+  const phrase = words.phrase ? `"${words.phrase.replaceAll('"', " ")}"` : "";
+  const none = words.none
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `-${word.replaceAll('"', "")}`)
+    .join(" ");
+  const required = [words.all, phrase, none].filter(Boolean).join(" ");
+  const any = words.any.split(/\s+/).filter(Boolean);
+  // websearch does not group parentheses. Repeat the required rows in each OR arm.
+  return any.length
+    ? any
+        .map((word) => [required, `"${word.replaceAll('"', "")}"`].filter(Boolean).join(" "))
+        .join(" OR ")
+    : required;
+}
+
+const QuestionCursorSchema = z.object({
+  rank: z.number().nonnegative(),
+  id: z.string().min(1).max(64),
+  kind: z.enum(SEARCH_KINDS),
+});
+
 export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.post(
+    "/search/query",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "querySearch",
+        tags: ["search"],
+        summary: "Run a versioned search question with an exact reachable match total.",
+        body: SearchQuestionSchema.safeExtend({
+          timeZone: TimezoneSchema.optional(),
+          cursor: z.string().min(1).max(512).optional(),
+          limit: z.number().int().min(1).max(MAX_LIMIT).default(FLAT_LIMIT),
+        }),
+        response: {
+          200: z.object({
+            results: z.array(SearchRowSchema),
+            total: z.number().int().nonnegative(),
+            nextCursor: z.string().nullable(),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const { cursor, limit, ...question } = request.body;
+      if (question.conditions.length)
+        throw httpError(400, "Search conditions are not supported yet.");
+      if (question.sort !== "relevance")
+        throw httpError(400, "Only relevance sort is supported yet.");
+      let boundary: z.infer<typeof QuestionCursorSchema> | undefined;
+      if (cursor) {
+        try {
+          boundary = QuestionCursorSchema.parse(
+            JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")),
+          );
+        } catch {
+          throw httpError(400, "Invalid search cursor.");
+        }
+      }
+      const after = boundary
+        ? sql`(rank, id, kind) < (${boundary.rank}::real, ${boundary.id}, ${boundary.kind})`
+        : sql`true`;
+      const ctes = searchCtes(app.db, request.user, compileWords(question.words), question);
+      const answer = await app.db.execute<{ total: number; page: SearchDbRow[] }>(sql`
+      with ${ctes}, page as (
+        select * from all_hits where ${after}
+        order by rank desc, id desc, kind desc limit ${limit + 1}
+      )
+      select (select count(*)::integer from all_hits) as total,
+        coalesce((select json_agg(page order by rank desc, id desc, kind desc) from page), '[]'::json) as page
+    `);
+      const { total, page: rows } = answer.rows[0]!;
+      const page = rows.slice(0, limit);
+      const last = page.at(-1);
+      return {
+        results: page.map(toSearchRow),
+        total,
+        nextCursor:
+          rows.length > limit && last
+            ? Buffer.from(
+                JSON.stringify({ rank: last.rank, id: last.id, kind: last.kind }),
+              ).toString("base64url")
+            : null,
+      };
+    },
+  );
+
   app.get(
     "/search",
     {

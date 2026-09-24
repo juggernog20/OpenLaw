@@ -8231,6 +8231,9 @@
   "search.autoDoc": {
     "defaultMessage": "Auto-Doc"
   },
+  "search.chip.remove": {
+    "defaultMessage": "Remove {label}"
+  },
   "search.error.body": {
     "defaultMessage": "The server did not answer. Try again in a moment."
   },
@@ -8285,14 +8288,32 @@
   "search.page.prompt": {
     "defaultMessage": "Search contracts, matters, documents, entities, counterparties, and requests"
   },
+  "search.page.results": {
+    "defaultMessage": "Search results"
+  },
   "search.page.resultsFor": {
     "defaultMessage": "Search results for “{query}”"
   },
   "search.page.showMore": {
     "defaultMessage": "Show more"
   },
+  "search.question.noMatches": {
+    "defaultMessage": "No records match this question."
+  },
   "search.result.knowledgeDraft": {
     "defaultMessage": "Draft · Knowledge Item"
+  },
+  "search.scope.chip": {
+    "defaultMessage": "Search in: {scope}"
+  },
+  "search.scope.contents": {
+    "defaultMessage": "Document contents"
+  },
+  "search.scope.text": {
+    "defaultMessage": "Record text"
+  },
+  "search.scope.titles": {
+    "defaultMessage": "Titles and numbers"
   },
   "search.searching": {
     "defaultMessage": "Searching…"
@@ -8302,6 +8323,21 @@
   },
   "search.seeAll": {
     "defaultMessage": "See all results"
+  },
+  "search.total": {
+    "defaultMessage": "{total, plural, one {# match} other {# matches}}"
+  },
+  "search.words.all": {
+    "defaultMessage": "All of these words"
+  },
+  "search.words.any": {
+    "defaultMessage": "Any of these words"
+  },
+  "search.words.none": {
+    "defaultMessage": "None of these words"
+  },
+  "search.words.phrase": {
+    "defaultMessage": "This exact phrase"
   },
   "settings.advanced.accessKey": {
     "defaultMessage": "S3 access key ID"

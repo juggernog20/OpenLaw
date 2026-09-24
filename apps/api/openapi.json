@@ -90937,6 +90937,352 @@
         }
       }
     },
+    "/api/v1/search/query": {
+      "post": {
+        "operationId": "querySearch",
+        "summary": "Run a versioned search question with an exact reachable match total.",
+        "tags": ["search"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "number",
+                    "enum": [1]
+                  },
+                  "words": {
+                    "type": "object",
+                    "properties": {
+                      "all": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "phrase": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "any": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "none": {
+                        "type": "string",
+                        "maxLength": 200
+                      }
+                    },
+                    "required": ["all", "phrase", "any", "none"]
+                  },
+                  "scope": {
+                    "type": "object",
+                    "properties": {
+                      "titles": {
+                        "type": "boolean"
+                      },
+                      "text": {
+                        "type": "boolean"
+                      },
+                      "contents": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["titles", "text", "contents"]
+                  },
+                  "kinds": {
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "contract",
+                        "matter",
+                        "document",
+                        "entity",
+                        "counterparty",
+                        "request",
+                        "knowledge_item"
+                      ]
+                    }
+                  },
+                  "conditions": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "contract",
+                            "matter",
+                            "document",
+                            "entity",
+                            "counterparty",
+                            "request",
+                            "knowledge_item"
+                          ]
+                        },
+                        "property": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "operator": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "value": {}
+                      },
+                      "required": ["kind", "property", "operator", "value"]
+                    }
+                  },
+                  "match": {
+                    "type": "string",
+                    "enum": ["all", "any"]
+                  },
+                  "sort": {
+                    "type": "string",
+                    "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                  },
+                  "timeZone": {
+                    "type": "string"
+                  },
+                  "cursor": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "limit": {
+                    "default": 25,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": ["version", "words", "scope", "kinds", "conditions", "match", "sort"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["contract", "matter", "entity", "counterparty", "request"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "required": ["kind", "id", "number", "title", "isConfidential", "rank"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["knowledge_item"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": ["draft", "published"]
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "number",
+                              "title",
+                              "isConfidential",
+                              "rank",
+                              "state"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["document"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "ownerKind": {
+                                "type": "string",
+                                "enum": [
+                                  "contract",
+                                  "matter",
+                                  "entity",
+                                  "knowledge_item",
+                                  "auto_doc"
+                                ]
+                              },
+                              "ownerId": {
+                                "type": "string"
+                              },
+                              "ownerNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "ownerTitle": {
+                                "type": "string"
+                              },
+                              "versionId": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "snippet": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "number",
+                              "title",
+                              "isConfidential",
+                              "rank",
+                              "ownerKind",
+                              "ownerId",
+                              "ownerNumber",
+                              "ownerTitle",
+                              "versionId",
+                              "versionNumber",
+                              "snippet"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["results", "total", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/search": {
       "get": {
         "operationId": "search",

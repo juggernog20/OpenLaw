@@ -246,6 +246,12 @@ Search uses one stored generated `tsvector` column on each table that owns searc
 
 Adding a stored generated column computes it for every existing row, so the M25 migration indexes the installed catalogue in place. The GIN indexes use the exact `<table>_search_vector_idx` names and are created as ordinary indexes in the migration batch.
 
+### Addendum (2026-09-24, M44/1, [#1081](https://github.com/juggernog20/OpenLaw/issues/1081)): versioned search questions
+
+`POST /api/v1/search/query` accepts a version 1 question, validated by `SearchQuestionSchema` in the shared package. It carries four words rows, scope, kinds, conditions, match and sort. The results page carries the same object as base64url JSON in `aq`, with `q` and `kind` as the legacy fallback. `GET /search` continues to serve the header.
+
+Scope filters the existing matching vectors before ranking. Titles and numbers select weight A, record text selects B and C including query-time joins, and Document contents selects D for Documents only. The exact total and cursor page read the same reached, unarchived hits in one SQL statement. The endpoint accepts `timeZone` through `TimezoneSchema`. Conditions and sorts other than relevance are refused until their compiler tickets land.
+
 ## DOC-010 — Deletion: soft delete + Admin hard delete; versions immutable
 
 - **Status** — Accepted
