@@ -12,6 +12,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { useConditionDefinitions } from "./condition-definitions";
 import { dropUnavailableFields, FIELD_NOTICES } from "./field-definitions";
 import { SavedSearchList, SaveSearch, useSavedSearches } from "./saved-searches";
+import { RecentSearchList } from "./recent-search-list";
 import { SearchConditions } from "./search-conditions";
 import { querySearch, type QuestionSearchOutcome } from "../../lib/search";
 import { cn } from "../../lib/utils";
@@ -180,6 +181,7 @@ function Preview({
 
 export function AdvancedSearchDialog({
   question,
+  recents,
   onChange,
   onClose,
   onSearch,
@@ -187,6 +189,7 @@ export function AdvancedSearchDialog({
   focusCondition,
 }: Readonly<{
   question: SearchQuestion;
+  recents: SearchQuestion[];
   onChange: (question: SearchQuestion) => void;
   onClose: () => void;
   onSearch: () => void;
@@ -364,11 +367,11 @@ export function AdvancedSearchDialog({
               definitions={definitions}
             />
             <SavedSearchList searches={searches} />
-            <section className="min-h-12">
-              <h2 className="font-semibold">
-                <FormattedMessage id="search.recent" defaultMessage="Recent searches" />
-              </h2>
-            </section>
+            <RecentSearchList
+              questions={recents}
+              onSelect={searches.selectRecent}
+              disabled={searches.busy}
+            />
           </div>
           <Preview question={question} onClose={onClose} fieldsValid={fieldsValid} />
         </div>

@@ -21,7 +21,7 @@ import {
 import { questionIsEmpty, questionPath } from "./search-question";
 
 const SORT_KEYS = SearchQuestionSchema.shape.sort.options;
-const SORT_LABELS = defineMessages({
+export const SORT_LABELS = defineMessages({
   relevance: { id: "search.sort.relevance", defaultMessage: "Relevance" },
   newest: { id: "search.sort.newest", defaultMessage: "Newest" },
   oldest: { id: "search.sort.oldest", defaultMessage: "Oldest" },

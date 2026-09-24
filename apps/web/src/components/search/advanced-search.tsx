@@ -8,9 +8,11 @@ import { useLocation, useNavigate } from "react-router";
 import { Button } from "../ui/button";
 import { AdvancedSearchDialog } from "./advanced-search-dialog";
 import { questionFromSearch, questionPath } from "./search-question";
+import { useRecentSearches } from "../../lib/recent-searches";
 
 const AdvancedSearchContext = createContext<{
   draft: SearchQuestion | null;
+  recents: SearchQuestion[];
   open: (question: SearchQuestion, focusCondition?: number) => void;
 } | null>(null);
 
@@ -20,8 +22,12 @@ export function useAdvancedSearch() {
   return context;
 }
 
-export function AdvancedSearchProvider({ children }: Readonly<{ children: ReactNode }>) {
+export function AdvancedSearchProvider({
+  children,
+  userId,
+}: Readonly<{ children: ReactNode; userId: string }>) {
   const navigate = useNavigate();
+  const recents = useRecentSearches(userId);
   const [session, setSession] = useState<{
     question: SearchQuestion;
     returnFocus: HTMLElement | null;
@@ -31,6 +37,7 @@ export function AdvancedSearchProvider({ children }: Readonly<{ children: ReactN
     <AdvancedSearchContext.Provider
       value={{
         draft: session?.question ?? null,
+        recents,
         open: (question, focusCondition) =>
           setSession({
             question,
@@ -43,6 +50,7 @@ export function AdvancedSearchProvider({ children }: Readonly<{ children: ReactN
       {children}
       {session && (
         <AdvancedSearchDialog
+          recents={recents}
           question={session.question}
           returnFocus={session.returnFocus}
           focusCondition={session.focusCondition}

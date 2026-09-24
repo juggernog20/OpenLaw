@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useState } from "react";
-import { SEARCH_FIELD_KINDS, type SearchQuestion, type SearchField } from "@openlaw/shared";
+import {
+  isValuelessOperator,
+  isRelativeDateOperator,
+  SEARCH_FIELD_KINDS,
+  type SearchQuestion,
+  type SearchField,
+} from "@openlaw/shared";
 import { defineMessages, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { useOtherConditionDefinitions } from "./other-condition-definitions";
 import { useSearchFields } from "./field-definitions";
+import { searchKindLabel } from "./search-result-row";
 import { api } from "../../lib/api";
 import { problem } from "../../lib/problem";
 import {
@@ -262,4 +269,52 @@ export function useConditionDefinitions(
     return filter?.kind === "choices" ? filter.choices : [];
   };
   return { choices, fields, error: loaded.error ?? other.error ?? fields.error };
+}
+
+const CHIP_LABELS: Record<"absolute" | "relative", MessageDescriptor> = defineMessages({
+  absolute: { id: "search.condition.chip", defaultMessage: "{kind} {property} {operator} {value}" },
+  relative: { id: "search.condition.relativeChip", defaultMessage: "{kind} {property} {operator}" },
+});
+
+/** The words a condition is read as: the chips on the results page say all
+ * four, the recent-search summaries leave the kind to the question's own
+ * kinds part. `relative` marks operators whose value is not shown. */
+export function conditionParts(
+  intl: IntlShape,
+  condition: Condition,
+  { choices, fields }: ReturnType<typeof useConditionDefinitions>,
+): { relative: boolean; kind: string; property: string; operator: string; value: string } {
+  const options = choices(condition);
+  const value = Array.isArray(condition.value)
+    ? condition.value
+        .map((value) => options.find((option) => option.id === value)?.displayName ?? String(value))
+        .join(", ")
+    : typeof condition.value === "boolean"
+      ? condition.value
+        ? intl.formatMessage({ id: "search.condition.yes", defaultMessage: "Yes" })
+        : intl.formatMessage({ id: "search.condition.no", defaultMessage: "No" })
+      : String(condition.value);
+  return {
+    relative: isRelativeDateOperator(condition.operator) || isValuelessOperator(condition.operator),
+    kind: searchKindLabel(intl, condition.kind),
+    property:
+      fields.properties.find(
+        (property) => property.kind === condition.kind && property.key === condition.property,
+      )?.label ?? propertyLabel(intl, condition.kind, condition.property),
+    operator: operatorLabel(
+      intl,
+      condition.operator,
+      typeof condition.value === "number" ? condition.value : undefined,
+    ),
+    value,
+  };
+}
+
+export function conditionLabel(
+  intl: IntlShape,
+  condition: Condition,
+  definitions: ReturnType<typeof useConditionDefinitions>,
+): string {
+  const { relative, ...values } = conditionParts(intl, condition, definitions);
+  return intl.formatMessage(relative ? CHIP_LABELS.relative : CHIP_LABELS.absolute, values);
 }

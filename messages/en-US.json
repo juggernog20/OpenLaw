@@ -8321,11 +8321,20 @@
   "search.filter.label": {
     "defaultMessage": "Filter search results"
   },
+  "search.header.enter": {
+    "defaultMessage": "Enter"
+  },
   "search.header.label": {
     "defaultMessage": "Search"
   },
   "search.header.listLabel": {
     "defaultMessage": "Search results"
+  },
+  "search.header.recent": {
+    "defaultMessage": "Recent"
+  },
+  "search.header.saved": {
+    "defaultMessage": "Saved"
   },
   "search.kind.all": {
     "defaultMessage": "All"
@@ -8374,6 +8383,9 @@
   },
   "search.noMatchesBody": {
     "defaultMessage": "No matches for “{query}”. Try another word or record number."
+  },
+  "search.openError": {
+    "defaultMessage": "This search could not open. Try again."
   },
   "search.operator.after": {
     "defaultMessage": "after"
@@ -8666,9 +8678,6 @@
   "search.saved.manage": {
     "defaultMessage": "Manage {name}"
   },
-  "search.saved.openError": {
-    "defaultMessage": "This saved search could not open. Try again."
-  },
   "search.saved.rename.title": {
     "defaultMessage": "Rename this saved search"
   },
@@ -8719,6 +8728,36 @@
   },
   "search.sort.title": {
     "defaultMessage": "Title"
+  },
+  "search.summary.condition": {
+    "defaultMessage": "{property} {operator} {value}"
+  },
+  "search.summary.contract": {
+    "defaultMessage": "Contracts"
+  },
+  "search.summary.counterparty": {
+    "defaultMessage": "Counterparties"
+  },
+  "search.summary.document": {
+    "defaultMessage": "Documents"
+  },
+  "search.summary.entity": {
+    "defaultMessage": "Entities"
+  },
+  "search.summary.knowledge": {
+    "defaultMessage": "Knowledge Items"
+  },
+  "search.summary.matter": {
+    "defaultMessage": "Matters"
+  },
+  "search.summary.or": {
+    "defaultMessage": "OR"
+  },
+  "search.summary.relativeCondition": {
+    "defaultMessage": "{property} {operator}"
+  },
+  "search.summary.request": {
+    "defaultMessage": "Requests"
   },
   "search.textState.failed": {
     "defaultMessage": "Failed"
