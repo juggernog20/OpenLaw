@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { z } from "zod";
-import { conditionProblem, SEARCH_PROPERTIES } from "./search-conditions.js";
+import { conditionProblem, searchProperty } from "./search-conditions.js";
 
 export const SEARCH_KINDS = [
   "contract",
@@ -85,7 +85,12 @@ export function simpleSearchQuestion(
   };
 }
 
-/** Stored questions keep their surviving conditions when a property is removed. */
+/** Read a stored question past a property the build no longer has
+ * (DD-019 clause 7): that condition is dropped, the rest stands, and
+ * `dropped` counts what went. Field conditions are kept here; the dialog
+ * checks them against the live catalogue, which this package cannot see.
+ * Null means the stored shape is not a version 1 question, or what is
+ * left of it is not a question the search can run. */
 export function resolveSearchQuestion(
   stored: unknown,
 ): { question: SearchQuestion; dropped: number } | null {
@@ -94,9 +99,7 @@ export function resolveSearchQuestion(
   const conditions = parsed.data.conditions.filter(
     (condition) =>
       condition.property.startsWith("field:") ||
-      SEARCH_PROPERTIES.some(
-        (property) => property.kind === condition.kind && property.key === condition.property,
-      ),
+      searchProperty(condition.kind, condition.property) !== undefined,
   );
   const question = { ...parsed.data, conditions };
   if (!SearchQuestionSchema.safeParse(question).success) return null;

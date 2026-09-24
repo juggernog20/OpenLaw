@@ -384,7 +384,7 @@ export function AdvancedSearchDialog({
           >
             <FormattedMessage id="search.clear" defaultMessage="Clear" />
           </Button>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             <SaveSearch searches={searches} valid={valid} />
             <Button disabled={!valid || searches.busy} onClick={onSearch}>
               <FormattedMessage id="search.header.label" defaultMessage="Search" />

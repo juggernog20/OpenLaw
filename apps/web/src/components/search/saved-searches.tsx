@@ -193,7 +193,7 @@ export function SavedSearchList({ searches }: Readonly<{ searches: Searches }>) 
           <li key={view.id} className="flex min-h-8 items-center gap-2">
             <Button
               variant="ghost"
-              className="h-8 min-w-0 flex-1 justify-start px-0 font-normal"
+              className="h-8 min-w-0 flex-1 justify-start px-0 text-sm font-normal"
               disabled={searches.busy}
               onClick={() => searches.select(view)}
             >

@@ -16,12 +16,19 @@
  * Views are private (clause 1), so nothing here asks who may see one.
  * The menu is one person's list, and its only refusals are a name they
  * already used and the ceiling on how many they keep.
+ *
+ * The search surface reuses the same acts for saved searches (DD-019
+ * addendum, M44/9). There the control splits in two: `searchControl`
+ * "save" is the footer's Save search button with the active search's
+ * menu beside it, and "row" is the small menu on one row of the Saved
+ * searches list. Neither offers Set as default, because a search has
+ * none.
  */
 
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ChevronDown, Ellipsis } from "lucide-react";
-import { MAX_LIST_VIEW_NAME_LENGTH } from "@openlaw/shared";
+import { MAX_LIST_VIEW_NAME_LENGTH, type ListViewSurface } from "@openlaw/shared";
 import { problem } from "../../lib/problem";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -72,7 +79,7 @@ export function ViewsMenu<View extends MenuView>({
   /** Back to the built-in layout, without touching any saved view. */
   onReset: () => void;
   busy: boolean;
-  surface?: string;
+  surface?: ListViewSurface;
   searchControl?: "save" | "row";
   saveDisabled?: boolean;
 }>) {
@@ -82,13 +89,13 @@ export function ViewsMenu<View extends MenuView>({
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
 
-  const label =
-    activeView?.name ??
-    intl.formatMessage(
-      surface === "search"
-        ? { id: "search.save", defaultMessage: "Save search" }
-        : { id: "views.builtIn", defaultMessage: "Default view" },
-    );
+  const search = surface === "search";
+  // Two literal descriptors: formatjs extraction skips a descriptor that
+  // is chosen inside the call.
+  const builtInLabel = search
+    ? intl.formatMessage({ id: "search.save", defaultMessage: "Save search" })
+    : intl.formatMessage({ id: "views.builtIn", defaultMessage: "Default view" });
+  const label = activeView?.name ?? builtInLabel;
 
   /** Run one act, keeping its refusal on the dialog that asked for it.
    * A name already in use is answered where the name was typed. */
@@ -114,7 +121,7 @@ export function ViewsMenu<View extends MenuView>({
   function open(kind: "saveAs" | "rename") {
     setError(null);
     setName(
-      kind === "saveAs" && surface === "search" && !activeView
+      kind === "saveAs" && search && !activeView
         ? ""
         : kind === "rename"
           ? (activeView?.name ?? "")
@@ -230,7 +237,7 @@ export function ViewsMenu<View extends MenuView>({
                 <DropdownMenuItem disabled={busy} onSelect={() => open("rename")}>
                   <FormattedMessage id="views.rename" defaultMessage="Rename…" />
                 </DropdownMenuItem>
-                {surface !== "search" && onSetDefault && !activeView.isDefault && (
+                {!search && onSetDefault && !activeView.isDefault && (
                   <DropdownMenuItem disabled={busy} onSelect={() => void run(onSetDefault, false)}>
                     <FormattedMessage id="views.setDefault" defaultMessage="Set as default" />
                   </DropdownMenuItem>
@@ -266,6 +273,7 @@ export function ViewsMenu<View extends MenuView>({
       {prompt?.kind === "saveAs" || prompt?.kind === "rename" ? (
         <NameDialog
           kind={prompt.kind}
+          search={search}
           name={name}
           error={error}
           busy={working}
@@ -284,14 +292,29 @@ export function ViewsMenu<View extends MenuView>({
         <Dialog open onOpenChange={(next) => !next && setPrompt(null)}>
           <DialogContent aria-describedby={undefined} width="md">
             <DialogTitle>
-              <FormattedMessage id="views.delete.title" defaultMessage="Delete this view?" />
+              {search ? (
+                <FormattedMessage
+                  id="search.saved.delete.title"
+                  defaultMessage="Delete this saved search?"
+                />
+              ) : (
+                <FormattedMessage id="views.delete.title" defaultMessage="Delete this view?" />
+              )}
             </DialogTitle>
             <p className="mt-2 text-base text-muted">
-              <FormattedMessage
-                id="views.delete.body"
-                defaultMessage="{name} is removed. The records in it are not touched."
-                values={{ name: prompt.view.name }}
-              />
+              {search ? (
+                <FormattedMessage
+                  id="search.saved.delete.body"
+                  defaultMessage="{name} is removed. The records it finds are not touched."
+                  values={{ name: prompt.view.name }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="views.delete.body"
+                  defaultMessage="{name} is removed. The records in it are not touched."
+                  values={{ name: prompt.view.name }}
+                />
+              )}
             </p>
             {error && (
               <p role="alert" className="mt-3 text-sm text-status-danger-fg">
@@ -321,6 +344,7 @@ export function ViewsMenu<View extends MenuView>({
  * two titles and two verbs. */
 function NameDialog({
   kind,
+  search,
   name,
   error,
   busy,
@@ -329,6 +353,8 @@ function NameDialog({
   onConfirm,
 }: Readonly<{
   kind: "saveAs" | "rename";
+  /** Saved searches name themselves as such, not as views. */
+  search: boolean;
   name: string;
   error: string | null;
   busy: boolean;
@@ -341,7 +367,16 @@ function NameDialog({
       <DialogContent aria-describedby={undefined} width="md">
         <DialogTitle>
           {kind === "rename" ? (
-            <FormattedMessage id="views.rename.title" defaultMessage="Rename this view" />
+            search ? (
+              <FormattedMessage
+                id="search.saved.rename.title"
+                defaultMessage="Rename this saved search"
+              />
+            ) : (
+              <FormattedMessage id="views.rename.title" defaultMessage="Rename this view" />
+            )
+          ) : search ? (
+            <FormattedMessage id="search.saved.saveAs.title" defaultMessage="Save this search" />
           ) : (
             <FormattedMessage id="views.saveAs.title" defaultMessage="Save this view" />
           )}
