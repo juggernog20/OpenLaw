@@ -385,7 +385,10 @@ export function SearchConditions({
             <FormattedMessage id="search.condition.add" defaultMessage="Add condition" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 max-w-[calc(100vw-2rem)] p-0">
+        <PopoverContent
+          className="w-80 max-w-[calc(100vw-2rem)] p-0"
+          aria-label={intl.formatMessage({ id: "search.properties", defaultMessage: "Properties" })}
+        >
           <PropertyList
             searchLabel={intl.formatMessage({
               id: "search.properties.search",
