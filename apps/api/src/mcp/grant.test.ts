@@ -11,7 +11,10 @@ let admin: Record<string, string>;
 let ownerId: string;
 const credentialIds = new WeakMap<Client, string>();
 const clients: Client[] = [];
-const guideNames = toolRegister.map((t) => t.name);
+const guideNames = toolRegister.filter((t) => t.toolset === "guide").map((t) => t.name);
+const contractReadNames = toolRegister
+  .filter((t) => t.toolset === "contracts" && t.kind === "read")
+  .map((t) => t.name);
 let endpoint: URL;
 const read: ToolDefinition = {
   name: "test_contract_read",
@@ -45,7 +48,18 @@ const invalid: ToolDefinition = {
 };
 beforeAll(async () => {
   h = await startHarness({
-    mcpTools: [...toolRegister, read, write, invalid],
+    mcpTools: [
+      ...toolRegister,
+      read,
+      write,
+      invalid,
+      ...Array.from({ length: 5 }, (_, index): ToolDefinition => ({
+        ...read,
+        name: `test_paged_${index}`,
+        toolset: "documents",
+        inputSchema: z.object({ text: z.string().describe("UTF-8 文".repeat(2000)) }),
+      })),
+    ],
     advancedRuntime: {
       baseline: { MCP_RATE_LIMIT_PER_HOUR: "invalid" },
       active: { MCP_RATE_LIMIT_PER_HOUR: "invalid" },
@@ -104,7 +118,12 @@ it.each([false, true])(
     expect(await names(narrow)).toEqual(guideNames);
     await refusal(narrow, read.name, "tool_outside_grant");
     const reader = await connect(["contracts"], "read", modern);
-    expect(await names(reader)).toEqual([...guideNames, read.name, invalid.name]);
+    expect(await names(reader)).toEqual([
+      ...guideNames,
+      ...contractReadNames,
+      read.name,
+      invalid.name,
+    ]);
     await refusal(reader, write.name, "mcp_read_only");
     const writer = await connect(["contracts"], "write", modern);
     expect(await names(writer)).toContain(write.name);
@@ -169,5 +188,25 @@ it("keeps the default allowance when the deployment rate limit is invalid", asyn
         "rate_limited: The limit is 600 Tool calls per hour per credential.",
       ),
     },
+  ]);
+});
+
+it("pages tools/list by cursor under the byte budget", async () => {
+  await h.db.update(orgSettings).set({ mcpToolsetCeiling: ["matters", "contracts", "documents"] });
+  const client = await connect(["documents"], "read");
+  const seen: string[] = [];
+  let cursor: string | undefined;
+  let pages = 0;
+  do {
+    const page = await client.request({ method: "tools/list", params: cursor ? { cursor } : {} });
+    expect(Buffer.byteLength(JSON.stringify(page))).toBeLessThan(64_000);
+    seen.push(...page.tools.map((tool) => tool.name));
+    cursor = page.nextCursor;
+    pages++;
+  } while (cursor);
+  expect(pages).toBeGreaterThan(1);
+  expect(seen).toEqual([
+    ...guideNames,
+    ...Array.from({ length: 5 }, (_, index) => `test_paged_${index}`),
   ]);
 });

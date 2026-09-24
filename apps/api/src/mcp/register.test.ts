@@ -68,6 +68,17 @@ it.each(["administrator", "legal_team_member", "business_user"] as const)(
     const defaults = toolRegister.filter(
       (t) => (role === "business_user" ? t.businessUser : t.legalUser) !== "off",
     );
-    expect(defaults.filter((t) => !toolRefusal(t, grant))).toHaveLength(5);
+    expect(defaults.filter((t) => !toolRefusal(t, grant))).toHaveLength(
+      role === "business_user" ? 8 : 13,
+    );
   },
 );
+it("expresses nullable types and positive integer bounds for Client schemas", () => {
+  const shape = z.object({ amount: z.number().int().positive().nullable() });
+  const tool = { ...toolRegister[0]!, inputSchema: shape, outputSchema: shape };
+  for (const schema of [toolInputJsonSchema(tool), toolOutputJsonSchema(tool)]) {
+    expect(JSON.stringify(schema)).not.toContain("exclusiveMinimum");
+    expect(JSON.stringify(schema)).toContain('"minimum":1');
+    expect(JSON.stringify(schema)).toContain('"anyOf"');
+  }
+});

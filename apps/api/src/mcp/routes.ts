@@ -73,18 +73,32 @@ export function mcpRoutes(
                 capabilities: { tools: {} },
               },
             );
-            server.server.setRequestHandler("tools/list", async () => ({
-              tools: tools
-                .filter((tool) => !toolRefusal(tool, context.grant))
-                .map((tool): Tool => ({
+            server.server.setRequestHandler("tools/list", async (call) => {
+              const visible = tools.filter((tool) => !toolRefusal(tool, context.grant));
+              const cursor = call.params?.cursor;
+              const boundary = cursor ? visible.findIndex((tool) => tool.name === cursor) : -1;
+              if (cursor && boundary < 0) return { tools: [] };
+              const page: Tool[] = [];
+              let hasMore = false;
+              for (const tool of visible.slice(boundary + 1)) {
+                const listed: Tool = {
                   name: tool.name,
                   title: tool.title,
                   description: tool.description,
                   annotations: tool.annotations,
                   inputSchema: toolInputJsonSchema(tool) as Tool["inputSchema"],
                   outputSchema: toolOutputJsonSchema(tool) as Tool["outputSchema"],
-                })),
-            }));
+                };
+                if (Buffer.byteLength(JSON.stringify({ tools: [...page, listed] })) > 60_000) {
+                  if (!page.length)
+                    throw new Error("One Tool definition exceeds the list byte budget.");
+                  hasMore = true;
+                  break;
+                }
+                page.push(listed);
+              }
+              return { tools: page, ...(hasMore ? { nextCursor: page.at(-1)!.name } : {}) };
+            });
             // Dispatch before schema validation so refused and invalid calls also enter the ledger.
             server.server.setRequestHandler("tools/call", async (call) => {
               try {

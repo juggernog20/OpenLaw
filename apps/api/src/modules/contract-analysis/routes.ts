@@ -4,6 +4,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { runContractAnalysis } from "./service.js";
 import {
   AI_PRESETS,
   and,
@@ -13,8 +14,6 @@ import {
   documents,
   documentVersions,
   eq,
-  isNull,
-  or,
   type ContractAnalysisRun,
   type Executor,
 } from "@openlaw/db";
@@ -28,7 +27,6 @@ import {
 } from "../../pipeline/conversion-analysis.js";
 import { requestAnalysisEvidence, requestAnalysisEvidenceReader } from "./request-evidence.js";
 import { EvidenceSchema } from "../requests/conversion-evidence.js";
-import { analysisTargetText } from "../../pipeline/contract-analysis.js";
 
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
 
@@ -295,72 +293,13 @@ export const contractAnalysisRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const provider = await app.resolveAiProvider();
-      if (!provider) throw httpError(409, "No enabled AI connector is configured.");
-
-      const run = await app.db.transaction(async (tx) => {
-        const reached = await reachedContract(tx, request.user, request.params.number, {
-          lock: true,
-        });
-        if (!reached) throw httpError(404, NO_CONTRACT);
-        const [record] = await tx
-          .select({ endedAt: contracts.endedAt })
-          .from(contracts)
-          .where(eq(contracts.id, reached.id))
-          .limit(1);
-        if (reached.archivedAt || record?.endedAt) {
-          throw httpError(409, "This Contract is frozen and cannot be analyzed.");
-        }
-        const [pending] = await tx
-          .select({ id: contractAnalysisRuns.id })
-          .from(contractAnalysisRuns)
-          .where(
-            and(
-              eq(contractAnalysisRuns.contractId, reached.id),
-              eq(contractAnalysisRuns.state, "pending"),
-              or(
-                isNull(contractAnalysisRuns.startedAt),
-                eq(contractAnalysisRuns.trigger, "conversion"),
-              ),
-            ),
-          )
-          .limit(1);
-        if (pending) throw httpError(409, "An analysis run is already pending for this Contract.");
-
-        const target = await analysisTargetText(tx, reached.id);
-        if (!reached.primaryDocumentId) {
-          throw httpError(409, "This Contract has no primary Document to analyze.");
-        }
-        if (!target) {
-          throw httpError(409, "The analysis target has no ready, non-empty text.");
-        }
-        const [created] = await tx
-          .insert(contractAnalysisRuns)
-          .values({
-            contractId: reached.id,
-            versionId: target.versionId,
-            state: "pending",
-            trigger: "manual",
-            requestedBy: request.user.id,
-            preset: provider.preset,
-            model: provider.model,
-          })
-          .returning();
-        return created!;
-      });
-
-      let queued: boolean;
-      try {
-        queued = await app.jobs.requestContractAnalysis(run.contractId, run.id);
-      } catch (error) {
-        await app.db.delete(contractAnalysisRuns).where(eq(contractAnalysisRuns.id, run.id));
-        request.log.error({ err: error, runId: run.id }, "could not queue contract analysis");
-        throw httpError(503, "The analysis run could not be queued. Try again.", { expose: true });
-      }
-      if (!queued) {
-        await app.db.delete(contractAnalysisRuns).where(eq(contractAnalysisRuns.id, run.id));
-        throw httpError(409, "An analysis run is already pending for this Contract.");
-      }
+      const run = await runContractAnalysis(
+        app.db,
+        request.user,
+        request.params.number,
+        app.resolveAiProvider,
+        app.jobs,
+      );
       return reply.status(202).send({ run: toAnalysisRun(run) });
     },
   );

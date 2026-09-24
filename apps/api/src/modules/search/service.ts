@@ -146,12 +146,16 @@ export function memberScope(user: AuthenticatedUser): SQL {
 }
 
 /** Search candidates apply their audience predicates before ranking. */
-export function searchCtes(db: Db, user: AuthenticatedUser, query: string): SQL {
+export function searchCtes(
+  db: Db,
+  user: AuthenticatedUser,
+  query: string,
+  scopes = searchScopes(db, user),
+): SQL {
   const exact = exactNumber(query);
   const contractExact = exactPredicate(exact, "contract");
   const matterExact = exactPredicate(exact, "matter");
   const requestExact = exactPredicate(exact, "request");
-  const scopes = searchScopes(db, user);
 
   return sql`
     search_query as (
@@ -562,10 +566,14 @@ export async function flatSearch(
   user: AuthenticatedUser,
   q: string,
   options: { kind?: SearchKind; cursor?: string; limit?: number } = {},
+  scopes = searchScopes(db, user),
 ) {
   const query = QuerySchema.parse({ ...options, q });
   const pageSize = query.limit ?? FLAT_LIMIT;
-  const rows = await flatRows(db, searchCtes(db, user, query.q), { ...query, limit: pageSize });
+  const rows = await flatRows(db, searchCtes(db, user, query.q, scopes), {
+    ...query,
+    limit: pageSize,
+  });
   const page = rows.slice(0, pageSize);
   return {
     results: page.map(toSearchRow),

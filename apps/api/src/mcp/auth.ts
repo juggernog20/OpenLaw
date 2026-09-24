@@ -51,6 +51,9 @@ export async function authenticateKey(request: FastifyRequest): Promise<ToolCont
     throw httpError(401, "Authentication required.");
   return {
     db,
+    notifier: request.server.notifier,
+    jobs: request.server.jobs,
+    resolveAiProvider: request.server.resolveAiProvider,
     user,
     credentialId: approved.credential.id,
     clientName: approved.request.clientName,

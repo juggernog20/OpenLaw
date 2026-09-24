@@ -7,6 +7,9 @@
  */
 
 import { z } from "zod";
+import { workspaceTools } from "./workspace.js";
+import { contractTools } from "./contracts.js";
+import type { AppDeps } from "../app.js";
 import { guideTools } from "./guide.js";
 import type { Db, UserRole } from "@openlaw/db";
 import type { McpToolset } from "@openlaw/shared";
@@ -19,7 +22,7 @@ export interface Grant {
   toolsets: readonly string[];
   scope: "read" | "write";
 }
-export interface ToolContext {
+export interface ToolContext extends Pick<AppDeps, "notifier" | "jobs" | "resolveAiProvider"> {
   db: Db;
   user: AuthenticatedUser;
   grant: Grant;
@@ -51,10 +54,12 @@ export interface ToolDefinition {
  * parsing. The SDK's own registerTool converts the same way.
  */
 export function toolInputJsonSchema(tool: ToolDefinition) {
-  return z.toJSONSchema(tool.inputSchema, { io: "input" });
+  return clientSchema(z.toJSONSchema(tool.inputSchema, { io: "input" }));
 }
 export function toolOutputJsonSchema(tool: ToolDefinition) {
-  const schema = z.toJSONSchema(tool.outputSchema, { io: "output" });
+  return clientSchema(z.toJSONSchema(tool.outputSchema, { io: "output" }));
+}
+function clientSchema<T>(schema: T): T {
   // Some Clients require nullable values as alternatives, not a type array.
   function expandTypes(value: unknown) {
     if (!value || typeof value !== "object") return;
@@ -62,6 +67,13 @@ export function toolOutputJsonSchema(tool: ToolDefinition) {
     if (Array.isArray(node.type)) {
       node.anyOf = node.type.map((type: unknown) => ({ type }));
       delete node.type;
+    }
+    if (node.type === "integer" && typeof node.exclusiveMinimum === "number") {
+      node.minimum = Math.max(
+        typeof node.minimum === "number" ? node.minimum : -Infinity,
+        Math.floor(node.exclusiveMinimum) + 1,
+      );
+      delete node.exclusiveMinimum;
     }
     for (const child of Object.values(node)) expandTypes(child);
   }
@@ -144,4 +156,6 @@ export const toolRegister: readonly ToolDefinition[] = [
     }),
   },
   ...guideTools,
+  ...workspaceTools,
+  ...contractTools,
 ];
