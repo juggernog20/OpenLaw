@@ -30,7 +30,13 @@ import type { MailMessage } from "../mailer.js";
 import type { ApprovalsHomeSection } from "../../modules/home/sections/approvals.js";
 import type { InboxHomeSection } from "../../modules/home/sections/inbox.js";
 import type { TasksHomeSection } from "../../modules/home/sections/tasks.js";
-import { escapeHtml, matterLink, origin, recordLink } from "./email.js";
+import {
+  renderEmailLayout,
+  type EmailBrand,
+  type EmailSection,
+  type EmailStatus,
+} from "../email-layout.js";
+import { matterLink, origin, recordLink } from "./email.js";
 
 interface DigestRowBase {
   /** Which tracked date this is (NOT-002 group 3). */
@@ -72,6 +78,8 @@ export interface KnowledgeBriefingItem {
 /** Every section the round has assembled for one reader. */
 export interface BriefingMail {
   recipientName: string;
+  /** The morning round's civil date in the reader's timezone. */
+  localDate: string;
   surface?: "staff" | "portal";
   approvals: ApprovalsHomeSection | null;
   tasks: TasksHomeSection | null;
@@ -273,24 +281,12 @@ function textRows<T>(
   return [heading, "", ...body];
 }
 
-function htmlRows<T>(
-  heading: string,
-  rows: readonly T[],
-  line: (row: T) => string,
-  link: (row: T) => string,
-  more: OverflowLine | null = null,
-): string {
-  if (rows.length === 0) return "";
-  const items = rows.map((row) => {
-    const href = escapeHtml(link(row));
-    return `<li>${escapeHtml(line(row))}<br><a href="${href}">${href}</a></li>`;
-  });
-  if (more) {
-    const href = escapeHtml(more.href);
-    items.push(`<li>${escapeHtml(more.line)}<br><a href="${href}">${href}</a></li>`);
-  }
-  return `<h2>${heading}</h2><ul>${items.join("")}</ul>`;
-}
+const URGENCY: Record<InboxHomeSection["rows"][number]["urgency"], EmailStatus> = {
+  low: { label: "Low", tone: "neutral" },
+  medium: { label: "Medium", tone: "warning" },
+  high: { label: "High", tone: "severe" },
+  critical: { label: "Critical", tone: "danger" },
+};
 
 /**
  * The morning briefing one person is owed, or `null` when they are owed
@@ -310,6 +306,7 @@ export function renderBriefingMail(
   briefing: BriefingMail,
   to: string,
   baseUrl: string,
+  brand: EmailBrand = {},
 ): MailMessage | null {
   const surface = briefing.surface ?? "staff";
   const rows = sortedDates(briefing.rows);
@@ -376,41 +373,73 @@ export function renderBriefingMail(
     ...textRows("Intake", intake, intakeLine, (row) => intakeLink(row, baseUrl), intakeMore),
   );
 
-  const htmlApprovals = htmlRows(
-    "Approvals",
-    approvals,
-    (row) => approvalLine(row, briefing.readerTimeZone),
-    (row) => approvalLink(row, baseUrl),
-    approvalsMore,
-  );
-  const htmlTasks = htmlRows("Tasks", tasks, taskLine, (row) => taskLink(row, baseUrl), tasksMore);
-  const htmlDateSections = dateSections(rows)
-    .map(
-      (section) =>
-        `<h2>${section.heading}</h2><ul>${section.rows
-          .map((row) => {
-            const link = escapeHtml(digestLink(row, baseUrl, surface));
-            return `<li>${escapeHtml(digestLine(row))}<br><a href="${link}">${link}</a></li>`;
-          })
-          .join("")}</ul>`,
-    )
-    .join("");
-  const htmlKnowledge =
-    knowledgeItems.length === 0
-      ? ""
-      : `<h2>Knowledge</h2><ul>${knowledgeItems
-          .map((item) => {
-            const link = escapeHtml(knowledgeLink(item, baseUrl));
-            return `<li><a href="${link}">${escapeHtml(item.title)}</a></li>`;
-          })
-          .join("")}</ul>`;
-  const htmlIntake = htmlRows(
-    "Intake",
-    intake,
-    intakeLine,
-    (row) => intakeLink(row, baseUrl),
-    intakeMore,
-  );
+  const homeHref = `${origin(baseUrl)}/`;
+  const sections: EmailSection[] = [
+    {
+      heading: "Approvals",
+      total: briefing.approvals?.total ?? 0,
+      href: homeHref,
+      rows: approvals.map((row) => ({
+        title: row.contract.title,
+        href: approvalLink(row, baseUrl),
+        ref: recordReference("contract", row.contract.number),
+        meta: `Requested by ${row.requestedBy.displayName} on ${instantDateLabel(row.requestedAt, briefing.readerTimeZone)}`,
+      })),
+    },
+    {
+      heading: "Tasks",
+      total: briefing.tasks?.total ?? 0,
+      href: homeHref,
+      rows: tasks.map((row) => ({
+        title: row.title,
+        href: taskLink(row, baseUrl),
+        ref: recordReference(row.record.kind, row.record.number),
+        meta: row.record.title,
+        due: row.dueDate ? `Due ${civilDateLabel(row.dueDate)}` : undefined,
+        tone: row.isOverdue ? "danger" : "warning",
+      })),
+    },
+    ...dateSections(rows).map((section): EmailSection => ({
+      heading: section.heading,
+      total: section.rows.length,
+      href: homeHref,
+      rows: section.rows.map((row) => ({
+        title: row.recordTitle,
+        href: digestLink(row, baseUrl, surface),
+        ref:
+          row.entityType === "entity"
+            ? undefined
+            : recordReference(row.entityType, row.recordNumber),
+        meta: `${row.label ?? DIGEST_KIND[row.eventType] ?? "Date"}${row.unverified ? " · unverified" : ""}`,
+        when: whenIs(row.daysAway),
+        date: civilDateLabel(row.date),
+        tone: row.daysAway < 0 ? "danger" : row.daysAway <= 1 ? "warning" : "neutral",
+      })),
+    })),
+    {
+      heading: "Knowledge",
+      total: knowledgeItems.length,
+      href: homeHref,
+      rows: knowledgeItems.map((item) => ({
+        title: item.title,
+        href: knowledgeLink(item, baseUrl),
+        meta: `Published ${instantDateLabel(item.publishedAt.toISOString(), briefing.readerTimeZone)}`,
+      })),
+    },
+    {
+      heading: "Intake",
+      total: briefing.intake?.total ?? 0,
+      href: homeHref,
+      rows: intake.map((row) => ({
+        title: row.title,
+        href: intakeLink(row, baseUrl),
+        ref: `R-${row.number}`,
+        meta: row.requestType.displayName,
+        due: URGENCY[row.urgency].label,
+        tone: URGENCY[row.urgency].tone,
+      })),
+    },
+  ];
   const settingsLink = `${origin(baseUrl)}${surface === "portal" ? "/portal/settings" : "/settings/notifications"}`;
 
   return {
@@ -428,10 +457,17 @@ export function renderBriefingMail(
       "Change what reaches you in your notification settings:",
       settingsLink,
     ].join("\n"),
-    html:
-      `<!doctype html><html><body><p>Hello ${escapeHtml(briefing.recipientName)},</p>` +
-      `<p>${escapeHtml(introduction)}</p>${htmlApprovals}${htmlTasks}${htmlDateSections}${htmlKnowledge}${htmlIntake}` +
-      `<p>Change what reaches you in your <a href="${escapeHtml(settingsLink)}">notification settings</a>.</p>` +
-      "</body></html>",
+    ...renderEmailLayout(
+      {
+        subject,
+        baseUrl,
+        surface,
+        label: "Daily briefing",
+        dateline: civilDateLabel(briefing.localDate),
+        sections: sections.filter((section) => section.rows.length > 0),
+        footer: { kind: "notification", why: "This is your daily briefing." },
+      },
+      brand,
+    ),
   };
 }

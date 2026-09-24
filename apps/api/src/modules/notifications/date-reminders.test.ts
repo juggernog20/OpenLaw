@@ -467,6 +467,10 @@ describe("a notice deadline at a seeded offset", () => {
     const sent = lastDigestTo(OWNER);
     expect(sent.subject).toBe("1 date on your contracts");
     expect(sent.text).toContain(OWNER.displayName);
+    expect(sent.html).toMatch(/Daily briefing <span[^>]*>· Mar 12, 2026<\/span>/);
+    expect(sent.html).not.toContain('width="33%"');
+    expect(sent.html).toMatch(/Dates <span[^>]*>1<\/span>/);
+    expect(sent.html).toMatch(/width="100"[^>]*>In 7 days<br>/);
     expect(sent.text).toContain("In 7 days");
     expect(sent.text).toContain("Notice deadline");
     expect(sent.text).toContain(contract.title);
@@ -977,11 +981,13 @@ describe("unverified Contract dates in the briefing", () => {
 
   it("reads the current flag at send time in both bodies", () => {
     const sent = lastDigestTo(OWNER);
-    for (const body of [sent.text, sent.html!]) {
-      expect(body).toMatch(/unverified — Expiry: Flagged expiry in the briefing/);
-      expect(body).not.toMatch(/unverified — Expiry: Confirmed expiry in the briefing/);
-      expect(body).toContain(`Expiry: Confirmed expiry in the briefing (#${confirmed.number})`);
-    }
+    expect(sent.text).toMatch(/unverified — Expiry: Flagged expiry in the briefing/);
+    expect(sent.text).not.toMatch(/unverified — Expiry: Confirmed expiry in the briefing/);
+    expect(sent.text).toContain(`Expiry: Confirmed expiry in the briefing (#${confirmed.number})`);
+    expect(sent.html).toMatch(
+      /Flagged expiry in the briefing<\/a><br><span[^>]*>Expiry · unverified<\/span>/,
+    );
+    expect(sent.html).toMatch(/Confirmed expiry in the briefing<\/a><br><span[^>]*>Expiry<\/span>/);
   });
 });
 
@@ -1328,6 +1334,9 @@ describe.each([
       expect(mail.text).toContain(`http://localhost/portal/${kind}/${record.number}`);
       expect(mail.html).toContain(`http://localhost/portal/${kind}/${record.number}`);
       expect(mail.text).toContain("http://localhost/portal/settings");
+      expect(mail.html).toContain("Legal portal");
+      expect(mail.html).toContain('href="http://localhost/portal/settings"');
+      expect(mail.html).not.toContain('width="33%"');
       expect(mail.text).not.toContain("/key-dates");
       expect((await rowsFor(person)).some((row) => row.eventType === "briefing.ready")).toBe(false);
     }
