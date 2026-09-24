@@ -4,14 +4,14 @@ Connect Claude Code, Claude Cowork, Claude Desktop, or a script to OpenLaw with 
 
 ## Before you start
 
-You need an OpenLaw account, your Client installed and signed in, and the Server address from your Administrator. Claude Cowork and Claude Desktop also need Node.js 20 or later on the device, because they connect through a small bridge program. Ask the Administrator to [enable MCP and API keys for your account group](configure-mcp.md#enable-api-keys). Allow time for approval before the five-minute connection steps below.
+You need an OpenLaw account, your Client installed and signed in, and the Server address from your Administrator. Claude Cowork and Claude Desktop also need Node.js 22 or later on the device, because they connect through a small bridge program. Ask the Administrator to [enable MCP and API keys for your account group](configure-mcp.md#enable-api-keys). Allow time for approval before the five-minute connection steps below.
 
 For a [LAN only deployment](deployment-configuration.md#lan-only), run the Client on a device connected to the office network or VPN. The device must resolve the private hostname and trust its HTTPS certificate. No public address is needed.
 
 ## Request and collect your key
 
 1. Open **Settings → Personal → API keys**.
-2. Select **Request a key**. Enter `Claude Code` as the **Client name**. This name appears on activity caused by the key.
+2. Select **Request a key**. Enter the name of the app you will connect, such as `Claude Code` or `Claude Cowork`, as the **Client name**. This name appears on activity caused by the key.
 3. Select the Toolsets you need, such as **Contracts**. Choose **Read** to find and read records, or **Write** to allow changes as well. Nothing is selected for you. Guide Tools remain available with every key.
 4. Add a **Note (Optional)** to explain your task. Check the expiry, then select **Send request**.
 5. Ask an Administrator to open the bell, find your request under **Your approvals**, and select **Approve**. Your row says **Pending approval** until it is handled.
@@ -73,22 +73,22 @@ Claude Cowork and Claude Desktop have no command to add a Client. They read a co
 
 Three details keep this entry working. Write the header as `x-api-key:${OPENLAW_API_KEY}` with no space after the colon. Some versions of the app split arguments on spaces and break the header. Keep `--transport http-only`, because OpenLaw serves Streamable HTTP only. Put the key in the entry's `env` block. The app does not pass your shell environment to the bridge, so a variable exported in a terminal is not seen.
 
-The file holds your key in clear text. Keep it readable by your account only. If your secret policy does not permit this, replace the two `--header` arguments with `--header-file` and the path to a file that holds one line, `x-api-key: <your key>`, and set its permissions the same way.
+The file holds your key in clear text. Keep it readable by your account only. If your secret policy does not permit this, replace the two `--header` arguments with `--header-file` and the path to a file that holds one line, `x-api-key: <your key>`. Remove the `env` block from the entry, and set the permissions of the header file the same way.
 
-The claude.ai website and mobile apps accept only custom connectors with a public HTTPS address and OAuth sign-in. An OpenLaw API key does not connect them.
+The claude.ai website and mobile apps reach a custom connector only at a public HTTPS address, and they cannot send an API key header. OpenLaw does not offer the OAuth sign-in that an authenticated connector needs there, so an API key does not connect them.
 
 ## Fix a connection or stop access
 
-| What you see                                      | What to check or do                                                                                                                                                                                                  |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| No Request a key button                           | Ask the Administrator to turn on MCP and API keys for your account group.                                                                                                                                            |
-| Pending approval                                  | Ask an Administrator to handle the request in Your approvals or the MCP section. You can cancel a pending request from your API keys pane.                                                                           |
-| Key dialog closed before you saved it             | Revoke that key and request another. Reloading cannot recover it.                                                                                                                                                    |
-| Connection refused, timeout, or certificate error | Check the address, office network or VPN, private DNS, and certificate trust on the Client device with your deployer.                                                                                                |
-| Unauthorized                                      | Check that the environment variable is set in the shell launching Claude Code, or in the `env` block of the Cowork entry. Check expiry and revocation, and ask whether MCP or your group's API keys were turned off. |
-| A Tool is absent or a call is refused             | Compare your approved Toolsets and scope with the organization's ceiling and Read-only switch. Record access still applies.                                                                                          |
-| Rate limit reached                                | Wait until the reset time in the refusal before retrying.                                                                                                                                                            |
-| An openlaw configuration already exists           | Run `claude mcp remove --scope user openlaw`, then repeat the add command.                                                                                                                                           |
-| Claude Cowork does not list openlaw               | Check that the JSON is valid and that the app was quit and started again. Open the log for `openlaw` from **Settings → Developer**. An `npx` error means Node.js is absent.                                          |
+| What you see                                          | What to check or do                                                                                                                                                                                                                           |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No Request a key button                               | Ask the Administrator to turn on MCP and API keys for your account group.                                                                                                                                                                     |
+| Pending approval                                      | Ask an Administrator to handle the request in Your approvals or the MCP section. You can cancel a pending request from your API keys pane.                                                                                                    |
+| Key dialog closed before you saved it                 | Revoke that key and request another. Reloading cannot recover it.                                                                                                                                                                             |
+| Connection refused, timeout, or certificate error     | Check the address, office network or VPN, private DNS, and certificate trust on the Client device with your deployer.                                                                                                                         |
+| Unauthorized                                          | Check that the environment variable is set in the shell launching Claude Code, or in the `env` block of the Claude Cowork or Claude Desktop entry. Check expiry and revocation, and ask whether MCP or your group's API keys were turned off. |
+| A Tool is absent or a call is refused                 | Compare your approved Toolsets and scope with the organization's ceiling and Read-only switch. Record access still applies.                                                                                                                   |
+| Rate limit reached                                    | Wait until the reset time in the refusal before retrying.                                                                                                                                                                                     |
+| An openlaw configuration already exists               | Run `claude mcp remove --scope user openlaw`, then repeat the add command.                                                                                                                                                                    |
+| Claude Cowork or Claude Desktop does not list openlaw | Check that the JSON is valid and that the app was quit and started again. Open the log for `openlaw` from **Settings → Developer**. An `npx` error means Node.js is absent.                                                                   |
 
 To stop this Client, open **API keys**, select **Revoke** on its row, and confirm. Its next request is refused. Removing a Client configuration alone does not revoke its OpenLaw key.
