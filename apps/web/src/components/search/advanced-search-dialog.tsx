@@ -11,6 +11,7 @@ import { LoaderCircle, Search, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useConditionDefinitions } from "./condition-definitions";
 import { dropUnavailableFields, FIELD_NOTICES } from "./field-definitions";
+import { SavedSearchList, SaveSearch, useSavedSearches } from "./saved-searches";
 import { SearchConditions } from "./search-conditions";
 import { querySearch, type QuestionSearchOutcome } from "../../lib/search";
 import { cn } from "../../lib/utils";
@@ -195,6 +196,7 @@ export function AdvancedSearchDialog({
   const intl = useIntl();
   const id = useId();
   const [notice, setNotice] = useState("");
+  const searches = useSavedSearches(question, onChange, setNotice);
   const definitions = useConditionDefinitions(question.kinds, (catalog) => {
     const next = dropUnavailableFields(question, catalog);
     if (next !== question) {
@@ -361,11 +363,7 @@ export function AdvancedSearchDialog({
               focusCondition={focusCondition}
               definitions={definitions}
             />
-            <section className="min-h-12">
-              <h2 className="font-semibold">
-                <FormattedMessage id="search.saved" defaultMessage="Saved searches" />
-              </h2>
-            </section>
+            <SavedSearchList searches={searches} />
             <section className="min-h-12">
               <h2 className="font-semibold">
                 <FormattedMessage id="search.recent" defaultMessage="Recent searches" />
@@ -374,19 +372,24 @@ export function AdvancedSearchDialog({
           </div>
           <Preview question={question} onClose={onClose} fieldsValid={fieldsValid} />
         </div>
-        <footer className="flex h-16 items-center justify-between border-t border-border-default px-6">
+        <footer className="flex min-h-16 flex-wrap items-center justify-between gap-2 border-t border-border-default px-6 py-3">
           <Button
             variant="secondary"
+            disabled={searches.busy}
             onClick={() => {
+              searches.clear();
               setNotice("");
               onChange(simpleSearchQuestion());
             }}
           >
             <FormattedMessage id="search.clear" defaultMessage="Clear" />
           </Button>
-          <Button disabled={!valid} onClick={onSearch}>
-            <FormattedMessage id="search.header.label" defaultMessage="Search" />
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <SaveSearch searches={searches} valid={valid} />
+            <Button disabled={!valid || searches.busy} onClick={onSearch}>
+              <FormattedMessage id="search.header.label" defaultMessage="Search" />
+            </Button>
+          </div>
         </footer>
       </DialogContent>
     </Dialog>

@@ -5,6 +5,7 @@ import {
   encodeSearchQuestion,
   SearchQuestionSchema,
   simpleSearchQuestion,
+  resolveSearchQuestion,
 } from "@openlaw/shared";
 
 describe("the question URL codec", () => {
@@ -40,4 +41,31 @@ describe("the question URL codec", () => {
     expect(SearchQuestionSchema.safeParse(simpleSearchQuestion()).success).toBe(false);
     expect(() => encodeSearchQuestion(simpleSearchQuestion())).toThrow();
   });
+});
+
+it("reads past a removed property in a stored question and its URL without losing sort or other conditions", () => {
+  const kept = {
+    kind: "contract" as const,
+    property: "expiry",
+    operator: "in_next_days",
+    value: 90,
+  };
+  const question = {
+    ...simpleSearchQuestion("renewal", ["contract"]),
+    sort: "expiry" as const,
+    conditions: [
+      kept,
+      { kind: "contract" as const, property: "removed", operator: "contains", value: "x" },
+    ],
+  };
+  expect(resolveSearchQuestion(question)).toEqual({
+    question: { ...question, conditions: [kept] },
+    dropped: 1,
+  });
+  const encoded = btoa(JSON.stringify(question))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
+  expect(decodeSearchQuestion(encoded)).toEqual({ ...question, conditions: [kept] });
+  expect(SearchQuestionSchema.safeParse(question).success).toBe(false);
 });

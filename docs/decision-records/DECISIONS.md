@@ -1008,6 +1008,10 @@ The Documents destination adopts `list_views` under the `documents` surface slug
 
 The Entity registry adopts `list_views` under the `entities` surface slug. Its chosen columns, Type, Status, Jurisdiction, Majority owner, and archived filters, and sort are one whole config under clauses 2 and 4. The fourth adopter adds no schema, sharing, or default-view exception; unknown catalogue keys remain a read-past.
 
+### Addendum (2026-09-25, M44/9, [#1096](https://github.com/juggernog20/OpenLaw/issues/1096)): saved searches
+
+Saved searches use the `search` surface in `list_views`. The config is the whole version 1 question, including sort. They remain private, with the same case-insensitive name rule and per-surface ceiling. Save overwrites the open search, Save as forks it, and edits remain unsaved until that act. The dialog reads past removed properties and archived Fields, drops only their conditions, and shows a notice. Search has no default: the menu omits Set as default, and the API refuses `isDefault: true`. Opening the dialog does not run a saved question until the reader chooses it. No table or migration is added.
+
 ## DD-020: Product documentation is public, versioned, and separate from Knowledge
 
 - **Status:** Accepted

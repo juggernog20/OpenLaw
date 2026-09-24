@@ -8645,8 +8645,35 @@
   "search.result.knowledgeDraft": {
     "defaultMessage": "Draft · Knowledge Item"
   },
+  "search.save": {
+    "defaultMessage": "Save search"
+  },
   "search.saved": {
     "defaultMessage": "Saved searches"
+  },
+  "search.saved.actions": {
+    "defaultMessage": "Saved search actions"
+  },
+  "search.saved.conditionsRemoved": {
+    "defaultMessage": "Unavailable search conditions were removed."
+  },
+  "search.saved.delete.body": {
+    "defaultMessage": "{name} is removed. The records it finds are not touched."
+  },
+  "search.saved.delete.title": {
+    "defaultMessage": "Delete this saved search?"
+  },
+  "search.saved.manage": {
+    "defaultMessage": "Manage {name}"
+  },
+  "search.saved.openError": {
+    "defaultMessage": "This saved search could not open. Try again."
+  },
+  "search.saved.rename.title": {
+    "defaultMessage": "Rename this saved search"
+  },
+  "search.saved.saveAs.title": {
+    "defaultMessage": "Save this search"
   },
   "search.scope": {
     "defaultMessage": "Search in"

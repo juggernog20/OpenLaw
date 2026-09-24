@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { z } from "zod";
-import { conditionProblem } from "./search-conditions.js";
+import { conditionProblem, searchProperty } from "./search-conditions.js";
 
 export const SEARCH_KINDS = [
   "contract",
@@ -18,54 +18,54 @@ const WordsRowSchema = z
   .trim()
   .max(200, "Search words rows must be 200 characters or fewer.");
 
-export const SearchQuestionSchema = z
-  .object({
-    version: z.literal(1),
-    words: z.object({
-      all: WordsRowSchema,
-      phrase: WordsRowSchema,
-      any: WordsRowSchema,
-      none: WordsRowSchema,
-    }),
-    scope: z.object({ titles: z.boolean(), text: z.boolean(), contents: z.boolean() }),
-    kinds: z.array(z.enum(SEARCH_KINDS)).max(SEARCH_KINDS.length),
-    conditions: z
-      .array(
-        z.object({
-          kind: z.enum(SEARCH_KINDS),
-          property: z.string().min(1).max(200),
-          operator: z.string().min(1).max(100),
-          value: z.unknown().optional(),
-        }),
-      )
-      .max(20, "A search can have at most 20 conditions."),
-    match: z.enum(["all", "any"]),
-    sort: z.enum(["relevance", "newest", "oldest", "expiry", "title"]),
-  })
-  .superRefine((question, ctx) => {
-    const hasWords = Object.values(question.words).some(Boolean);
-    if (hasWords && !Object.values(question.scope).some(Boolean)) {
+export const StoredSearchQuestionSchema = z.object({
+  version: z.literal(1),
+  words: z.object({
+    all: WordsRowSchema,
+    phrase: WordsRowSchema,
+    any: WordsRowSchema,
+    none: WordsRowSchema,
+  }),
+  scope: z.object({ titles: z.boolean(), text: z.boolean(), contents: z.boolean() }),
+  kinds: z.array(z.enum(SEARCH_KINDS)).max(SEARCH_KINDS.length),
+  conditions: z
+    .array(
+      z.object({
+        kind: z.enum(SEARCH_KINDS),
+        property: z.string().min(1).max(200),
+        operator: z.string().min(1).max(100),
+        value: z.unknown().optional(),
+      }),
+    )
+    .max(20, "A search can have at most 20 conditions."),
+  match: z.enum(["all", "any"]),
+  sort: z.enum(["relevance", "newest", "oldest", "expiry", "title"]),
+});
+
+export const SearchQuestionSchema = StoredSearchQuestionSchema.superRefine((question, ctx) => {
+  const hasWords = Object.values(question.words).some(Boolean);
+  if (hasWords && !Object.values(question.scope).some(Boolean)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["scope"],
+      message: "Choose at least one search scope.",
+    });
+  }
+  if (!hasWords && question.conditions.length === 0 && question.kinds.length === 0) {
+    ctx.addIssue({ code: "custom", message: "Enter words, choose a kind, or add a condition." });
+  }
+  question.conditions.forEach((condition, index) => {
+    const problem = conditionProblem(condition);
+    if (problem) ctx.addIssue({ code: "custom", path: ["conditions", index], message: problem });
+    if (!question.kinds.includes(condition.kind)) {
       ctx.addIssue({
         code: "custom",
-        path: ["scope"],
-        message: "Choose at least one search scope.",
+        path: ["conditions", index, "kind"],
+        message: "Choose the condition's kind.",
       });
     }
-    if (!hasWords && question.conditions.length === 0 && question.kinds.length === 0) {
-      ctx.addIssue({ code: "custom", message: "Enter words, choose a kind, or add a condition." });
-    }
-    question.conditions.forEach((condition, index) => {
-      const problem = conditionProblem(condition);
-      if (problem) ctx.addIssue({ code: "custom", path: ["conditions", index], message: problem });
-      if (!question.kinds.includes(condition.kind)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["conditions", index, "kind"],
-          message: "Choose the condition's kind.",
-        });
-      }
-    });
   });
+});
 
 export type SearchQuestion = z.infer<typeof SearchQuestionSchema>;
 
@@ -85,6 +85,27 @@ export function simpleSearchQuestion(
   };
 }
 
+/** Read a stored question past a property the build no longer has
+ * (DD-019 clause 7): that condition is dropped, the rest stands, and
+ * `dropped` counts what went. Field conditions are kept here; the dialog
+ * checks them against the live catalogue, which this package cannot see.
+ * Null means the stored shape is not a version 1 question, or what is
+ * left of it is not a question the search can run. */
+export function resolveSearchQuestion(
+  stored: unknown,
+): { question: SearchQuestion; dropped: number } | null {
+  const parsed = StoredSearchQuestionSchema.safeParse(stored);
+  if (!parsed.success) return null;
+  const conditions = parsed.data.conditions.filter(
+    (condition) =>
+      condition.property.startsWith("field:") ||
+      searchProperty(condition.kind, condition.property) !== undefined,
+  );
+  const question = { ...parsed.data, conditions };
+  if (!SearchQuestionSchema.safeParse(question).success) return null;
+  return { question, dropped: parsed.data.conditions.length - conditions.length };
+}
+
 export function encodeSearchQuestion(question: SearchQuestion): string {
   const bytes = new TextEncoder().encode(JSON.stringify(SearchQuestionSchema.parse(question)));
   return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""))
@@ -99,10 +120,10 @@ export function decodeSearchQuestion(encoded: string): SearchQuestion | null {
     const bytes = Uint8Array.from(atob(encoded.replaceAll("-", "+").replaceAll("_", "/")), (char) =>
       char.charCodeAt(0),
     );
-    const parsed = SearchQuestionSchema.safeParse(
-      JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    return (
+      resolveSearchQuestion(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)))
+        ?.question ?? null
     );
-    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }
