@@ -30,3 +30,6 @@ fb3c9439823e9d0e824e596d393fb7e96d1e130b:apps/api/src/modules/auth/profile.test.
 # The Pencil document id of designs/mcp.pen. Every .pen file carries a fileToken;
 # it names the document and unlocks nothing.
 aeb038aa69b65f2cdec50b9eafb2f3e3a6b8be19:designs/mcp.pen:generic-api-key:13996
+
+# Pencil document id for the Advanced search mock, as with mcp.pen above.
+fd39dd5f52154e9a95d20d437933669203304f8f:designs/search.pen:generic-api-key:14409
