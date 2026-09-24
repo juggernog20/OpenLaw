@@ -8,7 +8,15 @@
 
 import { SearchQuestionSchema, simpleSearchQuestion } from "@openlaw/shared";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { ArrowRight, LoaderCircle, SearchX, SlidersHorizontal, TriangleAlert } from "lucide-react";
+import {
+  ArrowRight,
+  Bookmark,
+  History,
+  LoaderCircle,
+  SearchX,
+  SlidersHorizontal,
+  TriangleAlert,
+} from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { useLocation, useNavigate } from "react-router";
 import { registerSearchTarget, SEARCH_KEY } from "../../lib/keyboard";
@@ -23,6 +31,7 @@ import {
 
 import { useAdvancedSearch } from "../search/advanced-search";
 import { questionFromSearch, questionPath } from "../search/search-question";
+import { useEmptySearchEntries } from "../search/empty-search-entries";
 
 const SEARCH_DEBOUNCE_MS = 150;
 const MIN_QUERY_LENGTH = 2;
@@ -97,10 +106,15 @@ export function SearchInput() {
     [],
   );
   const trimmed = query.trim();
-  const listOpen = open && !advanced.draft && trimmed.length >= MIN_QUERY_LENGTH;
+  const emptyBox = query.length === 0;
+  const groups = useEmptySearchEntries(open && emptyBox && !advanced.draft);
+  const entries = groups.flatMap((group) => group.entries);
+  const resultsOpen = open && !advanced.draft && trimmed.length >= MIN_QUERY_LENGTH;
+  const historyOpen = open && !advanced.draft && emptyBox && entries.length > 0;
+  const listOpen = resultsOpen || historyOpen;
 
   useEffect(() => {
-    if (!listOpen) return;
+    if (!resultsOpen) return;
     let live = true;
     const timer = setTimeout(() => {
       void search(trimmed).then((answer) => {
@@ -114,14 +128,14 @@ export function SearchInput() {
       live = false;
       clearTimeout(timer);
     };
-  }, [listOpen, trimmed]);
+  }, [resultsOpen, trimmed]);
 
   const results = useMemo(() => {
     if (!outcome?.ok) return [];
     return SEARCH_KIND_ORDER.flatMap((kind) => outcome.results.filter((row) => row.kind === kind));
   }, [outcome]);
-  const visibleResults = searching ? [] : results;
-  const optionCount = visibleResults.length + 2;
+  const visibleResults = searching || emptyBox ? [] : results;
+  const optionCount = emptyBox ? entries.length + 1 : visibleResults.length + 2;
   const active = Math.min(activeIndex, Math.max(optionCount - 1, 0));
   const optionId = (index: number) => `${popoverId}-option-${String(index)}`;
   const activeOptionId = optionId(active);
@@ -150,6 +164,14 @@ export function SearchInput() {
   }
 
   function openOption(index: number) {
+    if (historyOpen) {
+      const entry = entries[index];
+      if (entry) {
+        close();
+        void navigate(questionPath(entry.question));
+      } else openAdvanced();
+      return;
+    }
     if (index === visibleResults.length + 1) {
       openAdvanced();
       return;
@@ -194,7 +216,8 @@ export function SearchInput() {
           setQuery(next);
           const nextTrimmed = next.trim();
           const hasQuery = nextTrimmed.length >= MIN_QUERY_LENGTH;
-          setOpen(hasQuery);
+          setOpen(hasQuery || next.length === 0);
+          if (next.length === 0) setActiveIndex(0);
           if (nextTrimmed !== trimmed) {
             setActiveIndex(0);
             setOutcome(null);
@@ -210,6 +233,10 @@ export function SearchInput() {
           // clearing it here would strand the spinner.
         }}
         onFocus={() => {
+          if (emptyBox) {
+            setActiveIndex(0);
+            setOpen(true);
+          }
           if (trimmed.length >= MIN_QUERY_LENGTH) {
             setOutcome(null);
             setSearching(true);
@@ -220,7 +247,8 @@ export function SearchInput() {
         onKeyDown={(event) => {
           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
             event.preventDefault();
-            if (trimmed.length >= MIN_QUERY_LENGTH && !listOpen) {
+            if (emptyBox && !listOpen) setOpen(true);
+            else if (trimmed.length >= MIN_QUERY_LENGTH && !listOpen) {
               setOutcome(null);
               setSearching(true);
               setOpen(true);
@@ -235,7 +263,7 @@ export function SearchInput() {
             openOption(active);
             return;
           }
-          if (event.key === "Escape" && listOpen) {
+          if (event.key === "Escape" && (listOpen || (open && emptyBox))) {
             event.preventDefault();
             event.stopPropagation();
             close();
@@ -268,7 +296,49 @@ export function SearchInput() {
           aria-busy={searching}
           className="absolute top-full z-50 mt-1 max-h-[min(38rem,calc(100vh-5rem))] w-full overflow-y-auto rounded-card border border-border-default bg-raised text-primary shadow-xl"
         >
-          {searching && (
+          {historyOpen &&
+            groups.map((group, groupIndex) => {
+              if (!group.entries.length) return null;
+              const offset = groups
+                .slice(0, groupIndex)
+                .reduce((count, previous) => count + previous.entries.length, 0);
+              const Icon = group.key === "saved" ? Bookmark : History;
+              return (
+                <div key={group.key} role="group" aria-label={group.label}>
+                  <div className="border-t border-border-muted px-3 pb-1 pt-3 text-sm font-semibold text-muted">
+                    {group.label}
+                  </div>
+                  {group.entries.map((entry, at) => {
+                    const index = offset + at;
+                    return (
+                      <div
+                        key={entry.key}
+                        id={optionId(index)}
+                        role="option"
+                        aria-selected={active === index}
+                        className={`flex h-10 cursor-default items-center gap-2 px-3 text-sm ${active === index ? "bg-status-info-bg" : "bg-raised"}`}
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          openOption(index);
+                        }}
+                        onMouseMove={() => setActiveIndex(index)}
+                      >
+                        <Icon size={16} aria-hidden="true" className="shrink-0 text-muted" />
+                        <span className="truncate" title={entry.label}>
+                          {entry.label}
+                        </span>
+                        {active === index && (
+                          <span aria-hidden="true" className="ms-auto text-xs text-muted">
+                            <FormattedMessage id="search.header.enter" defaultMessage="Enter" />
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          {!historyOpen && searching && (
             <div role="status" className="flex flex-col items-center gap-2 px-5 py-6 text-center">
               <LoaderCircle size={20} aria-hidden="true" className="animate-spin text-muted" />
               <p className="text-sm font-semibold">
@@ -279,7 +349,7 @@ export function SearchInput() {
               </p>
             </div>
           )}
-          {!searching && outcome?.ok && results.length === 0 && (
+          {!historyOpen && !searching && outcome?.ok && results.length === 0 && (
             <div role="status" className="flex flex-col items-center gap-2 px-5 py-6 text-center">
               <SearchX size={20} aria-hidden="true" className="text-muted" />
               <p className="text-sm font-semibold">
@@ -290,7 +360,7 @@ export function SearchInput() {
               </p>
             </div>
           )}
-          {!searching && outcome && !outcome.ok && (
+          {!historyOpen && !searching && outcome && !outcome.ok && (
             <div role="alert" className="flex flex-col items-center gap-2 px-5 py-6 text-center">
               <TriangleAlert size={20} aria-hidden="true" className="text-status-danger-fg" />
               <p className="text-sm font-semibold">
@@ -301,7 +371,7 @@ export function SearchInput() {
               </p>
             </div>
           )}
-          {!searching && outcome?.ok && results.length > 0 && (
+          {!historyOpen && !searching && outcome?.ok && results.length > 0 && (
             <>
               {SEARCH_KIND_ORDER.map((kind) => {
                 const grouped = results
@@ -332,20 +402,24 @@ export function SearchInput() {
             </>
           )}
           {[MESSAGES.seeAll, MESSAGES.advanced].map((message, offset) => {
-            const index = visibleResults.length + offset;
+            const disabled = historyOpen && offset === 0;
+            const index = historyOpen ? entries.length : visibleResults.length + offset;
             const Icon = offset === 0 ? ArrowRight : SlidersHorizontal;
             return (
               <div
                 key={message.id}
-                id={optionId(index)}
+                id={disabled ? undefined : optionId(index)}
                 role="option"
-                aria-selected={active === index}
-                className={`flex h-11 cursor-default items-center justify-between border-t border-border-muted px-3 text-sm font-semibold text-link ${active === index ? "bg-status-info-bg" : "bg-raised"}`}
+                aria-disabled={disabled || undefined}
+                aria-selected={!disabled && active === index}
+                className={`flex h-11 cursor-default items-center justify-between border-t border-border-muted px-3 text-sm font-semibold ${disabled ? "text-muted opacity-50" : "text-link"} ${!disabled && active === index ? "bg-status-info-bg" : "bg-raised"}`}
                 onPointerDown={(event) => {
                   event.preventDefault();
-                  openOption(index);
+                  if (!disabled) openOption(index);
                 }}
-                onMouseMove={() => setActiveIndex(index)}
+                onMouseMove={() => {
+                  if (!disabled) setActiveIndex(index);
+                }}
               >
                 <FormattedMessage {...message} />
                 <Icon size={16} aria-hidden="true" />

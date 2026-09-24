@@ -103,7 +103,7 @@ export function AppShell({
 
   return (
     <ShellThemeContext.Provider value={shellTheme}>
-      <AdvancedSearchProvider>
+      <AdvancedSearchProvider key={user.id} userId={user.id}>
         {/* `h-dvh`, not `h-screen`: on a phone the viewport is the one the
           browser's own bars leave behind, and `vh` measures the one
           before they arrive. `overflow-hidden` is what makes the chrome

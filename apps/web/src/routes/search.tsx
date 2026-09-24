@@ -2,7 +2,7 @@
 
 /** Ranked results with the question held in the URL for reload, sharing and Back. */
 import { DEFAULT_SEARCH_SCOPE, SearchQuestionSchema, type SearchQuestion } from "@openlaw/shared";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search as SearchIcon, X } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -13,6 +13,7 @@ import {
   type SearchResult,
 } from "../lib/search";
 import { requireUser, useSignOut } from "../lib/session";
+import { recordRecentSearch } from "../lib/recent-searches";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import {
@@ -270,6 +271,12 @@ function SearchAnswer({
 export function SearchPage() {
   const loaded = useLoaderData<typeof searchLoader>();
   const intl = useIntl();
+
+  // Notify history readers after the route commits, so the storage update
+  // cannot interrupt a pending navigation or record a cancelled one.
+  useEffect(() => {
+    if (!loaded.empty) recordRecentSearch(loaded.user.id, loaded.question);
+  }, [loaded.user.id, loaded.question, loaded.empty]);
 
   const signOut = useSignOut("/auth/login");
 

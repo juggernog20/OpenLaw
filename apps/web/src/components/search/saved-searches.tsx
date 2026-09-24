@@ -43,10 +43,10 @@ export function useSavedSearches(
     };
   }, []);
 
-  async function select(view: SearchView | null) {
+  async function select(view: SearchView | null, recent?: SearchQuestion) {
     const request = ++selection.current;
     setError(null);
-    if (!view) {
+    if (!view && !recent) {
       setActiveView(null);
       onNotice("");
       onChange(simpleSearchQuestion());
@@ -54,7 +54,7 @@ export function useSavedSearches(
     }
     setBusy(true);
     try {
-      const resolved = resolveSearchQuestion(view.layout);
+      const resolved = resolveSearchQuestion(recent ?? view?.layout);
       if (!resolved) throw new Error("invalid question");
       let next = resolved.question;
       if (next.conditions.some((condition) => condition.property.startsWith("field:"))) {
@@ -71,14 +71,14 @@ export function useSavedSearches(
             })
           : "",
       );
-      setActiveView({ ...view, layout: next });
+      setActiveView(view ? { ...view, layout: next } : null);
       onChange(next);
     } catch {
       if (request === selection.current)
         setError(
           intl.formatMessage({
-            id: "search.saved.openError",
-            defaultMessage: "This saved search could not open. Try again.",
+            id: "search.openError",
+            defaultMessage: "This search could not open. Try again.",
           }),
         );
     } finally {
@@ -109,6 +109,9 @@ export function useSavedSearches(
     error,
     select: (view: SearchView | null) => {
       void select(view);
+    },
+    selectRecent: (question: SearchQuestion) => {
+      void select(null, question);
     },
     clear: () => {
       selection.current++;

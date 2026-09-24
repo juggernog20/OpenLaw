@@ -1,52 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { isValuelessOperator, isRelativeDateOperator, type SearchQuestion } from "@openlaw/shared";
+import { type SearchQuestion } from "@openlaw/shared";
 import { Link } from "react-router";
 import { X } from "lucide-react";
-import { defineMessages, useIntl, type MessageDescriptor } from "react-intl";
+import { useIntl } from "react-intl";
 import { useAdvancedSearch } from "./advanced-search";
-import { operatorLabel, propertyLabel, useConditionDefinitions } from "./condition-definitions";
-import { searchKindLabel } from "./search-result-row";
+import { conditionLabel, useConditionDefinitions } from "./condition-definitions";
 import { questionPath } from "./search-question";
-
-const CHIP_LABELS: Record<"absolute" | "relative", MessageDescriptor> = defineMessages({
-  absolute: { id: "search.condition.chip", defaultMessage: "{kind} {property} {operator} {value}" },
-  relative: { id: "search.condition.relativeChip", defaultMessage: "{kind} {property} {operator}" },
-});
 
 export function ConditionChips({ question }: Readonly<{ question: SearchQuestion }>) {
   const intl = useIntl();
   const { open } = useAdvancedSearch();
-  const { choices, fields } = useConditionDefinitions(
-    question.conditions.length ? question.kinds : [],
-  );
+  const definitions = useConditionDefinitions(question.conditions.length ? question.kinds : []);
   return question.conditions.map((condition, index) => {
-    const options = choices(condition);
-    const value = Array.isArray(condition.value)
-      ? condition.value
-          .map(
-            (value) => options.find((option) => option.id === value)?.displayName ?? String(value),
-          )
-          .join(", ")
-      : typeof condition.value === "boolean"
-        ? condition.value
-          ? intl.formatMessage({ id: "search.condition.yes", defaultMessage: "Yes" })
-          : intl.formatMessage({ id: "search.condition.no", defaultMessage: "No" })
-        : String(condition.value);
-    const relative =
-      isRelativeDateOperator(condition.operator) || isValuelessOperator(condition.operator);
-    const label = intl.formatMessage(relative ? CHIP_LABELS.relative : CHIP_LABELS.absolute, {
-      kind: searchKindLabel(intl, condition.kind),
-      property:
-        fields.properties.find(
-          (property) => property.kind === condition.kind && property.key === condition.property,
-        )?.label ?? propertyLabel(intl, condition.kind, condition.property),
-      operator: operatorLabel(
-        intl,
-        condition.operator,
-        typeof condition.value === "number" ? condition.value : undefined,
-      ),
-      value,
-    });
+    const label = conditionLabel(intl, condition, definitions);
     return (
       <span
         key={index}

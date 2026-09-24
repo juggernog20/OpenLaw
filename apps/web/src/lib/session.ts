@@ -12,6 +12,7 @@ import { unsubscribeDevice } from "./device-notifications";
 import { api } from "./api";
 import { authClient } from "./auth-client";
 import { configureFormatting } from "./format";
+import { clearRecentSearches } from "./recent-searches";
 
 export async function currentUser({ allowTwoFactorSetup = false, allowEmailSetup = false } = {}) {
   const { data, response } = await api.GET("/api/v1/me");
@@ -85,6 +86,7 @@ export async function requireUser(
 export function useSignOut(to: string): () => Promise<void> {
   const navigate = useNavigate();
   return async () => {
+    clearRecentSearches();
     // The session request goes out in the click's own task. Awaiting a
     // browser API first moves it to a later task, and a navigation that
     // lands in between leaves the person signed in. The browser
