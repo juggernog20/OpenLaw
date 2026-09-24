@@ -18,7 +18,7 @@ import {
   MutateContractTaskBody,
 } from "../modules/contract-tasks/service.js";
 import { addMatterTask, updateMatterTask } from "../modules/matter-tasks/service.js";
-import { readTool } from "./workspace.js";
+import { readTool, writeTool } from "./workspace.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
 import type { ToolDefinition } from "./tool.js";
 
@@ -40,18 +40,6 @@ const updateInput = z.strictObject({
   taskId: z.string().min(1).max(64),
   changes: MutateContractTaskBody,
 });
-const writeTool = {
-  toolset: "tasks",
-  kind: "write",
-  legalUser: "on",
-  businessUser: "off",
-  annotations: {
-    readOnlyHint: false,
-    destructiveHint: false,
-    openWorldHint: false,
-    idempotentHint: false,
-  },
-} as const;
 const output = z.object({ taskId: z.string() });
 export const taskTools: readonly ToolDefinition[] = [
   {
@@ -79,6 +67,7 @@ export const taskTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "tasks",
     name: "openlaw_task_create",
     title: "Create a Task",
     description:
@@ -100,6 +89,7 @@ export const taskTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "tasks",
     annotations: { ...writeTool.annotations, idempotentHint: true },
     name: "openlaw_task_update",
     title: "Update a Task",

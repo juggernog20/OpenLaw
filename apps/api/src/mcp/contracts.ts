@@ -51,8 +51,9 @@ import { listPortalDocuments } from "../modules/portal/document-service.js";
 import { AnalysisRunSchema, toAnalysisRun } from "../modules/contract-analysis/routes.js";
 import { runContractAnalysis } from "../modules/contract-analysis/service.js";
 import { ToolError, type ToolDefinition } from "./tool.js";
-import { readTool } from "./workspace.js";
+import { readTool, writeTool } from "./workspace.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
+import { creationAnswerParser } from "./answers.js";
 
 const reference = z.number().int().min(1);
 const id = z.string().min(1).max(128);
@@ -85,18 +86,6 @@ const changesSchema = ContractUpdateBody.omit({ isConfidential: true, contractTy
 const updateInput = z.object({ number: reference, changes: changesSchema }).strict();
 const statusInput = ContractStatusBody.extend({ number: reference });
 const analysisInput = z.object({ number: reference, versionId: id.optional() }).strict();
-const writeTool = {
-  toolset: "contracts",
-  kind: "write",
-  legalUser: "on",
-  businessUser: "off",
-  annotations: {
-    readOnlyHint: false,
-    destructiveHint: false,
-    openWorldHint: false,
-    idempotentHint: false,
-  },
-} as const;
 const mutationOutput = z.object({ number: reference });
 // The facts the DD-021 Portal read and the Portal work read expose. The status label,
 // the type, status and Department ids and every other Legal-only fact stay out.
@@ -186,39 +175,13 @@ const creationAnswers = changesSchema.omit({ managerId: true, businessOwnerId: t
     .max(50)
     .optional(),
 });
-const rowRefs = new Map(Object.entries(answerNames).map(([rowRef, key]) => [key, rowRef]));
-/** Name a refused answer the way the agent keyed it: by rowRef, and a Field by its slug. */
-function answerPath(path: readonly PropertyKey[]): string[] {
-  const [head, ...rest] = path.map(String);
-  if (head === undefined) return [];
-  if (head === "customFields") return rest;
-  return [rowRefs.get(head) ?? head, ...rest];
-}
-function parseAnswers(answers: Record<string, unknown>, contractTypeId: string) {
-  const native: Record<string, unknown> = {};
-  const custom: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(answers)) {
-    if (key === "contract_type") {
-      if (value !== contractTypeId)
-        throw new ToolError(
-          "validation_error",
-          "Contract type: the answer must match contractTypeId.",
-        );
-      continue;
-    }
-    if (Object.hasOwn(answerNames, key)) native[answerNames[key]!] = value;
-    else custom[key] = value;
-  }
-  const parsed = creationAnswers.safeParse({ ...native, customFields: custom });
-  if (!parsed.success)
-    throw new ToolError(
-      "validation_error",
-      parsed.error.issues
-        .map((issue) => `${answerPath(issue.path).join(".")}: ${issue.message}`)
-        .join("; "),
-    );
-  return parsed.data;
-}
+const parseAnswers = creationAnswerParser({
+  typeRowRef: "contract_type",
+  typeLabel: "Contract type",
+  typeArgument: "contractTypeId",
+  answerNames,
+  schema: creationAnswers,
+});
 async function pendingApprovals(db: Db, contractId: string, approverId?: string) {
   const rows = await db
     .select({
@@ -367,6 +330,7 @@ export const contractTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "contracts",
     name: "openlaw_contract_create",
     title: "Create a Contract",
     description:
@@ -429,6 +393,7 @@ export const contractTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "contracts",
     annotations: { ...writeTool.annotations, idempotentHint: true },
     name: "openlaw_contract_update",
     title: "Update Contract Fields and owners",
@@ -445,6 +410,7 @@ export const contractTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "contracts",
     name: "openlaw_contract_set_status",
     title: "Move Contract status",
     description:
@@ -460,6 +426,7 @@ export const contractTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "contracts",
     name: "openlaw_analysis_run",
     title: "Run Contract analysis",
     description:

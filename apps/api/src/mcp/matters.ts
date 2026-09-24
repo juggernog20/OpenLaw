@@ -46,8 +46,9 @@ import { listMatterDocuments } from "../modules/documents/service.js";
 import { listPortalDocuments } from "../modules/portal/document-service.js";
 import { recordPerson } from "../lib/record-person.js";
 import { departmentName } from "../modules/departments/references.js";
-import { readTool } from "./workspace.js";
+import { readTool, writeTool } from "./workspace.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
+import { creationAnswerParser } from "./answers.js";
 import { ToolError, type ToolDefinition } from "./tool.js";
 
 const id = z.string().min(1).max(128);
@@ -74,18 +75,6 @@ const createInput = z.strictObject({
 const changesSchema = MatterUpdateBody.omit({ isConfidential: true, matterTypeId: true });
 const updateInput = z.strictObject({ number: numberSchema, changes: changesSchema });
 const statusInput = MatterStatusBody.extend({ number: numberSchema });
-const writeTool = {
-  toolset: "matters",
-  kind: "write",
-  legalUser: "on",
-  businessUser: "off",
-  annotations: {
-    readOnlyHint: false,
-    destructiveHint: false,
-    openWorldHint: false,
-    idempotentHint: false,
-  },
-} as const;
 const mutationOutput = z.object({ number: numberSchema });
 // Facts exposed by the Portal overview and work reads.
 const portalRow = MatterRowSchema.pick({
@@ -137,33 +126,13 @@ const creationAnswers = changesSchema.omit({ managerId: true, businessOwnerId: t
   title: z.string().trim().min(1).max(MAX_MATTER_TITLE_LENGTH),
   neededBy: z.iso.date().nullable().optional(),
 });
-function parseAnswers(answers: Record<string, unknown>, matterTypeId: string) {
-  const native: Record<string, unknown> = {};
-  const customFields: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(answers)) {
-    if (key === "matter_type") {
-      if (value !== matterTypeId)
-        throw new ToolError("validation_error", "Matter type: the answer must match matterTypeId.");
-    } else if (Object.hasOwn(answerNames, key)) native[answerNames[key]!] = value;
-    else customFields[key] = value;
-  }
-  const parsed = creationAnswers.safeParse({ ...native, customFields });
-  if (!parsed.success)
-    throw new ToolError(
-      "validation_error",
-      parsed.error.issues
-        .map((issue) => {
-          const path = issue.path.map(String);
-          if (path[0] === "customFields") path.shift();
-          else if (path[0])
-            path[0] =
-              Object.entries(answerNames).find(([, value]) => value === path[0])?.[0] ?? path[0];
-          return `${path.join(".")}: ${issue.message}`;
-        })
-        .join("; "),
-    );
-  return parsed.data;
-}
+const parseAnswers = creationAnswerParser({
+  typeRowRef: "matter_type",
+  typeLabel: "Matter type",
+  typeArgument: "matterTypeId",
+  answerNames,
+  schema: creationAnswers,
+});
 export const matterTools: readonly ToolDefinition[] = [
   {
     ...readTool,
@@ -288,6 +257,7 @@ export const matterTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "matters",
     name: "openlaw_matter_create",
     title: "Create a Matter",
     description:
@@ -335,6 +305,7 @@ export const matterTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "matters",
     annotations: { ...writeTool.annotations, idempotentHint: true },
     name: "openlaw_matter_update",
     title: "Update Matter Fields and Manager",
@@ -351,6 +322,7 @@ export const matterTools: readonly ToolDefinition[] = [
   },
   {
     ...writeTool,
+    toolset: "matters",
     name: "openlaw_matter_set_status",
     title: "Move Matter status",
     description:
