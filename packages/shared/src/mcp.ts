@@ -27,3 +27,5 @@ export const API_KEY_PROBLEMS = [
   "urn:openlaw:problem:toolset-outside-ceiling",
   "urn:openlaw:problem:mcp-read-only",
 ] as const;
+
+export const MCP_OAUTH_UNAVAILABLE_PROBLEM = "urn:openlaw:problem:mcp-oauth-unavailable";

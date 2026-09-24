@@ -663,4 +663,9 @@ export {
   type FormModule,
 } from "./form-builtins.js";
 
-export { API_KEY_PROBLEMS, MCP_TOOLSETS, type McpToolset } from "./mcp.js";
+export {
+  API_KEY_PROBLEMS,
+  MCP_TOOLSETS,
+  MCP_OAUTH_UNAVAILABLE_PROBLEM,
+  type McpToolset,
+} from "./mcp.js";

@@ -35,10 +35,11 @@ export function authorizationServerAvailable(baseUrl: string): boolean {
   return url.protocol === "https:" || (url.protocol === "http:" && loopback);
 }
 
-export function oauthPlugins(baseUrl: string) {
+export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90) {
   if (!authorizationServerAvailable(baseUrl)) return [];
   const provider = mcp({
     resource: mcpResource(baseUrl),
+    refreshTokenExpiresIn: grantLifetimeDays * 86_400,
     loginPage: "/auth/login",
     consentPage: "/auth/consent",
     scopes: MCP_SCOPES,

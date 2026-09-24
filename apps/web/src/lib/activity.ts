@@ -402,6 +402,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
         "requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} " +
         "mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} " +
+        "mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} " +
         "mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} " +
         "other {{key}}}",
     },

@@ -126,10 +126,12 @@ import { usersRoutes } from "./modules/users/routes.js";
 import { apiKeyRoutes } from "./modules/api-keys/routes.js";
 import type { ToolDefinition } from "./mcp/register.js";
 import { mcpRoutes } from "./mcp/routes.js";
+import type { ResolveIpv4 } from "./modules/mcp-settings/reachability.js";
 import { mcpSettingsRoutes } from "./modules/mcp-settings/routes.js";
 import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
 import {
   effectiveEnvironment,
+  oauthGrantLifetimeDays,
   emptySettings,
   type AdvancedRuntime,
 } from "./modules/advanced-settings/config.js";
@@ -217,6 +219,7 @@ export interface AppDeps {
    */
   maxUploadBytes?: number;
   advancedRuntime?: AdvancedRuntime;
+  mcpResolveIpv4?: ResolveIpv4;
   /** TECH-035 register injection for the MCP adapter seam. Defaults to the code-owned register. */
   mcpTools?: readonly ToolDefinition[];
   /**
@@ -320,13 +323,20 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("notifier", deps.notifier);
   app.decorate("eventHub", deps.eventHub);
   app.decorate("baseUrl", deps.config.baseUrl);
+  const grantLifetimeDays = oauthGrantLifetimeDays(deps.advancedRuntime?.active ?? {});
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
   // OAuth seeds its resource during initialization. Route-only consumers such as
   // OpenAPI emission must not open a database; production awaits $context at boot.
   let auth: Auth | undefined;
   app.decorate("auth", {
-    getter: () => (auth ??= createAuth(deps.db, deps.config, deps.resolveMailer, app.log)),
+    getter: () =>
+      (auth ??= createAuth(
+        deps.db,
+        { ...deps.config, mcpOAuthGrantLifetimeDays: grantLifetimeDays },
+        deps.resolveMailer,
+        app.log,
+      )),
   });
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
@@ -600,7 +610,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     { prefix: "/api/v1" },
   );
   await app.register(apiKeyRoutes, { prefix: "/api/v1" });
-  await app.register(mcpSettingsRoutes, { prefix: "/api/v1" });
+  await app.register(mcpSettingsRoutes(deps.mcpResolveIpv4), { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
   await app.register(aiConnectorRoutes, { prefix: "/api/v1" });

@@ -15,7 +15,7 @@ export type SectionId = (typeof sectionIds)[number];
 export type Environment = Readonly<Record<string, string | undefined>>;
 export const sections: Record<SectionId, readonly string[]> = {
   instance: ["BASE_URL"],
-  mcp: ["MCP_RATE_LIMIT_PER_HOUR"],
+  mcp: ["MCP_RATE_LIMIT_PER_HOUR", "MCP_OAUTH_GRANT_LIFETIME_DAYS"],
   uploads: ["MAX_UPLOAD_MB"],
   storage: [
     "STORAGE_DRIVER",
@@ -54,6 +54,7 @@ export const defaults: Record<string, string> = {
   BASE_URL: "http://localhost:3000",
   MAX_UPLOAD_MB: "100",
   MCP_RATE_LIMIT_PER_HOUR: "600",
+  MCP_OAUTH_GRANT_LIFETIME_DAYS: "90",
   STORAGE_DRIVER: "local",
   STORAGE_PATH: "/var/lib/openlaw/files",
   S3_REGION: "us-east-1",
@@ -219,6 +220,12 @@ export function endpointHostChanges(before: Environment, after: Environment): En
   }
   return changes;
 }
+export function oauthGrantLifetimeDays(env: Environment): number {
+  const days = Number(env.MCP_OAUTH_GRANT_LIFETIME_DAYS ?? defaults.MCP_OAUTH_GRANT_LIFETIME_DAYS);
+  if (!Number.isSafeInteger(days) || days < 1 || days > 365)
+    throw new Error("MCP_OAUTH_GRANT_LIFETIME_DAYS must be a whole number from 1 to 365 days.");
+  return days;
+}
 export function validateSettings(env: Environment): void {
   for (const key of [
     "BASE_URL",
@@ -252,6 +259,7 @@ export function validateSettings(env: Environment): void {
   const mcpRate = Number(env.MCP_RATE_LIMIT_PER_HOUR);
   if (!Number.isSafeInteger(mcpRate) || mcpRate < 1)
     throw new Error("MCP_RATE_LIMIT_PER_HOUR must be a positive whole number.");
+  oauthGrantLifetimeDays(env);
   const upload = Number(env.MAX_UPLOAD_MB);
   if (!Number.isSafeInteger(upload) || upload < 1 || upload > 10240)
     throw new Error("The upload limit must be a whole number from 1 to 10,240 MiB.");
