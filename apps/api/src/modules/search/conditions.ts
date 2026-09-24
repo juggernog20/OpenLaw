@@ -52,8 +52,9 @@ function compile(
   const { kind, property, operator, value } = condition;
   const record = RECORDS[kind];
   const definition = searchProperty(kind, property)!;
-  const calendarDate = (column: AnyPgColumn) =>
-    sql`(${column} at time zone ${timeZone ?? user.timezone ?? "UTC"})::date`;
+  // The Inbox's Received filter chain: the request, then the profile, then UTC.
+  const zone = timeZone ?? user.timezone ?? "UTC";
+  const calendarDate = (column: AnyPgColumn) => sql`(${column} at time zone ${zone})::date`;
   const family = renderFamilySql(documentVersions.mimeType, documentVersions.originalFilename);
   // One column or expression per property, keyed by the kind it belongs to.
   const columns: Record<typeof kind, Record<string, AnyPgColumn | SQL>> = {
@@ -142,7 +143,7 @@ function compile(
       return value ? sql`true` : sql`${matterStatuses.category} = 'open'`;
     return sql`${column} = ${value as boolean}`;
   }
-  const relative = relativeDateRange(operator, value, now, timeZone ?? user.timezone ?? "UTC");
+  const relative = relativeDateRange(operator, value, now, zone);
   if (relative) {
     const [from, to] = relative;
     return sql`${column} between ${from}::date and ${to}::date`;

@@ -37,7 +37,7 @@ export function ConditionChips({ question }: Readonly<{ question: SearchQuestion
       operator: operatorLabel(
         intl,
         condition.operator,
-        typeof condition.value === "number" ? condition.value : "N",
+        typeof condition.value === "number" ? condition.value : undefined,
       ),
       value,
     });

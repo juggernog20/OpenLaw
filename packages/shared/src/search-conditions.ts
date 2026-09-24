@@ -116,7 +116,7 @@ export function conditionProblem(condition: {
       return z.number().int().min(1).max(3650).safeParse(condition.value).success
         ? null
         : "Relative day count N must be a whole number from 1 to 3650.";
-    return condition.value === null ? null : "This relative date operator requires a null value.";
+    return condition.value == null ? null : "This relative date operator takes no value.";
   }
   if (condition.value === undefined) return "A condition value is required.";
   const schema =

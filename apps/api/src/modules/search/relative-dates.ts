@@ -5,6 +5,7 @@
  * include today and the day N days away.
  */
 import { isRelativeDateOperator } from "@openlaw/shared";
+import { localMoment } from "../../lib/notifications/local-day.js";
 
 export function relativeDateRange(
   operator: string,
@@ -13,16 +14,9 @@ export function relativeDateRange(
   timeZone: string,
 ): [string, string] | null {
   if (!isRelativeDateOperator(operator)) return null;
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-  }).formatToParts(now);
-  const part = (name: string) => Number(parts.find((entry) => entry.type === name)!.value);
-  // UTC holds calendar components here, not instants in the viewer's timezone.
-  const today = new Date(0);
-  today.setUTCFullYear(part("year"), part("month") - 1, part("day"));
+  // The viewer's civil date, held as UTC midnight so the day arithmetic
+  // below never crosses a daylight saving change.
+  const today = new Date(`${localMoment(now, timeZone).date}T00:00:00Z`);
   const from = new Date(today);
   const to = new Date(today);
   switch (operator) {

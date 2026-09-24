@@ -187,6 +187,16 @@ describe("relative date query route", () => {
     expect(await rows("today", null)).toEqual(expected("2026-01-01"));
   });
 
+  it("takes no value for a calendar operator and refuses one that is given", async () => {
+    fixedClock();
+    expect(await rows("today", undefined, "Asia/Dubai")).toEqual(expected("2026-01-01"));
+    const response = await read("today", "2026-01-01", "Asia/Dubai");
+    expect(response.statusCode).toBe(400);
+    expect(response.json().errors).toContainEqual(
+      expect.objectContaining({ message: "This relative date operator takes no value." }),
+    );
+  });
+
   for (const operator of ["in_last_days", "in_next_days"]) {
     it.each([undefined, null, 0, -1, 3651, 1.5, "90"])(
       `${operator} refuses N=%s by name`,

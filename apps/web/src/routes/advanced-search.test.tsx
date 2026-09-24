@@ -815,6 +815,7 @@ it("previews relative expiry dates, refuses invalid N, and keeps the phrase thro
 
 it.each([
   ["in_last_days", 90, "in the last 90 days"],
+  ["in_last_days", 1, "in the last 1 day"],
   ["today", null, "today"],
   ["this_week", null, "this week"],
   ["this_month", null, "this month"],
