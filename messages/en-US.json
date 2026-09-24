@@ -8417,9 +8417,6 @@
   "search.properties": {
     "defaultMessage": "Properties"
   },
-  "search.properties.group": {
-    "defaultMessage": "{kind} properties"
-  },
   "search.properties.search": {
     "defaultMessage": "Search properties"
   },

@@ -61,9 +61,10 @@ function ConditionRow({
       )}
       className="space-y-2 rounded-button focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
     >
-      <div className="flex items-center justify-between gap-2 text-xs text-muted">
-        <span>
-          {kind}: {label}
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-baseline gap-2">
+          <span className="text-xs text-muted">{kind}</span>
+          <span className="text-sm font-medium">{label}</span>
         </span>
         <Button
           variant="ghost"
@@ -294,10 +295,7 @@ export function SearchConditions({
             items={properties.map((property) => ({
               key: `${property.kind}:${property.key}`,
               label: propertyLabel(intl, property.kind, property.key),
-              group: intl.formatMessage(
-                { id: "search.properties.group", defaultMessage: "{kind} properties" },
-                { kind: searchKindLabel(intl, property.kind) },
-              ),
+              group: searchKindLabel(intl, property.kind),
             }))}
             onSelect={(key) => {
               const property = properties.find(

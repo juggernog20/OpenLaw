@@ -62,8 +62,11 @@ function compile(
   if (definition.type === "flag") {
     // Show flags include inactive rows; they do not mean "only inactive".
     if (property === "includeArchived") return value ? sql`true` : isNull(record.archivedAt);
+    // Same test as the Contract list: the stage check also catches legacy ended rows without a stamp.
     if (property === "includeEnded")
-      return value ? sql`true` : sql`${contractStatuses.stage} <> 'ended'`;
+      return value
+        ? sql`true`
+        : and(isNull(contracts.endedAt), sql`${contractStatuses.stage} <> 'ended'`)!;
     if (property === "includeClosed")
       return value ? sql`true` : sql`${matterStatuses.category} = 'open'`;
     return sql`${column} = ${value as boolean}`;

@@ -37,7 +37,7 @@ export function PropertyList({
       <div className="max-h-80 overflow-y-auto p-1.5">
         {groups.map((group) => (
           <div key={group ?? "all"} role={group ? "group" : undefined} aria-label={group}>
-            {group && <p className="px-3 py-2 text-xs font-semibold text-muted">{group}</p>}
+            {group && <p className="px-3 py-2 text-sm font-semibold">{group}</p>}
             {visible
               .filter((item) => item.group === group)
               .map((item) => (

@@ -418,11 +418,11 @@ describe("search conditions", () => {
     await user.click(within(dialog).getByRole("button", { name: "Matter" }));
     await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
     await user.type(screen.getByRole("textbox", { name: "Search properties" }), "stat");
-    expect(screen.getByRole("group", { name: "Contract properties" })).toBeVisible();
-    expect(screen.getByRole("group", { name: "Matter properties" })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Contract" })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Matter" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Expiry date" })).not.toBeInTheDocument();
     await user.click(
-      within(screen.getByRole("group", { name: "Contract properties" })).getByRole("button", {
+      within(screen.getByRole("group", { name: "Contract" })).getByRole("button", {
         name: "Status",
       }),
     );
