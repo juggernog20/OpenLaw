@@ -16,7 +16,6 @@ import {
   entities,
   entityTypes,
   eq,
-  isNull,
   autoDocs,
   knowledgeItems,
   knowledgeTypes,
@@ -323,7 +322,7 @@ function searchCtes(
       left join ${entities} on ${entities.id} = ${documents.entityId}
       left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
     left join ${autoDocs} on ${autoDocs.id} = ${documents.autoDocId}
-      where ${and(isNull(documents.archivedAt), documentRepositoryScope(db, user), kindScope("document"))}
+      where ${and(conditionScope("document", question, user, timeZone), documentRepositoryScope(db, user), kindScope("document"))}
     ),
     document_version_hits as (
       select
@@ -377,7 +376,7 @@ function searchCtes(
           || setweight(to_tsvector('english', coalesce(${entityTypes.displayName}, '')), 'C') as document
       from ${entities}
       inner join ${entityTypes} on ${entityTypes.id} = ${entities.entityTypeId}
-      where ${and(isNull(entities.archivedAt), entityReachScope(db, user), kindScope("entity"))}
+      where ${and(conditionScope("entity", question, user, timeZone), entityReachScope(db, user), kindScope("entity"))}
     ),
     entity_hits as (
       select
@@ -402,7 +401,7 @@ function searchCtes(
         4::integer as kind_order,
         ${counterparties.searchVector} as document
       from ${counterparties}
-      where ${and(isNull(counterparties.archivedAt), staff, kindScope("counterparty"))}
+      where ${and(conditionScope("counterparty", question, user, timeZone), staff, kindScope("counterparty"))}
     ),
     counterparty_hits as (
       select
@@ -432,7 +431,7 @@ function searchCtes(
       from ${requests}
       inner join ${requestTypes} on ${requestTypes.id} = ${requests.requestTypeId}
       inner join ${users} on ${users.id} = ${requests.requesterId}
-      where ${and(isNull(requests.archivedAt), staff, kindScope("request"))}
+      where ${and(conditionScope("request", question, user, timeZone), staff, kindScope("request"))}
     ),
     request_hits as (
       select
@@ -464,7 +463,7 @@ function searchCtes(
           as document
       from ${knowledgeItems}
       inner join ${knowledgeTypes} on ${knowledgeTypes.id} = ${knowledgeItems.knowledgeTypeId}
-      where ${and(isNull(knowledgeItems.archivedAt), staff, kindScope("knowledge_item"))}
+      where ${and(conditionScope("knowledge_item", question, user, timeZone), staff, kindScope("knowledge_item"))}
     ),
     knowledge_item_hits as (
       select

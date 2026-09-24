@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { type SearchQuestion } from "@openlaw/shared";
 import { defineMessages, useIntl, type IntlShape } from "react-intl";
+import { useOtherConditionDefinitions } from "./other-condition-definitions";
 import { api } from "../../lib/api";
 import { problem } from "../../lib/problem";
 import {
@@ -81,6 +82,53 @@ const PROPERTY_LABELS = defineMessages({
     defaultMessage: "Show archived",
   },
   "matter.title": { id: "search.property.matter.title", defaultMessage: "Title" },
+  "document.owner": { id: "search.property.document.owner", defaultMessage: "Owning module" },
+  "document.format": { id: "search.property.document.format", defaultMessage: "Format" },
+  "document.type": { id: "search.property.document.type", defaultMessage: "Document type" },
+  "document.counterparty": {
+    id: "search.property.document.counterparty",
+    defaultMessage: "Counterparty",
+  },
+  "document.uploader": { id: "search.property.document.uploader", defaultMessage: "Uploader" },
+  "document.uploaded": { id: "search.property.document.uploaded", defaultMessage: "Uploaded date" },
+  "document.textState": { id: "search.property.document.textState", defaultMessage: "Text state" },
+  "document.includeArchived": {
+    id: "search.property.document.includeArchived",
+    defaultMessage: "Show archived",
+  },
+  "entity.type": { id: "search.property.entity.type", defaultMessage: "Type" },
+  "entity.jurisdiction": {
+    id: "search.property.entity.jurisdiction",
+    defaultMessage: "Jurisdiction",
+  },
+  "entity.status": { id: "search.property.entity.status", defaultMessage: "Status" },
+  "entity.majorityOwner": {
+    id: "search.property.entity.majorityOwner",
+    defaultMessage: "Majority owner",
+  },
+  "entity.nextObligation": {
+    id: "search.property.entity.nextObligation",
+    defaultMessage: "Next obligation date",
+  },
+  "entity.includeArchived": {
+    id: "search.property.entity.includeArchived",
+    defaultMessage: "Show archived",
+  },
+  "request.type": { id: "search.property.request.type", defaultMessage: "Type" },
+  "request.urgency": { id: "search.property.request.urgency", defaultMessage: "Urgency" },
+  "request.status": { id: "search.property.request.status", defaultMessage: "Status" },
+  "request.requester": { id: "search.property.request.requester", defaultMessage: "Requester" },
+  "request.received": { id: "search.property.request.received", defaultMessage: "Received date" },
+  "counterparty.jurisdiction": {
+    id: "search.property.counterparty.jurisdiction",
+    defaultMessage: "Jurisdiction",
+  },
+  "knowledge_item.type": { id: "search.property.knowledge_item.type", defaultMessage: "Type" },
+  "knowledge_item.state": { id: "search.property.knowledge_item.state", defaultMessage: "State" },
+  "knowledge_item.folder": {
+    id: "search.property.knowledge_item.folder",
+    defaultMessage: "Knowledge Folder",
+  },
 });
 export function propertyLabel(intl: IntlShape, kind: string, key: string) {
   const label = PROPERTY_LABELS[`${kind}.${key}` as keyof typeof PROPERTY_LABELS];
@@ -97,6 +145,7 @@ const EMPTY: Options = { types: [], statuses: [], people: [] };
 
 export function useConditionDefinitions(kinds: SearchQuestion["kinds"]) {
   const intl = useIntl();
+  const other = useOtherConditionDefinitions(kinds);
   const contracts = kinds.includes("contract");
   const matters = kinds.includes("matter");
   const [loaded, setLoaded] = useState<{
@@ -142,6 +191,8 @@ export function useConditionDefinitions(kinds: SearchQuestion["kinds"]) {
   const contractFilters = useRecordFilterDefinitions("contracts", loaded.contract);
   const matterFilters = useRecordFilterDefinitions("matters", loaded.matter);
   const choices = (condition: Pick<Condition, "kind" | "property">): Choice[] => {
+    if (condition.kind !== "contract" && condition.kind !== "matter")
+      return other.choices(condition);
     const options = condition.kind === "contract" ? loaded.contract : loaded.matter;
     if (condition.property === "counterparty") return options.counterparties ?? [];
     if (condition.property === "entity") return options.entities ?? [];
@@ -165,5 +216,5 @@ export function useConditionDefinitions(kinds: SearchQuestion["kinds"]) {
     );
     return filter?.kind === "choices" ? filter.choices : [];
   };
-  return { choices, error: loaded.error };
+  return { choices, error: loaded.error ?? other.error };
 }
