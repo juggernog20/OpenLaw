@@ -11,6 +11,8 @@ import { ToolError, type Grant, type ToolDefinition } from "./tool.js";
 export { ToolError, type Grant, type ToolContext, type ToolDefinition } from "./tool.js";
 import { workspaceTools } from "./workspace.js";
 import { contractTools } from "./contracts.js";
+import { matterTools } from "./matters.js";
+import { taskTools } from "./tasks.js";
 import { guideTools } from "./guide.js";
 
 export const instructions =
@@ -117,4 +119,6 @@ export const toolRegister: readonly ToolDefinition[] = [
   ...guideTools,
   ...workspaceTools,
   ...contractTools,
+  ...matterTools,
+  ...taskTools,
 ];

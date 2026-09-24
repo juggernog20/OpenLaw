@@ -237,15 +237,19 @@ export async function createContractTask(
   return answer;
 }
 
+export const MutateContractTaskBody = UpdateContractTaskBody.safeExtend({
+  isDone: z.boolean().optional(),
+});
+
 export async function updateContractTask(
   _db: Db,
   user: AuthenticatedUser,
   taskId: string,
-  input: z.input<typeof UpdateContractTaskBody>,
+  input: z.input<typeof MutateContractTaskBody>,
   notifier: Notifier,
 ) {
   assertMember(user);
-  const body = UpdateContractTaskBody.parse(input);
+  const body = MutateContractTaskBody.parse(input);
   // The seam's transaction, for the reason createContractTask opens one:
   // this is the other way a task gets a name on it.
   return await notifier.notifying(async (tx) => {
@@ -312,6 +316,20 @@ export async function updateContractTask(
       });
     }
 
+    if (body.isDone !== undefined && body.isDone !== task.isDone) {
+      await tx
+        .update(contractTasks)
+        .set({ isDone: body.isDone })
+        .where(eq(contractTasks.id, task.id));
+      await recordActivity(tx, {
+        entityType: "contract",
+        entityId: task.contract.id,
+        actorId: user.id,
+        action: body.isDone ? "task.completed" : "task.reopened",
+        visibility: RECORD_ACTIVITY_TIER,
+        payload: { taskId: task.id, title: wanted.title },
+      });
+    }
     return checklistOf(tx, task.contract.id);
   });
 }

@@ -10,10 +10,9 @@ import { requireRole } from "../../auth/guards.js";
 import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
 import { NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { prepareTaskAssignee } from "../../lib/task-assignment.js";
 import { removeTaskThread } from "../comments/audience.js";
-import { createMatterTask } from "./create.js";
 import {
+  addMatterTask,
   assertTaskWritable,
   assertWritable,
   checklistOf,
@@ -90,41 +89,13 @@ export const matterTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const answer = await app.notifier.notifying(async (tx) => {
-        const matter = await reachedMatter(tx, request.user, request.params.number, { lock: true });
-        assertWritable(matter);
-        const assigneeId = request.body.assigneeId ?? null;
-        await prepareTaskAssignee(
-          tx,
-          app.notifier,
-          "matter",
-          matter,
-          request.user,
-          assigneeId,
-          request.body.addToTeam,
-        );
-        const created = await createMatterTask(tx, {
-          matter,
-          title: request.body.title,
-          description: request.body.description,
-          assigneeId,
-          dueDate: request.body.dueDate ?? null,
-          actorId: request.user.id,
-        });
-        if (assigneeId) {
-          await app.notifier.matterTaskAssigned(tx, {
-            matterId: matter.id,
-            matterNumber: matter.number,
-            matterTitle: matter.title,
-            actorId: request.user.id,
-            actorName: request.user.displayName,
-            taskId: created.id,
-            taskTitle: request.body.title,
-            assigneeId,
-          });
-        }
-        return { ...(await checklistOf(tx, matter.id)), createdTaskId: created.id };
-      });
+      const answer = await addMatterTask(
+        app.db,
+        request.user,
+        request.params.number,
+        request.body,
+        app.notifier,
+      );
       return reply.status(201).send(answer);
     },
   );

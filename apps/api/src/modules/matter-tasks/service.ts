@@ -25,11 +25,11 @@ import {
 import { z } from "zod";
 import { NO_PERMISSION, type AuthenticatedUser } from "../../auth/guards.js";
 import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
-import { matterTeamScope, NO_MATTER } from "../../lib/matter-access.js";
+import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import type { Notifier } from "../../lib/notifications/notifier.js";
 import { httpError } from "../../lib/problem.js";
 import { prepareTaskAssignee } from "../../lib/task-assignment.js";
-import { assertValidMatterTaskAssignee } from "./create.js";
+import { createMatterTask, assertValidMatterTaskAssignee } from "./create.js";
 
 const TitleSchema = z.string().trim().min(1).max(MAX_TASK_TITLE_LENGTH);
 const NO_TASK = "No Matter Task exists with this id.";
@@ -121,15 +121,19 @@ export const UpdateMatterTaskBody = z
   .refine((body) => Object.keys(body).length > 0, {
     message: "Send at least one of title, description, assigneeId, or dueDate.",
   });
+export const MutateMatterTaskBody = UpdateMatterTaskBody.safeExtend({
+  isDone: z.boolean().optional(),
+});
+
 export async function updateMatterTask(
   _db: Db,
   user: AuthenticatedUser,
   taskId: string,
-  input: z.input<typeof UpdateMatterTaskBody>,
+  input: z.input<typeof MutateMatterTaskBody>,
   notifier: Notifier,
 ) {
   assertMember(user);
-  const body = UpdateMatterTaskBody.parse(input);
+  const body = MutateMatterTaskBody.parse(input);
   return notifier.notifying(async (tx) => {
     const task = await reachedTask(tx, user, taskId);
     assertTaskWritable(task);
@@ -185,6 +189,60 @@ export async function updateMatterTask(
         assigneeId: wanted.assigneeId,
       });
     }
+    if (body.isDone !== undefined && body.isDone !== task.isDone) {
+      await tx.update(matterTasks).set({ isDone: body.isDone }).where(eq(matterTasks.id, task.id));
+      await recordActivity(tx, {
+        entityType: "matter",
+        entityId: task.matter.id,
+        actorId: user.id,
+        action: body.isDone ? "task.completed" : "task.reopened",
+        visibility: RECORD_ACTIVITY_TIER,
+        payload: { taskId: task.id, title: wanted.title },
+      });
+    }
     return checklistOf(tx, task.matter.id);
+  });
+}
+
+export async function addMatterTask(
+  _db: Db,
+  user: AuthenticatedUser,
+  number: number,
+  body: {
+    title: string;
+    description?: string | null;
+    assigneeId?: string | null;
+    dueDate?: string | null;
+    addToTeam?: boolean;
+  },
+  notifier: Notifier,
+) {
+  assertMember(user);
+  return notifier.notifying(async (tx) => {
+    const matter = await reachedMatter(tx, user, number, { lock: true });
+    assertWritable(matter);
+    const assigneeId = body.assigneeId ?? null;
+    await prepareTaskAssignee(tx, notifier, "matter", matter, user, assigneeId, body.addToTeam);
+    const created = await createMatterTask(tx, {
+      matter,
+      title: body.title,
+      description: body.description,
+      assigneeId,
+      dueDate: body.dueDate ?? null,
+      actorId: user.id,
+    });
+    if (assigneeId) {
+      await notifier.matterTaskAssigned(tx, {
+        matterId: matter.id,
+        matterNumber: matter.number,
+        matterTitle: matter.title,
+        actorId: user.id,
+        actorName: user.displayName,
+        taskId: created.id,
+        taskTitle: body.title,
+        assigneeId,
+      });
+    }
+    return { ...(await checklistOf(tx, matter.id)), createdTaskId: created.id };
   });
 }
