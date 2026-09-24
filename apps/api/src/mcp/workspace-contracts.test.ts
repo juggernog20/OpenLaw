@@ -281,6 +281,12 @@ it("pages search and Contract filters without gaps under the byte budget", async
     cursor: first.nextCursor,
   });
   expect(second.results).not.toEqual(first.results);
+  const overlong = await legal.callTool({
+    name: "openlaw_search",
+    arguments: { query: "Quartz", cursor: "x".repeat(65) },
+  });
+  expect(overlong.isError).toBe(true);
+  expect(JSON.stringify(overlong)).toContain("invalid_arguments");
 });
 it("continues Contract pages when the cursor record leaves the filter", async () => {
   const older = await call(legal, "openlaw_contract_create", {
@@ -380,6 +386,17 @@ it("returns named creation errors and preserves create-service behavior", async 
   expect(invalid.isError).toBe(true);
   expect(JSON.stringify(invalid)).toContain("validation_error");
   expect(JSON.stringify(invalid)).toContain("Required answer");
+  const badDate = await legal.callTool({
+    name: "openlaw_contract_create",
+    arguments: {
+      contractTypeId: requiredType,
+      answers: { title: "Bad date", mcp_required: "complete", expiry_date: "next spring" },
+    },
+  });
+  expect(badDate.isError).toBe(true);
+  expect(JSON.stringify(badDate)).toContain("validation_error");
+  expect(JSON.stringify(badDate)).toContain("expiry_date:");
+  expect(JSON.stringify(badDate)).not.toContain("expiryDate");
   const created = await call(legal, "openlaw_contract_create", {
     contractTypeId: requiredType,
     answers: {
@@ -479,6 +496,13 @@ it("composes a Contract read and excludes legal details from the Portal projecti
   expect(portal).not.toHaveProperty("analysis");
   expect(portal).not.toHaveProperty("keyDates");
   expect(JSON.stringify(portal)).not.toContain("Legal date");
+  // DD-021 exposes the stage, never the status label or the type, status and Department ids.
+  const businessList = await call(business, "openlaw_contracts_list");
+  for (const record of [portal.contract, ...(businessList.contracts as object[])]) {
+    expect(record).toHaveProperty("stage");
+    for (const key of ["statusName", "statusId", "contractTypeId", "owningDepartmentId"])
+      expect(record).not.toHaveProperty(key);
+  }
 });
 it("pages recent activity at reachable records and tiers", async () => {
   for (const [entityId, title, visibility] of [

@@ -60,6 +60,8 @@ const searchInput = z
     query: z.string().trim().min(1).max(200),
     kind: z.enum(SEARCH_KINDS).optional(),
     ...pageInput,
+    // The search service caps its cursor at 64 characters; a longer one must fail as invalid arguments.
+    cursor: z.string().min(1).max(64).optional(),
   })
   .strict();
 const activityInput = z.object({ since: z.iso.datetime({ offset: true }), ...pageInput }).strict();

@@ -98,21 +98,18 @@ const writeTool = {
   },
 } as const;
 const mutationOutput = z.object({ number: reference });
-// These are the facts the Portal Contract and work reads expose. Legal-only facts never enter this projection.
+// The facts the DD-021 Portal read and the Portal work read expose. The status label,
+// the type, status and Department ids and every other Legal-only fact stay out.
 const portalRow = ContractRowSchema.pick({
   id: true,
   number: true,
   title: true,
-  contractTypeId: true,
   contractTypeName: true,
-  statusId: true,
-  statusName: true,
   stage: true,
   manager: true,
   businessOwner: true,
   primaryCounterparty: true,
   description: true,
-  owningDepartmentId: true,
   owningDepartment: true,
   region: true,
   value: true,
@@ -189,6 +186,14 @@ const creationAnswers = changesSchema.omit({ managerId: true, businessOwnerId: t
     .max(50)
     .optional(),
 });
+const rowRefs = new Map(Object.entries(answerNames).map(([rowRef, key]) => [key, rowRef]));
+/** Name a refused answer the way the agent keyed it: by rowRef, and a Field by its slug. */
+function answerPath(path: readonly PropertyKey[]): string[] {
+  const [head, ...rest] = path.map(String);
+  if (head === undefined) return [];
+  if (head === "customFields") return rest;
+  return [rowRefs.get(head) ?? head, ...rest];
+}
 function parseAnswers(answers: Record<string, unknown>, contractTypeId: string) {
   const native: Record<string, unknown> = {};
   const custom: Record<string, unknown> = {};
@@ -208,7 +213,9 @@ function parseAnswers(answers: Record<string, unknown>, contractTypeId: string) 
   if (!parsed.success)
     throw new ToolError(
       "validation_error",
-      parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+      parsed.error.issues
+        .map((issue) => `${answerPath(issue.path).join(".")}: ${issue.message}`)
+        .join("; "),
     );
   return parsed.data;
 }
