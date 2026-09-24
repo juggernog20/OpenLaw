@@ -32,7 +32,7 @@
  * renders, and the bell's own strings arrive with the bell. What this
  * layer sends is the same class of copy as the invite email above it.
  *
- * Contract and Matter events pair the authored text with the DES-093 layout.
+ * Contract, Matter and Request events pair the authored text with the DES-093 layout.
  */
 
 import type { NotificationEventType, RequestStatus, SeverityLevel } from "@openlaw/db";
@@ -188,8 +188,8 @@ export function renderNotificationMail(
   // message this is. The record alone cannot: both audiences hold rows
   // about the same Request, and one of them is staff.
   return requestSideOf(notification.eventType) === "inbox"
-    ? staffRequestMail(notification, record, to, baseUrl)
-    : requestMail(notification, record, to, baseUrl);
+    ? staffRequestMail(notification, record, to, baseUrl, brand)
+    : requestMail(notification, record, to, baseUrl, brand);
 }
 
 /** Comment and reply copy shares the same card on each record and bell surface. */
@@ -305,21 +305,41 @@ function recordLayout(
   },
 ): ReturnType<typeof renderEmailLayout> {
   const matter = notification.record.entityType === "matter";
+  const request = notification.record.entityType === "request";
+  const portal = request
+    ? requestSideOf(notification.eventType) !== "inbox"
+    : notification.recipientRole === "business_user";
+  const requestType = request && !portal ? detail(notification, "requestType") : null;
+  const urgency = request && !portal ? urgencyWord(detail(notification, "urgency")) : null;
+  // The portal speaks as Legal (M20/8): its bell names nobody on a
+  // receipt, a status move or a decline, and the text part says "Legal"
+  // too. The receipt's actor is the reader, who would otherwise see
+  // their own name in the card. Only a reply carries a person, and
+  // that arm has its own card.
+  const actor = request && portal ? null : notification.actorName;
   return renderEmailLayout(
     {
       ...model,
       baseUrl,
-      surface: notification.recipientRole === "business_user" ? "portal" : "staff",
+      surface: portal ? "portal" : "staff",
       greeting: `Hello ${notification.recipientName},`,
       preheader: model.preheader ?? model.body?.join(" "),
       record: {
-        kind: matter ? "Matter" : "Contract",
-        ref: `${matter ? "M" : "C"}-${notification.record.number}`,
+        kind: request ? "Request" : matter ? "Matter" : "Contract",
+        ref: `${request ? "R" : matter ? "M" : "C"}-${notification.record.number}`,
         title: notification.record.title,
-        href: matter
-          ? matterLink(baseUrl, notification.record.number)
-          : recordLink(baseUrl, notification.record.number),
-        ...(notification.actorName ? { actor: notification.actorName } : {}),
+        href: request
+          ? portal
+            ? portalRequestLink(baseUrl, notification.record.number)
+            : inboxRequestLink(baseUrl, notification.record.number)
+          : matter
+            ? matterLink(baseUrl, notification.record.number)
+            : recordLink(baseUrl, notification.record.number),
+        facts: [
+          ...(requestType ? [{ label: "Type", value: requestType }] : []),
+          ...(urgency ? [{ label: "Urgency", value: urgency }] : []),
+        ],
+        ...(actor ? { actor } : {}),
         ...model.record,
       },
     },
@@ -395,6 +415,7 @@ function staffRequestMail(
   record: Extract<MailRecord, { entityType: "request" }>,
   to: string,
   baseUrl: string,
+  brand: EmailBrand,
 ): MailMessage | null {
   const named = `${requestReference(record.number)} · ${record.title}`;
   const link = inboxRequestLink(baseUrl, record.number);
@@ -403,6 +424,15 @@ function staffRequestMail(
   switch (notification.eventType) {
     case "request.assigned":
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `Request assigned for triage: ${named}`,
+          tone: "assigned",
+          label: "Assigned for triage",
+          headline: named,
+          body: [`${who} assigned you to triage ${named}.`],
+          action: { label: "Triage request", href: link },
+          footer: { kind: "notification", why: "You are assigned to triage this request." },
+        }),
         to,
         subject: `Request assigned for triage: ${named}`,
         text: [hello, "", `${who} assigned you to triage ${named}.`, "", link].join("\n"),
@@ -417,6 +447,19 @@ function staffRequestMail(
       const requestType = detail(notification, "requestType");
       const urgency = urgencyWord(detail(notification, "urgency"));
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `New request: ${named}`,
+          tone: "info",
+          label: "New request",
+          headline: named,
+          body: [`${who} submitted a new request: ${named}.`],
+          action: {
+            label: "Triage request",
+            href: link,
+            line: "The Inbox has everything they sent, and the request is yours to triage from there.",
+          },
+          footer: { kind: "notification", why: "You turned on new request emails." },
+        }),
         to,
         subject: `New request: ${named}`,
         text: [
@@ -446,6 +489,15 @@ function staffRequestMail(
         module === "matter" || module === "contract" ? `${link}?convert=${module}` : link;
       if (detail(notification, "outcome") === "ready") {
         return {
+          ...recordLayout(notification, baseUrl, brand, {
+            subject: `Conversion draft ready: ${named}`,
+            tone: "success",
+            label: "Draft ready",
+            headline: "Your conversion draft is ready",
+            body: [`The conversion draft you asked for on ${named} is ready to review.`],
+            action: { label: "Review draft", href: convertLink },
+            footer: { kind: "notification", why: "You asked for this conversion draft." },
+          }),
           to,
           subject: `Conversion draft ready: ${named}`,
           text: [
@@ -458,6 +510,19 @@ function staffRequestMail(
         };
       }
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `Conversion draft could not finish: ${named}`,
+          tone: "danger",
+          label: "Draft failed",
+          headline: "Your conversion draft could not finish",
+          body: [`The conversion draft you asked for on ${named} could not finish.`],
+          action: {
+            label: "Open Convert",
+            href: convertLink,
+            line: "Retry it from the Convert dialog, or continue manually.",
+          },
+          footer: { kind: "notification", why: "You asked for this conversion draft." },
+        }),
         to,
         subject: `Conversion draft could not finish: ${named}`,
         text: [
@@ -944,6 +1009,7 @@ function requestMail(
   record: Extract<MailRecord, { entityType: "request" }>,
   to: string,
   baseUrl: string,
+  brand: EmailBrand,
 ): MailMessage | null {
   const link = portalRequestLink(baseUrl, record.number);
   const reference = requestReference(record.number);
@@ -955,6 +1021,20 @@ function requestMail(
   switch (notification.eventType) {
     case "request.created":
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `We have your request: ${named}`,
+          tone: "success",
+          label: "Request received",
+          headline: "Legal has your request",
+          body: [`Your request ${named} has reached Legal.`],
+          record: { steps: requestSteps("new") },
+          action: {
+            label: "View request",
+            href: link,
+            line: "You can follow it and reply to Legal there. We will let you know when anything changes.",
+          },
+          footer: { kind: "notification", why: "You submitted this request." },
+        }),
         to,
         // The one message in the catalog addressed to the person who
         // caused the event (INT-001). It is a receipt, so it says the
@@ -973,6 +1053,24 @@ function requestMail(
     case "request.status_changed": {
       const moved = statusWord(detail(notification, "to"));
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: moved ? `Your request is ${moved}: ${named}` : `An update on ${named}`,
+          tone: "warning",
+          label: "Status update",
+          headline: moved ? `Your request is ${moved}` : "Your request has an update",
+          body: [
+            moved
+              ? `Your request ${named} is now ${moved}.`
+              : `Your request ${named} has moved to another status.`,
+          ],
+          record: { steps: requestSteps(detail(notification, "to")) },
+          action: {
+            label: "View request",
+            href: link,
+            line: "The request page has the detail, and your conversation with Legal is on it.",
+          },
+          footer: { kind: "notification", why: "You submitted this request." },
+        }),
         to,
         subject: moved ? `Your request is ${moved}: ${named}` : `An update on ${named}`,
         text: [
@@ -994,6 +1092,20 @@ function requestMail(
       // without one still says the honest thing.
       const reason = detail(notification, "reason");
       return {
+        ...recordLayout(notification, baseUrl, brand, {
+          subject: `Your request was declined: ${named}`,
+          tone: "danger",
+          label: "Declined",
+          headline: "Your request was declined",
+          body: [`Legal has declined your request ${named}.`],
+          declineReason: reason ?? undefined,
+          action: {
+            label: "View request",
+            href: link,
+            line: "The reason is on the request, and you can reply to Legal there.",
+          },
+          footer: { kind: "notification", why: "You submitted this request." },
+        }),
         to,
         subject: `Your request was declined: ${named}`,
         text: [
@@ -1040,4 +1152,19 @@ const REQUEST_STATUS_WORDS: Record<RequestStatus, string> = {
  */
 function statusWord(status: string | null): string | null {
   return wordFor(REQUEST_STATUS_WORDS, status);
+}
+
+/** A read Request still awaits disposition; conversion starts the work. */
+function requestSteps(status: string | null): EmailRecord["steps"] {
+  const current =
+    status === "new" || status === "read"
+      ? 0
+      : status === "converted"
+        ? 1
+        : status === "resolved"
+          ? 2
+          : null;
+  return current === null
+    ? undefined
+    : { labels: ["Received", "In progress", "Resolved"], current };
 }
