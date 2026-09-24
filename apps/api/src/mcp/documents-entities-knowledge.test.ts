@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
+  apiKeyRequests,
   activityLog,
   contracts,
   contractStatuses,
@@ -32,6 +33,7 @@ let contractId: string;
 let entityId: string;
 let itemId: string;
 const clients: Client[] = [];
+const credentialIds = new Map<Client, string>();
 beforeAll(async () => {
   h = await startHarness({ maxUploadBytes: 64 });
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
@@ -82,6 +84,11 @@ beforeAll(async () => {
       ).json().key;
     }
     const client = new Client({ name: "Documents test", version: "1" });
+    const [credential] = await h.db
+      .select()
+      .from(apiKeyRequests)
+      .where(eq(apiKeyRequests.id, asked.json().id));
+    credentialIds.set(client, credential!.keyId!);
     clients.push(client);
     await client.connect(
       new StreamableHTTPClientTransport(endpoint, {
@@ -202,7 +209,9 @@ it("completes a signed upload without cookies or an API key and never overwrites
     expect.objectContaining({
       action: "document.created",
       actorId: userId,
+      visibility: "working_team",
       viaKind: "api_key",
+      viaId: credentialIds.get(legal),
       viaClientName: "Documents test",
     }),
   );

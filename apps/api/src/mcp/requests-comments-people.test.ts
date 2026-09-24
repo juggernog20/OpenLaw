@@ -2,6 +2,7 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
+  apiKeyRequests,
   fields,
   matterTypes,
   matterTypeBuiltinRows,
@@ -30,6 +31,7 @@ let typeId: string;
 let departmentId: string;
 
 const clients: Client[] = [];
+const credentialIds = new Map<Client, string>();
 beforeAll(async () => {
   h = await startHarness();
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
@@ -74,6 +76,11 @@ beforeAll(async () => {
         cookies,
       });
       const client = new Client({ name: "Requests Comments People test", version: "1" });
+      const [credential] = await h.db
+        .select()
+        .from(apiKeyRequests)
+        .where(eq(apiKeyRequests.id, asked.json().id));
+      credentialIds.set(client, credential!.keyId!);
       clients.push(client);
       await client.connect(
         new StreamableHTTPClientTransport(endpoint, {
@@ -184,6 +191,21 @@ it("submits Form answers, reads the original and scopes lists and details to the
     assigneeId: legalId,
   });
   expect(assigned.request.assignee?.id).toBe(legalId);
+  const activity = await h.db.select().from(activityLog).where(eq(activityLog.entityId, born.id));
+  for (const [action, actorId, client] of [
+    ["request.created", businessId, business],
+    ["request.assignee_changed", legalId, legal],
+  ] as const)
+    expect(activity).toContainEqual(
+      expect.objectContaining({
+        action,
+        actorId,
+        visibility: "working_team",
+        viaKind: "api_key",
+        viaId: credentialIds.get(client),
+        viaClientName: "Requests Comments People test",
+      }),
+    );
   await refused(
     legal,
     "request_assign",
@@ -210,7 +232,20 @@ it("uses the most restrictive comment tier and refuses an unavailable tier", asy
   expect((await call(legal, "comments_list", ref)).comments).toHaveLength(3);
   expect(await h.db.select().from(comments).where(eq(comments.entityId, born.id))).toHaveLength(3);
   const log = await h.db.select().from(activityLog).where(eq(activityLog.entityId, born.id));
-  expect(log.some((l) => l.action === "comment.posted" && l.actorId === legalId)).toBe(true);
+  for (const [actorId, client, visibility] of [
+    [legalId, legal, "legal_only"],
+    [businessId, business, "full_thread"],
+  ] as const)
+    expect(log).toContainEqual(
+      expect.objectContaining({
+        action: "comment.posted",
+        actorId,
+        visibility,
+        viaKind: "api_key",
+        viaId: credentialIds.get(client),
+        viaClientName: "Requests Comments People test",
+      }),
+    );
 });
 it("returns the shared assignable people and live Departments", async () => {
   const result = await call(legal, "people_list");

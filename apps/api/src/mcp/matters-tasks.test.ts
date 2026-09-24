@@ -2,6 +2,8 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
+  apiKeyRequests,
+  activityLog,
   matters,
   matterTypes,
   matterStatuses,
@@ -39,6 +41,7 @@ let visible: typeof matters.$inferSelect;
 let hidden: typeof matters.$inferSelect;
 let contract: typeof contracts.$inferSelect;
 const clients: Client[] = [];
+const credentialIds = new Map<Client, string>();
 beforeAll(async () => {
   h = await startHarness();
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
@@ -79,6 +82,11 @@ beforeAll(async () => {
         cookies,
       });
       const client = new Client({ name: "Matters Tasks test", version: "1" });
+      const [credential] = await h.db
+        .select()
+        .from(apiKeyRequests)
+        .where(eq(apiKeyRequests.id, asked.json().id));
+      credentialIds.set(client, credential!.keyId!);
       clients.push(client);
       await client.connect(
         new StreamableHTTPClientTransport(endpoint, {
@@ -244,6 +252,21 @@ it("creates from a template, updates Fields and Manager, and separates lifecycle
     templateId: template.id,
     managerId: legalId,
   });
+  const [created] = await h.db.select().from(matters).where(eq(matters.number, born.number));
+  const activity = await h.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.entityId, created!.id));
+  expect(activity).toContainEqual(
+    expect.objectContaining({
+      action: "matter.created",
+      actorId: legalId,
+      visibility: "working_team",
+      viaKind: "api_key",
+      viaId: credentialIds.get(legal),
+      viaClientName: "Matters Tasks test",
+    }),
+  );
   const read = await call(legal, "matter_get", { number: born.number });
   expect(read.matter.priority).toBe("high");
   expect(read.tasks[0]!.title).toBe("Template Task");
@@ -383,6 +406,13 @@ it.each(["contract", "matter"] as const)(
         (entry) => entry.action === "task.completed" && entry.payload.taskId === born.taskId,
       );
     expect(logs).toHaveLength(1);
+    expect(logs[0]).toMatchObject({
+      actor: { id: legalId },
+      visibility: "working_team",
+      viaKind: "api_key",
+      viaId: credentialIds.get(legal),
+      viaClientName: "Matters Tasks test",
+    });
   },
 );
 it("lists the Home assigned Tasks with filters, own reach for a named assignee and stable paging", async () => {

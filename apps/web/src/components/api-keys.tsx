@@ -597,8 +597,19 @@ export function ApiKeyReadyDialog({ ready, onClose }: { ready: KeyRow; onClose: 
                 id="apiKeys.header"
                 defaultMessage="Send this key in the x-api-key header."
               />{" "}
-              <a href="/help/reference#connect-a-headless-client" className="text-link underline">
-                <FormattedMessage id="apiKeys.guide" defaultMessage="Connect a headless Client" />
+              {/* A new tab, so the guide never unmounts the once-shown
+                  key. The same tab would close the dialog before the
+                  person copied it, and the key cannot be shown again. */}
+              <a
+                href="/documentation/connect-headless-client"
+                target="_blank"
+                rel="noreferrer"
+                className="text-link underline"
+              >
+                <FormattedMessage id="apiKeys.guide" defaultMessage="Connect a headless Client" />{" "}
+                <span className="sr-only">
+                  <FormattedMessage id="apiKeys.newTab" defaultMessage="(opens in a new tab)" />
+                </span>
               </a>
             </p>
             {error && (

@@ -2367,7 +2367,7 @@ describe("the /contracts/:number record page", () => {
     await waitFor(() =>
       expect(api.counterpartyCalls).toEqual(["primary cp-orion", "remove cp-helix"]),
     );
-    expect(screen.queryByText("Helix Labs GmbH")).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("Helix Labs GmbH")).not.toBeInTheDocument());
   });
 
   it("shows the API's refusal beside the counterparties when a write is turned down", async () => {

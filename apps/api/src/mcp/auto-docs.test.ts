@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { readFile } from "node:fs/promises";
+import PizZip from "pizzip";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
+  apiKeyRequests,
   autoDocGenerations,
   autoDocGenerationOrigins,
   activityLog,
@@ -27,6 +29,7 @@ let legal: Client;
 let business: Client;
 let readOnly: Client;
 const clients: Client[] = [];
+const credentialIds = new Map<Client, string>();
 const post = (path: string, payload: Record<string, unknown>, cookies = admin) =>
   h.app.inject({ method: "POST", url: `/api/v1${path}`, payload, cookies });
 const patch = (id: string, payload: Record<string, unknown>) =>
@@ -67,6 +70,11 @@ beforeAll(async () => {
         cookies,
       });
       const client = new Client({ name: "Auto-Docs test", version: "1" });
+      const [credential] = await h.db
+        .select()
+        .from(apiKeyRequests)
+        .where(eq(apiKeyRequests.id, asked.json().id));
+      credentialIds.set(client, credential!.keyId!);
       clients.push(client);
       await client.connect(
         new StreamableHTTPClientTransport(endpoint, {
@@ -292,14 +300,21 @@ it("uses the UI form, validates answers and the pair, and produces the same outp
       cookies,
     });
     expect(download.statusCode).toBe(200);
-    expect(download.rawPayload).toEqual(uiDownload.rawPayload);
+    expect(uiDownload.statusCode).toBe(200);
+    const entries = (bytes: Buffer) =>
+      Object.fromEntries(
+        Object.entries(new PizZip(bytes).files)
+          .filter(([, entry]) => !entry.dir)
+          .map(([name, entry]) => [name, entry.asNodeBuffer()]),
+      );
+    expect(entries(download.rawPayload)).toEqual(entries(uiDownload.rawPayload));
     expect(tool.downloads.pdf).toBeNull();
     const rows = await call(client, "generations_list");
     expect(rows.generations.map((r) => r.id)).toContain(tool.id);
     expect(JSON.stringify(rows)).not.toMatch(/fileRef|contractSnapshot|UEsDB/);
     const other = await call(client === legal ? business : legal, "generations_list");
     expect(other.generations.map((r) => r.id)).not.toContain(tool.id);
-    const [activity] = await h.db
+    const activity = await h.db
       .select()
       .from(activityLog)
       .where(
@@ -309,7 +324,14 @@ it("uses the UI form, validates answers and the pair, and produces the same outp
           eq(activityLog.actorId, client === legal ? legalId : businessId),
         ),
       );
-    expect(activity!.payload.generationId).toBe(tool.id);
+    const generated = activity.filter((row) => row.payload.generationId === tool.id);
+    expect(generated).toHaveLength(1);
+    expect(generated[0]).toMatchObject({
+      viaKind: "api_key",
+      viaId: credentialIds.get(client),
+      viaClientName: "Auto-Docs test",
+      visibility: "legal_only",
+    });
   }
 });
 it("uses generationDefinition for targeted Entity fields and creates the same Contract as the Portal", async () => {

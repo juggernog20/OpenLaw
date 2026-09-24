@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { IntlProvider } from "react-intl";
@@ -133,7 +133,8 @@ describe("public documentation", () => {
       throw new Error("No API expected");
     });
     const { router } = renderAt("/documentation/old-validation#before-you-start");
-    expect(await screen.findByRole("heading", { name: "Before you start" })).toHaveFocus();
+    const heading = await screen.findByRole("heading", { name: "Before you start" });
+    await waitFor(() => expect(heading).toHaveFocus());
     expect(router.state.location.pathname).toBe("/documentation/validation-procedure");
     expect(router.state.location.hash).toBe("#before-you-start");
     await act(() => router.navigate("/documentation/validation-procedure#missing"));

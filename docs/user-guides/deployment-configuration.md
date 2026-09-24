@@ -147,6 +147,20 @@ Before inviting the team, check the following from an employee device:
 
 Record the hostname, VPN requirements, certificate renewal owner, and firewall rules with the installation's operational configuration.
 
+## LAN only
+
+Run MCP at the private HTTPS origin from [Deploy on a private VM](#deploy-on-a-private-vm). Keep the loopback app binding, private DNS, trusted certificate, and office/VPN firewall rules from that profile. No public address, inbound internet forwarding, or OAuth configuration is needed for API keys.
+
+1. Set the intended private Instance address and recreate app and worker as described above. An Administrator copies **Server address** from **Settings → Organization → MCP**. It should read `https://openlaw.company.example/mcp`, with your actual hostname.
+2. Forward `/mcp` and its upload paths unchanged to the app. Preserve `x-api-key`, `Authorization`, MCP protocol headers, and `Accept` and `Content-Type`. The private Caddy example forwards these paths through the same upstream. Do not put an interactive proxy sign-in page in front of the MCP endpoint.
+3. Ask the Administrator to [enable MCP and the intended account group's API keys](configure-mcp.md#enable-api-keys). Keep the Toolset ceiling and Read-only policy appropriate to the work.
+4. From a device on the office network or VPN, follow [Connect a headless Client](connect-headless-client.md). Approve the key request, read the key once, and confirm that the Client connects and lists Tools.
+5. Revoke the test key and confirm that the next Client request is unauthorized. With VPN disconnected on an outside device, confirm that the private address is unreachable. Keep direct app port 3000 unavailable from other devices.
+
+The Client device needs private DNS, routing, and certificate trust, even if its model service is hosted elsewhere. Give Node-based Clients the corporate CA through their supported trust configuration, such as `NODE_EXTRA_CA_CERTS` pointing to a PEM CA file before starting Claude Code. Do not disable certificate verification. A private OpenLaw endpoint does not make the Client's model service local; outbound access to that service follows the Client's own requirements.
+
+`/mcp` uses Streamable HTTP. There is no separate `/sse` endpoint or browser-cookie authentication. Signed Document upload URLs returned by a Tool use the same private origin and need the same routing and upload limits. Treat the complete signed URL as a credential while it is valid.
+
 ## Connect the database
 
 With `DATABASE_URL` unset, Compose uses its bundled Postgres 16 database and named volume. To use an external PostgreSQL 16-or-later database, supply its connection URL and access credentials. The app applies migrations when it starts; that database account must be able to perform them. The worker reads the same URL.

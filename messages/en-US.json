@@ -878,6 +878,9 @@
   "apiKeys.lifetime": {
     "defaultMessage": "Keys expire {days} days after approval and are shown once."
   },
+  "apiKeys.newTab": {
+    "defaultMessage": "(opens in a new tab)"
+  },
   "apiKeys.note": {
     "defaultMessage": "Note (Optional)"
   },
