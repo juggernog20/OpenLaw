@@ -69,6 +69,15 @@ describe("openapi document", () => {
     expect(doc.openapi).toBe("3.1.0");
     expect(doc.paths["/api/v1/meta"].get.operationId).toBe("getMeta");
     expect(doc.paths["/api/v1/search"].get.operationId).toBe("search");
+    expect(doc.paths["/api/v1/search/query"].post.operationId).toBe("querySearch");
+    const operations = Object.values(
+      doc.paths as Record<string, Record<string, { operationId?: string }>>,
+    )
+      .flatMap((path) => Object.values(path))
+      .map((operation) => operation.operationId)
+      .filter(Boolean);
+    expect(operations.filter((id) => id === "querySearch")).toHaveLength(1);
+    expect(new Set(operations).size).toBe(operations.length);
     expect(doc.paths["/api/v1/echo"]).toBeUndefined();
     expect(doc.paths["/api/events"]).toBeUndefined();
   });

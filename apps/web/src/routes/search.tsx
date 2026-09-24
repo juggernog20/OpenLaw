@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * M25's flat ranked answer, with kind and query held in the URL so a
- * reload or a shared link answers the same. Reads the one search
- * endpoint through the generated client (TECH-003); `/` reaches it per
- * DES-010.
- */
+/** Ranked results with the question held in the URL for reload, sharing and Back. */
+import {
+  DEFAULT_SEARCH_SCOPE,
+  SearchQuestionSchema,
+  decodeSearchQuestion,
+  encodeSearchQuestion,
+  simpleSearchQuestion,
+  type SearchQuestion,
+} from "@openlaw/shared";
 import { useState } from "react";
-import { Search as SearchIcon } from "lucide-react";
+import { Search as SearchIcon, X } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { search, type SearchKind, type SearchOutcome, type SearchResult } from "../lib/search";
+import {
+  querySearch,
+  type SearchKind,
+  type QuestionSearchOutcome,
+  type SearchResult,
+} from "../lib/search";
 import { requireUser, useSignOut } from "../lib/session";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
@@ -18,7 +26,6 @@ import {
   SEARCH_KIND_ORDER,
   SearchResultRow,
   searchKindLabel,
-  searchPagePath,
 } from "../components/search/search-result-row";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
@@ -28,6 +35,7 @@ const PAGE_SIZE = 25;
 
 const MESSAGES: Record<
   | "prompt"
+  | "results"
   | "resultsFor"
   | "allKinds"
   | "filterLabel"
@@ -42,6 +50,7 @@ const MESSAGES: Record<
     id: "search.page.prompt",
     defaultMessage: "Search contracts, matters, documents, entities, counterparties, and requests",
   },
+  results: { id: "search.page.results", defaultMessage: "Search results" },
   resultsFor: {
     id: "search.page.resultsFor",
     defaultMessage: "Search results for “{query}”",
@@ -70,51 +79,127 @@ export async function searchLoader({ request }: LoaderFunctionArgs) {
   if (user.role === "business_user") return redirect("/portal");
 
   const params = new URL(request.url).searchParams;
-  const query = (params.get("q") ?? "").trim();
   const rawKind = params.get("kind");
-  const kind = isSearchKind(rawKind) ? rawKind : undefined;
-  const outcome: SearchOutcome =
-    query === ""
-      ? { ok: true, results: [], nextCursor: null }
-      : await search(query, { kind, limit: PAGE_SIZE });
-  return { user, query, kind, outcome };
+  const question =
+    decodeSearchQuestion(params.get("aq") ?? "") ??
+    simpleSearchQuestion((params.get("q") ?? "").trim(), isSearchKind(rawKind) ? [rawKind] : []);
+  const query = Object.values(question.words).filter(Boolean).join(" ");
+  const empty = !query && !question.kinds.length && !question.conditions.length;
+  const outcome: QuestionSearchOutcome = empty
+    ? { ok: true, results: [], total: 0, nextCursor: null }
+    : await querySearch(question, { limit: PAGE_SIZE });
+  return { user, query, question, empty, outcome };
 }
 
-function KindFilters({ query, active }: Readonly<{ query: string; active?: SearchKind }>) {
+function questionPath(question: SearchQuestion): string {
+  if (
+    !Object.values(question.words).some(Boolean) &&
+    !question.kinds.length &&
+    !question.conditions.length
+  )
+    return "/search";
+  return `/search?aq=${encodeSearchQuestion(question)}`;
+}
+
+const WORD_LABELS = defineMessages({
+  all: { id: "search.words.all", defaultMessage: "All of these words" },
+  phrase: { id: "search.words.phrase", defaultMessage: "This exact phrase" },
+  any: { id: "search.words.any", defaultMessage: "Any of these words" },
+  none: { id: "search.words.none", defaultMessage: "None of these words" },
+});
+const SCOPE_LABELS = defineMessages({
+  titles: { id: "search.scope.titles", defaultMessage: "Titles and numbers" },
+  text: { id: "search.scope.text", defaultMessage: "Record text" },
+  contents: { id: "search.scope.contents", defaultMessage: "Document contents" },
+});
+const CHIP_CLASS =
+  "rounded-chip border px-2.5 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link";
+const IDLE_CHIP_CLASS = "border-border-default bg-control text-muted hover:text-primary";
+const SELECTED_CHIP_CLASS =
+  "border-status-info-fg bg-status-info-bg font-semibold text-status-info-fg";
+
+function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
   const intl = useIntl();
+  const chips: { key: string; label: string; question: SearchQuestion }[] = (
+    Object.keys(WORD_LABELS) as (keyof typeof WORD_LABELS)[]
+  )
+    .filter((key) => question.words[key])
+    .map((key) => ({
+      key,
+      label: intl.formatMessage(
+        { id: "search.chip.words", defaultMessage: "{label}: {value}" },
+        { label: intl.formatMessage(WORD_LABELS[key]), value: question.words[key] },
+      ),
+      question: { ...question, words: { ...question.words, [key]: "" } },
+    }));
+  if (!Object.values(question.scope).every(Boolean)) {
+    const scope = (Object.keys(SCOPE_LABELS) as (keyof typeof SCOPE_LABELS)[])
+      .filter((key) => question.scope[key])
+      .map((key) => intl.formatMessage(SCOPE_LABELS[key]))
+      .join(", ");
+    chips.push({
+      key: "scope",
+      label: intl.formatMessage(
+        { id: "search.scope.chip", defaultMessage: "Search in: {scope}" },
+        { scope },
+      ),
+      question: { ...question, scope: { ...DEFAULT_SEARCH_SCOPE } },
+    });
+  }
   const choices: { kind?: SearchKind; label: string }[] = [
     { label: intl.formatMessage(MESSAGES.allKinds) },
     ...SEARCH_KIND_ORDER.map((kind) => ({ kind, label: searchKindLabel(intl, kind) })),
   ];
   return (
-    <nav aria-label={intl.formatMessage(MESSAGES.filterLabel)} className="flex flex-wrap gap-2">
-      {choices.map(({ kind, label }) => {
-        const selected = kind === active;
-        return (
-          <Link
-            key={kind ?? "all"}
-            to={searchPagePath(query, kind)}
-            aria-current={selected ? "page" : undefined}
-            className={cn(
-              "rounded-chip border px-2.5 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link",
-              selected
-                ? "border-status-info-fg bg-status-info-bg font-semibold text-status-info-fg"
-                : "border-border-default bg-control text-muted hover:text-primary",
-            )}
-          >
-            {label}
-          </Link>
-        );
-      })}
-    </nav>
+    <div className="flex flex-wrap gap-2">
+      {chips.map((chip) => (
+        <Link
+          key={chip.key}
+          to={questionPath(chip.question)}
+          className={cn(CHIP_CLASS, IDLE_CHIP_CLASS, "inline-flex items-center gap-1")}
+          aria-label={intl.formatMessage(
+            { id: "search.chip.remove", defaultMessage: "Remove {label}" },
+            { label: chip.label },
+          )}
+        >
+          {chip.label}
+          <X size={14} aria-hidden="true" />
+        </Link>
+      ))}
+      <nav aria-label={intl.formatMessage(MESSAGES.filterLabel)} className="flex flex-wrap gap-2">
+        {choices.map(({ kind, label }) => {
+          const selected = kind ? question.kinds.includes(kind) : question.kinds.length === 0;
+          return (
+            <Link
+              key={kind ?? "all"}
+              to={questionPath({
+                ...question,
+                kinds: kind ? [kind] : [],
+                conditions: question.conditions.filter((condition) => condition.kind === kind),
+              })}
+              aria-current={selected ? "page" : undefined}
+              className={cn(CHIP_CLASS, selected ? SELECTED_CHIP_CLASS : IDLE_CHIP_CLASS)}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 
 function SearchAnswer({
   query,
-  kind,
+  question,
+  empty,
   initial,
-}: Readonly<{ query: string; kind?: SearchKind; initial: SearchOutcome }>) {
+}: Readonly<{
+  query: string;
+  question: SearchQuestion;
+  empty: boolean;
+  initial: QuestionSearchOutcome;
+}>) {
   const intl = useIntl();
   const [rows, setRows] = useState<SearchResult[]>(initial.ok ? initial.results : []);
   const [cursor, setCursor] = useState<string | null>(initial.ok ? initial.nextCursor : null);
@@ -125,7 +210,7 @@ function SearchAnswer({
     if (busy || cursor === null) return;
     setBusy(true);
     setPageError(null);
-    const answer = await search(query, { kind, cursor, limit: PAGE_SIZE });
+    const answer = await querySearch(question, { cursor, limit: PAGE_SIZE });
     setBusy(false);
     if (!answer.ok) {
       setPageError(answer.detail ?? intl.formatMessage(MESSAGES.moreError));
@@ -146,7 +231,7 @@ function SearchAnswer({
     );
   }
 
-  if (query === "") {
+  if (empty) {
     return (
       <p className="rounded-card border border-border-default bg-raised px-6 py-12 text-center text-sm text-muted">
         <FormattedMessage {...MESSAGES.prompt} />
@@ -161,7 +246,14 @@ function SearchAnswer({
           <FormattedMessage {...MESSAGES.noMatches} />
         </h2>
         <p className="text-sm text-muted">
-          <FormattedMessage {...MESSAGES.noMatchesBody} values={{ query }} />
+          {query ? (
+            <FormattedMessage {...MESSAGES.noMatchesBody} values={{ query }} />
+          ) : (
+            <FormattedMessage
+              id="search.question.noMatches"
+              defaultMessage="No records match this question."
+            />
+          )}
         </p>
       </div>
     );
@@ -198,10 +290,11 @@ export function SearchPage() {
 
   const signOut = useSignOut("/auth/login");
 
-  const title =
-    loaded.query === ""
-      ? intl.formatMessage(MESSAGES.prompt)
-      : intl.formatMessage(MESSAGES.resultsFor, { query: loaded.query });
+  const title = loaded.empty
+    ? intl.formatMessage(MESSAGES.prompt)
+    : loaded.query
+      ? intl.formatMessage(MESSAGES.resultsFor, { query: loaded.query })
+      : intl.formatMessage(MESSAGES.results);
   return (
     <AppShell
       user={loaded.user}
@@ -214,15 +307,29 @@ export function SearchPage() {
               {title}
             </span>
           }
-          filters={<KindFilters query={loaded.query} active={loaded.kind} />}
+          filters={
+            loaded.empty || SearchQuestionSchema.safeParse(loaded.question).success ? (
+              <QuestionFilters question={loaded.question} />
+            ) : undefined
+          }
         />
       }
     >
       <PageTitle title={title} />
+      {loaded.outcome.ok && !loaded.empty && (
+        <p className="mb-3 text-sm text-muted">
+          <FormattedMessage
+            id="search.total"
+            defaultMessage="{total, plural, one {# match} other {# matches}}"
+            values={{ total: loaded.outcome.total }}
+          />
+        </p>
+      )}
       <SearchAnswer
-        key={`${loaded.query}:${loaded.kind ?? "all"}`}
+        key={JSON.stringify(loaded.question)}
         query={loaded.query}
-        kind={loaded.kind}
+        question={loaded.question}
+        empty={loaded.empty}
         initial={loaded.outcome}
       />
     </AppShell>

@@ -6,6 +6,7 @@
  * Escape.
  */
 
+import { decodeSearchQuestion } from "@openlaw/shared";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ArrowRight, LoaderCircle, SearchX, TriangleAlert } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
@@ -64,7 +65,9 @@ const MESSAGES: Record<
 });
 
 function routeQuery(pathname: string, searchString: string): string {
-  return pathname === "/search" ? (new URLSearchParams(searchString).get("q") ?? "") : "";
+  if (pathname !== "/search") return "";
+  const params = new URLSearchParams(searchString);
+  return decodeSearchQuestion(params.get("aq") ?? "")?.words.all ?? params.get("q") ?? "";
 }
 
 export function SearchInput() {

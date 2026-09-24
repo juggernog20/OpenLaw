@@ -661,3 +661,13 @@ export {
   pinnedFormRows,
   type FormModule,
 } from "./form-builtins.js";
+
+export {
+  SEARCH_KINDS,
+  DEFAULT_SEARCH_SCOPE,
+  SearchQuestionSchema,
+  simpleSearchQuestion,
+  encodeSearchQuestion,
+  decodeSearchQuestion,
+  type SearchQuestion,
+} from "./search-question.js";

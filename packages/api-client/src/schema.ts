@@ -6950,6 +6950,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/search/query": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Run a versioned search question with an exact reachable match total. */
+    post: operations["querySearch"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/search": {
     parameters: {
       query?: never;
@@ -39632,6 +39649,126 @@ export interface operations {
                   )
                 | null;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  querySearch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {number} */
+          version: 1;
+          words: {
+            all: string;
+            phrase: string;
+            any: string;
+            none: string;
+          };
+          scope: {
+            titles: boolean;
+            text: boolean;
+            contents: boolean;
+          };
+          kinds: (
+            | "contract"
+            | "matter"
+            | "document"
+            | "entity"
+            | "counterparty"
+            | "request"
+            | "knowledge_item"
+          )[];
+          conditions: {
+            /** @enum {string} */
+            kind:
+              | "contract"
+              | "matter"
+              | "document"
+              | "entity"
+              | "counterparty"
+              | "request"
+              | "knowledge_item";
+            property: string;
+            operator: string;
+            value: unknown;
+          }[];
+          /** @enum {string} */
+          match: "all" | "any";
+          /** @enum {string} */
+          sort: "relevance" | "newest" | "oldest" | "expiry" | "title";
+          timeZone?: string;
+          cursor?: string;
+          /** @default 25 */
+          limit?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            results: (
+              | {
+                  /** @enum {string} */
+                  kind: "contract" | "matter" | "entity" | "counterparty" | "request";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                }
+              | {
+                  /** @enum {string} */
+                  kind: "knowledge_item";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                  /** @enum {string} */
+                  state: "draft" | "published";
+                }
+              | {
+                  /** @enum {string} */
+                  kind: "document";
+                  id: string;
+                  number: number | null;
+                  title: string;
+                  isConfidential: boolean;
+                  rank: number;
+                  /** @enum {string} */
+                  ownerKind: "contract" | "matter" | "entity" | "knowledge_item" | "auto_doc";
+                  ownerId: string;
+                  ownerNumber: number | null;
+                  ownerTitle: string;
+                  versionId: string;
+                  versionNumber: number;
+                  snippet: string;
+                }
+            )[];
+            total: number;
+            nextCursor: string | null;
           };
         };
       };

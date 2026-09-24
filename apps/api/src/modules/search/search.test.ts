@@ -687,3 +687,230 @@ describe("Document search", () => {
     expect((await search("q=oldversiononlyneedle")).results).toEqual([]);
   });
 });
+
+describe("the versioned question endpoint", () => {
+  const question = (
+    words: Partial<{ all: string; phrase: string; any: string; none: string }> = {},
+  ) => ({
+    version: 1,
+    words: { all: "", phrase: "", any: "", none: "", ...words },
+    scope: { titles: true, text: true, contents: true },
+    kinds: [] as string[],
+    conditions: [] as object[],
+    match: "all",
+    sort: "relevance",
+  });
+  async function run(q: ReturnType<typeof question>, options: object = {}) {
+    const response = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/search/query",
+      cookies,
+      payload: { ...q, ...options },
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    return response.json<SearchAnswer & { total: number }>();
+  }
+  it("compiles all four rows and keeps required words on every OR branch", async () => {
+    for (const words of [
+      { all: "terminate" },
+      { phrase: "warranty clause" },
+      { any: "missingword aurora" },
+      { all: "aurora", none: "missingword" },
+      { all: "aurora", any: "missingword clause" },
+    ])
+      expect(
+        (await run({ ...question(words), kinds: ["contract"] })).results.map((r) => r.id),
+      ).toEqual([contractId]);
+    for (const words of [
+      { all: "aurora missingword" },
+      { phrase: "clause warranty" },
+      { all: "aurora", none: "clause" },
+      { all: "missingword", any: "aurora clause" },
+      { all: "...!!!" },
+      { all: "the and or" },
+      { all: "aurora", phrase: "the and" },
+    ])
+      expect((await run({ ...question(words), kinds: ["contract"] })).total).toBe(0);
+  });
+  it("returns an empty answer for each punctuation-only or stop-word-only row", async () => {
+    for (const row of ["all", "phrase", "any", "none"] as const) {
+      for (const value of ["...!!!", "the and or"]) {
+        expect(await run(question({ [row]: value }))).toEqual({
+          results: [],
+          total: 0,
+          nextCursor: null,
+        });
+      }
+    }
+  });
+  it("filters titles, record text, joined labels and exact numbers by scope", async () => {
+    for (const [word, titles] of [
+      ["aurora", true],
+      ["warranty", false],
+      ["falcon", false],
+      ["zephyr", false],
+    ] as const) {
+      for (const titleScope of [true, false]) {
+        const q = {
+          ...question({ all: word }),
+          kinds: ["contract"],
+          scope: { titles: titleScope, text: !titleScope, contents: false },
+        };
+        expect((await run(q)).total).toBe(titles === titleScope ? 1 : 0);
+      }
+    }
+    const q = { ...question({ all: `C-${contractNumber}` }), kinds: ["contract"] };
+    expect((await run(q)).total).toBe(1);
+    expect((await run({ ...q, scope: { titles: false, text: true, contents: false } })).total).toBe(
+      0,
+    );
+    expect(
+      (
+        await run({
+          ...question({ none: "missingword" }),
+          scope: { titles: false, text: false, contents: true },
+        })
+      ).results.every((r) => r.kind === "document"),
+    ).toBe(true);
+  });
+  it("keeps Document metadata and extracted contents in their own scopes", async () => {
+    const [document] = await harness.db
+      .insert(documents)
+      .values({
+        contractId,
+        createdBy: memberId,
+        title: "Scopetitle paper",
+        description: "Scopedescription",
+      })
+      .returning();
+    const [version] = await harness.db
+      .insert(documentVersions)
+      .values({
+        documentId: document!.id,
+        versionNumber: 1,
+        fileRef: "local:search/scope",
+        kind: "draft_ours",
+        originalFilename: "scopefilename.pdf",
+        mimeType: "application/pdf",
+        byteSize: 1,
+        checksumSha256: "b".repeat(64),
+        createdBy: memberId,
+      })
+      .returning();
+    await harness.db.insert(documentVersionText).values({
+      versionId: version!.id,
+      state: "ready",
+      source: "native_layer",
+      text: "Scopecontents inside this paper.",
+    });
+    for (const [word, scope] of [
+      ["scopetitle", "titles"],
+      ["scopedescription", "text"],
+      ["scopefilename", "text"],
+      ["scopecontents", "contents"],
+    ] as const) {
+      for (const selected of ["titles", "text", "contents"] as const) {
+        const answer = await run({
+          ...question({ all: word }),
+          scope: {
+            titles: selected === "titles",
+            text: selected === "text",
+            contents: selected === "contents",
+          },
+        });
+        expect(answer.results.map((row) => row.id)).toEqual(
+          selected === scope ? [document!.id] : [],
+        );
+        expect(answer.total).toBe(selected === scope ? 1 : 0);
+      }
+      expect((await run(question({ all: word }))).results.map((row) => row.id)).toEqual(
+        (await search(`q=${word}&limit=100`)).results.map((row) => row.id),
+      );
+    }
+  });
+  it("agrees with GET, counts before paging, and allows kinds without words", async () => {
+    const q = question({ all: "crossmodule" });
+    const answer = await run(q);
+    expect(answer.results.map((r) => r.id)).toEqual(
+      (await search("q=crossmodule&limit=100")).results.map((r) => r.id),
+    );
+    expect(answer.total).toBe(answer.results.length);
+    const pages: SearchRow[] = [];
+    let cursor: string | null = null;
+    do {
+      const page = await run(q, { limit: 1, ...(cursor ? { cursor } : {}) });
+      expect(page.total).toBe(answer.total);
+      pages.push(...page.results);
+      cursor = page.nextCursor;
+    } while (cursor);
+    expect(pages).toEqual(answer.results);
+    expect((await run({ ...question(), kinds: ["counterparty"] })).total).toBeGreaterThan(0);
+    // Kinds-only questions rank and headline against an empty query; no scope at all is legal too.
+    const documentsOnly = await run({ ...question(), kinds: ["document"] });
+    expect(documentsOnly.total).toBeGreaterThan(0);
+    expect(documentsOnly.results.every((row) => row.kind === "document")).toBe(true);
+    const noScope = await run({
+      ...question(),
+      kinds: ["contract"],
+      scope: { titles: false, text: false, contents: false },
+    });
+    expect(noScope.total).toBeGreaterThan(0);
+    expect(noScope.results.every((row) => row.kind === "contract")).toBe(true);
+    expect((await run(question({ all: "archivedneedle" }))).total).toBe(0);
+  });
+  it("pages equal relevance ranks and keeps the exact total after the last page", async () => {
+    const q = { ...question({ all: "pageword" }), kinds: ["counterparty"] };
+    const first = await run(q, { limit: 2 });
+    expect(first.total).toBe(3);
+    expect(first.results).toHaveLength(2);
+    expect(first.nextCursor).not.toBeNull();
+    const second = await run(q, { limit: 2, cursor: first.nextCursor });
+    expect(second.total).toBe(3);
+    expect(second.results).toHaveLength(1);
+    expect(second.nextCursor).toBeNull();
+    expect(new Set([...first.results, ...second.results].map((row) => row.id)).size).toBe(3);
+  });
+  it("refuses invalid and unsupported questions with problem details", async () => {
+    for (const [q, path] of [
+      [question(), ""],
+      [question({ all: "x".repeat(201) }), "words.all"],
+      [
+        { ...question({ all: "aurora" }), scope: { titles: false, text: false, contents: false } },
+        "scope",
+      ],
+    ] as const) {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/search/query",
+        cookies,
+        payload: q,
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.headers["content-type"]).toContain("application/problem+json");
+      expect(response.json().errors).toEqual(
+        expect.arrayContaining([expect.objectContaining({ path })]),
+      );
+    }
+    for (const extra of [
+      {
+        kinds: ["contract"],
+        conditions: [{ kind: "contract", property: "status", operator: "is", value: ["ended"] }],
+      },
+      { sort: "newest" },
+      { timeZone: "Not/AZone" },
+      { cursor: "invalid" },
+    ]) {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/search/query",
+        cookies,
+        payload: { ...question({ all: "aurora" }), ...extra },
+      });
+      expect(response.statusCode, response.body).toBe(400);
+      expect(response.json().detail).toBeTruthy();
+    }
+    expect(
+      (await run(question({ all: "aurora" }), { timeZone: "Asia/Dubai" })).total,
+    ).toBeGreaterThan(0);
+  });
+});
