@@ -455,3 +455,60 @@ it("shows the refusal for an oversized legacy query without breaking the filters
   renderAt(`/search?q=${"x".repeat(201)}`);
   expect(await screen.findByRole("alert")).toHaveTextContent("200 characters or fewer");
 });
+
+it("writes each sort to the question, pages it, and restores it on reload and Back", async () => {
+  const reads: (SearchQuestion & { cursor?: string })[] = [];
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (!questionCall(call)) return undefined;
+      const body = call.body as SearchQuestion & { cursor?: string };
+      reads.push(body);
+      return body.cursor ? searchAnswer([MATTER]) : searchAnswer([CONTRACT], "next-page");
+    },
+  });
+  const initial = {
+    ...simpleSearchQuestion("Orion", ["contract", "matter"]),
+    scope: { titles: true, text: false, contents: false },
+  };
+  const { router, view } = renderAt(`/search?aq=${encodeSearchQuestion(initial)}`);
+  const user = userEvent.setup();
+  for (const [sort, label] of [
+    ["newest", "Newest"],
+    ["oldest", "Oldest"],
+    ["title", "Title"],
+    ["relevance", "Relevance"],
+    ["expiry", "Expiry soonest"],
+  ] as const) {
+    await user.click(await screen.findByRole("button", { name: /^Sort:/ }));
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(5);
+    await user.click(screen.getByRole("menuitemradio", { name: label }));
+    await waitFor(() => expect(reads.at(-1)).toMatchObject({ ...initial, sort }));
+    const encoded = new URLSearchParams(router.state.location.search).get("aq")!;
+    expect(decodeSearchQuestion(encoded)).toEqual({ ...initial, sort });
+    expect(await screen.findByRole("button", { name: `Sort: ${label}` })).toBeVisible();
+  }
+  await user.click(screen.getByRole("button", { name: "Show more" }));
+  await waitFor(() => expect(reads.at(-1)).toMatchObject({ sort: "expiry", cursor: "next-page" }));
+  expect(await screen.findByRole("link", { name: /M-51/ })).toBeVisible();
+  await act(() => router.navigate(-1));
+  await waitFor(() => expect(reads.at(-1)).toMatchObject({ sort: "relevance" }));
+  expect(reads.at(-1)?.cursor).toBeUndefined();
+  await waitFor(() => expect(screen.queryByRole("link", { name: /M-51/ })).not.toBeInTheDocument());
+  await act(() => router.navigate(1));
+  await waitFor(() => expect(reads.at(-1)?.sort).toBe("expiry"));
+  const url = `/search${router.state.location.search}`;
+  view.unmount();
+  renderAt(url);
+  const trigger = await screen.findByRole("button", { name: "Sort: Expiry soonest" });
+  expect(trigger).toBeVisible();
+  expect(reads.at(-1)).toMatchObject({ ...initial, sort: "expiry" });
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("menuitemradio", { name: "Expiry soonest" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await user.keyboard("{Home}{Enter}");
+  expect(await screen.findByRole("button", { name: "Sort: Relevance" })).toBeVisible();
+});

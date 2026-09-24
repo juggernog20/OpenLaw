@@ -91053,7 +91053,7 @@
                   "cursor": {
                     "type": "string",
                     "minLength": 1,
-                    "maxLength": 512
+                    "maxLength": 16384
                   },
                   "limit": {
                     "default": 25,

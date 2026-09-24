@@ -8381,6 +8381,24 @@
   "search.seeAll": {
     "defaultMessage": "See all results"
   },
+  "search.sort.expiry": {
+    "defaultMessage": "Expiry soonest"
+  },
+  "search.sort.label": {
+    "defaultMessage": "Sort: {sort}"
+  },
+  "search.sort.newest": {
+    "defaultMessage": "Newest"
+  },
+  "search.sort.oldest": {
+    "defaultMessage": "Oldest"
+  },
+  "search.sort.relevance": {
+    "defaultMessage": "Relevance"
+  },
+  "search.sort.title": {
+    "defaultMessage": "Title"
+  },
   "search.total": {
     "defaultMessage": "{total, plural, one {# match} other {# matches}}"
   },

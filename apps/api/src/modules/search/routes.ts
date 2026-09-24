@@ -37,6 +37,7 @@ import {
   type SearchQuestion,
   type DocumentOwner,
 } from "@openlaw/shared";
+import { questionSort, readQuestionCursor, writeQuestionCursor } from "./sort.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
@@ -109,6 +110,12 @@ interface SearchDbRow extends Record<string, unknown> {
   version_number: number | null;
   snippet: string | null;
   state: "draft" | "published" | null;
+}
+
+interface QuestionSearchDbRow extends SearchDbRow {
+  created_at: string;
+  expiry_date: string | null;
+  sort_title: string;
 }
 
 interface ExactNumber {
@@ -200,6 +207,8 @@ function searchCtes(
       select
         'contract'::text as kind,
         ${contracts.id} as id,
+        ${contracts.createdAt} as created_at,
+        ${contracts.expiryDate} as expiry_date,
         ${contracts.number} as number,
         ${contracts.title} as title,
         ${contracts.isConfidential} as is_confidential,
@@ -222,7 +231,7 @@ function searchCtes(
     ),
     contract_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
@@ -238,6 +247,8 @@ function searchCtes(
       select
         'matter'::text as kind,
         ${matters.id} as id,
+        ${matters.createdAt} as created_at,
+        null::date as expiry_date,
         ${matters.number} as number,
         ${matters.title} as title,
         ${matters.isConfidential} as is_confidential,
@@ -255,7 +266,7 @@ function searchCtes(
     ),
     matter_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
@@ -271,6 +282,8 @@ function searchCtes(
       select
         'document'::text as kind,
         ${documents.id} as id,
+        ${documentVersions.createdAt} as created_at,
+        null::date as expiry_date,
         null::integer as number,
         coalesce(${documentVersionText.emailSubject}, ${documents.title}) as title,
         ${documents.isConfidential} as is_confidential,
@@ -312,7 +325,7 @@ function searchCtes(
     ),
     document_version_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         owner_kind, owner_id, owner_number, owner_title, version_id, version_number,
         document_title, document_description, original_filename,
         email_subject, extracted_text, extracted_vector, state,
@@ -323,7 +336,7 @@ function searchCtes(
     ),
     document_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         owner_kind, owner_id, owner_number, owner_title, version_id, version_number,
         ts_headline(
           'english',
@@ -352,6 +365,8 @@ function searchCtes(
       select
         'entity'::text as kind,
         ${entities.id} as id,
+        ${entities.createdAt} as created_at,
+        null::date as expiry_date,
         null::integer as number,
         ${entities.legalName} as title,
         ${entities.isConfidential} as is_confidential,
@@ -364,7 +379,7 @@ function searchCtes(
     ),
     entity_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
@@ -377,6 +392,8 @@ function searchCtes(
       select
         'counterparty'::text as kind,
         ${counterparties.id} as id,
+        ${counterparties.createdAt} as created_at,
+        null::date as expiry_date,
         null::integer as number,
         ${counterparties.name} as title,
         false as is_confidential,
@@ -387,7 +404,7 @@ function searchCtes(
     ),
     counterparty_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
@@ -400,6 +417,8 @@ function searchCtes(
       select
         'request'::text as kind,
         ${requests.id} as id,
+        ${requests.createdAt} as created_at,
+        null::date as expiry_date,
         ${requests.number} as number,
         ${requests.title} as title,
         false as is_confidential,
@@ -415,7 +434,7 @@ function searchCtes(
     ),
     request_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, null::text as state,
@@ -431,6 +450,8 @@ function searchCtes(
       select
         'knowledge_item'::text as kind,
         ${knowledgeItems.id} as id,
+        ${knowledgeItems.createdAt} as created_at,
+        null::date as expiry_date,
         null::integer as number,
         ${knowledgeItems.title} as title,
         false as is_confidential,
@@ -445,7 +466,7 @@ function searchCtes(
     ),
     knowledge_item_hits as (
       select
-        kind, id, number, title, is_confidential, kind_order,
+        kind, id, number, title, is_confidential, kind_order, created_at, expiry_date,
         null::text as owner_kind, null::text as owner_id, null::integer as owner_number, null::text as owner_title,
         null::text as version_id, null::integer as version_number,
         null::text as snippet, state,
@@ -593,12 +614,6 @@ function compileWords(words: SearchQuestion["words"]): string {
     : required;
 }
 
-const QuestionCursorSchema = z.object({
-  rank: z.number().nonnegative(),
-  id: z.string().min(1).max(64),
-  kind: z.enum(SEARCH_KINDS),
-});
-
 export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     "/search/query",
@@ -610,7 +625,7 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
         summary: "Run a versioned search question with an exact reachable match total.",
         body: SearchQuestionSchema.safeExtend({
           timeZone: TimezoneSchema.optional(),
-          cursor: z.string().min(1).max(512).optional(),
+          cursor: z.string().min(1).max(16_384).optional(),
           limit: z.number().int().min(1).max(MAX_LIMIT).default(FLAT_LIMIT),
         }),
         response: {
@@ -627,29 +642,18 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
       const { cursor, limit, ...question } = request.body;
       if (question.conditions.length)
         throw httpError(400, "Search conditions are not supported yet.");
-      if (question.sort !== "relevance")
-        throw httpError(400, "Only relevance sort is supported yet.");
-      let boundary: z.infer<typeof QuestionCursorSchema> | undefined;
-      if (cursor) {
-        try {
-          boundary = QuestionCursorSchema.parse(
-            JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")),
-          );
-        } catch {
-          throw httpError(400, "Invalid search cursor.");
-        }
-      }
-      const after = boundary
-        ? sql`(rank, id, kind) < (${boundary.rank}::real, ${boundary.id}, ${boundary.kind})`
-        : sql`true`;
+      const boundary = cursor ? readQuestionCursor(cursor, question.sort) : undefined;
+      const { after, order } = questionSort(question.sort, boundary);
       const ctes = searchCtes(app.db, request.user, compileWords(question.words), question);
-      const answer = await app.db.execute<{ total: number; page: SearchDbRow[] }>(sql`
-      with ${ctes}, page as (
-        select * from all_hits where ${after}
-        order by rank desc, id desc, kind desc limit ${limit + 1}
+      const answer = await app.db.execute<{ total: number; page: QuestionSearchDbRow[] }>(sql`
+      with ${ctes}, sortable_hits as (
+        select *, lower(title) as sort_title from all_hits
+      ), page as (
+        select * from sortable_hits where ${after}
+        order by ${order} limit ${limit + 1}
       )
       select (select count(*)::integer from all_hits) as total,
-        coalesce((select json_agg(page order by rank desc, id desc, kind desc) from page), '[]'::json) as page
+        coalesce((select json_agg(page order by ${order}) from page), '[]'::json) as page
     `);
       const { total, page: rows } = answer.rows[0]!;
       const page = rows.slice(0, limit);
@@ -657,12 +661,7 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         results: page.map(toSearchRow),
         total,
-        nextCursor:
-          rows.length > limit && last
-            ? Buffer.from(
-                JSON.stringify({ rank: last.rank, id: last.id, kind: last.kind }),
-              ).toString("base64url")
-            : null,
+        nextCursor: rows.length > limit && last ? writeQuestionCursor(question.sort, last) : null,
       };
     },
   );
