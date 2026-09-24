@@ -845,6 +845,17 @@ describe("the versioned question endpoint", () => {
     } while (cursor);
     expect(pages).toEqual(answer.results);
     expect((await run({ ...question(), kinds: ["counterparty"] })).total).toBeGreaterThan(0);
+    // Kinds-only questions rank and headline against an empty query; no scope at all is legal too.
+    const documentsOnly = await run({ ...question(), kinds: ["document"] });
+    expect(documentsOnly.total).toBeGreaterThan(0);
+    expect(documentsOnly.results.every((row) => row.kind === "document")).toBe(true);
+    const noScope = await run({
+      ...question(),
+      kinds: ["contract"],
+      scope: { titles: false, text: false, contents: false },
+    });
+    expect(noScope.total).toBeGreaterThan(0);
+    expect(noScope.results.every((row) => row.kind === "contract")).toBe(true);
     expect((await run(question({ all: "archivedneedle" }))).total).toBe(0);
   });
   it("pages equal relevance ranks and keeps the exact total after the last page", async () => {

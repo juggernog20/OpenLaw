@@ -10,7 +10,7 @@ import {
   type SearchQuestion,
 } from "@openlaw/shared";
 import { useState } from "react";
-import { Search as SearchIcon } from "lucide-react";
+import { Search as SearchIcon, X } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import {
@@ -113,7 +113,10 @@ const SCOPE_LABELS = defineMessages({
   contents: { id: "search.scope.contents", defaultMessage: "Document contents" },
 });
 const CHIP_CLASS =
-  "rounded-chip border border-border-default bg-control px-2.5 py-1 text-sm text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link";
+  "rounded-chip border px-2.5 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link";
+const IDLE_CHIP_CLASS = "border-border-default bg-control text-muted hover:text-primary";
+const SELECTED_CHIP_CLASS =
+  "border-status-info-fg bg-status-info-bg font-semibold text-status-info-fg";
 
 function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
   const intl = useIntl();
@@ -123,7 +126,10 @@ function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
     .filter((key) => question.words[key])
     .map((key) => ({
       key,
-      label: `${intl.formatMessage(WORD_LABELS[key])}: ${question.words[key]}`,
+      label: intl.formatMessage(
+        { id: "search.chip.words", defaultMessage: "{label}: {value}" },
+        { label: intl.formatMessage(WORD_LABELS[key]), value: question.words[key] },
+      ),
       question: { ...question, words: { ...question.words, [key]: "" } },
     }));
   if (!Object.values(question.scope).every(Boolean)) {
@@ -150,13 +156,14 @@ function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
         <Link
           key={chip.key}
           to={questionPath(chip.question)}
-          className={CHIP_CLASS}
+          className={cn(CHIP_CLASS, IDLE_CHIP_CLASS, "inline-flex items-center gap-1")}
           aria-label={intl.formatMessage(
             { id: "search.chip.remove", defaultMessage: "Remove {label}" },
             { label: chip.label },
           )}
         >
-          {chip.label} <span aria-hidden="true">×</span>
+          {chip.label}
+          <X size={14} aria-hidden="true" />
         </Link>
       ))}
       <nav aria-label={intl.formatMessage(MESSAGES.filterLabel)} className="flex flex-wrap gap-2">
@@ -171,11 +178,7 @@ function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
                 conditions: question.conditions.filter((condition) => condition.kind === kind),
               })}
               aria-current={selected ? "page" : undefined}
-              className={cn(
-                CHIP_CLASS,
-                selected &&
-                  "border-status-info-fg bg-status-info-bg font-semibold text-status-info-fg",
-              )}
+              className={cn(CHIP_CLASS, selected ? SELECTED_CHIP_CLASS : IDLE_CHIP_CLASS)}
             >
               {label}
             </Link>

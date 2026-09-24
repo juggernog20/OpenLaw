@@ -8234,6 +8234,9 @@
   "search.chip.remove": {
     "defaultMessage": "Remove {label}"
   },
+  "search.chip.words": {
+    "defaultMessage": "{label}: {value}"
+  },
   "search.error.body": {
     "defaultMessage": "The server did not answer. Try again in a moment."
   },
