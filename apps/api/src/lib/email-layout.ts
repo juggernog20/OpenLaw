@@ -9,6 +9,8 @@ export type EmailTone =
   "neutral" | "success" | "warning" | "info" | "danger" | "severe" | "assigned";
 export interface EmailBrand {
   name?: string | null;
+  /** The stored 48×48 PNG as base64, never a data URI. */
+  emailLogoPng?: string | null;
 }
 export interface EmailStatus {
   label: string;
@@ -264,6 +266,14 @@ export function renderEmailLayout(
   model: EmailModel,
   brand: EmailBrand,
 ): { html: string; attachments: NonNullable<MailMessage["attachments"]> } {
+  const logo = brand.emailLogoPng
+    ? {
+        filename: "org-logo.png",
+        content: Buffer.from(brand.emailLogoPng, "base64"),
+        contentType: "image/png",
+        cid: "org-logo@openlaw",
+      }
+    : { filename: "openlaw-192.png", content: MARK, contentType: "image/png", cid: MARK_CID };
   const orgName = brand.name?.trim() ?? "";
   const name = orgName || "OpenLaw";
   const tone = TONES[model.tone ?? "neutral"];
@@ -305,14 +315,12 @@ export function renderEmailLayout(
 <table ${TABLE} width="100%" bgcolor="#f6f8fa"><tr><td class="canvas" align="center" style="padding:32px;">
 <table ${TABLE} class="container" width="600" style="width:600px;max-width:600px;"><tr><td>
 <table ${TABLE} width="100%" bgcolor="#ffffff" style="${BORDER}">
-<tr><td class="px" bgcolor="#0d1117" style="border-radius:6px 6px 0 0;padding:10px 40px;"><table ${TABLE} width="100%"><tr><td width="24"><img src="cid:${MARK_CID}" width="24" height="24" alt="" style="display:block;border-radius:5px;background:#ffffff;"></td><td style="padding-left:10px;font-family:${FONT};font-size:14px;font-weight:600;color:#f0f6fc;">${e(name)} <span style="color:#7d8590;font-weight:400;">/ ${model.surface === "portal" ? "Legal portal" : "Legal"}</span></td></tr></table></td></tr>
+<tr><td class="px" bgcolor="#0d1117" style="border-radius:6px 6px 0 0;padding:10px 40px;"><table ${TABLE} width="100%"><tr><td width="24"><img src="cid:${logo.cid}" width="24" height="24" alt="" style="display:block;border-radius:5px;background:#ffffff;"></td><td style="padding-left:10px;font-family:${FONT};font-size:14px;font-weight:600;color:#f0f6fc;">${e(name)} <span style="color:#7d8590;font-weight:400;">/ ${model.surface === "portal" ? "Legal portal" : "Legal"}</span></td></tr></table></td></tr>
 <tr><td class="px" style="padding:32px 40px 8px;">${inner}</td></tr>
 ${why ? `<tr><td class="px" bgcolor="#f6f8fa" style="border-top:1px solid #d8dee4;border-radius:0 0 6px 6px;padding:14px 40px;${SMALL}">${why}</td></tr>` : ""}
 </table></td></tr><tr><td align="center" style="padding:16px 32px 0;${SMALL}">${orgName ? `${e(orgName)} · sent by OpenLaw` : "Sent by OpenLaw"}</td></tr></table></td></tr></table></body></html>`;
   return {
     html,
-    attachments: [
-      { filename: "openlaw-192.png", content: MARK, contentType: "image/png", cid: MARK_CID },
-    ],
+    attachments: [logo],
   };
 }

@@ -530,7 +530,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.general", "settings.users"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "authentication-and-email",

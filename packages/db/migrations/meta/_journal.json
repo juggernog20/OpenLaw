@@ -1142,6 +1142,13 @@
       "when": 1790194805635,
       "tag": "0162_user_reminder_offsets",
       "breakpoints": true
+    },
+    {
+      "idx": 163,
+      "version": "7",
+      "when": 1790252233693,
+      "tag": "0163_email_logo_png",
+      "breakpoints": true
     }
   ]
 }
