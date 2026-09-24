@@ -24,6 +24,7 @@
   "globalPassThroughEnv": ["OPENLAW_DEV_INSTANCE", "OPENLAW_DEV_RUN"],
   "tasks": {
     // The embedded edition records the current Git identity, including docs-only commits.
+    "@openlaw/api#build": { "dependsOn": ["^build"], "outputs": ["dist/**"], "cache": false },
     "@openlaw/web#build": { "dependsOn": ["^build"], "outputs": ["dist/**"], "cache": false },
     "build": {
       "dependsOn": ["^build"],

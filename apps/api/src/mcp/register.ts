@@ -7,6 +7,7 @@
  */
 
 import { z } from "zod";
+import { guideTools } from "./guide.js";
 import type { Db, UserRole } from "@openlaw/db";
 import type { McpToolset } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../auth/user.js";
@@ -53,7 +54,19 @@ export function toolInputJsonSchema(tool: ToolDefinition) {
   return z.toJSONSchema(tool.inputSchema, { io: "input" });
 }
 export function toolOutputJsonSchema(tool: ToolDefinition) {
-  return z.toJSONSchema(tool.outputSchema, { io: "output" });
+  const schema = z.toJSONSchema(tool.outputSchema, { io: "output" });
+  // Some Clients require nullable values as alternatives, not a type array.
+  function expandTypes(value: unknown) {
+    if (!value || typeof value !== "object") return;
+    const node = value as Record<string, unknown>;
+    if (Array.isArray(node.type)) {
+      node.anyOf = node.type.map((type: unknown) => ({ type }));
+      delete node.type;
+    }
+    for (const child of Object.values(node)) expandTypes(child);
+  }
+  expandTypes(schema);
+  return schema;
 }
 export class ToolError extends Error {
   constructor(
@@ -69,7 +82,7 @@ export function toolRefusal(tool: ToolDefinition, grant: Grant): ToolError | und
   if (
     (tool.toolset === "administration" && grant.role !== "administrator") ||
     (audience === "off" && tool.toolset !== "team" && tool.toolset !== "administration") ||
-    !grant.toolsets.includes(tool.toolset)
+    (tool.toolset !== "guide" && !grant.toolsets.includes(tool.toolset))
   )
     return new ToolError(
       "tool_outside_grant",
@@ -130,4 +143,5 @@ export const toolRegister: readonly ToolDefinition[] = [
       },
     }),
   },
+  ...guideTools,
 ];

@@ -89,7 +89,13 @@ it.each([false, true])(
     const client = await connect(await key(), modern);
     expect(client.getNegotiatedProtocolVersion()).toBe(modern ? "2026-07-28" : "2025-11-25");
     const list = await client.listTools();
-    expect(list.tools.map((t) => t.name)).toEqual(["openlaw_whoami"]);
+    expect(list.tools.map((t) => t.name)).toEqual([
+      "openlaw_whoami",
+      "openlaw_vocabulary",
+      "openlaw_docs_search",
+      "openlaw_docs_read",
+      "openlaw_form_get",
+    ]);
     const result = await client.callTool({ name: "openlaw_whoami", arguments: {} });
     expect(result.isError).not.toBe(true);
     expect(result.structuredContent).toMatchObject({

@@ -11,6 +11,7 @@ let admin: Record<string, string>;
 let ownerId: string;
 const credentialIds = new WeakMap<Client, string>();
 const clients: Client[] = [];
+const guideNames = toolRegister.map((t) => t.name);
 let endpoint: URL;
 const read: ToolDefinition = {
   name: "test_contract_read",
@@ -100,10 +101,10 @@ it.each([false, true])(
   "filters tools/list and refuses calls outside the Toolsets or read-only scope, modern=%s",
   async (modern) => {
     const narrow = await connect(["matters"], "write", modern);
-    expect(await names(narrow)).toEqual(["openlaw_whoami"]);
+    expect(await names(narrow)).toEqual(guideNames);
     await refusal(narrow, read.name, "tool_outside_grant");
     const reader = await connect(["contracts"], "read", modern);
-    expect(await names(reader)).toEqual(["openlaw_whoami", read.name, invalid.name]);
+    expect(await names(reader)).toEqual([...guideNames, read.name, invalid.name]);
     await refusal(reader, write.name, "mcp_read_only");
     const writer = await connect(["contracts"], "write", modern);
     expect(await names(writer)).toContain(write.name);
@@ -112,7 +113,7 @@ it.each([false, true])(
     expect(await names(writer)).not.toContain(write.name);
     await refusal(writer, write.name, "mcp_read_only");
     await h.db.update(orgSettings).set({ mcpReadOnly: false, mcpToolsetCeiling: ["matters"] });
-    expect(await names(writer)).toEqual(["openlaw_whoami"]);
+    expect(await names(writer)).toEqual(guideNames);
     await refusal(writer, read.name, "tool_outside_grant");
     await h.db.update(orgSettings).set({ mcpToolsetCeiling: ["matters", "contracts"] });
     await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, ownerId));
