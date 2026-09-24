@@ -26,6 +26,7 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import { clientAddress, consumeAuthRequestBudget } from "../../auth/limits.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
+import { renderEmailLayout } from "../../lib/email-layout.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -162,10 +163,28 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
           try {
             // The token rides in the URL fragment, which a browser never
             // sends, so no request log holds a live token (TECH-032).
+            const link = `${origin}/auth/set-password#token=${token}`;
             await mailer.send({
+              ...renderEmailLayout(
+                {
+                  subject: "Set your OpenLaw password",
+                  baseUrl: origin,
+                  surface: "portal",
+                  label: "Legal portal",
+                  headline: "Set your password",
+                  body: [
+                    "Set your OpenLaw password using the button below.",
+                    "If you did not expect this email, you can ignore it.",
+                  ],
+                  action: { label: "Set password", href: link, line: "Expires in 1 hour." },
+                  fallbackLink: link,
+                  footer: { kind: "security" },
+                },
+                settings,
+              ),
               to: email,
               subject: "Set your OpenLaw password",
-              text: `Set your OpenLaw password using the link below:\n\n${origin}/auth/set-password#token=${token}\n\nThe link expires in one hour. If you did not expect this email, you can ignore it.`,
+              text: `Set your OpenLaw password using the link below:\n\n${link}\n\nThe link expires in one hour. If you did not expect this email, you can ignore it.`,
             });
           } catch (error) {
             await app.db.delete(verifications).where(eq(verifications.id, verification.id));

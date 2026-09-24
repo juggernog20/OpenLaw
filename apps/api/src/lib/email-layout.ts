@@ -67,6 +67,7 @@ export interface EmailModel {
   headline?: string;
   greeting?: string;
   body?: string[];
+  facts?: { label: string; value: string }[];
   record?: EmailRecord;
   declineReason?: string;
   legalNote?: MarkdownBlock[];
@@ -284,6 +285,8 @@ export function renderEmailLayout(
     inner += `<h1 style="margin:0 0 20px;${TEXT}font-size:22px;line-height:1.3;font-weight:600;letter-spacing:-0.3px;">${e(model.headline)}</h1>`;
   if (model.greeting) inner += `<p style="margin:0 0 12px;${TEXT}">${e(model.greeting)}</p>`;
   for (const line of model.body ?? []) inner += `<p style="margin:0 0 20px;${TEXT}">${e(line)}</p>`;
+  if (model.facts?.length)
+    inner += `<table ${TABLE} width="100%" style="margin:0 0 24px;">${model.facts.map((row) => fact(row.label, `<span style="font-family:${MONO};">${e(row.value)}</span>`)).join("")}</table>`;
   if (model.declineReason)
     inner += `<table ${TABLE} width="100%" style="margin:0 0 24px;"><tr><td bgcolor="#f6f8fa" style="border-left:3px solid #cf222e;padding:12px 16px;${TEXT}">${e(model.declineReason).replaceAll("\n", "<br>")}</td></tr></table>`;
   if (model.record) inner += recordCard(model.record, model);
