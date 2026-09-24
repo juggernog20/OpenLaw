@@ -124,10 +124,13 @@ test("a Legal Team Member collects an approved key once and connects an SDK Clie
     await requester.reload();
     const ready = requester.getByRole("dialog", { name: "Your key is ready" });
     await expect(ready).toBeVisible();
-    const key = await ready.locator("code").innerText();
+    const key = await ready.getByRole("code").innerText();
+    expect(key.startsWith("ol_")).toBe(true);
     expect(key.length > 20).toBe(true);
     const guide = ready.getByRole("link", { name: "Connect a headless Client" });
-    expect(await guide.getAttribute("href")).toBe("/documentation/connect-headless-client");
+    await expect(guide).toHaveAttribute("href", "/documentation/connect-headless-client");
+    // The guide opens beside the dialog; the same tab would lose the once-shown key.
+    await expect(guide).toHaveAttribute("target", "_blank");
     await ready.getByRole("button", { name: "Done", exact: true }).click();
     await requester.reload();
     await expect(requester.getByRole("row").filter({ hasText: clientName })).toContainText(
@@ -155,9 +158,25 @@ test("a Legal Team Member collects an approved key once and connects an SDK Clie
     );
     expect(names).not.toContain("openlaw_contract_create");
     expect(names).not.toContain("openlaw_matters_list");
+    const me = await requester.request.get("/api/v1/me");
+    expect(me.status()).toBe(200);
+    const { user } = z.object({ user: z.object({ id: z.string() }) }).parse(await me.json());
     const identity = await client.callTool({ name: "openlaw_whoami", arguments: {} });
     expect(identity.isError).not.toBe(true);
-    expect(JSON.stringify(identity.structuredContent)).toContain(person.displayName);
+    const whoami = z
+      .object({
+        person: z.object({ id: z.string(), email: z.string(), displayName: z.string() }),
+        toolsets: z.array(z.string()),
+        scope: z.string(),
+      })
+      .parse(identity.structuredContent);
+    expect(whoami.person).toEqual({
+      id: user.id,
+      email: person.email,
+      displayName: person.displayName,
+    });
+    expect(whoami.toolsets).toEqual(["guide", "contracts"]);
+    expect(whoami.scope).toBe("read");
 
     await requester.goto("/documentation/connect-headless-client");
     await expect(
