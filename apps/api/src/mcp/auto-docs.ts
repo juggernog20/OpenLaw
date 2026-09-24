@@ -31,6 +31,7 @@ import {
   type GenerationSubmission,
 } from "../modules/auto-docs/generations.js";
 import {
+  ACKNOWLEDGEMENT_REQUIRED,
   acknowledgementState,
   authorisePortalGeneration,
   lockPortalPerson,
@@ -59,10 +60,19 @@ const generateInput = Pair.extend({
   answers: z.record(z.string().regex(AUTO_DOC_SLUG), Value.nullable()),
 }).strict();
 
-function acknowledgementRefusal(id: string, baseUrl: string) {
+/**
+ * ADO-008 belongs to the Portal. A once or once-per-Auto-Doc acknowledgement
+ * given there stands for later Tool calls; an every-use one is consumed by
+ * the Portal Generation it precedes, so that schedule sends the whole
+ * Generation to the Portal.
+ */
+function acknowledgementRefusal(id: string, baseUrl: string, frequency: unknown) {
+  const page = new URL(`/portal/auto-docs/${id}/generate`, baseUrl).href;
   return new ToolError(
     "acknowledgement_required",
-    `Acknowledge the current text in the Portal at ${new URL(`/portal/auto-docs/${id}/generate`, baseUrl).href} before generating. Your answers have not been submitted.`,
+    frequency === "every_use"
+      ? `Your organisation asks for an acknowledgement at every use, so generate this Auto-Doc in the Portal at ${page}. Your answers have not been submitted.`
+      : `Acknowledge the current text in the Portal at ${page} before generating. Your answers have not been submitted.`,
   );
 }
 export async function readAutoDocForm(
@@ -73,8 +83,9 @@ export async function readAutoDocForm(
 ) {
   await lockPortalPerson(tx, user);
   const row = await readPortalAutoDoc(tx, user, id, true, true);
-  if ((await acknowledgementState(tx, user, row, undefined, true)).required)
-    throw acknowledgementRefusal(id, baseUrl);
+  const acknowledgement = await acknowledgementState(tx, user, row, undefined, true);
+  if (acknowledgement.required)
+    throw acknowledgementRefusal(id, baseUrl, acknowledgement.frequency);
   if (user.role === "business_user" && (await portalWarnings(tx, row)).length)
     throw httpError(409, PORTAL_UNAVAILABLE);
   const live = await livePair(tx, id);
@@ -112,8 +123,8 @@ export async function generateForTool(
       authorisePortalGeneration(tx, user, id),
     );
   } catch (error) {
-    if (error instanceof HttpError && error.type === "urn:openlaw:acknowledgement-required")
-      throw acknowledgementRefusal(id, baseUrl);
+    if (error instanceof HttpError && error.type === ACKNOWLEDGEMENT_REQUIRED)
+      throw acknowledgementRefusal(id, baseUrl, error.extensions?.frequency);
     if (error instanceof HttpError && error.statusCode === 429)
       throw new ToolError("generation_limit_reached", error.message);
     throw error;

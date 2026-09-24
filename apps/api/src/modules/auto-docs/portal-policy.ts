@@ -299,6 +299,8 @@ export async function portalWarningsFor(db: Executor, rows: AutoDoc[]) {
 }
 export const PORTAL_UNAVAILABLE =
   "Legal needs to update this Auto-Doc before you can generate it. Please contact Legal.";
+/** Named so a client can tell an owed acknowledgement apart from the route's other 409s. */
+export const ACKNOWLEDGEMENT_REQUIRED = "urn:openlaw:problem:acknowledgement-required";
 async function standingAcknowledgement(
   db: Executor,
   user: AuthenticatedUser,
@@ -415,7 +417,12 @@ export async function authorisePortalGeneration(
     throw httpError(
       409,
       "Acknowledge the current text before generating. Your answers have not been submitted.",
-      { type: "urn:openlaw:acknowledgement-required" },
+      {
+        type: ACKNOWLEDGEMENT_REQUIRED,
+        // MCP words its refusal by schedule: an every-use acknowledgement is
+        // consumed by the Portal Generation it precedes, so no Tool call can hold one.
+        extensions: { frequency: words.frequency },
+      },
     );
   if (words.frequency === "every_use")
     await tx

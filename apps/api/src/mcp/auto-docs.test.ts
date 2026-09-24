@@ -199,10 +199,11 @@ it("refuses owed acknowledgements on read and generation and points at the Porta
   for (const [name, input] of [
     ["form_get", { kind: "auto_doc", typeId: p.id }],
     ["auto_doc_generate", args],
-  ] as const)
-    expect(await refused(business, name, input, "acknowledgement_required")).toContain(
-      `/portal/auto-docs/${p.id}`,
-    );
+  ] as const) {
+    const refusal = await refused(business, name, input, "acknowledgement_required");
+    expect(refusal).toContain(`/portal/auto-docs/${p.id}/generate`);
+    expect(refusal).toContain("Acknowledge the current text");
+  }
   expect(
     await h.db.select().from(autoDocGenerations).where(eq(autoDocGenerations.autoDocId, p.id)),
   ).toHaveLength(0);
@@ -220,7 +221,26 @@ it("refuses owed acknowledgements on read and generation and points at the Porta
   expect(form.autoDocForm.pair).toEqual(p.pair);
   expect((await call(business, "auto_doc_generate", args)).generation.state).toBe("ready");
   await h.db.update(orgSettings).set({ autoDocAcknowledgementFrequency: "every_use" });
-  await refused(business, "auto_doc_generate", args, "acknowledgement_required");
+  // An every-use acknowledgement is consumed by the Portal Generation it
+  // precedes, so the refusal sends the whole Generation to the Portal.
+  for (const [name, input] of [
+    ["form_get", { kind: "auto_doc", typeId: p.id }],
+    ["auto_doc_generate", args],
+  ] as const) {
+    const refusal = await refused(business, name, input, "acknowledgement_required");
+    expect(refusal).toContain("at every use, so generate this Auto-Doc in the Portal at");
+    expect(refusal).not.toContain("Acknowledge the current text");
+  }
+  const portalRefusal = await post(
+    `/portal/auto-docs/${p.id}/generations`,
+    { ...p.pair, answers: args.answers },
+    businessCookies,
+  );
+  expect(portalRefusal.statusCode, portalRefusal.body).toBe(409);
+  expect(portalRefusal.json()).toMatchObject({
+    type: "urn:openlaw:problem:acknowledgement-required",
+    frequency: "every_use",
+  });
 });
 it("uses the UI form, validates answers and the pair, and produces the same output", async () => {
   const p = await prepare();
