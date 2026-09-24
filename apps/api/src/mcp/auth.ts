@@ -62,7 +62,10 @@ export async function readCredentialContext(
     notifier: server.notifier,
     jobs: server.jobs,
     resolveAiProvider: server.resolveAiProvider,
-    user,
+    user: {
+      ...user,
+      via: { kind: "api_key", id: approved.credential.id, clientName: approved.request.clientName },
+    },
     credentialId: approved.credential.id,
     clientName: approved.request.clientName,
     organizationName: policy.name,

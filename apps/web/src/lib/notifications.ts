@@ -514,7 +514,8 @@ const ARMS: Readonly<Record<string, Arm>> = {
     icon: Inbox,
     message: defineMessage({
       id: "notifications.request.created",
-      defaultMessage: "Legal has received your request {request}",
+      defaultMessage:
+        "{hasVia, select, yes {{actor} submitted your request {request} to Legal} other {Legal has received your request {request}}}",
     }),
   },
   // Names the new status in the requester's own words (the NOT-005
@@ -771,7 +772,16 @@ export function narrateNotification(
       href,
     };
   }
-  const actor = text(item.payload, "actorName");
+  const actorName = text(item.payload, "actorName");
+  const viaClient = text(item.payload, "viaClientName");
+  const viaKind = text(item.payload, "viaKind");
+  const actor =
+    actorName && viaClient && viaKind && viaKind !== "ui"
+      ? intl.formatMessage(
+          { id: "notifications.actor.via", defaultMessage: "{actor}, via {client}," },
+          { actor: actorName, client: viaClient },
+        )
+      : actorName;
   const status = newStatus(intl, item);
   return {
     icon: arm.icon,
@@ -799,6 +809,7 @@ export function narrateNotification(
       // Every arm gets these whether or not its sentence selects on
       // them.
       hasActor: actor ? "yes" : "no",
+      hasVia: actorName && viaClient && viaKind && viaKind !== "ui" ? "yes" : "no",
       status: status ?? "",
       hasStatus: status ? "yes" : "no",
       outcome: text(item.payload, "outcome") ?? "",

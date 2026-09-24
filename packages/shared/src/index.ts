@@ -70,6 +70,7 @@ export {
  * is re-exported here because `@openlaw/shared` has one entry point.
  */
 export type {
+  ActivityVia,
   ActivityAction,
   ActivityPayloadMap,
   ChangedFields,

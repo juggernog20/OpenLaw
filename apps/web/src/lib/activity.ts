@@ -145,6 +145,8 @@ export type ActivityEntry = FeedResponse["entries"][number];
  * satisfy this, and neither has to be converted to be narrated.
  */
 export interface NarratableEntry {
+  viaKind?: string | null;
+  viaClientName?: string | null;
   action: string;
   actor: { displayName: string } | null;
   payload: Record<string, unknown>;
@@ -228,7 +230,13 @@ function actorName(intl: IntlShape, entry: NarratableEntry): string {
     entry.actor?.displayName ??
     intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" });
   const actorRole = text(entry.payload, "actorRole");
-  return actorRole ? `${name} (${roleLabel(intl, actorRole)})` : name;
+  const actor = actorRole ? `${name} (${roleLabel(intl, actorRole)})` : name;
+  return entry.viaKind && entry.viaKind !== "ui" && entry.viaClientName
+    ? intl.formatMessage(
+        { id: "activity.actor.via", defaultMessage: "{actor}, via {client}," },
+        { actor, client: entry.viaClientName },
+      )
+    : actor;
 }
 
 /**

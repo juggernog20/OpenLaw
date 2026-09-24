@@ -179,6 +179,9 @@ const AuditEntrySchema = z.object({
   entityRef: EntityRefSchema.nullable(),
   /** Who acted. NULL for a system-emitted event with no human actor. */
   actor: ActorSchema.nullable(),
+  viaKind: z.string().nullable(),
+  viaId: z.string().nullable(),
+  viaClientName: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   /** The action's own data, untyped by design: each slug carries its
    * own shape, the shapes are as old as the rows, and the narration
@@ -196,6 +199,9 @@ const entryColumns = {
   visibility: activityLog.visibility,
   createdAt: activityLog.createdAt,
   payload: activityLog.payload,
+  viaKind: activityLog.viaKind,
+  viaId: activityLog.viaId,
+  viaClientName: activityLog.viaClientName,
   actor: {
     id: users.id,
     displayName: users.displayName,
@@ -503,6 +509,9 @@ function toEntry(row: EntryRow, refs?: ReadonlyMap<string, EntityRef>) {
         : null,
     createdAt: row.createdAt.toISOString(),
     payload: row.payload,
+    viaKind: row.viaKind,
+    viaId: row.viaId,
+    viaClientName: row.viaClientName,
   };
 }
 
@@ -518,6 +527,9 @@ const CSV_COLUMNS = [
   "actor_name",
   "actor_email",
   "payload",
+  "via_kind",
+  "via_id",
+  "via_client_name",
 ] as const;
 
 export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -682,6 +694,9 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
                 entry.actor?.displayName ?? null,
                 row.actor?.email ?? null,
                 JSON.stringify(entry.payload),
+                entry.viaKind,
+                entry.viaId,
+                entry.viaClientName,
               ]);
             }
             if (chunk.length < EXPORT_CHUNK) return;

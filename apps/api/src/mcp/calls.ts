@@ -9,6 +9,7 @@
 import { and, eq, gte, lt, mcpToolCalls, ne, sql } from "@openlaw/db";
 import type { ToolContext, ToolDefinition } from "./register.js";
 import { ToolError, toolRefusal } from "./register.js";
+import { withActingUser } from "../lib/acting-context.js";
 import { defaults, type Environment } from "../modules/advanced-settings/config.js";
 
 /** Reserve a ledger row under a database lock so concurrent API processes share the limit. */
@@ -95,7 +96,7 @@ export async function callTool(
         "invalid_arguments",
         `${tool.name} arguments do not match its input schema.`,
       );
-    const output = await tool.run(parsed.data, context);
+    const output = await withActingUser(context.user, () => tool.run(parsed.data, context));
     const structuredContent = tool.outputSchema.parse(output);
     outcome = "success";
     return {

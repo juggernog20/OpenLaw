@@ -21888,6 +21888,9 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              viaKind: string | null;
+              viaId: string | null;
+              viaClientName: string | null;
               /** Format: date-time */
               createdAt: string;
               payload: {
@@ -33242,6 +33245,9 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              viaKind: string | null;
+              viaId: string | null;
+              viaClientName: string | null;
               /** Format: date-time */
               createdAt: string;
               payload: {
@@ -33323,6 +33329,9 @@ export interface operations {
                 image: string | null;
                 archived: boolean;
               } | null;
+              viaKind: string | null;
+              viaId: string | null;
+              viaClientName: string | null;
               /** Format: date-time */
               createdAt: string;
               payload: {

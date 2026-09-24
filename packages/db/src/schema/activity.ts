@@ -49,6 +49,10 @@ export const activityLog = pgTable(
     entityId: text("entity_id"),
     /** NULL for system-emitted events (cron jobs, webhooks) with no human actor. */
     actorId: text("actor_id").references(() => users.id),
+    /** NULL means UI. Snapshots survive credential revocation and deletion. */
+    viaKind: text("via_kind", { enum: ["ui", "api_key", "oauth_client"] }),
+    viaId: text("via_id"),
+    viaClientName: text("via_client_name"),
     /** Slug like `user.theme_changed` or `org_settings.updated`. */
     action: text("action").notNull(),
     visibility: text("visibility", { enum: ACTIVITY_VISIBILITIES }).notNull(),
@@ -57,6 +61,10 @@ export const activityLog = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    check(
+      "activity_log_via_kind_check",
+      sql`${table.viaKind} in ('ui', 'api_key', 'oauth_client')`,
+    ),
     // The three SCHEMA.md query shapes: per-entity feed, actor-based
     // audit queries, security-event filtering by action.
     //

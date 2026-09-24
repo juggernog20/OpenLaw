@@ -8,6 +8,7 @@
  * the rows are written.
  */
 
+import { withActingUser } from "../lib/acting-context.js";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { Readable } from "node:stream";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
@@ -212,64 +213,67 @@ export function documentUploadRoutes(secret: string): FastifyPluginAsync {
             throw httpError(401, "This upload URL has expired. Request a new upload URL.");
           const live = await readCredentialContext(app, ticket.credentialId);
           await assertTarget(app, live, ticket.input);
-          try {
-            if (ticket.input.documentId)
-              return await completeVersionUpload(
-                app,
-                live.user,
-                ticket.documentId,
-                ticket.versionId,
-                file,
-              );
-            switch (ticket.input.ownerType) {
-              case "contract":
-                return await completeContractUpload(
+          return withActingUser(live.user, async () => {
+            try {
+              if (ticket.input.documentId)
+                return await completeVersionUpload(
                   app,
                   live.user,
-                  ticket.input.number!,
                   ticket.documentId,
                   ticket.versionId,
                   file,
                 );
-              case "matter":
-                return await completeMatterUpload(
-                  app,
-                  live.user,
-                  ticket.input.number!,
-                  ticket.documentId,
-                  ticket.versionId,
-                  file,
-                );
-              case "entity":
-                return await completeEntityUpload(
-                  app,
-                  live.user,
-                  ticket.input.id!,
-                  ticket.documentId,
-                  ticket.versionId,
-                  file,
-                );
-              case "knowledge_item":
-                return await completeKnowledgeUpload(
-                  app,
-                  live.user,
-                  ticket.input.id!,
-                  ticket.documentId,
-                  ticket.versionId,
-                  file,
-                );
-              default:
-                throw httpError(400, "An Auto-Doc upload must append a Version.");
+              switch (ticket.input.ownerType) {
+                case "contract":
+                  return await completeContractUpload(
+                    app,
+                    live.user,
+                    ticket.input.number!,
+                    ticket.documentId,
+                    ticket.versionId,
+                    file,
+                  );
+                case "matter":
+                  return await completeMatterUpload(
+                    app,
+                    live.user,
+                    ticket.input.number!,
+                    ticket.documentId,
+                    ticket.versionId,
+                    file,
+                  );
+                case "entity":
+                  return await completeEntityUpload(
+                    app,
+                    live.user,
+                    ticket.input.id!,
+                    ticket.documentId,
+                    ticket.versionId,
+                    file,
+                  );
+                case "knowledge_item":
+                  return await completeKnowledgeUpload(
+                    app,
+                    live.user,
+                    ticket.input.id!,
+                    ticket.documentId,
+                    ticket.versionId,
+                    file,
+                  );
+                default:
+                  throw httpError(400, "An Auto-Doc upload must append a Version.");
+              }
+            } catch (error) {
+              // Concurrent uses of one URL can both pass the initial read; only one may commit.
+              const [completed] = await app.db
+                .select({ id: documentVersions.id })
+                .from(documentVersions)
+                .where(eq(documentVersions.id, ticket.versionId));
+              if (completed)
+                throw httpError(409, "This upload URL has already completed a Version.");
+              throw error;
             }
-          } catch (error) {
-            // Concurrent uses of one URL can both pass the initial read; only one may commit.
-            const [completed] = await app.db
-              .select({ id: documentVersions.id })
-              .from(documentVersions)
-              .where(eq(documentVersions.id, ticket.versionId));
-            if (completed) throw httpError(409, "This upload URL has already completed a Version.");
-            throw error;
-          }
+          });
         });
         await requestDerivations(app.jobs, app.log, {
           versionId: ticket.versionId,

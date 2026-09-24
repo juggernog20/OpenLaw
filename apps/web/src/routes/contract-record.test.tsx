@@ -5273,7 +5273,13 @@ describe("the contract record's history applet (M9/6)", () => {
    * every cursor it was asked for, so paging is asserted at the seam
    * rather than by counting rows on screen.
    */
-  function activityApi(pages: ReturnType<typeof entry>[][]) {
+  function activityApi(
+    pages: (ReturnType<typeof entry> & {
+      viaKind?: string;
+      viaId?: string;
+      viaClientName?: string;
+    })[][],
+  ) {
     const cursors: (string | null)[] = [];
     /** The reference each read was keyed by, so the entity-generic
      * claim is asserted rather than assumed. */
@@ -5589,6 +5595,29 @@ describe("the contract record's history applet (M9/6)", () => {
     expect(within(feed).getAllByRole("listitem")[0]).toHaveTextContent(
       "Nadia Counsel changed Since detached",
     );
+  });
+
+  it("names the Client on an MCP feed row and leaves UI rows plain", async () => {
+    const user = userEvent.setup();
+    const activity = activityApi([
+      [
+        {
+          ...entry("a2", "contract.updated"),
+          viaKind: "api_key",
+          viaId: "key-1",
+          viaClientName: "Claude Code",
+        },
+        entry("a1", "contract.created"),
+      ],
+    ]);
+    stubApi({ signedIn: MEMBER, extra: pageApi(activity) });
+    renderAt("/contracts/42");
+    await openHistory(user);
+    const feed = await screen.findByRole("list", { name: "History" });
+    const rows = within(feed).getAllByRole("listitem");
+    expect(rows[0]).toHaveTextContent("Nadia Counsel, via Claude Code, changed this contract");
+    expect(rows[1]).toHaveTextContent("Nadia Counsel created this contract");
+    expect(rows[1]).not.toHaveTextContent("via");
   });
 
   it("renders an unknown action slug plainly instead of throwing", async () => {

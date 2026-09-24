@@ -1428,3 +1428,10 @@ export type ActivityPayloadMap = ApiKeyPayloads &
 
 /** Every slug this build writes. */
 export type ActivityAction = keyof ActivityPayloadMap & string;
+
+/** The Client used for an act. Absent attribution means the UI. */
+export interface ActivityVia {
+  kind: "ui" | "api_key" | "oauth_client";
+  id: string | null;
+  clientName: string | null;
+}

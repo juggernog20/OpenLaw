@@ -20,7 +20,10 @@
 
 import type { Theme, UserRole } from "@openlaw/db";
 
+import type { ActivityVia } from "@openlaw/shared";
+
 export interface AuthenticatedUser {
+  via?: ActivityVia;
   id: string;
   email: string;
   displayName: string;

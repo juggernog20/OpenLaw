@@ -26,6 +26,8 @@ import {
   users,
   orgSettings,
   activityLog,
+  notifications,
+  apiKeyRequests,
   eq,
   sql,
 } from "@openlaw/db";
@@ -823,4 +825,110 @@ it("fails a manual run whose selected Version was erased instead of reading othe
     { timeout: 15000, interval: 100 },
   );
   expect(provider.extractions.length).toBe(count);
+});
+
+it("carries credential attribution through Contract writes, feeds, audit and notifications", async () => {
+  const created = await call(legal, "openlaw_contract_create", {
+    contractTypeId: typeId,
+    answers: { title: "Via contract" },
+    managerId: legalId,
+  });
+  const [contract] = await h.db
+    .select()
+    .from(contracts)
+    .where(eq(contracts.number, Number(created.number)));
+  await call(legal, "openlaw_contract_update", {
+    number: created.number,
+    changes: { managerId: adminId, title: "Via updated contract" },
+  });
+  const [review] = await h.db
+    .select()
+    .from(contractStatuses)
+    .where(eq(contractStatuses.stage, "review"));
+  await call(legal, "openlaw_contract_set_status", {
+    number: created.number,
+    statusId: review!.id,
+  });
+  const [credential] = await h.db
+    .select()
+    .from(apiKeyRequests)
+    .where(eq(apiKeyRequests.requesterId, legalId));
+  const via = { viaKind: "api_key", viaId: credential!.keyId, viaClientName: "Workspace test" };
+  const rows = await h.db.select().from(activityLog).where(eq(activityLog.entityId, contract!.id));
+  for (const action of ["contract.created", "contract.updated", "contract.status_changed"]) {
+    expect(rows).toContainEqual(expect.objectContaining({ action, actorId: legalId, ...via }));
+  }
+  const feed = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/activity?entityType=contract&entityId=${contract!.id}`,
+    cookies: admin,
+  });
+  expect(feed.statusCode, feed.body).toBe(200);
+  expect(feed.json().entries).toContainEqual(
+    expect.objectContaining({ action: "contract.updated", ...via }),
+  );
+  const recent = await call(legal, "openlaw_activity_recent", {
+    since: "2020-01-01T00:00:00Z",
+    limit: 100,
+  });
+  expect(recent.entries).toContainEqual(
+    expect.objectContaining({ entityId: contract!.id, ...via }),
+  );
+  const audit = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/audit-log?entityId=${contract!.id}`,
+    cookies: admin,
+  });
+  expect(audit.statusCode, audit.body).toBe(200);
+  expect(audit.json().entries).toContainEqual(expect.objectContaining(via));
+  const csv = await h.app.inject({
+    method: "GET",
+    url: `/api/v1/audit-log/export?entityId=${contract!.id}`,
+    cookies: admin,
+  });
+  expect(csv.statusCode, csv.body).toBe(200);
+  expect(csv.body).toContain('"via_kind","via_id","via_client_name"');
+  expect(csv.body).toContain(`"api_key","${credential!.keyId}","Workspace test"`);
+  const notices = await h.db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.entityId, contract!.id));
+  expect(notices).toContainEqual(
+    expect.objectContaining({
+      eventType: "contract.owner_assigned",
+      payload: expect.objectContaining({ actorName: "legal_team_member", ...via }),
+    }),
+  );
+
+  const legalCookies = await signInCookies(
+    h.app,
+    "legal_team_member@example.com",
+    TEST_ADMIN.password,
+  );
+  const [ui] = await Promise.all([
+    h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${contract!.number}`,
+      cookies: legalCookies,
+      payload: { title: "UI edit" },
+    }),
+    call(legal, "openlaw_contract_update", {
+      number: contract!.number,
+      changes: { description: "Concurrent MCP edit" },
+    }),
+  ]);
+  expect(ui.statusCode, ui.body).toBe(200);
+  const afterUi = await h.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.entityId, contract!.id));
+  expect(afterUi).toContainEqual(
+    expect.objectContaining({
+      actorId: legalId,
+      action: "contract.updated",
+      viaKind: null,
+      viaId: null,
+      viaClientName: null,
+    }),
+  );
 });

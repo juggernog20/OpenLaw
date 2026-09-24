@@ -484,6 +484,25 @@ describe("the notification centre", () => {
     expect(within(centre).queryByText(/Nothing to catch up on/)).not.toBeInTheDocument();
   });
 
+  it.each(["approval.requested", "request.created"])(
+    "names the Client that caused %s",
+    async (eventType) => {
+      const user = userEvent.setup();
+      const notice = item(1);
+      notice.eventType = eventType;
+      notice.payload = { ...notice.payload, viaKind: "api_key", viaClientName: "Claude Code" };
+      bellApi({ unread: 1, pages: { first: { notifications: [notice], nextCursor: null } } });
+      renderAt("/");
+      await user.click(await bell("1 unread"));
+      const centre = await screen.findByRole("dialog", { name: "Notifications" });
+      expect(
+        within(centre).getByRole("link", {
+          name: /Nadia Counsel, via Claude Code,/,
+        }),
+      ).toBeVisible();
+    },
+  );
+
   it("says which rows are unread, in the name and with a marker", async () => {
     const user = userEvent.setup();
     bellApi({
