@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import Fastify from "fastify";
 import { z } from "zod";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { eq, orgSettings, users } from "@openlaw/db";
-import { mcpRoutes } from "./routes.js";
+import { eq, orgSettings, users, mcpToolCalls, apiKeyRequests, sql } from "@openlaw/db";
 import { toolRegister, type ToolDefinition } from "./register.js";
 import { startHarness, TEST_ADMIN, signInCookies, type TestHarness } from "../testing/harness.js";
 
 let h: TestHarness;
 let admin: Record<string, string>;
 let ownerId: string;
-const mounted = Fastify();
+const credentialIds = new WeakMap<Client, string>();
 const clients: Client[] = [];
 let endpoint: URL;
 const read: ToolDefinition = {
@@ -45,7 +43,13 @@ const invalid: ToolDefinition = {
   run: async () => ({ secret: "record content must never leak" }),
 };
 beforeAll(async () => {
-  h = await startHarness();
+  h = await startHarness({
+    mcpTools: [...toolRegister, read, write, invalid],
+    advancedRuntime: {
+      baseline: { MCP_RATE_LIMIT_PER_HOUR: "invalid" },
+      active: { MCP_RATE_LIMIT_PER_HOUR: "invalid" },
+    },
+  });
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   admin = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
   const [owner] = await h.db.select().from(users).where(eq(users.email, TEST_ADMIN.email));
@@ -53,13 +57,10 @@ beforeAll(async () => {
   await h.db
     .update(orgSettings)
     .set({ mcpEnabled: true, mcpLegalApiKeysEnabled: true, mcpBusinessApiKeysEnabled: true });
-  mounted.decorate("db", h.db).decorate("auth", h.app.auth);
-  await mounted.register(mcpRoutes({}, [...toolRegister, read, write, invalid]));
-  endpoint = new URL("/mcp", await mounted.listen({ port: 0, host: "127.0.0.1" }));
+  endpoint = new URL("/mcp", await h.app.listen({ port: 0, host: "127.0.0.1" }));
 });
 afterAll(async () => {
   await Promise.all(clients.map((c) => c.close()));
-  await mounted.close();
   await h?.stop();
 });
 async function connect(toolsets: string[], scope: "read" | "write", modern = true) {
@@ -75,6 +76,11 @@ async function connect(toolsets: string[], scope: "read" | "write", modern = tru
     { versionNegotiation: { mode: modern ? { pin: "2026-07-28" } : "legacy" } },
   );
   clients.push(client);
+  const [approved] = await h.db
+    .select({ keyId: apiKeyRequests.keyId })
+    .from(apiKeyRequests)
+    .where(eq(apiKeyRequests.id, response.json().id));
+  credentialIds.set(client, approved!.keyId!);
   await client.connect(
     new StreamableHTTPClientTransport(endpoint, {
       requestInit: { headers: { "x-api-key": response.json().key } },
@@ -117,7 +123,11 @@ it.each([false, true])(
 );
 it("records invalid input and output once, without recording or returning their content", async () => {
   const client = await connect(["contracts"], "write");
-  const before = await h.db.$client.query("select count(*)::int as n from mcp_tool_calls");
+  const credential = eq(mcpToolCalls.credentialId, credentialIds.get(client)!);
+  const [before] = await h.db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(mcpToolCalls)
+    .where(credential);
   const result = await client.callTool({
     name: "openlaw_whoami",
     arguments: { unexpected: "private record content" },
@@ -126,10 +136,37 @@ it("records invalid input and output once, without recording or returning their 
   expect(JSON.stringify(result)).toContain("invalid_arguments");
   expect(JSON.stringify(result)).not.toContain("private record content");
   await refusal(client, invalid.name, "internal_error");
-  const after = await h.db.$client.query("select count(*)::int as n from mcp_tool_calls");
-  expect(after.rows[0].n - before.rows[0].n).toBe(2);
-  const rows = await h.db.$client.query("select * from mcp_tool_calls");
-  expect(JSON.stringify(rows.rows)).not.toContain("record content");
-  expect(rows.rows.some((r) => r.outcome === "invalid_arguments")).toBe(true);
-  expect(rows.rows.some((r) => r.outcome === "internal_error")).toBe(true);
+  const [after] = await h.db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(mcpToolCalls)
+    .where(credential);
+  expect(after!.n - before!.n).toBe(2);
+  const rows = await h.db.select().from(mcpToolCalls).where(credential);
+  expect(JSON.stringify(rows)).not.toContain("record content");
+  expect(rows.some((r) => r.outcome === "invalid_arguments")).toBe(true);
+  expect(rows.some((r) => r.outcome === "internal_error")).toBe(true);
+});
+
+it("keeps the default allowance when the deployment rate limit is invalid", async () => {
+  const client = await connect(["contracts"], "read");
+  await h.db.insert(mcpToolCalls).values(
+    Array.from({ length: 600 }, (_, index) => ({
+      personId: ownerId,
+      credentialId: credentialIds.get(client)!,
+      clientName: "Grant test",
+      tool: "openlaw_whoami",
+      outcome: "success",
+      requestId: `prior-${index}`,
+    })),
+  );
+  const result = await client.callTool({ name: "openlaw_whoami" });
+  expect(result.isError).toBe(true);
+  expect(result.content).toEqual([
+    {
+      type: "text",
+      text: expect.stringContaining(
+        "rate_limited: The limit is 600 Tool calls per hour per credential.",
+      ),
+    },
+  ]);
 });

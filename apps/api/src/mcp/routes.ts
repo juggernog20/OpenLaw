@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * TECH-035 stateless /mcp mount. Only a verified credential reaches the factory,
+ * which creates one server for that caller and protocol era per request.
+ * The route is outside the session origin check and hidden from OpenAPI.
+ */
+
 import {
   createMcpHandler,
   McpServer,
@@ -9,6 +16,7 @@ import { toNodeHandler } from "@modelcontextprotocol/node";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { OPENLAW_VERSION } from "@openlaw/shared";
+import { loggable } from "../logging.js";
 import { HttpError } from "../lib/problem.js";
 import type { Environment } from "../modules/advanced-settings/config.js";
 import { authenticateKey } from "./auth.js";
@@ -87,9 +95,9 @@ export function mcpRoutes(
                   request.id,
                   active,
                 );
-              } catch {
+              } catch (error) {
                 request.log.error(
-                  { credentialId: context.credentialId },
+                  { credentialId: context.credentialId, error: loggable(error) },
                   "MCP Tool call ledger failed.",
                 );
                 return {

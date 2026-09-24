@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * TECH-035 call accounting, described in SCHEMA.md's mcp_tool_calls section.
+ * Each call reserves a row under a credential lock before execution, then records
+ * its outcome. The database clock defines the hour shared by all API processes.
+ */
+
 import { and, eq, gte, lt, mcpToolCalls, ne, sql } from "@openlaw/db";
 import type { ToolContext, ToolDefinition } from "./register.js";
 import { ToolError, toolRefusal } from "./register.js";
@@ -11,7 +18,11 @@ async function reserveCall(
   requestId: string,
   active: Environment,
 ) {
-  const limit = Number(active.MCP_RATE_LIMIT_PER_HOUR ?? defaults.MCP_RATE_LIMIT_PER_HOUR);
+  const configured = Number(active.MCP_RATE_LIMIT_PER_HOUR);
+  const limit =
+    Number.isSafeInteger(configured) && configured > 0
+      ? configured
+      : Number(defaults.MCP_RATE_LIMIT_PER_HOUR);
   return context.db.transaction(async (tx) => {
     await tx.execute(
       sql`select pg_advisory_xact_lock(hashtextextended(${context.credentialId}, 0))`,

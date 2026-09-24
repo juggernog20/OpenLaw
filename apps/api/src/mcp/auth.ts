@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * TECH-035 API key authentication. Approval, revocation, expiry and owner match
+ * precede the shared live-user read. Archival, the master switch and the current
+ * account group's switch can refuse each request without a server restart.
+ */
+
 import { and, apiKeyRequests, apikeys, eq, isNull, orgSettings } from "@openlaw/db";
 import type { FastifyRequest } from "fastify";
 import { API_KEY_PREFIX } from "../auth/api-keys.js";

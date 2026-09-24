@@ -123,6 +123,7 @@ import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
 import { apiKeyRoutes } from "./modules/api-keys/routes.js";
+import type { ToolDefinition } from "./mcp/register.js";
 import { mcpRoutes } from "./mcp/routes.js";
 import { mcpSettingsRoutes } from "./modules/mcp-settings/routes.js";
 import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
@@ -214,6 +215,8 @@ export interface AppDeps {
    */
   maxUploadBytes?: number;
   advancedRuntime?: AdvancedRuntime;
+  /** TECH-035 register injection for the MCP adapter seam. Defaults to the code-owned register. */
+  mcpTools?: readonly ToolDefinition[];
   /**
    * Directory of the built SPA (TECH-017: the app serves the web bundle
    * same-origin). Unset — e.g. API-only development — leaves every
@@ -558,7 +561,10 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
 
   await app.register(authHandler);
   await app.register(
-    mcpRoutes(deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings())),
+    mcpRoutes(
+      deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings()),
+      deps.mcpTools,
+    ),
   );
   // The stream owns its full path and bypasses JSON response
   // serialization. Its session and optional record gates still run

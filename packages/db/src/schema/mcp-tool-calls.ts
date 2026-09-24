@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * TECH-035 Tool call metadata. Arguments, results and record ids never enter this
+ * ledger. A reserved row becomes a completed call with an outcome and duration.
+ */
+
 import { index, integer, pgTable, text, timestamp, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { uuidPk } from "./helpers.js";
 import { users } from "./auth.js";
 
-/** Call metadata only. Arguments, results and record ids never enter this ledger. */
 export const mcpToolCalls = pgTable(
   "mcp_tool_calls",
   {

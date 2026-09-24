@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import Fastify from "fastify";
-import { mcpRoutes } from "./routes.js";
+import { buildApp } from "../app.js";
+import { testDeps } from "../testing/deps.js";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { apikeys, eq, orgSettings, users } from "@openlaw/db";
+import { apikeys, eq, orgSettings, users, mcpToolCalls, desc, sql } from "@openlaw/db";
 import { effectiveEnvironment, emptySettings } from "../modules/advanced-settings/config.js";
 import { provisionUser } from "../auth/instance.js";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
@@ -102,20 +102,24 @@ it.each([false, true])(
     expect(result.content).toEqual([
       { type: "text", text: JSON.stringify(result.structuredContent) },
     ]);
-    const rows = await h.db.$client.query(
-      "select * from mcp_tool_calls where person_id = $1 order by created_at desc",
-      [memberId],
-    );
-    expect(rows.rows[0]).toMatchObject({
-      client_name: "Approved script",
+    const rows = await h.db
+      .select()
+      .from(mcpToolCalls)
+      .where(eq(mcpToolCalls.personId, memberId))
+      .orderBy(desc(mcpToolCalls.createdAt));
+    expect(rows[0]!).toMatchObject({
+      clientName: "Approved script",
       tool: "openlaw_whoami",
       outcome: "success",
-      person_id: memberId,
+      personId: memberId,
     });
-    expect(rows.rows[0].credential_id).toBeTruthy();
-    expect(rows.rows[0].request_id).toBeTruthy();
-    expect(rows.rows[0].duration_ms).toBeGreaterThanOrEqual(0);
-    expect(Object.keys(rows.rows[0]).sort()).toEqual(
+    expect(rows[0]!.credentialId).toBeTruthy();
+    expect(rows[0]!.requestId).toBeTruthy();
+    expect(rows[0]!.durationMs).toBeGreaterThanOrEqual(0);
+    const columns = await h.db.execute<{ column_name: string }>(
+      sql`select column_name from information_schema.columns where table_schema = 'public' and table_name = 'mcp_tool_calls'`,
+    );
+    expect(columns.rows.map((column) => column.column_name).sort()).toEqual(
       [
         "id",
         "person_id",
@@ -195,10 +199,11 @@ it("records unknown calls as named Tool errors and hides MCP from OpenAPI", asyn
   expect(result.content).toEqual([
     expect.objectContaining({ text: expect.stringContaining("unknown_tool") }),
   ]);
-  const rows = await h.db.$client.query(
-    "select outcome from mcp_tool_calls where tool = 'openlaw_unknown'",
-  );
-  expect(rows.rows).toEqual([{ outcome: "unknown_tool" }]);
+  const rows = await h.db
+    .select({ outcome: mcpToolCalls.outcome })
+    .from(mcpToolCalls)
+    .where(eq(mcpToolCalls.tool, "openlaw_unknown"));
+  expect(rows).toEqual([{ outcome: "unknown_tool" }]);
   expect(h.app.swagger().paths).not.toHaveProperty("/mcp");
 });
 it("enforces the database allowance across simultaneous calls and resets at the next hour", async () => {
@@ -210,9 +215,15 @@ it("enforces the database allowance across simultaneous calls and resets at the 
       values: { MCP_RATE_LIMIT_PER_HOUR: "999" },
     }),
   });
-  const replica = Fastify();
-  replica.decorate("db", h.db).decorate("auth", h.app.auth);
-  await replica.register(mcpRoutes({ MCP_RATE_LIMIT_PER_HOUR: "2" }));
+  const replica = await buildApp(
+    testDeps({
+      db: h.db,
+      advancedRuntime: {
+        baseline: { MCP_RATE_LIMIT_PER_HOUR: "2" },
+        active: { MCP_RATE_LIMIT_PER_HOUR: "2" },
+      },
+    }),
+  );
   const replicaUrl = new URL("/mcp", await replica.listen({ port: 0, host: "127.0.0.1" }));
   const replicaClient = new Client({ name: "Second API process", version: "1" });
   let results;
@@ -244,16 +255,18 @@ it("enforces the database allowance across simultaneous calls and resets at the 
       },
     ]);
   }
-  const rows = await h.db.$client.query(
-    "select * from mcp_tool_calls order by created_at desc limit 6",
-  );
-  expect(rows.rows.filter((r) => r.outcome === "rate_limited")).toHaveLength(4);
-  expect(rows.rows.filter((r) => r.outcome === "success")).toHaveLength(2);
-  const credential = rows.rows[0].credential_id;
-  await h.db.$client.query(
-    "update mcp_tool_calls set created_at = created_at - interval '2 hours' where credential_id = $1",
-    [credential],
-  );
+  const rows = await h.db
+    .select()
+    .from(mcpToolCalls)
+    .orderBy(desc(mcpToolCalls.createdAt))
+    .limit(6);
+  expect(rows.filter((r) => r.outcome === "rate_limited")).toHaveLength(4);
+  expect(rows.filter((r) => r.outcome === "success")).toHaveLength(2);
+  const credential = rows[0]!.credentialId;
+  await h.db
+    .update(mcpToolCalls)
+    .set({ createdAt: sql`${mcpToolCalls.createdAt} - interval '2 hours'` })
+    .where(eq(mcpToolCalls.credentialId, credential));
   expect((await client.callTool({ name: "openlaw_whoami" })).isError).not.toBe(true);
   const other = await connect(await key(), true);
   expect((await other.callTool({ name: "openlaw_whoami" })).isError).not.toBe(true);

@@ -8619,7 +8619,7 @@
     "defaultMessage": "MCP rate limit"
   },
   "settings.advanced.mcpHelp": {
-    "defaultMessage": "Configure the MCP calls per hour per credential. This limit is saved but is not enforced yet."
+    "defaultMessage": "Configure the MCP calls per hour per credential."
   },
   "settings.advanced.mcpRate": {
     "defaultMessage": "Calls per hour per credential"
