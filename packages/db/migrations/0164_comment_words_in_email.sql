@@ -1,0 +1,1 @@
+ALTER TABLE "org_settings" ADD COLUMN "comment_words_in_email" boolean DEFAULT true NOT NULL;

@@ -270,3 +270,113 @@ describe("Organization · Notifications (#322)", () => {
     expect(screen.getByRole("button", { name: "Remove 7 days before" })).toBeEnabled();
   });
 });
+
+describe("comment words in email", () => {
+  it.each([true, false])(
+    "renders the saved switch value %s and its explanation",
+    async (enabled) => {
+      stubApi({
+        signedIn: ADMIN,
+        extra: (call) =>
+          call.url.pathname === "/api/v1/org/notifications"
+            ? json(200, { commentWordsInEmail: enabled })
+            : undefined,
+      });
+      renderAt("/settings/reminders");
+      expect(
+        await screen.findByRole("switch", { name: "Include comment words in email" }),
+      ).toHaveAttribute("aria-checked", String(enabled));
+      expect(
+        screen.getByText(
+          "Applies to everyone in the organization. When off, mention, comment and reply emails link to the record without including the comment's words.",
+        ),
+      ).toBeVisible();
+    },
+  );
+
+  it("saves the switch immediately with its own per-field PATCH", async () => {
+    const writes: StubCall[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.method === "PATCH" || call.method === "PUT") {
+          writes.push(call);
+          return json(200, call.body);
+        }
+        return undefined;
+      },
+    });
+    renderAt("/settings/reminders");
+    const toggle = await screen.findByRole("switch", { name: "Include comment words in email" });
+    const user = userEvent.setup();
+    await user.click(toggle);
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(toggle).toHaveAttribute("aria-checked", "false");
+    await user.click(toggle);
+    await waitFor(() => expect(writes).toHaveLength(2));
+    expect(writes.map((call) => [call.method, call.url.pathname, call.body])).toEqual([
+      ["PATCH", "/api/v1/org/notifications", { commentWordsInEmail: false }],
+      ["PATCH", "/api/v1/org/notifications", { commentWordsInEmail: true }],
+    ]);
+  });
+
+  it("disables the switch while its save is pending", async () => {
+    const writes: unknown[] = [];
+    let release: (() => void) | undefined;
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/org/notifications" || call.method !== "PATCH")
+          return undefined;
+        writes.push(call.body);
+        return new Promise<Response>((resolve) => {
+          release = () => resolve(json(200, call.body));
+        });
+      },
+    });
+    renderAt("/settings/reminders");
+    const toggle = await screen.findByRole("switch", { name: "Include comment words in email" });
+    const user = userEvent.setup();
+    await user.click(toggle);
+    expect(toggle).toBeDisabled();
+    await user.click(toggle);
+    expect(writes).toEqual([{ commentWordsInEmail: false }]);
+    release!();
+    expect(await screen.findByText("Saved")).toBeVisible();
+    expect(toggle).toBeEnabled();
+  });
+
+  it("restores the saved switch value when a save fails", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => (call.method === "PATCH" ? problem(500, "Try again.") : undefined),
+    });
+    renderAt("/settings/reminders");
+    const toggle = await screen.findByRole("switch", { name: "Include comment words in email" });
+    await userEvent.setup().click(toggle);
+    expect(await screen.findByText("Try again.")).toBeVisible();
+    expect(toggle).toHaveAttribute("aria-checked", "true");
+  });
+
+  it.each(["legal_team_member", "business_user"])(
+    "does not expose or read the switch for %s",
+    async (role) => {
+      const reads: string[] = [];
+      stubApi({
+        signedIn: { ...MEMBER, role },
+        extra: (call) => {
+          reads.push(call.url.pathname);
+          return undefined;
+        },
+      });
+      renderAt("/settings/reminders");
+      await screen.findByRole("heading", {
+        name: role === "business_user" ? "What do you need from Legal?" : "Profile",
+      });
+      expect(
+        screen.queryByRole("switch", { name: "Include comment words in email" }),
+      ).not.toBeInTheDocument();
+      expect(reads).not.toContain("/api/v1/org/notifications");
+    },
+  );
+});

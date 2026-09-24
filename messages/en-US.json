@@ -10847,8 +10847,17 @@
   "settings.reminders.addUnit": {
     "defaultMessage": "days before the date"
   },
+  "settings.reminders.commentWords": {
+    "defaultMessage": "Include comment words in email"
+  },
+  "settings.reminders.commentWordsHelp": {
+    "defaultMessage": "Applies to everyone in the organization. When off, mention, comment and reply emails link to the record without including the comment's words."
+  },
   "settings.reminders.count": {
     "defaultMessage": "{count, plural, one {# lead time} other {# lead times}}"
+  },
+  "settings.reminders.emailTitle": {
+    "defaultMessage": "Comment emails"
   },
   "settings.reminders.help": {
     "defaultMessage": "These are the default lead times for expiries, notice deadlines, Key dates and obligations. People can set their own in Notifications. Keep at least one lead time."

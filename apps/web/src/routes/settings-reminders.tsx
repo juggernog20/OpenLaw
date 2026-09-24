@@ -37,21 +37,58 @@ import { InlineAddForm } from "../components/inline-add-form";
 import { ListEditor, type ListEditorRow } from "../components/list-editor";
 import { PageTitle } from "../components/page-title";
 import { StatusNote, type FieldStatus } from "../components/status-note";
+import { SettingsCard } from "../components/settings-card";
+import { Switch } from "../components/ui/switch";
 import { Input } from "../components/ui/input";
 
 export async function settingsRemindersLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const { data } = await api.GET("/api/v1/org/reminder-offsets");
+  const [{ data }, { data: notifications }] = await Promise.all([
+    api.GET("/api/v1/org/reminder-offsets"),
+    api.GET("/api/v1/org/notifications"),
+  ]);
   // A failed read must fail the pane: drawing a guessed list would show
   // an Administrator lead times the round is not firing on.
   if (!data) throw new Error("The reminder lead times could not be read.");
-  return { offsets: data.offsets };
+  if (!notifications) throw new Error("The organization notification settings could not be read.");
+  return { offsets: data.offsets, commentWordsInEmail: notifications.commentWordsInEmail };
 }
 
 export function SettingsRemindersPage() {
   const intl = useIntl();
   const loaded = useLoaderData<typeof settingsRemindersLoader>();
+  const [commentWordsInEmail, setCommentWordsInEmail] = useState(loaded.commentWordsInEmail);
+  const [commentStatus, setCommentStatus] = useState<FieldStatus>("idle");
+  const [commentError, setCommentError] = useState<string>();
+  const savingComment = useRef(false);
+
+  async function saveCommentWords(next: boolean) {
+    if (savingComment.current) return;
+    savingComment.current = true;
+    const previous = commentWordsInEmail;
+    setCommentWordsInEmail(next);
+    setCommentStatus("saving");
+    setCommentError(undefined);
+    try {
+      const result = await api
+        .PATCH("/api/v1/org/notifications", {
+          body: { commentWordsInEmail: next },
+        })
+        .catch(() => undefined);
+      if (!result?.data) {
+        setCommentWordsInEmail(previous);
+        setCommentStatus("error");
+        setCommentError((await problem(result)).detail);
+        return;
+      }
+      setCommentWordsInEmail(result.data.commentWordsInEmail);
+      setCommentStatus("saved");
+    } finally {
+      savingComment.current = false;
+    }
+  }
+
   const [offsets, setOffsets] = useState<number[]>(loaded.offsets);
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | undefined>(undefined);
@@ -242,6 +279,34 @@ export function SettingsRemindersPage() {
         })}
       />
       <div className="flex w-full max-w-(--width-settings-card) flex-col gap-4">
+        <SettingsCard
+          title={
+            <FormattedMessage id="settings.reminders.emailTitle" defaultMessage="Comment emails" />
+          }
+        >
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="comment-words-in-email" className="text-sm font-medium">
+              <FormattedMessage
+                id="settings.reminders.commentWords"
+                defaultMessage="Include comment words in email"
+              />
+            </label>
+            <Switch
+              id="comment-words-in-email"
+              aria-describedby="comment-words-help"
+              checked={commentWordsInEmail}
+              disabled={commentStatus === "saving"}
+              onCheckedChange={(next) => void saveCommentWords(next)}
+            />
+          </div>
+          <p id="comment-words-help" className="text-sm text-muted">
+            <FormattedMessage
+              id="settings.reminders.commentWordsHelp"
+              defaultMessage="Applies to everyone in the organization. When off, mention, comment and reply emails link to the record without including the comment's words."
+            />
+          </p>
+          <StatusNote status={commentStatus} detail={commentError} />
+        </SettingsCard>
         <ListEditor
           rows={rows}
           title={

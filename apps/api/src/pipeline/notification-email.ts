@@ -296,10 +296,12 @@ async function sendNotificationEmail(
   // was when the row was written (DES-093). Read for every event, so an
   // arm that moves onto the layout later gets the brand without a change
   // here.
-  const { name, emailLogoPng } = await getOrgSettings(deps.db);
+  const { name, emailLogoPng, commentWordsInEmail } = await getOrgSettings(deps.db);
   const brand = { name, emailLogoPng };
   const comment =
-    COMMENT_EMAIL_EVENTS.has(row.eventType) && typeof payload.commentId === "string"
+    commentWordsInEmail &&
+    COMMENT_EMAIL_EVENTS.has(row.eventType) &&
+    typeof payload.commentId === "string"
       ? await readEmailComment(deps.db, payload.commentId, row.userId)
       : undefined;
   const message = renderNotificationMail(

@@ -1149,6 +1149,13 @@
       "when": 1790252233693,
       "tag": "0163_email_logo_png",
       "breakpoints": true
+    },
+    {
+      "idx": 164,
+      "version": "7",
+      "when": 1790270646048,
+      "tag": "0164_comment_words_in_email",
+      "breakpoints": true
     }
   ]
 }
