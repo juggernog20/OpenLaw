@@ -29,12 +29,14 @@ import { S3_DRIVER, createS3Storage } from "./s3.js";
  * Pinned, like every other image the suites run. A floating tag makes a
  * green run today and an unexplained red one tomorrow.
  *
- * Quay, not Docker Hub: Docker Hub denies this tag ("requested access to
- * the resource is denied"), on CI and locally. Quay serves the same
- * manifest digest. Do not move it back for consistency with the
- * Postgres image.
+ * Chainguard, pinned by digest. MinIO no longer serves its images: Docker
+ * Hub denies every `minio/minio` tag ("requested access to the resource is
+ * denied") and, since 2026-09-24, Quay refuses `quay.io/minio/minio` too
+ * ("unauthorized"). Chainguard's free image is only tagged `latest`, so the
+ * digest is the pin. This digest is MinIO RELEASE.2026-09-22T19-25-18Z.
  */
-const MINIO_IMAGE = "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z";
+const MINIO_IMAGE =
+  "cgr.dev/chainguard/minio@sha256:7abc41a42aa78685a2fa48a9088e539625114ac4fc236ce5d58e92ca12f6b960";
 
 /**
  * Pulling and booting a container is slower than making a directory, and
