@@ -106,7 +106,8 @@ The watermark conflict branch remains defensive rather than newly reachable: bot
 
 The NOT-002 addendum of this date lets mention, comment and reply emails carry the
 comment's words. This keeps CMT-006. No comment text enters an activity payload or a
-notification row. Both keep only the comment's id. The mailer reads the body from
+notification row. The activity payload keeps its ids and metadata, and the notification
+row keeps the comment's id. The mailer reads the body from
 `comments` when it sends. So a redact before the send also keeps the words out of the
 email. A redact after the send cannot reach the inbox. That is the one copy of comment
 text OpenLaw does not control, and the NOT-002 addendum records why it is accepted.

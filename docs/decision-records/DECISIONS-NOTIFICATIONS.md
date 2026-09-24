@@ -283,10 +283,10 @@ narrows the audience when the notification is written (M18/3, M18/4). So every
 recipient is somebody who can read the comment on the thread. A Legal Only comment
 reaches only the people Legal Only includes, in the email and on the thread. Treating one
 tier differently would protect nothing. The email shows the tier's name beside the
-author, so the reader knows which room the words came from.
+author, so the reader knows which visibility tier the words came from.
 
 **The words are read at send time and never stored with the notification.** The
-notification row keeps only the comment's id, as the activity entry does (CMT-006). The
+notification row keeps the comment's id and no text, as the activity entry does (CMT-006). The
 mailer reads the body from `comments` when it builds the message. If the author edits
 the comment before the send, the email carries the new text. If the comment is deleted
 or redacted before the send, the email goes out without words, in the form it had before
