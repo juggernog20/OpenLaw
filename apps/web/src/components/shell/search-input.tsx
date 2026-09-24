@@ -6,9 +6,9 @@
  * Escape.
  */
 
-import { decodeSearchQuestion } from "@openlaw/shared";
+import { SearchQuestionSchema, simpleSearchQuestion } from "@openlaw/shared";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { ArrowRight, LoaderCircle, SearchX, TriangleAlert } from "lucide-react";
+import { ArrowRight, LoaderCircle, SearchX, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { useLocation, useNavigate } from "react-router";
 import { registerSearchTarget, SEARCH_KEY } from "../../lib/keyboard";
@@ -20,6 +20,9 @@ import {
   searchPagePath,
   searchResultPath,
 } from "../search/search-result-row";
+
+import { useAdvancedSearch } from "../search/advanced-search";
+import { questionFromSearch, questionPath } from "../search/search-question";
 
 const SEARCH_DEBOUNCE_MS = 150;
 const MIN_QUERY_LENGTH = 2;
@@ -34,7 +37,9 @@ const MESSAGES: Record<
   | "noMatchesBody"
   | "errorTitle"
   | "errorBody"
-  | "seeAll",
+  | "seeAll"
+  | "advanced"
+  | "advancedTitle",
   MessageDescriptor
 > = defineMessages({
   label: { id: "search.header.label", defaultMessage: "Search" },
@@ -61,19 +66,21 @@ const MESSAGES: Record<
     id: "search.error.body",
     defaultMessage: "The server did not answer. Try again in a moment.",
   },
+  advanced: { id: "search.advanced.entry", defaultMessage: "Advanced search…" },
+  advancedTitle: { id: "search.advanced.title", defaultMessage: "Advanced search" },
   seeAll: { id: "search.seeAll", defaultMessage: "See all results" },
 });
 
 function routeQuery(pathname: string, searchString: string): string {
   if (pathname !== "/search") return "";
-  const params = new URLSearchParams(searchString);
-  return decodeSearchQuestion(params.get("aq") ?? "")?.words.all ?? params.get("q") ?? "";
+  return questionFromSearch(searchString).words.all;
 }
 
 export function SearchInput() {
   const intl = useIntl();
   const navigate = useNavigate();
   const location = useLocation();
+  const advanced = useAdvancedSearch();
   const [query, setQuery] = useState(() => routeQuery(location.pathname, location.search));
   const [outcome, setOutcome] = useState<SearchOutcome | null>(null);
   const [open, setOpen] = useState(false);
@@ -90,7 +97,7 @@ export function SearchInput() {
     [],
   );
   const trimmed = query.trim();
-  const listOpen = open && trimmed.length >= MIN_QUERY_LENGTH;
+  const listOpen = open && !advanced.draft && trimmed.length >= MIN_QUERY_LENGTH;
 
   useEffect(() => {
     if (!listOpen) return;
@@ -113,7 +120,8 @@ export function SearchInput() {
     if (!outcome?.ok) return [];
     return SEARCH_KIND_ORDER.flatMap((kind) => outcome.results.filter((row) => row.kind === kind));
   }, [outcome]);
-  const optionCount = results.length > 0 ? results.length + 1 : 0;
+  const visibleResults = searching ? [] : results;
+  const optionCount = visibleResults.length + 2;
   const active = Math.min(activeIndex, Math.max(optionCount - 1, 0));
   const optionId = (index: number) => `${popoverId}-option-${String(index)}`;
   const activeOptionId = optionId(active);
@@ -128,9 +136,39 @@ export function SearchInput() {
     setSearching(false);
   }
 
+  function currentQuestion() {
+    const base =
+      location.pathname === "/search"
+        ? questionFromSearch(location.search)
+        : simpleSearchQuestion();
+    return { ...base, words: { ...base.words, all: query } };
+  }
+
+  function openAdvanced() {
+    close();
+    advanced.open(currentQuestion());
+  }
+
   function openOption(index: number) {
-    const result = results[index];
-    const path = result ? searchResultPath(result, trimmed) : searchPagePath(trimmed);
+    if (index === visibleResults.length + 1) {
+      openAdvanced();
+      return;
+    }
+    const result = visibleResults[index];
+    const question = currentQuestion();
+    if (
+      !result &&
+      location.pathname === "/search" &&
+      !SearchQuestionSchema.safeParse(question).success
+    ) {
+      openAdvanced();
+      return;
+    }
+    const path = result
+      ? searchResultPath(result, trimmed)
+      : location.pathname === "/search"
+        ? questionPath(question)
+        : searchPagePath(trimmed);
     close();
     void navigate(path);
   }
@@ -150,7 +188,7 @@ export function SearchInput() {
         autoComplete="off"
         spellCheck={false}
         placeholder={intl.formatMessage(MESSAGES.placeholder, { key: "" })}
-        value={query}
+        value={location.pathname === "/search" && advanced.draft ? advanced.draft.words.all : query}
         onChange={(event) => {
           const next = event.target.value;
           setQuery(next);
@@ -203,8 +241,17 @@ export function SearchInput() {
             close();
           }
         }}
-        className="h-7.5 w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-10 ps-3 text-base text-on-inverted [--text-placeholder:var(--chrome-search-placeholder)]"
+        className="h-7.5 w-full rounded-button border border-border-on-inverted bg-(--chrome-search-bg) pe-18 ps-3 text-base text-on-inverted [--text-placeholder:var(--chrome-search-placeholder)]"
       />
+      <button
+        type="button"
+        aria-label={intl.formatMessage(MESSAGES.advancedTitle)}
+        aria-haspopup="dialog"
+        onClick={openAdvanced}
+        className="absolute end-9 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-button text-on-inverted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+      >
+        <SlidersHorizontal size={16} aria-hidden="true" />
+      </button>
       <kbd
         aria-hidden="true"
         className="absolute end-2 top-1/2 flex h-5 w-6 -translate-y-1/2 items-center justify-center rounded-chip border border-border-on-inverted text-xs font-semibold text-subtle"
@@ -282,22 +329,29 @@ export function SearchInput() {
                   </div>
                 );
               })}
-              <div
-                id={optionId(results.length)}
-                role="option"
-                aria-selected={active === results.length}
-                className={`flex h-11 cursor-default items-center justify-between px-3 text-sm font-semibold text-link ${active === results.length ? "bg-status-info-bg" : "bg-raised"}`}
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  openOption(results.length);
-                }}
-                onMouseMove={() => setActiveIndex(results.length)}
-              >
-                <FormattedMessage {...MESSAGES.seeAll} />
-                <ArrowRight size={14} aria-hidden="true" />
-              </div>
             </>
           )}
+          {[MESSAGES.seeAll, MESSAGES.advanced].map((message, offset) => {
+            const index = visibleResults.length + offset;
+            const Icon = offset === 0 ? ArrowRight : SlidersHorizontal;
+            return (
+              <div
+                key={message.id}
+                id={optionId(index)}
+                role="option"
+                aria-selected={active === index}
+                className={`flex h-11 cursor-default items-center justify-between border-t border-border-muted px-3 text-sm font-semibold text-link ${active === index ? "bg-status-info-bg" : "bg-raised"}`}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  openOption(index);
+                }}
+                onMouseMove={() => setActiveIndex(index)}
+              >
+                <FormattedMessage {...message} />
+                <Icon size={16} aria-hidden="true" />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

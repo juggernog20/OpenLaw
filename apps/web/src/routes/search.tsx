@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** Ranked results with the question held in the URL for reload, sharing and Back. */
-import {
-  DEFAULT_SEARCH_SCOPE,
-  SearchQuestionSchema,
-  decodeSearchQuestion,
-  encodeSearchQuestion,
-  simpleSearchQuestion,
-  type SearchQuestion,
-} from "@openlaw/shared";
+import { DEFAULT_SEARCH_SCOPE, SearchQuestionSchema, type SearchQuestion } from "@openlaw/shared";
 import { useState } from "react";
 import { Search as SearchIcon, X } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
@@ -30,6 +23,18 @@ import {
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Button } from "../components/ui/button";
+
+import { AdvancedSearchButton } from "../components/search/advanced-search";
+import {
+  questionFromSearch,
+  questionIsEmpty,
+  questionPath,
+  WORD_LABELS,
+  SCOPE_LABELS,
+  CHIP_CLASS,
+  IDLE_CHIP_CLASS,
+  SELECTED_CHIP_CLASS,
+} from "../components/search/search-question";
 
 const PAGE_SIZE = 25;
 
@@ -70,53 +75,18 @@ const MESSAGES: Record<
   showMore: { id: "search.page.showMore", defaultMessage: "Show more" },
 });
 
-function isSearchKind(value: string | null): value is SearchKind {
-  return SEARCH_KIND_ORDER.some((kind) => kind === value);
-}
-
 export async function searchLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (user.role === "business_user") return redirect("/portal");
 
-  const params = new URL(request.url).searchParams;
-  const rawKind = params.get("kind");
-  const question =
-    decodeSearchQuestion(params.get("aq") ?? "") ??
-    simpleSearchQuestion((params.get("q") ?? "").trim(), isSearchKind(rawKind) ? [rawKind] : []);
+  const question = questionFromSearch(new URL(request.url).search);
   const query = Object.values(question.words).filter(Boolean).join(" ");
-  const empty = !query && !question.kinds.length && !question.conditions.length;
+  const empty = questionIsEmpty(question);
   const outcome: QuestionSearchOutcome = empty
     ? { ok: true, results: [], total: 0, nextCursor: null }
     : await querySearch(question, { limit: PAGE_SIZE });
   return { user, query, question, empty, outcome };
 }
-
-function questionPath(question: SearchQuestion): string {
-  if (
-    !Object.values(question.words).some(Boolean) &&
-    !question.kinds.length &&
-    !question.conditions.length
-  )
-    return "/search";
-  return `/search?aq=${encodeSearchQuestion(question)}`;
-}
-
-const WORD_LABELS = defineMessages({
-  all: { id: "search.words.all", defaultMessage: "All of these words" },
-  phrase: { id: "search.words.phrase", defaultMessage: "This exact phrase" },
-  any: { id: "search.words.any", defaultMessage: "Any of these words" },
-  none: { id: "search.words.none", defaultMessage: "None of these words" },
-});
-const SCOPE_LABELS = defineMessages({
-  titles: { id: "search.scope.titles", defaultMessage: "Titles and numbers" },
-  text: { id: "search.scope.text", defaultMessage: "Record text" },
-  contents: { id: "search.scope.contents", defaultMessage: "Document contents" },
-});
-const CHIP_CLASS =
-  "rounded-chip border px-2.5 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link";
-const IDLE_CHIP_CLASS = "border-border-default bg-control text-muted hover:text-primary";
-const SELECTED_CHIP_CLASS =
-  "border-status-info-fg bg-status-info-bg font-semibold text-status-info-fg";
 
 function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
   const intl = useIntl();
@@ -308,9 +278,12 @@ export function SearchPage() {
             </span>
           }
           filters={
-            loaded.empty || SearchQuestionSchema.safeParse(loaded.question).success ? (
-              <QuestionFilters question={loaded.question} />
-            ) : undefined
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              {(loaded.empty || SearchQuestionSchema.safeParse(loaded.question).success) && (
+                <QuestionFilters question={loaded.question} />
+              )}
+              <AdvancedSearchButton />
+            </div>
           }
         />
       }
