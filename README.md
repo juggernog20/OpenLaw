@@ -32,6 +32,28 @@ pnpm lint
 pnpm test
 ```
 
+API tests require Testcontainers' Ryuk cleanup helper. Do not set
+`TESTCONTAINERS_RYUK_DISABLED=true`: a killed worker or a timed-out setup hook can
+leave its database running after the suite exits. The API test config rejects
+that setting before starting any tests. Test databases are separate from the
+development Compose databases.
+
+Use a container runtime that can run Ryuk. For rootless Podman on Linux, keep the
+socket setting and remove the old cleanup override:
+
+```sh
+env -u TESTCONTAINERS_RYUK_DISABLED \
+  DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock \
+  pnpm --filter @openlaw/api test
+```
+
+Docker also works when its socket is accessible. Use
+`DOCKER_HOST=unix:///var/run/docker.sock` in that case. Do not switch runtimes just
+to disable cleanup.
+
+Web and API tests default to four workers per run. The API cleanup regression test
+kills a disposable database's owner and checks that Ryuk removes that database.
+
 ### The hot-reload loop
 
 `pnpm dev:hot` is the day-to-day loop (TECH-018): Postgres, the doc engine, and Mailpit run as containers with their ports published to the host, and the three apps run as watch processes beside them. Browse it on **<http://localhost:5173>** — the Vite dev server. It proxies `/api` to the API on 3000, so the session cookie stays same-origin (TECH-008), and a saved `.tsx` reaches the browser without a reload.
