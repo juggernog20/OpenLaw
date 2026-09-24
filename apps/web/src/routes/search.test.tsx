@@ -5,11 +5,13 @@ import {
   decodeSearchQuestion,
   encodeSearchQuestion,
   simpleSearchQuestion,
+  SearchQuestionSchema,
   type SearchQuestion,
 } from "@openlaw/shared";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 import { searchResultPath } from "../components/search/search-result-row";
 
@@ -462,7 +464,9 @@ it("writes each sort to the question, pages it, and restores it on reload and Ba
     signedIn: MEMBER,
     extra: (call) => {
       if (!questionCall(call)) return undefined;
-      const body = call.body as SearchQuestion & { cursor?: string };
+      const body = SearchQuestionSchema.safeExtend({ cursor: z.string().optional() }).parse(
+        call.body,
+      );
       reads.push(body);
       return body.cursor ? searchAnswer([MATTER]) : searchAnswer([CONTRACT], "next-page");
     },

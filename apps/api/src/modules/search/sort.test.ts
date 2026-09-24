@@ -224,5 +224,12 @@ describe("question sorts", () => {
       payload: { ...simpleSearchQuestion("sortneedle"), sort: "title", cursor: page.nextCursor },
     });
     expect(response.statusCode).toBe(400);
+    expect(response.headers["content-type"]).toContain("application/problem+json");
+    expect(response.json()).toMatchObject({
+      type: "about:blank",
+      status: 400,
+      title: "Invalid search cursor.",
+      detail: "Invalid search cursor.",
+    });
   });
 });

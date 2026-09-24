@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Search-question sort keys and cursors, evaluated in Postgres (TECH-003).
+ * Each cursor carries its sort's key, ID and kind. A different sort rejects it;
+ * missing sort means legacy relevance. Ordering and paging share one key list.
+ * Documents supply the latest Version's upload time as a timestamp string so
+ * cursors retain Postgres precision. Expiry puts nulls after dated Contracts,
+ * then orders the other kinds by relevance.
+ */
+
 import { sql, type SQL } from "@openlaw/db";
 import { SEARCH_KINDS, type SearchQuestion } from "@openlaw/shared";
 import { z } from "zod";
@@ -60,7 +69,6 @@ export function writeQuestionCursor(
   );
 }
 
-/** Use the same keys and directions for ORDER BY and the keyset boundary. */
 export function questionSort(sort: Sort, cursor?: Cursor): { order: SQL; after: SQL } {
   const keys: { column: SQL; value: SQL; descending: boolean }[] = [];
   const add = (column: SQL, value: SQL, descending = false) =>
