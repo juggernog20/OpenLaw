@@ -184,6 +184,8 @@ it("shows Word before PDF, freezes delivery settings, then mails both files with
       }),
     }),
   );
+  const logo = await readFile(new URL("../../../assets/openlaw-192.png", import.meta.url));
+  await h.db.update(orgSettings).set({ name: "Acme", emailLogoPng: logo.toString("base64") });
   await startWorker();
   const ready = await delivered(id, generation.id);
   expect(ready).toMatchObject({ state: "ready", hasDocx: true, hasPdf: true, formats: "both" });
@@ -197,14 +199,28 @@ it("shows Word before PDF, freezes delivery settings, then mails both files with
   expect(mail.subject).toContain("Delivery NDA");
   expect(mail.text).toContain(TEST_ADMIN.displayName);
   expect(mail.text).toContain("Please review this.");
-  expect(mail.html).toContain("Acme Legal");
+  expect(mail.html).toContain("Note from Acme Legal");
+  expect(mail.html).toMatch(/<h1[^>]*>Delivery NDA<\/h1>/);
+  expect(mail.html).toContain("Delivery NDA.docx<br>");
+  expect(mail.html).toContain("Delivery NDA.pdf<br>");
+  expect(mail.html?.match(/Attached · /g)).toHaveLength(2);
+  expect(mail.html).toMatch(/<a [^>]*>Download your files<\/a>/);
   expect(mail.html).toContain("<strong>review</strong>");
   expect(mail.html).not.toContain("<script>");
   expect(mail.html).not.toContain("Later cover note");
-  expect(mail.attachments).toEqual([
-    expect.objectContaining({ filename: "Delivery NDA.docx", content: word.rawPayload }),
-    expect.objectContaining({ filename: "Delivery NDA.pdf", content: pdf.rawPayload }),
+  expect(mail.attachments?.filter((attachment) => !attachment.cid)).toEqual([
+    {
+      filename: "Delivery NDA.docx",
+      contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      content: word.rawPayload,
+    },
+    { filename: "Delivery NDA.pdf", contentType: "application/pdf", content: pdf.rawPayload },
   ]);
+  const logos = mail.attachments?.filter((attachment) => attachment.cid);
+  expect(logos).toEqual([
+    { filename: "org-logo.png", contentType: "image/png", content: logo, cid: "org-logo@openlaw" },
+  ]);
+  expect(mail.html).toContain("cid:org-logo@openlaw");
 });
 
 it.each(["docx", "pdf"] as const)(
@@ -224,11 +240,15 @@ it.each(["docx", "pdf"] as const)(
       .where(eq(autoDocGenerations.id, generation.id));
     expect(stored!.docxFileRef).toEqual(expect.any(String));
     const mail = h.mailer.messagesTo(TEST_ADMIN.email).at(-1)!;
-    expect(mail.attachments).toHaveLength(1);
-    expect(mail.attachments![0]).toMatchObject({
+    const files = mail.attachments?.filter((attachment) => !attachment.cid);
+    expect(files).toHaveLength(1);
+    expect(files![0]).toMatchObject({
       filename: `Delivery NDA.${formats}`,
       content: allowed.rawPayload,
     });
+    expect(mail.html).toContain(`Delivery NDA.${formats}<br>`);
+    expect(mail.html).not.toContain(`Delivery NDA.${formats === "docx" ? "pdf" : "docx"}<br>`);
+    expect(mail.html?.match(/Attached · /g)).toHaveLength(1);
   },
 );
 
