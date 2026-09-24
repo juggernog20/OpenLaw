@@ -123,6 +123,8 @@ import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
 import { apiKeyRoutes } from "./modules/api-keys/routes.js";
+import type { ToolDefinition } from "./mcp/register.js";
+import { mcpRoutes } from "./mcp/routes.js";
 import { mcpSettingsRoutes } from "./modules/mcp-settings/routes.js";
 import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
 import {
@@ -213,6 +215,8 @@ export interface AppDeps {
    */
   maxUploadBytes?: number;
   advancedRuntime?: AdvancedRuntime;
+  /** TECH-035 register injection for the MCP adapter seam. Defaults to the code-owned register. */
+  mcpTools?: readonly ToolDefinition[];
   /**
    * Directory of the built SPA (TECH-017: the app serves the web bundle
    * same-origin). Unset — e.g. API-only development — leaves every
@@ -545,7 +549,9 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // The Origin check on API mutations (TECH-033). Registered on the root
   // context before any route, and scoped by path rather than mounted per
   // plugin, so a module registered later cannot forget it. The better-auth
-  // handler lives outside /api/v1 and runs its own origin check.
+  // handler lives outside /api/v1 and runs its own origin check. /mcp is
+  // outside too, on purpose: it authenticates by API key, never by cookie,
+  // so a foreign Origin has nothing to forge (TECH-035).
   const ownOrigin = new URL(deps.config.baseUrl).origin;
   app.addHook("onRequest", async (request) => {
     if (!UNSAFE_METHODS.has(request.method)) return;
@@ -556,6 +562,12 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   });
 
   await app.register(authHandler);
+  await app.register(
+    mcpRoutes(
+      deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings()),
+      deps.mcpTools,
+    ),
+  );
   // The stream owns its full path and bypasses JSON response
   // serialization. Its session and optional record gates still run
   // before it writes the first byte.

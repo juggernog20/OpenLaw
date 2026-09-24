@@ -1397,6 +1397,24 @@ Indexed on (`comment_id`, `created_at`, `id`) for the one read: a comment's atta
 
 ---
 
+### `mcp_tool_calls`
+
+Source: **DD-029**, **TECH-035**, **DD-017 MCP addendum**. Added by M40/7.
+
+One row per authenticated Tool call, including reads, refused calls and invalid arguments.
+The row stores `id`, `person_id`, `credential_id`, `client_name`, `tool`, `outcome`,
+`duration_ms`, `request_id` and `created_at`. It contains no arguments, results or record ids.
+`person_id` references `users`. `credential_id` identifies the API key and is reserved for
+OAuth credentials too. The Client name comes from the approved API key request.
+
+A call reserves a `pending` row before running and updates its outcome and duration on completion.
+A per-credential database lock serializes reservations. The hourly limit counts reserved calls
+in the current database clock hour, excluding `rate_limited` refusals. Refusals still get a row.
+The reset time is the start of the next hour. The limit uses the active Advanced configuration,
+including deployment pinning and the existing restart requirement.
+
+---
+
 ### `activity_log`
 
 Source: **DD-017**
