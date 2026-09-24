@@ -91,3 +91,11 @@ it("sends a content id inline while keeping ordinary attachments downloadable", 
     transport.close();
   }
 });
+
+it("exposes only the relay host and port for the test email", () => {
+  const resolved = envPinnedMailer({
+    url: "smtp://private-user:private-password@relay.example.com:587?name=private-name",
+    from: "legal@example.com",
+  });
+  expect(resolved?.sentThrough).toBe("relay.example.com:587");
+});

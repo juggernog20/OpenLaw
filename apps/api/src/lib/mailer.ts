@@ -48,6 +48,11 @@ function parseSmtpUrl(url: string, source: string): URL {
   }
 }
 
+/** The SMTP test email must never show relay credentials or URL options. */
+export function smtpHost(url: string, source = "SMTP_URL"): string {
+  return parseSmtpUrl(url, source).host;
+}
+
 /**
  * SMTP sender — `url` is a nodemailer connection URL
  * (smtp[s]://user:pass@host:port, extra options as query parameters).
@@ -111,6 +116,8 @@ export type MailerSource = (typeof MAILER_SOURCES)[number];
 
 export interface ResolvedMailer {
   source: MailerSource;
+  /** Display name of the transport. SMTP supplies only its host and port. */
+  sentThrough?: string;
   from: string | null;
   mailer: Mailer;
 }
@@ -137,7 +144,12 @@ export interface SmtpEnv {
 export function envPinnedMailer(env: SmtpEnv): ResolvedMailer | null {
   if (!env.url) return null;
   return env.from
-    ? { source: "env", from: env.from, mailer: createSmtpMailer(env.url, env.from) }
+    ? {
+        source: "env",
+        sentThrough: smtpHost(env.url),
+        from: env.from,
+        mailer: createSmtpMailer(env.url, env.from),
+      }
     : { source: "env", from: null, mailer: createUnconfiguredMailer() };
 }
 
@@ -160,6 +172,7 @@ export function createMailerResolver(db: Db, env: SmtpEnv): MailerResolver {
     if (!settings.smtpUrl || !settings.smtpFrom) return unset;
     return {
       source: "app",
+      sentThrough: smtpHost(settings.smtpUrl, "the SMTP URL saved in Settings"),
       from: settings.smtpFrom,
       mailer: createSmtpMailer(
         settings.smtpUrl,

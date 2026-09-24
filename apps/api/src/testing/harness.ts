@@ -36,6 +36,7 @@ import { buildApp } from "../app.js";
 import type { AuthConfig } from "../auth/instance.js";
 import {
   createUnconfiguredMailer,
+  smtpHost,
   type Mailer,
   type MailerResolver,
   type MailMessage,
@@ -173,7 +174,13 @@ export const TEST_SMTP_ENV = {
  * suites that call buildApp directly instead of through startHarness.
  */
 export function fixedMailerResolver(mailer: Mailer): MailerResolver {
-  return () => Promise.resolve({ source: "env", from: TEST_SMTP_ENV.from, mailer });
+  return () =>
+    Promise.resolve({
+      source: "env",
+      sentThrough: smtpHost(TEST_SMTP_ENV.url),
+      from: TEST_SMTP_ENV.from,
+      mailer,
+    });
 }
 
 export interface TestStorage {
@@ -382,7 +389,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
     const resolveMailer: MailerResolver = async () => {
       if (smtpEnv) {
         return smtpEnv.from
-          ? { source: "env", from: smtpEnv.from, mailer }
+          ? { source: "env", sentThrough: smtpHost(smtpEnv.url), from: smtpEnv.from, mailer }
           : { source: "env", from: null, mailer: createUnconfiguredMailer() };
       }
       const [row] = await db
@@ -390,7 +397,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
         .from(orgSettings)
         .limit(1);
       return row?.smtpUrl && row.smtpFrom
-        ? { source: "app", from: row.smtpFrom, mailer }
+        ? { source: "app", sentThrough: smtpHost(row.smtpUrl), from: row.smtpFrom, mailer }
         : { source: "unset", from: null, mailer: createUnconfiguredMailer() };
     };
     const { storage, root: storageRoot, cleanup } = await createTestStorage();
