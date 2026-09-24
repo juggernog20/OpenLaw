@@ -96,6 +96,7 @@ import {
   knowledgeTypesRoutes,
 } from "./modules/knowledge-types/routes.js";
 import { knowledgeRoutes } from "./modules/knowledge/routes.js";
+import { documentTypeOptionsRoutes, documentTypesRoutes } from "./modules/document-types/routes.js";
 import { portalContractRoutes } from "./modules/portal/contracts.js";
 import { portalMatterRoutes } from "./modules/portal/matters.js";
 import { portalRecordWorkRoutes } from "./modules/portal/record-work.js";
@@ -663,6 +664,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(knowledgeTypesRoutes, { prefix: "/api/v1" });
   await app.register(knowledgeTypeOptionsRoutes, { prefix: "/api/v1" });
   await app.register(knowledgeRoutes, { prefix: "/api/v1" });
+  await app.register(documentTypesRoutes, { prefix: "/api/v1" });
+  await app.register(documentTypeOptionsRoutes, { prefix: "/api/v1" });
   await app.register(searchRoutes, { prefix: "/api/v1" });
   await app.register(homeRoutes, { prefix: "/api/v1" });
   await app.register(fieldsRoutes, { prefix: "/api/v1" });

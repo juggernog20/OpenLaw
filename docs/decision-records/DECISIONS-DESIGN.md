@@ -3430,6 +3430,7 @@ Point 3 said the staff pane draws the staff groups and that the portal would ren
 - **Status:** Accepted
 - **Date:** 2026-08-18
 - **Amended:** 2026-08-18 — the digest's anatomy and its delivery rules moved to **NOT-006**. This record keeps the register: the voice every message is written in, where that copy lives, and how it prints a date.
+- **Amended:** 2026-09-24 — comment emails carry the comment's words (NOT-002 addendum of that date). Decision 1's second bullet is marked.
 
 ### Context
 
@@ -3444,7 +3445,7 @@ DES-015 fixed the voice for every string this product renders and named one exce
 **1. The register is DES-015's, with two additions email forces.** Terse, second-person, sentence case, digits, no apologies, no "please", no emoji, no celebration. The two additions:
 
 - **A message opens by naming its reader and closes by pointing somewhere.** `Hello {name},` then the sentence, then the link. In the app a person already knows where they are; in an inbox they do not, and an unaddressed message from a system is what a spam filter is shaped like.
-- **A sentence, not a summary.** One line says what happened, and the record says the rest. This is why no arm carries a comment's words, a document's bytes, or an approval's note: mail leaves the building, and DD-016's tier and CMT-006's redact both stop at the door.
+- **A sentence, not a summary.** One line says what happened, and the record says the rest. ~~This is why no arm carries a comment's words, a document's bytes, or an approval's note: mail leaves the building, and DD-016's tier and CMT-006's redact both stop at the door.~~ (Amended 2026-09-24. The NOT-002 addendum of that date now decides which emails carry a comment's words. A document's bytes and an approval's note still stay out.)
 
 **2. The copy is authored in English at the call site, not in the message catalog.** DES-013 governs what a browser renders; this is server-composed copy in a process the catalog does not run in, and it is the same class of string as the invite email that predates all of this. Localised email is a real want and it is a **separate** decision, because it needs a per-user locale that SET-006 does not yet store.
 
@@ -5048,7 +5049,7 @@ A Devices card follows the event grid. It lists every registered browser with a 
 
 "Turn on for this browser" requests browser permission only on click. A browser already turned on says so. A blocked permission shows the browser's own settings path to allow the site. An unsupported browser gets an explanation; iPhone and iPad users are told to open OpenLaw from their Home Screen. The document links a minimal standalone manifest with the existing scale mark as its icon.
 
-"Show record names on devices" is one immediate-save switch, default on. Off, every event uses a generic sentence with no payload values. The worker also uses that sentence if it cannot read the preference. A successful row read uses the same narrator and surface as the bell, including its record section link. A failed row read uses "You have a new notification" and opens that surface's bell. Read rows and focused app windows produce no OS notification.
+"Show details in notifications" is one immediate-save switch, default on. Off, every event uses a generic sentence with no payload values. The worker also uses that sentence if it cannot read the preference. A successful row read uses the same narrator and surface as the bell, including its record section link. A failed row read uses "You have a new notification" and opens that surface's bell. Read rows and focused app windows produce no OS notification.
 
 A click marks the row read and reuses a window of the same surface, or opens one. When a tab marks rows read it sends their ids to the worker, which closes their OS notifications. A live bell refresh rechecks displayed notifications, so reads from another device can close them too. Sign-out unsubscribes this browser while the session request is in flight; the session request never waits on a browser API, so a navigation that lands during sign-out cannot leave the person signed in.
 
@@ -5282,7 +5283,7 @@ The later builder, Request type editor and preview tickets use this record and t
 | DES-048 | Date inputs are a calendar popover (amends DES-014, DES-040)                                                                                                         | Accepted                                                                                                   |
 | DES-049 | The notification centre — the header bell, its counter badge, and the panel behind it (extends DES-026, DES-031, DES-016)                                            | Accepted                                                                                                   |
 | DES-050 | The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)                                                  | Accepted                                                                                                   |
-| DES-051 | The email copy register (closes DES-015's deferral)                                                                                                                  | Accepted                                                                                                   |
+| DES-051 | The email copy register (closes DES-015's deferral)                                                                                                                  | Accepted; comment words allowed in email by the 2026-09-24 amendment                                       |
 | DES-052 | The value-list editor — the list-editor anatomy for a list of values (extends DES-020, DES-021)                                                                      | Accepted                                                                                                   |
 | DES-053 | The status moves from the strip — the current stage is the trigger (extends DES-034, DES-017, DES-032)                                                               | Accepted                                                                                                   |
 | DES-054 | The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)                                                                              | Accepted                                                                                                   |

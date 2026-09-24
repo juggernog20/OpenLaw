@@ -38,6 +38,7 @@ function documentRow(overrides: Partial<Record<string, unknown>> = {}) {
       id: "version-4",
       versionNumber: 4,
       kind: "executed",
+      documentType: "Executed",
       originalFilename: "msa-signed.pdf",
       mimeType: "application/pdf",
       byteSize: 1_400_000,

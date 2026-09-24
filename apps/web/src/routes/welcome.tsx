@@ -220,7 +220,10 @@ const REVIEW_TAXONOMIES = [
   },
   {
     key: "officerRoles",
-    label: defineMessage({ id: "welcome.review.officerRoles", defaultMessage: "Officer roles" }),
+    label: defineMessage({
+      id: "welcome.review.officerRoles",
+      defaultMessage: "Director & Officer roles",
+    }),
     settingsPath: "/settings/entities/officer-roles",
   },
   {

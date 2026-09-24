@@ -13,6 +13,7 @@ import {
   contracts,
   desc,
   documents,
+  documentTypes,
   documentVersions,
   documentVersionText,
   eq,
@@ -22,6 +23,7 @@ import {
   isNull,
   autoDocs,
   knowledgeItems,
+  knowledgeTypes,
   matters,
   or,
   sql,
@@ -151,6 +153,12 @@ const versionColumns = {
   documentId: documentVersions.documentId,
   versionNumber: documentVersions.versionNumber,
   kind: documentVersions.kind,
+  documentTypeId: documentTypes.id,
+  documentTypeName: documentTypes.displayName,
+  documentTypeArchivedAt: documentTypes.archivedAt,
+  knowledgeTypeId: knowledgeTypes.id,
+  knowledgeTypeName: knowledgeTypes.displayName,
+  knowledgeTypeArchivedAt: knowledgeTypes.archivedAt,
   source: documentVersions.source,
   comparedFromVersionId: documentVersions.comparedFromVersionId,
   comparedToVersionId: documentVersions.comparedToVersionId,
@@ -173,7 +181,13 @@ export const selectVersions = (db: Executor) =>
   db
     .select(versionColumns)
     .from(documentVersions)
-    .innerJoin(users, eq(documentVersions.createdBy, users.id));
+    .innerJoin(users, eq(documentVersions.createdBy, users.id))
+    .leftJoin(documentTypes, eq(documentVersions.documentTypeId, documentTypes.id))
+    // DOC-015 addendum: a Knowledge Item's files show the item's
+    // Knowledge type, read here so a retyped item relabels them.
+    .innerJoin(documents, eq(documents.id, documentVersions.documentId))
+    .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
+    .leftJoin(knowledgeTypes, eq(knowledgeTypes.id, knowledgeItems.knowledgeTypeId));
 
 type DocumentRow = Awaited<ReturnType<typeof selectDocuments>>[number];
 type VersionRow = Awaited<ReturnType<typeof selectVersions>>[number];
@@ -209,6 +223,20 @@ export function toVersion(
     id: row.id,
     versionNumber: row.versionNumber,
     kind: row.kind,
+    documentType:
+      row.documentTypeId !== null && row.documentTypeName !== null
+        ? {
+            id: row.documentTypeId,
+            displayName: row.documentTypeName,
+            archived: row.documentTypeArchivedAt !== null,
+          }
+        : row.knowledgeTypeId !== null && row.knowledgeTypeName !== null
+          ? {
+              id: row.knowledgeTypeId,
+              displayName: row.knowledgeTypeName,
+              archived: row.knowledgeTypeArchivedAt !== null,
+            }
+          : null,
     source: row.source,
     comparedFromVersionNumber: comparedVersionNumber(row.comparedFromVersionId, numbers),
     comparedToVersionNumber: comparedVersionNumber(row.comparedToVersionId, numbers),

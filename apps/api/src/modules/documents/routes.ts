@@ -133,6 +133,7 @@ import {
   documentComparisons,
   documents,
   documentVersionRenditions,
+  documentTypes,
   documentVersions,
   eq,
   HAND_SET_DOCUMENT_VERSION_KINDS,
@@ -143,7 +144,6 @@ import {
   knowledgeTypes,
   TEXT_SOURCES,
   type Executor,
-  type HandSetDocumentVersionKind,
   type Transaction,
 } from "@openlaw/db";
 import { DOCUMENT_OWNER_KINDS, type ResolvedDocumentOwner } from "@openlaw/shared";
@@ -204,8 +204,10 @@ import {
   insertDocumentVersion,
   nextVersionNumber,
   requestDerivations,
-  updateDocumentVersionKind,
+  resolveDocumentType,
+  updateDocumentVersionType,
   versionStorageKey,
+  type DocumentTypeChoice,
 } from "../../lib/document-versions.js";
 import { requestAutomaticContractAnalysis } from "../../pipeline/automatic-contract-analysis.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
@@ -359,6 +361,13 @@ const VersionSchema = z.object({
   /** 1..n; the highest is the current version (DOC-001). */
   versionNumber: z.int().positive(),
   kind: KindSchema,
+  /** DOC-015: what the team calls this round, from the owner module's
+   * list, or null for no type. An archived type still names the rounds
+   * that carry it. A Knowledge Item's files carry the item's Knowledge
+   * type, which is set on the item and not per round. */
+  documentType: z
+    .object({ id: z.string(), displayName: z.string(), archived: z.boolean() })
+    .nullable(),
   source: z.enum(DOCUMENT_VERSION_SOURCES),
   comparedFromVersionNumber: z.int().positive().nullable(),
   comparedToVersionNumber: z.int().positive().nullable(),
@@ -748,9 +757,15 @@ const MetadataPatch = z.object({
   folderId: RecordIdSchema.nullable().optional(),
 });
 
-/** CTR-014's one correctable field. Strict so a caller cannot send a
- * note or any other version fact and have it ignored in silence. */
-const VersionKindPatch = z.strictObject({ kind: HandSetKindSchema });
+/** CTR-014's one correctable field, which DOC-015 made the type. A
+ * caller names a type from the owner's list or null for none; a caller
+ * that still speaks kinds sends one, and it maps to the fixed row.
+ * Strict so a caller cannot send a note or any other version fact and
+ * have it ignored in silence. */
+const VersionTypePatch = z.union([
+  z.strictObject({ documentTypeId: RecordIdSchema.nullable() }),
+  z.strictObject({ kind: HandSetKindSchema }),
+]);
 
 /**
  * DOC-010's typed confirmation, as the seam takes it: the Administrator
@@ -819,12 +834,19 @@ const UPLOAD_FIELDS = {
     format: "binary",
     description: "The file itself. Any type is accepted (DOC-004).",
   },
+  documentTypeId: {
+    type: "string",
+    description:
+      "DOC-015: a live Document type from the owning module's list. Empty or absent " +
+      "means no type. Wins over `kind` when both are sent. Must be sent before the file part.",
+  },
   kind: {
     type: "string",
     enum: [...HAND_SET_DOCUMENT_VERSION_KINDS],
     description:
-      "What this version is in the negotiation (CTR-014), or `general` for Matter and Entity documents. " +
-      "Matter and Entity uploads always use `general`, including when a valid negotiation kind is supplied. Other uploads default to `draft_ours`. Must be sent before the file part.",
+      "What this version is in the negotiation (CTR-014), for clients that speak kinds. " +
+      "It maps to the owner list's fixed Document type; a kind the list has no row for " +
+      "stores `general` with no type. Must be sent before the file part.",
   },
   note: {
     type: "string",
@@ -1397,12 +1419,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const documentId = uuidv7();
       const versionId = uuidv7();
-      const file = await receiveUpload(
-        request,
-        versionStorageKey(documentId, versionId),
-        true,
-        "general",
-      );
+      const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
       const created = await withStoredFile(request, file, () =>
         completeMatterUpload(app, request.user, request.params.number, documentId, versionId, file),
       );
@@ -1431,12 +1448,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       assertOpenEntity(await reachedEntity(app.db, request.user, request.params.id));
       const documentId = uuidv7();
       const versionId = uuidv7();
-      const file = await receiveUpload(
-        request,
-        versionStorageKey(documentId, versionId),
-        true,
-        "general",
-      );
+      const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
       const created = await withStoredFile(request, file, () =>
         completeEntityUpload(app, request.user, request.params.id, documentId, versionId, file),
       );
@@ -1517,16 +1529,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       assertOpenDocument(reached);
 
       const versionId = uuidv7();
-      const file = await receiveUpload(
-        request,
-        versionStorageKey(documentId, versionId),
-        false,
-        reached.owner.kind === "matter" ||
-          reached.owner.kind === "entity" ||
-          reached.owner.kind === "auto_doc"
-          ? "general"
-          : "draft_ours",
-      );
+      const file = await receiveUpload(request, versionStorageKey(documentId, versionId));
 
       // The seam's transaction, for the create path's reason: a new
       // round on a chain is ambient movement on the record (NOT-002
@@ -1546,26 +1549,27 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       preHandler: requireMember,
       schema: {
-        operationId: "updateDocumentVersionKind",
+        operationId: "updateDocumentVersionType",
         summary:
-          "Correct one version's kind (CTR-014). This is the only " +
-          "per-version update. It changes only the kind: the bytes, " +
-          "number, note, author, order, and executed pin stay where " +
-          "they are. The target must be one of the six hand-set kinds. " +
-          "A generated redline cannot be corrected or selected because " +
-          "its kind records how the file was made. Appends " +
-          "document.version_kind_changed on the owning contract with " +
-          "the kind before and after (DD-017). Member+ may correct a " +
-          "kind; a Contributor who reaches the record is refused 403",
+          "Correct one version's Document type (CTR-014, DOC-015). This is the " +
+          "only per-version update. It changes only the type and the kind " +
+          "that follows it: the bytes, number, note, author, order, and " +
+          "executed pin stay where they are. The target is a live type from " +
+          "the owning module's list, null for no type, or a hand-set kind " +
+          "that maps to the list's fixed row. A generated Version cannot be " +
+          "corrected because its kind records how the file was made. Appends " +
+          "document.version_type_changed on the owning record with the type " +
+          "names before and after (DD-017). Member+ may correct a type; a " +
+          "Contributor who reaches the record is refused 403",
         tags: ["documents"],
         params: VersionParams,
-        body: VersionKindPatch,
+        body: VersionTypePatch,
         response: { 200: DocumentEnvelope, default: problemResponse },
       },
     },
     async (request) => {
       const { documentId, versionId } = request.params;
-      const { kind } = request.body;
+      const body = request.body;
       return {
         document: await app.db.transaction(async (tx) => {
           const target = await reachedDocument(tx, request.user, documentId, true);
@@ -1578,8 +1582,11 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
               versionNumber: documentVersions.versionNumber,
               kind: documentVersions.kind,
               source: documentVersions.source,
+              documentTypeId: documentVersions.documentTypeId,
+              documentTypeName: documentTypes.displayName,
             })
             .from(documentVersions)
+            .leftJoin(documentTypes, eq(documentVersions.documentTypeId, documentTypes.id))
             .where(
               and(eq(documentVersions.id, versionId), eq(documentVersions.documentId, documentId)),
             )
@@ -1590,24 +1597,25 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           }
           if (version.source === "generated")
             throw httpError(409, "An Auto-Doc Version's kind records how it was made.");
-          if (version.kind === kind) {
-            throw httpError(409, "That version already has this kind.");
+          const typed = await resolveDocumentType(tx, documentId, body);
+          if (version.documentTypeId === typed.documentTypeId && version.kind === typed.kind) {
+            throw httpError(409, "That version already has this type.");
           }
 
-          await updateDocumentVersionKind(tx, documentId, versionId, kind);
+          await updateDocumentVersionType(tx, documentId, versionId, typed);
           await recordActivity(tx, {
             entityType: target.owner.kind,
             entityId: target.owner.value,
             actorId: request.user.id,
-            action: "document.version_kind_changed",
+            action: "document.version_type_changed",
             visibility: RECORD_ACTIVITY_TIER,
             payload: {
               documentId,
               versionId,
               title: target.title,
               versionNumber: version.versionNumber,
-              from: version.kind,
-              to: kind,
+              from: version.documentTypeName,
+              to: typed.displayName,
             },
           });
 
@@ -3274,13 +3282,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     request: FastifyRequest,
     key: string,
     filed = false,
-    defaultKind: HandSetDocumentVersionKind = "draft_ours",
   ): Promise<StoredUpload> {
     const part = await request.file().catch((error: unknown) => {
       throw asSharedUploadRefusal(error, app.maxUploadBytes);
     });
     if (!part) throw httpError(400, "Attach a file to upload.");
-    return storeUploadPart(request, part, key, filed, defaultKind);
+    return storeUploadPart(request, part, key, filed);
   }
 
   async function storeUploadPart(
@@ -3288,12 +3295,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     part: NonNullable<Awaited<ReturnType<FastifyRequest["file"]>>>,
     key: string,
     filed = false,
-    defaultKind: HandSetDocumentVersionKind = "draft_ours",
   ): Promise<StoredUpload> {
     // Read before the file is consumed. The parser reports the fields
     // it has already seen, and the file part ends the ones it can
     // report — which is why the form has to put them first.
     const rawKind = fieldValue(part.fields, "kind");
+    const rawTypeId = fieldValue(part.fields, "documentTypeId");
     const rawNote = fieldValue(part.fields, "note");
     // Checked here rather than after the bytes are stored, so a batch
     // whose paths are malformed is refused a file at a time without
@@ -3310,11 +3317,17 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         "Business Users may upload supporting Documents at the record root only.",
       );
     }
-    const requestedKind = rawKind
-      ? (HandSetKindSchema.safeParse(rawKind).data ?? refuseKind())
-      : defaultKind;
-    // DOC-001: new Matter versions are neutral even when an older client sends a negotiation kind.
-    const kind: HandSetDocumentVersionKind = defaultKind === "general" ? "general" : requestedKind;
+    // DOC-015: a type id wins; a kind maps to the fixed row; nothing is
+    // no type. Only the shape is checked here. The row is checked
+    // against the owner's list when the Version is written.
+    const typeId = rawTypeId?.trim() ?? "";
+    if (typeId.length > MAX_RECORD_ID_LENGTH) refuseKind();
+    const typeChoice: DocumentTypeChoice =
+      typeId.length > 0
+        ? { documentTypeId: typeId }
+        : rawKind && rawTypeId === undefined
+          ? { kind: HandSetKindSchema.safeParse(rawKind).data ?? refuseKind() }
+          : { documentTypeId: null };
     // Refused rather than shortened. A note is what the uploader wrote
     // about this round, and silently keeping the first 2000 characters
     // of it would put words on the record that nobody chose to stop
@@ -3385,7 +3398,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return {
       filename,
       mimeType,
-      kind,
+      typeChoice,
       note,
       destination,
       fileRef,
@@ -3468,7 +3481,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** The one refusal a bad `kind` earns, thrown rather than returned so
    * the expression above stays one line. */
   function refuseKind(): never {
-    throw httpError(400, "That is not a version kind this record accepts.");
+    throw httpError(400, "That is not a document type this record accepts.");
   }
 
   /**

@@ -18,7 +18,7 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
   const db = await freshDb(container, "approval_upgrade");
   let app: Awaited<ReturnType<typeof buildApp>> | undefined;
   try {
-    await migrateThrough(db, "0162_api-key-notifications", migrationEntries());
+    await migrateThrough(db, "0165_api-key-notifications", migrationEntries());
     app = await buildApp(testDeps({ db }));
     const person = await provisionUser(app.auth, TEST_ADMIN);
     await db.execute(sql`update users set role = 'administrator' where id = ${person.id}`);
@@ -65,7 +65,7 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
 it("builds valid open-approval indexes inside the migration run", async () => {
   const db = await freshDb(container, "approval_indexes");
   try {
-    await migrateThrough(db, "0163_your-approvals", migrationEntries());
+    await migrateThrough(db, "0166_your-approvals", migrationEntries());
     await runMigrations(db);
     await runMigrations(db);
     const indexes = await db.execute(

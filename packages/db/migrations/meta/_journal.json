@@ -1125,50 +1125,71 @@
     {
       "idx": 160,
       "version": "7",
-      "when": 1790181643214,
-      "tag": "0160_mcp-settings",
+      "when": 1790180897529,
+      "tag": "0160_document_types",
       "breakpoints": true
     },
     {
       "idx": 161,
       "version": "7",
-      "when": 1790198164007,
-      "tag": "0161_api-key-requests",
+      "when": 1790183941120,
+      "tag": "0161_document_types_without_knowledge",
       "breakpoints": true
     },
     {
       "idx": 162,
       "version": "7",
-      "when": 1790198357796,
-      "tag": "0162_api-key-notifications",
+      "when": 1790194805635,
+      "tag": "0162_user_reminder_offsets",
       "breakpoints": true
     },
     {
       "idx": 163,
       "version": "7",
-      "when": 1790203109932,
-      "tag": "0163_your-approvals",
+      "when": 1790196000000,
+      "tag": "0163_mcp-settings",
       "breakpoints": true
     },
     {
       "idx": 164,
       "version": "7",
-      "when": 1790205250569,
-      "tag": "0164_approval-indexes",
+      "when": 1790198164007,
+      "tag": "0164_api-key-requests",
       "breakpoints": true
     },
     {
       "idx": 165,
       "version": "7",
-      "when": 1790207955532,
-      "tag": "0165_mcp-tool-calls",
+      "when": 1790198357796,
+      "tag": "0165_api-key-notifications",
       "breakpoints": true
     },
     {
       "idx": 166,
       "version": "7",
+      "when": 1790203109932,
+      "tag": "0166_your-approvals",
+      "breakpoints": true
+    },
+    {
+      "idx": 167,
+      "version": "7",
+      "when": 1790205250569,
+      "tag": "0167_approval-indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 168,
+      "version": "7",
+      "when": 1790207955532,
+      "tag": "0168_mcp-tool-calls",
+      "breakpoints": true
+    },
+    {
+      "idx": 169,
+      "version": "7",
       "when": 1790243833451,
-      "tag": "0166_activity-via",
+      "tag": "0169_activity-via",
       "breakpoints": true
     }
   ]

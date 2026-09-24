@@ -62,7 +62,7 @@ describe("the Entities Officer roles pane", () => {
       screen.getByRole("img", { name: "Other is system-protected and can't be archived" }),
     ).toBeInTheDocument();
     const tabs = screen.getByRole("navigation", { name: "Entities panes" });
-    expect(within(tabs).getByRole("link", { name: "Officer roles" })).toHaveAttribute(
+    expect(within(tabs).getByRole("link", { name: "Director & Officer roles" })).toHaveAttribute(
       "aria-current",
       "page",
     );

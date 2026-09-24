@@ -20,6 +20,7 @@
 import type { paths } from "@openlaw/api-client";
 import type { DocumentOwner } from "@openlaw/shared";
 import type { IntlShape } from "react-intl";
+import { useEffect, useState } from "react";
 import { api } from "./api";
 // The separator a folder path is written with on the wire, taken from
 // the module that reads a dropped tree rather than written again here:
@@ -195,6 +196,68 @@ export function documentLandingPath(document: RepositoryDocument): string {
 export type DocumentRecord =
   | { entityType: "contract" | "matter"; number: number }
   | { entityType: "entity" | "knowledge_item"; id: string };
+
+/** The owning modules that carry a Document type list (DOC-015). A
+ * Knowledge Item's files show the item's Knowledge type instead. */
+export type DocumentTypeModule = "matter" | "contract" | "entity";
+
+/** One live Document type, as every picker offers it. */
+export type DocumentTypeOption =
+  paths["/api/v1/documents/type-options"]["get"]["responses"][200]["content"]["application/json"]["documentTypes"][number];
+
+/** The list a record's paper takes its types from, or null for a
+ * Knowledge Item, whose files take the item's own type. */
+export function documentTypeModuleOf(
+  entityType: DocumentRecord["entityType"],
+): DocumentTypeModule | null {
+  return entityType === "knowledge_item" ? null : entityType;
+}
+
+/** One module's live types in display order; empty when the read fails,
+ * which leaves the picker at no type rather than blocking an upload. */
+export async function readDocumentTypeOptions(
+  module: DocumentTypeModule,
+): Promise<DocumentTypeOption[]> {
+  const result = await api
+    .GET("/api/v1/documents/type-options", { params: { query: { module } } })
+    .catch(() => undefined);
+  return result?.data?.documentTypes ?? [];
+}
+
+/** The live types for one module, read once per mount. Null until the
+ * read answers, and for no module. */
+export function useDocumentTypeOptions(
+  module: DocumentTypeModule | null,
+): DocumentTypeOption[] | null {
+  const [state, setState] = useState<{
+    module: DocumentTypeModule;
+    options: DocumentTypeOption[];
+  } | null>(null);
+  useEffect(() => {
+    if (!module) return;
+    let live = true;
+    void readDocumentTypeOptions(module).then((options) => {
+      if (live) setState({ module, options });
+    });
+    return () => {
+      live = false;
+    };
+  }, [module]);
+  return state && state.module === module ? state.options : null;
+}
+
+/**
+ * What a Version is called in a row (DOC-015): its type's name, or the
+ * generated redline's own label, or null for no type.
+ */
+export function documentTypeLabel(
+  intl: IntlShape,
+  version: Pick<DocumentVersion, "kind" | "documentType">,
+): string | null {
+  if (version.documentType) return version.documentType.displayName;
+  if (version.kind === "generated_redline") return documentKindLabel(intl, version.kind);
+  return null;
+}
 
 /**
  * The listing context that is the record root — the documents filed in
@@ -601,7 +664,12 @@ function attachmentUrl(documentId: string, versionId: string, index: number): st
  * is in the negotiation, and what changed in this round. */
 export interface UploadDraft {
   file: File;
-  kind: HandSetDocumentVersionKind;
+  /** DOC-015: a type from the owner's list, or null for none. Sent in
+   * place of `kind` when present. */
+  documentTypeId?: string | null;
+  /** For callers that still speak kinds (the portal); the seam maps a
+   * kind to the fixed type. */
+  kind?: HandSetDocumentVersionKind;
   surface?: "portal";
   /** Empty when the uploader wrote nothing — the seam stores NULL. */
   note: string;
@@ -683,18 +751,18 @@ export function uploadDocumentVersion(
 }
 
 /**
- * Corrects the kind attached to one round (CTR-014). The seam changes
- * no other version field and leaves the executed pin alone.
+ * Corrects the type attached to one round (CTR-014, DOC-015). The seam
+ * changes no other version field and leaves the executed pin alone.
  */
-export async function updateDocumentVersionKind(
+export async function updateDocumentVersionType(
   documentId: string,
   versionId: string,
-  kind: HandSetDocumentVersionKind,
+  documentTypeId: string | null,
 ): Promise<UploadOutcome> {
   const result = await api
     .PATCH("/api/v1/documents/{documentId}/versions/{versionId}", {
       params: { path: { documentId, versionId } },
-      body: { kind },
+      body: { documentTypeId },
     })
     .catch(() => undefined);
   return result?.data
@@ -706,7 +774,9 @@ export async function updateDocumentVersionKind(
  * only when the caller had one to give. */
 async function send(url: string, draft: DocumentUploadDraft): Promise<UploadOutcome> {
   const form = new FormData();
-  form.append("kind", draft.kind);
+  // An empty type id is no type; the seam reads it that way.
+  if (draft.documentTypeId !== undefined) form.append("documentTypeId", draft.documentTypeId ?? "");
+  else if (draft.kind) form.append("kind", draft.kind);
   if (draft.note.trim().length > 0) form.append("note", draft.note.trim());
   // Before the file part, as the kind and the note are: the parser
   // reports the fields it has already seen, and the file part ends the

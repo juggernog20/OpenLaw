@@ -10,6 +10,7 @@ import {
   contractTypes,
   documentFolders,
   documents,
+  documentTypes,
   documentVersions,
   documentVersionText,
   eq,
@@ -607,5 +608,41 @@ describe("the sorted Document repository cursor", () => {
     expect(seen.map((row) => row.id)).toEqual(
       (await list({ ...tiedQuery, sort: "title", dir: "asc" })).documents.map((row) => row.id),
     );
+  });
+});
+
+describe("the repository cursor sorted by Document type (DOC-015)", () => {
+  it("pages by each row's own type, without skipping or repeating a Document", async () => {
+    // Give the Versions different fixed Contract types, so a boundary that
+    // read the outer row's type instead of the cursor row's would page wrong.
+    const types = await harness.db
+      .select({ id: documentTypes.id })
+      .from(documentTypes)
+      .where(eq(documentTypes.module, "contract"));
+    const versions = await harness.db
+      .select({ id: documentVersions.id })
+      .from(documentVersions)
+      .orderBy(documentVersions.id);
+    for (const [index, version] of versions.entries()) {
+      await harness.db
+        .update(documentVersions)
+        .set({ documentTypeId: index % 3 === 0 ? null : types[index % types.length]!.id })
+        .where(eq(documentVersions.id, version.id));
+    }
+
+    const whole = (await list({ sort: "kind", dir: "asc" })).documents.map((row) => row.id);
+    const paged: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const page: Answer = await list({
+        sort: "kind",
+        dir: "asc",
+        limit: "2",
+        ...(cursor ? { cursor } : {}),
+      });
+      paged.push(...page.documents.map((row) => row.id));
+      cursor = page.nextCursor;
+    } while (cursor !== null);
+    expect(paged).toEqual(whole);
   });
 });

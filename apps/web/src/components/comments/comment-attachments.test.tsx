@@ -30,6 +30,15 @@ it.each(["matter", "contract"] as const)(
     const posts: unknown[] = [];
     stubApi({
       extra: (call) => {
+        // DOC-015: the Contract list has its fixed types; the Matter list
+        // starts empty, so its picker stays hidden.
+        if (call.url.pathname === "/api/v1/documents/type-options")
+          return json(200, {
+            documentTypes:
+              call.url.searchParams.get("module") === "contract"
+                ? [{ id: "dt-draft_ours", displayName: "Draft · ours", systemKind: "draft_ours" }]
+                : [],
+          });
         if (call.url.searchParams.get("preview") === "true")
           return new Response(null, { status: 415 });
         if (call.url.pathname.endsWith("/file") && call.method === "POST") {
@@ -95,15 +104,15 @@ it.each(["matter", "contract"] as const)(
     ).toBeInTheDocument();
     expect(within(filing).getByLabelText("Document name")).toHaveValue("advice.pdf");
     if (entityType === "matter")
-      expect(within(filing).queryByLabelText("Kind")).not.toBeInTheDocument();
-    else expect(within(filing).getByLabelText("Kind")).toHaveValue("draft_ours");
+      expect(within(filing).queryByLabelText("Type")).not.toBeInTheDocument();
+    else expect(await within(filing).findByLabelText("Type")).toHaveValue("");
     await user.click(within(filing).getByRole("button", { name: "File" }));
     await waitFor(() => expect(changed).toHaveBeenCalledTimes(1));
     expect(posts).toEqual([
       {
         destination: "new_document",
         name: "advice.pdf",
-        kind: entityType === "matter" ? "general" : "draft_ours",
+        documentTypeId: null,
         isConfidential: false,
       },
     ]);

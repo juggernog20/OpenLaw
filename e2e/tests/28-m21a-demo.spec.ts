@@ -28,6 +28,7 @@ import {
   signInAs,
   sweepOrSay,
   uniqueEmail,
+  pickDocumentType,
 } from "./helpers.js";
 import { extractLink, waitForMailTo } from "./mailpit.js";
 
@@ -115,7 +116,7 @@ async function uploadDraft(page: Page): Promise<void> {
     mimeType: "text/plain",
     buffer: Buffer.from("Northwind NDA — Legal draft, round one.\n"),
   });
-  await dialog.getByLabel("Kind").selectOption("draft_ours");
+  await pickDocumentType(dialog, "draft_ours");
   await dialog.getByLabel("Note").fill(DRAFT_NOTE);
   const uploaded = page.waitForResponse(
     (response) =>
@@ -262,7 +263,7 @@ test.describe.serial("M21A demo path", () => {
       await markupComment.getByRole("button", { name: "File" }).click();
       const filing = filer.getByRole("dialog", { name: "File attachment" });
       await filing.getByLabel("Destination").selectOption("new_version");
-      await filing.getByLabel("Kind").selectOption("redline_theirs");
+      await pickDocumentType(filing, "redline_theirs");
       await filing.getByLabel("Note").fill(MARKUP_NOTE);
       const filed = filer.waitForResponse(
         (response) =>

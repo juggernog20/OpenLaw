@@ -67,6 +67,20 @@ describe("Advanced settings", () => {
     ])
       expect(within(nav).getByRole("link", { name: title })).toBeInTheDocument();
   });
+  it("offers no Save when the deployment sets every value in the section", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/advanced-settings/instance") return;
+        return json(200, state([field("BASE_URL", "http://localhost:3000", { locked: true })]));
+      },
+    });
+    renderAt("/settings/instance");
+    expect(await screen.findByLabelText("Application address")).toHaveAttribute("readonly");
+    expect(screen.getByText(/The deployment configuration sets this value/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Values saved here/)).not.toBeInTheDocument();
+  });
   it("requires a new test after editing storage and leaves configured credentials blank", async () => {
     const calls: string[] = [];
     stubApi({

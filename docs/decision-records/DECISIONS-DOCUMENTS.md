@@ -37,13 +37,15 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 - **Alternatives considered** — DAG with branches: git-for-lawyers UI for a rare case. Self-referencing single table (`prev_version_id`): no stable identity to link from; every query collapses chains.
 - **Consequences** — Two tables in SCHEMA.md: `documents` carries the four nullable owner FKs (`matter_id` / `contract_id` / `entity_id` / `knowledge_item_id`) with the exactly-one-owner invariant application-enforced per DOC-008; `generated_redline` added to CTR-014's kind list (SCHEMA note updated). Storage question (Q5) deals in immutable blobs — enables content-addressing/dedup. K.H3 unblocked.
 - **Addendum (2026-08-19, [#326](https://github.com/juggernog20/OpenLaw/issues/326))** — CTR-014 added the hand-set `draft_theirs` kind for a negotiation that opens on the counterparty's paper. It is an ordinary uploaded version kind; the chain and generated-redline provenance rules above are unchanged.
-- **Addendum (2026-08-22, M21A, [#438](https://github.com/juggernog20/OpenLaw/issues/438))** — CTR-014 made one part of a Version correctable: a Member+ may change a hand-set `kind`, and only that judgement. The bytes, order, note, author, and provenance remain immutable; `generated_redline` is refused as both source and target, and every correction is narrated.
+- **Addendum (2026-08-22, M21A, [#438](https://github.com/juggernog20/OpenLaw/issues/438))** — CTR-014 made one part of a Version correctable: a Member+ may change a hand-set `kind`, and only that judgement. The bytes, order, note, author, and provenance remain immutable; `generated_redline` is refused as both source and target, and every correction is narrated. _Revised by **DOC-015** (2026-09-23): the correctable field is now the Document type, and the kind follows it. The correction writes `document.version_type_changed`._
 
 ### Addendum (2026-09-06, UX review) — Matter documents have no negotiation Kind
 
 Matter uploads do not ask for a contract negotiation Kind. This applies to single files, new versions, batch imports, creation attachments, and comment-attachment filing. Matter document rows omit the Kind column; the global repository leaves that cell blank for Matter-owned documents. Contract negotiation labels remain available on Contracts.
 
 New Matter uploads and versions use the neutral stored `general` kind. Existing classifications and generated-redline provenance remain intact; this change does not rewrite earlier versions or add a Matter document taxonomy. Migration 0093 extends the allowed stored values without changing document contents.
+
+_Revised by **DOC-015** (2026-09-23): Matters now have an optional Document type list, and the Type column shows on Matter documents. The stored kind stays `general`._
 
 ## DOC-002 — Module identity: the legal file layer, made browsable
 
@@ -162,7 +164,7 @@ Knowledge Items own Documents, but their Documents do not gain a fourth folder m
 
 ## DOC-007 — Metadata: standard document properties only; no custom fields; tags deferred
 
-- **Status** — Accepted
+- **Status** — Accepted; revised by **DOC-015** (2026-09-23), which adds one configurable field: the Document type
 - **Date** — 2026-08-04
 - **Context** — Recommended tags + a `document` scope in the CTR-016 fields catalog. Blair: "I don't think we want to do too many custom fields for doc metadata.. just normal what you'd see for document metadata."
 - **Decision** — Documents carry **standard metadata only**: title, description/notes, document kind (per DOC-001 version kinds at version level), file properties (format, size), provenance (uploaded by, dates), owning record, folder. **No `document` scope in the fields catalog. No tags in v1** — this extends MTR-010's tag deferral to documents; the existing FUTURE-FEATURES tags entry now covers both, and PRODUCT.md's "tagging" wording is satisfied later or amended (flagged).
@@ -321,6 +323,30 @@ Supporting uploads on Matters and Contracts mint the same immutable `<driver>:<k
 - **Alternatives considered** — Per-blob (version-scoped) WORM policies in one container: the operator sets policy blob by blob, forever. Splitting the stores later: a data migration over every rendition in every install, against one config path now. A driver-migration tool instead of a router: rewrites the history the DOC-012 prefix was built to preserve.
 - **Consequences** — The M12 branch grows the derived-store seam and moves rendition writes onto it (noted on #187). #206 builds the router. When DEPLOYMENT.md documents WORM, it must say: split the containers before locking a policy, or rendition rebuilds and hard delete will fail against retention. _Settled in part in #206, where the router landed: `createStorageFromEnv` answers a router over every configured driver, and the routing layer itself passes the same shared contract suite every driver does, so what the app factory is handed is a storage adapter in full. The local driver is always configured — its default root is what makes the zero-configuration install work — and an object store counts as configured the moment its bucket or container is named, write driver or not; naming one and misconfiguring the rest stops the boot, because a reader that cannot reach its store is not a reader. A reference naming an unconfigured driver rejects with `UnconfiguredDriverError`, naming the driver and what to set. **The source/derived store split has not landed**: M12 closed without it, so it is no longer "before the milestone closes" and every M12 install now writes renditions beside sources — the deferred cost this decision names. It is owed before any WORM documentation, as its own change._
 
+## DOC-015 — Document types: one configurable list per owning module
+
+- **Status** — Accepted
+- **Date** — 2026-09-23
+- **Context** — Blair asked for a Documents settings page with configurable Document types for Matters, Contracts, Entities, and Knowledge. Before this, a Version carried only CTR-014's fixed negotiation kind. DOC-007 ruled out custom document metadata, and the 2026-09-06 Matter addendum ruled out a Matter document taxonomy. This decision revises both for one field.
+- **Decision** —
+  - **One list per module.** Settings → Documents has three tabs: Matters, Contracts, and Entities. Each tab is its own Administrator-managed list on the shared taxonomy machinery: add, rename, reorder, archive, restore. All three live in one `document_types` table with a `module` column. Knowledge has no list (see the addendum below).
+  - **The type replaces the kind on Contracts.** A Document Version names at most one type from its owner's list. No type is a valid answer, and it is the upload default in every module, Contracts included.
+  - **Types that code reads are fixed.** The Contract list starts with the six negotiation types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, and Amendment. Each one carries the Version kind it stands for, and none of them can be renamed, archived, or deleted. Administrators add their own types beside them. The other three lists start empty.
+  - **The kind follows the type.** A Version of a fixed type stores that type's kind. A Version of an added type, or of no type, stores `general`. A generated Version keeps the kind that records how it was made. A generated redline has no type. The executed pin, comparisons, Auto-Doc provenance, and the pill colours keep reading the kind, so they did not change.
+  - **Archive keeps references.** An archived type still labels the Versions that carry it and leaves the pickers. It is never reassigned, because a Version records what somebody called that round.
+  - **Where people pick it.** The upload composer, a new Version, the batch import, record-creation attachments (including intake conversion), and comment-attachment filing. A Member+ corrects a type from the Type column on the record's Documents tab, now shown for every module. The repository's column shows the type name. Its filter stays on the fixed kinds.
+- **Rationale** — A per-module list lets each practice area name its own paper (a Matter memo, an Entity resolution) without adding a custom-field system, which DOC-007 still rules out. Deriving the kind from the type keeps every code path that reads the kind unchanged.
+- **Alternatives considered** — One shared catalog with per-module tick boxes: fewer duplicates, but a name in two modules would be one row that two teams can rename. Only the four types code branches on fixed (Draft · ours, Executed, Amendment, and the hidden generated redline): declined, because the other three carry the ours/theirs colours and the #326 draft/redline distinction. Keeping `draft_ours` as the Contract upload default: declined in favour of blank everywhere.
+- **Consequences** — Migration 0160 adds `document_types` and `document_versions.document_type_id`, seeds the six Contract rows, points every existing Contract Version at the row for its kind, and resets Knowledge Versions' negotiation kinds to `general`. Existing Matter and Entity Versions are untouched and show no type. Uploads accept `documentTypeId`. A client that still sends `kind` (the portal) lands on the matching fixed row, or on no type where the list has none. The correction route writes `document.version_type_changed`. The portal still shows the kind label, so a Contract Version of an added type reads General there until the portal learns types.
+
+### Addendum (2026-09-23): Knowledge files show the item's Knowledge type
+
+The first cut gave Knowledge a fourth tab. Blair saw that it would be confused with the Knowledge types page, because a Knowledge Item already has a type. So Knowledge has no Document type list.
+
+- A Knowledge Item's files show the item's Knowledge type in the Type column and in the repository. The API derives it when it reads the Version. Nothing is stored on the Version, so retyping the item relabels its files.
+- Knowledge uploads have no type picker. An upload to a Knowledge Item that names a `documentTypeId` is refused with 400.
+- Migration 0161 clears any Version that named a Knowledge row, deletes the Knowledge rows (five, all unused on dev), and narrows the `module` check to `matter`, `contract`, and `entity`.
+
 ## Index of decisions
 
 | #       | Decision                                                                       | Status   |
@@ -339,6 +365,7 @@ Supporting uploads on Matters and Contracts mint the same immutable `<driver>:<k
 | DOC-012 | Storage adapter: three operations, and `file_ref` = `<driver>:<key>`           | Accepted |
 | DOC-013 | SharePoint is not a store; the third driver is Azure Blob                      | Accepted |
 | DOC-014 | Two stores per install: source and derived; reads route across drivers         | Accepted |
+| DOC-015 | Document types: one configurable list per owning module                        | Accepted |
 
 ### DOC-006 UX review addendum — drag saved Documents between folders (2026-09-08)
 

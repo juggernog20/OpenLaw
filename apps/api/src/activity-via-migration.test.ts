@@ -13,7 +13,7 @@ afterAll(async () => container?.stop());
 it("leaves old activity unattributed, enforces the via kinds and survives a restart", async () => {
   const db = await freshDb(container, "activity_via");
   try {
-    await migrateThrough(db, "0165_mcp-tool-calls", migrationEntries());
+    await migrateThrough(db, "0168_mcp-tool-calls", migrationEntries());
     await db.execute(sql`insert into activity_log (id, entity_type, action, visibility)
       values ('old-entry', 'system', 'legacy.action', 'admin_only')`);
     await runMigrations(db);

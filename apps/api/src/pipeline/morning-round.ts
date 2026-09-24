@@ -116,7 +116,7 @@ import {
 import { localMoment, morningHasArrived } from "../lib/notifications/local-day.js";
 import type { Notifier } from "../lib/notifications/notifier.js";
 import { inboxAudience } from "../lib/notifications/audience.js";
-import { reminderOffsets } from "../lib/notifications/offsets.js";
+import { personalOffsets, reminderOffsets } from "../lib/notifications/offsets.js";
 import { briefingChoices, channelChoices } from "../lib/notifications/preferences.js";
 import { readApprovalsHomeSection } from "../modules/home/sections/approvals.js";
 import { readInboxHomeSection } from "../modules/home/sections/inbox.js";
@@ -258,6 +258,9 @@ interface Served {
    * Carried past the gate because the once-a-day rule has to read an
    * earlier briefing's instant on **their** calendar, not on UTC's. */
   timezone: string | null;
+  /** Their own reminder lead times, or null where they use the
+   * organization's list (NOT-004 addendum). */
+  reminderOffsetDays: unknown;
   /** Their own civil date — what "today" means for their reminders and
    * for the once-a-day rule. */
   today: string;
@@ -344,12 +347,13 @@ export async function runMorningRound(
     // a list that changed mid-round would have two people in one cohort
     // reminded on different schedules, which is a difference nobody
     // could explain from the outside.
-    const offsets = await reminderOffsets(deps.db);
+    const organization = await reminderOffsets(deps.db);
 
-    // Cohorts, because "today" is a fact about a person and not about
-    // the round: at any tick the people being served are on at most two
-    // civil dates, and each date names its own set of due dates.
-    for (const [today, cohort] of cohorts(serving)) {
+    // Cohorts, because "today" and the lead times are facts about a
+    // person and not about the round. People on one civil date with one
+    // list share one set of due dates. Most people keep the
+    // organization's list, so a tick rarely has more than a few cohorts.
+    for (const { today, offsets, cohort } of cohorts(serving, organization)) {
       if (options.signal?.aborted) {
         summary.stopped = true;
         return summary;
@@ -406,6 +410,7 @@ async function whoseMorningItIs(deps: MorningRoundDeps, now: Date): Promise<Serv
       displayName: users.displayName,
       role: users.role,
       timezone: users.timezone,
+      reminderOffsetDays: users.reminderOffsetDays,
     })
     .from(users)
     .where(isNull(users.archivedAt))
@@ -417,15 +422,21 @@ async function whoseMorningItIs(deps: MorningRoundDeps, now: Date): Promise<Serv
   });
 }
 
-/** The people being served, grouped by the civil date they are on. */
-function cohorts(serving: readonly Served[]): Map<string, Served[]> {
-  const byDate = new Map<string, Served[]>();
+/** The people being served, grouped by the civil date they are on and
+ * the lead times that apply to them. */
+function cohorts(
+  serving: readonly Served[],
+  organization: readonly number[],
+): { today: string; offsets: number[]; cohort: Served[] }[] {
+  const groups = new Map<string, { today: string; offsets: number[]; cohort: Served[] }>();
   for (const person of serving) {
-    const held = byDate.get(person.today);
-    if (held) held.push(person);
-    else byDate.set(person.today, [person]);
+    const offsets = personalOffsets(person.reminderOffsetDays, organization);
+    const key = `${person.today}|${offsets.join(",")}`;
+    const held = groups.get(key);
+    if (held) held.cohort.push(person);
+    else groups.set(key, { today: person.today, offsets, cohort: [person] });
   }
-  return byDate;
+  return [...groups.values()];
 }
 
 /**

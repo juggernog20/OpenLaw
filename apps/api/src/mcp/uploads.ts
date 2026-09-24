@@ -204,9 +204,14 @@ export function documentUploadRoutes(secret: string): FastifyPluginAsync {
           mimeType: ticket.input.mimeType,
           note: ticket.input.note || null,
           destination: null,
-          kind: ["matter", "entity", "auto_doc"].includes(ticket.input.ownerType)
-            ? "general"
-            : (ticket.input.kind ?? "draft_ours"),
+          // DOC-015: a kind the ticket named maps to the owner list's
+          // fixed row; no kind is no type. Matter, Entity and Auto-Doc
+          // rounds stay `general` whatever the ticket said.
+          typeChoice:
+            ["matter", "entity", "auto_doc"].includes(ticket.input.ownerType) ||
+            ticket.input.kind === undefined
+              ? { documentTypeId: null }
+              : { kind: ticket.input.kind },
         };
         const document = await withStoredBlob(app.storage, request.log, fileRef, async () => {
           if (ticket.expiresAt <= Date.now())

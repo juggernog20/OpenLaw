@@ -172,6 +172,13 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "knowledge_type.archived": TAXONOMY_ARCHIVE,
   "knowledge_type.restored": TAXONOMY_NAMED,
   "knowledge_type.deleted": TAXONOMY_NAMED,
+  "document_type.created": TAXONOMY_NAMED,
+  "document_type.renamed": TAXONOMY_RENAME,
+  "document_type.updated": TAXONOMY_UPDATE,
+  "document_type.reordered": { order: ["memo", "letter"] },
+  "document_type.archived": TAXONOMY_ARCHIVE,
+  "document_type.restored": TAXONOMY_NAMED,
+  "document_type.deleted": TAXONOMY_NAMED,
   "department.created": TAXONOMY_NAMED,
   "department.renamed": TAXONOMY_RENAME,
   "department.updated": TAXONOMY_UPDATE,
@@ -906,6 +913,14 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     from: "draft_ours",
     to: "draft_theirs",
   },
+  "document.version_type_changed": {
+    documentId: "doc_1",
+    versionId: "ver_2",
+    title: "Supply agreement v1.pdf",
+    versionNumber: 2,
+    from: "Draft · ours",
+    to: "Side letter",
+  },
   "document.updated": {
     documentId: "doc_1",
     title: "Supply agreement.pdf",
@@ -1365,6 +1380,15 @@ describe("the sentences a reader gets", () => {
     expect(
       narrate("user.notification_preference_changed", { showRecordNamesOnDevices: true }).sentence,
     ).toBe("Nadia Counsel chose to show record names on their devices");
+  });
+
+  it("narrates a person's own reminder lead times and the return to the default", () => {
+    expect(
+      narrate("user.notification_preference_changed", { reminderOffsetDays: [3, 1] }).sentence,
+    ).toBe("Nadia Counsel set their own reminder lead times");
+    expect(
+      narrate("user.notification_preference_changed", { reminderOffsetDays: null }).sentence,
+    ).toBe("Nadia Counsel went back to the organization's reminder lead times");
   });
 
   it("narrates both kinds behind a version-kind correction", () => {

@@ -1,6 +1,6 @@
 {
-  "id": "2a1ba75a-d654-4fdb-98e8-554eeb589612",
-  "prevId": "73fc4644-2e4e-4428-93ea-9a6ec4bde053",
+  "id": "b76bc14c-d2ca-4173-809e-effe6f505a31",
+  "prevId": "7387b96b-342f-4e5e-93eb-5482db4a6f69",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -28,6 +28,24 @@
         },
         "actor_id": {
           "name": "actor_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "via_kind": {
+          "name": "via_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "via_id": {
+          "name": "via_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "via_client_name": {
+          "name": "via_client_name",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -172,6 +190,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "activity_log_via_kind_check": {
+          "name": "activity_log_via_kind_check",
+          "value": "\"activity_log\".\"via_kind\" in ('ui', 'api_key', 'oauth_client')"
+        },
         "activity_log_entity_type_check": {
           "name": "activity_log_entity_type_check",
           "value": "\"activity_log\".\"entity_type\" in ('matter', 'contract', 'document', 'request', 'user', 'entity', 'knowledge_item', 'auto_doc', 'system')"
@@ -1485,6 +1507,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "reminder_offset_days": {
+          "name": "reminder_offset_days",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "email_verified": {
           "name": "email_verified",
@@ -6784,6 +6812,141 @@
       },
       "isRLSEnabled": false
     },
+    "public.document_types": {
+      "name": "document_types",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_system_default": {
+          "name": "is_system_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "module": {
+          "name": "module",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "system_kind": {
+          "name": "system_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "document_types_module_slug_unique": {
+          "name": "document_types_module_slug_unique",
+          "columns": [
+            {
+              "expression": "module",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "document_types_module_system_kind_unique": {
+          "name": "document_types_module_system_kind_unique",
+          "columns": [
+            {
+              "expression": "module",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "system_kind",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"document_types\".\"system_kind\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "document_types_module_check": {
+          "name": "document_types_module_check",
+          "value": "\"document_types\".\"module\" in ('matter', 'contract', 'entity')"
+        },
+        "document_types_system_kind_check": {
+          "name": "document_types_system_kind_check",
+          "value": "\"document_types\".\"system_kind\" is null or \"document_types\".\"system_kind\" in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment')"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.document_versions": {
       "name": "document_versions",
       "schema": "",
@@ -6817,6 +6980,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "document_type_id": {
+          "name": "document_type_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "source": {
           "name": "source",
@@ -6976,6 +7145,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "document_versions_document_type_idx": {
+          "name": "document_versions_document_type_idx",
+          "columns": [
+            {
+              "expression": "document_type_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -6986,6 +7170,15 @@
           "columnsFrom": ["document_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "document_versions_document_type_id_document_types_id_fk": {
+          "name": "document_versions_document_type_id_document_types_id_fk",
+          "tableFrom": "document_versions",
+          "tableTo": "document_types",
+          "columnsFrom": ["document_type_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
           "onUpdate": "no action"
         },
         "document_versions_generated_from_generation_id_auto_doc_generation_origins_id_fk": {
@@ -11712,6 +11905,127 @@
         "matters_risk_check": {
           "name": "matters_risk_check",
           "value": "\"matters\".\"risk\" is null or \"matters\".\"risk\" in ('low', 'medium', 'high', 'critical')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.mcp_tool_calls": {
+      "name": "mcp_tool_calls",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "credential_id": {
+          "name": "credential_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "client_name": {
+          "name": "client_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tool": {
+          "name": "tool",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duration_ms": {
+          "name": "duration_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "mcp_tool_calls_credential_time_idx": {
+          "name": "mcp_tool_calls_credential_time_idx",
+          "columns": [
+            {
+              "expression": "credential_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mcp_tool_calls_created_at_idx": {
+          "name": "mcp_tool_calls_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "mcp_tool_calls_person_id_users_id_fk": {
+          "name": "mcp_tool_calls_person_id_users_id_fk",
+          "tableFrom": "mcp_tool_calls",
+          "tableTo": "users",
+          "columnsFrom": ["person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "mcp_tool_calls_duration_check": {
+          "name": "mcp_tool_calls_duration_check",
+          "value": "\"mcp_tool_calls\".\"duration_ms\" >= 0"
         }
       },
       "isRLSEnabled": false

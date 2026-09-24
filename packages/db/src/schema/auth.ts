@@ -12,6 +12,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -46,6 +47,9 @@ export const users = pgTable(
     // NULL = "use browser timezone", the default most users never change.
     timezone: text("timezone"),
     showRecordNamesOnDevices: boolean("show_record_names_on_devices").notNull().default(true),
+    // The person's own reminder lead times (NOT-004 addendum, 2026-09-24).
+    // NULL means they use the organization's list on org_settings.
+    reminderOffsetDays: jsonb("reminder_offset_days").$type<number[]>(),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
     // twoFactor-plugin column (nullable per its schema, like the admin

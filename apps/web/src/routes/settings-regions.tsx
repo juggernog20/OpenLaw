@@ -28,11 +28,6 @@ const MESSAGES = defineMessages({
   },
   add: { id: "settings.regions.add", defaultMessage: "Add Region" },
   addName: { id: "settings.regions.addName", defaultMessage: "New Region name" },
-  help: {
-    id: "settings.regions.help",
-    defaultMessage:
-      "Regions are listed alphabetically. Archiving a Region removes it from pickers and keeps existing references.",
-  },
   renameLabel: { id: "settings.regions.renameLabel", defaultMessage: "Rename {name}" },
   inUse: {
     id: "settings.regions.inUse",

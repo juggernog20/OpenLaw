@@ -1,6 +1,6 @@
 {
-  "id": "5226657b-00f3-407c-a124-75b4d648dc0d",
-  "prevId": "27aacbab-b116-41ef-ae37-39567797d609",
+  "id": "7387b96b-342f-4e5e-93eb-5482db4a6f69",
+  "prevId": "e2277918-6d7e-4c01-8631-33907b65a8fe",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -422,405 +422,6 @@
           "value": "\"ai_saved_keys\".\"protocol\" in ('anthropic_messages', 'openai_chat_completions', 'gemini')"
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.api_key_requests": {
-      "name": "api_key_requests",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "requester_id": {
-          "name": "requester_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "client_name": {
-          "name": "client_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "toolsets": {
-          "name": "toolsets",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "scope": {
-          "name": "scope",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "note": {
-          "name": "note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "key_id": {
-          "name": "key_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sealed_key": {
-          "name": "sealed_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decided_by": {
-          "name": "decided_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decision_note": {
-          "name": "decision_note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decided_at": {
-          "name": "decided_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revoked_at": {
-          "name": "revoked_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expiry_audited_at": {
-          "name": "expiry_audited_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "api_key_requests_owner_idx": {
-          "name": "api_key_requests_owner_idx",
-          "columns": [
-            {
-              "expression": "requester_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "api_key_requests_status_idx": {
-          "name": "api_key_requests_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "api_key_requests_key_unique": {
-          "name": "api_key_requests_key_unique",
-          "columns": [
-            {
-              "expression": "key_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "api_key_requests_requester_id_users_id_fk": {
-          "name": "api_key_requests_requester_id_users_id_fk",
-          "tableFrom": "api_key_requests",
-          "tableTo": "users",
-          "columnsFrom": ["requester_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "api_key_requests_key_id_api_keys_id_fk": {
-          "name": "api_key_requests_key_id_api_keys_id_fk",
-          "tableFrom": "api_key_requests",
-          "tableTo": "api_keys",
-          "columnsFrom": ["key_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "api_key_requests_decided_by_users_id_fk": {
-          "name": "api_key_requests_decided_by_users_id_fk",
-          "tableFrom": "api_key_requests",
-          "tableTo": "users",
-          "columnsFrom": ["decided_by"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "api_key_requests_scope_check": {
-          "name": "api_key_requests_scope_check",
-          "value": "\"api_key_requests\".\"scope\" in ('read', 'write')"
-        },
-        "api_key_requests_status_check": {
-          "name": "api_key_requests_status_check",
-          "value": "\"api_key_requests\".\"status\" in ('pending', 'approved', 'denied', 'cancelled')"
-        },
-        "api_key_requests_approval_check": {
-          "name": "api_key_requests_approval_check",
-          "value": "(\"api_key_requests\".\"status\" = 'approved') = (\"api_key_requests\".\"key_id\" is not null)"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.api_keys": {
-      "name": "api_keys",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "config_id": {
-          "name": "config_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'default'"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "start": {
-          "name": "start",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "prefix": {
-          "name": "prefix",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reference_id": {
-          "name": "reference_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "key": {
-          "name": "key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "refill_interval": {
-          "name": "refill_interval",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "refill_amount": {
-          "name": "refill_amount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_refill_at": {
-          "name": "last_refill_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "enabled": {
-          "name": "enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "rate_limit_enabled": {
-          "name": "rate_limit_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "rate_limit_time_window": {
-          "name": "rate_limit_time_window",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "rate_limit_max": {
-          "name": "rate_limit_max",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "request_count": {
-          "name": "request_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "remaining": {
-          "name": "remaining",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_request": {
-          "name": "last_request",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "permissions": {
-          "name": "permissions",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "api_keys_key_unique": {
-          "name": "api_keys_key_unique",
-          "columns": [
-            {
-              "expression": "key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "api_keys_owner_idx": {
-          "name": "api_keys_owner_idx",
-          "columns": [
-            {
-              "expression": "reference_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "api_keys_expiry_idx": {
-          "name": "api_keys_expiry_idx",
-          "columns": [
-            {
-              "expression": "expires_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "api_keys_reference_id_users_id_fk": {
-          "name": "api_keys_reference_id_users_id_fk",
-          "tableFrom": "api_keys",
-          "tableTo": "users",
-          "columnsFrom": ["reference_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.approver_group_members": {
@@ -1485,6 +1086,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "reminder_offset_days": {
+          "name": "reminder_offset_days",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         },
         "email_verified": {
           "name": "email_verified",
@@ -6784,6 +6391,141 @@
       },
       "isRLSEnabled": false
     },
+    "public.document_types": {
+      "name": "document_types",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "display_order": {
+          "name": "display_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_system_default": {
+          "name": "is_system_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "module": {
+          "name": "module",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "system_kind": {
+          "name": "system_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "document_types_module_slug_unique": {
+          "name": "document_types_module_slug_unique",
+          "columns": [
+            {
+              "expression": "module",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "document_types_module_system_kind_unique": {
+          "name": "document_types_module_system_kind_unique",
+          "columns": [
+            {
+              "expression": "module",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "system_kind",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"document_types\".\"system_kind\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "document_types_module_check": {
+          "name": "document_types_module_check",
+          "value": "\"document_types\".\"module\" in ('matter', 'contract', 'entity')"
+        },
+        "document_types_system_kind_check": {
+          "name": "document_types_system_kind_check",
+          "value": "\"document_types\".\"system_kind\" is null or \"document_types\".\"system_kind\" in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment')"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.document_versions": {
       "name": "document_versions",
       "schema": "",
@@ -6817,6 +6559,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "document_type_id": {
+          "name": "document_type_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "source": {
           "name": "source",
@@ -6976,6 +6724,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "document_versions_document_type_idx": {
+          "name": "document_versions_document_type_idx",
+          "columns": [
+            {
+              "expression": "document_type_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -6986,6 +6749,15 @@
           "columnsFrom": ["document_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "document_versions_document_type_id_document_types_id_fk": {
+          "name": "document_versions_document_type_id_document_types_id_fk",
+          "tableFrom": "document_versions",
+          "tableTo": "document_types",
+          "columnsFrom": ["document_type_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
           "onUpdate": "no action"
         },
         "document_versions_generated_from_generation_id_auto_doc_generation_origins_id_fk": {
@@ -12014,7 +11786,7 @@
       "checkConstraints": {
         "notifications_entity_type_check": {
           "name": "notifications_entity_type_check",
-          "value": "\"notifications\".\"entity_type\" in ('matter', 'contract', 'document', 'request', 'entity', 'knowledge_item', 'api_key_request')"
+          "value": "\"notifications\".\"entity_type\" in ('matter', 'contract', 'document', 'request', 'entity', 'knowledge_item')"
         },
         "notifications_reminder_pair": {
           "name": "notifications_reminder_pair",
@@ -12407,48 +12179,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "mcp_enabled": {
-          "name": "mcp_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "mcp_legal_api_keys_enabled": {
-          "name": "mcp_legal_api_keys_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "mcp_business_api_keys_enabled": {
-          "name": "mcp_business_api_keys_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "mcp_toolset_ceiling": {
-          "name": "mcp_toolset_ceiling",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
-        },
-        "mcp_read_only": {
-          "name": "mcp_read_only",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "mcp_api_key_lifetime_days": {
-          "name": "mcp_api_key_lifetime_days",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 90
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -12486,10 +12216,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "org_settings_mcp_api_key_lifetime_check": {
-          "name": "org_settings_mcp_api_key_lifetime_check",
-          "value": "\"org_settings\".\"mcp_api_key_lifetime_days\" between 1 and 365"
-        },
         "org_settings_auto_doc_acknowledgement_frequency_check": {
           "name": "org_settings_auto_doc_acknowledgement_frequency_check",
           "value": "\"org_settings\".\"auto_doc_acknowledgement_frequency\" in ('none', 'every_use', 'once_per_auto_doc', 'once')"

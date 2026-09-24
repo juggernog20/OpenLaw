@@ -213,7 +213,7 @@ export function NotificationDevices({
           <label htmlFor="device-record-names" className="text-base font-medium">
             <FormattedMessage
               id="settings.devices.recordNames"
-              defaultMessage="Show record names on devices"
+              defaultMessage="Show details in notifications"
             />
           </label>
           <Switch

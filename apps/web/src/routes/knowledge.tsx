@@ -929,7 +929,7 @@ function CreateItemDialog({
         </DialogTitle>
         {attachments.created ? (
           <div className="mt-4">
-            <CreateAttachments uploads={attachments} />
+            <CreateAttachments module={null} uploads={attachments} />
           </div>
         ) : (
           <>
@@ -992,7 +992,7 @@ function CreateItemDialog({
                   ))}
                 </select>
               </div>
-              <CreateAttachments uploads={attachments} disabled={busy} />
+              <CreateAttachments module={null} uploads={attachments} disabled={busy} />
               {error ? (
                 <p role="alert" className="text-sm text-status-danger-fg">
                   {error}

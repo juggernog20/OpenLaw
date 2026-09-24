@@ -86,11 +86,10 @@ export const orgSettings = pgTable(
      * tracked date the morning round fires, seeded `7 / 1 / day-of`.
      *
      * **One list for every tracked date** — key dates, notice deadlines,
-     * and expiries alike — and one list for the whole install. It is
-     * admin-tunable rather than fixed because nothing branches on the
-     * numbers (the configurable-over-fixed rule), and it is not per-user
-     * or per-date because that would be config sprawl for a team of ten
-     * (NOT-004's own alternatives).
+     * and expiries alike. It is admin-tunable rather than fixed because
+     * nothing branches on the numbers (the configurable-over-fixed rule).
+     * It is the organization's default: a person may set their own list
+     * on `users.reminder_offset_days` (NOT-004 addendum, 2026-09-24).
      *
      * Day-granular whole numbers, because a deadline is a day and not a
      * moment (SCHEMA.md, DES-014): the round compares civil dates, and a

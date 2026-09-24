@@ -48,7 +48,7 @@ document is the map, not the territory.
 **M38 adds device notifications on the staff app and the Portal.** Push joins In-app and Email,
 with browser enrolment, a Devices list, revocation, and a choice to hide record names. The push
 service carries only a notification ID and its bell surface; the service worker reads the item
-through the signed-in API. M36 added the share register and cap table. M34 Release follows M42.
+through the signed-in API. M36 added the share register and cap table. **M43 moves every email onto one HTML layout** after the MCP milestones. M34 Release follows M43.
 
 **M35 delivered Auto-Docs.** Legal publishes a Word template and form as one Live pair, and selected Business Users generate documents through the Portal. Generations deliver Word and PDF, create draft Contracts with their default people and assigned Legal Owner, and can be Filed to reached records. Departments and the Portal first run complete SET-011's pre-launch obligation. M33 closed the app first run. Then, for the record: **M32 added Redline compare to the Document chain.** A reader opens a stored Comparison of two Versions, reads its change model in the compare screen, and moves through the change pane. Word pairs run through the existing doc-engine sidecar and export once per pair as a Generated redline with both operands on the chain. Other pairs use extracted text and state that formatting and export are unavailable. **M31 ships AI Contract analysis.** One runtime BYO-key connector supports Anthropic Messages, OpenAI-compatible chat completions, and Gemini through presets or a custom endpoint. An executed primary Document automatically queues extraction against the seven core targets plus prompted catalog Fields; the evidence-checked writer preserves human values, marks every AI write unverified, and carries that marker onto derived deadline surfaces until a person confirms. The Contract record revalidates from the completion frame, so another open browser sees the run and its writes land without a refresh. **M30 makes the open record live.** One `GET /api/events` connection per signed-in tab carries prompts, never payloads, and Postgres `LISTEN`/`NOTIFY` fans them out across the API and the worker. The bell, an open comment thread, an open Activity feed, the Approvals & signing card, the Envelope row, and the Home Inbox count re-read their existing routes when a frame names them, so a live update passes the same reach and tier gates as a page load. The 60-second bell poll is gone. **M29 makes Home the personal state summary and completes the daily briefing.** A Member+ user lands on pending Approvals, assigned Tasks, approaching Dates, Entity Obligations, the Inbox, managed Contracts, and managed Matters. The morning email carries its six cross-module sections, and one daily bell summary opens Home. Reporting remains deferred as a destination.
 
@@ -783,6 +783,18 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - The listen stream on the event hub for change notifications
   - The `team` and `admin` Toolsets, T33 to T35 and T40; audit-log routes already enforce record-level reach
   - _Decisions:_ DD-029, TECH-035
+
+- [ ] **M43 — Email: one HTML layout for every email**
+      _Demo:_ A Legal Team Member opens an approval email on a phone and sees the org's logo and name, the
+      Contract, its status and who asked, with the button in the record card. A mention email shows the
+      comment's words and its tier. The morning briefing opens with count tiles. An Administrator turns
+      comment words off, and the next mention arrives without them.
+      _Issues:_ omnibus [#1080](https://github.com/juggernog20/OpenLaw/issues/1080), tasks #1083–#1101.
+  - The shared email layout (A2 · Console+) and the approval email on it, with a Mailpit HTML check in e2e
+  - The org logo as an inline PNG, made at upload from PNG, JPEG, WebP or SVG
+  - Every Contract, Matter, Request, briefing, Auto-Doc, account and SMTP test email on the layout
+  - Comment words in mention, comment and reply emails, read at send time, with an Administrator switch
+  - _Decisions:_ DES-093 (new), DES-051, NOT-002 and CMT-006 addenda of 2026-09-24, a TECH-011 addendum
 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.

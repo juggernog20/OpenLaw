@@ -46,6 +46,7 @@ import { autoDocs, autoDocGenerationOrigins } from "./auto-docs.js";
 import { users } from "./auth.js";
 import { contracts } from "./contracts.js";
 import { documentFolders } from "./document-folders.js";
+import { documentTypes } from "./document-types.js";
 import { entities } from "./entities.js";
 import { searchVector, uuidPk } from "./helpers.js";
 import { knowledgeItems } from "./knowledge-items.js";
@@ -301,6 +302,13 @@ export const documentVersions = pgTable(
      * read what the old one wrote. */
     fileRef: text("file_ref").notNull(),
     kind: text("kind", { enum: DOCUMENT_VERSION_KINDS }).notNull(),
+    /**
+     * DOC-015: what the team calls this round, from the owner module's
+     * list. NULL is no type. The kind above follows it: a fixed row's
+     * system kind, or `general` for a row an Administrator added. No
+     * cascade: a type in use is archived, never deleted.
+     */
+    documentTypeId: text("document_type_id").references(() => documentTypes.id),
     /** Generated output names its comparison operands or its Auto-Doc Generation. */
     source: text("source", { enum: DOCUMENT_VERSION_SOURCES }).notNull().default("uploaded"),
     /** Null on uploads and redlines; otherwise the Generation that produced Version 1. */
@@ -361,6 +369,7 @@ export const documentVersions = pgTable(
       .on(table.comparedToVersionId)
       .where(sql`${table.comparedToVersionId} IS NOT NULL`),
     index("document_versions_generation_idx").on(table.generatedFromGenerationId),
+    index("document_versions_document_type_idx").on(table.documentTypeId),
     check("document_versions_number_check", sql`${table.versionNumber} >= 1`),
     check("document_versions_byte_size_check", sql`${table.byteSize} >= 0`),
     // Exactly 64 lowercase hex characters. The column's whole value is

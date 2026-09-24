@@ -1518,7 +1518,12 @@ const REVIEW_ROWS = [
     "/settings/contracts/statuses",
   ],
   ["Entity types", "/api/v1/entity-types", "entityTypes", "/settings/entities/types"],
-  ["Officer roles", "/api/v1/officer-roles", "officerRoles", "/settings/entities/officer-roles"],
+  [
+    "Director & Officer roles",
+    "/api/v1/officer-roles",
+    "officerRoles",
+    "/settings/entities/officer-roles",
+  ],
   ["Knowledge types", "/api/v1/knowledge/types", "knowledgeTypes", "/settings/knowledge/types"],
   ["Request types", "/api/v1/request-types", "requestTypes", "/settings/intake/request-types"],
   ["Contract fields", "/api/v1/fields", "fields", "/settings/contracts/fields"],
@@ -1700,7 +1705,7 @@ describe("welcome wizard Review step (#700)", () => {
     ["Contract types", 3],
     ["Contract statuses", 1],
     ["Entity types", 0],
-    ["Officer roles", 2],
+    ["Director & Officer roles", 2],
     ["Knowledge types", 1],
     ["Request types", 3],
   ] as const;

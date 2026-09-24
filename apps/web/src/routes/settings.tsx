@@ -43,6 +43,7 @@ import {
   Globe,
   Inbox,
   KeyRound,
+  Files,
   LibraryBig,
   PanelsTopLeft,
   Landmark,
@@ -214,6 +215,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       path: "/settings/knowledge/types",
       icon: LibraryBig,
       label: defineMessage({ id: "settings.section.knowledge", defaultMessage: "Knowledge" }),
+    },
+    {
+      id: "documents",
+      path: "/settings/documents/matters",
+      icon: Files,
+      label: defineMessage({ id: "settings.section.documents", defaultMessage: "Documents" }),
     },
     {
       id: "auto-docs",

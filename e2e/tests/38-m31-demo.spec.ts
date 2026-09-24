@@ -19,7 +19,14 @@ import {
   type TestInfo,
 } from "@playwright/test";
 import { z } from "zod";
-import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs, sweepOrSay } from "./helpers.js";
+import {
+  ADMIN,
+  ensureAdminExists,
+  reportAxeViolations,
+  signInAs,
+  sweepOrSay,
+  pickDocumentType,
+} from "./helpers.js";
 import { demoContractPdf, OpenAiStub } from "./openai.js";
 
 test.setTimeout(360_000);
@@ -217,7 +224,7 @@ async function uploadDemoPdf(page: Page) {
     buffer: demoContractPdf(),
   });
   await expect(dialog.getByText(PDF_NAME)).toBeVisible();
-  await dialog.getByLabel("Kind").selectOption("executed");
+  await pickDocumentType(dialog, "executed");
   await dialog.getByLabel("Note").fill("The M31 built-stack analysis demo Contract.");
   const uploading = page.waitForResponse(
     (response) =>

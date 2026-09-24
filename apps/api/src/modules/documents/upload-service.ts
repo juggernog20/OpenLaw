@@ -12,7 +12,6 @@ import {
   matters,
   or,
   type Executor,
-  type HandSetDocumentVersionKind,
   type Transaction,
 } from "@openlaw/db";
 import {
@@ -30,7 +29,12 @@ import {
   reachedContract,
   type ReachedContract,
 } from "../../lib/contract-access.js";
-import { insertDocumentVersion, nextVersionNumber } from "../../lib/document-versions.js";
+import {
+  insertDocumentVersion,
+  nextVersionNumber,
+  resolveDocumentType,
+  type DocumentTypeChoice,
+} from "../../lib/document-versions.js";
 import { NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
 import { NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import { httpError } from "../../lib/problem.js";
@@ -284,7 +288,9 @@ export async function reachedDocument(
 export interface StoredUpload {
   filename: string;
   mimeType: string;
-  kind: HandSetDocumentVersionKind;
+  /** What the uploader called the round (DOC-015), resolved against
+   * the owner's list when the row is written. */
+  typeChoice: DocumentTypeChoice;
   note: string | null;
   /**
    * Where the file is to be filed (DOC-006, DOC-011), or null for the
@@ -300,7 +306,13 @@ export interface StoredUpload {
   byteSize: number;
   checksumSha256: string;
 }
-export function insertVersion(
+/** One row in the chain, written from what arrived. The write itself
+ * is `lib/document-versions.ts` — shared with the signing
+ * integration's executed-copy append (M15/5), because a round filed
+ * by a person and a round filed by the integration are the same row
+ * (DOC-001). This is only the upload's half of the translation. Answers
+ * the resolved type (DOC-015) so the caller can name the kind it wrote. */
+export async function insertVersion(
   tx: Transaction,
   row: Readonly<{
     documentId: string;
@@ -310,12 +322,14 @@ export function insertVersion(
     by: AuthenticatedUser;
   }>,
 ) {
-  return insertDocumentVersion(tx, {
+  const typed = await resolveDocumentType(tx, row.documentId, row.file.typeChoice);
+  await insertDocumentVersion(tx, {
     documentId: row.documentId,
     versionId: row.versionId,
     versionNumber: row.versionNumber,
     fileRef: row.file.fileRef,
-    kind: row.file.kind,
+    kind: typed.kind,
+    documentTypeId: typed.documentTypeId,
     source: "uploaded",
     comparedFromVersionId: null,
     comparedToVersionId: null,
@@ -326,6 +340,7 @@ export function insertVersion(
     checksumSha256: row.file.checksumSha256,
     createdBy: row.by.id,
   });
+  return typed;
 }
 export function assertOpen<T extends ReachedContract>(contract: T | null): asserts contract is T {
   if (!contract) throw httpError(404, NO_CONTRACT);
@@ -712,7 +727,7 @@ export async function completeVersionUpload(
 
     const versionNumber = await nextVersionNumber(tx, documentId);
 
-    await insertVersion(tx, { documentId, versionId, versionNumber, file, by: user });
+    const typed = await insertVersion(tx, { documentId, versionId, versionNumber, file, by: user });
     // The document's own row is touched so that "when did this
     // document last change" answers with the new round rather than
     // with the day it was created.
@@ -739,7 +754,7 @@ export async function completeVersionUpload(
           versionId,
           title: locked.title,
           versionNumber,
-          kind: file.kind,
+          kind: typed.kind,
           ...(user.role === "business_user" ? { actorRole: "business_user" as const } : {}),
         },
       });

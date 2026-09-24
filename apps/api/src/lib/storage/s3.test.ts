@@ -29,13 +29,11 @@ import { S3_DRIVER, createS3Storage } from "./s3.js";
  * Pinned, like every other image the suites run. A floating tag makes a
  * green run today and an unexplained red one tomorrow.
  *
- * Chainguard's build, by digest. MinIO withdrew its public images from
- * Docker Hub and Quay on or before 2026-09-24: an anonymous manifest
- * GET for `minio/minio` answers 401 on both registries, for every tag,
- * and CI went red pulling the old pin. Chainguard publishes a public
- * MinIO build (the `minio` binary as the entrypoint, so `MinioContainer`
- * drives it unchanged), but only under `latest`, so the pin is the
- * digest of the OCI index fetched on 2026-09-24.
+ * Chainguard, pinned by digest. MinIO no longer serves its images: Docker
+ * Hub denies every `minio/minio` tag ("requested access to the resource is
+ * denied") and, since 2026-09-24, Quay refuses `quay.io/minio/minio` too
+ * ("unauthorized"). Chainguard's free image is only tagged `latest`, so the
+ * digest is the pin. This digest is MinIO RELEASE.2026-09-22T19-25-18Z.
  *
  * The image runs as a non-root user and declares no volume, so `/data`
  * is a tmpfs here, as the old image's `VOLUME /data` was: MinIO renames
@@ -43,7 +41,7 @@ import { S3_DRIVER, createS3Storage } from "./s3.js";
  * filesystem refuses that with "rename across devices".
  */
 const MINIO_IMAGE =
-  "cgr.dev/chainguard/minio@sha256:bd014394a80898e68c149f2311fdf8d5a2c2f3bb2c33b9327ae6d02b4b065ae1";
+  "cgr.dev/chainguard/minio@sha256:7abc41a42aa78685a2fa48a9088e539625114ac4fc236ce5d58e92ca12f6b960";
 
 /**
  * Pulling and booting a container is slower than making a directory, and

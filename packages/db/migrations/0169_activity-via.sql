@@ -7,7 +7,7 @@
 -- The preamble is TECH-006's #390 rule: four statements that must land
 -- together get a transaction of their own on every upgrade path.
 --
--- The CHECK is validated in place, as 0080, 0089, 0099 and 0164 settled
+-- The CHECK is validated in place, as 0080, 0089, 0099 and 0167 settled
 -- for indexes: TECH-005 runs migrations on container start, before the
 -- API accepts a request, so nothing writes while the scan runs and a
 -- NOT VALID constraint with a later VALIDATE would buy nothing. It would
