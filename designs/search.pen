@@ -1226,7 +1226,7 @@
               "strokeWidth": {
                 "top": 1
               },
-              "gap": 8,
+              "gap": 12,
               "padding": [
                 16,
                 24
@@ -1267,7 +1267,7 @@
                   "type": "frame",
                   "id": "Wkb6V",
                   "name": "Save and run",
-                  "gap": 8,
+                  "gap": 12,
                   "alignItems": "center",
                   "children": [
                     {
@@ -1326,7 +1326,7 @@
                           "content": "Search",
                           "fontFamily": "$font",
                           "fontSize": "$text-base",
-                          "fontWeight": "500"
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -4244,7 +4244,7 @@
               "strokeWidth": {
                 "top": 1
               },
-              "gap": 8,
+              "gap": 12,
               "padding": [
                 16,
                 24
@@ -4285,7 +4285,7 @@
                   "type": "frame",
                   "id": "hc8wo",
                   "name": "Save and run",
-                  "gap": 8,
+                  "gap": 12,
                   "alignItems": "center",
                   "children": [
                     {
@@ -4342,7 +4342,7 @@
                           "content": "Search",
                           "fontFamily": "$font",
                           "fontSize": "$text-base",
-                          "fontWeight": "500"
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -7260,7 +7260,7 @@
               "strokeWidth": {
                 "top": 1
               },
-              "gap": 8,
+              "gap": 12,
               "padding": [
                 16,
                 24
@@ -7301,7 +7301,7 @@
                   "type": "frame",
                   "id": "Mtwhj",
                   "name": "Save and run",
-                  "gap": 8,
+                  "gap": 12,
                   "alignItems": "center",
                   "children": [
                     {
@@ -7358,7 +7358,7 @@
                           "content": "Search",
                           "fontFamily": "$font",
                           "fontSize": "$text-base",
-                          "fontWeight": "500"
+                          "fontWeight": "600"
                         }
                       ]
                     }
@@ -14120,7 +14120,7 @@
           "strokeWidth": {
             "top": 1
           },
-          "gap": 8,
+          "gap": 12,
           "padding": [
             16,
             24
@@ -14161,7 +14161,7 @@
               "type": "frame",
               "id": "x7UTGs",
               "name": "Save and run",
-              "gap": 8,
+              "gap": 12,
               "alignItems": "center",
               "children": [
                 {
@@ -14218,7 +14218,7 @@
                       "content": "Search",
                       "fontFamily": "$font",
                       "fontSize": "$text-base",
-                      "fontWeight": "500"
+                      "fontWeight": "600"
                     }
                   ]
                 }
