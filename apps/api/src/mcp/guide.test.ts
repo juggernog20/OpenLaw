@@ -2,6 +2,7 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
+  contractTypes,
   matterTypes,
   requestTypes,
   fields,
@@ -346,5 +347,32 @@ it("pages long articles within the byte budget and rejects malformed cursors", a
     const result = await legal.callTool({ name: "openlaw_docs_search", arguments: { cursor } });
     expect(result.isError).toBe(true);
     expect(JSON.stringify(result.content)).toContain("invalid_arguments");
+  }
+});
+
+it("keeps vocabulary readable when one Request type has an unavailable destination Form", async () => {
+  await h.db
+    .update(contractTypes)
+    .set({ archivedAt: new Date() })
+    .where(eq(contractTypes.id, typeId));
+  try {
+    for (const client of clients) {
+      const result = await call(client, "openlaw_vocabulary");
+      expect(result.requestTypes.find((t) => t.id === requestId)).toMatchObject({
+        targetModule: "contract",
+        targetTypeId: typeId,
+        fields: [],
+        formAvailable: false,
+      });
+      expect(result.matterTypes.length).toBeGreaterThan(0);
+      const form = await client.callTool({
+        name: "openlaw_form_get",
+        arguments: { kind: "request", typeId: requestId },
+      });
+      expect(form.isError).toBe(true);
+      expect(JSON.stringify(form.content)).toContain("form_unavailable");
+    }
+  } finally {
+    await h.db.update(contractTypes).set({ archivedAt: null }).where(eq(contractTypes.id, typeId));
   }
 });

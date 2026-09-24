@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * DD-029 Guide Tools. List cursors index the flattened collection order;
+ * article cursors index plain text. The TECH-035 byte budget leaves room for
+ * the text copy of each result. Under DD-013, Business Users read Request
+ * Forms; Contract and Matter creation Forms require a Legal User. Auto-Doc
+ * Forms belong to #1060.
+ */
 import { z } from "zod";
 import {
   and,
@@ -85,7 +93,11 @@ export const VocabularyOutput = z.object({
   contractTypes: z.array(namedType.extend({ isDefault: z.boolean() })),
   matterTypes: z.array(namedType.extend({ isDefault: z.boolean() })),
   requestTypes: z.array(
-    namedType.extend({ targetModule: z.string(), targetTypeId: z.string().nullable() }),
+    namedType.extend({
+      targetModule: z.string(),
+      targetTypeId: z.string().nullable(),
+      formAvailable: z.boolean(),
+    }),
   ),
   contractStatuses: z.array(named.extend({ stage: z.string() })),
   matterStatuses: z.array(named.extend({ category: z.string() })),
@@ -212,7 +224,7 @@ export const guideTools: readonly ToolDefinition[] = [
     name: "openlaw_vocabulary",
     title: "Read OpenLaw vocabulary",
     description:
-      "Read live configured Contract types, Matter types, Request types, their Fields, statuses, Departments and Regions. Business Users see only Portal-visible Fields. Results page across the named collections in their listed order; continue with nextCursor until null.",
+      "Read live configured Contract types, Matter types, Request types, their Fields, statuses, Departments and Regions. Business Users see only Portal-visible Fields. Request types with unavailable Forms have formAvailable false. Results page across the named collections in their listed order; continue with nextCursor until null.",
     inputSchema: vocabularyInput,
     outputSchema: VocabularyOutput,
     run: async (input, { db, user }) => {
@@ -271,13 +283,25 @@ export const guideTools: readonly ToolDefinition[] = [
         ),
         Promise.all(
           requests.map(async (t) => {
-            const intake = await readIntakeForm(db, t.id);
-            return {
-              ...named.parse(t),
-              targetModule: intake.module,
-              targetTypeId: intake.typeId,
-              fields: intake.fields,
-            };
+            try {
+              const intake = await readIntakeForm(db, t.id);
+              return {
+                ...named.parse(t),
+                targetModule: intake.module,
+                targetTypeId: intake.typeId,
+                fields: intake.fields,
+                formAvailable: true,
+              };
+            } catch (error) {
+              if (!(error instanceof HttpError) || error.statusCode >= 500) throw error;
+              return {
+                ...named.parse(t),
+                targetModule: t.targetModule,
+                targetTypeId: t.targetContractTypeId ?? t.targetMatterTypeId,
+                fields: [],
+                formAvailable: false,
+              };
+            }
           }),
         ),
       ]);

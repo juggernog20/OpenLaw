@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** TECH-026: write the API copy of the web reader bundle at build time. */
+
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { compileWorkspace, repository } from "./build.mjs";
