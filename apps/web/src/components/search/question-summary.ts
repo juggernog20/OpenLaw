@@ -4,10 +4,17 @@
  * choice, and relative-date labels as the results-page condition chips. */
 
 import type { SearchQuestion } from "@openlaw/shared";
-import { defineMessages, useIntl } from "react-intl";
-import { conditionLabel, useConditionDefinitions } from "./condition-definitions";
+import { defineMessages, useIntl, type MessageDescriptor } from "react-intl";
+import { conditionParts, useConditionDefinitions } from "./condition-definitions";
 import { SCOPE_LABELS, WORD_LABELS } from "./search-question";
 import { SORT_LABELS } from "./search-sort";
+
+// S5 reads a condition as "Matter Manager is Me": the kind is already the
+// question's kinds part, so the chip's kind prefix would only repeat it.
+const CONDITION_LABELS: Record<"absolute" | "relative", MessageDescriptor> = defineMessages({
+  absolute: { id: "search.summary.condition", defaultMessage: "{property} {operator} {value}" },
+  relative: { id: "search.summary.relativeCondition", defaultMessage: "{property} {operator}" },
+});
 
 const KIND_LABELS = defineMessages({
   contract: { id: "search.summary.contract", defaultMessage: "Contracts" },
@@ -47,17 +54,21 @@ export function useQuestionSummaries(questions: SearchQuestion[]): string[] {
           .join(" + "),
       );
     }
-    const conditions = question.conditions.map((condition) =>
-      conditionLabel(intl, condition, definitions),
-    );
+    // Match all is the default and reads as S5's plain "·" list; match any
+    // spells its joiner so two questions that differ only there look different.
+    const conditions = question.conditions.map((condition) => {
+      const { relative, ...values } = conditionParts(intl, condition, definitions);
+      return intl.formatMessage(
+        relative ? CONDITION_LABELS.relative : CONDITION_LABELS.absolute,
+        values,
+      );
+    });
     if (conditions.length)
       parts.push(
         conditions.join(
-          ` ${
-            question.match === "any"
-              ? intl.formatMessage({ id: "search.summary.or", defaultMessage: "OR" })
-              : intl.formatMessage({ id: "search.summary.and", defaultMessage: "AND" })
-          } `,
+          question.match === "any"
+            ? ` ${intl.formatMessage({ id: "search.summary.or", defaultMessage: "OR" })} `
+            : " · ",
         ),
       );
     if (question.sort !== "relevance")

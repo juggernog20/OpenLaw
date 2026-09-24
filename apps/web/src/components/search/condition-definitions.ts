@@ -276,11 +276,14 @@ const CHIP_LABELS: Record<"absolute" | "relative", MessageDescriptor> = defineMe
   relative: { id: "search.condition.relativeChip", defaultMessage: "{kind} {property} {operator}" },
 });
 
-export function conditionLabel(
+/** The words a condition is read as: the chips on the results page say all
+ * four, the recent-search summaries leave the kind to the question's own
+ * kinds part. `relative` marks operators whose value is not shown. */
+export function conditionParts(
   intl: IntlShape,
   condition: Condition,
   { choices, fields }: ReturnType<typeof useConditionDefinitions>,
-): string {
+): { relative: boolean; kind: string; property: string; operator: string; value: string } {
   const options = choices(condition);
   const value = Array.isArray(condition.value)
     ? condition.value
@@ -291,9 +294,8 @@ export function conditionLabel(
         ? intl.formatMessage({ id: "search.condition.yes", defaultMessage: "Yes" })
         : intl.formatMessage({ id: "search.condition.no", defaultMessage: "No" })
       : String(condition.value);
-  const relative =
-    isRelativeDateOperator(condition.operator) || isValuelessOperator(condition.operator);
-  return intl.formatMessage(relative ? CHIP_LABELS.relative : CHIP_LABELS.absolute, {
+  return {
+    relative: isRelativeDateOperator(condition.operator) || isValuelessOperator(condition.operator),
     kind: searchKindLabel(intl, condition.kind),
     property:
       fields.properties.find(
@@ -305,5 +307,14 @@ export function conditionLabel(
       typeof condition.value === "number" ? condition.value : undefined,
     ),
     value,
-  });
+  };
+}
+
+export function conditionLabel(
+  intl: IntlShape,
+  condition: Condition,
+  definitions: ReturnType<typeof useConditionDefinitions>,
+): string {
+  const { relative, ...values } = conditionParts(intl, condition, definitions);
+  return intl.formatMessage(relative ? CHIP_LABELS.relative : CHIP_LABELS.absolute, values);
 }

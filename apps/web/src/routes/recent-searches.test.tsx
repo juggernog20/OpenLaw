@@ -120,9 +120,9 @@ describe("recent searches", () => {
     await user.click(await screen.findByRole("button", { name: "Advanced search" }));
     const recent = screen.getByRole("region", { name: "Recent searches" });
     const entry = within(recent).getAllByRole("button")[0]!;
-    expect(entry).toHaveTextContent("renewal");
-    expect(entry).toHaveTextContent("notice period");
-    expect(entry).toHaveTextContent("90 days");
+    expect(entry.textContent).toBe(
+      "renewal · This exact phrase: notice period · Any of these words: extend renew · None of these words: draft · Contracts + Documents · Record text + Document contents · Expiry date in the next 90 days · Sort: Expiry soonest",
+    );
     await user.click(entry);
     expect(screen.getByLabelText("This exact phrase")).toHaveValue("notice period");
     expect(router.state.location.pathname).toBe("/");
@@ -243,6 +243,32 @@ describe("recent searches", () => {
     expect(screen.queryByRole("group", { name: "Recent" })).not.toBeInTheDocument();
     await user.clear(input);
     expect(await screen.findByRole("group", { name: "Recent" })).toBeVisible();
+  });
+
+  it("summarises conditions without the kind prefix and spells the joiner only for match any", async () => {
+    const conditions: SearchQuestion["conditions"] = [
+      { kind: "matter", property: "opened", operator: "this_month" },
+      { kind: "matter", property: "deadline", operator: "in_next_days", value: 30 },
+    ];
+    localStorage.setItem(
+      KEY,
+      JSON.stringify([
+        { ...simpleSearchQuestion("", ["matter"]), conditions, match: "any" },
+        { ...simpleSearchQuestion("", ["matter"]), conditions },
+      ]),
+    );
+    stub();
+    renderAt("/");
+    await userEvent.setup().click(await screen.findByRole("button", { name: "Advanced search" }));
+    const recent = screen.getByRole("region", { name: "Recent searches" });
+    expect(
+      within(recent)
+        .getAllByRole("button")
+        .map((entry) => entry.textContent),
+    ).toEqual([
+      "Matters · Opened date this month OR Next deadline in the next 30 days",
+      "Matters · Opened date this month · Next deadline in the next 30 days",
+    ]);
   });
 
   it("ignores corrupt storage and keeps search usable when storage is unavailable", async () => {

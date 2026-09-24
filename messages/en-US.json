@@ -8729,8 +8729,8 @@
   "search.sort.title": {
     "defaultMessage": "Title"
   },
-  "search.summary.and": {
-    "defaultMessage": "AND"
+  "search.summary.condition": {
+    "defaultMessage": "{property} {operator} {value}"
   },
   "search.summary.contract": {
     "defaultMessage": "Contracts"
@@ -8752,6 +8752,9 @@
   },
   "search.summary.or": {
     "defaultMessage": "OR"
+  },
+  "search.summary.relativeCondition": {
+    "defaultMessage": "{property} {operator}"
   },
   "search.summary.request": {
     "defaultMessage": "Requests"
