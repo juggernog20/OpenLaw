@@ -3430,6 +3430,7 @@ Point 3 said the staff pane draws the staff groups and that the portal would ren
 - **Status:** Accepted; normalization points 1 and 2 superseded by DES-093; point 3 amended for HTML only
 - **Date:** 2026-08-18
 - **Amended:** 2026-08-18 — the digest's anatomy and its delivery rules moved to **NOT-006**. This record keeps the register: the voice every message is written in, where that copy lives, and how it prints a date.
+- **Amended:** 2026-09-24 — **DES-093** gives every email one HTML layout. Normalization points 1 and 2 are superseded, and point 3 is amended for the HTML part only. The register is unchanged.
 
 ### Context
 
