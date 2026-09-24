@@ -12,6 +12,7 @@ let ownerId: string;
 const credentialIds = new WeakMap<Client, string>();
 const clients: Client[] = [];
 const guideNames = toolRegister.filter((t) => t.toolset === "guide").map((t) => t.name);
+const matterNames = toolRegister.filter((t) => t.toolset === "matters").map((t) => t.name);
 const contractReadNames = toolRegister
   .filter((t) => t.toolset === "contracts" && t.kind === "read")
   .map((t) => t.name);
@@ -115,7 +116,7 @@ it.each([false, true])(
   "filters tools/list and refuses calls outside the Toolsets or read-only scope, modern=%s",
   async (modern) => {
     const narrow = await connect(["matters"], "write", modern);
-    expect(await names(narrow)).toEqual(guideNames);
+    expect(await names(narrow)).toEqual([...guideNames, ...matterNames]);
     await refusal(narrow, read.name, "tool_outside_grant");
     const reader = await connect(["contracts"], "read", modern);
     expect(await names(reader)).toEqual([

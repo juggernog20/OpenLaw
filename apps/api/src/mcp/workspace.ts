@@ -55,6 +55,18 @@ export const readTool = {
     idempotentHint: true,
   },
 } as const;
+/** A Legal User mutation. DD-029 keeps every write off the Portal. */
+export const writeTool = {
+  kind: "write",
+  legalUser: "on",
+  businessUser: "off",
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    openWorldHint: false,
+    idempotentHint: false,
+  },
+} as const;
 const searchInput = z
   .object({
     query: z.string().trim().min(1).max(200),
