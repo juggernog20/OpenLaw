@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
+  apiKeyRequests,
   autoDocGenerations,
   autoDocGenerationOrigins,
   activityLog,
@@ -27,6 +28,7 @@ let legal: Client;
 let business: Client;
 let readOnly: Client;
 const clients: Client[] = [];
+const credentialIds = new Map<Client, string>();
 const post = (path: string, payload: Record<string, unknown>, cookies = admin) =>
   h.app.inject({ method: "POST", url: `/api/v1${path}`, payload, cookies });
 const patch = (id: string, payload: Record<string, unknown>) =>
@@ -67,6 +69,11 @@ beforeAll(async () => {
         cookies,
       });
       const client = new Client({ name: "Auto-Docs test", version: "1" });
+      const [credential] = await h.db
+        .select()
+        .from(apiKeyRequests)
+        .where(eq(apiKeyRequests.id, asked.json().id));
+      credentialIds.set(client, credential!.keyId!);
       clients.push(client);
       await client.connect(
         new StreamableHTTPClientTransport(endpoint, {
@@ -310,6 +317,12 @@ it("uses the UI form, validates answers and the pair, and produces the same outp
         ),
       );
     expect(activity!.payload.generationId).toBe(tool.id);
+    expect(activity).toMatchObject({
+      viaKind: "api_key",
+      viaId: credentialIds.get(client),
+      viaClientName: "Auto-Docs test",
+      visibility: "legal_only",
+    });
   }
 });
 it("uses generationDefinition for targeted Entity fields and creates the same Contract as the Portal", async () => {

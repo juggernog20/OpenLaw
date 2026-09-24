@@ -377,3 +377,19 @@ it("keeps vocabulary readable when one Request type has an unavailable destinati
     await h.db.update(contractTypes).set({ archivedAt: null }).where(eq(contractTypes.id, typeId));
   }
 });
+
+it.each(["configure-mcp", "connect-headless-client"])(
+  "serves %s through Guide with the same article as Help",
+  async (id) => {
+    const article = compileWorkspace({ development: true }).bundle.articles.find(
+      (a) => a.id === id,
+    );
+    expect(article).toBeDefined();
+    for (const client of [legal, business]) {
+      const found = await call(client, "openlaw_docs_search", { query: article!.title });
+      expect(found.articles.map((a) => a.id)).toContain(id);
+      const read = await call(client, "openlaw_docs_read", { id });
+      expect(read.text).toBe(article!.text);
+    }
+  },
+);

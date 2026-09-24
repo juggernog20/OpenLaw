@@ -115,6 +115,10 @@ it("collects an approved key once, copies it and confirms revocation", async () 
   renderAt("/settings/api-keys");
   const ready = await screen.findByRole("dialog", { name: "Your key is ready" });
   expect(within(ready).getByText(/will not show/)).toBeInTheDocument();
+  expect(within(ready).getByRole("link", { name: "Connect a headless Client" })).toHaveAttribute(
+    "href",
+    "/documentation/connect-headless-client",
+  );
   await user.click(within(ready).getByRole("button", { name: "Copy" }));
   expect(await navigator.clipboard.readText()).toBe("ol_once_only");
   await user.click(within(ready).getByRole("button", { name: "Done" }));

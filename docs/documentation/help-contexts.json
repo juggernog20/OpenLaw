@@ -344,6 +344,24 @@
       "contexts": ["settings.advanced"],
       "surface": "staff",
       "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/mcp"],
+      "contexts": ["settings.mcp"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/settings/api-keys"],
+      "contexts": ["settings.api-keys"],
+      "surface": "staff",
+      "pilotEntry": false
+    },
+    {
+      "routes": ["/portal/settings/api-keys"],
+      "contexts": ["settings.api-keys"],
+      "surface": "portal",
+      "pilotEntry": false
     }
   ]
 }

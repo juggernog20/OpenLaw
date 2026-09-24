@@ -597,7 +597,7 @@ export function ApiKeyReadyDialog({ ready, onClose }: { ready: KeyRow; onClose: 
                 id="apiKeys.header"
                 defaultMessage="Send this key in the x-api-key header."
               />{" "}
-              <a href="/help/reference#connect-a-headless-client" className="text-link underline">
+              <a href="/documentation/connect-headless-client" className="text-link underline">
                 <FormattedMessage id="apiKeys.guide" defaultMessage="Connect a headless Client" />
               </a>
             </p>
