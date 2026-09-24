@@ -106,11 +106,17 @@ export async function readAssignedTasks(
     cursor,
     dueThrough,
     includeCompleted = false,
+    assigneeId = user.id,
+    dueWithinDays,
+    overdue = false,
   }: {
     limit: number;
     cursor?: string;
     dueThrough?: string;
     includeCompleted?: boolean;
+    assigneeId?: string;
+    dueWithinDays?: number;
+    overdue?: boolean;
   },
 ): Promise<z.infer<typeof AssignedTasksPageSchema>> {
   const today = dueThrough ? sql`${dueThrough}::date` : sql`current_date`;
@@ -138,9 +144,15 @@ export async function readAssignedTasks(
       inner join ${contracts} on ${contracts.id} = ${contractTasks.contractId}
       inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
       where ${and(
-        eq(contractTasks.assigneeId, user.id),
+        eq(contractTasks.assigneeId, assigneeId),
         includeCompleted ? undefined : eq(contractTasks.isDone, false),
         dueThrough ? lte(contractTasks.dueDate, dueThrough) : undefined,
+        dueWithinDays !== undefined
+          ? sql`${contractTasks.dueDate} <= current_date + ${dueWithinDays}::integer`
+          : undefined,
+        overdue
+          ? sql`not ${contractTasks.isDone} and ${contractTasks.dueDate} < current_date`
+          : undefined,
         isNull(contracts.archivedAt),
         ne(contractStatuses.stage, "ended"),
         contractTeamScope(db, user),
@@ -163,9 +175,15 @@ export async function readAssignedTasks(
       inner join ${matters} on ${matters.id} = ${matterTasks.matterId}
       inner join ${matterStatuses} on ${matterStatuses.id} = ${matters.statusId}
       where ${and(
-        eq(matterTasks.assigneeId, user.id),
+        eq(matterTasks.assigneeId, assigneeId),
         includeCompleted ? undefined : eq(matterTasks.isDone, false),
         dueThrough ? lte(matterTasks.dueDate, dueThrough) : undefined,
+        dueWithinDays !== undefined
+          ? sql`${matterTasks.dueDate} <= current_date + ${dueWithinDays}::integer`
+          : undefined,
+        overdue
+          ? sql`not ${matterTasks.isDone} and ${matterTasks.dueDate} < current_date`
+          : undefined,
         isNull(matters.archivedAt),
         eq(matterStatuses.category, "open"),
         matterTeamScope(db, user),

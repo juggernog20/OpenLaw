@@ -389,3 +389,17 @@ over MC2. Both frames draw the rail with MCP after Integrations and before Advan
 after Notifications under Personal. Every settings frame in this file still draws the old rail,
 so the rail redraw already owed by the ST7 amendments now also owes those two entries. DES-092
 holds the drawing rules; SET-014 holds the contents and their order.
+
+## Amendment (2026-09-24, M40/16, #1063) — the MCP panes shipped
+
+| Frame | Node ID | Screen              | Ships in |
+| ----- | ------- | ------------------- | -------- |
+| MC1   | `h6Rm2` | Organization · MCP  | M40 ✓    |
+| MC2   | `NLZJR` | Personal · API keys | M40 ✓    |
+
+Both panes are live, with MC3's request dialog and MC4's once-shown key dialog.
+Organization → MCP sits after Integrations and before Advanced. Personal → API keys
+sits after Notifications. Business Users use the same key controls in Portal Settings.
+M40 ships API keys, the ceiling, Read-only, lifetime, request decisions and revocation.
+The frames' OAuth Clients and Allowed Clients controls remain M41 work. The rail redraw
+noted above remains drawing debt; these ticks record the shipped panes.

@@ -12,8 +12,9 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
-type Section = "instance" | "uploads" | "storage" | "processing";
+type Section = "instance" | "uploads" | "storage" | "processing" | "mcp";
 export const advancedTitles = defineMessages({
+  mcp: { id: "settings.advanced.mcp", defaultMessage: "MCP rate limit" },
   instance: { id: "settings.advanced.instance", defaultMessage: "Instance address" },
   uploads: { id: "settings.advanced.uploads", defaultMessage: "File uploads" },
   storage: { id: "settings.advanced.storage", defaultMessage: "Document storage" },
@@ -21,6 +22,10 @@ export const advancedTitles = defineMessages({
   status: { id: "settings.advanced.status", defaultMessage: "System status" },
 });
 const labels = defineMessages({
+  MCP_RATE_LIMIT_PER_HOUR: {
+    id: "settings.advanced.mcpRate",
+    defaultMessage: "Calls per hour per credential",
+  },
   BASE_URL: { id: "settings.advanced.baseUrl", defaultMessage: "Application address" },
   MAX_UPLOAD_MB: { id: "settings.advanced.uploadLimit", defaultMessage: "Maximum file size (MiB)" },
   STORAGE_DRIVER: { id: "settings.advanced.driver", defaultMessage: "Store new documents in" },
@@ -66,6 +71,10 @@ const driverOptions = defineMessages({
   "azure-blob": { id: "settings.advanced.driver.azureBlob", defaultMessage: "Azure Blob Storage" },
 });
 const descriptions = defineMessages({
+  mcp: {
+    id: "settings.advanced.mcpHelp",
+    defaultMessage: "Configure the MCP calls per hour per credential.",
+  },
   instance: {
     id: "settings.advanced.instanceHelp",
     defaultMessage:
@@ -287,7 +296,11 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                     <Input
                       id={id}
                       type={
-                        field.secret ? "password" : /(_MS|_MB)$/.test(field.key) ? "number" : "text"
+                        field.secret
+                          ? "password"
+                          : /(_MS|_MB|_PER_HOUR)$/.test(field.key)
+                            ? "number"
+                            : "text"
                       }
                       min={1}
                       step={1}
@@ -295,6 +308,7 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                       required={[
                         "BASE_URL",
                         "MAX_UPLOAD_MB",
+                        "MCP_RATE_LIMIT_PER_HOUR",
                         "DOC_ENGINE_URL",
                         "DOC_ENGINE_TIMEOUT_MS",
                         "DOC_ENGINE_COMPARE_TIMEOUT_MS",

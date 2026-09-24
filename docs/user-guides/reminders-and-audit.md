@@ -34,6 +34,16 @@ The Audit log includes configuration events and recorded record-level activity, 
 
 Select **Export CSV** to download the matching entries. Treat the file as a copy of the information available in this Audit log view and share it only with the intended recipient. Changing filters or leaving the app does not remove a downloaded file.
 
+## Read Tool calls
+
+1. In **Settings**, open **Advanced**, then **Audit log**, then the **Tool calls** tab.
+2. Read the time, the person, the Client, the Tool, the outcome, and the duration of each call. **Pending** means the call has not finished.
+3. Use **From** and **To** to narrow the date range. Select **Load more** for older calls, or **Clear filters** to start again.
+
+The Tool calls tab lists every call a Client made through MCP, as recorded in the MCP ledger. It names the Tool and the outcome and never the records the Tool returned; a change a Tool made appears on the Activity tab and in the record's Activity feed, attributed to the person via the Client. **Settings → Organization → MCP** opens this tab filtered to the last 24 hours.
+
+Select **Export CSV** to download the matching calls. Each export is itself recorded on the Activity tab as an Administrator-only event.
+
 ## If an entry is missing
 
 Clear the filters, expand the dates, and check whether another person made the change. If the change is about a Confidential record, check whether you are in its audience. Search is not a search of all Contract, Matter, Document, or Knowledge content. A read, failed attempt, or email delivery need not have the same kind of audit entry as a successful configuration change. If the log reports that it could not be read, change a filter to retry. Record the action and approximate time when asking your operator to investigate.

@@ -70,6 +70,7 @@ export {
  * is re-exported here because `@openlaw/shared` has one entry point.
  */
 export type {
+  ActivityVia,
   ActivityAction,
   ActivityPayloadMap,
   ChangedFields,
@@ -661,3 +662,5 @@ export {
   pinnedFormRows,
   type FormModule,
 } from "./form-builtins.js";
+
+export { API_KEY_PROBLEMS, MCP_TOOLSETS, type McpToolset } from "./mcp.js";

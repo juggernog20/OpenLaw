@@ -173,6 +173,39 @@ interface Arm {
  * it cannot see.
  */
 const ARMS: Readonly<Record<string, Arm>> = {
+  "api_key.requested": {
+    icon: Stamp,
+    generic: defineMessage({
+      id: "notifications.apiKey.requested.generic",
+      defaultMessage: "An API key request needs your approval",
+    }),
+    message: defineMessage({
+      id: "notifications.apiKeyRequested",
+      defaultMessage: "{requester} requested an API key for {client}",
+    }),
+  },
+  "api_key.approved": {
+    icon: Stamp,
+    generic: defineMessage({
+      id: "notifications.apiKey.approved.generic",
+      defaultMessage: "Your API key request was approved",
+    }),
+    message: defineMessage({
+      id: "notifications.apiKeyApproved",
+      defaultMessage: "Your API key request was approved. Open API keys to copy your key.",
+    }),
+  },
+  "api_key.denied": {
+    icon: Stamp,
+    generic: defineMessage({
+      id: "notifications.apiKey.denied.generic",
+      defaultMessage: "Your API key request was denied",
+    }),
+    message: defineMessage({
+      id: "notifications.apiKeyDenied",
+      defaultMessage: "Your API key request was denied. Open API keys to read the note.",
+    }),
+  },
   // Group 1 — done *to* you. Every sentence here says "you", because
   // that is what puts the event in this group (NOT-002).
   "approval.requested": {
@@ -481,7 +514,8 @@ const ARMS: Readonly<Record<string, Arm>> = {
     icon: Inbox,
     message: defineMessage({
       id: "notifications.request.created",
-      defaultMessage: "Legal has received your request {request}",
+      defaultMessage:
+        "{hasVia, select, yes {{actor} submitted your request {request} to Legal} other {Legal has received your request {request}}}",
     }),
   },
   // Names the new status in the requester's own words (the NOT-005
@@ -641,6 +675,12 @@ function recordName(intl: IntlShape, item: BellItem): string {
  * written for, and the reader's role does not come into it.
  */
 function hrefFor(item: BellItem, arm: Arm | undefined, surface: "staff" | "portal"): string | null {
+  if (item.entityType === "api_key_request")
+    return item.eventType === "api_key.requested"
+      ? "/settings/mcp"
+      : surface === "portal"
+        ? "/portal/settings/api-keys"
+        : "/settings/api-keys";
   if (
     surface === "portal" &&
     item.eventType === "approval.requested" &&
@@ -732,7 +772,18 @@ export function narrateNotification(
       href,
     };
   }
-  const actor = text(item.payload, "actorName");
+  const actorName = text(item.payload, "actorName");
+  // The Client the actor acted through (DD-017's via). A browser act
+  // carries no via at all, and the activity feed reads `ui` as none.
+  const viaKind = text(item.payload, "viaKind");
+  const viaClient =
+    actorName && viaKind && viaKind !== "ui" ? text(item.payload, "viaClientName") : null;
+  const actor = viaClient
+    ? intl.formatMessage(
+        { id: "notifications.actor.via", defaultMessage: "{actor}, via {client}," },
+        { actor: actorName, client: viaClient },
+      )
+    : actorName;
   const status = newStatus(intl, item);
   return {
     icon: arm.icon,
@@ -745,6 +796,12 @@ export function narrateNotification(
       // `hasActor` below relies on.
       contract: record,
       request: record,
+      requester:
+        text(item.payload, "requesterName") ??
+        intl.formatMessage({ id: "notifications.keyRequester", defaultMessage: "A person" }),
+      client:
+        text(item.payload, "clientName") ??
+        intl.formatMessage({ id: "notifications.keyClient", defaultMessage: "a Client" }),
       obligation: text(item.payload, "label") ?? intl.formatMessage(UNNAMED_OBLIGATION),
       // The same `label` key under the noun a Key date's sentence uses,
       // on the `contract`/`request` rule two lines up.
@@ -754,6 +811,7 @@ export function narrateNotification(
       // Every arm gets these whether or not its sentence selects on
       // them.
       hasActor: actor ? "yes" : "no",
+      hasVia: viaClient ? "yes" : "no",
       status: status ?? "",
       hasStatus: status ? "yes" : "no",
       outcome: text(item.payload, "outcome") ?? "",

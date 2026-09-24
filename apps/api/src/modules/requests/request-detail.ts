@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { readIntakeForm } from "../../lib/intake-form.js";
+import { readRequest } from "./read.js";
 
 /**
  * The staff request detail (INT-006, INT-007, #414): one Request as
@@ -69,7 +69,7 @@ import { readIntakeForm } from "../../lib/intake-form.js";
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { activityLog, and, asc, eq, isNull, requests, users } from "@openlaw/db";
+import { and, eq, isNull, requests } from "@openlaw/db";
 import { publishInboxTotal } from "./live-inbox.js";
 import { requireRole } from "../../auth/guards.js";
 import type { Readable } from "node:stream";
@@ -87,8 +87,6 @@ import {
   DownloadSchema,
   NO_ATTACHMENT,
   RequestAttachmentSchema,
-  resolveStaffRefs,
-  selectAttachments,
   sendAttachment,
   StaffRequestCustomFieldRefsSchema,
   staffRequestRow,
@@ -176,40 +174,7 @@ export const requestDetailRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const row = await staffRequestRow(app.db, request.user, request.params.number);
-      const [attached, attachments] = await Promise.all([
-        readIntakeForm(app.db, row.typeId, { includeArchived: true }),
-        row.status === "converted" ? [] : selectAttachments(app.db, row.id),
-      ]);
-      const [conversion] =
-        row.status === "converted"
-          ? await app.db
-              .select({ at: activityLog.createdAt, by: users.displayName })
-              .from(activityLog)
-              .leftJoin(users, eq(users.id, activityLog.actorId))
-              .where(
-                and(
-                  eq(activityLog.entityType, "request"),
-                  eq(activityLog.entityId, row.id),
-                  eq(activityLog.action, "request.converted"),
-                ),
-              )
-              .orderBy(asc(activityLog.createdAt), asc(activityLog.id))
-              .limit(1)
-          : [];
-      const readableFields = attached.fields;
-      return {
-        conversion: conversion ? { at: conversion.at.toISOString(), by: conversion.by } : null,
-        request: toStaffRequest(row),
-        fields: readableFields,
-        customFieldRefs: await resolveStaffRefs(
-          app.db,
-          readableFields,
-          row.customFields,
-          request.user,
-        ),
-        attachments,
-      };
+      return readRequest(app.db, request.user, request.params.number);
     },
   );
 

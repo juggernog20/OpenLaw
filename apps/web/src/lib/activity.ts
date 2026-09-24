@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { identifierLabel } from "./identifier-label";
+import { toolsetLabel } from "./mcp";
 
 /**
  * The narration layer (M9/6, DD-017): one activity-log entry in, one
@@ -144,6 +145,8 @@ export type ActivityEntry = FeedResponse["entries"][number];
  * satisfy this, and neither has to be converted to be narrated.
  */
 export interface NarratableEntry {
+  viaKind?: string | null;
+  viaClientName?: string | null;
   action: string;
   actor: { displayName: string } | null;
   payload: Record<string, unknown>;
@@ -227,7 +230,13 @@ function actorName(intl: IntlShape, entry: NarratableEntry): string {
     entry.actor?.displayName ??
     intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" });
   const actorRole = text(entry.payload, "actorRole");
-  return actorRole ? `${name} (${roleLabel(intl, actorRole)})` : name;
+  const actor = actorRole ? `${name} (${roleLabel(intl, actorRole)})` : name;
+  return entry.viaKind && entry.viaKind !== "ui" && entry.viaClientName
+    ? intl.formatMessage(
+        { id: "activity.actor.via", defaultMessage: "{actor}, via {client}," },
+        { actor, client: entry.viaClientName },
+      )
+    : actor;
 }
 
 /**
@@ -392,6 +401,8 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "audienceUsers {Selected people} audienceDepartments {Selected Departments} " +
         "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
         "requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} " +
+        "mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} " +
+        "mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} " +
         "other {{key}}}",
     },
     { key },
@@ -458,6 +469,10 @@ function changeValue(
       { value: String(value) },
     );
   if (key === "priority") return severityLabel(intl, value as SeverityLevel);
+  // DD-029's ceiling stores Toolset slugs, so the feed says "Auto-Docs"
+  // where the column says `auto-docs`. A slug this build no longer has
+  // reads as itself.
+  if (key === "mcpToolsetCeiling" && typeof value === "string") return toolsetLabel(intl, value);
   if (key === "risk") return riskLabel(intl, value as SeverityLevel);
   // CTR-006's term type is a stored slug, so the feed says "Evergreen"
   // where the column says `evergreen`. Its ICU message carries an
@@ -1280,6 +1295,19 @@ function typeFieldArms<Owner extends string>(
     (Object.keys(arms) as TypeFieldVerb[]).map((verb) => [`${owner}.${verb}`, arms[verb]]),
   ) as Record<`${Owner}.${TypeFieldVerb}`, Arm>;
 }
+
+/**
+ * The seven API key sentences (DD-029) name the Client and, for an
+ * approval, whether the requester approved their own request. One
+ * function rather than seven copies, so the fallback and the strict
+ * `selfApproved` read cannot drift apart.
+ */
+const apiKeyValues: Arm["values"] = (intl, payload) => ({
+  client:
+    text(payload, "clientName") ??
+    intl.formatMessage({ id: "activity.apiKey.unnamedClient", defaultMessage: "a Client" }),
+  selfApproved: payload.selfApproved === true ? "yes" : "no",
+});
 
 /**
  * The whole vocabulary, narrated. `contract.*` is a record's own story
@@ -2722,6 +2750,63 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // the change line names the field. Naming the field in the sentence
   // would need the label lowercased into prose, which is a translation
   // trap for the sake of one word.
+  "api_key.requested": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.requested",
+      defaultMessage: "{actor} requested an API key for {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "api_key.minted": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.minted",
+      defaultMessage: "{actor} issued an API key for {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "api_key.approved": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.approved",
+      defaultMessage:
+        "{selfApproved, select, yes {{actor} approved their own API key request for {client}} other {{actor} approved the API key request for {client}}}",
+    }),
+    values: apiKeyValues,
+  },
+  "api_key.denied": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.denied",
+      defaultMessage: "{actor} denied the API key request for {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "api_key.cancelled": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.cancelled",
+      defaultMessage: "{actor} cancelled the API key request for {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "api_key.revoked": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.revoked",
+      defaultMessage: "{actor} revoked the API key for {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "api_key.expired": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.apiKey.expired",
+      defaultMessage: "{actor} recorded expiry of the API key for {client}",
+    }),
+    values: apiKeyValues,
+  },
   "org_settings.updated": {
     icon: Settings,
     message: defineMessage({

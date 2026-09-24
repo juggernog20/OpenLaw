@@ -34,6 +34,11 @@ import { S3_DRIVER, createS3Storage } from "./s3.js";
  * denied") and, since 2026-09-24, Quay refuses `quay.io/minio/minio` too
  * ("unauthorized"). Chainguard's free image is only tagged `latest`, so the
  * digest is the pin. This digest is MinIO RELEASE.2026-09-22T19-25-18Z.
+ *
+ * The image runs as a non-root user and declares no volume, so `/data`
+ * is a tmpfs here, as the old image's `VOLUME /data` was: MinIO renames
+ * directories under `/data/.minio.sys` at boot, and the overlay
+ * filesystem refuses that with "rename across devices".
  */
 const MINIO_IMAGE =
   "cgr.dev/chainguard/minio@sha256:7abc41a42aa78685a2fa48a9088e539625114ac4fc236ce5d58e92ca12f6b960";
@@ -54,7 +59,7 @@ interface StartedStore {
 
 /** Boots MinIO and creates one empty bucket in it. */
 async function startStore(): Promise<StartedStore> {
-  const container = await new MinioContainer(MINIO_IMAGE).start();
+  const container = await new MinioContainer(MINIO_IMAGE).withTmpFs({ "/data": "rw" }).start();
   const bucket = `openlaw-test-${randomUUID()}`;
   const client = new S3Client({
     region: "us-east-1",

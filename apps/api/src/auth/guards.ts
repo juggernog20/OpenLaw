@@ -7,7 +7,7 @@
  * immediately (DD-013).
  */
 
-import { eq, users, type UserRole } from "@openlaw/db";
+import { eq, users, type UserRole, type Executor } from "@openlaw/db";
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyRequest } from "fastify";
 import { httpError } from "../lib/problem.js";
@@ -53,21 +53,15 @@ export const userColumns = {
   image: users.image,
 } as const;
 
-export async function requireSession(request: FastifyRequest): Promise<void> {
-  const session = await request.server.auth.api.getSession({
-    headers: fromNodeHeaders(request.headers),
-  });
-  if (!session) throw httpError(401, "Authentication required.");
-
-  const rows = await request.server.db
+/** Session and API key credentials both resolve the current account through this read. */
+export async function readLiveUser(db: Executor, id: string): Promise<AuthenticatedUser> {
+  const [user] = await db
     .select({ ...guardColumns, archivedAt: users.archivedAt })
     .from(users)
-    .where(eq(users.id, session.user.id))
+    .where(eq(users.id, id))
     .limit(1);
-  const user = rows[0];
-  if (user?.archivedAt !== null) throw httpError(401, "Authentication required.");
-
-  request.user = {
+  if (!user || user.archivedAt !== null) throw httpError(401, "Authentication required.");
+  return {
     id: user.id,
     email: user.email,
     displayName: user.displayName,
@@ -75,6 +69,15 @@ export async function requireSession(request: FastifyRequest): Promise<void> {
     theme: user.theme,
     timezone: user.timezone,
   };
+}
+
+export async function requireSession(request: FastifyRequest): Promise<void> {
+  const session = await request.server.auth.api.getSession({
+    headers: fromNodeHeaders(request.headers),
+  });
+  if (!session) throw httpError(401, "Authentication required.");
+
+  request.user = await readLiveUser(request.server.db, session.user.id);
   request.session = {
     id: session.session.id,
     expiresAt: session.session.expiresAt,

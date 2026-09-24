@@ -20,14 +20,16 @@ import {
   requestTypes,
   type Executor,
 } from "@openlaw/db";
-import { requireAuth } from "../../auth/guards.js";
+import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { documentAudienceScope } from "../../lib/contract-access.js";
 import { AttachedCustomFieldSchema } from "../../lib/custom-fields.js";
-import { httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
+import type { Db } from "@openlaw/db";
+import { HttpError, httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
 import { attachmentDisposition } from "../../lib/uploads.js";
 
 import { readIntakeForm } from "../../lib/intake-form.js";
 import { FormNodeSchema } from "../../lib/type-form-routes.js";
+import { portalKnowledgeScope, readPortalKnowledgeItem } from "../knowledge/service.js";
 
 const PortalRequestTypeSchema = z.object({
   turnaroundDays: z.number().int().nullable(),
@@ -79,27 +81,6 @@ const PortalKnowledgeItemSchema = z.object({
 const DownloadSchema = z.any().meta({ type: "string", format: "binary" });
 const PORTAL_KNOWLEDGE_NOT_FOUND = "No portal Knowledge Item exists with this id.";
 
-async function portalKnowledgeItem(db: Executor, id: string) {
-  const [item] = await db
-    .select({
-      id: knowledgeItems.id,
-      title: knowledgeItems.title,
-      body: knowledgeItems.body,
-      primaryDocumentId: knowledgeItems.primaryDocumentId,
-    })
-    .from(knowledgeItems)
-    .where(
-      and(
-        eq(knowledgeItems.id, id),
-        eq(knowledgeItems.state, "published"),
-        eq(knowledgeItems.audience, "everyone"),
-        isNull(knowledgeItems.archivedAt),
-      ),
-    )
-    .limit(1);
-  return item ?? null;
-}
-
 /**
  * Deliberately hand-written rather than thrown through `httpError`: the
  * shared handler stamps `instance` with the request URL, which carries
@@ -133,14 +114,9 @@ function portalLink(row: {
     : { id: row.id, label: row.label, url: row.url!, displayOrder: row.displayOrder };
 }
 
-const reachableLink = or(
-  isNull(intakeLinks.knowledgeItemId),
-  and(
-    eq(knowledgeItems.state, "published"),
-    eq(knowledgeItems.audience, "everyone"),
-    isNull(knowledgeItems.archivedAt),
-  ),
-);
+function reachableLink(db: Executor, user: AuthenticatedUser) {
+  return or(isNull(intakeLinks.knowledgeItemId), portalKnowledgeScope(db, user));
+}
 
 export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -197,7 +173,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
+    async (request) => {
       const rows = await app.db
         .select({
           id: intakeLinks.id,
@@ -208,7 +184,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .from(intakeLinks)
         .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
-        .where(and(isNull(intakeLinks.requestTypeId), reachableLink))
+        .where(and(isNull(intakeLinks.requestTypeId), reachableLink(app.db, request.user)))
         .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt));
       return { intakeLinks: rows.map(portalLink) };
     },
@@ -271,7 +247,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
           })
           .from(intakeLinks)
           .leftJoin(knowledgeItems, eq(intakeLinks.knowledgeItemId, knowledgeItems.id))
-          .where(and(eq(intakeLinks.requestTypeId, type.id), reachableLink))
+          .where(and(eq(intakeLinks.requestTypeId, type.id), reachableLink(app.db, request.user)))
           .orderBy(asc(intakeLinks.displayOrder), asc(intakeLinks.createdAt)),
       ]);
       return {
@@ -307,66 +283,12 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request, reply) => {
-      const item = await portalKnowledgeItem(app.db, request.params.id);
-      if (!item) return portalKnowledgeNotFound(reply);
-      // The Document's own Confidential flag (DOC-008) narrows the paper
-      // one level below the item gate. The same predicate every staff
-      // read applies, so a flagged file leaves the Portal listing with
-      // the staff surfaces.
-      const paper = await app.db
-        .select({ id: documents.id, title: documents.title })
-        .from(documents)
-        .where(
-          and(
-            eq(documents.knowledgeItemId, item.id),
-            isNull(documents.archivedAt),
-            documentAudienceScope(app.db, request.user),
-          ),
-        )
-        .orderBy(asc(documents.createdAt), asc(documents.id));
-      const withVersions = (
-        await Promise.all(
-          paper.map(async (document) => {
-            const [version] = await app.db
-              .select({
-                id: documentVersions.id,
-                originalFilename: documentVersions.originalFilename,
-                mimeType: documentVersions.mimeType,
-                byteSize: documentVersions.byteSize,
-              })
-              .from(documentVersions)
-              .where(eq(documentVersions.documentId, document.id))
-              .orderBy(desc(documentVersions.versionNumber))
-              .limit(1);
-            return version
-              ? {
-                  ...document,
-                  currentVersion: {
-                    ...version,
-                    downloadUrl: `/api/v1/portal/knowledge/${item.id}/documents/${document.id}/download`,
-                  },
-                }
-              : null;
-          }),
-        )
-      ).filter((row): row is NonNullable<typeof row> => row !== null);
-      withVersions.sort((left, right) => {
-        if (left.id === item.primaryDocumentId) return -1;
-        if (right.id === item.primaryDocumentId) return 1;
-        return 0;
-      });
-      const primary = withVersions.find((row) => row.id === item.primaryDocumentId) ?? null;
-      return {
-        knowledgeItem: {
-          id: item.id,
-          title: item.title,
-          body: item.body,
-          primaryDocument: primary ? { id: primary.id, title: primary.title } : null,
-          documents: withVersions,
-        },
-      };
-    },
+    async (request, reply) =>
+      getPortalKnowledge(app.db, request.user, request.params.id).catch((error: unknown) => {
+        if (error instanceof HttpError && error.statusCode === 404)
+          return portalKnowledgeNotFound(reply);
+        throw error;
+      }),
   );
 
   app.get(
@@ -387,7 +309,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const item = await portalKnowledgeItem(app.db, request.params.id);
+      const item = await readPortalKnowledgeItem(app.db, request.user, request.params.id);
       if (!item) return portalKnowledgeNotFound(reply);
       const [version] = await app.db
         .select({
@@ -421,3 +343,64 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function getPortalKnowledge(db: Db, user: AuthenticatedUser, id: string) {
+  const item = await readPortalKnowledgeItem(db, user, id);
+  if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
+  // The Document's own Confidential flag (DOC-008) narrows the paper
+  // one level below the item gate. The same predicate every staff
+  // read applies, so a flagged file leaves the Portal listing with
+  // the staff surfaces.
+  const paper = await db
+    .select({ id: documents.id, title: documents.title })
+    .from(documents)
+    .where(
+      and(
+        eq(documents.knowledgeItemId, item.id),
+        isNull(documents.archivedAt),
+        documentAudienceScope(db, user),
+      ),
+    )
+    .orderBy(asc(documents.createdAt), asc(documents.id));
+  const withVersions = (
+    await Promise.all(
+      paper.map(async (document) => {
+        const [version] = await db
+          .select({
+            id: documentVersions.id,
+            originalFilename: documentVersions.originalFilename,
+            mimeType: documentVersions.mimeType,
+            byteSize: documentVersions.byteSize,
+          })
+          .from(documentVersions)
+          .where(eq(documentVersions.documentId, document.id))
+          .orderBy(desc(documentVersions.versionNumber))
+          .limit(1);
+        return version
+          ? {
+              ...document,
+              currentVersion: {
+                ...version,
+                downloadUrl: `/api/v1/portal/knowledge/${item.id}/documents/${document.id}/download`,
+              },
+            }
+          : null;
+      }),
+    )
+  ).filter((row): row is NonNullable<typeof row> => row !== null);
+  withVersions.sort((left, right) => {
+    if (left.id === item.primaryDocumentId) return -1;
+    if (right.id === item.primaryDocumentId) return 1;
+    return 0;
+  });
+  const primary = withVersions.find((row) => row.id === item.primaryDocumentId) ?? null;
+  return {
+    knowledgeItem: {
+      id: item.id,
+      title: item.title,
+      body: item.body,
+      primaryDocument: primary ? { id: primary.id, title: primary.title } : null,
+      documents: withVersions,
+    },
+  };
+}

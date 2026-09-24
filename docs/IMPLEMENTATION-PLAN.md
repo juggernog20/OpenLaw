@@ -781,7 +781,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
       a question from the chat.
   - Record resources and the triage and summary prompts
   - The listen stream on the event hub for change notifications
-  - The `team` and `admin` Toolsets, T33 to T35 and T40, after the audit-log audience fix
+  - The `team` and `admin` Toolsets, T33 to T35 and T40; audit-log routes already enforce record-level reach
   - _Decisions:_ DD-029, TECH-035
 
 - [ ] **M43 — Email: one HTML layout for every email**

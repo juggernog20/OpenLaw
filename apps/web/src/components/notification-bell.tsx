@@ -16,12 +16,8 @@
  * its cap, the read model, paging, the focus landing, both failure
  * states — is written once, because it is one decision and not two.
  *
- * **The two bells never see each other's items.** The scope is the API's
- * (`NotificationSurface`), not this component's: the staff mount answers
- * rows about contracts and the portal mount answers rows about the
- * reader's own Requests. A person who is both a Member+ and a Requester
- * has two bells with two badges, and marking one read leaves the other
- * exactly as it was.
+ * The API scopes each bell. Open approvals can appear on both mounts;
+ * ordinary news follows its existing staff or Portal audience.
  *
  * **The bell is an ephemeral prompt, and the activity feed is the
  * durable history** (NOT-005). There is no per-record notifications
@@ -40,9 +36,8 @@
  * **Opening the centre marks nothing** (the NOT-005 2026-09-09
  * amendment). An item is read when the person opens it, which is the
  * row's click; "Mark all read" is the one deliberate sweep. So a row
- * still unread wears a marker, and the badge means "not yet looked
- * at" rather than "not yet drawn". That is the whole read model: one
- * write per item opened, or one for everything.
+ * still unread wears a marker. Open approvals keep their marker and
+ * badge count until handled. Mark all read leaves them alone.
  *
  * **The wall is the API's, not this component's.** Both reads and both
  * writes re-apply the confidentiality predicate (DD-014, M10), so an
@@ -52,10 +47,14 @@
  * omission silent rather than a gap somebody could count.
  */
 
-import { useCallback, useEffect, useRef, useState, type Ref } from "react";
-import { Bell } from "lucide-react";
+import { useCallback, useEffect, useId, useRef, useState, type Ref } from "react";
+import { Bell, Pin } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
+import type { paths } from "@openlaw/api-client";
+import { ApiKeyReadyDialog } from "./api-keys";
+import { MCP_TOOLSETS } from "@openlaw/shared";
+import { toolsetLabel } from "../lib/mcp";
 import { closeReadNotifications, closeAllReadNotifications } from "../lib/device-notifications";
 import { api } from "../lib/api";
 import { subscribeLiveEvents } from "../lib/events";
@@ -114,13 +113,22 @@ const TRIGGER_TONE: Record<BellSurface, string> = {
   portal: "text-muted hover:text-primary",
 };
 
+type KeyDecision =
+  paths["/api/v1/api-key-requests/{id}/approve"]["post"]["responses"][200]["content"]["application/json"];
+
+function isOpenApproval(item: BellItem) {
+  return item.approvalKind != null && item.handledAt == null;
+}
+
 export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>) {
   const intl = useIntl();
   const location = useLocation();
+  const approvalHeading = useId();
   const [open, setOpen] = useState(false);
   /** The current popover state for work that resumes after a read. */
   const openNow = useRef(false);
   const [unread, setUnread] = useState(0);
+  const [readyKey, setReadyKey] = useState<KeyDecision>();
 
   /** null until the first page answers. */
   const [items, setItems] = useState<BellItem[] | null>(null);
@@ -328,8 +336,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     [markRead, onOpenChange],
   );
 
-  /** The one deliberate sweep (NOT-005). Reachable whenever the badge
-   * is above zero, because opening the centre no longer clears it. */
+  /** The deliberate sweep reads ordinary items and leaves open approvals alone. */
   const markAllRead = useCallback(async () => {
     const { data } = await (
       surface === "portal"
@@ -341,127 +348,190 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     setUnread(data.unread);
     const readAt = new Date().toISOString();
     setItems(
-      (current) => current && current.map((item) => ({ ...item, readAt: item.readAt ?? readAt })),
+      (current) =>
+        current &&
+        current.map((item) =>
+          isOpenApproval(item) ? item : { ...item, readAt: item.readAt ?? readAt },
+        ),
     );
   }, [surface]);
 
+  const approvals = items?.filter(isOpenApproval) ?? [];
+  const earlier = items?.filter((item) => !isOpenApproval(item)) ?? [];
+  const refreshApprovals = async (decision: KeyDecision) => {
+    if (decision.key) {
+      setReadyKey(decision);
+      onOpenChange(false);
+    }
+    await readCount();
+    if (openNow.current) await loadPage(null, "live");
+  };
+
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger
-        // The count is in the name and it is uncapped: "9+" is how the
-        // badge is drawn, and a screen-reader user is owed the number.
-        aria-label={intl.formatMessage(
-          {
-            id: "notifications.bell",
-            defaultMessage:
-              "Notifications, {count, plural, =0 {none unread} one {# unread} other {# unread}}",
-          },
-          { count: unread },
-        )}
-        // 24×24 around a 20px glyph is DES-011's minimum hit target;
-        // the focus ring is the base layer's, as it is on the avatar
-        // trigger beside it. Only the foreground pair moves with the
-        // surface, because only the chrome under it does.
-        className={`relative flex size-6 items-center justify-center rounded-button ${TRIGGER_TONE[surface]}`}
-      >
-        <Bell size={20} aria-hidden="true" />
-        {/* Overhangs the glyph's trailing top corner, as the AppHeader
+    <>
+      <Popover open={open} onOpenChange={onOpenChange}>
+        <PopoverTrigger
+          // The count is in the name and it is uncapped: "9+" is how the
+          // badge is drawn, and a screen-reader user is owed the number.
+          aria-label={intl.formatMessage(
+            {
+              id: "notifications.bell",
+              defaultMessage:
+                "Notifications, {count, plural, =0 {none unread} one {# unread} other {# unread}}",
+            },
+            { count: unread },
+          )}
+          // 24×24 around a 20px glyph is DES-011's minimum hit target;
+          // the focus ring is the base layer's, as it is on the avatar
+          // trigger beside it. Only the foreground pair moves with the
+          // surface, because only the chrome under it does.
+          className={`relative flex size-6 items-center justify-center rounded-button ${TRIGGER_TONE[surface]}`}
+        >
+          <Bell size={20} aria-hidden="true" />
+          {/* Overhangs the glyph's trailing top corner, as the AppHeader
             frame draws it. Decorative: the trigger's name already says
             the number, and hearing it twice is noise. */}
-        {unread > 0 && (
-          <span
-            aria-hidden="true"
-            className="absolute -top-1 -end-1 flex h-4 min-w-4 items-center justify-center rounded-pill bg-badge-alert-bg px-1 text-xs font-semibold text-badge-alert-fg"
-          >
-            {unread > BADGE_CAP ? (
-              <FormattedMessage
-                id="notifications.badgeCapped"
-                defaultMessage="{cap}+"
-                values={{ cap: intl.formatNumber(BADGE_CAP) }}
-              />
-            ) : (
-              intl.formatNumber(unread)
-            )}
-          </span>
-        )}
-      </PopoverTrigger>
-      <PopoverContent
-        aria-label={intl.formatMessage(CENTRE_LABEL)}
-        // Trailing-aligned, because the trigger sits at the trailing
-        // end of the header and a panel hanging off the other side
-        // would leave the screen. `p-0` drops the shared inset the
-        // calendar wants (DES-048): this panel's head and rows carry
-        // their own, and the head's rule has to reach both edges.
-        align="end"
-        className="flex max-h-(--radix-popover-content-available-height) w-(--width-panel) max-w-(--radix-popover-content-available-width) flex-col p-0"
-      >
-        {/* The applet panel's 44px head, which is this app's one panel
+          {unread > 0 && (
+            <span
+              aria-hidden="true"
+              className="absolute -top-1 -end-1 flex h-4 min-w-4 items-center justify-center rounded-pill bg-badge-alert-bg px-1 text-xs font-semibold text-badge-alert-fg"
+            >
+              {unread > BADGE_CAP ? (
+                <FormattedMessage
+                  id="notifications.badgeCapped"
+                  defaultMessage="{cap}+"
+                  values={{ cap: intl.formatNumber(BADGE_CAP) }}
+                />
+              ) : (
+                intl.formatNumber(unread)
+              )}
+            </span>
+          )}
+        </PopoverTrigger>
+        <PopoverContent
+          aria-label={intl.formatMessage(CENTRE_LABEL)}
+          // Trailing-aligned, because the trigger sits at the trailing
+          // end of the header and a panel hanging off the other side
+          // would leave the screen. `p-0` drops the shared inset the
+          // calendar wants (DES-048): this panel's head and rows carry
+          // their own, and the head's rule has to reach both edges.
+          align="end"
+          className="flex max-h-(--radix-popover-content-available-height) w-(--width-panel) max-w-(--radix-popover-content-available-width) flex-col p-0"
+        >
+          {/* The applet panel's 44px head, which is this app's one panel
             head (DES-016). */}
-        <header className="flex h-11 shrink-0 items-center justify-between border-b border-border-muted px-4">
-          <h2 className="text-base font-semibold">
-            <FormattedMessage {...CENTRE_LABEL} />
-          </h2>
-          {/* Drawn only while there is something to clear: a control
+          <header className="flex h-11 shrink-0 items-center justify-between border-b border-border-muted px-4">
+            <h2 className="text-base font-semibold">
+              <FormattedMessage {...CENTRE_LABEL} />
+            </h2>
+            {/* Drawn only while there is something to clear: a control
               that can only ever do nothing is chrome, not an
               affordance. */}
-          {unread > 0 && (
-            <Button variant="ghost" size="sm" className="-me-2" onClick={() => void markAllRead()}>
-              <FormattedMessage id="notifications.markAllRead" defaultMessage="Mark all read" />
-            </Button>
-          )}
-        </header>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {/* Two failures, and they leave the reader in different
+            {unread > approvals.length && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-me-2"
+                onClick={() => void markAllRead()}
+              >
+                <FormattedMessage id="notifications.markAllRead" defaultMessage="Mark all read" />
+              </Button>
+            )}
+          </header>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {/* Two failures, and they leave the reader in different
               places. A first page that fails has no list and no control
               to retry with, so reopening the centre is the way back. A
               failed "Show older" keeps the list and the button, so the
               retry is the control already under their hand (DES-026). */}
-          {loadFailed && items === null && (
-            <p role="alert" className="px-4 py-3 text-sm text-status-danger-fg">
-              <FormattedMessage
-                id="notifications.loadError"
-                defaultMessage="Notifications could not be read. Close this and open it again."
-              />
-            </p>
-          )}
-          {items !== null && items.length === 0 && (
-            <p className="px-4 py-3 text-sm text-muted">
-              <FormattedMessage {...EMPTY_COPY[surface]} />
-            </p>
-          )}
-          {items !== null && items.length > 0 && (
-            <ol>
-              {items.map((item, index) => (
-                <NotificationRow
-                  surface={surface}
-                  key={item.id}
-                  item={item}
-                  onOpen={openItem}
-                  ref={index === landingIndex ? landing : undefined}
+            {loadFailed && items === null && (
+              <p role="alert" className="px-4 py-3 text-sm text-status-danger-fg">
+                <FormattedMessage
+                  id="notifications.loadError"
+                  defaultMessage="Notifications could not be read. Close this and open it again."
                 />
-              ))}
-            </ol>
-          )}
-          {loadFailed && items !== null && (
-            <p role="alert" className="px-4 pt-3 text-sm text-status-danger-fg">
+              </p>
+            )}
+            {items !== null && items.length === 0 && (
+              <p className="px-4 py-3 text-sm text-muted">
+                <FormattedMessage {...EMPTY_COPY[surface]} />
+              </p>
+            )}
+            {approvals.length > 0 && (
+              <section aria-labelledby={approvalHeading} className="bg-legal-only-bg">
+                <h3 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold">
+                  <Pin size={16} aria-hidden="true" />
+                  <span id={approvalHeading}>
+                    <FormattedMessage
+                      id="notifications.yourApprovals"
+                      defaultMessage="Your approvals"
+                    />
+                  </span>
+                  <span className="ms-auto">{approvals.length}</span>
+                </h3>
+                <ol>
+                  {approvals.map((item) => (
+                    <NotificationRow
+                      key={item.id}
+                      surface={surface}
+                      item={item}
+                      onOpen={openItem}
+                      onHandled={refreshApprovals}
+                    />
+                  ))}
+                </ol>
+              </section>
+            )}
+            {earlier.length > 0 && (
+              <>
+                {approvals.length > 0 && (
+                  <h3 className="px-4 py-2 text-sm font-semibold">
+                    <FormattedMessage id="notifications.earlier" defaultMessage="Earlier" />
+                  </h3>
+                )}
+                <ol>
+                  {earlier.map((item, index) => (
+                    <NotificationRow
+                      surface={surface}
+                      key={item.id}
+                      item={item}
+                      onOpen={openItem}
+                      ref={index + approvals.length === landingIndex ? landing : undefined}
+                    />
+                  ))}
+                </ol>
+              </>
+            )}
+            {loadFailed && items !== null && (
+              <p role="alert" className="px-4 pt-3 text-sm text-status-danger-fg">
+                <FormattedMessage
+                  id="notifications.olderError"
+                  defaultMessage="The older notifications could not be read. Try again."
+                />
+              </p>
+            )}
+            {/* DES-026's foot: drawn while a further page exists, and
+              absent — not disabled — when the list is complete. */}
+            {cursor !== null && (
+              <div className="px-4 py-3">
+                <Button variant="secondary" disabled={busy} onClick={showOlder}>
+                  <FormattedMessage id="notifications.older" defaultMessage="Show older" />
+                </Button>
+              </div>
+            )}
+          </div>
+          {approvals.length > 0 && (
+            <p className="border-t border-border-muted px-4 py-2 text-xs text-muted">
               <FormattedMessage
-                id="notifications.olderError"
-                defaultMessage="The older notifications could not be read. Try again."
+                id="notifications.approvalsStay"
+                defaultMessage="Mark all read leaves Your approvals in place."
               />
             </p>
           )}
-          {/* DES-026's foot: drawn while a further page exists, and
-              absent — not disabled — when the list is complete. */}
-          {cursor !== null && (
-            <div className="px-4 py-3">
-              <Button variant="secondary" disabled={busy} onClick={showOlder}>
-                <FormattedMessage id="notifications.older" defaultMessage="Show older" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+      {readyKey && <ApiKeyReadyDialog ready={readyKey} onClose={() => setReadyKey(undefined)} />}
+    </>
   );
 }
 
@@ -469,10 +539,8 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
  * One item (DES-026's row, DES-049): a 24px medallion carrying the
  * event family's glyph, then the prompt, then the timestamp.
  *
- * **The whole row is the link.** An item exists to be acted on and it
- * carries exactly one action, so a link inside the row would be a
- * smaller target for the same destination (DES-011). Opening it is
- * what reads it, so the click is also the write.
+ * Ordinary rows link to their record. Open approvals place their
+ * Review or Deny and Approve controls below the text (DES-092).
  *
  * **An unread row wears a marker** (the NOT-005 2026-09-09 amendment).
  * The marker is presentational, in the badge's own red, at the row's
@@ -486,6 +554,7 @@ function NotificationRow({
   surface,
   item,
   onOpen,
+  onHandled,
   ref,
 }: Readonly<{
   item: BellItem;
@@ -493,13 +562,32 @@ function NotificationRow({
   /** The reader opened this item: it is read now, and the centre
    * closes behind them. */
   onOpen: (item: BellItem) => void;
+  onHandled?: (decision: KeyDecision) => Promise<void>;
   /** Set on the first row of a page "Show older" brought, so focus can
    * land there (DES-031). */
   ref?: Ref<HTMLAnchorElement>;
 }>) {
   const intl = useIntl();
   const { icon: Icon, sentence, href } = narrateNotification(intl, item, surface);
-  const unread = item.readAt === null;
+  const approval = isOpenApproval(item);
+  const unread = item.readAt === null || approval;
+  const [acting, setActing] = useState(false);
+  const [actionFailed, setActionFailed] = useState(false);
+  const decideKey = async (action: "approve" | "deny") => {
+    setActing(true);
+    setActionFailed(false);
+    const { data } = await api
+      .POST(
+        action === "approve"
+          ? "/api/v1/api-key-requests/{id}/approve"
+          : "/api/v1/api-key-requests/{id}/deny",
+        { params: { path: { id: item.entityId } }, body: {} },
+      )
+      .catch(() => ({ data: undefined }));
+    if (data) await onHandled?.(data);
+    else setActionFailed(true);
+    setActing(false);
+  };
 
   const face = (
     <>
@@ -545,7 +633,72 @@ function NotificationRow({
 
   return (
     <li className="border-b border-border-muted last:border-b-0">
-      {href === null ? (
+      {approval ? (
+        <>
+          <div className="flex gap-2.5 px-4 py-2.5">{face}</div>
+          {item.approvalKind === "api_key" && (
+            <div className="flex flex-wrap items-center gap-2 px-4 pb-2 ps-12 text-xs">
+              {Array.isArray(item.payload.toolsets) && (
+                <span className="text-muted">
+                  {MCP_TOOLSETS.filter((toolset) =>
+                    (item.payload.toolsets as unknown[]).includes(toolset),
+                  )
+                    .map((toolset) => toolsetLabel(intl, toolset))
+                    .join(", ")}
+                </span>
+              )}
+              {(item.payload.scope === "read" || item.payload.scope === "write") && (
+                <span
+                  className={
+                    item.payload.scope === "write"
+                      ? "rounded-full bg-status-warning-bg px-2 py-0.5 text-status-warning-fg"
+                      : "rounded-full bg-status-info-bg px-2 py-0.5 text-status-info-fg"
+                  }
+                >
+                  {item.payload.scope === "write" ? (
+                    <FormattedMessage id="apiKeys.write" defaultMessage="Write" />
+                  ) : (
+                    <FormattedMessage id="apiKeys.read" defaultMessage="Read" />
+                  )}
+                </span>
+              )}
+            </div>
+          )}
+          <div className="flex gap-2 px-4 pb-3 ps-12">
+            {item.approvalKind === "api_key" ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={acting}
+                  onClick={() => void decideKey("deny")}
+                >
+                  <FormattedMessage id="notifications.deny" defaultMessage="Deny" />
+                </Button>
+                <Button size="sm" disabled={acting} onClick={() => void decideKey("approve")}>
+                  <FormattedMessage id="notifications.approve" defaultMessage="Approve" />
+                </Button>
+              </>
+            ) : (
+              href && (
+                <Button size="sm" variant="secondary" asChild>
+                  <Link to={href} onClick={() => onOpen(item)}>
+                    <FormattedMessage id="notifications.review" defaultMessage="Review" />
+                  </Link>
+                </Button>
+              )
+            )}
+          </div>
+          {actionFailed && (
+            <p role="alert" className="px-4 pb-3 text-sm text-status-danger-fg">
+              <FormattedMessage
+                id="notifications.approvalError"
+                defaultMessage="The request could not be handled. Try again."
+              />
+            </p>
+          )}
+        </>
+      ) : href === null ? (
         // Unreachable while `contract` and `request` are the only
         // entities the two mounts answer for, and the honest drawing if
         // a later record type ever reaches this panel before its route

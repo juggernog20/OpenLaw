@@ -2,7 +2,7 @@
 
 /** Portal preferences cover Request updates, mentions, and shared record news (DD-023). */
 
-import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
 import { currentUserFor, useSignOut } from "../lib/session";
@@ -82,6 +82,9 @@ export function PortalSettingsPage() {
       </section>
       {/* The Portal column is wider than a settings card. The Devices card
           fills it, the same width as the preferences card above. */}
+      <Link to="/portal/settings/api-keys" className="text-link underline">
+        <FormattedMessage id="apiKeys.title" defaultMessage="API keys" />
+      </Link>
       <NotificationDevices
         surface="portal"
         className="max-w-none"

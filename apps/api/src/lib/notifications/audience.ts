@@ -46,6 +46,7 @@
  */
 
 import {
+  apiKeyRequests,
   and,
   asc,
   contracts,
@@ -563,7 +564,10 @@ export function notificationScope(
   surface: NotificationSurface,
 ): SQL | undefined {
   if (surface === "staff" && !MEMBER_PLUS.includes(user.role)) return sql`false`;
-  return surface === "portal" ? portalScope(db, user) : staffScope(db, user);
+  return or(
+    apiKeyNotificationScope(db, user, surface),
+    surface === "portal" ? portalScope(db, user) : staffScope(db, user),
+  );
 }
 
 /**
@@ -725,6 +729,7 @@ function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
               eq(contractApprovals.contractId, notifications.entityId),
               eq(contractApprovals.status, "pending"),
               isNull(contracts.archivedAt),
+              user.role === "business_user" ? undefined : contractTeamScope(db, user),
             ),
           ),
       ),
@@ -770,6 +775,33 @@ function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
           ),
         ),
       ),
+    ),
+  );
+}
+
+/** API key decisions follow the owner's account surface; requests follow the Administrator role. */
+export function apiKeyNotificationScope(
+  db: Executor,
+  user: Pick<AuthenticatedUser, "id" | "role">,
+  surface: NotificationSurface,
+): SQL | undefined {
+  return and(
+    eq(notifications.entityType, "api_key_request"),
+    eq(notifications.userId, user.id),
+    or(
+      user.role === "administrator" ? eq(notifications.eventType, "api_key.requested") : sql`false`,
+      (surface === "portal") === (user.role === "business_user")
+        ? and(
+            inArray(notifications.eventType, ["api_key.approved", "api_key.denied"]),
+            inArray(
+              notifications.entityId,
+              db
+                .select({ id: apiKeyRequests.id })
+                .from(apiKeyRequests)
+                .where(eq(apiKeyRequests.requesterId, user.id)),
+            ),
+          )
+        : sql`false`,
     ),
   );
 }

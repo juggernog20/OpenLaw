@@ -143,7 +143,13 @@ export * from "./schema/signing-connectors.js";
 export * from "./migration-journal.js";
 export * from "./rewrap.js";
 export * from "./secrets.js";
+import * as apiKeysSchema from "./schema/api-keys.js";
+export * from "./schema/api-keys.js";
+import * as mcpToolCallsSchema from "./schema/mcp-tool-calls.js";
+export * from "./schema/mcp-tool-calls.js";
 export const schema = {
+  ...mcpToolCallsSchema,
+  ...apiKeysSchema,
   ...typeFormsSchema,
   ...activitySchema,
   ...aiConnectorSchema,

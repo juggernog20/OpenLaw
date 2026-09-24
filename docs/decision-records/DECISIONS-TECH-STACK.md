@@ -730,6 +730,14 @@ Before release tags exist, upgrade CI uses the PR's recorded base or the push's
 previous revision. Local/manual rehearsal falls back to dev, or its parent when dev
 is the candidate. Baseline and candidate must be distinct immutable commits.
 
+### Addendum (2026-09-25, M40, [#1120](https://github.com/juggernog20/OpenLaw/pull/1120)) — a service with a non-HTTP caller may be asserted at the service seam
+
+API tests assert at the HTTP seam: status, headers, body. That rule assumes every caller of a module arrives through a route, where `preHandler` guards run before the handler. M40 broke that assumption on purpose. The MCP register (DD-029) calls the extracted record, read and Request services directly, so a guarantee a route's `requireRole` used to carry is now the service's own to keep.
+
+**The exception.** A service that has a caller other than a route may be asserted directly, for the guarantees the HTTP guards no longer cover: the role floor, reach, Confidential exclusion, transaction rollback, and that the service answers the same rows the route answers. `read-services.test.ts`, `record-services.test.ts` and `request-task-services.test.ts` are that seam. Each one cites this addendum at the top. A service with routes as its only callers stays under the HTTP rule.
+
+**What it costs.** A service test pins a TypeScript signature that the HTTP rule left free to change, so an extraction that renames a parameter now touches a test file too. It also reads a `Problem` as a thrown object rather than a response body, so a change to the error envelope is not caught here; the HTTP tests still hold that. The trade is accepted because the alternative, asserting every guarantee through `/mcp`, would test the register's grant logic and the service floor in one place and leave a direct caller added later with no seam at all.
+
 ## TECH-015: TypeScript 7 native compiler + TS 6 API shim for typescript-eslint
 
 - **Status:** Accepted — **temporary by design; see sunset trigger below**
@@ -1749,6 +1757,12 @@ One endpoint that speaks both eras is the only shape that serves all three clien
 - `DEPLOYMENT.md` gains the two profiles of DD-029 and the three egress allowlists.
 - Unverified before build: whether Claude.ai completes CIMD registration when DCR is off; the revision each client negotiates; Copilot Studio's PKCE, `resource`, `WWW-Authenticate` and session handling and its exact callback URL; whether each chat client sends a file to the T27 upload URL; whether ChatGPT's `openai/fileParams` path fires for an unpublished Developer mode connector. Each is tested against a throwaway server before the milestone it gates.
 
+### Addendum (2026-09-24, #1059): the T27 upload URL is a signed PUT of raw bytes
+
+T27 as built. `openlaw_document_upload` checks the target, the grant and record reach, then returns `uploadUrl`, `headers`, `versionId`, `documentId`, `expiresAt` and `maxUploadBytes`. The URL is `PUT ${BASE_URL}/mcp/uploads?token=...`. The token is a base64url ticket signed with HMAC-SHA256 under `AUTH_SECRET`. The ticket names the Tool arguments, the credential, the person, the pending Document and Version ids, and an expiry ten minutes out. There is no form field. The Client sends the raw bytes as the request body with `Content-Type: application/octet-stream`, which `curl -T` and every HTTP client can do without a multipart library. The "form field" wording in the decision above described Notion's shape; OpenLaw's is the plainer one.
+
+The ticket is the only credential the route accepts. A cookie or an API key on the request counts for nothing, and the route is outside the TECH-033 origin check with `/mcp`. On each PUT the route reads the credential again (approval, revocation, expiry, the master switch and the audience switch) and re-checks the grant, the write scope and record reach, so a key revoked or a team row dropped after the URL was issued refuses the upload. The bytes are counted as they stream. The ceiling is the `MAX_UPLOAD_MB` the REST upload enforces, and an upload over it answers 413 and leaves no Version. One URL completes one Version. A second PUT, including a concurrent one, answers 409, and a refused PUT leaves no rows and no blob. Each attempt writes a fresh storage key under the Version's DOC-012 key, so a retry after a failed write never reuses a key. An unused URL expires and leaves nothing, because no row exists until the PUT commits. The PUT is not a Tool call and does not count against the per-credential rate limit; each URL costs one rate-limited `openlaw_document_upload` call and completes at most once. The REST upload routes and the MCP route share one completion service, so the designation, activity and notification rules of DOC-001 and CTR-014 are written once.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -1766,7 +1780,7 @@ One endpoint that speaks both eras is the only shape that serves all three clien
 | TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted                                                                        |
 | TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted                                                                        |
 | TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted                                                                        |
-| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted                                                                        |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted; service-seam tests for non-HTTP callers by the 2026-09-25 addendum    |
 | TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)                                                            |
 | TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted                                                                        |
 | TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted                                                                        |
@@ -1787,4 +1801,4 @@ One endpoint that speaks both eras is the only shape that serves all three clien
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted                                                                        |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 upload URL shape recorded by the 2026-09-24 addendum              |

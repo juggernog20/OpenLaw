@@ -92,6 +92,12 @@ export const JOB_QUEUES = {
    */
   reconciliationSweep: "envelope.reconciliation-sweep",
   /**
+   * The daily API key expiry audit (DD-029). Reads derive expiry from
+   * the credential's own timestamp; this job records the first
+   * observation of each one, once, as an audit row.
+   */
+  apiKeyExpiry: "api-key.expiry-sweep",
+  /**
    * One notification's immediate email (NOT-002 group 1, NOT-003).
    *
    * It is a queue of its own for the reason every other one is: it is

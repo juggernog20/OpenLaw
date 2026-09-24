@@ -116,6 +116,8 @@ interface BellItem {
   entityType: string;
   entityId: string;
   payload: Record<string, unknown>;
+  approvalKind: string | null;
+  handledAt: string | null;
   readAt: string | null;
   createdAt: string;
 }
@@ -541,7 +543,9 @@ describe("the reads answer for the signed-in person", () => {
     const firstIds = new Set(first.notifications.map((row) => row.id));
     expect(second.notifications.some((row) => firstIds.has(row.id))).toBe(false);
     // Newest first, as a feed is read.
-    const times = first.notifications.map((row) => Date.parse(row.createdAt));
+    const times = first.notifications
+      .filter((row) => !row.approvalKind || row.handledAt)
+      .map((row) => Date.parse(row.createdAt));
     expect([...times].sort((a, b) => b - a)).toEqual(times);
   });
 });
@@ -778,4 +782,193 @@ it("collects committed push wake-ups for immediate and digest rows, once per rem
   ).rejects.toThrow("rollback push");
   expect(push).toHaveBeenCalledTimes(2);
   expect(logError).not.toHaveBeenCalled();
+});
+
+describe("Your approvals", () => {
+  it("pins open approvals ahead of newer news, counts read approvals, and handles every copy", async () => {
+    const contract = await newContract("Pinned approval");
+    await ask(contract.number, idOf(READER));
+    const [approval] = await harness.db
+      .select()
+      .from(notifications)
+      .where(and(eq(notifications.userId, idOf(READER)), eq(notifications.entityId, contract.id)));
+    const [copy] = await harness.db
+      .insert(notifications)
+      .values({
+        userId: idOf(READER),
+        eventType: approval!.eventType,
+        entityType: "contract",
+        entityId: contract.id,
+        payload: approval!.payload,
+        approvalKind: "contract",
+        readAt: new Date(),
+      })
+      .returning();
+    const [news] = await harness.db
+      .insert(notifications)
+      .values({
+        userId: idOf(READER),
+        eventType: "contract.status_changed",
+        entityType: "contract",
+        entityId: contract.id,
+      })
+      .returning();
+    const listed = await bell(READER);
+    expect(listed.notifications.slice(0, 2).map((row) => row.id)).toEqual(
+      expect.arrayContaining([approval!.id, copy!.id]),
+    );
+    expect(await unread(READER)).toBe(3);
+    const readAll = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/notifications/read-all",
+      cookies: as(READER),
+    });
+    expect(readAll.json()).toEqual({ unread: 2 });
+    const rows = await harness.db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.entityId, contract.id));
+    expect(rows.find((row) => row.id === approval!.id)!.readAt).toBeNull();
+    expect(rows.find((row) => row.id === news!.id)!.readAt).not.toBeNull();
+    const decision = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/approvals/${approval!.payload.approvalId}/decision`,
+      cookies: as(READER),
+      payload: { decision: "approved" },
+    });
+    expect(decision.statusCode, decision.body).toBe(200);
+    const handled = await harness.db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.entityId, contract.id));
+    expect(handled.filter((row) => row.approvalKind).every((row) => row.handledAt !== null)).toBe(
+      true,
+    );
+    expect(await unread(READER)).toBe(0);
+  });
+
+  it("stamps cancelled Contract Approval items before deleting the request", async () => {
+    const contract = await newContract("Cancelled approval");
+    await ask(contract.number, idOf(READER));
+    const [item] = await harness.db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.entityId, contract.id));
+    const result = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/approvals/${item!.payload.approvalId}`,
+      cookies: as(MEMBER),
+    });
+    expect(result.statusCode, result.body).toBe(200);
+    const [handled] = await harness.db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, item!.id));
+    expect(handled!.handledAt).not.toBeNull();
+  });
+});
+
+it("keeps a Portal approval open when read and handles it through the Portal decision", async () => {
+  const contract = await newContract("Portal approval");
+  await ask(contract.number, idOf(READER));
+  const root = "/api/v1/portal/notifications";
+  const list = await harness.app.inject({ method: "GET", url: root, cookies: as(READER) });
+  expect(list.statusCode, list.body).toBe(200);
+  const item = list.json().notifications.find((row: BellItem) => row.entityId === contract.id);
+  expect(item).toMatchObject({ approvalKind: "contract", handledAt: null });
+  const read = await harness.app.inject({
+    method: "POST",
+    url: `${root}/read`,
+    cookies: as(READER),
+    payload: { ids: [item.id] },
+  });
+  expect(read.json()).toEqual({ unread: 1 });
+  const readAll = await harness.app.inject({
+    method: "POST",
+    url: `${root}/read-all`,
+    cookies: as(READER),
+  });
+  expect(readAll.json()).toEqual({ unread: 1 });
+  const decision = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/portal/approvals/${item.payload.approvalId}/decision`,
+    cookies: as(READER),
+    payload: { decision: "approved" },
+  });
+  expect(decision.statusCode, decision.body).toBe(200);
+  const [handled] = await harness.db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.id, item.id));
+  expect(handled!.handledAt).not.toBeNull();
+  const badge = await harness.app.inject({
+    method: "GET",
+    url: `${root}/unread-count`,
+    cookies: as(READER),
+  });
+  expect(badge.json()).toEqual({ unread: 0 });
+});
+
+it("removes open approvals from both bells and badges when the staff approver loses record access", async () => {
+  const contract = await newContract("Both bells wall");
+  await ask(contract.number, idOf(READER));
+  for (const root of ["/api/v1/notifications", "/api/v1/portal/notifications"]) {
+    const list = await harness.app.inject({ method: "GET", url: root, cookies: as(READER) });
+    expect(
+      list
+        .json()
+        .notifications.some(
+          (row: BellItem) => row.entityId === contract.id && row.approvalKind === "contract",
+        ),
+    ).toBe(true);
+  }
+  await wallOff(contract.id);
+  for (const root of ["/api/v1/notifications", "/api/v1/portal/notifications"]) {
+    const list = await harness.app.inject({ method: "GET", url: root, cookies: as(READER) });
+    expect(list.json().notifications.some((row: BellItem) => row.entityId === contract.id)).toBe(
+      false,
+    );
+    const badge = await harness.app.inject({
+      method: "GET",
+      url: `${root}/unread-count`,
+      cookies: as(READER),
+    });
+    expect(badge.json()).toEqual({ unread: 0 });
+    await harness.app.inject({ method: "POST", url: `${root}/read-all`, cookies: as(READER) });
+  }
+  const [item] = await harness.db
+    .select()
+    .from(notifications)
+    .where(eq(notifications.entityId, contract.id));
+  expect(item!.readAt).toBeNull();
+  expect(item!.handledAt).toBeNull();
+});
+
+it("returns every open approval before the ordinary feed without repeating them on older pages", async () => {
+  const contract = await newContract("Long Your approvals group");
+  const rows = await harness.db
+    .insert(notifications)
+    .values(
+      Array.from({ length: 60 }, (_, index) => ({
+        userId: idOf(ADMIN),
+        eventType: index < 30 ? "approval.requested" : "contract.status_changed",
+        entityType: "contract" as const,
+        entityId: contract.id,
+        approvalKind: index < 30 ? "contract" : null,
+        createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, index)),
+      })),
+    )
+    .returning();
+  const first = await bell(ADMIN);
+  expect(first.notifications).toHaveLength(55);
+  expect(first.notifications.slice(0, 30).every((row) => row.approvalKind === "contract")).toBe(
+    true,
+  );
+  expect(first.nextCursor).not.toBeNull();
+  const second = await bell(ADMIN, first.nextCursor!);
+  expect(second.notifications).toHaveLength(5);
+  expect(second.nextCursor).toBeNull();
+  expect([...first.notifications, ...second.notifications].map((row) => row.id).sort()).toEqual(
+    rows.map((row) => row.id).sort(),
+  );
 });
