@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Matter Tools T13 to T16 and T42 use the shared record services. DD-029 and
+ * TECH-035 limit Business Users to Portal facts and Portal record reach.
+ */
 import { z } from "zod";
 import {
   and,

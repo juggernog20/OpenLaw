@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Task Tools T17, T18 and T36 reuse the UI assignment services and Home's
+ * active-record read. DD-029 and TECH-035 keep reach bound to the caller,
+ * including when the Task filter names another assignee.
+ */
 import { z } from "zod";
 import {
   readAssignedTasks,

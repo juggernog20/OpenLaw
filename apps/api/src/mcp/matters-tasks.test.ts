@@ -20,7 +20,6 @@ import {
   orgSettings,
   eq,
   sql,
-  activityLog,
 } from "@openlaw/db";
 import { provisionUser } from "../auth/instance.js";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
@@ -315,7 +314,7 @@ it("returns named validation errors for missing and invalid creation Fields with
     { matterTypeId: typeId, answers: { title: "Unknown", bogus_field: "x" } },
     "validation_error",
   );
-  expect(await h.db.select().from(matters).where(eq(matters.title, "Missing"))).toHaveLength(0);
+  expect((await call(legal, "matters_list", { typeId: mt.id })).matters).toEqual([]);
 });
 it.each(["contract", "matter"] as const)(
   "creates and atomically completes, reassigns and reschedules a %s Task under UI assignee rules",
@@ -340,32 +339,48 @@ it.each(["contract", "matter"] as const)(
       assigneeId: legalId,
       dueDate: "2026-01-01",
     });
-    const table = kind === "contract" ? contractTasks : matterTasks;
+    const readTask = async () => {
+      const response = await h.app.inject({
+        method: "GET",
+        url: `/api/v1/${kind}s/${number}/tasks`,
+        cookies: legalCookies,
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      const body = response.json<{
+        tasks: { id: string; isDone: boolean; assigneeId: string | null; dueDate: string | null }[];
+      }>();
+      const task = body.tasks.find((row) => row.id === born.taskId);
+      expect(task).toBeDefined();
+      return task!;
+    };
     await refused(
       legal,
       "task_update",
       { kind, taskId: born.taskId, changes: { isDone: true, assigneeId: businessId } },
       "validation_error",
     );
-    expect((await h.db.select().from(table).where(eq(table.id, born.taskId)))[0]!.isDone).toBe(
-      false,
-    );
+    expect((await readTask()).isDone).toBe(false);
     await call(legal, "task_update", {
       kind,
       taskId: born.taskId,
       changes: { isDone: true, assigneeId: adminId, addToTeam: true, dueDate: "2026-12-01" },
     });
-    expect((await h.db.select().from(table).where(eq(table.id, born.taskId)))[0]).toMatchObject({
+    expect(await readTask()).toMatchObject({
       isDone: true,
       assigneeId: adminId,
       dueDate: "2026-12-01",
     });
     await call(legal, "task_update", { kind, taskId: born.taskId, changes: { isDone: true } });
-    const logs = await h.db
-      .select()
-      .from(activityLog)
-      .where(
-        sql`${activityLog.payload}->>'taskId' = ${born.taskId} and ${activityLog.action} = 'task.completed'`,
+    const activity = await h.app.inject({
+      method: "GET",
+      url: `/api/v1/activity?entityType=${kind}&entityId=${kind === "contract" ? contract.id : visible.id}`,
+      cookies: legalCookies,
+    });
+    expect(activity.statusCode, activity.body).toBe(200);
+    const logs = activity
+      .json<{ entries: { action: string; payload: { taskId?: string } }[] }>()
+      .entries.filter(
+        (entry) => entry.action === "task.completed" && entry.payload.taskId === born.taskId,
       );
     expect(logs).toHaveLength(1);
   },
