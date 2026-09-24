@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { formForTouchpoint } from "@openlaw/shared";
+import { listAssignableUsers } from "../../lib/assignable-users.js";
 import { readTypeForm } from "../../lib/type-form-routes.js";
 
 import { regionOptions } from "../regions/references.js";
@@ -233,17 +234,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
           .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt)),
         // Everyone assignable to a team; the client narrows the Owner
         // pick to Member+, and the write guard is the real refusal.
-        app.db
-          .select({
-            id: users.id,
-            displayName: users.displayName,
-            image: users.image,
-            archivedAt: users.archivedAt,
-            role: users.role,
-          })
-          .from(users)
-          .where(isNull(users.archivedAt))
-          .orderBy(asc(sql`lower(${users.displayName})`)),
+        listAssignableUsers(app.db),
         // The live templates and their membership in one read (CTR-012).
         // An archived group is absent, which is the whole of what
         // archiving one does: it leaves the apply picker and disturbs

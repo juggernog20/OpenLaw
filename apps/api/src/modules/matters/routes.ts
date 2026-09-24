@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { formForTouchpoint } from "@openlaw/shared";
+import { listAssignableUsers } from "../../lib/assignable-users.js";
 import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
 
 /** The first matter surface: list, create, options, and record read. */
@@ -20,7 +21,6 @@ import {
   matterTemplateTasks,
   matterTypeFields,
   matterTypes,
-  sql,
   USER_ROLES,
   users,
 } from "@openlaw/db";
@@ -212,17 +212,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(matterStatuses)
           .where(isNull(matterStatuses.archivedAt))
           .orderBy(asc(matterStatuses.displayOrder), asc(matterStatuses.createdAt)),
-        app.db
-          .select({
-            id: users.id,
-            displayName: users.displayName,
-            image: users.image,
-            archivedAt: users.archivedAt,
-            role: users.role,
-          })
-          .from(users)
-          .where(isNull(users.archivedAt))
-          .orderBy(asc(sql`lower(${users.displayName})`)),
+        listAssignableUsers(app.db),
         app.db
           .select()
           .from(matterTemplates)

@@ -6,16 +6,13 @@ follow the accepted Request in separate uploads. */
 
 import {
   and,
-  contracts,
   count,
   eq,
   gte,
   isNull,
-  matters,
   REQUEST_STATUSES,
   requestAttachments,
   requests,
-  requestTypes,
   SEVERITY_LEVELS,
   sql,
   type Executor,
@@ -33,8 +30,6 @@ import { z } from "zod";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { requireAuth } from "../../auth/guards.js";
 import { AttachedCustomFieldSchema, CustomFieldsSchema } from "../../lib/custom-fields.js";
-import { readIntakeForm } from "../../lib/intake-form.js";
-import { portalRecordScope } from "../../lib/portal-record-access.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   asUploadRefusal,
@@ -43,34 +38,25 @@ import {
   uploadFilename,
   withStoredBlob,
 } from "../../lib/uploads.js";
-import { departmentName } from "../departments/references.js";
 import {
   attachmentOn,
   DownloadSchema,
   NO_ATTACHMENT,
   NO_REQUEST,
-  requestAssignees,
   RequestAttachmentSchema,
   RequestCustomFieldRefsSchema,
-  resolveRefs,
-  selectAttachments,
   selectConvertedRecords,
   sendAttachment,
   toAttachment,
 } from "./projection.js";
+import { readMyRequest } from "./read.js";
 import { convertedContractOf, convertedRecordOf } from "./record-reference.js";
-import {
-  listMyRequests,
-  lockPerson,
-  submitRequest,
-  SubmitRequestBody,
-  toPortalRequestRow,
-} from "./service.js";
+import { listMyRequests, lockPerson, submitRequest, SubmitRequestBody } from "./service.js";
 
 /** The Request as its creator is answered. Narrow on purpose: the
  * confirmation needs the number to quote and the status to state, and
  * the rest of the envelope is the detail view's (ticket 7). */
-const RequestSchema = z.object({
+export const RequestSchema = z.object({
   id: z.string(),
   /** INT-002's global reference; the portal renders it R-###. */
   number: z.number().int(),
@@ -99,7 +85,7 @@ const RequestTypeRefSchema = z.object({
 /** One row of my-requests. Five facts, because that is what the I5
  * block draws: the reference, the one-line ask, the front door it came
  * through, where it got to, and how old it is. */
-const MyRequestRowSchema = z.object({
+export const MyRequestRowSchema = z.object({
   owner: z.object({ displayName: z.string() }).nullable(),
   id: z.string(),
   /** Rendered R-###; it is also what the detail is addressed by. */
@@ -113,7 +99,7 @@ const MyRequestRowSchema = z.object({
 
 /** The Request detail's envelope: the I7 head block, the "What you
  * submitted" card, and the disposition. */
-const MyRequestSchema = MyRequestRowSchema.extend({
+export const MyRequestSchema = MyRequestRowSchema.extend({
   description: z.string().nullable(),
   departmentId: z.string().nullable().optional(),
   department: z.string().nullable().optional(),
@@ -203,87 +189,7 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const [row] = await app.db
-        .select({
-          id: requests.id,
-          number: requests.number,
-          status: requests.status,
-          convertedContractId: requests.convertedContractId,
-          convertedMatterId: requests.convertedMatterId,
-          title: requests.title,
-          description: requests.description,
-          departmentId: requests.departmentId,
-          urgency: requests.urgency,
-          customFields: requests.customFields,
-          declinedReason: requests.declinedReason,
-          createdAt: requests.createdAt,
-          typeId: requestTypes.id,
-          typeSlug: requestTypes.slug,
-          typeDisplayName: requestTypes.displayName,
-          owner: { displayName: requestAssignees.displayName },
-        })
-        .from(requests)
-        .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
-        .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
-        .where(
-          and(
-            eq(requests.number, request.params.number),
-            // The scoping is part of the lookup rather than a check
-            // after it, so there is no branch where the row was read
-            // and then refused.
-            eq(requests.requesterId, request.user.id),
-            isNull(requests.archivedAt),
-          ),
-        )
-        .limit(1);
-      if (!row) throw httpError(404, NO_REQUEST);
-
-      let redirectTo: { module: "contract" | "matter"; number: number } | null = null;
-      let recordArchived = false;
-      if (row.status === "converted") {
-        const module = row.convertedMatterId ? "matter" : "contract";
-        const targetId = row.convertedMatterId ?? row.convertedContractId;
-        const target = module === "contract" ? contracts : matters;
-        if (!targetId) throw httpError(404, NO_REQUEST);
-        const [destination] = await app.db
-          .select({ number: target.number, archivedAt: target.archivedAt })
-          .from(target)
-          .where(eq(target.id, targetId))
-          .limit(1);
-        if (!destination) throw httpError(404, NO_REQUEST);
-        recordArchived = destination.archivedAt !== null;
-        if (!recordArchived) {
-          const [allowed] = await app.db
-            .select({ id: target.id })
-            .from(target)
-            .where(and(eq(target.id, targetId), portalRecordScope(app.db, request.user, module)))
-            .limit(1);
-          if (!allowed) throw httpError(404, NO_REQUEST);
-          redirectTo = { module, number: destination.number };
-        }
-      }
-
-      const [attached, attachments] = await Promise.all([
-        readIntakeForm(app.db, row.typeId, { includeArchived: true }),
-        row.status === "converted" ? [] : selectAttachments(app.db, row.id),
-      ]);
-      const readableFields = attached.fields;
-      return {
-        redirectTo,
-        recordArchived,
-        request: {
-          ...toPortalRequestRow(row),
-          description: row.description,
-          departmentId: row.departmentId,
-          department: await departmentName(app.db, row.departmentId),
-          urgency: row.urgency,
-          customFields: row.customFields,
-          declinedReason: row.declinedReason,
-        },
-        fields: readableFields,
-        customFieldRefs: await resolveRefs(app.db, readableFields, row.customFields),
-        attachments,
-      };
+      return readMyRequest(app.db, request.user, request.params.number);
     },
   );
 
