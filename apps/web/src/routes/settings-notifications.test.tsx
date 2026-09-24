@@ -42,11 +42,15 @@ const BRIEFING_DEFAULTS = [
   { eventGroup: "briefing.intake", email: false },
 ] satisfies BriefingPreference[];
 
+/** The lead-time fields every answer carries (NOT-004 addendum). */
+const LEAD_TIMES = { reminderOffsetDays: null, organizationReminderOffsetDays: [7, 1, 0] };
+
 /** Answers the pane's read and captures its writes, the way the real
  * endpoint does. Every save answers the whole grid back. */
 function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
   let groups = DEFAULTS.map((row) => ({ ...row }));
   let briefing: BriefingPreference[] = BRIEFING_DEFAULTS.map((row) => ({ ...row }));
+  let reminderOffsetDays: number[] | null = null;
   return (call: StubCall) => {
     if (call.url.pathname === "/api/v1/notifications/subscriptions")
       return json(200, { subscriptions: [] });
@@ -55,6 +59,9 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
       const body = call.body as { eventGroup: string; channel: string; enabled: boolean };
       writes.push(body);
       if (failWith) return failWith;
+      if ("reminderOffsetDays" in body) {
+        reminderOffsetDays = (body as { reminderOffsetDays: number[] | null }).reminderOffsetDays;
+      }
       groups = groups.map((row) =>
         row.eventGroup === body.eventGroup
           ? { ...row, [body.channel === "in_app" ? "inApp" : body.channel]: body.enabled }
@@ -64,11 +71,95 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
         row.eventGroup === body.eventGroup ? { ...row, email: body.enabled } : row,
       );
     }
-    return json(200, { groups, briefing, vapidPublicKey: "AQID", showRecordNamesOnDevices: true });
+    return json(200, {
+      groups,
+      briefing,
+      vapidPublicKey: "AQID",
+      showRecordNamesOnDevices: true,
+      reminderOffsetDays,
+      organizationReminderOffsetDays: [7, 1, 0],
+    });
   };
 }
 
 describe("Personal · Notifications (#320)", () => {
+  it("puts the lead-time switch back and says so when the save is refused", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: capturePreferenceWrites(writes, problem(500, "The change could not be saved.")),
+    });
+    renderAt("/settings/notifications");
+
+    const useDefault = await screen.findByRole("switch", {
+      name: "Use the organization's default lead times",
+    });
+    await user.click(useDefault);
+    expect(await screen.findByText("The change could not be saved.")).toBeVisible();
+    expect(useDefault).toBeChecked();
+    expect(screen.queryByRole("button", { name: "Add lead time" })).not.toBeInTheDocument();
+  });
+
+  it("refuses a duplicate or out-of-range lead time without saving", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites(writes) });
+    renderAt("/settings/notifications");
+
+    await user.click(
+      await screen.findByRole("switch", { name: "Use the organization's default lead times" }),
+    );
+    await screen.findByRole("button", { name: "Remove On the day" });
+    const saved = writes.length;
+    const days = screen.getByRole("spinbutton", { name: "days before the date" });
+
+    await user.type(days, "7");
+    await user.click(screen.getByRole("button", { name: "Add lead time" }));
+    expect(await screen.findByText("7 days before is already on the list.")).toBeVisible();
+
+    await user.clear(days);
+    await user.type(days, "731");
+    await user.click(screen.getByRole("button", { name: "Add lead time" }));
+    // The field's own bound stops the form before the card's check runs.
+    expect(days).toBeInvalid();
+    expect(writes).toHaveLength(saved);
+  });
+
+  it("lets a person set their own reminder lead times and go back to the default", async () => {
+    const user = userEvent.setup();
+    const writes: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites(writes) });
+    renderAt("/settings/notifications");
+
+    const useDefault = await screen.findByRole("switch", {
+      name: "Use the organization's default lead times",
+    });
+    expect(useDefault).toBeChecked();
+    const list = screen.getByRole("list", { name: "Your reminder lead times" });
+    expect(
+      within(list)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["7 days before", "1 day before", "On the day"]);
+    // The default is read-only here; the Administrator edits it.
+    expect(within(list).queryByRole("button")).not.toBeInTheDocument();
+
+    // Turning the switch off starts from a copy of the default.
+    await user.click(useDefault);
+    expect(writes.at(-1)).toEqual({ reminderOffsetDays: [7, 1, 0] });
+    await user.click(await screen.findByRole("button", { name: "Remove On the day" }));
+    expect(writes.at(-1)).toEqual({ reminderOffsetDays: [7, 1] });
+    await user.type(screen.getByRole("spinbutton", { name: "days before the date" }), "30");
+    await user.click(screen.getByRole("button", { name: "Add lead time" }));
+    expect(writes.at(-1)).toEqual({ reminderOffsetDays: [30, 7, 1] });
+
+    await user.click(
+      screen.getByRole("switch", { name: "Use the organization's default lead times" }),
+    );
+    expect(writes.at(-1)).toEqual({ reminderOffsetDays: null });
+  });
+
   it("carries the rail entry M5 omitted", async () => {
     stubApi({ signedIn: MEMBER, extra: capturePreferenceWrites([]) });
     renderAt("/settings/notifications");
@@ -123,8 +214,9 @@ describe("Personal · Notifications (#320)", () => {
     // Named by its visible label — M20/9 gave the row real copy, and a
     // regex on the model's name would go on passing if the pane drew it.
     expect(screen.queryByText("Request updates")).not.toBeInTheDocument();
-    // Four event groups gain Push. Record names is one device preference.
-    expect(screen.getAllByRole("switch")).toHaveLength(18);
+    // Four event groups gain Push. Record names is one device preference,
+    // and the organization's lead times is one more.
+    expect(screen.getAllByRole("switch")).toHaveLength(19);
   });
 
   it("draws a separate email-only Briefing group and saves its rows", async () => {
@@ -208,7 +300,8 @@ describe("Personal · Notifications (#320)", () => {
         if (call.url.pathname === "/api/v1/notifications/subscriptions")
           return json(200, { subscriptions: [] });
         if (call.url.pathname !== "/api/v1/me/notification-preferences") return undefined;
-        if (call.method !== "PATCH") return json(200, { groups, briefing: BRIEFING_DEFAULTS });
+        if (call.method !== "PATCH")
+          return json(200, { groups, briefing: BRIEFING_DEFAULTS, ...LEAD_TIMES });
         const body = call.body as { eventGroup: string; channel: string; enabled: boolean };
         writes.push(body);
         groups = groups.map((row) =>
@@ -218,7 +311,7 @@ describe("Personal · Notifications (#320)", () => {
         );
         // Every reply is held open, so the test decides when each one
         // lands and can look at the pane in the gap between them.
-        const answer = json(200, { groups, briefing: BRIEFING_DEFAULTS });
+        const answer = json(200, { groups, briefing: BRIEFING_DEFAULTS, ...LEAD_TIMES });
         return new Promise<Response>((resolve) => {
           releases.push(() => {
             resolve(answer);

@@ -28,24 +28,34 @@
  * the commit only wakes a worker, and a lost send leaves a `pending`
  * row for the M12/6 sweep rather than a version nobody will ever read.
  *
- * **Only the kind is correctable.** There is one INSERT into
- * `document_versions` and one UPDATE that sets only `kind`. Both live
- * here. There is no DELETE (DOC-001, CTR-014).
+ * **Only the type is correctable.** There is one INSERT into
+ * `document_versions` and one UPDATE that sets only the type and the
+ * kind that follows it. Both live here. There is no DELETE (DOC-001,
+ * CTR-014, DOC-015).
+ *
+ * **The kind follows the type (DOC-015).** A Version of a fixed type
+ * stores that type's system kind; any other Version stores `general`,
+ * unless it was generated, in which case its kind records how it was
+ * made. {@link resolveDocumentType} is the one place that rule lives.
  */
 
 import {
   and,
   desc,
+  documents,
+  documentTypes,
   documentVersions,
   eq,
+  isNull,
+  type DocumentTypeModule,
   type DocumentVersionKind,
   type DocumentVersionSource,
   type Executor,
-  type HandSetDocumentVersionKind,
 } from "@openlaw/db";
 import { needsDisplayRendition, recordRenditionOwed } from "../pipeline/display-conversion.js";
 import { boundedQueueAsk, type JobQueue } from "../pipeline/jobs.js";
 import { extractsText, recordTextOwed } from "../pipeline/text-extraction.js";
+import { httpError } from "./problem.js";
 
 /** Somewhere to say that a queue could not be reached. The pipeline's
  * own logger shape, so a route's Fastify log and the worker's console
@@ -90,6 +100,12 @@ export interface AppendedVersion {
   fileRef: string;
   kind: DocumentVersionKind;
   /**
+   * DOC-015's type, when the caller has already resolved it with
+   * {@link resolveDocumentType}. Omitted, the type is read off `kind`:
+   * the owner list's fixed row for that kind, or none.
+   */
+  documentTypeId?: string | null;
+  /**
    * How the file was made, and which two rounds it compares.
    *
    * A generated redline names both comparison operands. An Auto-Doc's
@@ -123,12 +139,17 @@ export async function insertDocumentVersion(
   tx: Executor,
   row: Readonly<AppendedVersion>,
 ): Promise<void> {
+  const typed =
+    row.documentTypeId === undefined
+      ? await resolveDocumentType(tx, row.documentId, { kind: row.kind }, row.source)
+      : { kind: row.kind, documentTypeId: row.documentTypeId };
   await tx.insert(documentVersions).values({
     id: row.versionId,
     documentId: row.documentId,
     versionNumber: row.versionNumber,
     fileRef: row.fileRef,
-    kind: row.kind,
+    kind: typed.kind,
+    documentTypeId: typed.documentTypeId,
     source: row.source,
     generatedFromGenerationId: row.generatedFromGenerationId ?? null,
     comparedFromVersionId: row.comparedFromVersionId,
@@ -154,19 +175,128 @@ export async function insertDocumentVersion(
 
 /**
  * Corrects the judgement attached to one round without moving any fact
- * about the round. The caller checks access and rejects generated
- * provenance before this one-column write runs (CTR-014).
+ * about the round. The caller checks access, rejects generated
+ * provenance, and resolves the type before this write runs (CTR-014,
+ * DOC-015).
  */
-export async function updateDocumentVersionKind(
+export async function updateDocumentVersionType(
   tx: Executor,
   documentId: string,
   versionId: string,
-  kind: HandSetDocumentVersionKind,
+  typed: ResolvedDocumentType,
 ): Promise<void> {
   await tx
     .update(documentVersions)
-    .set({ kind })
+    .set({ kind: typed.kind, documentTypeId: typed.documentTypeId })
     .where(and(eq(documentVersions.id, versionId), eq(documentVersions.documentId, documentId)));
+}
+
+/** What a Version stores for its type (DOC-015). */
+export interface ResolvedDocumentType {
+  kind: DocumentVersionKind;
+  documentTypeId: string | null;
+  /** The type's name, for activity entries; null when there is none. */
+  displayName: string | null;
+}
+
+/**
+ * What somebody asked a round to be called: a type from the owner's
+ * list by id, null for no type, or a Version kind from a caller that
+ * speaks kinds (the portal, the signing integration, Auto-Docs).
+ */
+export type DocumentTypeChoice = { documentTypeId: string | null } | { kind: DocumentVersionKind };
+
+/** The list a Document's types come from, or null for a Knowledge
+ * Item's files, which show the item's Knowledge type, and for an
+ * Auto-Doc template, which has none. */
+export async function documentTypeModuleOf(
+  tx: Executor,
+  documentId: string,
+): Promise<DocumentTypeModule | null> {
+  const [owner] = await tx
+    .select({
+      contractId: documents.contractId,
+      matterId: documents.matterId,
+      entityId: documents.entityId,
+    })
+    .from(documents)
+    .where(eq(documents.id, documentId))
+    .limit(1);
+  if (!owner) return null;
+  if (owner.contractId) return "contract";
+  if (owner.matterId) return "matter";
+  if (owner.entityId) return "entity";
+  return null;
+}
+
+/**
+ * Turns a choice into the two columns a Version stores (DOC-015).
+ *
+ * A type id must name a live row on the owner's own list; anything else
+ * is refused, so a Matter round cannot borrow a Contract type. The row
+ * is read `for share`, so an archive that races the write waits for it.
+ *
+ * A kind maps to the owner list's fixed row for it. With no such row,
+ * an uploaded round becomes `general` with no type, which is how a
+ * Matter upload from an older client stays neutral. A generated round
+ * keeps its kind, because the kind records how it was made.
+ */
+export async function resolveDocumentType(
+  tx: Executor,
+  documentId: string,
+  choice: DocumentTypeChoice,
+  source: DocumentVersionSource = "uploaded",
+): Promise<ResolvedDocumentType> {
+  const module = await documentTypeModuleOf(tx, documentId);
+  if ("documentTypeId" in choice) {
+    if (choice.documentTypeId === null) {
+      return { kind: "general", documentTypeId: null, displayName: null };
+    }
+    const [row] = module
+      ? await tx
+          .select({
+            id: documentTypes.id,
+            displayName: documentTypes.displayName,
+            systemKind: documentTypes.systemKind,
+          })
+          .from(documentTypes)
+          .where(
+            and(
+              eq(documentTypes.id, choice.documentTypeId),
+              eq(documentTypes.module, module),
+              isNull(documentTypes.archivedAt),
+            ),
+          )
+          .limit(1)
+          .for("share")
+      : [];
+    if (!row) throw httpError(400, "Pick a document type from this record's list.");
+    return {
+      kind: row.systemKind ?? "general",
+      documentTypeId: row.id,
+      displayName: row.displayName,
+    };
+  }
+  const [row] =
+    module && choice.kind !== "generated_redline" && choice.kind !== "general"
+      ? await tx
+          .select({ id: documentTypes.id, displayName: documentTypes.displayName })
+          .from(documentTypes)
+          .where(
+            and(
+              eq(documentTypes.module, module),
+              eq(documentTypes.systemKind, choice.kind),
+              isNull(documentTypes.archivedAt),
+            ),
+          )
+          .limit(1)
+      : [];
+  if (row) return { kind: choice.kind, documentTypeId: row.id, displayName: row.displayName };
+  return {
+    kind: source === "uploaded" && choice.kind !== "generated_redline" ? "general" : choice.kind,
+    documentTypeId: null,
+    displayName: null,
+  };
 }
 
 /**

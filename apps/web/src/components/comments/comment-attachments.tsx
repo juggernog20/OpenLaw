@@ -7,7 +7,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Download, FileCheck2, Paperclip, X } from "lucide-react";
 import { MAX_COMMENT_ATTACHMENTS } from "@openlaw/shared";
 import { fileCommentAttachment, type Comment, type CommentEntityType } from "../../lib/comments";
-import { DOCUMENT_VERSION_KINDS, type HandSetDocumentVersionKind } from "../../lib/documents";
+import { useDocumentTypeOptions } from "../../lib/documents";
 import { CONTROL_CLASS } from "../../lib/form-controls";
 import { problem } from "../../lib/problem";
 import { ConfidentialToggle } from "../confidential-toggle";
@@ -295,8 +295,10 @@ function FilingDialog({
   const [documents, setDocuments] = useState(filing.documents);
   const [name, setName] = useState(attachment.filename);
   const [documentId, setDocumentId] = useState(filing.documents[0]?.id ?? "");
-  const showKind = entityType !== "matter" && !filing.recordHref.startsWith("/matters/");
-  const [kind, setKind] = useState<HandSetDocumentVersionKind>(showKind ? "draft_ours" : "general");
+  // Filing reaches Contracts and Matters; each has its own type list.
+  const onMatter = entityType === "matter" || filing.recordHref.startsWith("/matters/");
+  const typeOptions = useDocumentTypeOptions(onMatter ? "matter" : "contract");
+  const [typeId, setTypeId] = useState("");
   const [note, setNote] = useState("");
   // CMT-011: the room proposes the flag; it never mandates it.
   const [isConfidential, setConfidential] = useState(comment.visibility === "legal_only");
@@ -347,8 +349,13 @@ function FilingDialog({
       comment.id,
       attachment.id,
       destination === "new_document"
-        ? { destination, kind, name, isConfidential }
-        : { destination, documentId, kind, ...(note.trim() ? { note } : {}) },
+        ? { destination, documentTypeId: typeId || null, name, isConfidential }
+        : {
+            destination,
+            documentId,
+            documentTypeId: typeId || null,
+            ...(note.trim() ? { note } : {}),
+          },
     ).catch(() => undefined);
     if (!outcome?.data) {
       setBusy(false);
@@ -424,7 +431,7 @@ function FilingDialog({
                 />
               </div>
               <ConfidentialToggle
-                record={showKind ? "contract" : "matter"}
+                record={onMatter ? "matter" : "contract"}
                 id="comment-filing-confidential"
                 confidential={isConfidential}
                 disabled={busy}
@@ -467,32 +474,23 @@ function FilingDialog({
               </div>
             </>
           )}
-          {showKind && (
+          {typeOptions && typeOptions.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="comment-filing-kind">
-                <FormattedMessage id="comments.filing.kind" defaultMessage="Kind" />
+              <Label htmlFor="comment-filing-type">
+                <FormattedMessage id="comments.filing.type" defaultMessage="Type" />
               </Label>
               <select
-                id="comment-filing-kind"
+                id="comment-filing-type"
                 className={CONTROL_CLASS}
-                value={kind}
-                onChange={(event) => {
-                  const picked = DOCUMENT_VERSION_KINDS.find(
-                    (option) => option === event.target.value,
-                  );
-                  if (picked) setKind(picked);
-                }}
+                value={typeId}
+                onChange={(event) => setTypeId(event.target.value)}
               >
-                {DOCUMENT_VERSION_KINDS.map((option) => (
-                  <option key={option} value={option}>
-                    {intl.formatMessage(
-                      {
-                        id: "comments.filing.kindOption",
-                        defaultMessage:
-                          "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} amendment {Amendment} executed {Executed} other {{kind}}}",
-                      },
-                      { kind: option },
-                    )}
+                <option value="">
+                  {intl.formatMessage({ id: "documents.type.none", defaultMessage: "No type" })}
+                </option>
+                {typeOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.displayName}
                   </option>
                 ))}
               </select>

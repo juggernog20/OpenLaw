@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * NOT-004's reminder-offset list, as the one place that reads it.
+ * NOT-004's reminder-offset lists, as the one place that reads them.
  *
- * Global lead times apply to every tracked date. Contract and Matter
- * Key dates may add lead times of their own (NOT-004, #807).
+ * The organization's lead times are the default for every tracked date.
+ * A person may set their own list, which replaces the default for the
+ * reminders they receive (NOT-004 addendum, 2026-09-24). Contract and
+ * Matter Key dates may add lead times of their own (NOT-004, #807).
  *
  * **It is read live, on every round** — the read-on-every-decision
  * pattern the mailer resolver and the signing connector already follow.
@@ -45,6 +47,17 @@ export const SEEDED_REMINDER_OFFSETS: readonly number[] = [7, 1, 0];
  * for the same reason the rest of this read is.
  */
 export const MAX_REMINDER_OFFSET_DAYS = 730;
+
+/**
+ * How many lead times one list may hold (NOT-004).
+ *
+ * A reminder schedule is a handful of numbers — a week out, the day
+ * before, the day itself. Twenty is far past any real ladder and still
+ * small enough that the round reads the whole column without thinking
+ * about it. The bound exists so a scripted caller cannot turn one
+ * settings row into a thousand reminders a day.
+ */
+export const MAX_REMINDER_OFFSETS = 20;
 
 /**
  * Whether one stored value is a lead time this system can fire on.
@@ -109,4 +122,19 @@ export async function reminderOffsets(db: Executor): Promise<number[]> {
     .from(orgSettings)
     .limit(1);
   return usableOffsets(row?.offsets);
+}
+
+/**
+ * The offsets one person's reminders fire on: their own list when they
+ * set one, otherwise the organization's.
+ *
+ * A stored list with no usable value falls back to the organization's
+ * list, not to the seeded one. The person chose to differ from the
+ * default; a row nobody can read should not also discard what the
+ * Administrator set.
+ */
+export function personalOffsets(own: unknown, organization: readonly number[]): number[] {
+  if (!Array.isArray(own)) return [...organization];
+  const usable = [...new Set(own.filter(isUsableOffset))];
+  return usable.length > 0 ? usable.sort((left, right) => right - left) : [...organization];
 }

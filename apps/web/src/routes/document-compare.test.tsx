@@ -42,6 +42,7 @@ function version(
     createdAt: `2026-08-0${versionNumber}T10:00:00.000Z`,
     isCurrent: versionNumber === 5,
     isExecuted: false,
+    documentType: null,
   } as const;
 }
 

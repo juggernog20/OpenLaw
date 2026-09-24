@@ -17,7 +17,10 @@ const TABS = [
   {
     path: "/settings/entities/officer-roles",
     label: (
-      <FormattedMessage id="settings.entities.tab.officerRoles" defaultMessage="Officer roles" />
+      <FormattedMessage
+        id="settings.entities.tab.officerRoles"
+        defaultMessage="Director & Officer roles"
+      />
     ),
   },
   {

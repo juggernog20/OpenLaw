@@ -185,9 +185,9 @@ import {
   clearExecutedVersion,
   documentDownloadHref,
   documentComparisonPath,
-  documentKindLabel,
+  documentTypeLabel,
+  documentTypeModuleOf,
   DOCUMENT_KIND_PILL,
-  DOCUMENT_VERSION_KINDS,
   FOLDER_ROOT,
   hardDeleteDocument,
   isPreviewable,
@@ -197,12 +197,14 @@ import {
   setExecutedVersion,
   setPrimaryDocument,
   updateDocument,
-  updateDocumentVersionKind,
+  updateDocumentVersionType,
   uploadRecordDocument,
+  useDocumentTypeOptions,
   uploadDocumentVersion,
   type ContractDocument,
   type DocumentVersion,
   type DocumentRecord,
+  type DocumentTypeOption,
   type HandSetDocumentVersionKind,
   type UploadDraft,
 } from "../../lib/documents";
@@ -318,7 +320,9 @@ interface RowContext {
   selected: ReadonlySet<string>;
   onSelect: (documentId: string, selected: boolean) => void;
   documentDrag: ReturnType<typeof useDocumentDrag<ContractDocument>>;
-  showKind: boolean;
+  /** The record module's live Document types (DOC-015); empty until
+   * the read answers. */
+  typeOptions: readonly DocumentTypeOption[];
   designations: boolean;
   executedDesignations: boolean;
   folders: boolean;
@@ -351,10 +355,10 @@ interface RowContext {
   ) => void;
   onCompare: (document: ContractDocument, from: DocumentVersion, to: DocumentVersion) => void;
   onPin: (document: ContractDocument, version: DocumentVersion) => void;
-  onKindChange: (
+  onTypeChange: (
     document: ContractDocument,
     version: DocumentVersion,
-    kind: HandSetDocumentVersionKind,
+    documentTypeId: string | null,
   ) => void;
   onMakePrimary: (document: ContractDocument) => void;
   onAddVersion: (document: ContractDocument) => void;
@@ -565,6 +569,7 @@ export function DocumentsCard({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filing, setFiling] = useState<ContractDocument | null>(null);
   const [composer, setComposer] = useState<Composer | null>(null);
+  const typeOptions = useDocumentTypeOptions(documentTypeModuleOf(record.entityType));
   /**
    * The batch a confirmation is open for, or none (M13/4, M13/5,
    * DOC-011).
@@ -584,6 +589,9 @@ export function DocumentsCard({
     unreadable: (readonly string[])[];
     destination: BatchDestination | null;
     source: BatchSource;
+    /** The type picked in the composer before it handed over; a drop
+     * starts on no type. */
+    documentTypeId?: string;
   } | null>(null);
   /** A drag carrying files is over the section, so the surface says it
    * is a target rather than leaving the reader to guess (DES-033 §7).
@@ -1152,17 +1160,22 @@ export function DocumentsCard({
     setDetail(outcome.detail ?? null);
   }
 
-  /** Corrects one round's kind and leaves every other fact on it alone. */
-  async function changeKind(
+  /** Corrects one round's type and leaves every other fact on it alone. */
+  async function changeType(
     document: ContractDocument,
     version: DocumentVersion,
-    kind: HandSetDocumentVersionKind,
+    documentTypeId: string | null,
   ) {
-    if (busy || version.kind === kind || version.kind === "generated_redline") return;
+    if (
+      busy ||
+      (version.documentType?.id ?? null) === documentTypeId ||
+      version.kind === "generated_redline"
+    )
+      return;
     setBusy(true);
     setStatus("saving");
     setDetail(null);
-    const outcome = await updateDocumentVersionKind(document.id, version.id, kind);
+    const outcome = await updateDocumentVersionType(document.id, version.id, documentTypeId);
     setBusy(false);
     if (outcome.ok) {
       replace(outcome.document);
@@ -1409,7 +1422,7 @@ export function DocumentsCard({
     selected,
     onSelect: selectDocument,
     documentDrag,
-    showKind: record.entityType !== "matter" && record.entityType !== "entity",
+    typeOptions: typeOptions ?? [],
     designations: supportsDesignations(record.entityType),
     executedDesignations: record.entityType === "contract",
     folders: record.entityType !== "knowledge_item",
@@ -1430,7 +1443,8 @@ export function DocumentsCard({
     onCompare: (document, from, to) =>
       navigate(documentComparisonPath(document.id, from.id, to.id)),
     onPin: (document, version) => void togglePin(document, version),
-    onKindChange: (document, version, kind) => void changeKind(document, version, kind),
+    onTypeChange: (document, version, documentTypeId) =>
+      void changeType(document, version, documentTypeId),
     onMakePrimary: (document) => void makePrimary(document),
     onAddVersion: (document) => setComposer({ document }),
     onEditDetails: setEditing,
@@ -1643,11 +1657,9 @@ export function DocumentsCard({
                     <FormattedMessage id="documents.column.name" defaultMessage="Name" />
                   </span>
                 </th>
-                {record.entityType !== "matter" && record.entityType !== "entity" && (
-                  <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
-                    <FormattedMessage id="documents.column.kind" defaultMessage="Kind" />
-                  </th>
-                )}
+                <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
+                  <FormattedMessage id="documents.column.type" defaultMessage="Type" />
+                </th>
                 <th scope="col" className="w-24 px-4 py-2 text-start font-medium">
                   <FormattedMessage id="documents.column.version" defaultMessage="Version" />
                 </th>
@@ -1737,9 +1749,10 @@ export function DocumentsCard({
           record={record}
           document={composer.document}
           seedKind={composer.kind}
+          typeOptions={typeOptions ?? []}
           supportingOnly={supportingUploads && frozen}
           onClose={() => setComposer(null)}
-          onBatch={(files) => {
+          onBatch={(files, documentTypeId) => {
             // More than one file is a batch, wherever it came from
             // (DOC-011). The composer's own fields are a round's — one
             // note about one change — and a batch is not a round, so it
@@ -1759,6 +1772,7 @@ export function DocumentsCard({
               unreadable: [],
               destination: null,
               source: "picker",
+              documentTypeId,
             });
           }}
           onSaved={(document) => {
@@ -1776,6 +1790,7 @@ export function DocumentsCard({
           unreadable={batch.unreadable}
           destination={batch.destination}
           source={batch.source}
+          initialDocumentTypeId={batch.documentTypeId}
           // Every listing on screen, read again — the record root and
           // each open folder — with every cached listing the refresh
           // did not re-read evicted. A batch is a write over the
@@ -2061,9 +2076,7 @@ function DocumentRows({
                   </span>
                 </span>
               </td>
-              {rows.showKind && (
-                <KindCell document={document} version={chain.current} rows={rows} />
-              )}
+              <TypeCell document={document} version={chain.current} rows={rows} />
               <VersionCell version={chain.current} intl={rows.intl} />
               <ModifiedCell version={chain.current} />
               <UploaderCell version={chain.current} intl={rows.intl} />
@@ -2160,7 +2173,7 @@ function DocumentRows({
                       </span>
                     </span>
                   </td>
-                  {rows.showKind && <KindCell document={document} version={version} rows={rows} />}
+                  <TypeCell document={document} version={version} rows={rows} />
                   <VersionCell version={version} intl={rows.intl} />
                   <ModifiedCell version={version} />
                   <UploaderCell version={version} intl={rows.intl} />
@@ -2388,7 +2401,7 @@ function FolderRows({
                 {/* A folder has no kind, no version and no modified
                     date, so those cells are empty rather than filled
                     with em dashes. */}
-                {rows.showKind && <td className="px-4 py-2.5" />}
+                <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
                 <td className="px-4 py-2.5" />
@@ -2469,7 +2482,7 @@ function FolderListingFoot({
   onShowMore: (folderId: string, cursor: string) => void;
 }>) {
   /** Every column of the table, so a foot spans the row it sits in. */
-  const columns = (rows.showActionColumn ? 6 : 5) - (rows.showKind ? 0 : 1);
+  const columns = rows.showActionColumn ? 6 : 5;
   const loading = listing === undefined || listing.loading;
   if (!loading && listing.error === null && listing.nextCursor === null) return null;
 
@@ -3489,7 +3502,16 @@ function DeleteDialog({
   );
 }
 
-function KindCell({
+/**
+ * The round's Document type (DOC-015), and where a Member corrects it.
+ *
+ * The pill keeps CTR-014's colours: a fixed Contract type stores its
+ * negotiation kind, so the kind still says whose paper it is. A type an
+ * Administrator added stores `general` and reads neutral. An archived
+ * type stays on the round it labels, and the picker keeps it as the
+ * selected option so the control never claims a type it does not have.
+ */
+function TypeCell({
   document,
   version,
   rows,
@@ -3498,37 +3520,55 @@ function KindCell({
   version: DocumentVersion;
   rows: RowContext;
 }>) {
+  const label = documentTypeLabel(rows.intl, version);
   const pill = `whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[version.kind]}`;
+  const current = version.documentType;
+  const options =
+    current && !rows.typeOptions.some((option) => option.id === current.id)
+      ? [...rows.typeOptions, { id: current.id, displayName: current.displayName }]
+      : rows.typeOptions;
+  const readOnly =
+    rows.frozen ||
+    document.archivedAt !== null ||
+    version.kind === "generated_redline" ||
+    version.source === "generated" ||
+    options.length === 0;
   return (
     <td className="px-4 py-2.5">
       {/* The pill sits in a flex line rather than a text line, so it
           centres on the row instead of on a baseline the cell has no
           text to share. */}
       <span className="flex items-center">
-        {rows.frozen || document.archivedAt !== null || version.kind === "generated_redline" ? (
-          <span className={pill}>{documentKindLabel(rows.intl, version.kind)}</span>
+        {readOnly ? (
+          label === null ? (
+            <span className="text-sm text-muted">—</span>
+          ) : (
+            <span className={pill}>{label}</span>
+          )
         ) : (
           <select
             aria-label={rows.intl.formatMessage(
               {
-                id: "documents.versionKindLabel",
-                defaultMessage: "Kind of version {number} of {title}",
+                id: "documents.versionTypeLabel",
+                defaultMessage: "Type of version {number} of {title}",
               },
               { number: version.versionNumber, title: document.title },
             )}
-            className={`${pill} min-h-6 cursor-pointer border-0`}
-            value={version.kind}
+            className={
+              current
+                ? `${pill} min-h-6 max-w-full cursor-pointer truncate border-0`
+                : "min-h-6 max-w-full cursor-pointer truncate rounded-pill border-0 bg-transparent px-2 py-0.5 text-xs text-muted"
+            }
+            value={current?.id ?? ""}
             disabled={rows.busy}
-            onChange={(event) => {
-              // Narrowed against the list the options are drawn from,
-              // not asserted: the DOM hands back a string.
-              const picked = DOCUMENT_VERSION_KINDS.find((kind) => kind === event.target.value);
-              if (picked) rows.onKindChange(document, version, picked);
-            }}
+            onChange={(event) => rows.onTypeChange(document, version, event.target.value || null)}
           >
-            {DOCUMENT_VERSION_KINDS.map((kind) => (
-              <option key={kind} value={kind}>
-                {documentKindLabel(rows.intl, kind)}
+            <option value="">
+              {rows.intl.formatMessage({ id: "documents.type.none", defaultMessage: "No type" })}
+            </option>
+            {options.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.displayName}
               </option>
             ))}
           </select>
@@ -3700,6 +3740,7 @@ function UploadDialog({
   record,
   document,
   seedKind,
+  typeOptions,
   supportingOnly,
   onClose,
   onBatch,
@@ -3708,11 +3749,13 @@ function UploadDialog({
   record: DocumentRecord;
   /** The document being added to, or undefined for a new one. */
   document: ContractDocument | undefined;
-  /** What the kind picker starts on. Only a renewal routed here to be
-   * papered as an amendment sets it (M16/5); every other way in starts
-   * on the draft the negotiation usually opens with. It is a seed and
-   * not a lock — the person may pick another kind before uploading. */
+  /** What the type picker starts on, as a kind. Only a renewal routed
+   * here to be papered as an amendment sets it (M16/5); every other way
+   * in starts on no type (DOC-015). It is a seed and not a lock — the
+   * person may pick another type before uploading. */
   seedKind: HandSetDocumentVersionKind | undefined;
+  /** The record module's live Document types. */
+  typeOptions: readonly DocumentTypeOption[];
   /** A Contributor may use this one-file supporting upload action, but
    * not the folder picker that recreates and administers a tree. */
   supportingOnly: boolean;
@@ -3722,16 +3765,17 @@ function UploadDialog({
    * keyboard reaches bulk intake, so it has to reach the same dialog —
    * and the directory picker beside it is folder drop's twin, handing
    * over the same shape with a path on each file. */
-  onBatch: (files: DroppedFile[]) => void;
+  onBatch: (files: DroppedFile[], documentTypeId: string) => void;
   onSaved: (document: ContractDocument) => void;
 }>) {
   const intl = useIntl();
   const [file, setFile] = useState<File | null>(null);
-  const [kind, setKind] = useState<HandSetDocumentVersionKind>(
-    record.entityType === "matter" || record.entityType === "entity"
-      ? "general"
-      : (seedKind ?? "draft_ours"),
-  );
+  // The seed is read off the options each render, because a renewal
+  // can open the composer before the type list has answered; a pick,
+  // once made, wins.
+  const [picked, setTypeId] = useState<string | null>(null);
+  const typeId =
+    picked ?? typeOptions.find((option) => seedKind && option.systemKind === seedKind)?.id ?? "";
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -3762,7 +3806,12 @@ function UploadDialog({
     }
     setBusy(true);
     setError(null);
-    const draft: UploadDraft = { file, kind, note };
+    // A seeded amendment sent before the type list answers carries its
+    // kind, which the API maps to the fixed Amendment type (DOC-015).
+    const draft: UploadDraft =
+      !typeId && picked === null && seedKind
+        ? { file, kind: seedKind, note }
+        : { file, documentTypeId: typeId || null, note };
     const outcome = document
       ? await uploadDocumentVersion(document.id, draft)
       : await uploadRecordDocument(record, draft);
@@ -3826,7 +3875,10 @@ function UploadDialog({
                     // Picked flat, so every file lands at the record
                     // root — the batch's shape is the drop's, with an
                     // empty path on each row.
-                    onBatch(chosen.map((one) => ({ file: one, path: [] })));
+                    onBatch(
+                      chosen.map((one) => ({ file: one, path: [] })),
+                      typeId,
+                    );
                     return;
                   }
                   const one = chosen[0] ?? null;
@@ -3860,7 +3912,7 @@ function UploadDialog({
                   {...{ webkitdirectory: "" }}
                   onChange={(event) => {
                     const chosen = [...(event.target.files ?? [])];
-                    if (chosen.length > 0) onBatch(filesFromDirectoryPicker(chosen));
+                    if (chosen.length > 0) onBatch(filesFromDirectoryPicker(chosen), typeId);
                   }}
                 />
               )}
@@ -3939,25 +3991,23 @@ function UploadDialog({
               </FileTileGrid>
             )}
           </div>
-          {record.entityType !== "matter" && record.entityType !== "entity" && (
+          {typeOptions.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="document-kind">
-                <FormattedMessage id="documents.composer.kind" defaultMessage="Kind" />
+              <Label htmlFor="document-type">
+                <FormattedMessage id="documents.composer.type" defaultMessage="Type" />
               </Label>
               <select
-                id="document-kind"
-                value={kind}
+                id="document-type"
+                value={typeId}
                 className={CONTROL_CLASS}
-                onChange={(event) => {
-                  const picked = DOCUMENT_VERSION_KINDS.find(
-                    (option) => option === event.target.value,
-                  );
-                  if (picked) setKind(picked);
-                }}
+                onChange={(event) => setTypeId(event.target.value)}
               >
-                {DOCUMENT_VERSION_KINDS.map((option) => (
-                  <option key={option} value={option}>
-                    {documentKindLabel(intl, option)}
+                <option value="">
+                  {intl.formatMessage({ id: "documents.type.none", defaultMessage: "No type" })}
+                </option>
+                {typeOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.displayName}
                   </option>
                 ))}
               </select>

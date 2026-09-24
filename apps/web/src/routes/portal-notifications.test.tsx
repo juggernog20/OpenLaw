@@ -323,6 +323,8 @@ function capturePreferenceWrites(writes: unknown[], failWith?: Response) {
       briefing: [],
       vapidPublicKey: "AQID",
       showRecordNamesOnDevices: true,
+      reminderOffsetDays: null,
+      organizationReminderOffsetDays: [7, 1, 0],
     });
   };
 }

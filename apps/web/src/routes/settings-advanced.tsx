@@ -269,6 +269,7 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                   {options ? (
                     <select
                       id={id}
+                      disabled={field.locked}
                       className="h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm"
                       value={values[field.key]}
                       onChange={(event) => {
@@ -354,22 +355,38 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                 </div>
               );
             })}
-            <p className="text-sm text-muted">
-              <FormattedMessage
-                id="settings.advanced.restartHelp"
-                defaultMessage="Changes take effect after both the API and worker restart. Values saved here override deployment defaults."
-              />
-            </p>
-            <div className="flex justify-end gap-2">
-              {(section === "storage" || section === "processing") && (
-                <Button type="button" variant="secondary" onClick={() => void run(true)}>
-                  <FormattedMessage id="settings.advanced.test" defaultMessage="Test connection" />
-                </Button>
-              )}
-              <Button type="submit" disabled={section === "storage" && !tested}>
-                <FormattedMessage id="action.save" defaultMessage="Save" />
-              </Button>
-            </div>
+            {/* A value the deployment sets always wins, so a section whose
+                every field is pinned has nothing to save. */}
+            {state.fields.every((field) => field.locked) ? (
+              <p className="text-sm text-muted">
+                <FormattedMessage
+                  id="settings.advanced.allLocked"
+                  defaultMessage="The deployment configuration sets this value. Change it there, then restart the API and worker."
+                />
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-muted">
+                  <FormattedMessage
+                    id="settings.advanced.restartHelp"
+                    defaultMessage="Values saved here replace OpenLaw's defaults. A value set in the deployment configuration is read only here. Changes take effect after both the API and worker restart."
+                  />
+                </p>
+                <div className="flex justify-end gap-2">
+                  {(section === "storage" || section === "processing") && (
+                    <Button type="button" variant="secondary" onClick={() => void run(true)}>
+                      <FormattedMessage
+                        id="settings.advanced.test"
+                        defaultMessage="Test connection"
+                      />
+                    </Button>
+                  )}
+                  <Button type="submit" disabled={section === "storage" && !tested}>
+                    <FormattedMessage id="action.save" defaultMessage="Save" />
+                  </Button>
+                </div>
+              </>
+            )}
           </fieldset>
         </form>
       </SettingsCard>

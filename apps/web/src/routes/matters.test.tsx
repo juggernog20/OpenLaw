@@ -495,7 +495,8 @@ describe("the Matters destination", () => {
         if (call.url.pathname === "/api/v1/matters/8/documents" && call.method === "POST") {
           expect(creates).toBe(1);
           const form = call.body as FormData;
-          expect(form.get("kind")).toBe("general");
+          // DOC-015: no type chosen, which the seam reads as none.
+          expect(form.get("documentTypeId")).toBe("");
           const name = (form.get("file") as File).name;
           uploads.push(name);
           if (uploads.length === 1)
@@ -520,7 +521,7 @@ describe("the Matters destination", () => {
       new File(["advice"], "advice.txt", { type: "text/plain" }),
       new File(["notes"], "notes.txt", { type: "text/plain" }),
     ]);
-    expect(within(dialog).queryByLabelText("Document kind")).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText("Document type")).not.toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Create" }));
     await screen.findByText("Record created. Uploading documents…");
     await user.keyboard("{Escape}");

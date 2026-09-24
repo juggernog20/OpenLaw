@@ -132,6 +132,26 @@ beforeEach(() => {
   );
 });
 
+/** DOC-015: the fixed Contract type a kind names, as the API answers it. */
+const FIXED_TYPE_NAMES: Partial<Record<string, string>> = {
+  draft_ours: "Draft · ours",
+  draft_theirs: "Draft · theirs",
+  redline_theirs: "Redline · theirs",
+  redline_ours: "Redline · ours",
+  executed: "Executed",
+  amendment: "Amendment",
+};
+function typedAs(kind: string) {
+  const displayName = FIXED_TYPE_NAMES[kind];
+  return displayName ? { id: `dt-${kind}`, displayName, archived: false } : null;
+}
+/** The type-options read, as the Contract list answers it. */
+const CONTRACT_TYPE_OPTIONS = Object.entries(FIXED_TYPE_NAMES).map(([kind, displayName]) => ({
+  id: `dt-${kind}`,
+  displayName: displayName!,
+  systemKind: kind,
+}));
+
 const ADMIN = {
   id: "u1",
   email: "admin@example.com",
@@ -582,6 +602,9 @@ function recordApi(
   };
   const statusById = new Map(OPTIONS.contractStatuses.map((status) => [status.id, status]));
   const handler = (call: StubCall): Response | undefined => {
+    if (call.url.pathname === "/api/v1/documents/type-options" && call.method === "GET") {
+      return json(200, { documentTypes: CONTRACT_TYPE_OPTIONS });
+    }
     if (call.url.pathname === "/api/v1/contracts/options" && call.method === "GET") {
       return json(200, OPTIONS);
     }
@@ -3886,7 +3909,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     expect(confidential).toBeChecked();
     // The proposal is not a mandate: this filer clears it before filing.
     await user.click(confidential);
-    await user.selectOptions(within(dialog).getByLabelText("Kind"), "draft_theirs");
+    await user.selectOptions(await within(dialog).findByLabelText("Type"), "dt-draft_theirs");
     await user.clear(within(dialog).getByLabelText("Document name"));
     await user.type(within(dialog).getByLabelText("Document name"), "Counterparty paper");
     await user.click(within(dialog).getByRole("button", { name: "File" }));
@@ -3895,7 +3918,7 @@ describe("the contract record's comment applet (M9/2)", () => {
       expect(comments.filings).toEqual([
         {
           destination: "new_document",
-          kind: "draft_theirs",
+          documentTypeId: "dt-draft_theirs",
           name: "Counterparty paper",
           isConfidential: false,
         },
@@ -3954,7 +3977,7 @@ describe("the contract record's comment applet (M9/2)", () => {
     ).not.toBeChecked();
     await user.selectOptions(within(dialog).getByLabelText("Destination"), "new_version");
     expect(within(dialog).getByLabelText("Document")).toHaveValue("doc-existing");
-    await user.selectOptions(within(dialog).getByLabelText("Kind"), "redline_ours");
+    await user.selectOptions(await within(dialog).findByLabelText("Type"), "dt-redline_ours");
     await user.type(within(dialog).getByLabelText("Note"), "Held the liability cap.");
     await user.click(within(dialog).getByRole("button", { name: "File" }));
 
@@ -3963,7 +3986,7 @@ describe("the contract record's comment applet (M9/2)", () => {
         {
           destination: "new_version",
           documentId: "doc-existing",
-          kind: "redline_ours",
+          documentTypeId: "dt-redline_ours",
           note: "Held the liability cap.",
         },
       ]);
@@ -6265,6 +6288,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     /** The CTR-014 pin, which no upload ever sets: it is the team's own
      * decision, never read off the round's kind. */
     isExecuted: false,
+    documentType: typedAs(over.kind ?? "draft_ours"),
     ...over,
   });
 
@@ -6404,6 +6428,9 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       includeArchived ? current : current.filter((row) => row.archivedAt === null);
     const handler = (call: StubCall): Response | undefined => {
       const { pathname } = call.url;
+      if (pathname === "/api/v1/documents/type-options" && call.method === "GET") {
+        return json(200, { documentTypes: CONTRACT_TYPE_OPTIONS });
+      }
       if (pathname === "/api/v1/contracts/42/documents" && call.method === "GET") {
         return json(200, {
           documents: paper(call.url.searchParams.get("includeArchived") === "true"),
@@ -6450,7 +6477,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         current = current.map((row) => (row === target ? next : row));
         return json(201, { document: next });
       }
-      // A version-kind correction changes one field on one round and
+      // A version-type correction changes one field on one round and
       // answers the document with the chain in the same order.
       const corrected = /^\/api\/v1\/documents\/([^/]+)\/versions\/([^/]+)$/.exec(pathname);
       if (corrected && call.method === "PATCH") {
@@ -6460,7 +6487,19 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         const next = {
           ...target,
           versions: (target.versions as Record<string, unknown>[]).map((row) =>
-            row.id === corrected[2] ? { ...row, kind: (call.body as { kind: string }).kind } : row,
+            row.id === corrected[2]
+              ? (() => {
+                  const typeId = (call.body as { documentTypeId: string | null }).documentTypeId;
+                  const option = CONTRACT_TYPE_OPTIONS.find((candidate) => candidate.id === typeId);
+                  return {
+                    ...row,
+                    kind: option?.systemKind ?? "general",
+                    documentType: option
+                      ? { id: option.id, displayName: option.displayName, archived: false }
+                      : null,
+                  };
+                })()
+              : row,
           ),
         };
         current = current.map((row) => (row === target ? next : row));
@@ -6637,43 +6676,44 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
 
     const section = await documentsSection();
     expect(
-      within(section).getByRole("combobox", {
-        name: "Kind of version 1 of Orion_MSA_2026_their_paper.docx",
+      await within(section).findByRole("combobox", {
+        name: "Type of version 1 of Orion_MSA_2026_their_paper.docx",
       }),
-    ).toHaveValue("draft_theirs");
+    ).toHaveValue("dt-draft_theirs");
   });
 
-  it("lets Member+ correct a version kind from the pill", async () => {
+  it("lets Member+ correct a version type from the pill", async () => {
     const api = documentsApi([CHAIN]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/documents");
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    const picker = within(section).getByRole("combobox", {
-      name: "Kind of version 3 of Orion Cloud — master services agreement",
+    const picker = await within(section).findByRole("combobox", {
+      name: "Type of version 3 of Orion Cloud — master services agreement",
     });
     expect(
       within(picker)
         .getAllByRole("option")
         .map((option) => option.textContent),
     ).toEqual([
+      "No type",
       "Draft · ours",
       "Draft · theirs",
       "Redline · theirs",
       "Redline · ours",
-      "Amendment",
       "Executed",
+      "Amendment",
     ]);
 
-    await user.selectOptions(picker, "executed");
+    await user.selectOptions(picker, "dt-executed");
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
     expect(api.writes[0]).toEqual({
       url: "/api/v1/documents/doc-3/versions/ver-c",
-      body: { kind: "executed" },
+      body: { documentTypeId: "dt-executed" },
     });
-    await waitFor(() => expect(picker).toHaveValue("executed"));
+    await waitFor(() => expect(picker).toHaveValue("dt-executed"));
   });
 
   it("shows a generated redline but never offers a picker for it", async () => {
@@ -6754,7 +6794,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     ).not.toBeInTheDocument();
   });
 
-  it("uploads through the composer, sending the kind and the note with the file", async () => {
+  it("uploads through the composer, sending the type and the note with the file", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/documents");
@@ -6768,18 +6808,18 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
         type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       }),
     );
-    await user.selectOptions(within(dialog).getByLabelText("Kind"), "redline_ours");
+    await user.selectOptions(await within(dialog).findByLabelText("Type"), "dt-redline_ours");
     await user.type(within(dialog).getByLabelText("Note"), "Our counter to their clause 8.");
     await user.click(within(dialog).getByRole("button", { name: "Upload" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
     const form = api.writes[0]!.body as FormData;
     expect(api.writes[0]!.url).toBe("/api/v1/contracts/42/documents");
-    expect(form.get("kind")).toBe("redline_ours");
+    expect(form.get("documentTypeId")).toBe("dt-redline_ours");
     expect(form.get("note")).toBe("Our counter to their clause 8.");
     // The fields ride before the file, which is the order the seam
     // reads them in.
-    expect([...form.keys()]).toEqual(["kind", "note", "file"]);
+    expect([...form.keys()]).toEqual(["documentTypeId", "note", "file"]);
     // Newest first, and the count follows.
     expect(
       await within(section).findByRole("button", { name: "counter_redline.docx" }),
@@ -6787,10 +6827,10 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     expect(countBadge(section, "2 documents")).toBeVisible();
   });
 
-  it("offers the six kinds in the order a negotiation walks them (#326)", async () => {
-    // The order is a decision, not an accident: the two drafts are the
-    // two ways a negotiation can open, so `draft_theirs` sits beside
-    // `draft_ours` rather than beside the redlines it is not one of.
+  it("offers the Contract types in the list's order, starting blank (DOC-015)", async () => {
+    // The seeded order is a decision, not an accident: the two drafts
+    // are the two ways a negotiation can open, so `draft_theirs` sits
+    // beside `draft_ours` rather than beside the redlines (#326).
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT]).handler });
     renderAt("/contracts/42/documents");
     const user = userEvent.setup();
@@ -6798,14 +6838,16 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const section = await documentsSection();
     const dialog = await compose(user, section, "Upload");
 
-    const kind = within(dialog).getByLabelText("Kind");
-    expect([...within(kind).getAllByRole("option")].map((option) => option.textContent)).toEqual([
+    const type = await within(dialog).findByLabelText("Type");
+    expect(type).toHaveValue("");
+    expect([...within(type).getAllByRole("option")].map((option) => option.textContent)).toEqual([
+      "No type",
       "Draft · ours",
       "Draft · theirs",
       "Redline · theirs",
       "Redline · ours",
-      "Amendment",
       "Executed",
+      "Amendment",
     ]);
   });
 
@@ -7631,6 +7673,7 @@ describe("the doc panel (M12/2)", () => {
     createdAt: "2026-08-11T09:00:00.000Z",
     isCurrent: true,
     isExecuted: false,
+    documentType: typedAs(over.kind ?? "draft_ours"),
     ...over,
   });
 
@@ -9072,6 +9115,7 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     createdAt: "2026-08-11T09:00:00.000Z",
     isCurrent: true,
     isExecuted: false,
+    documentType: typedAs(over.kind ?? "draft_ours"),
     ...over,
   });
 
@@ -9871,6 +9915,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     createdAt: "2026-08-11T09:00:00.000Z",
     isCurrent: true,
     isExecuted: false,
+    documentType: typedAs(over.kind ?? "draft_ours"),
     ...over,
   });
 
@@ -9981,7 +10026,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
         lastUpload = ++sequence;
         uploaded.push({
           name: file.name,
-          kind: String(form.get("kind")),
+          kind: String(form.get("documentTypeId")),
           folderId: form.has("folderId") ? String(form.get("folderId")) : null,
           folderPath: form.has("folderPath") ? String(form.get("folderPath")) : null,
         });
@@ -10064,7 +10109,7 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     expect(api.uploaded).toEqual([]);
   });
 
-  it("collects one kind for the whole batch and no note, and sends it with every file", async () => {
+  it("collects one type for the whole batch and no note, and sends it with every file", async () => {
     const api = batchApi([]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/documents");
@@ -10073,19 +10118,19 @@ describe("the multi-file batch on the contract record (M13/4, DOC-011, DES-033)"
     const section = await documentsSection();
     dropOn(section, [file("one.pdf"), file("two.pdf")]);
     const dialog = await screen.findByRole("dialog");
-    // One control over the kinds, defaulting to our own draft, and no
+    // One control over the types, starting blank (DOC-015), and no
     // per-file ceremony beside it (DOC-011).
-    const kind = within(dialog).getByLabelText("Version kind");
-    expect(kind).toHaveValue("draft_ours");
+    const type = await within(dialog).findByLabelText("Type");
+    expect(type).toHaveValue("");
     expect(within(dialog).queryByLabelText("Note")).toBeNull();
-    await user.selectOptions(kind, "executed");
+    await user.selectOptions(type, "dt-executed");
     await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
 
     await waitFor(() => expect(api.uploaded).toHaveLength(2));
     expect(api.names().toSorted()).toEqual(["one.pdf", "two.pdf"]);
-    // One kind rode with every file of the batch, and it is the one the
+    // One type rode with every file of the batch, and it is the one the
     // dialog collected.
-    expect(api.uploaded.map((one) => one.kind)).toEqual(["executed", "executed"]);
+    expect(api.uploaded.map((one) => one.kind)).toEqual(["dt-executed", "dt-executed"]);
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
     // Both rows land, both as new documents at version 1, and the
     // section counts them.
@@ -10541,6 +10586,7 @@ describe("dropping a folder tree on the contract record (M13/5, DOC-011, DES-033
     createdAt: "2026-08-11T09:00:00.000Z",
     isCurrent: true,
     isExecuted: false,
+    documentType: typedAs(over.kind ?? "draft_ours"),
     ...over,
   });
 

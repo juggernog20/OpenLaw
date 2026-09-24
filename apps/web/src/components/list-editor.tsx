@@ -89,7 +89,9 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   rowError: Record<string, string | undefined>;
   /** In-place rename (DES-017). A value list omits the pair: a lead time
    * is not renamed, it is removed and another one added. */
-  renameLabel?: (row: Row) => string;
+  /** The rename control's name; null draws the row's name as plain
+   * text, for a row that cannot be renamed (DOC-015's fixed types). */
+  renameLabel?: (row: Row) => string | null;
   /** Commits an in-place rename; the trimmed draft is never empty. */
   onRename?: (row: Row, displayName: string) => void;
   /** Content beside the name: qualifier pills, table columns. */
@@ -204,8 +206,10 @@ export function ListEditor<Row extends ListEditorRow>({
   }
 
   function nameCell(row: Row) {
-    // A value list has no rename: the row reads as what it is.
-    if (!onRename || !renameLabel) {
+    // A value list has no rename, and neither has a fixed row: the row
+    // reads as what it is.
+    const label = renameLabel?.(row) ?? null;
+    if (!onRename || label === null) {
       return <span className="text-base font-medium text-primary">{row.displayName}</span>;
     }
     if (editing?.id === row.id) {
@@ -213,7 +217,7 @@ export function ListEditor<Row extends ListEditorRow>({
         <Input
           autoFocus
           value={editing.draft}
-          aria-label={renameLabel(row)}
+          aria-label={label}
           className="h-7 w-64 max-w-full"
           onChange={(event) => setEditing({ id: row.id, draft: event.target.value })}
           onBlur={() => commitRename(row, editing.draft)}
@@ -229,7 +233,7 @@ export function ListEditor<Row extends ListEditorRow>({
         type="button"
         // In-place rename (DES-017/DES-020): the name IS the editor.
         onClick={() => setEditing({ id: row.id, draft: row.displayName })}
-        aria-label={renameLabel(row)}
+        aria-label={label}
         className="rounded-chip text-base font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
       >
         {row.displayName}

@@ -25,8 +25,8 @@ export async function settingsOfficerRolesLoader() {
 }
 
 const MESSAGES = defineMessages({
-  pageTitle: { id: "settings.officerRoles.pageTitle", defaultMessage: "Officer roles" },
-  title: { id: "settings.officerRoles.title", defaultMessage: "Officer roles" },
+  pageTitle: { id: "settings.officerRoles.pageTitle", defaultMessage: "Director & Officer roles" },
+  title: { id: "settings.officerRoles.title", defaultMessage: "Director & Officer roles" },
   count: {
     id: "settings.officerRoles.count",
     defaultMessage: "{count, plural, one {# role} other {# roles}}",

@@ -194,7 +194,7 @@ describe("the Users pane (#65)", () => {
       }),
     ).toBeVisible();
     expect(
-      within(caseyRow).getByRole("button", { name: "Revoke all sessions of casey@example.com" }),
+      within(caseyRow).getByRole("button", { name: "More actions for casey@example.com" }),
     ).toBeVisible();
     expect(
       within(caseyRow).getByRole("button", { name: "Archive casey@example.com" }),
@@ -210,7 +210,7 @@ describe("the Users pane (#65)", () => {
     ).not.toBeInTheDocument();
     expect(
       within(blairRow).queryByRole("button", {
-        name: "Revoke all sessions of blair@example.com",
+        name: "More actions for blair@example.com",
       }),
     ).not.toBeInTheDocument();
 
@@ -488,8 +488,9 @@ describe("the Users pane (#65)", () => {
     renderAt("/settings/users");
 
     await user.click(
-      await screen.findByRole("button", { name: "Revoke all sessions of casey@example.com" }),
+      await screen.findByRole("button", { name: "More actions for casey@example.com" }),
     );
+    await user.click(await screen.findByRole("menuitem", { name: "Sign out user" }));
 
     await waitFor(() => expect(calls.sessionRevokes).toEqual(["u2"]));
     expect(await screen.findByText("Saved")).toBeVisible();
