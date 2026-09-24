@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
 /**
  * OpenLaw API application factory (TECH-003: Fastify + REST/OpenAPI,
  * TECH-016: Zod as the single schema source).
@@ -550,7 +551,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // plugin, so a module registered later cannot forget it. The better-auth
   // handler lives outside /api/v1 and runs its own origin check. /mcp is
   // outside too, on purpose: it authenticates by API key, never by cookie,
-  // so a foreign Origin has nothing to forge (TECH-035).
+  // so a foreign Origin has nothing to forge (TECH-035). /mcp/uploads sits
+  // with it: its only credential is the signed URL T27 issued.
   const ownOrigin = new URL(deps.config.baseUrl).origin;
   app.addHook("onRequest", async (request) => {
     if (!UNSAFE_METHODS.has(request.method)) return;

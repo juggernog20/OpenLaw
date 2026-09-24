@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
 /**
  * The share register at the HTTP seam (ENT-011): share classes, register
  * entries with their certificates, and the as-of read that replays them
@@ -27,7 +28,8 @@ import {
   type Transaction,
 } from "@openlaw/db";
 import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE, type ChangedFields } from "@openlaw/shared";
-import { requireRole } from "../../auth/guards.js";
+import type { Db } from "@openlaw/db";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
@@ -1446,8 +1448,8 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
 };
 
 export async function getEntityShareRegister(
-  db: import("@openlaw/db").Db,
-  user: import("../../auth/user.js").AuthenticatedUser,
+  db: Db,
+  user: AuthenticatedUser,
   id: string,
   asOf = todayIsoDate(),
 ) {

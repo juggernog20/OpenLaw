@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { HttpError } from "../../lib/problem.js";
 
 /** Portal reads require a session. Request forms read the destination type's Intake tree; archived Request types take no submissions. */
 
@@ -24,7 +23,8 @@ import {
 import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { documentAudienceScope } from "../../lib/contract-access.js";
 import { AttachedCustomFieldSchema } from "../../lib/custom-fields.js";
-import { httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
+import type { Db } from "@openlaw/db";
+import { HttpError, httpError, problemResponse, PROBLEM_CONTENT_TYPE } from "../../lib/problem.js";
 import { attachmentDisposition } from "../../lib/uploads.js";
 
 import { readIntakeForm } from "../../lib/intake-form.js";
@@ -344,11 +344,7 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 };
 
-export async function getPortalKnowledge(
-  db: import("@openlaw/db").Db,
-  user: import("../../auth/user.js").AuthenticatedUser,
-  id: string,
-) {
+export async function getPortalKnowledge(db: Db, user: AuthenticatedUser, id: string) {
   const item = await readPortalKnowledgeItem(db, user, id);
   if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
   // The Document's own Confidential flag (DOC-008) narrows the paper

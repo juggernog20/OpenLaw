@@ -353,6 +353,8 @@ it("counts streamed bytes without Content-Length and requires the signed URL eve
     payload: Readable.from([Buffer.alloc(40), Buffer.alloc(40)]),
   });
   expect(response.statusCode, response.body).toBe(413);
+  const bodiless = await h.app.inject({ method: "PUT", url: url.pathname + url.search });
+  expect(bodiless.statusCode, bodiless.body).toBe(400);
   expect(
     await h.db.select().from(documentVersions).where(eq(documentVersions.id, upload.versionId)),
   ).toHaveLength(0);

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
 /**
  * DD-029 and TECH-035's code-owned Tool register. Definitions carry their schemas,
  * audience defaults and annotations without a transport dependency. The grant

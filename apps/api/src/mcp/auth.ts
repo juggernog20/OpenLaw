@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
 /**
  * TECH-035 API key authentication. Approval, revocation, expiry and owner match
  * precede the shared live-user read. Archival, the master switch and the current

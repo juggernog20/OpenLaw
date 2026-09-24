@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
 /** Officers and registrations on the Entity record (ENT-001/ENT-002). */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -18,7 +19,8 @@ import {
   type EntityRegistration,
   type Transaction,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
+import type { Db } from "@openlaw/db";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { NO_ENTITY, reachedEntity, type LockedEntity } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -607,8 +609,8 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
 };
 
 export async function listEntityOfficers(
-  db: import("@openlaw/db").Db,
-  user: import("../../auth/user.js").AuthenticatedUser,
+  db: Db,
+  user: AuthenticatedUser,
   id: string,
   includeFormer = false,
 ) {

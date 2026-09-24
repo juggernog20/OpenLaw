@@ -1,23 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import {
-  assertLiveOwner,
-  assertOpen,
-  assertOpenDocument,
-  assertOpenEntity,
-  assertOpenMatter,
-  assertReachedDocument,
-  completeContractUpload,
-  completeEntityUpload,
-  completeKnowledgeUpload,
-  completeMatterUpload,
-  completeVersionUpload,
-  insertVersion,
-  ownerCopy,
-  reachedDocument,
-  type ReachedDocument,
-  type StoredUpload,
-} from "./upload-service.js";
-
 /**
  * A contract's paper (M11/2, M11/3, M11/4, M11/5) — the first path in
  * the codebase that puts a file anywhere: upload a draft, append the
@@ -251,6 +232,24 @@ import {
   toVersion,
   type ReachedVersion,
 } from "./service.js";
+import {
+  assertLiveOwner,
+  assertOpen,
+  assertOpenDocument,
+  assertOpenEntity,
+  assertOpenMatter,
+  assertReachedDocument,
+  completeContractUpload,
+  completeEntityUpload,
+  completeKnowledgeUpload,
+  completeMatterUpload,
+  completeVersionUpload,
+  insertVersion,
+  ownerCopy,
+  reachedDocument,
+  type ReachedDocument,
+  type StoredUpload,
+} from "./upload-service.js";
 
 /** Uploads, Versions and record paper reads are the Document surface a
  * Business User receives (DD-024). Reach still comes from the owning

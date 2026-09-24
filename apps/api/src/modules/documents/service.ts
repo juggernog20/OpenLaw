@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { portalKnowledgeScope } from "../knowledge/service.js";
 
 /**
  * Per-record Document lists and Version text reads enforce owning-record reach and the
@@ -38,6 +37,7 @@ import {
   reachedContract,
 } from "../../lib/contract-access.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
+import { portalKnowledgeScope } from "../knowledge/service.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
 import { httpError } from "../../lib/problem.js";
 import { renderFamilyOf } from "../../lib/render-family.js";

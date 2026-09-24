@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * T27's upload URL (TECH-035). The Tool signs a ticket that names the target, the
+ * credential and a pending Version id. A PUT of the bytes to /mcp/uploads completes
+ * that Version once, under the upload ceiling. The ticket is the only credential the
+ * route accepts, and the live key, the policy and record reach are read again before
+ * the rows are written.
+ */
+
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { Readable } from "node:stream";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
@@ -163,6 +172,8 @@ export function documentUploadRoutes(secret: string): FastifyPluginAsync {
           .from(documentVersions)
           .where(eq(documentVersions.id, ticket.versionId));
         if (existing) throw httpError(409, "This upload URL has already completed a Version.");
+        // A PUT with no body never reaches the parser, so there is no stream to count.
+        if (!request.body) throw httpError(400, "Send the file bytes as the request body.");
         const size = Number(request.headers["content-length"]);
         if (size > app.maxUploadBytes) throw refuseOversize(app.maxUploadBytes);
         const digest = createHash("sha256");

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
 /** Entity obligations, Mark filed, and the unified compliance calendar (ENT-006). */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -17,7 +18,8 @@ import {
   type EntityObligation,
   type Transaction,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
+import type { Db } from "@openlaw/db";
+import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { shiftMonths } from "../../lib/contract-term.js";
 import {
@@ -597,11 +599,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 };
 
-export async function listEntityObligations(
-  db: import("@openlaw/db").Db,
-  user: import("../../auth/user.js").AuthenticatedUser,
-  id: string,
-) {
+export async function listEntityObligations(db: Db, user: AuthenticatedUser, id: string) {
   const entity = await reachedEntity(db, user, id);
   if (!entity) throw httpError(404, NO_ENTITY);
   const rows = await obligationProjection(db, user)

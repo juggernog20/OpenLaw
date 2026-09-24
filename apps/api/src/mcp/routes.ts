@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 
 /**
  * TECH-035 stateless /mcp mount. Only a verified credential reaches the factory,
  * which creates one server for that caller and protocol era per request.
- * The route is outside the session origin check and hidden from OpenAPI.
+ * The route is outside the session origin check and hidden from OpenAPI, and so
+ * is the /mcp/uploads PUT that completes a T27 upload under its signed URL.
  */
 
 import {
@@ -21,6 +21,7 @@ import { HttpError } from "../lib/problem.js";
 import type { Environment } from "../modules/advanced-settings/config.js";
 import { authenticateKey } from "./auth.js";
 import { callTool } from "./calls.js";
+import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 import {
   instructions,
   toolInputJsonSchema,
