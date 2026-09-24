@@ -17,7 +17,7 @@ describe("the question URL codec", () => {
       conditions: [
         {
           kind: "contract" as const,
-          property: "field:governing-law",
+          property: "title",
           operator: "contains",
           value: "Delaware",
         },

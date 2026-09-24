@@ -671,3 +671,11 @@ export {
   decodeSearchQuestion,
   type SearchQuestion,
 } from "./search-question.js";
+
+export {
+  SEARCH_PROPERTIES,
+  SEARCH_OPERATORS,
+  searchProperty,
+  conditionProblem,
+  type SearchProperty,
+} from "./search-conditions.js";

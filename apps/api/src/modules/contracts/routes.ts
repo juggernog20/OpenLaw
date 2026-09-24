@@ -1790,7 +1790,22 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         [...new Map(values.map((value) => [value.id, value])).values()].sort((a, b) =>
           a.displayName.localeCompare(b.displayName),
         );
+      const [partyChoices, entityChoices] = await Promise.all([
+        app.db
+          .selectDistinct({ id: counterparties.id, displayName: counterparties.name })
+          .from(contracts)
+          .innerJoin(contractCounterparties, eq(contractCounterparties.contractId, contracts.id))
+          .innerJoin(counterparties, eq(counterparties.id, contractCounterparties.counterpartyId))
+          .where(teamScope(request.user)),
+        app.db
+          .selectDistinct({ id: entities.id, displayName: entities.legalName })
+          .from(contracts)
+          .innerJoin(entities, eq(entities.id, contracts.entityId))
+          .where(and(teamScope(request.user), entityReachScope(app.db, request.user))),
+      ]);
       return {
+        counterparties: unique(partyChoices),
+        entities: unique(entityChoices),
         types: unique(rows.map((row) => ({ id: row.typeId, displayName: row.typeName }))),
         statuses: unique(rows.map((row) => ({ id: row.statusId, displayName: row.statusName }))),
         people: unique(

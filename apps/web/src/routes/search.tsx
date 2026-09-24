@@ -24,6 +24,7 @@ import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Button } from "../components/ui/button";
 
+import { ConditionChips } from "../components/search/condition-chips";
 import { SearchSort } from "../components/search/search-sort";
 import { AdvancedSearchButton } from "../components/search/advanced-search";
 import {
@@ -137,6 +138,7 @@ function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
           <X size={14} aria-hidden="true" />
         </Link>
       ))}
+      <ConditionChips question={question} />
       <nav aria-label={intl.formatMessage(MESSAGES.filterLabel)} className="flex flex-wrap gap-2">
         {choices.map(({ kind, label }) => {
           const selected = kind ? question.kinds.includes(kind) : question.kinds.length === 0;

@@ -60,5 +60,12 @@ export async function querySearch(
       body: { ...question, ...options, timeZone: resolveTimeZone() },
     })
     .catch(() => undefined);
-  return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
+  if (result?.data) return { ok: true, ...result.data };
+  const failure = await problem(result);
+  const errors = result?.error?.errors;
+  return {
+    ok: false,
+    ...failure,
+    detail: errors?.length ? errors.map((error) => error.message).join(" ") : failure.detail,
+  };
 }

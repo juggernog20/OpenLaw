@@ -387,3 +387,211 @@ it("preserves legacy kind when submitting new header words with Enter", async ()
     ).toEqual(simpleSearchQuestion("changed", ["contract"])),
   );
 });
+
+describe("search conditions", () => {
+  const options = {
+    types: [{ id: "nda", displayName: "NDA" }],
+    statuses: [
+      { id: "active", displayName: "Active" },
+      { id: "draft", displayName: "Draft" },
+    ],
+    people: [],
+  };
+  function stubConditions() {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname.endsWith("/filter-options")
+          ? json(200, options)
+          : call.url.pathname === "/api/v1/search/query"
+            ? answer([CONTRACT])
+            : undefined,
+    });
+  }
+  it("groups and searches only selected kinds, edits rows and match, and removes rows with their kind", async () => {
+    stubConditions();
+    renderAt("/");
+    const user = userEvent.setup();
+    const dialog = await openDialog();
+    expect(within(dialog).getByRole("button", { name: "Add condition" })).toBeDisabled();
+    await user.click(within(dialog).getByRole("button", { name: "Contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Matter" }));
+    await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
+    await user.type(screen.getByRole("textbox", { name: "Search properties" }), "stat");
+    expect(screen.getByRole("group", { name: "Contract" })).toBeVisible();
+    expect(screen.getByRole("group", { name: "Matter" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Expiry date" })).not.toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole("group", { name: "Contract" })).getByRole("button", {
+        name: "Status",
+      }),
+    );
+    const row = within(dialog).getByRole("group", { name: "Contract Status condition" });
+    expect(within(row).getByRole("combobox", { name: "Operator" })).toHaveValue("is_any_of");
+    await user.click(within(row).getByRole("button", { name: "Choose values" }));
+    await user.click(screen.getByRole("checkbox", { name: "Active" }));
+    await user.click(screen.getByRole("checkbox", { name: "Draft" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+    await user.click(within(dialog).getByRole("button", { name: "Match any" }));
+    expect(within(dialog).getByRole("button", { name: "Match any" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Contract" }));
+    expect(
+      within(dialog).queryByRole("group", { name: "Contract Status condition" }),
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Conditions for Contract were removed.")).toBeVisible();
+  });
+  it("edits a condition chip on its row, removes it, and keeps the question on reload", async () => {
+    stubConditions();
+    const question = {
+      ...simpleSearchQuestion("", ["contract"]),
+      conditions: [
+        { kind: "contract" as const, property: "status", operator: "is_any_of", value: ["active"] },
+        { kind: "contract" as const, property: "confidential", operator: "is", value: false },
+      ],
+    };
+    const { router, view } = renderAt(`/search?aq=${encodeSearchQuestion(question)}`);
+    const user = userEvent.setup();
+    const chip = await screen.findByRole("button", { name: "Edit Contract Confidential is No" });
+    await user.click(chip);
+    const row = screen.getByRole("group", { name: "Contract Confidential condition" });
+    await waitFor(() => expect(row).toHaveFocus());
+    await user.selectOptions(within(row).getByRole("combobox", { name: "Value" }), "true");
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Search" }));
+    expect(
+      await screen.findByRole("button", { name: "Edit Contract Confidential is Yes" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("link", { name: "Remove Contract Status is any of Active" }));
+    const stored = decodeSearchQuestion(
+      new URLSearchParams(router.state.location.search).get("aq")!,
+    );
+    expect(stored?.conditions).toEqual([
+      { kind: "contract", property: "confidential", operator: "is", value: true },
+    ]);
+    const reloadPath = router.state.location.pathname + router.state.location.search;
+    view.unmount();
+    router.dispose();
+    renderAt(reloadPath);
+    expect(
+      await screen.findByRole("button", { name: "Edit Contract Confidential is Yes" }),
+    ).toBeVisible();
+  });
+});
+
+describe("condition values and refusals", () => {
+  for (const kind of ["contract", "matter"] as const) {
+    it(`${kind} draws text, flag and date operators and removes a row`, async () => {
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) =>
+          call.url.pathname.endsWith("/filter-options")
+            ? json(200, { types: [], statuses: [], people: [] })
+            : call.url.pathname === "/api/v1/search/query"
+              ? answer()
+              : undefined,
+      });
+      const question = {
+        ...simpleSearchQuestion("", [kind]),
+        conditions: [
+          { kind, property: "title", operator: "contains", value: "Alpha" },
+          {
+            kind,
+            property: kind === "contract" ? "effective" : "opened",
+            operator: "on",
+            value: "2026-01-10",
+          },
+          { kind, property: "confidential", operator: "is", value: false },
+        ],
+      };
+      renderAt(`/search?aq=${encodeSearchQuestion(question)}`);
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Advanced" }));
+      const dialog = screen.getByRole("dialog");
+      const title = within(dialog).getByRole("group", { name: new RegExp("Title condition$") });
+      expect(
+        within(title)
+          .getAllByRole("option")
+          .map((option) => option.textContent),
+      ).toEqual(["contains", "does not contain"]);
+      await user.selectOptions(within(title).getByRole("combobox"), "does_not_contain");
+      const date = within(dialog).getByRole("group", { name: new RegExp("date condition$") });
+      expect(
+        within(date)
+          .getAllByRole("option")
+          .map((option) => option.textContent),
+      ).toEqual(["before", "after", "on", "between"]);
+      await user.selectOptions(within(date).getByRole("combobox"), "between");
+      expect(within(date).getByLabelText("From")).toHaveValue("2026-01-10");
+      fireEvent.change(within(date).getByLabelText("To"), { target: { value: "2026-01-20" } });
+      const flag = within(dialog).getByRole("group", {
+        name: new RegExp("Confidential condition$"),
+      });
+      expect(within(flag).getByRole("combobox", { name: "Operator" })).toHaveValue("is");
+      expect(within(flag).getByRole("combobox", { name: "Value" })).toHaveValue("false");
+      await user.click(within(title).getByRole("button", { name: /Remove/ }));
+      expect(
+        within(dialog).queryByRole("group", { name: new RegExp("Title condition$") }),
+      ).not.toBeInTheDocument();
+    });
+  }
+  it("refuses a twenty-first row in the dialog", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname.endsWith("/filter-options")
+          ? json(200, { types: [], statuses: [], people: [] })
+          : call.url.pathname === "/api/v1/search/query"
+            ? answer()
+            : undefined,
+    });
+    const question = {
+      ...simpleSearchQuestion("", ["contract"]),
+      conditions: Array.from({ length: 20 }, () => ({
+        kind: "contract" as const,
+        property: "confidential",
+        operator: "is",
+        value: false,
+      })),
+    };
+    renderAt(`/search?aq=${encodeSearchQuestion(question)}`);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Advanced" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Add condition" }),
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent("A search can have at most 20 conditions.");
+    expect(screen.getAllByRole("group", { name: "Contract Confidential condition" })).toHaveLength(
+      20,
+    );
+  });
+  it.each([
+    "Unknown search property.",
+    "The operator does not fit this property's value type.",
+    "Choose the condition's kind.",
+  ])("shows the server's condition refusal: %s", async (detail) => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname.endsWith("/filter-options")
+          ? json(200, { types: [], statuses: [], people: [] })
+          : call.url.pathname === "/api/v1/search/query"
+            ? new Response(
+                JSON.stringify({
+                  type: "about:blank",
+                  title: "Request validation failed",
+                  status: 400,
+                  detail: "One or more request fields are invalid.",
+                  errors: [{ path: "conditions.0", message: detail }],
+                }),
+                { status: 400, headers: { "Content-Type": "application/problem+json" } },
+              )
+            : undefined,
+    });
+    renderAt("/");
+    const dialog = await openDialog();
+    await userEvent.setup().click(within(dialog).getByRole("button", { name: "Contract" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(detail);
+  });
+});

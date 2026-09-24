@@ -11,7 +11,7 @@ import { questionFromSearch, questionPath } from "./search-question";
 
 const AdvancedSearchContext = createContext<{
   draft: SearchQuestion | null;
-  open: (question: SearchQuestion) => void;
+  open: (question: SearchQuestion, focusCondition?: number) => void;
 } | null>(null);
 
 export function useAdvancedSearch() {
@@ -25,14 +25,16 @@ export function AdvancedSearchProvider({ children }: Readonly<{ children: ReactN
   const [session, setSession] = useState<{
     question: SearchQuestion;
     returnFocus: HTMLElement | null;
+    focusCondition?: number;
   } | null>(null);
   return (
     <AdvancedSearchContext.Provider
       value={{
         draft: session?.question ?? null,
-        open: (question) =>
+        open: (question, focusCondition) =>
           setSession({
             question,
+            focusCondition,
             returnFocus:
               document.activeElement instanceof HTMLElement ? document.activeElement : null,
           }),
@@ -43,6 +45,7 @@ export function AdvancedSearchProvider({ children }: Readonly<{ children: ReactN
         <AdvancedSearchDialog
           question={session.question}
           returnFocus={session.returnFocus}
+          focusCondition={session.focusCondition}
           onChange={(question) => setSession({ ...session, question })}
           onClose={() => setSession(null)}
           onSearch={() => {

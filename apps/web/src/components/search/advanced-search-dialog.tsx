@@ -4,6 +4,7 @@ import { SearchQuestionSchema, simpleSearchQuestion, type SearchQuestion } from 
 import { useEffect, useId, useState } from "react";
 import { LoaderCircle, Search, X } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { SearchConditions } from "./search-conditions";
 import { querySearch, type QuestionSearchOutcome } from "../../lib/search";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
@@ -163,15 +164,18 @@ export function AdvancedSearchDialog({
   onClose,
   onSearch,
   returnFocus,
+  focusCondition,
 }: Readonly<{
   question: SearchQuestion;
   onChange: (question: SearchQuestion) => void;
   onClose: () => void;
   onSearch: () => void;
   returnFocus: HTMLElement | null;
+  focusCondition?: number;
 }>) {
   const intl = useIntl();
   const id = useId();
+  const [notice, setNotice] = useState("");
   const valid =
     Object.values(question.scope).some(Boolean) && SearchQuestionSchema.safeParse(question).success;
   return (
@@ -268,7 +272,20 @@ export function AdvancedSearchDialog({
                       type="button"
                       aria-pressed={selected}
                       className={cn(CHIP_CLASS, selected ? SELECTED_CHIP_CLASS : IDLE_CHIP_CLASS)}
-                      onClick={() =>
+                      onClick={() => {
+                        if (
+                          selected &&
+                          question.conditions.some((condition) => condition.kind === kind)
+                        )
+                          setNotice(
+                            intl.formatMessage(
+                              {
+                                id: "search.conditions.removed",
+                                defaultMessage: "Conditions for {kind} were removed.",
+                              },
+                              { kind: searchKindLabel(intl, kind) },
+                            ),
+                          );
                         onChange({
                           ...question,
                           kinds: selected
@@ -277,8 +294,8 @@ export function AdvancedSearchDialog({
                           conditions: selected
                             ? question.conditions.filter((condition) => condition.kind !== kind)
                             : question.conditions,
-                        })
-                      }
+                        });
+                      }}
                     >
                       {searchKindLabel(intl, kind)}
                     </button>
@@ -299,11 +316,16 @@ export function AdvancedSearchDialog({
                 )}
               </p>
             </fieldset>
-            <section className="min-h-12">
-              <h2 className="font-semibold">
-                <FormattedMessage id="search.properties" defaultMessage="Properties" />
-              </h2>
-            </section>
+            {notice && (
+              <p role="status" className="text-sm text-muted">
+                {notice}
+              </p>
+            )}
+            <SearchConditions
+              question={question}
+              onChange={onChange}
+              focusCondition={focusCondition}
+            />
             <section className="min-h-12">
               <h2 className="font-semibold">
                 <FormattedMessage id="search.saved" defaultMessage="Saved searches" />
@@ -318,7 +340,13 @@ export function AdvancedSearchDialog({
           <Preview question={question} onClose={onClose} />
         </div>
         <footer className="flex h-16 items-center justify-between border-t border-border-default px-6">
-          <Button variant="secondary" onClick={() => onChange(simpleSearchQuestion())}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setNotice("");
+              onChange(simpleSearchQuestion());
+            }}
+          >
             <FormattedMessage id="search.clear" defaultMessage="Clear" />
           </Button>
           <Button disabled={!valid} onClick={onSearch}>

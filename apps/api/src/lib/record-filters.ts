@@ -49,6 +49,9 @@ export function validDateRanges(query: Record<string, unknown>): boolean {
 }
 
 export const FilterOptionsSchema = z.object({
+  counterparties: z.array(z.object({ id: z.string(), displayName: z.string() })).optional(),
+  entities: z.array(z.object({ id: z.string(), displayName: z.string() })).optional(),
+  businessOwners: z.array(z.object({ id: z.string(), displayName: z.string() })).optional(),
   types: z.array(z.object({ id: z.string(), displayName: z.string() })),
   statuses: z.array(z.object({ id: z.string(), displayName: z.string() })),
   people: z.array(z.object({ id: z.string(), displayName: z.string() })),
