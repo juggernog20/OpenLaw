@@ -86,6 +86,7 @@ it("reads the fresh-install policy and server address in one call", async () => 
   const response = await harness.app.inject({ method: "GET", url, cookies });
   expect(response.statusCode).toBe(200);
   expect(response.json()).toEqual({
+    authorizationServerAvailable: true,
     enabled: false,
     legalApiKeysEnabled: false,
     businessApiKeysEnabled: false,

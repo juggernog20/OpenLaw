@@ -153,7 +153,9 @@ it("challenges absent, cookie-only, unknown, expired and revoked credentials", a
       payload: { jsonrpc: "2.0", id: 1, method: "tools/list" },
     });
     expect(r.statusCode, r.body).toBe(401);
-    expect(r.headers["www-authenticate"]).toBe("Bearer");
+    expect(r.headers["www-authenticate"]).toContain(
+      'Bearer resource_metadata="http://localhost/.well-known/oauth-protected-resource" scope="',
+    );
   }
   for (const patch of [
     { expiresAt: new Date(0) },
@@ -167,7 +169,9 @@ it("challenges absent, cookie-only, unknown, expired and revoked credentials", a
       payload: {},
     });
     expect(r.statusCode, r.body).toBe(401);
-    expect(r.headers["www-authenticate"]).toBe("Bearer");
+    expect(r.headers["www-authenticate"]).toContain(
+      'Bearer resource_metadata="http://localhost/.well-known/oauth-protected-resource" scope="',
+    );
   }
 });
 it("re-reads master, group, account type and archival for an already connected Client", async () => {
@@ -183,7 +187,9 @@ it("re-reads master, group, account type and archival for an already connected C
       payload: {},
     });
     expect(r.statusCode).toBe(401);
-    expect(r.headers["www-authenticate"]).toBe("Bearer");
+    expect(r.headers["www-authenticate"]).toContain(
+      'Bearer resource_metadata="http://localhost/.well-known/oauth-protected-resource" scope="',
+    );
     await h.db.update(orgSettings).set({ mcpEnabled: true, mcpLegalApiKeysEnabled: true });
   }
   await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, memberId));
@@ -285,7 +291,9 @@ it("authenticates before parsing a body and challenges GET and DELETE too", asyn
   for (const method of ["GET", "DELETE"] as const) {
     const response = await h.app.inject({ method, url: "/mcp", cookies: admin });
     expect(response.statusCode).toBe(401);
-    expect(response.headers["www-authenticate"]).toBe("Bearer");
+    expect(response.headers["www-authenticate"]).toContain(
+      'Bearer resource_metadata="http://localhost/.well-known/oauth-protected-resource" scope="',
+    );
   }
   const response = await h.app.inject({
     method: "POST",
@@ -294,5 +302,7 @@ it("authenticates before parsing a body and challenges GET and DELETE too", asyn
     payload: "{",
   });
   expect(response.statusCode).toBe(401);
-  expect(response.headers["www-authenticate"]).toBe("Bearer");
+  expect(response.headers["www-authenticate"]).toContain(
+    'Bearer resource_metadata="http://localhost/.well-known/oauth-protected-resource" scope="',
+  );
 });

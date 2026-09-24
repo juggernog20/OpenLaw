@@ -10,6 +10,7 @@
  */
 
 import { betterAuth } from "better-auth";
+import { oauthPlugins } from "./oauth.js";
 import { admin, magicLink, twoFactor } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
 import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
@@ -351,6 +352,7 @@ export function createAuth(
     },
     plugins: [
       apiKeyPlugin(),
+      ...oauthPlugins(config.baseUrl),
       // Owns the users.role column plus ban/impersonation columns. Bans
       // carry no product semantics yet; adminRoles shields administrators
       // from ban/impersonation targeting. The roles map exists to teach

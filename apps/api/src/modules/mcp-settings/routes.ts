@@ -9,6 +9,7 @@ import { orgSettings, eq } from "@openlaw/db";
 import { MCP_TOOLSETS } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { authorizationServerAvailable } from "../../auth/oauth.js";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -32,7 +33,10 @@ const Policy = z.object({
     .min(1, { error: lifetimeError })
     .max(365, { error: lifetimeError }),
 });
-const State = Policy.extend({ serverAddress: z.string() });
+const State = Policy.extend({
+  serverAddress: z.string(),
+  authorizationServerAvailable: z.boolean(),
+});
 const columns = {
   enabled: orgSettings.mcpEnabled,
   legalApiKeysEnabled: orgSettings.mcpLegalApiKeysEnabled,
@@ -51,6 +55,7 @@ const fieldColumns = {
 } as const;
 
 export const mcpSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
+  const available = authorizationServerAvailable(app.baseUrl);
   const serverAddress = `${app.baseUrl.replace(/\/$/, "")}/mcp`;
   app.get(
     "/mcp-settings",
@@ -65,7 +70,7 @@ export const mcpSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
     async () => {
       const [row] = await app.db.select(columns).from(orgSettings);
       if (!row) throw httpError(500, "Organization settings are unavailable.");
-      return { ...row, serverAddress };
+      return { ...row, serverAddress, authorizationServerAvailable: available };
     },
   );
   app.patch(
@@ -106,7 +111,7 @@ export const mcpSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         if (Object.keys(changes).length)
           await tx.update(orgSettings).set(changes).where(eq(orgSettings.id, row.id));
-        return { ...row, ...request.body, serverAddress };
+        return { ...row, ...request.body, serverAddress, authorizationServerAvailable: available };
       }),
   );
 };

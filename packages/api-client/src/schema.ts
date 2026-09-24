@@ -10192,6 +10192,7 @@ export interface operations {
             readOnly: boolean;
             apiKeyLifetimeDays: number;
             serverAddress: string;
+            authorizationServerAvailable: boolean;
           };
         };
       };
@@ -10268,6 +10269,7 @@ export interface operations {
             readOnly: boolean;
             apiKeyLifetimeDays: number;
             serverAddress: string;
+            authorizationServerAvailable: boolean;
           };
         };
       };
