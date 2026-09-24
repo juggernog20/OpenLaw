@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** The results-page sort menu writes the URL question (DES-046). */
+/**
+ * The results-page sort menu writes the URL question. The trigger shows the
+ * active sort's name, as the S4 mock does, with DES-046's trailing chevron;
+ * its accessible name adds the "Sort:" prefix so the menu says what it sorts.
+ */
 
 import { SearchQuestionSchema, type SearchQuestion } from "@openlaw/shared";
 import { ChevronDown } from "lucide-react";
@@ -35,8 +39,8 @@ export function SearchSort({ question }: Readonly<{ question: SearchQuestion }>)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" disabled={questionIsEmpty(question)}>
-          {label}
+        <Button variant="secondary" disabled={questionIsEmpty(question)} aria-label={label}>
+          {intl.formatMessage(SORT_LABELS[question.sort])}
           <ChevronDown size={16} aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>

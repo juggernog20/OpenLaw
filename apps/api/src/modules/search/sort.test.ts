@@ -215,6 +215,15 @@ describe("question sorts", () => {
     );
   });
 
+  it("reads a cursor written before sort support as a relevance cursor", async () => {
+    const first = await run("relevance", { limit: 1 });
+    const second = await run("relevance", { limit: 1, cursor: first.nextCursor });
+    const legacy = JSON.parse(Buffer.from(first.nextCursor!, "base64url").toString("utf8"));
+    delete legacy.sort;
+    const cursor = Buffer.from(JSON.stringify(legacy)).toString("base64url");
+    expect(await run("relevance", { limit: 1, cursor })).toEqual(second);
+  });
+
   it("refuses a cursor from another sort", async () => {
     const page = await run("relevance", { limit: 1 });
     const response = await harness.app.inject({

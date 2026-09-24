@@ -283,12 +283,12 @@ export function SearchPage() {
               {(loaded.empty || SearchQuestionSchema.safeParse(loaded.question).success) && (
                 <QuestionFilters question={loaded.question} />
               )}
-              <div className="ml-auto flex shrink-0 items-center gap-2">
-                <AdvancedSearchButton />
-                {SearchQuestionSchema.safeParse(loaded.question).success && (
+              <AdvancedSearchButton />
+              {SearchQuestionSchema.safeParse(loaded.question).success && (
+                <div className="ml-auto shrink-0">
                   <SearchSort question={loaded.question} />
-                )}
-              </div>
+                </div>
+              )}
             </div>
           }
         />
