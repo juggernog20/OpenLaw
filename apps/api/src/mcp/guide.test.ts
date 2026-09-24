@@ -209,6 +209,7 @@ it("reads live configured vocabulary for Legal and projects Fields for a Busines
   expect(portal.requestTypes.find((t) => t.id === requestId)!.fields.map((f) => f.slug)).toContain(
     "guide_detail",
   );
+  expect(JSON.stringify(portal)).not.toContain("guide_hidden");
   expect(portal.contractStatuses.length).toBeGreaterThan(0);
   expect(portal.matterStatuses.length).toBeGreaterThan(0);
   expect(portal.departments).toContainEqual(
