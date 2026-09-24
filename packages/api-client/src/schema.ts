@@ -6950,6 +6950,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/search/fields": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live Fields and reachable reference choices for search conditions. */
+    get: operations["searchFields"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/search/query": {
     parameters: {
       query?: never;
@@ -39672,6 +39689,63 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  searchFields: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            fields: {
+              slug: string;
+              displayName: string;
+              /** @enum {string} */
+              moduleScope: "contract" | "matter" | "entity";
+              /** @enum {string} */
+              fieldType:
+                | "text"
+                | "long_text"
+                | "number"
+                | "currency"
+                | "date"
+                | "boolean"
+                | "single_select"
+                | "multi_select"
+                | "user"
+                | "entity";
+              options: string[] | null;
+            }[];
+            people: {
+              id: string;
+              displayName: string;
+            }[];
+            entities: {
+              id: string;
+              displayName: string;
             }[];
           };
         };

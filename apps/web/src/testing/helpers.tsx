@@ -620,6 +620,8 @@ export function stubApi(state: ApiState) {
     // M25's global search runs from the staff shell. An empty answer is
     // the ordinary fresh-install state; search surface suites replace
     // it through `extra` before this default runs.
+    if (call.url.pathname === "/api/v1/search/fields" && call.method === "GET")
+      return json(200, { fields: [], people: [], entities: [] });
     if (call.url.pathname === "/api/v1/search" && call.method === "GET") {
       return json(200, { results: [], nextCursor: null });
     }

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useState } from "react";
-import { type SearchQuestion } from "@openlaw/shared";
+import { SEARCH_FIELD_KINDS, type SearchQuestion, type SearchField } from "@openlaw/shared";
 import { defineMessages, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 import { useOtherConditionDefinitions } from "./other-condition-definitions";
+import { useSearchFields } from "./field-definitions";
 import { api } from "../../lib/api";
 import { problem } from "../../lib/problem";
 import {
@@ -11,6 +12,16 @@ import {
 } from "../table/record-filter-definitions";
 
 export const OPERATOR_LABELS = defineMessages({
+  equals: { id: "search.operator.equals", defaultMessage: "equals" },
+  greater_than: { id: "search.operator.greaterThan", defaultMessage: "greater than" },
+  less_than: { id: "search.operator.lessThan", defaultMessage: "less than" },
+  is_empty: { id: "search.operator.empty", defaultMessage: "is empty" },
+  is_not_empty: { id: "search.operator.notEmpty", defaultMessage: "is not empty" },
+  is_yes: { id: "search.operator.yes", defaultMessage: "is yes" },
+  is_no: { id: "search.operator.no", defaultMessage: "is no" },
+  includes_any: { id: "search.operator.includesAny", defaultMessage: "includes any" },
+  includes_all: { id: "search.operator.includesAll", defaultMessage: "includes all" },
+  includes_none: { id: "search.operator.includesNone", defaultMessage: "includes none" },
   is_any_of: { id: "search.operator.any", defaultMessage: "is any of" },
   is_none_of: { id: "search.operator.none", defaultMessage: "is none of" },
   contains: { id: "search.operator.contains", defaultMessage: "contains" },
@@ -168,9 +179,16 @@ type Options = RecordFilterOptions & {
 };
 const EMPTY: Options = { types: [], statuses: [], people: [] };
 
-export function useConditionDefinitions(kinds: SearchQuestion["kinds"]) {
+export function useConditionDefinitions(
+  kinds: SearchQuestion["kinds"],
+  onFieldsLoaded?: (fields: SearchField[]) => void,
+) {
   const intl = useIntl();
   const other = useOtherConditionDefinitions(kinds);
+  const fields = useSearchFields(
+    kinds.some((kind) => (SEARCH_FIELD_KINDS as readonly string[]).includes(kind)),
+    onFieldsLoaded,
+  );
   const contracts = kinds.includes("contract");
   const matters = kinds.includes("matter");
   const [loaded, setLoaded] = useState<{
@@ -216,6 +234,8 @@ export function useConditionDefinitions(kinds: SearchQuestion["kinds"]) {
   const contractFilters = useRecordFilterDefinitions("contracts", loaded.contract);
   const matterFilters = useRecordFilterDefinitions("matters", loaded.matter);
   const choices = (condition: Pick<Condition, "kind" | "property">): Choice[] => {
+    if (condition.property.startsWith("field:"))
+      return fields.choices(condition.kind, condition.property);
     if (condition.kind !== "contract" && condition.kind !== "matter")
       return other.choices(condition);
     const options = condition.kind === "contract" ? loaded.contract : loaded.matter;
@@ -241,5 +261,5 @@ export function useConditionDefinitions(kinds: SearchQuestion["kinds"]) {
     );
     return filter?.kind === "choices" ? filter.choices : [];
   };
-  return { choices, error: loaded.error ?? other.error };
+  return { choices, fields, error: loaded.error ?? other.error ?? fields.error };
 }

@@ -5,6 +5,9 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
+  fields,
+  isNull,
+  asc,
   contracts,
   contractCounterparties,
   contractStatuses,
@@ -32,6 +35,9 @@ import {
 import {
   DOCUMENT_OWNER_KINDS,
   SEARCH_KINDS,
+  SearchFieldSchema,
+  conditionProblem,
+  type SearchField,
   SearchQuestionSchema,
   type SearchQuestion,
   type DocumentOwner,
@@ -39,12 +45,12 @@ import {
 import { conditionScope } from "./conditions.js";
 import { questionSort, readQuestionCursor, writeQuestionCursor } from "./sort.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
-import { requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
+import { requireRole, requireAuth, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { documentRepositoryScope } from "../../lib/document-access.js";
 import { entityReachScope } from "../../lib/entity-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
-import { problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse } from "../../lib/problem.js";
 import { documentOwnerCase } from "../documents/owner.js";
 
 type SearchKind = (typeof SEARCH_KINDS)[number];
@@ -160,6 +166,7 @@ function searchCtes(
   query: string,
   question?: SearchQuestion,
   timeZone?: string,
+  catalog: readonly SearchField[] = [],
 ): SQL {
   const now = new Date();
   const exact = question && !question.scope.titles ? null : exactNumber(query);
@@ -229,7 +236,7 @@ function searchCtes(
       from ${contracts}
       inner join ${contractTypes} on ${contractTypes.id} = ${contracts.contractTypeId}
       inner join ${contractStatuses} on ${contractStatuses.id} = ${contracts.statusId}
-      where ${and(conditionScope("contract", question, user, timeZone, now), contractTeamScope(db, user), kindScope("contract"))}
+      where ${and(conditionScope("contract", question, user, timeZone, now, catalog), contractTeamScope(db, user), kindScope("contract"))}
     ),
     contract_hits as (
       select
@@ -264,7 +271,7 @@ function searchCtes(
       inner join ${matterTypes} on ${matterTypes.id} = ${matters.matterTypeId}
       inner join ${matterStatuses} on ${matterStatuses.id} = ${matters.statusId}
       left join ${users} on ${users.id} = ${matters.managerId}
-      where ${and(conditionScope("matter", question, user, timeZone, now), matterTeamScope(db, user), kindScope("matter"))}
+      where ${and(conditionScope("matter", question, user, timeZone, now, catalog), matterTeamScope(db, user), kindScope("matter"))}
     ),
     matter_hits as (
       select
@@ -323,7 +330,7 @@ function searchCtes(
       left join ${entities} on ${entities.id} = ${documents.entityId}
       left join ${knowledgeItems} on ${knowledgeItems.id} = ${documents.knowledgeItemId}
     left join ${autoDocs} on ${autoDocs.id} = ${documents.autoDocId}
-      where ${and(conditionScope("document", question, user, timeZone, now), documentRepositoryScope(db, user), kindScope("document"))}
+      where ${and(conditionScope("document", question, user, timeZone, now, catalog), documentRepositoryScope(db, user), kindScope("document"))}
     ),
     document_version_hits as (
       select
@@ -377,7 +384,7 @@ function searchCtes(
           || setweight(to_tsvector('english', coalesce(${entityTypes.displayName}, '')), 'C') as document
       from ${entities}
       inner join ${entityTypes} on ${entityTypes.id} = ${entities.entityTypeId}
-      where ${and(conditionScope("entity", question, user, timeZone, now), entityReachScope(db, user), kindScope("entity"))}
+      where ${and(conditionScope("entity", question, user, timeZone, now, catalog), entityReachScope(db, user), kindScope("entity"))}
     ),
     entity_hits as (
       select
@@ -402,7 +409,7 @@ function searchCtes(
         4::integer as kind_order,
         ${counterparties.searchVector} as document
       from ${counterparties}
-      where ${and(conditionScope("counterparty", question, user, timeZone, now), staff, kindScope("counterparty"))}
+      where ${and(conditionScope("counterparty", question, user, timeZone, now, catalog), staff, kindScope("counterparty"))}
     ),
     counterparty_hits as (
       select
@@ -432,7 +439,7 @@ function searchCtes(
       from ${requests}
       inner join ${requestTypes} on ${requestTypes.id} = ${requests.requestTypeId}
       inner join ${users} on ${users.id} = ${requests.requesterId}
-      where ${and(conditionScope("request", question, user, timeZone, now), staff, kindScope("request"))}
+      where ${and(conditionScope("request", question, user, timeZone, now, catalog), staff, kindScope("request"))}
     ),
     request_hits as (
       select
@@ -464,7 +471,7 @@ function searchCtes(
           as document
       from ${knowledgeItems}
       inner join ${knowledgeTypes} on ${knowledgeTypes.id} = ${knowledgeItems.knowledgeTypeId}
-      where ${and(conditionScope("knowledge_item", question, user, timeZone, now), staff, kindScope("knowledge_item"))}
+      where ${and(conditionScope("knowledge_item", question, user, timeZone, now, catalog), staff, kindScope("knowledge_item"))}
     ),
     knowledge_item_hits as (
       select
@@ -616,7 +623,54 @@ function compileWords(words: SearchQuestion["words"]): string {
     : required;
 }
 
+const fieldProjection = {
+  slug: fields.slug,
+  displayName: fields.displayName,
+  moduleScope: fields.moduleScope,
+  fieldType: fields.fieldType,
+  options: fields.options,
+};
+
 export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.get(
+    "/search/fields",
+    {
+      preHandler: requireRole("administrator", "legal_team_member"),
+      schema: {
+        operationId: "searchFields",
+        tags: ["search"],
+        summary: "Live Fields and reachable reference choices for search conditions.",
+        response: {
+          200: z.object({
+            fields: z.array(SearchFieldSchema),
+            people: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            entities: z.array(z.object({ id: z.string(), displayName: z.string() })),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const [catalog, people, companies] = await Promise.all([
+        app.db
+          .select(fieldProjection)
+          .from(fields)
+          .where(isNull(fields.archivedAt))
+          .orderBy(asc(fields.displayName)),
+        app.db
+          .select({ id: users.id, displayName: users.displayName })
+          .from(users)
+          .where(isNull(users.archivedAt))
+          .orderBy(asc(users.displayName)),
+        app.db
+          .select({ id: entities.id, displayName: entities.legalName })
+          .from(entities)
+          .where(and(isNull(entities.archivedAt), entityReachScope(app.db, request.user)))
+          .orderBy(asc(entities.legalName)),
+      ]);
+      return { fields: catalog, people, entities: companies };
+    },
+  );
   app.post(
     "/search/query",
     {
@@ -642,6 +696,18 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { cursor, limit, ...question } = request.body;
+      const hasFields = question.conditions.some((condition) =>
+        condition.property.startsWith("field:"),
+      );
+      if (hasFields && request.user.role === "business_user")
+        throw httpError(403, "Field search is available to staff only.");
+      const catalog = hasFields
+        ? await app.db.select(fieldProjection).from(fields).where(isNull(fields.archivedAt))
+        : [];
+      for (const condition of question.conditions) {
+        const problem = conditionProblem(condition, catalog);
+        if (problem) throw httpError(400, `${condition.property}: ${problem}`);
+      }
       const boundary = cursor ? readQuestionCursor(cursor, question.sort) : undefined;
       const { after, order } = questionSort(question.sort, boundary);
       const ctes = searchCtes(
@@ -650,6 +716,7 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
         compileWords(question.words),
         question,
         question.timeZone,
+        catalog,
       );
       const answer = await app.db.execute<{ total: number; page: QuestionSearchDbRow[] }>(sql`
       with ${ctes}, sortable_hits as (

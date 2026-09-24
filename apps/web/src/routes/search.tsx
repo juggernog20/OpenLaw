@@ -24,6 +24,11 @@ import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Button } from "../components/ui/button";
 
+import {
+  readSearchFields,
+  dropUnavailableFields,
+  FIELD_NOTICES,
+} from "../components/search/field-definitions";
 import { ConditionChips } from "../components/search/condition-chips";
 import { SearchSort } from "../components/search/search-sort";
 import { AdvancedSearchButton } from "../components/search/advanced-search";
@@ -81,13 +86,18 @@ export async function searchLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (user.role === "business_user") return redirect("/portal");
 
-  const question = questionFromSearch(new URL(request.url).search);
+  const original = questionFromSearch(new URL(request.url).search);
+  const catalog = original.conditions.some((condition) => condition.property.startsWith("field:"))
+    ? await readSearchFields().catch(() => null)
+    : null;
+  const question = catalog ? dropUnavailableFields(original, catalog.fields) : original;
+  const fieldsRemoved = question !== original;
   const query = Object.values(question.words).filter(Boolean).join(" ");
   const empty = questionIsEmpty(question);
   const outcome: QuestionSearchOutcome = empty
     ? { ok: true, results: [], total: 0, nextCursor: null }
     : await querySearch(question, { limit: PAGE_SIZE });
-  return { user, query, question, empty, outcome };
+  return { user, query, question, empty, outcome, fieldsRemoved };
 }
 
 function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
@@ -297,6 +307,11 @@ export function SearchPage() {
       }
     >
       <PageTitle title={title} />
+      {loaded.fieldsRemoved && (
+        <p role="status" className="mb-3 text-sm text-muted">
+          <FormattedMessage {...FIELD_NOTICES.removed} />
+        </p>
+      )}
       {loaded.outcome.ok && !loaded.empty && (
         <p className="mb-3 text-sm text-muted">
           <FormattedMessage
