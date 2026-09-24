@@ -41,7 +41,6 @@
  * last place to add the first one.
  */
 
-import { toolCallRoutes } from "./tool-calls.js";
 import { Readable } from "node:stream";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -81,6 +80,7 @@ import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { problemResponse } from "../../lib/problem.js";
 import { csvRow } from "../../lib/csv.js";
+import { toolCallRoutes } from "./tool-calls.js";
 
 /** SET-002: every Organization surface is Administrator-only, and this
  * is the one that reads every other one's entries. */

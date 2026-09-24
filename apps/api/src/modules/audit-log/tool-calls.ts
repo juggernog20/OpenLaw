@@ -29,9 +29,16 @@ function datePredicate(filters: z.infer<typeof FilterSchema>) {
     filters.to ? lte(mcpToolCalls.createdAt, new Date(filters.to)) : undefined,
   );
 }
+/** The keyset boundary the audit log uses: strictly older than one row
+ * in `(created_at, id)` order, with the position read from the table
+ * rather than trusted from the client. An id naming no row leaves the
+ * comparison NULL, which answers an empty page. */
 function olderThan(cursor: string): SQL {
-  return sql`(${mcpToolCalls.createdAt}, ${mcpToolCalls.id}) <
-    (select created_at, id from mcp_tool_calls where id::text = ${cursor})`;
+  return sql`(${mcpToolCalls.createdAt}, ${mcpToolCalls.id}) < (
+    select ${mcpToolCalls.createdAt}, ${mcpToolCalls.id}
+    from ${mcpToolCalls}
+    where ${eq(mcpToolCalls.id, cursor)}
+  )`;
 }
 function selectCalls(db: Db, where: SQL | undefined, limit: number) {
   return db

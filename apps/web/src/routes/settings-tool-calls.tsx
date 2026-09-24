@@ -7,7 +7,7 @@ import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { dayBounds, formatLongDateTime } from "../lib/format";
 import { requireUser } from "../lib/session";
-import { SettingsAuditTabs } from "./settings-audit-tabs";
+import { AuditSettingsTabs } from "../components/audit-settings-tabs";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { Button } from "../components/ui/button";
@@ -84,7 +84,7 @@ export function SettingsToolCallsPage() {
   return (
     <>
       <PageTitle title={title} />
-      <SettingsAuditTabs />
+      <AuditSettingsTabs />
       <SettingsCard
         title={title}
         className="max-w-none"
@@ -213,7 +213,7 @@ export function SettingsToolCallsPage() {
                     <td className="px-4 py-3">
                       <FormattedMessage
                         id="audit.toolCalls.outcome"
-                        defaultMessage="{outcome, select, success {Success} error {Error} pending {Pending} rate_limited {Rate limited} forbidden {Forbidden} other {{outcome}}}"
+                        defaultMessage="{outcome, select, success {Success} pending {Pending} rate_limited {Rate limited} forbidden {Forbidden} tool_outside_grant {Outside the grant} mcp_read_only {Read-only} unknown_tool {Unknown Tool} invalid_arguments {Invalid arguments} invalid_cursor {Invalid cursor} validation_error {Validation error} not_found {Not found} type_not_found {Type not found} article_not_found {Article not found} unavailable {Unavailable} form_unavailable {Form unavailable} documentation_unavailable {Documentation unavailable} acknowledgement_required {Acknowledgement required} generation_limit_reached {Generation limit reached} result_too_large {Result too large} internal_error {Internal error} other {{outcome}}}"
                         values={{ outcome: entry.outcome }}
                       />
                     </td>

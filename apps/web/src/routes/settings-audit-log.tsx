@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { SettingsAuditTabs } from "./settings-audit-tabs";
+import { AuditSettingsTabs } from "../components/audit-settings-tabs";
 import { identifierLabel } from "../lib/identifier-label";
 
 /**
@@ -362,7 +362,7 @@ export function SettingsAuditLogPage() {
       <PageTitle
         title={intl.formatMessage({ id: "settings.section.auditLog", defaultMessage: "Audit log" })}
       />
-      <SettingsAuditTabs />
+      <AuditSettingsTabs />
       <SettingsCard
         title={<FormattedMessage id="settings.section.auditLog" defaultMessage="Audit log" />}
         // The log spans the pane; the shared card's max width is for
