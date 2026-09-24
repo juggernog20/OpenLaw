@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { portalKnowledgeScope } from "../knowledge/service.js";
 
 /**
  * Per-record Document lists and Version text reads enforce owning-record reach and the
@@ -509,11 +510,23 @@ export const DocumentListQuery = z.object({
   cursor: z.string().min(1).max(64).optional(),
   folder: z.string().min(1).max(64).optional(),
 });
-export async function listAutoDocDocuments(db: Db, user: AuthenticatedUser, id: string) {
+export async function listAutoDocDocuments(
+  db: Db,
+  user: AuthenticatedUser,
+  id: string,
+  query: { cursor?: string } = {},
+) {
   assertReader(user);
   const [row] = await db.select({ id: autoDocs.id }).from(autoDocs).where(eq(autoDocs.id, id));
   if (!row) throw httpError(404, "No Auto-Doc exists with this id.");
-  return paperOf(db, user, { id: row.id, primaryDocumentId: null }, "auto_doc");
+  return paperOf(
+    db,
+    user,
+    { id: row.id, primaryDocumentId: null },
+    "auto_doc",
+    false,
+    query.cursor,
+  );
 }
 /** A Knowledge Item's paper has no folder listing, so the read takes
  * none: a caller that passed one would otherwise have it dropped
@@ -633,6 +646,10 @@ export async function readDocumentVersionText(
   // reach is a 404 from here, before anything is said about text.
   const version = await reachedVersion(db, user, params);
 
+  return storedVersionText(db, params.versionId, version);
+}
+
+async function storedVersionText(db: Db, versionId: string, version: ReachedVersion) {
   const [row] = await db
     .select({
       state: documentVersionText.state,
@@ -641,7 +658,7 @@ export async function readDocumentVersionText(
       updatedAt: documentVersionText.updatedAt,
     })
     .from(documentVersionText)
-    .where(eq(documentVersionText.versionId, params.versionId))
+    .where(eq(documentVersionText.versionId, versionId))
     .limit(1);
 
   if (!row) {
@@ -670,4 +687,35 @@ export async function readDocumentVersionText(
       updatedAt: row.updatedAt.toISOString(),
     },
   };
+}
+
+/** The Portal article exposes only the current Version of its readable Documents. */
+export async function readPortalKnowledgeVersionText(
+  db: Db,
+  user: AuthenticatedUser,
+  params: { documentId: string; versionId: string },
+) {
+  const [version] = await db
+    .select({
+      fileRef: documentVersions.fileRef,
+      originalFilename: documentVersions.originalFilename,
+      mimeType: documentVersions.mimeType,
+      byteSize: documentVersions.byteSize,
+    })
+    .from(documentVersions)
+    .innerJoin(documents, eq(documents.id, documentVersions.documentId))
+    .innerJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
+    .where(
+      and(
+        eq(documents.id, params.documentId),
+        eq(documentVersions.id, params.versionId),
+        isNull(documents.archivedAt),
+        documentAudienceScope(db, user),
+        portalKnowledgeScope(db, user),
+        sql`${documentVersions.versionNumber} = (select max(v.version_number) from document_versions v where v.document_id = ${documents.id})`,
+      ),
+    )
+    .limit(1);
+  if (!version) throw httpError(404, NO_DOCUMENT);
+  return storedVersionText(db, params.versionId, version);
 }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { HttpError } from "../../lib/problem.js";
 
 /** Portal reads require a session. Request forms read the destination type's Intake tree; archived Request types take no submissions. */
 
@@ -282,66 +283,12 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request, reply) => {
-      const item = await readPortalKnowledgeItem(app.db, request.user, request.params.id);
-      if (!item) return portalKnowledgeNotFound(reply);
-      // The Document's own Confidential flag (DOC-008) narrows the paper
-      // one level below the item gate. The same predicate every staff
-      // read applies, so a flagged file leaves the Portal listing with
-      // the staff surfaces.
-      const paper = await app.db
-        .select({ id: documents.id, title: documents.title })
-        .from(documents)
-        .where(
-          and(
-            eq(documents.knowledgeItemId, item.id),
-            isNull(documents.archivedAt),
-            documentAudienceScope(app.db, request.user),
-          ),
-        )
-        .orderBy(asc(documents.createdAt), asc(documents.id));
-      const withVersions = (
-        await Promise.all(
-          paper.map(async (document) => {
-            const [version] = await app.db
-              .select({
-                id: documentVersions.id,
-                originalFilename: documentVersions.originalFilename,
-                mimeType: documentVersions.mimeType,
-                byteSize: documentVersions.byteSize,
-              })
-              .from(documentVersions)
-              .where(eq(documentVersions.documentId, document.id))
-              .orderBy(desc(documentVersions.versionNumber))
-              .limit(1);
-            return version
-              ? {
-                  ...document,
-                  currentVersion: {
-                    ...version,
-                    downloadUrl: `/api/v1/portal/knowledge/${item.id}/documents/${document.id}/download`,
-                  },
-                }
-              : null;
-          }),
-        )
-      ).filter((row): row is NonNullable<typeof row> => row !== null);
-      withVersions.sort((left, right) => {
-        if (left.id === item.primaryDocumentId) return -1;
-        if (right.id === item.primaryDocumentId) return 1;
-        return 0;
-      });
-      const primary = withVersions.find((row) => row.id === item.primaryDocumentId) ?? null;
-      return {
-        knowledgeItem: {
-          id: item.id,
-          title: item.title,
-          body: item.body,
-          primaryDocument: primary ? { id: primary.id, title: primary.title } : null,
-          documents: withVersions,
-        },
-      };
-    },
+    async (request, reply) =>
+      getPortalKnowledge(app.db, request.user, request.params.id).catch((error: unknown) => {
+        if (error instanceof HttpError && error.statusCode === 404)
+          return portalKnowledgeNotFound(reply);
+        throw error;
+      }),
   );
 
   app.get(
@@ -396,3 +343,68 @@ export const portalRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function getPortalKnowledge(
+  db: import("@openlaw/db").Db,
+  user: import("../../auth/user.js").AuthenticatedUser,
+  id: string,
+) {
+  const item = await readPortalKnowledgeItem(db, user, id);
+  if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
+  // The Document's own Confidential flag (DOC-008) narrows the paper
+  // one level below the item gate. The same predicate every staff
+  // read applies, so a flagged file leaves the Portal listing with
+  // the staff surfaces.
+  const paper = await db
+    .select({ id: documents.id, title: documents.title })
+    .from(documents)
+    .where(
+      and(
+        eq(documents.knowledgeItemId, item.id),
+        isNull(documents.archivedAt),
+        documentAudienceScope(db, user),
+      ),
+    )
+    .orderBy(asc(documents.createdAt), asc(documents.id));
+  const withVersions = (
+    await Promise.all(
+      paper.map(async (document) => {
+        const [version] = await db
+          .select({
+            id: documentVersions.id,
+            originalFilename: documentVersions.originalFilename,
+            mimeType: documentVersions.mimeType,
+            byteSize: documentVersions.byteSize,
+          })
+          .from(documentVersions)
+          .where(eq(documentVersions.documentId, document.id))
+          .orderBy(desc(documentVersions.versionNumber))
+          .limit(1);
+        return version
+          ? {
+              ...document,
+              currentVersion: {
+                ...version,
+                downloadUrl: `/api/v1/portal/knowledge/${item.id}/documents/${document.id}/download`,
+              },
+            }
+          : null;
+      }),
+    )
+  ).filter((row): row is NonNullable<typeof row> => row !== null);
+  withVersions.sort((left, right) => {
+    if (left.id === item.primaryDocumentId) return -1;
+    if (right.id === item.primaryDocumentId) return 1;
+    return 0;
+  });
+  const primary = withVersions.find((row) => row.id === item.primaryDocumentId) ?? null;
+  return {
+    knowledgeItem: {
+      id: item.id,
+      title: item.title,
+      body: item.body,
+      primaryDocument: primary ? { id: primary.id, title: primary.title } : null,
+      documents: withVersions,
+    },
+  };
+}

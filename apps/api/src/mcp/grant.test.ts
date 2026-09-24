@@ -208,6 +208,9 @@ it("pages tools/list by cursor under the byte budget", async () => {
   expect(pages).toBeGreaterThan(1);
   expect(seen).toEqual([
     ...guideNames,
+    ...toolRegister
+      .filter((tool) => tool.toolset === "documents" && tool.kind === "read")
+      .map((tool) => tool.name),
     ...Array.from({ length: 5 }, (_, index) => `test_paged_${index}`),
   ]);
 });

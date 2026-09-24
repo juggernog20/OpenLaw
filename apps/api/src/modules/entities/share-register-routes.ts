@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
 /**
  * The share register at the HTTP seam (ENT-011): share classes, register
  * entries with their certificates, and the as-of read that replays them
@@ -1094,11 +1093,8 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: RegisterEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const entity = await reachedEntity(app.db, request.user, request.params.id);
-      if (!entity) throw httpError(404, NO_ENTITY);
-      return readRegister(app.db, request.user, entity, request.query.asOf ?? todayIsoDate());
-    },
+    async (request) =>
+      getEntityShareRegister(app.db, request.user, request.params.id, request.query.asOf),
   );
 
   app.post(
@@ -1448,3 +1444,14 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function getEntityShareRegister(
+  db: import("@openlaw/db").Db,
+  user: import("../../auth/user.js").AuthenticatedUser,
+  id: string,
+  asOf = todayIsoDate(),
+) {
+  const entity = await reachedEntity(db, user, id);
+  if (!entity) throw httpError(404, NO_ENTITY);
+  return readRegister(db, user, entity, asOf);
+}

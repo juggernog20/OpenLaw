@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 
 /**
  * TECH-035 stateless /mcp mount. Only a verified credential reaches the factory,
@@ -39,9 +40,11 @@ declare module "fastify" {
 export function mcpRoutes(
   active: Environment,
   tools: readonly ToolDefinition[] = toolRegister,
+  uploadConfig?: { baseUrl: string; secret: string },
 ): FastifyPluginAsync {
   return async (app) => {
     app.decorateRequest("mcpContext", null);
+    if (uploadConfig) await app.register(documentUploadRoutes(uploadConfig.secret));
     app.route({
       method: ["POST", "GET", "DELETE"],
       url: "/mcp",
@@ -55,6 +58,7 @@ export function mcpRoutes(
       },
       handler: async (request, reply) => {
         const context = request.mcpContext!;
+        if (uploadConfig) context.prepareDocumentUpload = documentUploadIssuer(app, uploadConfig);
         const authInfo = {
           token: context.credentialId,
           clientId: context.credentialId,

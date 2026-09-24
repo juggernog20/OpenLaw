@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
 /**
  * TECH-035 API key authentication. Approval, revocation, expiry and owner match
  * precede the shared live-user read. Archival, the master switch and the current
@@ -7,7 +6,7 @@
  */
 
 import { and, apiKeyRequests, apikeys, eq, isNull, orgSettings } from "@openlaw/db";
-import type { FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import { API_KEY_PREFIX } from "../auth/api-keys.js";
 import { readLiveUser } from "../auth/guards.js";
 import { httpError } from "../lib/problem.js";
@@ -20,14 +19,22 @@ export async function authenticateKey(request: FastifyRequest): Promise<ToolCont
   if (!key?.startsWith(API_KEY_PREFIX)) throw httpError(401, "Authentication required.");
   const verified = await request.server.auth.api.verifyApiKey({ body: { key } });
   if (!verified.valid || !verified.key) throw httpError(401, "Authentication required.");
-  const db = request.server.db;
+  return readCredentialContext(request.server, verified.key.id);
+}
+
+/** Revalidate a signed upload against its live credential without accepting another credential. */
+export async function readCredentialContext(
+  server: FastifyInstance,
+  credentialId: string,
+): Promise<ToolContext> {
+  const db = server.db;
   const [approved] = await db
     .select({ request: apiKeyRequests, credential: apikeys })
     .from(apiKeyRequests)
     .innerJoin(apikeys, eq(apikeys.id, apiKeyRequests.keyId))
     .where(
       and(
-        eq(apikeys.id, verified.key.id),
+        eq(apikeys.id, credentialId),
         eq(apiKeyRequests.status, "approved"),
         isNull(apiKeyRequests.revokedAt),
       ),
@@ -51,9 +58,9 @@ export async function authenticateKey(request: FastifyRequest): Promise<ToolCont
     throw httpError(401, "Authentication required.");
   return {
     db,
-    notifier: request.server.notifier,
-    jobs: request.server.jobs,
-    resolveAiProvider: request.server.resolveAiProvider,
+    notifier: server.notifier,
+    jobs: server.jobs,
+    resolveAiProvider: server.resolveAiProvider,
     user,
     credentialId: approved.credential.id,
     clientName: approved.request.clientName,

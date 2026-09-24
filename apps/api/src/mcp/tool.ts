@@ -21,6 +21,17 @@ export interface ToolContext extends Pick<AppDeps, "notifier" | "jobs" | "resolv
   credentialId: string;
   clientName: string;
   organizationName: string;
+  prepareDocumentUpload?: (
+    input: z.infer<typeof import("./documents.js").uploadInput>,
+    context: ToolContext,
+  ) => Promise<{
+    uploadUrl: string;
+    headers: Record<string, string>;
+    versionId: string;
+    documentId: string;
+    expiresAt: string;
+    maxUploadBytes: number;
+  }>;
 }
 export interface ToolDefinition {
   name: string;

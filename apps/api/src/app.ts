@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
 /**
  * OpenLaw API application factory (TECH-003: Fastify + REST/OpenAPI,
  * TECH-016: Zod as the single schema source).
@@ -566,6 +565,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     mcpRoutes(
       deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings()),
       deps.mcpTools,
+      { baseUrl: deps.config.baseUrl, secret: deps.config.secret },
     ),
   );
   // The stream owns its full path and bypasses JSON response

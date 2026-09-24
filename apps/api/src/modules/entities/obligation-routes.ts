@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
 /** Entity obligations, Mark filed, and the unified compliance calendar (ENT-006). */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -367,14 +366,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const entity = await reachedEntity(app.db, request.user, request.params.id);
-      if (!entity) throw httpError(404, NO_ENTITY);
-      const rows = await obligationProjection(app.db, request.user)
-        .where(eq(entityObligations.entityId, entity.id))
-        .orderBy(asc(entityObligations.nextDueOn), asc(entityObligations.id));
-      return { obligations: rows.map(toObligation) };
-    },
+    async (request) => listEntityObligations(app.db, request.user, request.params.id),
   );
 
   app.post(
@@ -604,3 +596,16 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function listEntityObligations(
+  db: import("@openlaw/db").Db,
+  user: import("../../auth/user.js").AuthenticatedUser,
+  id: string,
+) {
+  const entity = await reachedEntity(db, user, id);
+  if (!entity) throw httpError(404, NO_ENTITY);
+  const rows = await obligationProjection(db, user)
+    .where(eq(entityObligations.entityId, entity.id))
+    .orderBy(asc(entityObligations.nextDueOn), asc(entityObligations.id));
+  return { obligations: rows.map(toObligation) };
+}

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
 /** Officers and registrations on the Entity record (ENT-001/ENT-002). */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -197,23 +196,13 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: z.object({ officers: z.array(OfficerSchema) }), default: problemResponse },
       },
     },
-    async (request) => {
-      const entity = await reachedEntity(app.db, request.user, request.params.id);
-      if (!entity) throw httpError(404, NO_ENTITY);
-      const rows = await selectOfficers(app.db)
-        .where(
-          and(
-            eq(entityOfficers.entityId, entity.id),
-            request.query.includeFormer === "true" ? undefined : isNull(entityOfficers.resignedOn),
-          ),
-        )
-        .orderBy(
-          asc(sql`case when ${entityOfficers.resignedOn} is null then 0 else 1 end`),
-          desc(entityOfficers.appointedOn),
-          desc(entityOfficers.createdAt),
-        );
-      return { officers: rows.map((row) => toOfficer(row)) };
-    },
+    async (request) =>
+      listEntityOfficers(
+        app.db,
+        request.user,
+        request.params.id,
+        request.query.includeFormer === "true",
+      ),
   );
 
   app.post(
@@ -616,3 +605,26 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function listEntityOfficers(
+  db: import("@openlaw/db").Db,
+  user: import("../../auth/user.js").AuthenticatedUser,
+  id: string,
+  includeFormer = false,
+) {
+  const entity = await reachedEntity(db, user, id);
+  if (!entity) throw httpError(404, NO_ENTITY);
+  const rows = await selectOfficers(db)
+    .where(
+      and(
+        eq(entityOfficers.entityId, entity.id),
+        includeFormer ? undefined : isNull(entityOfficers.resignedOn),
+      ),
+    )
+    .orderBy(
+      asc(sql`case when ${entityOfficers.resignedOn} is null then 0 else 1 end`),
+      desc(entityOfficers.appointedOn),
+      desc(entityOfficers.createdAt),
+    );
+  return { officers: rows.map((row) => toOfficer(row)) };
+}
