@@ -173,6 +173,10 @@ it.each<{
   ])
     expect(message?.html).toContain(fact);
   expect(message?.html).not.toContain(test.portal ? staffLink : portalLink);
+  // The portal speaks as Legal: no card on that side names the person
+  // who acted. The staff card does, the way the sentence does.
+  if (test.portal) expect(message?.html).not.toContain("Legal Counsel");
+  else expect(message?.html).toContain("Legal Counsel");
   expect(message?.html).not.toMatch(/<script|src=["']data:|calc\(/i);
   expect(message?.attachments).toHaveLength(1);
   expect(message?.html).toContain(`cid:${message?.attachments?.[0]?.cid}`);
@@ -248,4 +252,15 @@ it("escapes Request facts and decline reasons", () => {
   expect(message?.html).toContain("NDA &lt;script&gt;");
   expect(message?.html).toContain("Use &lt;approved&gt; terms &amp; reply.");
   expect(message?.html).not.toContain("<script>");
+});
+
+it("does not show the reader as the actor on their own receipt", () => {
+  const message = renderNotificationMail(
+    { ...notification, eventType: "request.created", actorName: "Alex" },
+    "alex@example.com",
+    baseUrl,
+  );
+  expect(message?.html).toContain("Hello Alex,");
+  // Once for the greeting. An actor row would name them a second time.
+  expect(message?.html?.match(/Alex/g)).toHaveLength(1);
 });

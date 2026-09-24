@@ -311,6 +311,12 @@ function recordLayout(
     : notification.recipientRole === "business_user";
   const requestType = request && !portal ? detail(notification, "requestType") : null;
   const urgency = request && !portal ? urgencyWord(detail(notification, "urgency")) : null;
+  // The portal speaks as Legal (M20/8): its bell names nobody on a
+  // receipt, a status move or a decline, and the text part says "Legal"
+  // too. The receipt's actor is the reader, who would otherwise see
+  // their own name in the card. Only a reply carries a person, and
+  // that arm has its own card.
+  const actor = request && portal ? null : notification.actorName;
   return renderEmailLayout(
     {
       ...model,
@@ -333,7 +339,7 @@ function recordLayout(
           ...(requestType ? [{ label: "Type", value: requestType }] : []),
           ...(urgency ? [{ label: "Urgency", value: urgency }] : []),
         ],
-        ...(notification.actorName ? { actor: notification.actorName } : {}),
+        ...(actor ? { actor } : {}),
         ...model.record,
       },
     },
