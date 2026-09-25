@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** Sender View launch and authenticated return confirmation (CTR-013, TECH-033). */
 import { createHash, randomBytes } from "node:crypto";
 import {
   and,
@@ -24,6 +26,7 @@ import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 import { requestExecutedCopy } from "../../lib/signing/completion.js";
 
 const hash = (state: string) => createHash("sha256").update(state).digest("hex");
+const RETURN_EVENTS = ["send", "save", "cancel", "error", "sessionend"];
 const COOKIE = "openlaw-signing-return";
 const RETURN_PATH = "/api/v1/signing/return";
 const UNAVAILABLE = "This signing return is unavailable. Open the Contract from Signatures.";
@@ -142,9 +145,9 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
     const state = query.get("state") ?? "";
     // Events, including unknown events and missing provider IDs, carry no authority.
     const event = (query.get("event") ?? "").toLowerCase();
-    const recognized = ["send", "save", "cancel", "error", "sessionend"].includes(event);
+    const recognized = RETURN_EVENTS.includes(event);
     const value = /^[A-Za-z0-9_-]{43}$/.test(state)
-      ? `${state}.${recognized ? "known" : "unknown"}`
+      ? `${state}.${recognized ? event : "unknown"}`
       : "";
     return reply.header("set-cookie", cookie(value)).redirect("/signing/return");
   });
@@ -213,7 +216,7 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!consumed) throw httpError(404, UNAVAILABLE);
       reply.header("set-cookie", `${cookie("")}; Max-Age=0`);
       let waiting = row.envelope.status === "draft";
-      if (hint === "known" && signing && account) {
+      if (hint && RETURN_EVENTS.includes(hint) && signing && account) {
         try {
           const checked = await checkEnvelopeStatus(app.db, signing, row.envelope.id);
           if (checked && row.envelope.providerEnvelopeId) {
@@ -223,11 +226,12 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
               ...checked,
             });
             await requestExecutedCopy(app.jobs, request.log, result);
+            // The event controls only the waiting display; provider evidence owns status.
+            waiting = hint === "send" && checked.status === "draft";
             await app.db
               .update(contractEnvelopes)
-              .set({ confirmationPending: false })
+              .set({ confirmationPending: waiting })
               .where(eq(contractEnvelopes.id, row.envelope.id));
-            waiting = false;
           }
         } catch {
           // A failed check retains the reservation and the durable allowance.

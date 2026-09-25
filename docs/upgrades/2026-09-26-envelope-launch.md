@@ -3,6 +3,9 @@
 Migration `0173_envelope-launch-return` adds a confirmation flag to Envelopes and a
 separate table of hashed, expiring launch correlations. Existing Envelope statuses,
 provider IDs, sent timestamps and executed-copy references retain their meaning.
+Migration `0174_envelope-launch-timestamps` adds creation and update timestamps to
+launch correlations, including installs that already applied 0173. Existing rows
+receive the upgrade time; their hashes, expiry and consumption are unchanged.
 
 The preparation feature switch stays off by default. When enabled, Continue to
 DocuSign prepares the selected Version and Signers, then opens field placement in the
@@ -16,8 +19,11 @@ sessionStorage. Return correlations expire after two hours and are single use.
 Configure the application base URL to the browser-reachable OpenLaw origin. The
 browser return uses `/api/v1/signing/return`; this is independent of Connect's public
 webhook address. Polling retains its fifteen-minute per-Envelope read allowance. It
-leaves a draft alone for fifteen minutes after a launch so a prompt return can confirm
-at once; a send whose return was lost is confirmed on the next ordinary poll after that.
+leaves a draft alone for at most fifteen minutes after a launch, reserving the next
+eligible read for a prompt return. A prior poll can still hold that read allowance.
+A send whose return was lost is confirmed on the next ordinary poll after the grace.
+Saved and unlaunched drafts remain eligible for polling: sends outside the browser
+return flow must also recover.
 
 Protocol tests and a scripted browser stand-in establish application behavior only.
 Before rollout, #1178 must record real DocuSign checks for recipient and message locks,

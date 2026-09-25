@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** Resumes a signing return through sign-in before posting its confirmation (CTR-013). */
 import { Link, redirect } from "react-router";
 import { FormattedMessage } from "react-intl";
 import { currentUser } from "../lib/session";

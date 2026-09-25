@@ -104,12 +104,12 @@ test("sends in DocuSign and confirms through sign-in; forged returns reveal no C
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(new RegExp(`/contracts/${contract.number}/signatures$`));
     await expect(page.getByText("Out for signature", { exact: true })).toBeVisible();
-    const confirmed = await (
+    const confirmed: { envelopes: { status: string; sentAt: string | null }[] } = await (
       await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
     ).json();
     expect(confirmed.envelopes).toHaveLength(1);
     expect(confirmed.envelopes[0]).toMatchObject({ status: "sent", confirmationPending: false });
-    expect(confirmed.envelopes[0].sentAt).toBeTruthy();
+    expect(confirmed.envelopes[0]!.sentAt).toBeTruthy();
     const forged = new URL(stub.launches[0]!.returnUrl);
     forged.searchParams.set("state", "A".repeat(43));
     forged.searchParams.set("event", "send");

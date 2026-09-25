@@ -12431,6 +12431,9 @@
   "signing.executedFiling": {
     "defaultMessage": "Filing the executed copy…"
   },
+  "signing.launchFailed": {
+    "defaultMessage": "DocuSign could not open this draft. Try again from Signatures."
+  },
   "signing.namePlaceholder": {
     "defaultMessage": "Search people or type a name"
   },
@@ -12448,6 +12451,9 @@
   },
   "signing.peopleMatches": {
     "defaultMessage": "People in OpenLaw"
+  },
+  "signing.preparationPending": {
+    "defaultMessage": "Preparation is awaiting confirmation. Check Signatures before trying again."
   },
   "signing.prepare": {
     "defaultMessage": "Prepare Envelope"

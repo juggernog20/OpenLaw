@@ -1540,6 +1540,59 @@ describe("authenticated Sender View launch and return", () => {
     read.mockRestore();
   });
 
+  it("refuses a sibling-origin return before consuming its correlation or read allowance", async () => {
+    const { envelope, contract } = await draft();
+    await launch(envelope.id);
+    harness.signing!.sendDraft(envelope.providerEnvelopeId!);
+    const cookies = { ...as(MEMBER), ...(await returned("send")) };
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const denied = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/signing/return",
+      cookies,
+      headers: { origin: "https://sibling.example.test", "sec-fetch-site": "same-site" },
+    });
+    expect(denied.statusCode).toBe(403);
+    expect(read).not.toHaveBeenCalled();
+    expect(await entriesOn(contract.id)).toHaveLength(0);
+    const [correlation] = await harness.db
+      .select()
+      .from(envelopeLaunches)
+      .where(eq(envelopeLaunches.envelopeId, envelope.id));
+    expect(correlation!.consumedAt).toBeNull();
+    const [unchanged] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, envelope.id));
+    expect(unchanged!.nextReconcileAt).toBeNull();
+    expect((await confirm(cookies)).statusCode).toBe(200);
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(await entriesOn(contract.id)).toHaveLength(1);
+    read.mockRestore();
+  });
+
+  it("keeps a premature Send return waiting without spending another read", async () => {
+    const { envelope, contract } = await draft();
+    await launch(envelope.id);
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const response = await confirm({ ...as(MEMBER), ...(await returned("SeNd")) });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json().waiting).toBe(true);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes[0]).toMatchObject({
+      status: "draft",
+      confirmationPending: true,
+      sentAt: null,
+    });
+    expect(await entriesOn(contract.id)).toHaveLength(0);
+    expect((await launch(envelope.id)).statusCode).toBe(200);
+    harness.signing!.sendDraft(envelope.providerEnvelopeId!);
+    expect((await confirm({ ...as(MEMBER), ...(await returned("send")) })).json().waiting).toBe(
+      true,
+    );
+    expect(read).toHaveBeenCalledTimes(1);
+    read.mockRestore();
+  });
+
   it("does not spend another read for a delayed confirmation, including after a failed check", async () => {
     const { envelope } = await draft();
     await launch(envelope.id);
@@ -1569,7 +1622,11 @@ describe("authenticated Sender View launch and return", () => {
       await launch(envelope.id);
       expect((await confirm({ ...as(MEMBER), ...(await returned(event)) })).statusCode).toBe(200);
       const state = await signingState(as(MEMBER), contract.number);
-      expect(state.envelopes[0]).toMatchObject({ status: "draft", sentAt: null });
+      expect(state.envelopes[0]).toMatchObject({
+        status: "draft",
+        sentAt: null,
+        confirmationPending: false,
+      });
       expect(await entriesOn(contract.id)).toHaveLength(0);
     },
   );
@@ -1668,7 +1725,7 @@ describe("shared browser and worker status allowance", () => {
   });
 
   /** One prepared draft with a fresh launch, as the sweep tests need it. */
-  async function launchedDraft(title: string, idempotencyKey: string) {
+  async function launchedDraft(title: string, idempotencyKey: string, launch = true) {
     await configureConnector();
     const contract = await newContract(title);
     await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
@@ -1689,6 +1746,7 @@ describe("shared browser and worker status allowance", () => {
       .select()
       .from(contractEnvelopes)
       .where(eq(contractEnvelopes.id, id));
+    if (!launch) return { contract, id, providerEnvelopeId: row!.providerEnvelopeId! };
     const launched = await harness.app.inject({
       method: "POST",
       url: `/api/v1/envelopes/${id}/launch`,
@@ -1759,7 +1817,29 @@ describe("shared browser and worker status allowance", () => {
     await sweep();
     expect(readsOfDraft()).toHaveLength(2);
     expect(await held(id)).toMatchObject({ status: "draft", confirmationPending: false });
+    harness.signing!.sendDraft(providerEnvelopeId);
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ nextReconcileAt: new Date(0) })
+      .where(eq(contractEnvelopes.id, id));
+    await sweep();
+    expect(await held(id)).toMatchObject({ status: "sent", confirmationPending: false });
+    expect(readsOfDraft()).toHaveLength(3);
     read.mockRestore();
+  });
+
+  it("recovers provider sends for drafts with no browser launch or pending confirmation", async () => {
+    const { contract, id, providerEnvelopeId } = await launchedDraft(
+      "Sent outside the launch flow",
+      "unlaunched",
+      false,
+    );
+    expect(await openCorrelations(id)).toHaveLength(0);
+    expect(await held(id)).toMatchObject({ status: "draft", confirmationPending: false });
+    harness.signing!.sendDraft(providerEnvelopeId);
+    await sweep();
+    expect(await held(id)).toMatchObject({ status: "sent", confirmationPending: false });
+    expect(await entriesOn(contract.id)).toHaveLength(1);
   });
 
   it("confirms a draft sent without a return once the grace has passed", async () => {

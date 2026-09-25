@@ -258,6 +258,7 @@ function deliver(delivery: WebhookDelivery) {
     headers: {
       "content-type": "application/json",
       [FAKE_SIGNATURE_HEADER]: signed.headers[FAKE_SIGNATURE_HEADER]!,
+      origin: "https://provider.example.test",
     },
     payload: signed.body,
   });

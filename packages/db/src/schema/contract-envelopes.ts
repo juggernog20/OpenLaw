@@ -341,5 +341,11 @@ export const envelopeLaunches = pgTable("envelope_launches", {
   providerAccountId: text("provider_account_id").notNull(),
   providerEnvironment: text("provider_environment").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  /** NULL means this launch has not been consumed. Expiry still limits its use. */
   consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });

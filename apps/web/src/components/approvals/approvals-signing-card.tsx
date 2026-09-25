@@ -500,6 +500,10 @@ export function SignaturesCard({
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [sending, setSending] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const launchFailed = intl.formatMessage({
+    id: "signing.launchFailed",
+    defaultMessage: "DocuSign could not open this draft. Try again from Signatures.",
+  });
   const [voiding, setVoiding] = useState<ContractEnvelope | null>(null);
   const busy = status === "saving";
 
@@ -635,7 +639,7 @@ export function SignaturesCard({
         </>
       )}
       {launchError && (
-        <p role="alert" className="px-4 py-2 text-sm text-primary">
+        <p role="alert" className="px-4 py-2 text-sm text-status-danger-fg">
           {launchError}
         </p>
       )}
@@ -643,18 +647,20 @@ export function SignaturesCard({
         live?.status === "draft" &&
         !frozen &&
         (viewerRole === "administrator" || live.sentBy.id === viewerId || ownerId === viewerId) && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             disabled={busy}
-            className="m-4 rounded-control border border-border-default px-3 py-2 text-sm text-primary"
+            className="m-4"
             onClick={async () => {
               setStatus("saving");
-              setLaunchError(await launchContractEnvelope(live.id));
+              const detail = await launchContractEnvelope(live.id);
+              setLaunchError(detail === null ? null : (detail ?? launchFailed));
               setStatus("idle");
             }}
           >
             <FormattedMessage id="signing.openDraft" defaultMessage="Open in DocuSign" />
-          </button>
+          </Button>
         )}
       {sending && signing.primaryDocument !== null && (
         <SendEnvelopeDialog
@@ -679,17 +685,20 @@ export function SignaturesCard({
                           type: undefined,
                           status: 409,
                           network: false,
-                          detail:
-                            "Preparation is awaiting confirmation. Check Signatures before trying again.",
+                          detail: intl.formatMessage({
+                            id: "signing.preparationPending",
+                            defaultMessage:
+                              "Preparation is awaiting confirmation. Check Signatures before trying again.",
+                          }),
                         };
                       const detail = await launchContractEnvelope(draft.id);
-                      return detail
+                      return detail !== null
                         ? {
                             ok: false as const,
                             type: undefined,
                             status: 502,
                             network: false,
-                            detail,
+                            detail: detail ?? launchFailed,
                           }
                         : outcome;
                     })

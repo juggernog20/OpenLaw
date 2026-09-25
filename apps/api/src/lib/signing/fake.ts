@@ -140,6 +140,7 @@ export class FakeSigningProvider implements SigningProvider {
   readonly launches: { providerEnvelopeId: string; returnUrl: string }[] = [];
 
   async launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string> {
+    this.requireReachable();
     const envelope = this.require(providerEnvelopeId);
     if (envelope.status !== "draft") throw new SigningRefusedError("Only a draft can be edited.");
     this.launches.push({ providerEnvelopeId, returnUrl });

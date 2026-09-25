@@ -283,7 +283,7 @@ const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
  * signing provider's webhook. It proves itself with an HMAC over the
  * body and carries no cookie, so the Origin check has nothing to add.
  */
-const ORIGIN_CHECK_EXEMPT_PREFIX = "/api/v1/signing/";
+const ORIGIN_CHECK_EXEMPT_PATH = /^\/api\/v1\/signing\/[^/]+\/webhook$/;
 
 /**
  * Whether a browser-originated mutation came from this install's own
@@ -588,7 +588,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.addHook("onRequest", async (request) => {
     if (!UNSAFE_METHODS.has(request.method)) return;
     const pathname = request.url.split("?", 1)[0] ?? request.url;
-    if (!pathname.startsWith("/api/v1/") || pathname.startsWith(ORIGIN_CHECK_EXEMPT_PREFIX)) return;
+    if (!pathname.startsWith("/api/v1/") || ORIGIN_CHECK_EXEMPT_PATH.test(pathname)) return;
     if (!fromOwnOrigin(request.headers, ownOrigin))
       throw httpError(403, "This request did not come from this OpenLaw instance's own origin.");
   });

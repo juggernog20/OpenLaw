@@ -994,6 +994,27 @@ describe("preparing an unsent Envelope", () => {
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 
+  it("shows the localized launch fallback when reopening a draft fails without problem detail", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "draft", preparationState: "created", sentAt: null })],
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname.endsWith("/launch") && call.method === "POST"
+          ? json(502, { status: 502 })
+          : api.handler(call),
+    });
+    renderAt("/contracts/42/signatures");
+    await user.click(await screen.findByRole("button", { name: "Open in DocuSign" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "DocuSign could not open this draft. Try again from Signatures.",
+    );
+    expect(screen.getByRole("button", { name: "Open in DocuSign" })).toBeEnabled();
+  });
+
   it("selects the exact Version, Signers and Subject and displays the unsent draft", async () => {
     const user = userEvent.setup();
     const api = recordApi({ preparationEnabled: true });

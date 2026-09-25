@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** Durable provider read claims shared by reconciliation and browser returns (TECH-007, CTR-013). */
 import { and, contractEnvelopes, eq, inArray, isNull, or, sql, type Db } from "@openlaw/db";
 import { SigningRefusedError, type SigningProvider } from "./provider.js";
 
