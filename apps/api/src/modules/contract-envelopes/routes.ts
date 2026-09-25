@@ -512,7 +512,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * can quote back what it was just handed — the connector pane's test
    * button makes the same call for the same reason.
    */
-  function sendFailure(error: unknown): unknown {
+  function sendFailure(error: unknown, reserved = false): unknown {
     if (error instanceof SigningRefusedError) {
       // The provider's own words stay in the log. A driver builds this
       // message from a response that can quote back what it was just
@@ -534,21 +534,12 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         { expose: true },
       );
     }
-    // Ambiguous creation keeps its durable reservation until recovery can
-    // establish the external outcome.
-    if (error instanceof SigningTimeoutError) {
+    if (error instanceof SigningTimeoutError || error instanceof SigningUnavailableError) {
       return httpError(
         502,
-        "The provider did not answer in time. It may still have taken the envelope — " +
-          "the preparation stays reserved until its outcome is confirmed.",
-        { expose: true },
-      );
-    }
-    if (error instanceof SigningUnavailableError) {
-      return httpError(
-        502,
-        "The provider could not be reached. It may still have taken the envelope — " +
-          "the preparation stays reserved until its outcome is confirmed.",
+        reserved
+          ? "The provider did not confirm creation. The Envelope stays reserved until its outcome is confirmed."
+          : "The provider account could not be verified. No Envelope was created. Try again.",
         { expose: true },
       );
     }
@@ -955,7 +946,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
                 : { preparationState: "uncertain" },
             )
             .where(eq(contractEnvelopes.id, envelopeId));
-          throw sendFailure(error);
+          throw sendFailure(error, true);
         }
         if (preparing)
           return reply.status(201).send(await signingStateOf(request.user, contract, true));
