@@ -98,7 +98,10 @@ export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90, db?: Execu
   };
   return [
     // The adapter pluralizes model names; the physical key table is jwks.
-    jwt({ schema: { jwks: { modelName: "jwk" } } }),
+    // No `set-auth-jwt` header: nothing reads it, and it carries the whole
+    // user row. An avatar data: URI can make that row larger than a proxy
+    // accepts in a response header.
+    jwt({ disableSettingJwtHeader: true, schema: { jwks: { modelName: "jwk" } } }),
     provider,
     ...(db ? [allowedClientsPlugin(db), oauthGrantsPlugin(db, mcpResource(baseUrl))] : []),
     cimd({
