@@ -37,6 +37,8 @@
  * yet must not be the one thing that leaves the building unchecked.
  */
 
+import { apiKeyNotificationScope } from "../lib/notifications/audience.js";
+
 import { approvalRecipients } from "../lib/approval-access.js";
 import {
   and,
@@ -57,8 +59,10 @@ import {
   notificationScope,
   REQUEST_ENTITY,
 } from "../lib/notifications/audience.js";
+import { COMMENT_EMAIL_EVENTS, readEmailComment } from "../lib/notifications/comment-email.js";
 import { requestSideOf } from "../lib/notifications/catalog.js";
 import { origin, renderNotificationMail, type MailRecord } from "../lib/notifications/email.js";
+import { getOrgSettings } from "../lib/org-settings.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { reasonOf } from "./derivations.js";
 import type { PipelineLogger } from "./logger.js";
@@ -242,7 +246,26 @@ async function sendNotificationEmail(
   }
   const payload = row.payload;
   let record: MailRecord;
-  if (row.entityType === CONTRACT_ENTITY) {
+  if (row.entityType === "api_key_request") {
+    const [visible] = await deps.db
+      .select({ id: notifications.id })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.id, row.id),
+          apiKeyNotificationScope(
+            deps.db,
+            { id: row.userId, role: row.recipientRole },
+            row.recipientRole === "business_user" ? "portal" : "staff",
+          ),
+        ),
+      );
+    if (!visible) return "unreachable";
+    record = {
+      entityType: "api_key_request",
+      title: typeof payload.clientName === "string" ? payload.clientName : "Client",
+    };
+  } else if (row.entityType === CONTRACT_ENTITY) {
     const reachable =
       row.eventType === "approval.requested"
         ? typeof payload.approvalId === "string"
@@ -290,10 +313,23 @@ async function sendNotificationEmail(
   const { mailer, from } = await deps.resolveMailer();
   if (!mailer.configured || !from) return "unconfigured";
 
+  // The header names the organization as it is at send time, not as it
+  // was when the row was written (DES-093). Read for every event, so an
+  // arm that moves onto the layout later gets the brand without a change
+  // here.
+  const { name, emailLogoPng, commentWordsInEmail } = await getOrgSettings(deps.db);
+  const brand = { name, emailLogoPng };
+  const comment =
+    commentWordsInEmail &&
+    COMMENT_EMAIL_EVENTS.has(row.eventType) &&
+    typeof payload.commentId === "string"
+      ? await readEmailComment(deps.db, payload.commentId, row.userId)
+      : undefined;
   const message = renderNotificationMail(
     {
       eventType: row.eventType as NotificationEventType,
       record,
+      comment,
       actorName: typeof payload.actorName === "string" ? payload.actorName : null,
       recipientName: row.recipientName,
       // The rest of the snapshot, for the arms that name something
@@ -304,9 +340,12 @@ async function sendNotificationEmail(
       recipientRole: row.recipientRole,
     },
     row.recipientEmail,
-    row.recipientRole === "business_user" && row.entityType !== "request"
+    row.recipientRole === "business_user" &&
+      row.entityType !== "request" &&
+      row.entityType !== "api_key_request"
       ? `${origin(deps.baseUrl)}/portal`
       : deps.baseUrl,
+    brand,
   );
   // No copy for this event yet — group 3's words arrive with the digest
   // (NOT-003). Terminal, because no retry writes copy.

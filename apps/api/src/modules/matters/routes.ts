@@ -1,24 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { formForTouchpoint } from "@openlaw/shared";
+import { listAssignableUsers } from "../../lib/assignable-users.js";
 import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
 
 /** The first matter surface: list, create, options, and record read. */
-import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { z } from "zod";
-import { regionOptions, lockedRegionName } from "../regions/references.js";
-import { departmentOptions, departmentName, lockedDepartment } from "../departments/references.js";
-import { recordPerson } from "../../lib/record-person.js";
-import { originalIntake, OriginalIntakeSchema } from "../requests/original-intake.js";
-import { incompleteMatter } from "../../lib/incomplete-matter.js";
-import { nextDeadline, NextDeadlineSchema } from "../../lib/next-deadline.js";
-import {
-  FilterChoices,
-  FilterOptionsSchema,
-  choiceFilter,
-  dateFilter,
-  validDateRanges,
-} from "../../lib/record-filters.js";
 import {
   and,
   asc,
@@ -26,363 +12,64 @@ import {
   eq,
   inArray,
   isNull,
+  MATTER_PROGRESSION_GROUPS,
   matters,
   matterStatuses,
-  MATTER_PROGRESSION_GROUPS,
   matterTeam,
+  matterTemplateKeyDates,
+  matterTemplates,
+  matterTemplateTasks,
   matterTypeFields,
   matterTypes,
-  matterTemplateKeyDates,
-  matterTemplateTasks,
-  matterTemplates,
-  SEVERITY_LEVELS,
-  sql,
-  users,
   USER_ROLES,
-  type AnyPgColumn,
-  type CustomFieldValue,
-  type Executor,
-  type Matter,
-  type SQL,
-  type Transaction,
+  users,
 } from "@openlaw/db";
-import {
-  MAX_MATTER_TITLE_LENGTH,
-  MATTER_SORT_KEYS,
-  SORT_DIRECTIONS,
-  type MatterSortKey,
-  type SortDirection,
-  MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE,
-} from "@openlaw/shared";
-import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { TimezoneSchema } from "../../lib/timezones.js";
+import { MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
+import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { z } from "zod";
+import { requireRole } from "../../auth/guards.js";
+import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
 import { civilToday } from "../../lib/contract-term.js";
 import {
-  applyCustomFields,
-  assertBusinessCustomFieldWrite,
-  assertRequiredCustomFields,
   AttachedCustomFieldSchema,
   CustomFieldsInput,
   CustomFieldsSchema,
-  projectCustomFields,
   selectAttachedFields,
-  type AttachedCustomField,
 } from "../../lib/custom-fields.js";
-import {
-  MATTER_MANAGER_REFUSAL,
-  MATTER_MANAGER_ROLES,
-  matterConfidentialityWrite,
-  matterTeamScope,
-  NO_MATTER,
-  reachedMatter,
-} from "../../lib/matter-access.js";
-import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
+import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import { setMatterParent } from "../../lib/matter-relations.js";
-import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
-import { ConversionProvenanceSchema } from "../../lib/conversion-draft.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
+import { FilterOptionsSchema } from "../../lib/record-filters.js";
+import { departmentName, departmentOptions } from "../departments/references.js";
+import { regionOptions } from "../regions/references.js";
 import { createMatter } from "./create.js";
+import {
+  assertAudienceActor,
+  assertEditable,
+  lockedLiveUser,
+  lockedMatter,
+  MatterEnvelope,
+  MatterLifecycleEnvelope,
+  MatterListQuery,
+  MatterPatchBody,
+  MatterRecordEnvelope,
+  MatterRowSchema,
+  MatterTeamEnvelope,
+  NumberParams,
+  OpenChildSchema,
+  PersonSchema,
+  scope,
+  selectMatters,
+  selectTeam,
+  SeveritySchema,
+  toRow,
+} from "./record.js";
+import { getMatter, listMatters, patchMatter } from "./service.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const requireReader = requireRole("administrator", "legal_team_member");
-const SeveritySchema = z.enum(SEVERITY_LEVELS);
-const NumberParams = z.object({ number: z.coerce.number().int().positive() });
-const PAGE_SIZE = 50;
-const CursorSchema = z.string().min(1).max(64);
-
-interface SortRequest {
-  key: MatterSortKey;
-  dir: SortDirection;
-}
-
-function severityRank(column: AnyPgColumn): SQL {
-  const arms = SEVERITY_LEVELS.map(
-    (level, index) => sql`when ${level} then ${sql.raw(String(index + 1))}`,
-  );
-  return sql`case ${column} ${sql.join(arms, sql` `)} end`;
-}
-
-const PersonSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  image: z.string().nullable(),
-  archived: z.boolean(),
-});
-
-const MatterRowSchema = z.object({
-  id: z.string(),
-  number: z.number().int(),
-  title: z.string(),
-  description: z.string().nullable(),
-  matterTypeId: z.string(),
-  matterTypeName: z.string(),
-  statusId: z.string(),
-  statusName: z.string(),
-  statusCategory: z.enum(["open", "closed"]),
-  statusProgressionGroup: z.enum(MATTER_PROGRESSION_GROUPS),
-  manager: PersonSchema.nullable(),
-  businessOwner: PersonSchema.nullable().optional(),
-  departmentId: z.string().nullable().optional(),
-  department: z.string().nullable().optional(),
-  region: z.string().nullable().optional(),
-  createdBy: z.string().nullable().optional(),
-  priority: SeveritySchema,
-  risk: SeveritySchema.nullable(),
-  aiUnverified: ConversionProvenanceSchema.optional(),
-  customFields: CustomFieldsSchema,
-  openedAt: z.iso.datetime(),
-  closedAt: z.iso.datetime().nullable(),
-  isConfidential: z.boolean(),
-  archivedAt: z.iso.datetime().nullable(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-  nextDeadline: NextDeadlineSchema,
-});
-
-const MatterEnvelope = z.object({ matter: MatterRowSchema });
-/** The record plus the fields its type attaches and the people and
- * Entities its stored values name. A `user` or `entity` field holds an
- * id, and the hero must draw a name, so the read resolves them the way
- * the contract and Request reads do. */
-const MatterRecordEnvelope = MatterEnvelope.extend({
-  originalIntake: OriginalIntakeSchema.nullable().optional(),
-  creator: PersonSchema.nullable().optional(),
-  form: z.array(FormNodeSchema).optional(),
-  fields: z.array(AttachedCustomFieldSchema),
-  customFieldRefs: StaffRequestCustomFieldRefsSchema,
-  team: z.array(PersonSchema),
-});
-const MatterTeamEnvelope = z.object({
-  team: z.array(PersonSchema),
-});
-const LifecycleStatusSchema = z.strictObject({
-  id: z.string(),
-  displayName: z.string(),
-});
-const OpenChildSchema = z.union([
-  z.strictObject({ restricted: z.literal(true) }),
-  z.strictObject({
-    restricted: z.literal(false),
-    number: z.number().int(),
-    title: z.string(),
-  }),
-]);
-const MatterLifecycleEnvelope = z.strictObject({
-  action: z.enum(["close", "reopen"]),
-  targetCategory: z.enum(["open", "closed"]),
-  statuses: z.array(LifecycleStatusSchema),
-  openChildren: z.array(OpenChildSchema),
-});
-
-interface MatterContext {
-  row: Matter;
-  matterTypeName: string;
-  statusName: string;
-  statusCategory: "open" | "closed";
-  statusProgressionGroup: (typeof MATTER_PROGRESSION_GROUPS)[number];
-  manager: {
-    id: string;
-    displayName: string;
-    image: string | null;
-    archivedAt: Date | null;
-  } | null;
-  nextDeadline?: z.infer<typeof NextDeadlineSchema>;
-}
-
-function toRow(
-  context: MatterContext,
-  customFields: Readonly<Record<string, CustomFieldValue>> = context.row.customFields,
-) {
-  const { row } = context;
-  return {
-    id: row.id,
-    createdBy: row.createdBy,
-    departmentId: row.departmentId,
-    region: row.region,
-    number: row.number,
-    title: row.title,
-    description: row.description,
-    matterTypeId: row.matterTypeId,
-    matterTypeName: context.matterTypeName,
-    statusId: row.statusId,
-    statusName: context.statusName,
-    statusCategory: context.statusCategory,
-    statusProgressionGroup: context.statusProgressionGroup,
-    manager: context.manager
-      ? {
-          id: context.manager.id,
-          displayName: context.manager.displayName,
-          image: context.manager.image,
-          archived: context.manager.archivedAt !== null,
-        }
-      : null,
-    priority: row.priority,
-    risk: row.risk,
-    aiUnverified: row.aiUnverified
-      ? Object.fromEntries(
-          Object.entries(row.aiUnverified).filter(
-            ([slug]) => !slug.startsWith("field:") || slug.slice(6) in customFields,
-          ),
-        )
-      : null,
-    customFields,
-    openedAt: row.openedAt.toISOString(),
-    closedAt: row.closedAt?.toISOString() ?? null,
-    isConfidential: row.isConfidential,
-    archivedAt: row.archivedAt?.toISOString() ?? null,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    nextDeadline: context.nextDeadline ?? null,
-  };
-}
 
 export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
-  const selectMatters = (db: Executor, today: string = civilToday()) =>
-    db
-      .select({
-        row: matters,
-        matterTypeName: matterTypes.displayName,
-        statusName: matterStatuses.displayName,
-        statusCategory: matterStatuses.category,
-        statusProgressionGroup: matterStatuses.progressionGroup,
-        manager: {
-          id: users.id,
-          displayName: users.displayName,
-          image: users.image,
-          archivedAt: users.archivedAt,
-        },
-        nextDeadline: nextDeadline("matter", today),
-      })
-      .from(matters)
-      .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
-      .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
-      .leftJoin(users, eq(matters.managerId, users.id));
-
-  const selectTeam = async (db: Executor, matterId: string) => {
-    const rows = await db
-      .select({
-        id: users.id,
-        displayName: users.displayName,
-        image: users.image,
-        archivedAt: users.archivedAt,
-      })
-      .from(matterTeam)
-      .innerJoin(users, eq(matterTeam.userId, users.id))
-      .where(eq(matterTeam.matterId, matterId))
-      .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
-    return rows.map((row) => ({
-      id: row.id,
-      displayName: row.displayName,
-      image: row.image,
-      archived: row.archivedAt !== null,
-    }));
-  };
-
-  async function lockedMatter(
-    tx: Transaction,
-    number: number,
-    user: AuthenticatedUser,
-  ): Promise<MatterContext> {
-    const row = await reachedMatter(tx, user, number, { lock: true });
-    if (!row) throw httpError(404, NO_MATTER);
-    const [context] = await selectMatters(tx).where(eq(matters.id, row.id)).limit(1);
-    if (!context) throw httpError(404, NO_MATTER);
-    return context;
-  }
-
-  function assertEditable(context: MatterContext): void {
-    if (context.row.archivedAt) {
-      throw httpError(409, "This matter is archived. Restore it before editing.");
-    }
-  }
-
-  async function assertAudienceActor(
-    tx: Transaction,
-    current: MatterContext,
-    user: AuthenticatedUser,
-    refusal: string,
-  ): Promise<void> {
-    const verdict = await matterConfidentialityWrite(tx, user, current.row);
-    if (verdict === "unreachable") throw httpError(404, NO_MATTER);
-    if (verdict === "refused") throw httpError(403, refusal);
-  }
-
-  async function lockedLiveUser(tx: Transaction, userId: string, managerOnly = false) {
-    const [person] = await tx
-      .select({
-        id: users.id,
-        displayName: users.displayName,
-        image: users.image,
-        archivedAt: users.archivedAt,
-        role: users.role,
-      })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1)
-      .for("update");
-    if (!person || person.archivedAt || (managerOnly && !MATTER_MANAGER_ROLES.has(person.role))) {
-      throw httpError(
-        400,
-        managerOnly ? MATTER_MANAGER_REFUSAL : "That is not a person we can add.",
-      );
-    }
-    return person;
-  }
-
-  const scope = (user: AuthenticatedUser) => matterTeamScope(app.db, user);
-  const SORTS: Record<MatterSortKey, { expr: SQL; joined: boolean }> = {
-    number: { expr: sql`${matters.number}`, joined: false },
-    title: { expr: sql`lower(${matters.title})`, joined: false },
-    type: { expr: sql`lower(${matterTypes.displayName})`, joined: true },
-    status: { expr: sql`${matterStatuses.displayOrder}`, joined: true },
-    priority: { expr: severityRank(matters.priority), joined: false },
-    risk: { expr: severityRank(matters.risk), joined: false },
-    manager: { expr: sql`lower(${users.displayName})`, joined: true },
-    openedAt: { expr: sql`${matters.openedAt}`, joined: false },
-  };
-
-  function listOrder(sort: SortRequest | null): SQL[] {
-    if (!sort) return [sql`${matters.number} desc`];
-    const { expr } = SORTS[sort.key];
-    return [
-      sql`${expr} ${sql.raw(sort.dir === "asc" ? "asc" : "desc")} nulls last`,
-      sql`${matters.number} desc`,
-    ];
-  }
-
-  function furtherDownThan(cursor: string, user: AuthenticatedUser, sort: SortRequest | null): SQL {
-    const reach = scope(user);
-    const at = sql`(
-      select ${matters.number} from ${matters}
-      where ${and(eq(matters.id, cursor), reach)}
-    )`;
-    if (!sort) return sql`${matters.number} < ${at}`;
-    const { expr, joined } = SORTS[sort.key];
-    const value = joined
-      ? sql`(
-          select ${expr} from ${matters}
-            inner join ${matterTypes} on ${eq(matters.matterTypeId, matterTypes.id)}
-            inner join ${matterStatuses} on ${eq(matters.statusId, matterStatuses.id)}
-            left join ${users} on ${eq(matters.managerId, users.id)}
-          where ${and(eq(matters.id, cursor), reach)}
-          limit 1
-        )`
-      : sql`(
-          select ${expr} from ${matters}
-          where ${and(eq(matters.id, cursor), reach)}
-        )`;
-    const later = sql.raw(sort.dir === "asc" ? ">" : "<");
-    return sql`case
-      when ${value} is null
-        then (${expr} is null and ${matters.number} < ${at})
-      else (
-        ${expr} is null
-        or ${expr} ${later} ${value}
-        or (${expr} = ${value} and ${matters.number} < ${at})
-      )
-    end`;
-  }
-
   app.get(
     "/matters",
     {
@@ -392,40 +79,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The managed Matters list, filtered and keyset-paged after access scope, with active counts",
         tags: ["matters"],
-        querystring: z
-          .object({
-            includeClosed: z.enum(["true", "false"]).optional(),
-            includeArchived: z.enum(["true", "false"]).optional(),
-            status: FilterChoices.optional(),
-            type: FilterChoices.optional(),
-            priority: FilterChoices.refine((value) =>
-              value
-                .split(",")
-                .every((item) =>
-                  SEVERITY_LEVELS.includes(item as (typeof SEVERITY_LEVELS)[number]),
-                ),
-            ).optional(),
-            risk: FilterChoices.refine((value) =>
-              value
-                .split(",")
-                .every(
-                  (item) =>
-                    item === "unassigned" ||
-                    SEVERITY_LEVELS.includes(item as (typeof SEVERITY_LEVELS)[number]),
-                ),
-            ).optional(),
-            timeZone: TimezoneSchema.optional(),
-            openedFrom: z.iso.date().optional(),
-            openedTo: z.iso.date().optional(),
-            deadlineFrom: z.iso.date().optional(),
-            deadlineTo: z.iso.date().optional(),
-            manager: FilterChoices.optional(),
-            incomplete: z.enum(["true", "false"]).optional(),
-            sort: z.enum(MATTER_SORT_KEYS).optional(),
-            dir: z.enum(SORT_DIRECTIONS).optional(),
-            cursor: CursorSchema.optional(),
-          })
-          .refine(validDateRanges, "The end date must be on or after the start date"),
+        querystring: MatterListQuery,
         response: {
           200: z.object({
             matters: z.array(MatterRowSchema),
@@ -437,85 +91,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const today = civilToday();
-      const sort: SortRequest | null = request.query.sort
-        ? { key: request.query.sort, dir: request.query.dir ?? "asc" }
-        : null;
-      const predicates = and(
-        request.query.includeArchived === "true" ? undefined : isNull(matters.archivedAt),
-        request.query.includeClosed === "true" ? undefined : eq(matterStatuses.category, "open"),
-        choiceFilter(matters.statusId, request.query.status),
-        choiceFilter(matters.matterTypeId, request.query.type),
-        choiceFilter(matters.priority, request.query.priority),
-        choiceFilter(matters.risk, request.query.risk),
-        choiceFilter(matters.managerId, request.query.manager, request.user.id),
-        dateFilter(
-          sql`(${matters.openedAt} at time zone ${request.query.timeZone ?? request.user.timezone ?? "UTC"})::date`,
-          request.query.openedFrom,
-          request.query.openedTo,
-        ),
-        dateFilter(
-          sql`((${nextDeadline("matter", today)}) ->> 'date')::date`,
-          request.query.deadlineFrom,
-          request.query.deadlineTo,
-        ),
-        request.query.incomplete === "true" ? incompleteMatter : undefined,
-        scope(request.user),
-      );
-      const rows = await selectMatters(app.db, today)
-        .where(
-          and(
-            predicates,
-            request.query.cursor
-              ? furtherDownThan(request.query.cursor, request.user, sort)
-              : undefined,
-          ),
-        )
-        .orderBy(...listOrder(sort))
-        .limit(PAGE_SIZE + 1);
-      const page = rows.slice(0, PAGE_SIZE);
-      const [counts] = await app.db
-        .select({
-          total: sql<number>`count(*)::int`,
-          open: sql<number>`count(*) filter (where ${matterStatuses.slug} = 'open')::int`,
-          onHold: sql<number>`count(*) filter (where ${matterStatuses.slug} = 'on_hold')::int`,
-        })
-        .from(matters)
-        .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
-        .where(predicates);
-      const businessFields =
-        request.user.role === "business_user"
-          ? new Map(
-              await Promise.all(
-                [...new Set(page.map((context) => context.row.matterTypeId))].map(
-                  async (matterTypeId) =>
-                    [
-                      matterTypeId,
-                      await selectAttachedFields(app.db, matterTypeFields, matterTypeId),
-                    ] as const,
-                ),
-              ),
-            )
-          : null;
-      return {
-        total: counts?.total ?? 0,
-        matters: page.map((context) =>
-          toRow(
-            context,
-            businessFields
-              ? projectCustomFields(
-                  request.user.role,
-                  businessFields.get(context.row.matterTypeId) ?? [],
-                  context.row.customFields,
-                ).customFields
-              : context.row.customFields,
-          ),
-        ),
-        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.row.id ?? null) : null,
-        counts: counts ?? { open: 0, onHold: 0 },
-      };
-    },
+    async (request) => listMatters(app.db, request.user, request.query),
   );
 
   app.get(
@@ -542,7 +118,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         .innerJoin(matterTypes, eq(matters.matterTypeId, matterTypes.id))
         .innerJoin(matterStatuses, eq(matters.statusId, matterStatuses.id))
         .leftJoin(users, eq(matters.managerId, users.id))
-        .where(scope(request.user));
+        .where(scope(app.db, request.user));
       const unique = (values: { id: string; displayName: string }[]) =>
         [...new Map(values.map((value) => [value.id, value])).values()].sort((a, b) =>
           a.displayName.localeCompare(b.displayName),
@@ -551,7 +127,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         .selectDistinct({ id: users.id, displayName: users.displayName })
         .from(matters)
         .innerJoin(users, eq(users.id, matters.businessOwnerId))
-        .where(scope(request.user));
+        .where(scope(app.db, request.user));
       return {
         businessOwners: unique(businessOwners),
         types: unique(rows.map((row) => ({ id: row.typeId, displayName: row.typeName }))),
@@ -642,17 +218,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           .from(matterStatuses)
           .where(isNull(matterStatuses.archivedAt))
           .orderBy(asc(matterStatuses.displayOrder), asc(matterStatuses.createdAt)),
-        app.db
-          .select({
-            id: users.id,
-            displayName: users.displayName,
-            image: users.image,
-            archivedAt: users.archivedAt,
-            role: users.role,
-          })
-          .from(users)
-          .where(isNull(users.archivedAt))
-          .orderBy(asc(sql`lower(${users.displayName})`)),
+        listAssignableUsers(app.db),
         app.db
           .select()
           .from(matterTemplates)
@@ -739,40 +305,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: MatterRecordEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      // Archiving hides a matter from the collection; it does not revoke
-      // an existing M-number link, so this lookup intentionally has no archive filter.
-      const [context] = await selectMatters(app.db)
-        .where(
-          and(eq(matters.number, request.params.number), matterTeamScope(app.db, request.user)),
-        )
-        .limit(1);
-      if (!context) throw httpError(404, NO_MATTER);
-      const attached = await selectAttachedFields(
-        app.db,
-        matterTypeFields,
-        context.row.matterTypeId,
-      );
-      const projection = projectCustomFields(request.user.role, attached, context.row.customFields);
-      return {
-        matter: {
-          ...toRow(context, projection.customFields),
-          businessOwner: await recordPerson(app.db, context.row.businessOwnerId),
-          department: await departmentName(app.db, context.row.departmentId),
-        },
-        creator: await recordPerson(app.db, context.row.createdBy),
-        originalIntake: await originalIntake(app.db, request.user, "matter", context.row.id),
-        form: await readTypeForm(app.db, "matter", context.row.matterTypeId),
-        fields: projection.fields,
-        customFieldRefs: await resolveStaffRefs(
-          app.db,
-          projection.fields,
-          projection.customFields,
-          request.user,
-        ),
-        team: await selectTeam(app.db, context.row.id),
-      };
-    },
+    async (request) => getMatter(app.db, request.user, request.params.number),
   );
 
   app.get(
@@ -927,22 +460,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
           "Commit matter fields individually, including re-type gaps, unrestricted live status transitions, and confidentiality",
         tags: ["matters"],
         params: NumberParams,
-        body: z.strictObject({
-          title: z.string().trim().min(1).max(MAX_MATTER_TITLE_LENGTH).optional(),
-          description: z.string().trim().max(10_000).nullable().optional(),
-          matterTypeId: z.string().optional(),
-          managerId: z.string().nullable().optional(),
-          departmentId: z.string().min(1).nullable().optional(),
-          region: z.string().trim().max(200).nullable().optional(),
-          businessOwnerId: z.string().nullable().optional(),
-          priority: SeveritySchema.optional(),
-          risk: SeveritySchema.nullable().optional(),
-          customFields: CustomFieldsInput.optional(),
-          statusId: z.string().optional(),
-          closingNote: z.string().trim().min(1).max(2000).optional(),
-          confirmReopen: z.literal(true).optional(),
-          isConfidential: z.boolean().optional(),
-        }),
+        body: MatterPatchBody,
         response: {
           200: MatterRecordEnvelope,
           409: problemTypeResponse("Reopening requires explicit confirmation", [
@@ -952,362 +470,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const body = request.body;
-      const today = civilToday();
-      const written = await app.db.transaction(async (tx) => {
-        const current = await lockedMatter(tx, request.params.number, request.user);
-        let businessAttached: AttachedCustomField[] | null = null;
-        if (request.user.role === "business_user") {
-          const allowed = new Set(["description", "customFields"]);
-          if (Object.keys(body).some((key) => !allowed.has(key))) {
-            throw httpError(
-              403,
-              "Business Users can edit only the description and Fields visible on the Portal on this matter.",
-            );
-          }
-          if (body.customFields !== undefined) {
-            businessAttached = await selectAttachedFields(
-              tx,
-              matterTypeFields,
-              current.row.matterTypeId,
-            );
-            assertBusinessCustomFieldWrite(businessAttached, body.customFields);
-          }
-        }
-        if (body.isConfidential !== undefined) {
-          await assertAudienceActor(
-            tx,
-            current,
-            request.user,
-            "Only an Administrator, the matter's creator, or its Matter Manager can change this.",
-          );
-        }
-        // The Matter Manager reaches a confidential matter by being its
-        // Manager, so naming one is an audience change. It takes the
-        // same actor set the team routes do, asked at the same point:
-        // before the archived refusal, and before the named person is
-        // read.
-        if (
-          current.row.isConfidential &&
-          body.managerId !== undefined &&
-          body.managerId !== current.row.managerId
-        ) {
-          await assertAudienceActor(
-            tx,
-            current,
-            request.user,
-            "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
-          );
-        }
-        assertEditable(current);
-        const target = current.row;
-        const patch: Partial<Matter> = {};
-        const changed: Record<string, { from: unknown; to: unknown }> = {};
-
-        if (body.title !== undefined && body.title.trim() !== target.title) {
-          patch.title = body.title.trim();
-          changed.title = { from: target.title, to: patch.title };
-        }
-        if (body.description !== undefined) {
-          const next = body.description?.trim() || null;
-          if (next !== target.description) {
-            patch.description = next;
-            changed.description = { from: target.description, to: next };
-          }
-        }
-
-        if (body.departmentId !== undefined && body.departmentId !== target.departmentId) {
-          const next = body.departmentId ? await lockedDepartment(tx, body.departmentId) : null;
-          patch.departmentId = next?.id ?? null;
-          changed.department = {
-            from: await departmentName(tx, target.departmentId),
-            to: next?.displayName ?? null,
-          };
-        }
-        if (body.region !== undefined && body.region !== target.region) {
-          const next = await lockedRegionName(tx, body.region);
-          patch.region = next;
-          changed.region = { from: target.region, to: next };
-        }
-        if (body.businessOwnerId !== undefined && body.businessOwnerId !== target.businessOwnerId) {
-          const next = body.businessOwnerId ? await lockedLiveUser(tx, body.businessOwnerId) : null;
-          const previous = await recordPerson(tx, target.businessOwnerId);
-          if (next) {
-            if (target.isConfidential) {
-              await assertAudienceActor(
-                tx,
-                current,
-                request.user,
-                "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
-              );
-            }
-            const inserted = await tx
-              .insert(matterTeam)
-              .values({ matterId: target.id, userId: next.id })
-              .onConflictDoNothing()
-              .returning();
-            if (inserted.length > 0) {
-              await recordActivity(tx, {
-                entityType: "matter",
-                entityId: target.id,
-                actorId: request.user.id,
-                action: "matter.team_added",
-                visibility: RECORD_ACTIVITY_TIER,
-                payload: { number: target.number, title: target.title, member: next.displayName },
-              });
-            }
-          }
-          patch.businessOwnerId = next?.id ?? null;
-          changed.businessOwner = {
-            from: previous?.displayName ?? null,
-            to: next?.displayName ?? null,
-          };
-        }
-        let manager = current.manager;
-        if (body.managerId !== undefined && body.managerId !== target.managerId) {
-          manager = body.managerId ? await lockedLiveUser(tx, body.managerId, true) : null;
-          patch.managerId = manager?.id ?? null;
-          changed.matterManager = {
-            from: current.manager?.displayName ?? null,
-            to: manager?.displayName ?? null,
-          };
-        }
-        if (body.priority !== undefined && body.priority !== target.priority) {
-          patch.priority = body.priority;
-          changed.priority = { from: target.priority, to: body.priority };
-        }
-        if (body.risk !== undefined && body.risk !== target.risk) {
-          patch.risk = body.risk;
-          changed.risk = { from: target.risk, to: body.risk };
-        }
-
-        let matterTypeName = current.matterTypeName;
-        const retyped =
-          body.matterTypeId !== undefined && body.matterTypeId !== target.matterTypeId;
-        if (retyped) {
-          const [matterType] = await tx
-            .select({
-              id: matterTypes.id,
-              displayName: matterTypes.displayName,
-              archivedAt: matterTypes.archivedAt,
-            })
-            .from(matterTypes)
-            .where(eq(matterTypes.id, body.matterTypeId!))
-            .limit(1)
-            .for("update");
-          if (!matterType || matterType.archivedAt) {
-            throw httpError(400, "The matter type must be a live matter type.");
-          }
-          patch.matterTypeId = matterType.id;
-          matterTypeName = matterType.displayName;
-        }
-
-        const attached =
-          businessAttached ??
-          (await selectAttachedFields(
-            tx,
-            matterTypeFields,
-            patch.matterTypeId ?? target.matterTypeId,
-          ));
-        if (body.customFields !== undefined || retyped) {
-          const applied = await applyCustomFields(
-            tx,
-            attached,
-            target.customFields,
-            body.customFields ?? {},
-          );
-          if (retyped) {
-            assertRequiredCustomFields(attached, applied.values);
-          } else if (body.customFields !== undefined) {
-            assertRequiredCustomFields(
-              attached.filter((field) => field.slug in body.customFields!),
-              applied.values,
-            );
-          }
-          if (Object.keys(applied.changed).length > 0) {
-            patch.customFields = applied.values;
-            Object.assign(changed, applied.changed);
-          }
-        }
-
-        let statusName = current.statusName;
-        let statusCategory = current.statusCategory;
-        let statusChange:
-          | {
-              from: string;
-              to: string;
-              fromCategory: "open" | "closed";
-              toCategory: "open" | "closed";
-            }
-          | undefined;
-        if (body.statusId !== undefined && body.statusId !== target.statusId) {
-          const [status] = await tx
-            .select({
-              id: matterStatuses.id,
-              displayName: matterStatuses.displayName,
-              category: matterStatuses.category,
-              progressionGroup: matterStatuses.progressionGroup,
-              archivedAt: matterStatuses.archivedAt,
-            })
-            .from(matterStatuses)
-            .where(eq(matterStatuses.id, body.statusId))
-            .limit(1)
-            .for("update");
-          if (!status || status.archivedAt) {
-            throw httpError(400, "The status must be a live matter status.");
-          }
-          patch.statusId = status.id;
-          statusChange = {
-            from: current.statusName,
-            to: status.displayName,
-            fromCategory: current.statusCategory,
-            toCategory: status.category,
-          };
-          statusName = status.displayName;
-          statusCategory = status.category;
-          if (current.statusCategory === "open" && status.category === "closed") {
-            if (!body.closingNote)
-              throw httpError(400, "Enter a closing note before closing this Matter.");
-            patch.closedAt = new Date();
-          } else if (current.statusCategory === "closed" && status.category === "open") {
-            if (!body.confirmReopen)
-              throw httpError(409, "Confirm before reopening this Matter.", {
-                type: MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE,
-              });
-            patch.closedAt = null;
-          }
-        }
-
-        if (
-          body.closingNote !== undefined &&
-          !(statusChange?.fromCategory === "open" && statusChange.toCategory === "closed")
-        ) {
-          throw httpError(400, "A closing note can only accompany closing an open Matter.");
-        }
-
-        let confidentialityChange: boolean | undefined;
-        if (body.isConfidential !== undefined && body.isConfidential !== target.isConfidential) {
-          patch.isConfidential = body.isConfidential;
-          confidentialityChange = body.isConfidential;
-        }
-
-        if (target.aiUnverified) {
-          const flags = { ...target.aiUnverified };
-          for (const [key, slug] of Object.entries({
-            title: "title",
-            description: "description",
-            priority: "priority",
-            matterTypeId: "matter_type",
-          }))
-            if (key in patch) delete flags[slug];
-          for (const slug of Object.keys(body.customFields ?? {}))
-            if (
-              JSON.stringify((patch.customFields ?? target.customFields)[slug]) !==
-              JSON.stringify(target.customFields[slug])
-            )
-              delete flags[`field:${slug}`];
-          if (retyped)
-            for (const slug of Object.keys(flags))
-              if (slug.startsWith("field:")) delete flags[slug];
-          // Only deletions happen above, so a shorter map is a real change.
-          // Writing an unchanged map would bump updatedAt on a no-op PATCH.
-          if (Object.keys(flags).length !== Object.keys(target.aiUnverified).length)
-            patch.aiUnverified = Object.keys(flags).length ? flags : null;
-        }
-        let row: Matter = target;
-        if (Object.keys(patch).length > 0) {
-          const [written] = await tx
-            .update(matters)
-            .set({ ...patch, updatedAt: new Date() })
-            .where(eq(matters.id, target.id))
-            .returning();
-          row = written!;
-        }
-        if (Object.keys(changed).length > 0) {
-          await recordActivity(tx, {
-            entityType: "matter",
-            entityId: target.id,
-            actorId: request.user.id,
-            action: "matter.updated",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              number: row.number,
-              title: row.title,
-              changed,
-              ...(request.user.role === "business_user" ? { actorRole: request.user.role } : {}),
-            },
-          });
-        }
-        if (retyped) {
-          await recordActivity(tx, {
-            entityType: "matter",
-            entityId: target.id,
-            actorId: request.user.id,
-            action: "matter.type_reassigned",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              number: row.number,
-              title: row.title,
-              from: current.matterTypeName,
-              to: matterTypeName,
-            },
-          });
-        }
-        if (statusChange) {
-          await recordActivity(tx, {
-            entityType: "matter",
-            entityId: target.id,
-            actorId: request.user.id,
-            action: "matter.status_changed",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              number: row.number,
-              title: row.title,
-              ...statusChange,
-              ...(body.closingNote ? { closingNote: body.closingNote } : {}),
-            },
-          });
-        }
-        if (confidentialityChange !== undefined) {
-          await recordActivity(tx, {
-            entityType: "matter",
-            entityId: target.id,
-            actorId: request.user.id,
-            action: confidentialityChange
-              ? "matter.confidentiality_set"
-              : "matter.confidentiality_cleared",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: row.number, title: row.title },
-          });
-        }
-        return { row, matterTypeName, statusName, statusCategory, manager, attached };
-      });
-      const [updated] = await selectMatters(app.db, today)
-        .where(eq(matters.id, written.row.id))
-        .limit(1);
-      if (!updated) throw httpError(404, NO_MATTER);
-      const projection = projectCustomFields(
-        request.user.role,
-        written.attached,
-        updated.row.customFields,
-      );
-      return {
-        matter: {
-          ...toRow(updated, projection.customFields),
-          businessOwner: await recordPerson(app.db, updated.row.businessOwnerId),
-          department: await departmentName(app.db, updated.row.departmentId),
-        },
-        fields: projection.fields,
-        customFieldRefs: await resolveStaffRefs(
-          app.db,
-          projection.fields,
-          projection.customFields,
-          request.user,
-        ),
-        team: await selectTeam(app.db, updated.row.id),
-      };
-    },
+    async (request) => patchMatter(app.db, request.user, request.params.number, request.body),
   );
 
   app.post(

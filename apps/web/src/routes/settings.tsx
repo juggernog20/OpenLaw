@@ -28,6 +28,7 @@ import { advancedTitles } from "./settings-advanced";
 import { useState } from "react";
 import {
   Activity,
+  Bot,
   Database,
   Upload,
   Cog,
@@ -137,6 +138,12 @@ const PERSONAL_GROUP: SettingsGroup = {
         id: "settings.section.notifications",
         defaultMessage: "Notifications",
       }),
+    },
+    {
+      id: "api-keys",
+      path: "/settings/api-keys",
+      icon: KeyRound,
+      label: defineMessage({ id: "apiKeys.title", defaultMessage: "API keys" }),
     },
   ],
 };
@@ -257,6 +264,12 @@ const ORGANIZATION_GROUP: SettingsGroup = {
       label: defineMessage({ id: "settings.section.integrations", defaultMessage: "Integrations" }),
     },
     {
+      id: "mcp",
+      path: "/settings/mcp",
+      icon: Bot,
+      label: defineMessage({ id: "settings.section.mcp", defaultMessage: "MCP" }),
+    },
+    {
       id: "advanced",
       label: defineMessage({ id: "settings.group.advanced", defaultMessage: "Advanced" }),
       icon: Settings2,
@@ -294,6 +307,7 @@ const ORGANIZATION_GROUP: SettingsGroup = {
           icon: Cog,
           label: advancedTitles.processing,
         },
+        { id: "mcp-limits", path: "/settings/mcp-limits", icon: Bot, label: advancedTitles.mcp },
         {
           id: "system-status",
           path: "/settings/system-status",

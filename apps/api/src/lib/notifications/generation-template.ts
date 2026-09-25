@@ -3,17 +3,20 @@
 /** ADO-007: the same cover-note nodes feed the paired text and HTML email. */
 import { parseKnowledgeMarkdown, type MarkdownInline } from "@openlaw/shared";
 import type { MailMessage } from "../mailer.js";
-import { escapeHtml, origin } from "./email.js";
-function htmlInline(parts: MarkdownInline[], baseUrl: string): string {
-  return parts
-    .map((part) => {
-      const text = escapeHtml(part.text);
-      if (part.kind === "text") return text;
-      if (part.kind === "link")
-        return `<a href="${escapeHtml(new URL(part.href, baseUrl).href)}" rel="noreferrer">${text}</a>`;
-      return `<${part.kind}>${text}</${part.kind}>`;
-    })
-    .join("");
+import { renderEmailLayout, type EmailModel } from "../email-layout.js";
+import { origin } from "./email.js";
+
+function fileSize(bytes: number): string {
+  const step = [
+    { unit: "gigabyte", threshold: 1e9 },
+    { unit: "megabyte", threshold: 1e6 },
+    { unit: "kilobyte", threshold: 1e3 },
+  ].find(({ threshold }) => bytes >= threshold) ?? { unit: "byte", threshold: 1 };
+  return new Intl.NumberFormat("en-US", {
+    style: "unit",
+    unit: step.unit,
+    maximumFractionDigits: 1,
+  }).format(bytes / step.threshold);
 }
 const textInline = (parts: MarkdownInline[], baseUrl: string) =>
   parts
@@ -26,6 +29,8 @@ export function renderGenerationMail(input: {
   personName: string;
   autoDocName: string;
   organizationName: string;
+  emailLogoPng?: string | null;
+  surface: EmailModel["surface"];
   coverNote: string | null;
   baseUrl: string;
   autoDocId: string;
@@ -33,17 +38,6 @@ export function renderGenerationMail(input: {
   attachments: NonNullable<MailMessage["attachments"]>;
 }): MailMessage {
   const blocks = parseKnowledgeMarkdown(input.coverNote ?? "");
-  const html = blocks
-    .map((block) => {
-      if (block.kind === "code") return `<pre><code>${escapeHtml(block.text)}</code></pre>`;
-      if (block.kind === "list") {
-        const tag = block.ordered ? "ol" : "ul";
-        return `<${tag}>${block.items.map((item) => `<li>${htmlInline(item, input.baseUrl)}</li>`).join("")}</${tag}>`;
-      }
-      const tag = block.kind === "heading" ? ["h2", "h3", "h4"][block.level - 1]! : "p";
-      return `<${tag}>${htmlInline(block.children, input.baseUrl)}</${tag}>`;
-    })
-    .join("");
   const text = blocks
     .map((block) =>
       block.kind === "code"
@@ -62,11 +56,40 @@ export function renderGenerationMail(input: {
   const link = `${origin(input.baseUrl)}/auto-docs/${input.autoDocId}/generations/${input.generationId}`;
   const greeting = `Hello ${input.personName},`;
   const message = `Your generated ${input.autoDocName} is attached.`;
+  const subject = `${input.autoDocName} is ready`;
+  const layout = renderEmailLayout(
+    {
+      subject,
+      baseUrl: input.baseUrl,
+      surface: input.surface,
+      // The inbox preview shows the sentence. The subject already carries the name.
+      preheader: message,
+      tone: "success",
+      label: "Auto-Doc",
+      headline: input.autoDocName,
+      greeting,
+      body: [message],
+      legalNote: blocks,
+      attachments: input.attachments.map((attachment) => ({
+        name: attachment.filename,
+        size: fileSize(attachment.content.byteLength),
+        type:
+          attachment.contentType === "application/pdf"
+            ? "pdf"
+            : attachment.contentType ===
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              ? "word"
+              : "file",
+      })),
+      action: { label: "Download your files", href: link },
+    },
+    { name: input.organizationName, emailLogoPng: input.emailLogoPng },
+  );
   return {
     to: input.to,
-    subject: `${input.autoDocName} is ready`,
-    attachments: input.attachments,
+    subject,
+    attachments: [...input.attachments, ...layout.attachments],
     text: [brand, "", greeting, "", message, "", text, "", "Download your files:", link].join("\n"),
-    html: `<!doctype html><html><body><header><p><strong>${escapeHtml(brand)}</strong></p></header><main><h1>${escapeHtml(input.autoDocName)}</h1><p>${escapeHtml(greeting)}</p><p>${escapeHtml(message)}</p>${html}<p><a href="${escapeHtml(link)}">Download your files</a></p></main></body></html>`,
+    html: layout.html,
   };
 }

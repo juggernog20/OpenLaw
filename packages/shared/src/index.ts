@@ -70,6 +70,7 @@ export {
  * is re-exported here because `@openlaw/shared` has one entry point.
  */
 export type {
+  ActivityVia,
   ActivityAction,
   ActivityPayloadMap,
   ChangedFields,
@@ -617,6 +618,13 @@ export {
 export const MAX_CONTRACT_CLASSIFICATION_LENGTH = 200;
 
 export { parseKnowledgeMarkdown, type MarkdownBlock, type MarkdownInline } from "./markdown.js";
+export {
+  commentBodyParts,
+  documentLinkDraft,
+  serializeDocumentLinks,
+  type CommentBodyPart,
+  type CommentDocumentLink,
+} from "./comment-document-links.js";
 export { INTAKE_BASIC_FIELD_KEYS, resolveIntakeFieldOrder } from "./intake-field-order.js";
 
 export {
@@ -689,3 +697,5 @@ export {
 } from "./search-conditions.js";
 
 export * from "./search-fields.js";
+
+export { API_KEY_PROBLEMS, MCP_TOOLSETS, type McpToolset } from "./mcp.js";

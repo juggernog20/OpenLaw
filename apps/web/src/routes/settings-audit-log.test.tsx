@@ -264,6 +264,18 @@ describe("who reaches the audit log", () => {
 });
 
 describe("what the pane shows", () => {
+  it("renders the Client on an attributed audit row", async () => {
+    const attributed = {
+      ...ENTRIES[2]!,
+      viaKind: "api_key",
+      viaId: "key-1",
+      viaClientName: "Claude Code",
+    };
+    stubApi({ signedIn: ADMIN, extra: auditApi(newCalls(), { pages: [[attributed]] }) });
+    renderAt("/settings/audit-log");
+    expect(await screen.findByText(/Blair Wentworth, via Claude Code, created/)).toBeVisible();
+  });
+
   it("narrates every family, including the admin-only ones no record feed carries", async () => {
     stubApi({ signedIn: ADMIN, extra: auditApi(newCalls()) });
     renderAt("/settings/audit-log");

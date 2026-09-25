@@ -15,6 +15,8 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { orgSettings } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
+import { renderEmailLayout } from "../../lib/email-layout.js";
+import { getOrgSettings } from "../../lib/org-settings.js";
 import { MAILER_SOURCES } from "../../lib/mailer.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { SmtpSettingsSchema, smtpSettingsToStorage } from "./config.js";
@@ -164,7 +166,7 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const { mailer } = await app.resolveMailer();
+      const { mailer, sentThrough, from } = await app.resolveMailer();
       // Unconfigured fails before dialing anything: the reason is ours to
       // author, so the relay-text scrubbing in describeSendFailure never
       // has to special-case it.
@@ -175,8 +177,32 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
           { expose: true },
         );
       }
+      const brand = await getOrgSettings(app.db);
       try {
         await mailer.send({
+          ...renderEmailLayout(
+            {
+              subject: "OpenLaw test email",
+              baseUrl: app.baseUrl,
+              surface: "staff",
+              preheader: "Receiving it means outbound email is working.",
+              tone: "success",
+              label: "Email settings",
+              headline: "Outbound email works",
+              greeting: `Hello ${request.user.displayName},`,
+              body: [
+                "This is a test email from your OpenLaw instance. Receiving it means outbound email is working.",
+              ],
+              // A configured mailer always has both. A resolver that
+              // supplies neither gets no empty rows.
+              facts: [
+                ...(sentThrough ? [{ label: "Sent through", value: sentThrough }] : []),
+                ...(from ? [{ label: "From", value: from }] : []),
+              ],
+              footer: { kind: "system" },
+            },
+            brand,
+          ),
           to: request.user.email,
           subject: "OpenLaw test email",
           text: [

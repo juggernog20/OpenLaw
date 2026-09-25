@@ -131,3 +131,17 @@ Split newly discovered workflows into additional stable coverage IDs. Keep remov
 or deferred rows with a reason and target rather than silently shrinking the scope.
 For G3 and G4 reports, show verified/required counts, explicit deferrals, blockers,
 and failing scenarios separately.
+
+## M40 documentation, #1063
+
+DOC-030 is the catalog owner for the two articles added by #1063. These articles
+are under review. The MCP integration tests and browser journey are author checks,
+not an independent documentation walkthrough or release publication.
+
+| ID  | User outcome                                                        | Audience | Destination | Priority | Owner task      | Article ID                |
+| --- | ------------------------------------------------------------------- | -------- | ----------- | -------- | --------------- | ------------------------- |
+| C57 | Configure MCP, approve API key requests and inspect Client activity | A/O      | S/F         | P1       | DOC-030 / #1063 | `configure-mcp`           |
+| C58 | Request and collect an API key, then connect a headless Client      | L/A/B    | S/P/F       | P1       | DOC-030 / #1063 | `connect-headless-client` |
+
+C45 also covers the LAN only profile added to `deployment-configuration`. Its
+private network and certificate checks remain in the operator walkthrough queue.

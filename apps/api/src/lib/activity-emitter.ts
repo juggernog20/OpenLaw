@@ -55,6 +55,9 @@ export interface ActivityEvent {
   entityType: ActivityEntityType;
   entityId: string | null;
   actorId: string | null;
+  viaKind?: string | null;
+  viaId?: string | null;
+  viaClientName?: string | null;
   action: string;
   visibility: ActivityVisibility;
   payload: Record<string, unknown>;

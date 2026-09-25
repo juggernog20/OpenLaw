@@ -339,8 +339,8 @@ describe("a reply on the thread (INT-007)", () => {
     const message = await oneMailAbout(REQUESTER, request, "Legal replied");
     expect(message.text).toContain(STAFF.displayName);
     expect(message.text).toContain(portalLink(request));
-    // The words stay on the thread (CMT-006, DD-016).
-    expect(message.text).not.toContain("counterparty's paper");
+    // NOT-002 reads the current comment words when the email is sent.
+    expect(message.text).toContain("counterparty's paper");
 
     // The actor exclusion, from the other end: the person who wrote it
     // hears nothing about having written it.

@@ -108,7 +108,7 @@ it.each(["none", "valid", "swapped", "invalid", "half-dropped", "renamed"])(
             ${row.reminderOffsetDays}, ${row.emailOwed}, ${row.emailedAt.toISOString()})`);
       }
       const before = await db.execute(
-        sql`select to_jsonb(n) - 'push_owed' - 'pushed_at' - 'push_skipped_at' as row from notifications n order by id`,
+        sql`select to_jsonb(n) - 'push_owed' - 'pushed_at' - 'push_skipped_at' - 'approval_kind' - 'handled_at' as row from notifications n order by id`,
       );
 
       let stagedOid: unknown;
@@ -168,7 +168,7 @@ it.each(["none", "valid", "swapped", "invalid", "half-dropped", "renamed"])(
       expect(
         (
           await db.execute(
-            sql`select to_jsonb(n) - 'push_owed' - 'pushed_at' - 'push_skipped_at' as row from notifications n order by id`,
+            sql`select to_jsonb(n) - 'push_owed' - 'pushed_at' - 'push_skipped_at' - 'approval_kind' - 'handled_at' as row from notifications n order by id`,
           )
         ).rows,
       ).toEqual(before.rows);

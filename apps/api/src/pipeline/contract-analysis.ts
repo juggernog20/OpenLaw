@@ -143,8 +143,8 @@ export async function analysisTargetText(
   };
 }
 
-/** Reads the Version a run snapshotted on its first attempt. */
-async function snapshottedTargetText(
+/** Reads a manual run's selected Version, or an automatic run's first-attempt snapshot. */
+export async function snapshottedTargetText(
   db: Executor,
   contractId: string,
   contractTypeId: string,
@@ -813,8 +813,15 @@ export async function handleContractAnalysis(
       if (!provider) throw new AiConfigError("No enabled AI connector is configured.");
 
       const targetText =
-        run.startedAt && run.versionId
-          ? await snapshottedTargetText(tx, run.contractId, contract.contractTypeId, run.versionId)
+        run.startedAt || run.trigger === "manual"
+          ? run.versionId
+            ? await snapshottedTargetText(
+                tx,
+                run.contractId,
+                contract.contractTypeId,
+                run.versionId,
+              )
+            : null
           : await analysisTargetText(tx, run.contractId);
       if (!targetText) {
         throw new AnalysisTargetError("The Contract has no ready, non-empty analysis target text.");

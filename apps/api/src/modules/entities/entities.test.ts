@@ -160,7 +160,13 @@ describe("the ENT-004 access floor", () => {
     const set = await patchEntity(adminCookies, id, { isConfidential: true });
     expect(set.statusCode, set.body).toBe(200);
     expect(set.json().entity.isConfidential).toBe(true);
-    expect((await getEntity(memberCookies, id)).statusCode).toBe(404);
+    const refusedRead = await getEntity(memberCookies, id);
+    expect(refusedRead.statusCode, refusedRead.body).toBe(404);
+    expect(refusedRead.headers["content-type"]).toContain("application/problem+json");
+    expect(refusedRead.json()).toMatchObject({
+      status: 404,
+      detail: "No entity exists with this id.",
+    });
     expect((await listEntities(memberCookies)).some((row) => row.id === id)).toBe(false);
     expect((await listEntities(adminCookies)).find((row) => row.id === id)?.isConfidential).toBe(
       true,

@@ -10,6 +10,8 @@ const row: BellItem = {
   entityType: "contract",
   entityId: "c1",
   payload: { contractNumber: 42, contractTitle: "Secret agreement", actorName: "Casey" },
+  approvalKind: null,
+  handledAt: null,
   readAt: null,
   createdAt: "2026-09-20T10:00:00Z",
 };

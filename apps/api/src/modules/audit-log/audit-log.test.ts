@@ -561,7 +561,7 @@ describe("the CSV export", () => {
     const [header] = res.body.split("\r\n");
     expect(header).toBe(
       '"id","created_at","action","entity_type","entity_id","visibility",' +
-        '"actor_id","actor_name","actor_email","payload"',
+        '"actor_id","actor_name","actor_email","payload","via_kind","via_id","via_client_name"',
     );
     const rows = csvRows(res.body);
     expect(rows).toHaveLength(1);
@@ -634,6 +634,22 @@ function exportRows() {
 describe("structured emission", () => {
   afterEach(() => {
     clearActivityEmitter();
+  });
+
+  it("snapshots an explicit via in the writer and its SIEM copy", async () => {
+    const emitted: ActivityEvent[] = [];
+    setActivityEmitter((event) => emitted.push(event));
+    const [row] = await recordActivity(harness.db, {
+      entityType: "system",
+      actorId: userIds.get(ADMIN.email)!,
+      action: "org_settings.updated",
+      visibility: "admin_only",
+      payload: { field: "name", old: "Old name", new: "New name" },
+      via: { kind: "oauth_client", id: "client-1", clientName: "Connected Client" },
+    });
+    const via = { viaKind: "oauth_client", viaId: "client-1", viaClientName: "Connected Client" };
+    expect(row).toMatchObject(via);
+    expect(emitted).toContainEqual(expect.objectContaining({ id: row!.id, ...via }));
   });
 
   it("emits every appended entry as one structured event", async () => {

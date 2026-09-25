@@ -18,7 +18,8 @@ import {
   type EntityObligation,
   type Transaction,
 } from "@openlaw/db";
-import { requireRole } from "../../auth/guards.js";
+import type { Db } from "@openlaw/db";
+import { NO_PERMISSION, requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { shiftMonths } from "../../lib/contract-term.js";
 import {
@@ -367,14 +368,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async (request) => {
-      const entity = await reachedEntity(app.db, request.user, request.params.id);
-      if (!entity) throw httpError(404, NO_ENTITY);
-      const rows = await obligationProjection(app.db, request.user)
-        .where(eq(entityObligations.entityId, entity.id))
-        .orderBy(asc(entityObligations.nextDueOn), asc(entityObligations.id));
-      return { obligations: rows.map(toObligation) };
-    },
+    async (request) => listEntityObligations(app.db, request.user, request.params.id),
   );
 
   app.post(
@@ -604,3 +598,17 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function listEntityObligations(db: Db, user: AuthenticatedUser, id: string) {
+  // The route above asks requireMember. A caller that is not a route
+  // (the MCP register) reaches this service directly, so the same
+  // floor is asserted here rather than trusted to the caller.
+  if (user.role !== "administrator" && user.role !== "legal_team_member")
+    throw httpError(403, NO_PERMISSION);
+  const entity = await reachedEntity(db, user, id);
+  if (!entity) throw httpError(404, NO_ENTITY);
+  const rows = await obligationProjection(db, user)
+    .where(eq(entityObligations.entityId, entity.id))
+    .orderBy(asc(entityObligations.nextDueOn), asc(entityObligations.id));
+  return { obligations: rows.map(toObligation) };
+}

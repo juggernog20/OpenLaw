@@ -144,6 +144,9 @@ export const ActivityEntrySchema = z.object({
   visibility: z.enum(COMMENT_VISIBILITIES),
   /** Who acted. NULL for a system-emitted event with no human actor. */
   actor: ActorSchema.nullable(),
+  viaKind: z.string().nullable(),
+  viaId: z.string().nullable(),
+  viaClientName: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   /**
    * The action's own data — old and new values for an edit, the names
@@ -257,6 +260,9 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: activityLog.visibility,
           createdAt: activityLog.createdAt,
           payload: activityLog.payload,
+          viaKind: activityLog.viaKind,
+          viaId: activityLog.viaId,
+          viaClientName: activityLog.viaClientName,
           actor: {
             id: users.id,
             displayName: users.displayName,
@@ -321,6 +327,9 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
             : null,
           createdAt: row.createdAt.toISOString(),
           payload: row.payload,
+          viaKind: row.viaKind,
+          viaId: row.viaId,
+          viaClientName: row.viaClientName,
         })),
         // Only when a further row was actually read. A cursor on the
         // last page would send the client for an empty one.

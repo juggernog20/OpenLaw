@@ -12,12 +12,12 @@
     }
   },
   "scripts": {
-    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "dev": "node ../../scripts/documentation/api.mjs && tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "build": "node ../../scripts/documentation/api.mjs && tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src scripts",
-    "test": "vitest run",
+    "test": "node ../../scripts/documentation/api.mjs && vitest run",
     "openapi:emit": "tsx scripts/emit-openapi.ts"
   },
   "dependencies": {
@@ -25,12 +25,16 @@
     "@aws-sdk/lib-storage": "^3.1139.0",
     "@azure/identity": "^4.13.3",
     "@azure/storage-blob": "^12.33.0",
+    "@better-auth/api-key": "1.7.5",
     "@better-auth/drizzle-adapter": "~1.7.5",
     "@better-auth/sso": "1.7.5",
     "@fastify/multipart": "^10.1.2",
     "@fastify/static": "^10.1.4",
     "@fastify/swagger": "^9.9.0",
     "@kenjiuno/msgreader": "^1.28.0",
+    "@modelcontextprotocol/fastify": "2.0.0",
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
     "@node-rs/argon2": "^2.2.1",
     "@openlaw/db": "workspace:*",
     "@openlaw/shared": "workspace:*",
@@ -46,11 +50,13 @@
     "pizzip": "^3.3.0",
     "postal-mime": "^3.0.0",
     "sanitize-html": "^2.17.7",
+    "sharp": "^0.35.4",
     "uuidv7": "^1.2.1",
     "web-push": "^3.6.7",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
     "@testcontainers/azurite": "^12.1.0",
     "@testcontainers/minio": "^12.1.0",
     "@testcontainers/postgresql": "^12.1.0",

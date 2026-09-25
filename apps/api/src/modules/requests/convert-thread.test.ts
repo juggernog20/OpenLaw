@@ -659,8 +659,8 @@ describe("the reply promise follows the thread (NOT-002 group 5)", () => {
       m.subject.includes("Legal replied"),
     );
     expect(message!.text).toContain(`http://localhost/portal/requests/${request.number}`);
-    // The words stay on the thread (CMT-006, DD-016).
-    expect(message!.text).not.toContain("redline back");
+    // NOT-002 reads the current comment words when the email is sent.
+    expect(message!.text).toContain("redline back");
   });
 
   it("raises nothing at the Requester from a Legal Only or Working Team comment", async () => {

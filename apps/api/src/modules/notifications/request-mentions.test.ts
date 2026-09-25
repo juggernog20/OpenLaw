@@ -19,8 +19,8 @@ import { requestDepartment } from "../../testing/request-department.js";
  * - **A mention is done *to* you whatever record it happens on** (NOT-002
  *   M18/1). Being named on a Request thread is group 1, exactly as being
  *   named on a contract is: the bell rings and the email leaves at once,
- *   carrying R-### and the staff detail's address (#414) and no comment
- *   words (M18/3).
+ *   carrying R-###, the staff detail's address (#414), and the current
+ *   comment words (NOT-002).
  * - **The audience is the staff side** (INT-006). A Member+ is named as a
  *   triager, so the mention lands on the staff centre and the wall step
  *   re-asks that they are still Member+.
@@ -372,8 +372,8 @@ describe("the mention's email (NOT-002 group 1)", () => {
     expect(message.text).toContain(`http://localhost/inbox/${request.number}`);
     // The reader is staff, so the portal address is never offered.
     expect(message.text).not.toContain("/portal/requests/");
-    // No comment words in the mail (M18/3).
-    expect(message.text).not.toContain("Your call");
+    // NOT-002 reads the current comment words when the email is sent.
+    expect(message.text).toContain("Your call");
   });
 });
 

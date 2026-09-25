@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { activityViaFor } from "../acting-context.js";
 
 /**
  * The notification seam (NOT-001, NOT-002, TECH-007).
@@ -57,6 +58,8 @@
 
 import { approvalRecipients } from "../approval-access.js";
 import {
+  isNull,
+  apiKeyRequests,
   commentMentions,
   and,
   inArray,
@@ -508,15 +511,21 @@ export interface RequestDeclinedEvent extends RequestEvent {
   /** Why. INT-006 makes "no" arrive with a why, so the reason travels
    * with the event rather than being a line *about* a reason.
    *
-   * It is the one piece of somebody's prose this seam carries into an
-   * email, and it is carried on purpose: a decline reason is written to
-   * be read by the requester, it is not a room anybody can be moved out
-   * of, and there is no redact for it to outrun (CMT-006 is why a
-   * comment's words stay on the thread). */
+   * The reason is stored in this event. Comment words are read separately
+   * at send time by commentId, under the NOT-002 addendum. */
   reason: string;
 }
 
+export interface ApiKeyEvent {
+  requestId: string;
+  requesterId: string;
+  clientName: string;
+  actorId: string;
+  event: "requested" | "approved" | "denied";
+}
+
 export interface Notifier {
+  apiKeyEvent(tx: NotifyingTransaction, event: ApiKeyEvent): Promise<void>;
   /**
    * Runs one mutation and everything it has to tell people about, in
    * one transaction.
@@ -819,6 +828,7 @@ interface PendingNotification {
  * names it. Which arm answers the wall question is read from `type`,
  * so an entity added later is an arm rather than a branch at a route. */
 type NotificationEntity =
+  | { type: "api_key_request"; id: string }
   | { type: typeof MATTER_ENTITY; id: string }
   | { type: typeof CONTRACT_ENTITY; id: string }
   | { type: typeof ENTITY_ENTITY; id: string }
@@ -877,6 +887,7 @@ async function fanOut(
   options: FanOutOptions = {},
 ): Promise<number> {
   const { narrowing = {}, reminder } = options;
+  const via = activityViaFor(actorId);
   // 1. The audience, minus the person who caused it. Deduplicated: one
   // event tells one person once, however many rows named them.
   const byUser = new Map<string, PendingNotification>();
@@ -889,22 +900,24 @@ async function fanOut(
   // 2. The wall (DD-014, and the Request's own two facts). Applied here
   // so no event can skip it, whichever record it is about.
   const reachable =
-    entity.type === CONTRACT_ENTITY
-      ? eventType === "approval.requested"
-        ? await approvalRecipients(tx, entity.id, [...byUser.keys()])
-        : await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-      : entity.type === MATTER_ENTITY
-        ? await matterReachedBy(tx, entity.id, [...byUser.keys()], narrowing)
-        : entity.type === ENTITY_ENTITY
-          ? await entityReachedBy(tx, entity.id, [...byUser.keys()])
-          : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
-              ...narrowing,
-              // Which standing this event addressed (M21/4, M21/5). It is
-              // read from the catalog rather than passed by the method, so
-              // an event added to a group later inherits that group's side
-              // and cannot be the one that forgets to ask for it.
-              side: requestSideOf(eventType),
-            });
+    entity.type === "api_key_request"
+      ? new Set(byUser.keys())
+      : entity.type === CONTRACT_ENTITY
+        ? eventType === "approval.requested"
+          ? await approvalRecipients(tx, entity.id, [...byUser.keys()])
+          : await reachedBy(tx, entity.id, [...byUser.keys()], narrowing)
+        : entity.type === MATTER_ENTITY
+          ? await matterReachedBy(tx, entity.id, [...byUser.keys()], narrowing)
+          : entity.type === ENTITY_ENTITY
+            ? await entityReachedBy(tx, entity.id, [...byUser.keys()])
+            : await requestReachedBy(tx, entity.id, [...byUser.keys()], {
+                ...narrowing,
+                // Which standing this event addressed (M21/4, M21/5). It is
+                // read from the catalog rather than passed by the method, so
+                // an event added to a group later inherits that group's side
+                // and cannot be the one that forgets to ask for it.
+                side: requestSideOf(eventType),
+              });
 
   if (entity.type === CONTRACT_ENTITY || entity.type === MATTER_ENTITY) {
     const businessPeople = await tx
@@ -946,9 +959,18 @@ async function fanOut(
       {
         userId,
         eventType,
+        approvalKind:
+          eventType === "approval.requested"
+            ? "contract"
+            : eventType === "api_key.requested"
+              ? "api_key"
+              : null,
         entityType: entity.type satisfies NotificationEntityType,
         entityId: entity.id,
-        payload: byUser.get(userId)!.payload,
+        payload: {
+          ...byUser.get(userId)!.payload,
+          ...(via ? { viaKind: via.kind, viaId: via.id, viaClientName: via.clientName } : {}),
+        },
         // The refinement: decided here, at write time, so that "owed
         // and unsent" is a state the rows can be asked about. A group
         // whose email never leaves owes none, whatever a stale
@@ -1305,9 +1327,8 @@ async function commentOnRecord(
     tx,
     "comment.posted",
     event,
-    // The words are not here, for the mention's reason: the thread
-    // is where DD-016 is enforced and where a redact can still reach
-    // the text (CMT-006). The item is a prompt to go and read it.
+    // CMT-006 keeps words out of the stored payload. Email reads them
+    // from the comment at send time, after any edit, delete or redact.
     { commentId: event.commentId, ...(event.taskId ? { taskId: event.taskId } : {}) },
     {
       except: [
@@ -1434,6 +1455,39 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         }),
       );
       return result;
+    },
+
+    async apiKeyEvent(tx, event) {
+      const [request] = await tx
+        .select({
+          requesterName: users.displayName,
+          toolsets: apiKeyRequests.toolsets,
+          scope: apiKeyRequests.scope,
+        })
+        .from(apiKeyRequests)
+        .innerJoin(users, eq(users.id, apiKeyRequests.requesterId))
+        .where(eq(apiKeyRequests.id, event.requestId));
+      const people = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          and(
+            isNull(users.archivedAt),
+            event.event === "requested"
+              ? eq(users.role, "administrator")
+              : eq(users.id, event.requesterId),
+          ),
+        );
+      await fanOut(
+        tx,
+        `api_key.${event.event}`,
+        { type: "api_key_request", id: event.requestId },
+        event.actorId,
+        people.map((person) => ({
+          userId: person.id,
+          payload: { requestId: event.requestId, clientName: event.clientName, ...request },
+        })),
+      );
     },
 
     async approvalRequested(
@@ -1635,10 +1689,8 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         .select({ userId: commentMentions.userId })
         .from(commentMentions)
         .where(eq(commentMentions.commentId, event.commentId));
-      // The comment's own words are never in a payload, and never will
-      // be. A mention is a prompt to go and read the thread, where the
-      // tier is enforced and a redact can still reach the text (CMT-006)
-      // — a payload could not be redacted out of.
+      // CMT-006 keeps words out of the payload. The send path reads
+      // the current comment by id under NOT-002.
       const who = { actorId: event.actorId, actorName: event.actorName };
       if (event.entityType === REQUEST_ENTITY) {
         await mentionedOnRequest(tx, event, named, who);
@@ -1825,10 +1877,8 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         tx,
         "request.replied",
         event,
-        // The words are not here, for the contract thread's reason: the
-        // portal is where DD-016 is enforced and where a redact can
-        // still reach the text (CMT-006). The item is a prompt to go and
-        // read the conversation.
+        // Keep only the id here. Email reads the current words at send
+        // time, so a delete or redact before delivery omits them.
         { commentId: event.commentId },
         { narrowing: { tier: event.visibility } },
       );

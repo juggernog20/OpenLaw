@@ -67,6 +67,7 @@ x-openlaw-environment: &openlaw-environment
   # a worker that linked somewhere else would send mail nobody could
   # act on.
   BASE_URL: ${BASE_URL:-}
+  MCP_RATE_LIMIT_PER_HOUR: ${MCP_RATE_LIMIT_PER_HOUR:-}
 
 services:
   app:

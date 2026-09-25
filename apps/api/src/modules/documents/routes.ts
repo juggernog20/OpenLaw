@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
 /**
  * A contract's paper (M11/2, M11/3, M11/4, M11/5) — the first path in
  * the codebase that puts a file anywhere: upload a draft, append the
@@ -125,67 +124,43 @@
  * rather than one generic edit.
  */
 
-import { documentErasureBlobs } from "../../lib/document-erasure.js";
-import { createHash } from "node:crypto";
-import { Readable } from "node:stream";
-import type { FastifyRequest } from "fastify";
-import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { uuidv7 } from "uuidv7";
-import { z } from "zod";
 import {
   and,
   asc,
   contracts,
-  desc,
+  DOCUMENT_VERSION_KINDS,
+  DOCUMENT_VERSION_SOURCES,
   documentComparisons,
-  documentFolders,
   documents,
   documentVersionRenditions,
   documentTypes,
   documentVersions,
-  documentVersionText,
-  DOCUMENT_VERSION_KINDS,
-  DOCUMENT_VERSION_SOURCES,
-  HAND_SET_DOCUMENT_VERSION_KINDS,
   eq,
-  entities,
+  HAND_SET_DOCUMENT_VERSION_KINDS,
   inArray,
-  isNotNull,
   isNull,
   knowledgeFolders,
-  autoDocs,
   knowledgeItems,
   knowledgeTypes,
-  matters,
-  or,
-  sql,
   TEXT_SOURCES,
-  users,
   type Executor,
-  type SQL,
   type Transaction,
 } from "@openlaw/db";
-import {
-  DOCUMENT_OWNER_KINDS,
-  resolveDocumentOwner,
-  type DocumentOwner,
-  type ResolvedDocumentOwner,
-} from "@openlaw/shared";
+import { DOCUMENT_OWNER_KINDS, type ResolvedDocumentOwner } from "@openlaw/shared";
+import type { FastifyRequest } from "fastify";
+import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { createHash } from "node:crypto";
+import { Readable } from "node:stream";
+import { uuidv7 } from "uuidv7";
+import { z } from "zod";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { applyTemplateVersion, detectStoredTemplate } from "../auto-docs/forms.js";
+import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
+import { reachedContract } from "../../lib/contract-access.js";
 import { assertConversionDocumentCanNarrow } from "../../lib/conversion-source-privacy.js";
 import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
+import { isComparableFormat } from "../../lib/doc-engine/engine.js";
 import { requireDocumentReader } from "../../lib/document-access.js";
-import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import {
-  contractTeamScope,
-  documentAudienceScope,
-  NO_CONTRACT,
-  reachedContract,
-  type ReachedContract,
-} from "../../lib/contract-access.js";
-import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
-import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { documentErasureBlobs } from "../../lib/document-erasure.js";
 import {
   EmailUnreadableError,
   isEmail,
@@ -193,9 +168,9 @@ import {
   type EmailAttachment,
   type ParsedEmail,
 } from "../../lib/email/parse.js";
+import { reachedEntity } from "../../lib/entity-access.js";
+import { reachedMatter } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { formatBlobRef } from "../../lib/storage/adapter.js";
-import { isComparableFormat } from "../../lib/doc-engine/engine.js";
 import {
   conversionFormatOf,
   previewContentType,
@@ -203,6 +178,7 @@ import {
   renderFamilyOf,
   RENDITION_CONTENT_TYPE,
 } from "../../lib/render-family.js";
+import { formatBlobRef } from "../../lib/storage/adapter.js";
 import {
   asUploadRefusal as asSharedUploadRefusal,
   attachmentDisposition,
@@ -225,14 +201,6 @@ import {
 // differing only in case to make a folder the create route would have
 // refused.
 import {
-  findOrCreateFolderPath,
-  folderOnRecord,
-  folderPathSegments,
-  MAX_FOLDER_PATH_LENGTH,
-  NO_FOLDER,
-  type FolderDestination,
-} from "./folders.js";
-import {
   insertDocumentVersion,
   nextVersionNumber,
   requestDerivations,
@@ -242,9 +210,48 @@ import {
   type DocumentTypeChoice,
 } from "../../lib/document-versions.js";
 import { requestAutomaticContractAnalysis } from "../../pipeline/automatic-contract-analysis.js";
-import { boundedQueueAsk } from "../../pipeline/jobs.js";
 import { needsDisplayRendition } from "../../pipeline/display-conversion.js";
-import { extractsText } from "../../pipeline/text-extraction.js";
+import { boundedQueueAsk } from "../../pipeline/jobs.js";
+import {
+  folderOnRecord,
+  folderPathSegments,
+  MAX_FOLDER_PATH_LENGTH,
+  NO_FOLDER,
+  type FolderDestination,
+} from "./folders.js";
+import {
+  documentWithChain,
+  listAutoDocDocuments,
+  listContractDocuments,
+  listEntityDocuments,
+  listKnowledgeItemDocuments,
+  listMatterDocuments,
+  paperOf,
+  reachedVersion,
+  readDocumentVersionText,
+  ROOT_FOLDER,
+  selectVersions,
+  toVersion,
+  type ReachedVersion,
+} from "./service.js";
+import {
+  assertLiveOwner,
+  assertOpen,
+  assertOpenDocument,
+  assertOpenEntity,
+  assertOpenMatter,
+  assertReachedDocument,
+  completeContractUpload,
+  completeEntityUpload,
+  completeKnowledgeUpload,
+  completeMatterUpload,
+  completeVersionUpload,
+  insertVersion,
+  ownerCopy,
+  reachedDocument,
+  type ReachedDocument,
+  type StoredUpload,
+} from "./upload-service.js";
 
 /** Uploads, Versions and record paper reads are the Document surface a
  * Business User receives (DD-024). Reach still comes from the owning
@@ -265,12 +272,6 @@ const requireMember = requireRole("administrator", "legal_team_member");
  * every other role plainly — a viewer who reaches the record already
  * knows the document is there, so a 404 would read as a bug. */
 const requireAdministrator = requireRole("administrator");
-
-/** A document on a contract this viewer cannot reach answers exactly as
- * `NO_CONTRACT` has the record itself answer. Its own id says nothing
- * about which record it belongs to, so a refusal here would be the leak
- * the 404 exists to prevent. */
-const NO_DOCUMENT = "No document exists with this reference.";
 
 /** CTR-003's reference, as every contract route takes it. */
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
@@ -799,29 +800,8 @@ const ArchivedQuery = z.object({
   includeArchived: z.enum(["true", "false"]).optional(),
 });
 
-/**
- * How many documents one read answers (CTR-024).
- *
- * Server-fixed, matching the contract list. It counts **documents**, not
- * versions: a document's chain rides with it whole, because a chain
- * split across two pages is not a negotiation history. A chain long
- * enough to matter on its own is a bound of its own, and this is not it.
- */
-const PAGE_SIZE = 50;
-
 /** A cursor is a document id, and nothing longer is worth reading. */
 const CursorSchema = z.string().min(1).max(64);
-
-/**
- * The listing context the record root is asked for by name (M13/3).
- *
- * A folder filter has three answers — every document on the record, the
- * documents in one folder, and the documents filed nowhere — and the
- * third has no id to be addressed by. So it is addressed by a word, and
- * the word is safe to reserve: every id in this API is a uuidv7, so no
- * folder can ever be called this.
- */
-const ROOT_FOLDER = "root";
 
 /**
  * Which listing this read is about (DOC-006, DES-031).
@@ -931,533 +911,6 @@ function fieldValue(fields: Record<string, unknown>, name: string): string | und
 }
 
 export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
-  function ownerReachScope(
-    owner: DocumentOwner,
-    db: Executor,
-    user: AuthenticatedUser,
-  ): SQL | undefined {
-    switch (owner) {
-      case "contract":
-        return and(isNotNull(documents.contractId), contractTeamScope(db, user));
-      case "matter":
-        return and(isNotNull(documents.matterId), matterTeamScope(db, user));
-      case "entity":
-        return and(isNotNull(documents.entityId), entityReachScope(db, user));
-      case "auto_doc":
-        return and(
-          isNotNull(documents.autoDocId),
-          user.role === "administrator" || user.role === "legal_team_member"
-            ? undefined
-            : sql`false`,
-        );
-      case "knowledge_item":
-        // No archived filter: archiving freezes a record, it does not
-        // hide it. `assertLiveOwner` answers writes on an archived
-        // item's paper with the 409 that names the cause, and reads
-        // stay reachable — the same shape as the other three arms.
-        return and(
-          isNotNull(documents.knowledgeItemId),
-          user.role === "administrator" || user.role === "legal_team_member"
-            ? undefined
-            : sql`false`,
-        );
-    }
-  }
-
-  function ownerValues(owner: ResolvedDocumentOwner<string>) {
-    switch (owner.kind) {
-      case "contract":
-        return { contractId: owner.value } as const;
-      case "matter":
-        return { matterId: owner.value } as const;
-      case "entity":
-        return { entityId: owner.value } as const;
-      case "auto_doc":
-        return { autoDocId: owner.value } as const;
-      case "knowledge_item":
-        return { knowledgeItemId: owner.value } as const;
-    }
-  }
-
-  /** One document this viewer reaches, as the routes here need it. */
-  interface ReachedDocument {
-    id: string;
-    title: string;
-    description: string | null;
-    contractId: string | null;
-    matterId: string | null;
-    entityId: string | null;
-    autoDocId: string | null;
-    knowledgeItemId: string | null;
-    owner: ResolvedDocumentOwner<string>;
-    /** The owning contract's SET-003 soft delete (CTR-021). */
-    ownerArchivedAt: Date | null;
-    /** This document's own DOC-010 soft delete, which is a different
-     * fact from the contract's above: one hides a file, the other
-     * freezes the whole record. */
-    archivedAt: Date | null;
-    /** Which version of *this* document is pinned as signed, or NULL
-     * (CTR-014). */
-    executedVersionId: string | null;
-    /** Which document the owning contract calls its instrument, which
-     * may be this one or another (CTR-014). */
-    primaryDocumentId: string | null;
-    /** DD-014's per-document flag, as it stands on this row. */
-    isConfidential: boolean;
-    /** Which folder on the owning record this document is filed in, or
-     * NULL at the record root (DOC-006). */
-    folderId: string | null;
-    /** That folder's name, or NULL when the document sits at the record
-     * root. Read here so a filing's activity entry can name the folder
-     * the document came out of — an id would not draw a sentence once
-     * the folder is renamed or gone. */
-    folderName: string | null;
-    /** Who uploaded it — one of the three actors who may decide its
-     * audience (DD-014, CTR-022). */
-    createdBy: string;
-    /** The owning contract's Owner (CTR-004), who is another. */
-    ownerManagerId: string | null;
-    /** The owning record's own identity, carried by the comparison read
-     * so its full-page breadcrumb and close control need no polymorphic
-     * follow-up request. */
-    ownerNumber: number | null;
-    ownerTitle: string;
-  }
-
-  /**
-   * One document this viewer reaches, by its own id, or `null`.
-   *
-   * The owning contract is joined in and **both** scopes ride beside the
-   * id, so a document on a contract the viewer cannot reach — and a
-   * confidential document on a contract they can — are each
-   * indistinguishable from one that was never created (DOC-008,
-   * DD-014). A document's id says nothing about which record it is on,
-   * so refusing it any other way would be the leak the 404 prevents.
-   *
-   * `lock` holds the **contract** row — not the document row. That is
-   * the lock every write on a contract's paper serializes behind, so a
-   * version number assigned under it cannot be assigned twice.
-   */
-  async function reachedDocument(
-    db: Executor,
-    user: AuthenticatedUser,
-    documentId: string,
-    lock = false,
-  ): Promise<ReachedDocument | null> {
-    if (user.role === "business_user") {
-      const [knowledgeOwned] = await db
-        .select({ id: documents.id })
-        .from(documents)
-        .where(and(eq(documents.id, documentId), isNotNull(documents.knowledgeItemId)))
-        .limit(1);
-      if (knowledgeOwned) throw httpError(403, "Knowledge Documents require a Legal Team Member.");
-    }
-    const query = db
-      .select({
-        id: documents.id,
-        title: documents.title,
-        description: documents.description,
-        contractId: documents.contractId,
-        matterId: documents.matterId,
-        entityId: documents.entityId,
-        autoDocId: documents.autoDocId,
-        knowledgeItemId: documents.knowledgeItemId,
-        contractArchivedAt: contracts.archivedAt,
-        matterArchivedAt: matters.archivedAt,
-        entityArchivedAt: entities.archivedAt,
-        autoDocArchivedAt: autoDocs.archivedAt,
-        knowledgeItemArchivedAt: knowledgeItems.archivedAt,
-        archivedAt: documents.archivedAt,
-        executedVersionId: documents.executedVersionId,
-        contractPrimaryDocumentId: contracts.primaryDocumentId,
-        knowledgePrimaryDocumentId: knowledgeItems.primaryDocumentId,
-        isConfidential: documents.isConfidential,
-        folderId: documents.folderId,
-        folderName: documentFolders.name,
-        createdBy: documents.createdBy,
-        contractManagerId: contracts.managerId,
-        matterManagerId: matters.managerId,
-        contractNumber: contracts.number,
-        contractTitle: contracts.title,
-        matterNumber: matters.number,
-        matterTitle: matters.title,
-        entityTitle: entities.legalName,
-        autoDocTitle: autoDocs.name,
-        knowledgeItemTitle: knowledgeItems.title,
-      })
-      .from(documents)
-      .leftJoin(contracts, eq(documents.contractId, contracts.id))
-      .leftJoin(matters, eq(documents.matterId, matters.id))
-      .leftJoin(entities, eq(documents.entityId, entities.id))
-      .leftJoin(knowledgeItems, eq(documents.knowledgeItemId, knowledgeItems.id))
-      .leftJoin(autoDocs, eq(documents.autoDocId, autoDocs.id))
-      // Left, because most documents sit at the record root and an inner
-      // join would answer none of them.
-      .leftJoin(documentFolders, eq(documents.folderId, documentFolders.id))
-      .where(
-        and(
-          eq(documents.id, documentId),
-          or(...DOCUMENT_OWNER_KINDS.map((owner) => ownerReachScope(owner, db, user))),
-          documentAudienceScope(db, user),
-        ),
-      )
-      .limit(1);
-    let [row] = await query;
-    if (!row) return null;
-    if (lock) {
-      const owner = resolveDocumentOwner({
-        contract: row.contractId,
-        matter: row.matterId,
-        entity: row.entityId,
-        auto_doc: row.autoDocId,
-        knowledge_item: row.knowledgeItemId,
-      });
-      switch (owner.kind) {
-        case "contract":
-          await db
-            .select({ id: contracts.id })
-            .from(contracts)
-            .where(eq(contracts.id, owner.value))
-            .for("update", { of: contracts });
-          break;
-        case "matter":
-          await db
-            .select({ id: matters.id })
-            .from(matters)
-            .where(eq(matters.id, owner.value))
-            .for("update", { of: matters });
-          break;
-        case "entity":
-          await db
-            .select({ id: entities.id })
-            .from(entities)
-            .where(eq(entities.id, owner.value))
-            .for("update", { of: entities });
-          break;
-        case "auto_doc":
-          await db
-            .select({ id: autoDocs.id })
-            .from(autoDocs)
-            .where(eq(autoDocs.id, owner.value))
-            .for("update", { of: autoDocs });
-          break;
-        case "knowledge_item":
-          await db
-            .select({ id: knowledgeItems.id })
-            .from(knowledgeItems)
-            .where(eq(knowledgeItems.id, owner.value))
-            .for("update", { of: knowledgeItems });
-          break;
-      }
-      [row] = await query;
-      if (!row) return null;
-    }
-    const owner = resolveDocumentOwner({
-      contract: row.contractId,
-      matter: row.matterId,
-      entity: row.entityId,
-      auto_doc: row.autoDocId,
-      knowledge_item: row.knowledgeItemId,
-    });
-    let ownerArchivedAt: Date | null;
-    let primaryDocumentId: string | null;
-    let ownerManagerId: string | null;
-    let ownerNumber: number | null;
-    let ownerTitle: string;
-    switch (owner.kind) {
-      case "contract":
-        ownerArchivedAt = row.contractArchivedAt;
-        primaryDocumentId = row.contractPrimaryDocumentId;
-        ownerManagerId = row.contractManagerId;
-        ownerNumber = row.contractNumber;
-        ownerTitle = row.contractTitle!;
-        break;
-      case "matter":
-        ownerArchivedAt = row.matterArchivedAt;
-        primaryDocumentId = null;
-        ownerManagerId = row.matterManagerId;
-        ownerNumber = row.matterNumber;
-        ownerTitle = row.matterTitle!;
-        break;
-      case "entity":
-        ownerArchivedAt = row.entityArchivedAt;
-        primaryDocumentId = null;
-        ownerManagerId = null;
-        ownerNumber = null;
-        ownerTitle = row.entityTitle!;
-        break;
-      case "auto_doc":
-        ownerArchivedAt = row.autoDocArchivedAt;
-        primaryDocumentId = null;
-        ownerManagerId = null;
-        ownerNumber = null;
-        ownerTitle = row.autoDocTitle!;
-        break;
-      case "knowledge_item":
-        ownerArchivedAt = row.knowledgeItemArchivedAt;
-        primaryDocumentId = row.knowledgePrimaryDocumentId;
-        ownerManagerId = null;
-        ownerNumber = null;
-        ownerTitle = row.knowledgeItemTitle!;
-        break;
-    }
-    return {
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      contractId: row.contractId,
-      matterId: row.matterId,
-      entityId: row.entityId,
-      autoDocId: row.autoDocId,
-      knowledgeItemId: row.knowledgeItemId,
-      owner,
-      ownerArchivedAt,
-      archivedAt: row.archivedAt,
-      executedVersionId: row.executedVersionId,
-      primaryDocumentId,
-      isConfidential: row.isConfidential,
-      folderId: row.folderId,
-      folderName: row.folderName,
-      createdBy: row.createdBy,
-      ownerManagerId,
-      ownerNumber,
-      ownerTitle,
-    };
-  }
-
-  /** The one document projection, joined to its creator. The chain is
-   * read beside it. Callers add the scope. */
-  const selectDocuments = (db: Executor) =>
-    db
-      .select({
-        id: documents.id,
-        title: documents.title,
-        description: documents.description,
-        contractId: documents.contractId,
-        matterId: documents.matterId,
-        entityId: documents.entityId,
-        autoDocId: documents.autoDocId,
-        knowledgeItemId: documents.knowledgeItemId,
-        /** CTR-014's pin, read here so the chain below can mark the row
-         * it names without a second query. */
-        executedVersionId: documents.executedVersionId,
-        /** DOC-010's soft delete, so the archived view can mark the rows
-         * that are off the record's list rather than guess at them. */
-        archivedAt: documents.archivedAt,
-        /** DD-014's per-document flag, so a reader who is inside the
-         * audience can see which file is narrowed. Only rows this
-         * viewer already reaches get here. */
-        isConfidential: documents.isConfidential,
-        /** DOC-006's grouping, so the row says where it is filed rather
-         * than leaving it to be inferred from which listing answered
-         * it (M13/3). */
-        folderId: documents.folderId,
-        createdAt: documents.createdAt,
-        updatedAt: documents.updatedAt,
-        createdBy: {
-          id: users.id,
-          displayName: users.displayName,
-          image: users.image,
-          archivedAt: users.archivedAt,
-        },
-      })
-      .from(documents)
-      .innerJoin(users, eq(documents.createdBy, users.id));
-
-  /** One version row's columns, named once so the plain read and the
-   * current-version read cannot answer two different shapes. */
-  const versionColumns = {
-    id: documentVersions.id,
-    documentId: documentVersions.documentId,
-    versionNumber: documentVersions.versionNumber,
-    kind: documentVersions.kind,
-    documentTypeId: documentTypes.id,
-    documentTypeName: documentTypes.displayName,
-    documentTypeArchivedAt: documentTypes.archivedAt,
-    knowledgeTypeId: knowledgeTypes.id,
-    knowledgeTypeName: knowledgeTypes.displayName,
-    knowledgeTypeArchivedAt: knowledgeTypes.archivedAt,
-    source: documentVersions.source,
-    comparedFromVersionId: documentVersions.comparedFromVersionId,
-    comparedToVersionId: documentVersions.comparedToVersionId,
-    note: documentVersions.note,
-    originalFilename: documentVersions.originalFilename,
-    mimeType: documentVersions.mimeType,
-    byteSize: documentVersions.byteSize,
-    checksumSha256: documentVersions.checksumSha256,
-    createdAt: documentVersions.createdAt,
-    uploadedBy: {
-      id: users.id,
-      displayName: users.displayName,
-      image: users.image,
-      archivedAt: users.archivedAt,
-    },
-  };
-
-  /** One version row with the person who uploaded it. */
-  const selectVersions = (db: Executor) =>
-    db
-      .select(versionColumns)
-      .from(documentVersions)
-      .innerJoin(users, eq(documentVersions.createdBy, users.id))
-      .leftJoin(documentTypes, eq(documentVersions.documentTypeId, documentTypes.id))
-      // DOC-015 addendum: a Knowledge Item's files show the item's
-      // Knowledge type, read here so a retyped item relabels them.
-      .innerJoin(documents, eq(documents.id, documentVersions.documentId))
-      .leftJoin(knowledgeItems, eq(knowledgeItems.id, documents.knowledgeItemId))
-      .leftJoin(knowledgeTypes, eq(knowledgeTypes.id, knowledgeItems.knowledgeTypeId));
-
-  type DocumentRow = Awaited<ReturnType<typeof selectDocuments>>[number];
-  type VersionRow = Awaited<ReturnType<typeof selectVersions>>[number];
-
-  function toPerson(person: DocumentRow["createdBy"]) {
-    return {
-      id: person.id,
-      displayName: person.displayName,
-      image: person.image,
-      archived: person.archivedAt !== null,
-    };
-  }
-
-  function comparedVersionNumber(
-    id: string | null,
-    numbers: ReadonlyMap<string, number>,
-  ): number | null {
-    if (id === null) return null;
-    const number = numbers.get(id);
-    if (number === undefined) {
-      throw new Error("A generated redline names an operand outside its document chain.");
-    }
-    return number;
-  }
-
-  function toVersion(
-    row: VersionRow,
-    isCurrent: boolean,
-    isExecuted: boolean,
-    numbers: ReadonlyMap<string, number>,
-  ) {
-    return {
-      id: row.id,
-      versionNumber: row.versionNumber,
-      kind: row.kind,
-      documentType:
-        row.documentTypeId !== null && row.documentTypeName !== null
-          ? {
-              id: row.documentTypeId,
-              displayName: row.documentTypeName,
-              archived: row.documentTypeArchivedAt !== null,
-            }
-          : row.knowledgeTypeId !== null && row.knowledgeTypeName !== null
-            ? {
-                id: row.knowledgeTypeId,
-                displayName: row.knowledgeTypeName,
-                archived: row.knowledgeTypeArchivedAt !== null,
-              }
-            : null,
-      source: row.source,
-      comparedFromVersionNumber: comparedVersionNumber(row.comparedFromVersionId, numbers),
-      comparedToVersionNumber: comparedVersionNumber(row.comparedToVersionId, numbers),
-      note: row.note,
-      originalFilename: row.originalFilename,
-      mimeType: row.mimeType,
-      renderFamily: renderFamilyOf(row.mimeType, row.originalFilename),
-      byteSize: row.byteSize,
-      checksumSha256: row.checksumSha256,
-      uploadedBy: toPerson(row.uploadedBy),
-      createdAt: row.createdAt.toISOString(),
-      isCurrent,
-      isExecuted,
-    };
-  }
-
-  /**
-   * One document with its chain, ordered 1..n, and both CTR-014
-   * designations stated on it.
-   *
-   * The chain arrives in version order, so the current version is its
-   * last row — that is what "current is the highest version number"
-   * means (DOC-001). Current and executed are two different marks and
-   * are computed from two different facts: the first from the ordering,
-   * the second from the document's own `executed_version_id`. A chain
-   * may carry both on one row, on two rows, or on neither.
-   *
-   * `primaryDocumentId` is the owning contract's column, passed in
-   * rather than read here: it is one fact about the record, and reading
-   * it once per document would ask the same question as many times as
-   * the record has paper.
-   */
-  function toDocument(
-    row: DocumentRow,
-    chain: readonly VersionRow[],
-    primaryDocumentId: string | null,
-  ) {
-    const last = chain.length - 1;
-    const numbers = new Map(chain.map((version) => [version.id, version.versionNumber]));
-    return {
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      isPrimary: row.id === primaryDocumentId,
-      versions: chain.map((version, index) =>
-        toVersion(version, index === last, version.id === row.executedVersionId, numbers),
-      ),
-      archivedAt: row.archivedAt?.toISOString() ?? null,
-      isConfidential: row.isConfidential,
-      folderId: row.folderId,
-      createdBy: toPerson(row.createdBy),
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    };
-  }
-
-  /**
-   * The whole chain of each of these documents, in one read, each in
-   * version order.
-   *
-   * One read for every document on the record rather than one per
-   * document: the record page draws them all, and a query per row is
-   * how a section with six documents on it becomes seven round trips.
-   *
-   * A document always has at least one version — the upload writes both
-   * rows in one transaction — so a document with no rows here would be a
-   * broken record, and it is left out of the answer rather than drawn
-   * without a file.
-   */
-  async function chainsOf(
-    db: Executor,
-    documentIds: readonly string[],
-  ): Promise<Map<string, VersionRow[]>> {
-    if (documentIds.length === 0) return new Map();
-    const rows = await selectVersions(db)
-      .where(inArray(documentVersions.documentId, [...documentIds]))
-      // 1..n within each document, which is the order the chain reads
-      // in and the order the pin is taken from.
-      .orderBy(asc(documentVersions.documentId), asc(documentVersions.versionNumber));
-    const chains = new Map<string, VersionRow[]>();
-    for (const row of rows) {
-      const chain = chains.get(row.documentId);
-      if (chain) chain.push(row);
-      else chains.set(row.documentId, [row]);
-    }
-    return chains;
-  }
-
-  /** One document with its chain, read back through the projection the
-   * list answers with, so what a write returns is what the next load
-   * will draw. */
-  async function documentWithChain(
-    db: Executor,
-    documentId: string,
-    primaryDocumentId: string | null,
-  ) {
-    const [row] = await selectDocuments(db).where(eq(documents.id, documentId));
-    const chain = (await chainsOf(db, [documentId])).get(documentId);
-    // Both are written in one transaction, so neither can be missing
-    // for a document this code just wrote or edited.
-    return toDocument(row!, chain!, primaryDocumentId);
-  }
-
   /** One comparison projected with the exact Version shape the chain uses. */
   async function comparisonWithVersions(
     db: Executor,
@@ -1528,125 +981,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       createdAt: row.createdAt.toISOString(),
       finishedAt: row.finishedAt?.toISOString() ?? null,
     };
-  }
-
-  /**
-   * All the paper on one contract, newest first, each document with its
-   * whole chain.
-   *
-   * Shared by the list read, by the primary designation, and by the hard
-   * delete — the three answers that are about the record's paper as a
-   * whole rather than about one document. The designation changes two
-   * rows at once, and an erasure can leave the record without an
-   * instrument, so both answer the whole list and the caller replaces
-   * what it holds rather than working out for itself which other row
-   * moved.
-   *
-   * **Archived documents are left out unless they are asked for**
-   * (DOC-010). That is the soft delete: the row is still there, the
-   * chain is still there, and the blobs are still there — it is off the
-   * list and out of the count until somebody restores it.
-   *
-   * **A confidential document this viewer is outside the audience of is
-   * left out of every one of those answers** (DD-014), and there is no
-   * query parameter that asks for it. The record's section count is
-   * taken from this list, so a document left out here is out of the
-   * count too — which is the whole of what "silently omitted, not shown
-   * as a placeholder" means for a number.
-   */
-  async function paperOf(
-    db: Executor,
-    user: AuthenticatedUser,
-    // The two facts a listing turns on, and no more: a caller that has
-    // just written a document holds them without re-reading the record.
-    owner: { id: string; primaryDocumentId: string | null },
-    ownerType: DocumentOwner,
-    includeArchived = false,
-    cursor?: string,
-    folder?: string,
-  ) {
-    let owningRecord: SQL;
-    switch (ownerType) {
-      case "contract":
-        owningRecord = eq(documents.contractId, owner.id);
-        break;
-      case "matter":
-        owningRecord = eq(documents.matterId, owner.id);
-        break;
-      case "entity":
-        owningRecord = eq(documents.entityId, owner.id);
-        break;
-      case "auto_doc":
-        owningRecord = eq(documents.autoDocId, owner.id);
-        break;
-      case "knowledge_item":
-        owningRecord = eq(documents.knowledgeItemId, owner.id);
-        break;
-    }
-    const scope = and(
-      owningRecord,
-      includeArchived ? undefined : isNull(documents.archivedAt),
-      // The listing context (M13/3). Omitted is the record's whole
-      // paper. It sits in the same WHERE clause as the audience scope
-      // and for the same reason: the limit below has to cut rows that
-      // are already in this listing, or a folder's page would be as
-      // short as the documents from elsewhere that fell in the window.
-      folder === undefined
-        ? undefined
-        : folder === ROOT_FOLDER
-          ? isNull(documents.folderId)
-          : eq(documents.folderId, folder),
-      // The per-document audience is in the WHERE clause, so the limit
-      // below cuts rows this viewer can already see. A read that limited
-      // first and filtered after would answer pages that shrink by
-      // however many walled documents sat in the window, and a page
-      // length that varies with what is hidden is the existence leak
-      // DD-014 exists to close (CTR-024).
-      documentAudienceScope(db, user),
-    );
-    const rows = await selectDocuments(db)
-      .where(and(scope, cursor === undefined ? undefined : olderThan(cursor, scope)))
-      // Newest first, as the record's Documents section reads. The id
-      // breaks a same-instant tie: uuidv7 is time-ordered, so that
-      // order is still the upload order.
-      .orderBy(desc(documents.createdAt), desc(documents.id))
-      // One past the page, which is how the answer knows whether there
-      // is more without counting anything.
-      .limit(PAGE_SIZE + 1);
-    const page = rows.slice(0, PAGE_SIZE);
-    const chains = await chainsOf(
-      db,
-      page.map((row) => row.id),
-    );
-    return {
-      documents: page.flatMap((row) => {
-        const chain = chains.get(row.id);
-        return chain ? [toDocument(row, chain, owner.primaryDocumentId)] : [];
-      }),
-      // Only when a further row was actually read. A cursor on the last
-      // page would send the client for an empty one.
-      nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
-    };
-  }
-
-  /**
-   * The keyset boundary: every document strictly older than one of them,
-   * in the order the section reads (CTR-024).
-   *
-   * The boundary's own position is read from the table rather than taken
-   * from the client, and it is read **under the same scope the page is
-   * read under** — the contract, the archived filter, and DD-014's
-   * per-document audience. A cursor naming a walled document this viewer
-   * is outside resolves to NULL and answers an empty page, so a cursor
-   * cannot confirm that a document they were told nothing about is
-   * there.
-   */
-  function olderThan(documentId: string, scope: SQL | undefined): SQL {
-    return sql`(${documents.createdAt}, ${documents.id}) < (
-      select ${documents.createdAt}, ${documents.id}
-      from ${documents}
-      where ${and(eq(documents.id, documentId), scope)}
-    )`;
   }
 
   app.post(
@@ -1859,14 +1193,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: DocumentsEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const [row] = await app.db
-        .select({ id: autoDocs.id })
-        .from(autoDocs)
-        .where(eq(autoDocs.id, request.params.id));
-      if (!row) throw httpError(404, "No Auto-Doc exists with this id.");
-      return paperOf(app.db, request.user, { id: row.id, primaryDocumentId: null }, "auto_doc");
-    },
+    async (request) => listAutoDocDocuments(app.db, request.user, request.params.id),
   );
 
   app.get(
@@ -1883,31 +1210,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: DocumentsEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const [item] = await app.db
-        .select({
-          id: knowledgeItems.id,
-          primaryDocumentId: knowledgeItems.primaryDocumentId,
-        })
-        .from(knowledgeItems)
-        .where(eq(knowledgeItems.id, request.params.id))
-        .limit(1);
-      // An archived item still reads, as an archived contract does
-      // (#776). Archiving is a soft delete, the record read already
-      // answers an archived item, and restore is offered on the page
-      // this list feeds, so a 404 here only broke the way back. Writes
-      // stay frozen, because every document write asserts a live
-      // owner, and the portal gate is untouched.
-      if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
-      return paperOf(
-        app.db,
-        request.user,
-        item,
-        "knowledge_item",
-        request.query.includeArchived === "true",
-        request.query.cursor,
-      );
-    },
+    async (request) =>
+      listKnowledgeItemDocuments(app.db, request.user, request.params.id, request.query),
   );
 
   app.get(
@@ -1926,12 +1230,12 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "needs: a loose attachment such as a schedule or a " +
           "certificate is its own document with its own chain, beside " +
           "the main instrument rather than inside its history " +
-          "(CTR-014). Access is inherited from the " +
-          "contract and nothing else: a Contributor on the team reads " +
-          "the list, and anyone who cannot reach the contract — a " +
-          "Contributor who is not on it, a Legal Team Member outside a " +
-          "confidential record's audience — is answered 404, exactly as " +
-          "for a contract that does not exist. Archived documents " +
+          "(CTR-014). Administrators and Legal Team Members read the " +
+          "list; a Business User on the team is refused 403 and reads " +
+          "the contract's paper through the Portal. Reach is otherwise " +
+          "inherited from the contract and nothing else: a Legal Team " +
+          "Member outside a confidential record's audience is answered " +
+          "404, exactly as for a contract that does not exist. Archived documents " +
           "(DOC-010) are left out; includeArchived=true draws them " +
           "beside the live ones, which is where restoring one is " +
           "offered. folder narrows the read to one listing (DOC-006): a " +
@@ -1952,29 +1256,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: DocumentsEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const contract = await reachedContract(app.db, request.user, request.params.number);
-      if (!contract) throw httpError(404, NO_CONTRACT);
-      const { folder } = request.query;
-      // A folder is addressed by its own id, which says nothing about
-      // which record it is on — so it is checked against this contract
-      // before it is filtered on. Skipping the check would make the
-      // list route a way to ask whether a folder id exists somewhere.
-      if (folder !== undefined && folder !== ROOT_FOLDER) {
-        await folderOnRecord(app.db, contract.id, folder);
-      }
-      // An archived record still reads: archiving is a soft delete for
-      // mistakes and imports, and restore has to be reachable.
-      return await paperOf(
-        app.db,
-        request.user,
-        contract,
-        "contract",
-        request.query.includeArchived === "true",
-        request.query.cursor,
-        folder,
-      );
-    },
+    async (request) =>
+      listContractDocuments(app.db, request.user, request.params.number, request.query),
   );
 
   app.get(
@@ -1986,8 +1269,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The paper on one matter, newest first, with each document's complete version chain. " +
           "Access is inherited from the matter and a confidential document narrows to its team, " +
-          "or Matter Manager. Administrators, Legal Team Members, and Contributors " +
-          "may read matter paper. Primary and executed designations are contract concepts.",
+          "or Matter Manager. Administrators and Legal Team Members read matter paper; a " +
+          "Business User on the team is refused 403 and reads it through the Portal. " +
+          "Primary and executed designations are contract concepts.",
         tags: ["documents"],
         params: NumberParams,
         querystring: ArchivedQuery.extend(FolderQuery.shape).extend({
@@ -1996,23 +1280,8 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: DocumentsEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const matter = await reachedMatter(app.db, request.user, request.params.number);
-      if (!matter) throw httpError(404, NO_MATTER);
-      const { folder } = request.query;
-      if (folder !== undefined && folder !== ROOT_FOLDER) {
-        await folderOnRecord(app.db, { kind: "matter", value: matter.id }, folder);
-      }
-      return paperOf(
-        app.db,
-        request.user,
-        { id: matter.id, primaryDocumentId: null },
-        "matter",
-        request.query.includeArchived === "true",
-        request.query.cursor,
-        folder,
-      );
-    },
+    async (request) =>
+      listMatterDocuments(app.db, request.user, request.params.number, request.query),
   );
 
   app.get(
@@ -2033,24 +1302,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: DocumentsEnvelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const entity = await reachedEntity(app.db, request.user, request.params.id);
-      if (!entity) throw httpError(404, NO_ENTITY);
-      const { folder } = request.query;
-      const owner = { kind: "entity", value: entity.id } as const;
-      if (folder !== undefined && folder !== ROOT_FOLDER) {
-        await folderOnRecord(app.db, owner, folder);
-      }
-      return paperOf(
-        app.db,
-        request.user,
-        { id: entity.id, primaryDocumentId: null },
-        "entity",
-        request.query.includeArchived === "true",
-        request.query.cursor,
-        folder,
-      );
-    },
+    async (request) => listEntityDocuments(app.db, request.user, request.params.id, request.query),
   );
 
   app.post(
@@ -2130,131 +1382,14 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // bell rows for it belong inside the same commit as the rows they
       // are about.
       const created = await withStoredFile(request, file, () =>
-        app.notifier.notifying(async (tx) => {
-          // The contract row is held for the write, and reach is asked
-          // again on the same snapshot: a team row dropped between the
-          // first check and the insert must not leave a file on a record
-          // the uploader no longer reaches.
-          const locked = await reachedContract(tx, request.user, request.params.number, {
-            lock: true,
-          });
-          assertOpen(locked);
-          const owner = resolveDocumentOwner({
-            contract: locked.id,
-            matter: null,
-            entity: null,
-            auto_doc: null,
-            knowledge_item: null,
-          });
-
-          // Under that same lock, which is what makes a folder drop
-          // converge (DOC-011): a chain the form named is found or made
-          // segment by segment, and a second upload racing on the same
-          // path waits here and then finds what the first one wrote.
-          const folder = file.destination
-            ? await findOrCreateFolderPath(tx, locked, file.destination)
-            : null;
-
-          await tx.insert(documents).values({
-            id: documentId,
-            folderId: folder?.id ?? null,
-            // Seeded from the filename: the record has to be called
-            // something, and what the uploader recognises is the name
-            // they chose on their own machine. It is renameable from
-            // there (DOC-007), and renaming leaves the file's own name
-            // alone.
-            title: file.filename,
-            ...ownerValues(owner),
-            createdBy: request.user.id,
-          });
-          await insertVersion(tx, {
-            documentId,
-            versionId,
-            versionNumber: 1,
-            file,
-            by: request.user,
-          });
-          // On the owning contract, at the tier every record action rides
-          // (DD-017). The title is in the payload on purpose: hard
-          // deletion (DOC-010) removes the rows, and the entry has to
-          // still name what was deleted.
-          await recordActivity(tx, {
-            entityType: owner.kind,
-            entityId: owner.value,
-            actorId: request.user.id,
-            action: "document.created",
-            visibility: RECORD_ACTIVITY_TIER,
-            // The destination rides in the payload **by name** (DD-017),
-            // beside the title and for the same reason: this entry is the
-            // drop's whole story — a folder it find-or-created wrote none
-            // of its own — and it has to still say where the file landed
-            // after that folder is renamed or dissolved.
-            payload: {
-              documentId,
-              versionId,
-              title: file.filename,
-              folderName: folder?.name ?? null,
-              ...(request.user.role === "business_user"
-                ? { actorRole: "business_user" as const }
-                : {}),
-            },
-          });
-
-          // The first Member+ upload on a record with no instrument takes
-          // the designation (CTR-014). A Contributor's paper is supporting
-          // by definition, including when the record has no instrument yet.
-          // The next Member+ upload may then take the still-empty pin.
-          // The first document on a record is otherwise the instrument.
-          // Nobody asked for it, which is exactly why it gets its own
-          // entry rather than being left implied by the upload above — the
-          // counterparty promotion is logged for the same reason, and a
-          // record born confidential is too. The contract row is held, so
-          // two first uploads at once cannot both read NULL here.
-          const primaryDocumentId =
-            locked.primaryDocumentId ?? (request.user.role === "business_user" ? null : documentId);
-          if (locked.primaryDocumentId === null && request.user.role !== "business_user") {
-            await tx
-              .update(contracts)
-              .set({ primaryDocumentId: documentId })
-              .where(eq(contracts.id, locked.id));
-            await recordActivity(tx, {
-              entityType: "contract",
-              entityId: locked.id,
-              actorId: request.user.id,
-              action: "document.primary_set",
-              visibility: RECORD_ACTIVITY_TIER,
-              // `from`/`to` as the counterparty promotion writes them, so
-              // the M9 viewer narrates the move with one shared helper. The
-              // first upload takes the designation from nobody.
-              payload: {
-                documentId,
-                title: file.filename,
-                fromDocumentId: null,
-                from: null,
-                to: file.filename,
-              },
-            });
-          }
-
-          // The team hears that the paper moved (NOT-002 group 2): bell
-          // on, no email owed under the default. A document is born with
-          // the flag clear, so this one always goes as far as the record
-          // does — the flag is asked anyway, because the rule belongs to
-          // the event rather than to what today's write path happens to
-          // set.
-          await app.notifier.documentAdded(tx, {
-            contractId: locked.id,
-            actorId: request.user.id,
-            actorName: request.user.displayName,
-            documentId,
-            documentTitle: file.filename,
-            isConfidential: false,
-          });
-
-          // Read back through the list's own projection, so the row the
-          // uploader gets is the row the next load will draw.
-          return documentWithChain(tx, documentId, primaryDocumentId);
-        }),
+        completeContractUpload(
+          app,
+          request.user,
+          request.params.number,
+          documentId,
+          versionId,
+          file,
+        ),
       );
 
       await askForDerivations(versionId, file);
@@ -2287,54 +1422,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const versionId = uuidv7();
       const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
       const created = await withStoredFile(request, file, () =>
-        app.db.transaction(async (tx) => {
-          const locked = await reachedMatter(tx, request.user, request.params.number, {
-            lock: true,
-          });
-          assertOpenMatter(locked);
-          const owner = resolveDocumentOwner({
-            contract: null,
-            matter: locked.id,
-            entity: null,
-            auto_doc: null,
-            knowledge_item: null,
-          });
-          const folder = file.destination
-            ? await findOrCreateFolderPath(tx, locked, file.destination)
-            : null;
-
-          await tx.insert(documents).values({
-            id: documentId,
-            folderId: folder?.id ?? null,
-            title: file.filename,
-            ...ownerValues(owner),
-            createdBy: request.user.id,
-          });
-          await insertVersion(tx, {
-            documentId,
-            versionId,
-            versionNumber: 1,
-            file,
-            by: request.user,
-          });
-          await recordActivity(tx, {
-            entityType: owner.kind,
-            entityId: owner.value,
-            actorId: request.user.id,
-            action: "document.created",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              documentId,
-              versionId,
-              title: file.filename,
-              folderName: folder?.name ?? null,
-              ...(request.user.role === "business_user"
-                ? { actorRole: "business_user" as const }
-                : {}),
-            },
-          });
-          return documentWithChain(tx, documentId, null);
-        }),
+        completeMatterUpload(app, request.user, request.params.number, documentId, versionId, file),
       );
 
       await askForDerivations(versionId, file);
@@ -2363,48 +1451,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const versionId = uuidv7();
       const file = await receiveUpload(request, versionStorageKey(documentId, versionId), true);
       const created = await withStoredFile(request, file, () =>
-        app.db.transaction(async (tx) => {
-          const locked = await reachedEntity(tx, request.user, request.params.id, { lock: true });
-          assertOpenEntity(locked);
-          const owner = resolveDocumentOwner({
-            contract: null,
-            matter: null,
-            entity: locked.id,
-            auto_doc: null,
-            knowledge_item: null,
-          });
-          const folder = file.destination
-            ? await findOrCreateFolderPath(tx, locked, file.destination)
-            : null;
-          await tx.insert(documents).values({
-            id: documentId,
-            folderId: folder?.id ?? null,
-            title: file.filename,
-            ...ownerValues(owner),
-            createdBy: request.user.id,
-          });
-          await insertVersion(tx, {
-            documentId,
-            versionId,
-            versionNumber: 1,
-            file,
-            by: request.user,
-          });
-          await recordActivity(tx, {
-            entityType: "entity",
-            entityId: locked.id,
-            actorId: request.user.id,
-            action: "document.created",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: {
-              documentId,
-              versionId,
-              title: file.filename,
-              folderName: folder?.name ?? null,
-            },
-          });
-          return documentWithChain(tx, documentId, null);
-        }),
+        completeEntityUpload(app, request.user, request.params.id, documentId, versionId, file),
       );
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
@@ -2439,65 +1486,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const versionId = uuidv7();
       const file = await receiveUpload(request, versionStorageKey(documentId, versionId));
       const created = await withStoredFile(request, file, () =>
-        app.db.transaction(async (tx) => {
-          const [item] = await tx
-            .select({
-              id: knowledgeItems.id,
-              primaryDocumentId: knowledgeItems.primaryDocumentId,
-              archivedAt: knowledgeItems.archivedAt,
-            })
-            .from(knowledgeItems)
-            .where(eq(knowledgeItems.id, request.params.id))
-            .limit(1)
-            .for("update");
-          if (!item) throw httpError(404, "No Knowledge Item exists with this id.");
-          if (item.archivedAt) {
-            throw httpError(409, "Restore this Knowledge Item before adding Documents.");
-          }
-          await tx.insert(documents).values({
-            id: documentId,
-            knowledgeItemId: item.id,
-            title: file.filename,
-            createdBy: request.user.id,
-          });
-          await insertVersion(tx, {
-            documentId,
-            versionId,
-            versionNumber: 1,
-            file,
-            by: request.user,
-          });
-          await recordActivity(tx, {
-            entityType: "knowledge_item",
-            entityId: item.id,
-            actorId: request.user.id,
-            action: "document.created",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: { documentId, versionId, title: file.filename, folderName: null },
-          });
-          const primaryDocumentId = item.primaryDocumentId ?? documentId;
-          if (item.primaryDocumentId === null) {
-            await tx
-              .update(knowledgeItems)
-              .set({ primaryDocumentId: documentId, updatedBy: request.user.id })
-              .where(eq(knowledgeItems.id, item.id));
-            await recordActivity(tx, {
-              entityType: "knowledge_item",
-              entityId: item.id,
-              actorId: request.user.id,
-              action: "document.primary_set",
-              visibility: RECORD_ACTIVITY_TIER,
-              payload: {
-                documentId,
-                title: file.filename,
-                fromDocumentId: null,
-                from: null,
-                to: file.filename,
-              },
-            });
-          }
-          return documentWithChain(tx, documentId, primaryDocumentId);
-        }),
+        completeKnowledgeUpload(app, request.user, request.params.id, documentId, versionId, file),
       );
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: created });
@@ -2547,82 +1536,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // round on a chain is ambient movement on the record (NOT-002
       // group 2). The storage wrapper removes the fresh blob if the
       // locked reach or archival state changed while it streamed.
-      const updated = await withStoredFile(request, file, async () => {
-        const detection = reached.autoDocId
-          ? await detectStoredTemplate(app.storage, file.fileRef, file.filename, app.maxUploadBytes)
-          : null;
-        return app.notifier.notifying(async (tx) => {
-          // The owning contract's row is held here, and this is the lock
-          // the version number is assigned under: two uploaders reading
-          // the chain's high-water mark at the same moment would both see
-          // the same number, so the second one waits here until the first
-          // has committed its row and then reads the number it wrote.
-          const locked = await reachedDocument(tx, request.user, documentId, true);
-          assertOpenDocument(locked);
-
-          const versionNumber = await nextVersionNumber(tx, documentId);
-
-          const typed = await insertVersion(tx, {
-            documentId,
-            versionId,
-            versionNumber,
-            file,
-            by: request.user,
-          });
-          // The document's own row is touched so that "when did this
-          // document last change" answers with the new round rather than
-          // with the day it was created.
-          await tx
-            .update(documents)
-            .set({ updatedAt: new Date() })
-            .where(eq(documents.id, documentId));
-          if (locked.autoDocId && detection) {
-            await applyTemplateVersion(tx, {
-              autoDocId: locked.autoDocId,
-              name: locked.ownerTitle,
-              actorId: request.user.id,
-              documentId,
-              versionId,
-              versionNumber,
-              detection,
-            });
-          } else
-            await recordActivity(tx, {
-              entityType: locked.owner.kind,
-              entityId: locked.owner.value,
-              actorId: request.user.id,
-              action: "document.version_added",
-              visibility: RECORD_ACTIVITY_TIER,
-              payload: {
-                documentId,
-                versionId,
-                title: locked.title,
-                versionNumber,
-                kind: typed.kind,
-                ...(request.user.role === "business_user"
-                  ? { actorRole: "business_user" as const }
-                  : {}),
-              },
-            });
-          // The team hears that the paper moved (NOT-002 group 2). This is
-          // the door where the document flag bites: a round appended to a
-          // confidential document goes exactly as far as that document
-          // does (DD-014, DOC-008).
-          if (locked.contractId) {
-            await app.notifier.documentVersionAdded(tx, {
-              contractId: locked.contractId,
-              actorId: request.user.id,
-              actorName: request.user.displayName,
-              documentId,
-              documentTitle: locked.title,
-              isConfidential: locked.isConfidential,
-              versionId,
-              versionNumber,
-            });
-          }
-          return documentWithChain(tx, documentId, locked.primaryDocumentId);
-        });
-      });
+      const updated = await withStoredFile(request, file, () =>
+        completeVersionUpload(app, request.user, documentId, versionId, file),
+      );
 
       await askForDerivations(versionId, file);
       return reply.status(201).send({ document: updated });
@@ -3809,7 +2725,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const row = await reachedVersion(request.user, request.params);
+      const row = await reachedVersion(app.db, request.user, request.params);
 
       const body = await app.storage.get(row.fileRef);
       return (
@@ -3883,7 +2799,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const row = await reachedVersion(request.user, request.params);
+      const row = await reachedVersion(app.db, request.user, request.params);
 
       // Which bytes this file previews as, and what to call them. Both
       // are chosen from the routing table and never echoed from the row.
@@ -3960,54 +2876,9 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      // The same read the preview and the download make, so the three
-      // cannot drift into three answers. A version this viewer cannot
-      // reach is a 404 from here, before anything is said about text.
-      const version = await reachedVersion(request.user, request.params);
-
-      // As the two byte reads set it, and for both of their reasons. Who
-      // may read a document changes, so this is private to the browser
-      // that asked; and a client polls this address, so a cached answer
-      // would have it poll a stale one for ever.
+      const result = await readDocumentVersionText(app.db, request.user, request.params);
       void reply.header("cache-control", "private, max-age=0, must-revalidate");
-
-      const [row] = await app.db
-        .select({
-          state: documentVersionText.state,
-          source: documentVersionText.source,
-          text: documentVersionText.text,
-          updatedAt: documentVersionText.updatedAt,
-        })
-        .from(documentVersionText)
-        .where(eq(documentVersionText.versionId, request.params.versionId))
-        .limit(1);
-
-      if (!row) {
-        // No derivation, for one of two reasons. Either this file has no
-        // text to read — an image, a spreadsheet — or it predates the
-        // pipeline and M12/6's sweep has not reached it yet. The first
-        // is the honest answer for a reader; the second reads as pending
-        // because that is what it is.
-        return {
-          text: {
-            state: extractsText(version.mimeType, version.originalFilename)
-              ? ("pending" as const)
-              : ("unsupported" as const),
-            source: null,
-            text: null,
-            updatedAt: null,
-          },
-        };
-      }
-
-      return {
-        text: {
-          state: row.state,
-          source: row.source,
-          text: row.text,
-          updatedAt: row.updatedAt.toISOString(),
-        },
-      };
+      return result;
     },
   );
 
@@ -4047,7 +2918,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
       // so the four cannot drift into four answers. A version this
       // viewer cannot reach is a 404 from here, before anything is said
       // about a conversion.
-      const version = await reachedVersion(request.user, request.params);
+      const version = await reachedVersion(app.db, request.user, request.params);
 
       // As every other read on a version sets it, and for both of their
       // reasons. Who may read a document changes, so this is private to
@@ -4277,7 +3148,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     user: AuthenticatedUser,
     params: Readonly<{ documentId: string; versionId: string }>,
   ): Promise<ParsedEmail> {
-    const version = await reachedVersion(user, params);
+    const version = await reachedVersion(app.db, user, params);
     if (!isEmail(version.mimeType, version.originalFilename)) {
       throw httpError(415, "This file is not an email.");
     }
@@ -4387,102 +3258,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     // or one whose queue send was lost. Both are "not yet", and both are
     // worth asking about again.
     throw httpError(409, "This file is still being prepared for reading. Try again in a moment.");
-  }
-
-  /** One stored version, as the two byte reads need it described. */
-  interface ReachedVersion {
-    fileRef: string;
-    originalFilename: string;
-    mimeType: string;
-    byteSize: number;
-  }
-
-  /**
-   * One version this viewer reaches, by its own id and its document's,
-   * or a 404.
-   *
-   * Shared by the download, the preview, and the extracted-text read,
-   * because they ask one question and must not drift into three
-   * answers. Document, owning
-   * contract, and both scopes ride in one read: a version on a contract
-   * the viewer cannot reach, and a version of a confidential document
-   * they are outside the audience of, are each answered exactly as one
-   * that was never uploaded (DOC-008, DD-014). Rendering opens no side
-   * door past the contract gate.
-   */
-  async function reachedVersion(
-    user: AuthenticatedUser,
-    params: Readonly<{ documentId: string; versionId: string }>,
-  ): Promise<ReachedVersion> {
-    if (user.role === "business_user") {
-      const [knowledgeOwned] = await app.db
-        .select({ id: documentVersions.id })
-        .from(documentVersions)
-        .innerJoin(documents, eq(documentVersions.documentId, documents.id))
-        .where(
-          and(
-            eq(documentVersions.id, params.versionId),
-            eq(documentVersions.documentId, params.documentId),
-            isNotNull(documents.knowledgeItemId),
-          ),
-        )
-        .limit(1);
-      if (knowledgeOwned) throw httpError(403, "Knowledge Documents require a Legal Team Member.");
-    }
-    const [row] = await app.db
-      .select({
-        fileRef: documentVersions.fileRef,
-        originalFilename: documentVersions.originalFilename,
-        mimeType: documentVersions.mimeType,
-        byteSize: documentVersions.byteSize,
-      })
-      .from(documentVersions)
-      .innerJoin(documents, eq(documentVersions.documentId, documents.id))
-      .leftJoin(contracts, eq(documents.contractId, contracts.id))
-      .leftJoin(matters, eq(documents.matterId, matters.id))
-      .leftJoin(entities, eq(documents.entityId, entities.id))
-      .leftJoin(knowledgeItems, eq(documents.knowledgeItemId, knowledgeItems.id))
-      .leftJoin(autoDocs, eq(documents.autoDocId, autoDocs.id))
-      .where(
-        and(
-          eq(documentVersions.id, params.versionId),
-          eq(documentVersions.documentId, params.documentId),
-          or(...DOCUMENT_OWNER_KINDS.map((owner) => ownerReachScope(owner, app.db, user))),
-          documentAudienceScope(app.db, user),
-          user.role === "business_user"
-            ? and(
-                isNull(documents.archivedAt),
-                or(isNotNull(documents.contractId), isNotNull(documents.matterId)),
-              )
-            : undefined,
-        ),
-      )
-      .limit(1);
-    if (!row) throw httpError(404, NO_DOCUMENT);
-    return row;
-  }
-
-  /** One uploaded file, once its bytes are stored and described. */
-  interface StoredUpload {
-    filename: string;
-    mimeType: string;
-    /** What the uploader called the round (DOC-015), resolved against
-     * the owner's list when the row is written. */
-    typeChoice: DocumentTypeChoice;
-    note: string | null;
-    /**
-     * Where the file is to be filed (DOC-006, DOC-011), or null for the
-     * record root.
-     *
-     * Read off the form and checked for shape here, before a byte is
-     * stored; the folder itself is resolved under the contract's row
-     * lock in the handler, because that is where it can be created
-     * without two racing uploads making two of it.
-     */
-    destination: FolderDestination | null;
-    fileRef: string;
-    byteSize: number;
-    checksumSha256: string;
   }
 
   /**
@@ -4683,42 +3458,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     return { folderId: rawFolderId.length === 0 ? null : rawFolderId, path };
   }
 
-  /** One row in the chain, written from what arrived. The write itself
-   * is `lib/document-versions.ts` — shared with the signing
-   * integration's executed-copy append (M15/5), because a round filed
-   * by a person and a round filed by the integration are the same row
-   * (DOC-001). This is only the upload's half of the translation. */
-  async function insertVersion(
-    tx: Transaction,
-    row: Readonly<{
-      documentId: string;
-      versionId: string;
-      versionNumber: number;
-      file: StoredUpload;
-      by: AuthenticatedUser;
-    }>,
-  ) {
-    const typed = await resolveDocumentType(tx, row.documentId, row.file.typeChoice);
-    await insertDocumentVersion(tx, {
-      documentId: row.documentId,
-      versionId: row.versionId,
-      versionNumber: row.versionNumber,
-      fileRef: row.file.fileRef,
-      kind: typed.kind,
-      documentTypeId: typed.documentTypeId,
-      source: "uploaded",
-      comparedFromVersionId: null,
-      comparedToVersionId: null,
-      note: row.file.note,
-      originalFilename: row.file.filename,
-      mimeType: row.file.mimeType,
-      byteSize: row.file.byteSize,
-      checksumSha256: row.file.checksumSha256,
-      createdBy: row.by.id,
-    });
-    return typed;
-  }
-
   /**
    * Wakes the pipeline for whatever a freshly uploaded version is owed —
    * its text (DOC-005), or its display rendition (DOC-004).
@@ -4744,61 +3483,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
    * the expression above stays one line. */
   function refuseKind(): never {
     throw httpError(400, "That is not a document type this record accepts.");
-  }
-
-  /**
-   * The two refusals every upload shares, in the order they have to be
-   * asked in.
-   *
-   * Reach first: a 409 on a record the uploader cannot reach would tell
-   * them it is there. Then the freeze — an archived contract reads as
-   * facts until it is restored (CTR-021), and putting new paper on it is
-   * a change to the record, not a conversation about it.
-   */
-  function assertOpen<T extends ReachedContract>(contract: T | null): asserts contract is T {
-    if (!contract) throw httpError(404, NO_CONTRACT);
-    if (contract.archivedAt) {
-      throw httpError(409, "This contract is archived. Restore it before uploading.");
-    }
-  }
-
-  function assertOpenMatter<T extends Awaited<ReturnType<typeof reachedMatter>>>(
-    matter: T | null,
-  ): asserts matter is T {
-    if (!matter) throw httpError(404, NO_MATTER);
-    if (matter.archivedAt) {
-      throw httpError(409, "This matter is archived. Restore it before uploading.");
-    }
-  }
-
-  function assertOpenEntity<T extends Awaited<ReturnType<typeof reachedEntity>>>(
-    entity: T | null,
-  ): asserts entity is T {
-    if (!entity) throw httpError(404, NO_ENTITY);
-    if (entity.archivedAt) {
-      throw httpError(409, "This Entity is archived. Restore it before uploading.");
-    }
-  }
-
-  /**
-   * The refusals a write addressed at a document shares, in the order
-   * they have to be asked in.
-   *
-   * Reach first, for the reason above. Then the contract's freeze. Then
-   * the document's own archive (DOC-010): an archived document is off
-   * the record's list, so adding a round to it or renaming it would be
-   * work done on something nobody can see. Restoring it and erasing it
-   * are the two things that may still reach it, and neither comes
-   * through here.
-   */
-  function assertOpenDocument(
-    document: ReachedDocument | null,
-  ): asserts document is ReachedDocument {
-    assertReachedDocument(document);
-    assertLiveOwner(document);
-    if (document.archivedAt) {
-      throw httpError(409, "This document is archived. Restore it before changing it.");
-    }
   }
 
   /**
@@ -4840,32 +3524,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   }
 
-  /** The copy each owner kind lends a refusal. `manager` is null where
-   * the owner has no managing person: an Entity carries no Owner or
-   * Matter Manager, so `ownerManagerId` is always null on its paper. */
-  function ownerCopy(owner: DocumentOwner): { manager: string | null; noun: string } {
-    switch (owner) {
-      case "contract":
-        return { manager: "contract's Owner", noun: "contract" };
-      case "matter":
-        return { manager: "Matter Manager", noun: "matter" };
-      case "entity":
-        return { manager: null, noun: "Entity" };
-      case "auto_doc":
-        return { manager: null, noun: "Auto-Doc" };
-      case "knowledge_item":
-        return { manager: null, noun: "Knowledge item" };
-    }
-  }
-
-  /** Reach and nothing else, for the two writes an archived document
-   * still takes: restoring it, and erasing it. */
-  function assertReachedDocument(
-    document: ReachedDocument | null,
-  ): asserts document is ReachedDocument {
-    if (!document) throw httpError(404, NO_DOCUMENT);
-  }
-
   /** The primary and executed designations are contract concepts
    * (M22/7). A document the viewer can read but that a matter owns is
    * refused in the open: a 404 here would hide nothing and would read
@@ -4889,18 +3547,6 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   } {
     if (document.owner.kind !== "contract" && document.owner.kind !== "knowledge_item") {
       throw httpError(409, "Matter and Entity paper has no primary document designation.");
-    }
-  }
-
-  /** The owning contract's freeze, on its own. Archive and restore ask
-   * for this one without the archived-document check above, because
-   * whether the document is archived is the very thing they are
-   * changing — and they must tell "already archived" apart from "on a
-   * frozen record" rather than answering both with one sentence. */
-  function assertLiveOwner(document: ReachedDocument): void {
-    if (document.ownerArchivedAt) {
-      const noun = ownerCopy(document.owner.kind).noun;
-      throw httpError(409, `This ${noun} is archived. Restore it before changing its paper.`);
     }
   }
 

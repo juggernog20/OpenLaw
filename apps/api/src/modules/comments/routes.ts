@@ -82,24 +82,16 @@
  * composer's confirmation explains the promotion, it does not enforce it.
  */
 
-import type { FastifyRequest } from "fastify";
-import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { z } from "zod";
-import { uuidv7 } from "uuidv7";
 import {
   and,
-  asc,
+  COMMENT_VISIBILITIES,
   commentAttachments,
   commentLastRead,
   commentMentions,
   commentRevisions,
   comments,
   contracts,
-  matters,
-  matterTeam,
-  COMMENT_VISIBILITIES,
   count,
-  desc,
   documents,
   documentVersions,
   eq,
@@ -107,12 +99,12 @@ import {
   HAND_SET_DOCUMENT_VERSION_KINDS,
   inArray,
   isNull,
+  matters,
+  matterTeam,
   ne,
   sql,
-  users,
   type CommentVisibility,
   type Executor,
-  type SQL,
   type Transaction,
 } from "@openlaw/db";
 import {
@@ -120,10 +112,20 @@ import {
   MAX_COMMENT_ATTACHMENTS,
   MAX_COMMENT_BODY_LENGTH,
 } from "@openlaw/shared";
+import type { FastifyRequest } from "fastify";
+import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import type { Readable } from "node:stream";
+import { uuidv7 } from "uuidv7";
+import { z } from "zod";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
-import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
-import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
+import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
 import { documentAudienceScope, documentConfidentialityWrite } from "../../lib/contract-access.js";
+import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
+import {
+  DocEngineError,
+  DocEngineTimeoutError,
+  DocEngineUnavailableError,
+} from "../../lib/doc-engine/engine.js";
 import {
   insertDocumentVersion,
   resolveDocumentType,
@@ -131,16 +133,10 @@ import {
   requestDerivations,
   versionStorageKey,
 } from "../../lib/document-versions.js";
-import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
-import {
-  DocEngineError,
-  DocEngineTimeoutError,
-  DocEngineUnavailableError,
-} from "../../lib/doc-engine/engine.js";
-import { BlobNotFoundError, formatBlobRef } from "../../lib/storage/adapter.js";
 import { cachedPdfRendition } from "../../lib/preview-rendition.js";
 import { httpError, HttpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
-import type { Readable } from "node:stream";
+import { conversionFormatOf, previewContentType } from "../../lib/render-family.js";
+import { BlobNotFoundError, formatBlobRef } from "../../lib/storage/adapter.js";
 import {
   asUploadRefusal,
   attachmentDisposition,
@@ -150,17 +146,31 @@ import {
   withStoredBlobs,
 } from "../../lib/uploads.js";
 import {
-  commentAudience,
-  commentEntityType,
-  commentActivityRef,
-  mentionCandidates,
-  reachedThread,
   COMMENT_ENTITY_TYPES,
   COMMENT_READER_ROLES,
+  commentActivityRef,
+  commentAudience,
+  commentEntityType,
+  mentionCandidates,
+  reachedThread,
   type CommentAudience,
   type CommentEntityType,
 } from "./audience.js";
-import { CommentBodySchema, postComment } from "./post.js";
+import { CommentBodySchema, postThreadComment } from "./post.js";
+import {
+  attachmentsOf,
+  CommentEntityTypeSchema,
+  CommentListQuery,
+  CommentSchema,
+  EntityRefQuery,
+  listComments,
+  mentionsOf,
+  RECORD_ID_MAX_LENGTH,
+  RecordIdSchema,
+  selectComments,
+  toComment,
+  VisibilitySchema,
+} from "./service.js";
 
 /**
  * The floor for reading any thread: every role that reaches a thread of
@@ -192,89 +202,6 @@ const requireAdministrator = requireCommentRole("administrator");
 
 /** Filing changes the record's paper, so it belongs to Member+ alone. */
 const requireMember = requireCommentRole("administrator", "legal_team_member");
-
-/**
- * What a comment can hang off, as the API accepts it — the entity types
- * that have an arm in `audience.ts`, drawn from that list so the schema
- * and the arms cannot drift. The table's CHECK admits the wider `matter |
- * contract | document | request`, matching the `activity_log` precedent.
- */
-const CommentEntityTypeSchema = z.enum(COMMENT_ENTITY_TYPES);
-
-/**
- * The record's id. Bounded rather than shaped: every id in this API is
- * an opaque text primary key, and no route asserts a UUID pattern, so
- * this one must not either — the bound is here to refuse junk before it
- * reaches a query, not to rule on what an id looks like. A well-formed
- * id for a record the viewer cannot reach still answers 404.
- */
-const RECORD_ID_MAX_LENGTH = 64;
-const RecordIdSchema = z.string().min(1).max(RECORD_ID_MAX_LENGTH);
-
-const VisibilitySchema = z.enum(COMMENT_VISIBILITIES);
-
-/** The author as every comment row draws them — the same person shape
- * the record's roster uses, so one face renders one way (DES-018). */
-const AuthorSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  image: z.string().nullable(),
-  archived: z.boolean(),
-});
-
-/** One mentioned person, as a posted comment carries them. The name is
- * re-read from the users table rather than frozen into the row, so a
- * chip renders whoever that person is now. */
-const MentionSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-});
-
-/** One attachment as it travels inside a live comment. The storage
- * reference never leaves the API. */
-const CommentAttachmentSchema = z.object({
-  id: z.string(),
-  filename: z.string(),
-  /** The one destination this file became, or NULL until it is filed. */
-  filed: z
-    .object({
-      documentId: z.string(),
-      documentTitle: z.string(),
-      versionId: z.string(),
-      versionNumber: z.int().positive(),
-    })
-    .optional(),
-});
-
-const CommentSchema = z.object({
-  id: z.string(),
-  entityType: CommentEntityTypeSchema,
-  entityId: z.string(),
-  author: AuthorSchema,
-  /** What the comment says now. **Empty once the text is gone** — a soft
-   * delete moves it to `comment_revisions` and a redact purges it from
-   * there too, so the tombstone carries no body to leak. */
-  body: z.string(),
-  visibility: VisibilitySchema,
-  /** Who the comment addresses (CMT-007), alphabetical. Empty for a
-   * comment that names nobody, and emptied by a redact along with the
-   * text it named them in. */
-  mentions: z.array(MentionSchema),
-  /** Omitted for a paperless comment, preserving the existing JSON
-   * shape. Also omitted from both tombstones. */
-  attachments: z.array(CommentAttachmentSchema).optional(),
-  createdAt: z.iso.datetime({ offset: true }),
-  /** NULL until the author changes the text; a time draws the "edited"
-   * marker, so a reader can tell the text moved since they read it. */
-  editedAt: z.iso.datetime({ offset: true }).nullable(),
-  /** NULL while the comment stands; a time draws the author's own
-   * tombstone, which holds the comment's place in the thread. */
-  deletedAt: z.iso.datetime({ offset: true }).nullable(),
-  /** NULL until an Administrator removes the text; a time draws the
-   * other tombstone. The two are different acts by different people, so
-   * the row says which one happened. */
-  redactedAt: z.iso.datetime({ offset: true }).nullable(),
-});
 
 /**
  * The people a post may name. Bounded because an unbounded list is a
@@ -326,14 +253,6 @@ const CommentPostTransportSchema = z.any().meta({
   additionalProperties: false,
 });
 
-/** The reference the thread is keyed by — one record, named by type and
- * id rather than by a contract's CTR-003 number, because the panel that
- * reads it is entity-generic. */
-const EntityRefQuery = z.object({
-  entityType: CommentEntityTypeSchema,
-  entityId: RecordIdSchema,
-});
-
 const HandSetKindSchema = z.enum(HAND_SET_DOCUMENT_VERSION_KINDS);
 
 /** One act with two destinations (CMT-011), discriminated before any write. */
@@ -356,48 +275,6 @@ const FilingBody = z.discriminatedUnion("destination", [
   }),
 ]);
 
-/**
- * How many comments one read answers (CTR-024).
- *
- * Server-fixed, so no client can turn one request into a whole-thread
- * scan. 50 matches the contract list rather than the activity feed's 25:
- * a thread is read in one sitting, and a page that ends mid-conversation
- * more often is worse than a page that is a little long.
- *
- * The page is the **newest** 50, answered oldest-first inside itself, so
- * the panel opens on the conversation as it stands. Paging walks
- * backwards through the thread, which is the direction a reader goes
- * when they want more of it.
- */
-const PAGE_SIZE = 50;
-
-/** A cursor is a comment id, and nothing longer is worth reading. */
-const CursorSchema = z.string().min(1).max(64);
-
-/**
- * The keyset boundary: every comment strictly older than one of them,
- * in the order the thread is read back (CTR-024).
- *
- * `(created_at, id)` is the pair the audit log and the record feed both
- * use, and the id breaks a same-instant tie — uuidv7 is time-ordered, so
- * that order is still the order things were said in.
- *
- * The boundary's own position is read from the table rather than taken
- * from the client, and it is read **under the same scope the page is
- * read under**: a cursor naming a comment in a tier this viewer is not
- * in the room for resolves to NULL, the comparison answers nothing, and
- * they get an empty page. A boundary that resolved outside the tier
- * filter would let a cursor confirm that a Legal Only comment exists,
- * which is the one thing DD-016 will not have leak.
- */
-function olderThan(commentId: string, scope: SQL | undefined): SQL {
-  return sql`(${comments.createdAt}, ${comments.id}) < (
-    select ${comments.createdAt}, ${comments.id}
-    from ${comments}
-    where ${and(eq(comments.id, commentId), scope)}
-  )`;
-}
-
 /** And a comment a viewer is not in the room for reads the same way. A
  * 403 on a Legal Only comment would say a Legal Only comment is there,
  * which is the one thing DD-016 will not have leak. */
@@ -414,160 +291,6 @@ export function attachmentRenditionKey(attachmentId: string): string {
 }
 
 export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
-  /** The one comment projection, joined to its author. Callers add the
-   * scope; the list adds the order too. */
-  const selectComments = (db: Executor) =>
-    db
-      .select({
-        id: comments.id,
-        entityType: comments.entityType,
-        entityId: comments.entityId,
-        body: comments.body,
-        visibility: comments.visibility,
-        createdAt: comments.createdAt,
-        editedAt: comments.editedAt,
-        deletedAt: comments.deletedAt,
-        redactedAt: comments.redactedAt,
-        author: {
-          id: users.id,
-          displayName: users.displayName,
-          image: users.image,
-          archivedAt: users.archivedAt,
-        },
-      })
-      .from(comments)
-      .innerJoin(users, eq(comments.authorId, users.id));
-
-  type ThreadRow = Awaited<ReturnType<typeof selectComments>>[number];
-
-  /** Derived from the response schema, so the projection and what the
-   * route promises cannot drift apart. */
-  type Mention = z.infer<typeof MentionSchema>;
-  type Attachment = z.infer<typeof CommentAttachmentSchema>;
-
-  /**
-   * Who each of these comments addresses, in one read. The list is a
-   * table, not a substring of the body, so this is a join rather than a
-   * parse — that is the whole reason `comment_mentions` exists.
-   */
-  async function mentionsOf(
-    db: Executor,
-    commentIds: readonly string[],
-  ): Promise<Map<string, Mention[]>> {
-    const byComment = new Map<string, Mention[]>();
-    if (commentIds.length === 0) return byComment;
-    const rows = await db
-      .select({
-        commentId: commentMentions.commentId,
-        id: users.id,
-        displayName: users.displayName,
-      })
-      .from(commentMentions)
-      .innerJoin(users, eq(commentMentions.userId, users.id))
-      .where(inArray(commentMentions.commentId, [...commentIds]))
-      .orderBy(asc(sql`lower(${users.displayName})`), asc(users.id));
-    for (const row of rows) {
-      const list = byComment.get(row.commentId);
-      if (list) list.push({ id: row.id, displayName: row.displayName });
-      else byComment.set(row.commentId, [{ id: row.id, displayName: row.displayName }]);
-    }
-    return byComment;
-  }
-
-  /** The paper carried by a page of comments, grouped without exposing
-   * storage references.
-   *
-   * The filed marker obeys the Document's own audience (DD-014), not the
-   * comment's. A Business User hears a Full Thread comment but reaches no
-   * Document, and a Member off the team does not reach a Confidential
-   * one; for them the row reads as plain paper, because a Document this
-   * viewer may not see never leaves the database. */
-  async function attachmentsOf(
-    db: Executor,
-    user: AuthenticatedUser,
-    commentIds: readonly string[],
-  ): Promise<Map<string, Attachment[]>> {
-    const byComment = new Map<string, Attachment[]>();
-    if (commentIds.length === 0) return byComment;
-    const rows = await db
-      .select({
-        commentId: commentAttachments.commentId,
-        id: commentAttachments.id,
-        filename: commentAttachments.filename,
-        filedDocumentId: commentAttachments.filedDocumentId,
-        filedDocumentTitle: documents.title,
-        filedVersionId: commentAttachments.filedVersionId,
-        filedVersionNumber: documentVersions.versionNumber,
-      })
-      .from(commentAttachments)
-      .leftJoin(
-        documents,
-        and(eq(commentAttachments.filedDocumentId, documents.id), documentAudienceScope(db, user)),
-      )
-      .leftJoin(
-        documentVersions,
-        and(
-          eq(commentAttachments.filedVersionId, documentVersions.id),
-          eq(documentVersions.documentId, documents.id),
-        ),
-      )
-      .where(inArray(commentAttachments.commentId, [...commentIds]))
-      .orderBy(asc(commentAttachments.createdAt), asc(commentAttachments.id));
-    for (const row of rows) {
-      const list = byComment.get(row.commentId);
-      const filed =
-        row.filedDocumentId !== null &&
-        row.filedDocumentTitle !== null &&
-        row.filedVersionId !== null &&
-        row.filedVersionNumber !== null
-          ? {
-              documentId: row.filedDocumentId,
-              documentTitle: row.filedDocumentTitle,
-              versionId: row.filedVersionId,
-              versionNumber: row.filedVersionNumber,
-            }
-          : null;
-      const attachment = {
-        id: row.id,
-        filename: row.filename,
-        ...(filed ? { filed } : {}),
-      };
-      if (list) list.push(attachment);
-      else byComment.set(row.commentId, [attachment]);
-    }
-    return byComment;
-  }
-
-  function toComment(
-    row: ThreadRow,
-    mentions: readonly Mention[] = [],
-    attachments: readonly Attachment[] = [],
-  ) {
-    const carriesPaper =
-      row.deletedAt === null && row.redactedAt === null && attachments.length > 0;
-    return {
-      id: row.id,
-      // Narrowed for the response schema: the column admits four types,
-      // and only a type with an arm can have reached this far.
-      entityType: row.entityType as CommentEntityType,
-      entityId: row.entityId,
-      author: {
-        id: row.author.id,
-        displayName: row.author.displayName,
-        image: row.author.image,
-        archived: row.author.archivedAt !== null,
-      },
-      body: row.body,
-      visibility: row.visibility,
-      mentions: [...mentions],
-      ...(carriesPaper ? { attachments: [...attachments] } : {}),
-      createdAt: row.createdAt.toISOString(),
-      editedAt: row.editedAt?.toISOString() ?? null,
-      deletedAt: row.deletedAt?.toISOString() ?? null,
-      redactedAt: row.redactedAt?.toISOString() ?? null,
-    };
-  }
-
   app.get(
     "/comments",
     {
@@ -584,11 +307,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "reads oldest-first inside itself, and `nextCursor` walks back " +
           "into the older thread",
         tags: ["comments"],
-        querystring: EntityRefQuery.extend({
-          /** The previous page's `nextCursor`. Omit for the newest page. */
-          cursor: CursorSchema.optional(),
-          visibility: VisibilitySchema.optional(),
-        }),
+        querystring: CommentListQuery,
         response: {
           200: z.object({
             comments: z.array(CommentSchema),
@@ -601,52 +320,7 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      const audience = await reachedThread(app.db, request.user, request.query);
-      const scope = and(
-        eq(comments.entityType, audience.entityType),
-        eq(comments.entityId, audience.entityId),
-        // The tier filter is in the WHERE clause, so the limit below
-        // cuts rows this viewer is already in the room for. A read that
-        // limited first and filtered after would answer pages that
-        // shrink by however many Legal Only comments sat in the window,
-        // and a page length that varies with what is hidden is the leak
-        // DD-016 exists to close (CTR-024).
-        inArray(comments.visibility, [...audience.tiers]),
-        request.query.visibility ? eq(comments.visibility, request.query.visibility) : undefined,
-      );
-      const rows = await selectComments(app.db)
-        .where(
-          and(
-            scope,
-            request.query.cursor === undefined ? undefined : olderThan(request.query.cursor, scope),
-          ),
-        )
-        // Read from the newest end, because that is the end a reader
-        // opens the panel on. The id breaks a same-instant tie: uuidv7
-        // is time-ordered, so that order is still the posting order.
-        // One past the page, which is how the answer knows whether
-        // there is more without counting anything.
-        .orderBy(desc(comments.createdAt), desc(comments.id))
-        .limit(PAGE_SIZE + 1);
-      const page = rows.slice(0, PAGE_SIZE);
-      const ids = page.map((row) => row.id);
-      const [mentions, attachments] = await Promise.all([
-        mentionsOf(app.db, ids),
-        attachmentsOf(app.db, request.user, ids),
-      ]);
-      return {
-        // Turned back into the order a conversation is read in
-        // (CMT-002). The page is a window on the thread, not a feed:
-        // what the reader sees inside it runs oldest to newest exactly
-        // as it always has.
-        comments: page
-          .slice()
-          .reverse()
-          .map((row) => toComment(row, mentions.get(row.id), attachments.get(row.id))),
-        // The oldest row of this page is the boundary for the page
-        // before it, and only when a further row was actually read.
-        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
-      };
+      return listComments(app.db, request.user, request.query);
     },
   );
 
@@ -996,75 +670,14 @@ export const commentsRoutes: FastifyPluginAsyncZod = async (app) => {
       const incoming = request.isMultipart()
         ? await receiveMultipartComment(request, mintedCommentId)
         : { body: requireJsonComment(request.body), attachments: [] };
-      const { body, visibility } = incoming.body;
-      // One person named twice is one person to reach, and the row's
-      // compound key says so too.
-      const named = [...new Set(incoming.body.mentions ?? [])];
-
       // The seam's transaction rather than the database's: a comment
       // that names somebody is done *to* them (CMT-007, NOT-002 group
       // 1), and the bell row for it belongs inside the same commit as
       // the `comment_mentions` row it is read from.
       const write = () =>
-        app.notifier.notifying(async (tx) => {
-          // Read on the same snapshot the rows are written on: a grant
-          // dropped between the check and the insert must not authorize a
-          // post onto a record the author no longer reaches. A refusal
-          // thrown here rolls the transaction back and keeps its status.
-          const audience = await reachedThread(tx, request.user, incoming.body);
-          // The composer offers a Contributor two segments; this is the
-          // refusal that holds when the request does not come from it.
-          if (!audience.tiers.includes(visibility)) {
-            throw httpError(403, "You cannot post a comment at that visibility tier.");
-          }
-
-          // Checked on that same snapshot: a grant dropped before the
-          // insert must not leave a mention nobody can hear.
-          if (named.length > 0) {
-            const candidates = await mentionCandidates(tx, audience, named);
-            const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-            // Somebody no tier on this record reaches is not addressable
-            // here at all. Mentioning a person does not grant them the
-            // record; whatever the arm's audience rule asks for does.
-            if (named.some((id) => !byId.has(id))) {
-              throw httpError(400, "That is not a person you can mention on this record.");
-            }
-            // The load-bearing refusal (CMT-007). The client's
-            // confirmation offers the promotion; this is what holds when
-            // the request did not come from it.
-            const unreachable = named
-              .map((id) => byId.get(id)!)
-              .filter((candidate) => !candidate.tiers.includes(visibility));
-            if (unreachable.length > 0) {
-              const names = unreachable.map((candidate) => candidate.displayName).join(", ");
-              throw httpError(
-                403,
-                `${names} cannot see a comment at that visibility tier. Widen the audience or take the mention out.`,
-              );
-            }
-          }
-
-          // The write itself, its `comment_mentions` rows, its activity
-          // entry, and whatever the arm raises are all one act, and
-          // `post.ts` is where that act lives — the Resolve disposition
-          // says its closing reply through the same call (INT-007).
-          const commentId = await postComment(tx, app.notifier, {
-            id: mintedCommentId,
-            audience,
-            author: request.user,
-            body,
-            visibility,
-            mentions: named,
-            attachments: incoming.attachments,
-          });
-          // Read back through the same projection the thread uses, so the
-          // row the poster gets is the row they will see on the next load.
-          const [posted] = await selectComments(tx).where(eq(comments.id, commentId));
-          const [mentions, attachments] = await Promise.all([
-            mentionsOf(tx, [commentId]),
-            attachmentsOf(tx, request.user, [commentId]),
-          ]);
-          return toComment(posted!, mentions.get(commentId), attachments.get(commentId));
+        postThreadComment(app.notifier, request.user, incoming.body, {
+          id: mintedCommentId,
+          attachments: incoming.attachments,
         });
 
       const comment =

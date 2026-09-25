@@ -23,7 +23,8 @@
  *
  * Each bell includes a single-item read and browser subscription routes.
  * Preferences are shared between the bells. **The list** is this person's items, newest
- * first, paged. **The count** is their unread badge, which NOT-005 caps
+ * first, paged after the pinned approvals. **The count** is their unread
+ * items plus open approvals, counted once each, which NOT-005 caps
  * at "9+" for display — the cap is the badge's, not the number's, so
  * this answers the count and the surface decides how to draw it.
  *
@@ -32,8 +33,8 @@
  * sends the id of the item the person clicked, and drawing the panel
  * writes nothing. The route takes a list, so a surface that has more
  * than one to send can. **Marking everything read** is the one
- * deliberate sweep, the affordance that zeroes the badge after a
- * holiday. Both answer the unread count that remains, for the reason
+ * deliberate sweep over ordinary items. Open approvals keep their state
+ * and count until handled. Both answer the unread count that remains, for the reason
  * `POST /comments/read` does: the badge takes the server's number
  * rather than assuming its own write cleared it.
  *
@@ -79,6 +80,7 @@
  * see, through the same predicate.
  */
 
+import { openApproval } from "../../lib/notifications/approvals.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -89,6 +91,7 @@ import {
   eq,
   inArray,
   isNull,
+  or,
   notifications,
   pushSubscriptions,
   users,
@@ -182,7 +185,7 @@ async function unreadCount(
     .where(
       and(
         eq(notifications.userId, user.id),
-        isNull(notifications.readAt),
+        or(isNull(notifications.readAt), openApproval),
         // The same predicate the list composes, on the same surface. One
         // rule, so the badge can never promise an item the centre will
         // not draw — and never count an item that belongs to the other
@@ -205,6 +208,8 @@ const NotificationSchema = z.object({
    * it first.
    */
   eventType: z.string(),
+  approvalKind: z.string().nullable(),
+  handledAt: z.iso.datetime({ offset: true }).nullable(),
   /** What the item is about: `contract` on the staff mount, `request`
    * on the portal one. Never both in one answer — the mount's own
    * predicate is what makes that true. */
@@ -291,49 +296,12 @@ const STAFF_BELL: BellMount = {
     readAll: "markAllNotificationsRead",
   },
   summaries: {
-    list:
-      "The signed-in person's staff notifications, newest first " +
-      "(NOT-001). There is no way to ask for anybody else's: a " +
-      "notification is addressed to one person and the address is the " +
-      "whole scope. This is the **staff** notification centre, so it " +
-      "answers items about contracts and never a Requester's group-5 " +
-      "items — those are the portal bell's, at " +
-      "`/portal/notifications`. An item about a record the reader can " +
-      "no longer reach — a contract walled off after the item was " +
-      "written (DD-014) — is silently omitted: no row, no gap, and no " +
-      "number that says something was left out. Paged from a " +
-      "server-fixed page size: pass the previous page's `nextCursor` to " +
-      "read further back. A cursor naming nothing in this person's bell " +
-      "answers an empty page rather than an error",
+    list: "The signed-in person's staff bell. Open approvals come first on the first page, followed by ordinary notifications, newest first. nextCursor pages ordinary notifications. Every read applies the record wall.",
     count:
-      "How many unread staff notifications the signed-in person has " +
-      "(NOT-005) — the number behind the top-nav badge. It is the whole " +
-      "count, not the capped one: NOT-005's '9+' is how the badge draws " +
-      "it, and the cap belongs to the surface. It is computed over " +
-      "exactly the items the list would answer with, through the same " +
-      "confidentiality predicate, so an item about a since-walled-off " +
-      "record leaves the count as silently as it leaves the list",
-    read:
-      "Mark the named items read — what opening one from the " +
-      "notification centre does (NOT-005, 2026-09-09 amendment). " +
-      "Drawing the centre writes nothing; the click on an item is the " +
-      "read, so the centre sends that one id. The body is a list of up " +
-      "to one page's worth, because a page is the most the centre ever " +
-      "holds. Ids that are not this person's, are already read, are " +
-      "about a record they can no longer reach, or belong to their " +
-      "portal bell match nothing and are not refused — a refusal would " +
-      "answer whether an id exists. Answers the unread count that " +
-      "remains: what was not sent, plus whatever landed in the meantime",
+      "Count unread notifications and open approvals once each, through the same reach predicate as the list. Reading an open approval does not remove it from the badge.",
+    read: "Mark named reachable notifications read. Open approvals keep their badge count until handled. Returns the remaining badge count.",
     readAll:
-      "Mark every unread staff item read — the affordance that zeroes " +
-      "the badge after a holiday (NOT-005). It covers exactly what the " +
-      "badge counts, so an item about a record the reader can no longer " +
-      "reach is left alone: it is already outside the count, and " +
-      "clearing it would be a write on a record they cannot see. A " +
-      "group-5 item on the same person's portal bell is left alone too, " +
-      "for the stronger reason that it is not on this surface at all. " +
-      "Answers the unread count that remains, which is zero unless " +
-      "something landed while the request was in flight",
+      "Mark ordinary reachable notifications read. Leave open approvals unchanged and return the remaining badge count.",
   },
 };
 
@@ -348,11 +316,12 @@ const PORTAL_BELL: BellMount = {
     readAll: "markAllPortalNotificationsRead",
   },
   summaries: {
-    list: "Portal notifications for the signed-in person's Requests and current Contract or Matter team memberships. Legal content, archived work, and revoked memberships are omitted before pagination.",
-    count: "Unread count over exactly the Portal notifications the current user may read.",
+    list: "The signed-in person's Portal bell. Open approvals come first on the first page, then ordinary Portal news, newest first. nextCursor pages ordinary news. Each item requires current access.",
+    count:
+      "Count unread Portal notifications and open approvals once each, through the same reach predicate as the list.",
     read: "Mark named reachable Portal notifications read. Unreachable or already-read ids match nothing. Returns the remaining unread count.",
     readAll:
-      "Mark every currently reachable Portal notification read and return the remaining unread count.",
+      "Mark ordinary reachable Portal notifications read. Leave open approvals unchanged and return the remaining badge count.",
   },
 };
 
@@ -530,6 +499,7 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
         if (!row) throw httpError(404, "Notification not found.");
         return {
           ...row,
+          handledAt: row.handledAt?.toISOString() ?? null,
           readAt: row.readAt?.toISOString() ?? null,
           createdAt: row.createdAt.toISOString(),
         };
@@ -577,28 +547,49 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
           )`
           : undefined;
 
-        const rows = await app.db
-          .select({
-            id: notifications.id,
-            eventType: notifications.eventType,
-            entityType: notifications.entityType,
-            entityId: notifications.entityId,
-            payload: notifications.payload,
-            readAt: notifications.readAt,
-            createdAt: notifications.createdAt,
-          })
-          .from(notifications)
-          .where(and(mine, notificationScope(app.db, request.user, surface), before))
-          .orderBy(desc(notifications.createdAt), desc(notifications.id))
-          // One past the page, which is how the answer knows whether
-          // there is more without counting anything.
-          .limit(PAGE_SIZE + 1);
+        const columns = {
+          id: notifications.id,
+          eventType: notifications.eventType,
+          entityType: notifications.entityType,
+          entityId: notifications.entityId,
+          payload: notifications.payload,
+          readAt: notifications.readAt,
+          createdAt: notifications.createdAt,
+          approvalKind: notifications.approvalKind,
+          handledAt: notifications.handledAt,
+        };
+        const scope = and(mine, notificationScope(app.db, request.user, surface));
+        // Both groups use one snapshot so a concurrent answer cannot put
+        // the same item in the pinned group and the ordinary feed.
+        const [approvals, rows] = await app.db.transaction(
+          async (tx) => {
+            const approvals = request.query.cursor
+              ? []
+              : await tx
+                  .select(columns)
+                  .from(notifications)
+                  .where(and(scope, openApproval))
+                  .orderBy(desc(notifications.createdAt), desc(notifications.id));
+            const rows = await tx
+              .select(columns)
+              .from(notifications)
+              .where(and(scope, sql`not (${openApproval})`, before))
+              .orderBy(desc(notifications.createdAt), desc(notifications.id))
+              // One past the page, which is how the answer knows whether
+              // there is more without counting anything.
+              .limit(PAGE_SIZE + 1);
+            return [approvals, rows] as const;
+          },
+          { isolationLevel: "repeatable read", accessMode: "read only" },
+        );
 
         const page = rows.slice(0, PAGE_SIZE);
         return {
-          notifications: page.map((row) => ({
+          notifications: [...approvals, ...page].map((row) => ({
             id: row.id,
             eventType: row.eventType,
+            approvalKind: row.approvalKind,
+            handledAt: row.handledAt?.toISOString() ?? null,
             entityType: row.entityType,
             entityId: row.entityId,
             payload: row.payload,
@@ -691,6 +682,7 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
               and(
                 eq(notifications.userId, request.user.id),
                 isNull(notifications.readAt),
+                sql`not (${openApproval})`,
                 notificationScope(tx, request.user, surface),
               ),
             );

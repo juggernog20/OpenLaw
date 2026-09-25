@@ -1142,6 +1142,62 @@
       "when": 1790194805635,
       "tag": "0162_user_reminder_offsets",
       "breakpoints": true
+    },
+    {
+      "idx": 163,
+      "version": "7",
+      "when": 1790196000000,
+      "tag": "0163_mcp-settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 164,
+      "version": "7",
+      "when": 1790198164007,
+      "tag": "0164_api-key-requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 165,
+      "version": "7",
+      "when": 1790198357796,
+      "tag": "0165_api-key-notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 166,
+      "version": "7",
+      "when": 1790203109932,
+      "tag": "0166_your-approvals",
+      "breakpoints": true
+    },
+    {
+      "idx": 167,
+      "version": "7",
+      "when": 1790205250569,
+      "tag": "0167_approval-indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 168,
+      "version": "7",
+      "when": 1790207955532,
+      "tag": "0168_mcp-tool-calls",
+      "breakpoints": true
+    },
+    {
+      "idx": 169,
+      "version": "7",
+      "when": 1790243833451,
+      "tag": "0169_activity-via",
+      "breakpoints": true
+    },
+    {
+      "idx": 170,
+      "version": "7",
+      "when": 1790288469379,
+      "tag": "0170_email-layout",
+      "breakpoints": true
     }
   ]
 }

@@ -338,6 +338,12 @@ export const portalAppletRoutes: FastifyPluginAsyncZod = async (app) => {
       const rows = await app.db
         .select({
           id: activityLog.id,
+          viaKind: activityLog.viaKind,
+          // The credential id is another person's API key or grant id.
+          // The Portal narration reads only the kind and the Client
+          // name, so the id stays inside.
+          viaId: sql<string | null>`null`,
+          viaClientName: activityLog.viaClientName,
           // A Contract's Portal card draws the Stage, never the Status
           // name the team moves through, so the entry says what the
           // reader can see. This name is narration and is never stored.

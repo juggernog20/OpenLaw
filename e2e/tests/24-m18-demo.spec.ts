@@ -564,16 +564,22 @@ test.describe("M18 demo path", () => {
       await approverBell.click();
       const approverCentre = notificationCentre(approverPage);
       await expect(approverCentre).toBeVisible();
-      await expect(
-        approverCentre.getByRole("link", { name: `${OWNER_NAME} asked you to approve ${title}` }),
-      ).toBeVisible();
+      const yourApprovals = approverCentre.getByRole("region", { name: "Your approvals" });
+      await expect(yourApprovals).toContainText(`${OWNER_NAME} asked you to approve ${title}`);
+      await expect(approverCentre.getByRole("button", { name: "Mark all read" })).toBeHidden();
 
-      // Opening marks nothing (NOT-005, 2026-09-09 amendment). The badge
-      // goes on the deliberate sweep, and takes the server's answer.
-      await approverCentre.getByRole("button", { name: "Mark all read" }).click();
-      await expect(bellTrigger(approverPage)).toHaveAccessibleName("Notifications, none unread", {
-        timeout: 15_000,
-      });
+      // Reviewing reads the prompt, but an open approval stays in the badge.
+      const readApproval = approverPage.waitForResponse(
+        (response) =>
+          response.url().endsWith("/api/v1/notifications/read") &&
+          response.request().method() === "POST",
+      );
+      await yourApprovals.getByRole("link", { name: "Review", exact: true }).click();
+      const readResponse = await readApproval;
+      expect(readResponse.status()).toBe(200);
+      expect(await readResponse.json()).toEqual({ unread: 1 });
+      await expect(approverPage).toHaveURL(`/contracts/${number}/approvals`);
+      await expect(bellTrigger(approverPage)).toHaveAccessibleName("Notifications, 1 unread");
 
       // ---- The deadline path: one morning round ----
       //

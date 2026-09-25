@@ -258,6 +258,7 @@ export const serializers = {
 export const REDACT_PATHS = [
   "req.headers.cookie",
   "req.headers.authorization",
+  'req.headers["x-api-key"]',
   'req.headers["set-cookie"]',
   'res.headers["set-cookie"]',
   "err.params",

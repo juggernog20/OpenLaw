@@ -13,21 +13,12 @@ import { betterAuth } from "better-auth";
 import { admin, magicLink, twoFactor } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
 import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
-import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { authAdapter, apiKeyPlugin } from "./api-keys.js";
 import { sso } from "@better-auth/sso";
 import { hash, verify } from "@node-rs/argon2";
 import { uuidv7 } from "uuidv7";
-import {
-  and,
-  eq,
-  sql,
-  sessions,
-  twoFactors,
-  schema,
-  ssoProviders,
-  users,
-  type Db,
-} from "@openlaw/db";
+import { and, eq, sql, sessions, twoFactors, ssoProviders, users, type Db } from "@openlaw/db";
+import { renderEmailLayout } from "../lib/email-layout.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 import { createProfileAuditHook } from "./audit.js";
@@ -248,7 +239,7 @@ export function createAuth(
     baseURL: config.baseUrl,
     secret: config.secret,
     ...(config.disableRateLimit ? { rateLimit: { enabled: false } } : {}),
-    database: drizzleAdapter(db, { provider: "pg", usePlural: true, schema }),
+    database: authAdapter(db),
     // Registered providers' issuer origins stay trusted so the plugin can
     // re-run endpoint discovery after registration if it ever needs to;
     // the table is only consulted on SSO paths to keep the extra query
@@ -319,7 +310,30 @@ export function createAuth(
       // logs a live token with the GET for the page (TECH-032).
       sendResetPassword: async ({ user, token }) => {
         const { mailer } = await resolveMailer();
+        const brand = await getOrgSettings(db);
+        const portal = (user as { role?: string }).role === "business_user";
+        const link = `${config.baseUrl}/auth/set-password#token=${token}${portal ? "&portal=1" : ""}`;
         await mailer.send({
+          ...renderEmailLayout(
+            {
+              subject: "Set your OpenLaw password",
+              baseUrl: config.baseUrl,
+              surface: portal ? "portal" : "staff",
+              preheader: "The link expires in 1 hour.",
+              label: portal ? "Legal portal" : "Account",
+              headline: "Set your password",
+              greeting: `Hello ${user.name},`,
+              body: ["Set your OpenLaw password using the button below."],
+              action: {
+                label: "Set password",
+                href: link,
+                line: "The link expires in 1 hour. If you did not expect this email, you can ignore it.",
+              },
+              fallbackLink: link,
+              footer: { kind: "security" },
+            },
+            brand,
+          ),
           to: user.email,
           subject: "Set your OpenLaw password",
           text: [
@@ -327,7 +341,7 @@ export function createAuth(
             "",
             "Set your OpenLaw password using the link below:",
             "",
-            `${config.baseUrl}/auth/set-password#token=${token}${(user as { role?: string }).role === "business_user" ? "&portal=1" : ""}`,
+            link,
             "",
             "The link expires in one hour. If you did not expect this email, you can ignore it.",
           ].join("\n"),
@@ -360,6 +374,7 @@ export function createAuth(
       storeIdentifier: "hashed",
     },
     plugins: [
+      apiKeyPlugin(),
       // Owns the users.role column plus ban/impersonation columns. Bans
       // carry no product semantics yet; adminRoles shields administrators
       // from ban/impersonation targeting. The roles map exists to teach
@@ -387,7 +402,30 @@ export function createAuth(
         storeToken: "hashed",
         sendMagicLink: async ({ email, url }) => {
           const { mailer } = await resolveMailer();
+          const { settings, user } = await authenticationForEmail(db, email);
+          const portal = user?.role === "business_user";
           await mailer.send({
+            ...renderEmailLayout(
+              {
+                subject: "Sign in to OpenLaw",
+                baseUrl: config.baseUrl,
+                surface: portal ? "portal" : "staff",
+                preheader: "The link expires in 5 minutes and works once.",
+                tone: "info",
+                label: portal ? "Legal portal" : "Account",
+                headline: "Sign in to OpenLaw",
+                greeting: "Hello,",
+                body: ["Sign in to OpenLaw using the button below."],
+                action: {
+                  label: "Sign in",
+                  href: url,
+                  line: "The link expires in 5 minutes and can be used once. If you did not request it, you can ignore this email.",
+                },
+                fallbackLink: url,
+                footer: { kind: "security" },
+              },
+              settings,
+            ),
             to: email,
             subject: "Sign in to OpenLaw",
             text: [
