@@ -11,6 +11,8 @@ import type { paths } from "@openlaw/api-client";
 import type { McpToolset } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { toolsetLabel } from "../lib/mcp";
+import { Scope } from "./mcp-scope";
+import { ConnectedClients } from "./connected-clients";
 import { SettingsCard } from "./settings-card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -38,6 +40,7 @@ function asCredential(row: OAuthGrantRow): KeyRow {
     keyAvailable: false,
   };
 }
+const EMPTY_GRANTS: OAuthGrantRow[] = [];
 type Action = "approve" | "deny" | "cancel" | "revoke";
 const actions = defineMessages({
   approve: { id: "apiKeys.approve", defaultMessage: "Approve" },
@@ -60,7 +63,7 @@ const statuses = defineMessages({
 export function ApiKeys({
   initial,
   organization = false,
-  initialGrants = [],
+  initialGrants = EMPTY_GRANTS,
 }: {
   initial: State;
   organization?: boolean;
@@ -69,11 +72,15 @@ export function ApiKeys({
   const intl = useIntl();
   const [state, setState] = useState(initial);
   const [grants, setGrants] = useState(initialGrants);
+  const [loadedGrants, setLoadedGrants] = useState(initialGrants);
+  if (loadedGrants !== initialGrants) {
+    setLoadedGrants(initialGrants);
+    setGrants(initialGrants);
+  }
   const [loadedRequests, setLoadedRequests] = useState(initial.requests);
   if (loadedRequests !== initial.requests) {
     setLoadedRequests(initial.requests);
     setState(initial);
-    setGrants(initialGrants);
   }
   const [requesting, setRequesting] = useState(false);
   const [ready, setReady] = useState<KeyRow>();
@@ -103,9 +110,13 @@ export function ApiKeys({
       if (!currentGrants) throw new Error(fail());
       setGrants(currentGrants);
     } else {
-      const { data, error } = await api.GET("/api/v1/api-key-requests");
-      if (!data) throw new Error(error?.detail ?? fail());
+      const [{ data, error }, { data: currentGrants }] = await Promise.all([
+        api.GET("/api/v1/api-key-requests"),
+        api.GET("/api/v1/oauth-grants"),
+      ]);
+      if (!data || !currentGrants) throw new Error(error?.detail ?? fail());
       setState(data);
+      setGrants(currentGrants);
     }
   }
   // Only the mounted pane collects secrets. Loaders and revalidation read metadata alone.
@@ -168,6 +179,7 @@ export function ApiKeys({
       if (decision.row.oauthGrant) {
         const { data, error } = await api.POST("/api/v1/oauth-grants/{id}/revoke", { params });
         if (!data) throw new Error(error?.detail ?? fail());
+        setGrants((current) => current.filter((grant) => grant.id !== decision.row.id));
         setDecision(undefined);
         return;
       }
@@ -388,6 +400,16 @@ export function ApiKeys({
           </p>
         </SettingsCard>
       )}
+      {!organization && (
+        <ConnectedClients
+          grants={grants}
+          busy={busy}
+          onDisconnect={(grant) => {
+            setError(undefined);
+            setDecision({ row: asCredential(grant), action: "revoke" });
+          }}
+        />
+      )}
       <Dialog
         open={requesting}
         onOpenChange={(open) => {
@@ -565,23 +587,6 @@ export function ApiKeys({
         </DialogContent>
       </Dialog>
     </>
-  );
-}
-function Scope({ scope }: { scope: "read" | "write" }) {
-  return (
-    <span
-      className={
-        scope === "write"
-          ? "rounded-full bg-status-warning-bg px-2 py-0.5 text-status-warning-fg"
-          : "rounded-full bg-status-info-bg px-2 py-0.5 text-status-info-fg"
-      }
-    >
-      {scope === "write" ? (
-        <FormattedMessage id="apiKeys.write" defaultMessage="Write" />
-      ) : (
-        <FormattedMessage id="apiKeys.read" defaultMessage="Read" />
-      )}
-    </span>
   );
 }
 function Note({ value, onChange }: { value: string; onChange: (value: string) => void }) {

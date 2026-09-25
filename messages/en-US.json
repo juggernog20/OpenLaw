@@ -2657,6 +2657,30 @@
   "confidential.markerShort": {
     "defaultMessage": "CONFI"
   },
+  "connectedClients.disconnect": {
+    "defaultMessage": "Disconnect"
+  },
+  "connectedClients.disconnectNamed": {
+    "defaultMessage": "Disconnect {client}"
+  },
+  "connectedClients.empty": {
+    "defaultMessage": "No Client is connected."
+  },
+  "connectedClients.granted": {
+    "defaultMessage": "Granted {date}"
+  },
+  "connectedClients.help": {
+    "defaultMessage": "A Client on the Allowed Clients list asks to connect from inside the Client. You choose its Toolsets and scope on the consent page."
+  },
+  "connectedClients.lastUsed": {
+    "defaultMessage": "Last used {date}"
+  },
+  "connectedClients.never": {
+    "defaultMessage": "Never"
+  },
+  "connectedClients.title": {
+    "defaultMessage": "Connected Clients"
+  },
   "consent.allow": {
     "defaultMessage": "Allow"
   },

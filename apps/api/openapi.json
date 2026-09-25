@@ -4062,6 +4062,96 @@
         }
       }
     },
+    "/api/v1/oauth-grants": {
+      "get": {
+        "tags": ["OAuth grants"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "personId": {
+                        "type": "string"
+                      },
+                      "owner": {
+                        "type": "string"
+                      },
+                      "clientName": {
+                        "type": "string"
+                      },
+                      "toolsets": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "workspace",
+                            "contracts",
+                            "matters",
+                            "tasks",
+                            "requests",
+                            "comments",
+                            "documents",
+                            "auto-docs",
+                            "entities",
+                            "knowledge",
+                            "people",
+                            "team",
+                            "administration"
+                          ]
+                        }
+                      },
+                      "scope": {
+                        "type": "string",
+                        "enum": ["read", "write"]
+                      },
+                      "grantedAt": {
+                        "type": "string"
+                      },
+                      "expiresAt": {
+                        "type": "string"
+                      },
+                      "lastUsedAt": {
+                        "type": ["string", "null"]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "personId",
+                      "owner",
+                      "clientName",
+                      "toolsets",
+                      "scope",
+                      "grantedAt",
+                      "expiresAt",
+                      "lastUsedAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/mcp-settings/oauth-grants": {
       "get": {
         "tags": ["OAuth grants"],

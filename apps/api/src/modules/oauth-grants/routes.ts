@@ -294,33 +294,46 @@ export function oauthGrantRoutes(lifetimeDays: number): FastifyPluginAsyncZod {
         });
       },
     );
-    app.get(
-      "/mcp-settings/oauth-grants",
-      {
-        preHandler: requireRole("administrator"),
-        schema: {
-          tags: ["OAuth grants"],
-          response: { 200: z.array(Row), default: problemResponse },
+    for (const personal of [true, false]) {
+      app.get(
+        personal ? "/oauth-grants" : "/mcp-settings/oauth-grants",
+        {
+          preHandler: personal ? requireAuth : requireRole("administrator"),
+          schema: {
+            tags: ["OAuth grants"],
+            response: { 200: z.array(Row), default: problemResponse },
+          },
         },
-      },
-      async () => {
-        const rows = await app.db
-          .select({ grant: oauthGrants, owner: users.displayName, clientName: allowedClients.name })
-          .from(oauthGrants)
-          .innerJoin(users, eq(users.id, oauthGrants.personId))
-          .innerJoin(allowedClients, eq(allowedClients.id, oauthGrants.allowedClientId))
-          .where(and(isNull(oauthGrants.revokedAt), gt(oauthGrants.expiresAt, new Date())))
-          .orderBy(desc(oauthGrants.grantedAt));
-        return rows.map(({ grant, owner, clientName }) => ({
-          ...grant,
-          owner,
-          clientName,
-          grantedAt: grant.grantedAt.toISOString(),
-          expiresAt: grant.expiresAt.toISOString(),
-          lastUsedAt: grant.lastUsedAt?.toISOString() ?? null,
-        }));
-      },
-    );
+        async (req, reply) => {
+          reply.header("Cache-Control", "no-store");
+          const rows = await app.db
+            .select({
+              grant: oauthGrants,
+              owner: users.displayName,
+              clientName: allowedClients.name,
+            })
+            .from(oauthGrants)
+            .innerJoin(users, eq(users.id, oauthGrants.personId))
+            .innerJoin(allowedClients, eq(allowedClients.id, oauthGrants.allowedClientId))
+            .where(
+              and(
+                personal ? eq(oauthGrants.personId, req.user.id) : undefined,
+                isNull(oauthGrants.revokedAt),
+                gt(oauthGrants.expiresAt, new Date()),
+              ),
+            )
+            .orderBy(desc(oauthGrants.grantedAt));
+          return rows.map(({ grant, owner, clientName }) => ({
+            ...grant,
+            owner,
+            clientName,
+            grantedAt: grant.grantedAt.toISOString(),
+            expiresAt: grant.expiresAt.toISOString(),
+            lastUsedAt: grant.lastUsedAt?.toISOString() ?? null,
+          }));
+        },
+      );
+    }
     app.post(
       "/oauth-grants/:id/revoke",
       {

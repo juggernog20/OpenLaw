@@ -643,3 +643,88 @@ it("reports a refresh storage failure as a server error rather than invalid cons
     );
   }
 });
+
+it.each(["legal_team_member", "business_user"] as const)(
+  "lists only the %s's own connected Clients and disconnects immediately",
+  async (role) => {
+    await h.db.update(users).set({ role }).where(eq(users.id, businessId));
+    try {
+      const otherToken = await issue(["documents"], "write");
+      const ownToken = await issue(["contracts"], "read", business);
+      const [other] = await h.db
+        .select()
+        .from(oauthGrants)
+        .where(eq(oauthGrants.personId, personId));
+      const [own] = await h.db
+        .select()
+        .from(oauthGrants)
+        .where(eq(oauthGrants.personId, businessId));
+      expect((await call(ownToken.access_token)).statusCode).toBe(200);
+      const listing = await h.app.inject({
+        url: `/api/v1/oauth-grants?personId=${personId}`,
+        cookies: business,
+      });
+      expect(listing.statusCode, listing.body).toBe(200);
+      expect(listing.headers["cache-control"]).toBe("no-store");
+      expect(listing.json()).toEqual([
+        expect.objectContaining({
+          id: own!.id,
+          personId: businessId,
+          clientName: "Test Client",
+          toolsets: ["contracts"],
+          scope: "read",
+          grantedAt: own!.grantedAt.toISOString(),
+          lastUsedAt: expect.any(String),
+        }),
+      ]);
+      const adminListing = await h.app.inject({ url: "/api/v1/oauth-grants", cookies });
+      expect(adminListing.json().map((row: { id: string }) => row.id)).toEqual([other!.id]);
+      expect((await h.app.inject({ url: "/api/v1/oauth-grants" })).statusCode).toBe(401);
+      const denied = await h.app.inject({
+        method: "POST",
+        url: `/api/v1/oauth-grants/${other!.id}/revoke`,
+        cookies: business,
+      });
+      expect(denied.statusCode).toBe(404);
+      expect((await call(otherToken.access_token)).statusCode).toBe(200);
+      for (let i = 0; i < 2; i++) {
+        const revoked = await h.app.inject({
+          method: "POST",
+          url: `/api/v1/oauth-grants/${own!.id}/revoke`,
+          cookies: business,
+        });
+        expect(revoked.statusCode, revoked.body).toBe(200);
+      }
+      expect(
+        (await h.app.inject({ url: "/api/v1/oauth-grants", cookies: business })).json(),
+      ).toEqual([]);
+      expect((await call(ownToken.access_token)).statusCode).toBe(401);
+      const audit = await h.db
+        .select()
+        .from(activityLog)
+        .where(
+          and(eq(activityLog.actorId, businessId), eq(activityLog.action, "oauth_grant.revoked")),
+        );
+      expect(audit).toContainEqual(
+        expect.objectContaining({
+          visibility: "admin_only",
+          payload: expect.objectContaining({
+            oauthGrantId: own!.id,
+            personId: businessId,
+            clientName: "Test Client",
+          }),
+        }),
+      );
+      await issue(["contracts"], "read", business);
+      await h.db
+        .update(oauthGrants)
+        .set({ expiresAt: new Date(Date.now() - 1000) })
+        .where(eq(oauthGrants.id, own!.id));
+      expect(
+        (await h.app.inject({ url: "/api/v1/oauth-grants", cookies: business })).json(),
+      ).toEqual([]);
+    } finally {
+      await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, businessId));
+    }
+  },
+);

@@ -14,32 +14,35 @@ import { PageTitle } from "../components/page-title";
 import { PortalShell } from "../components/portal/portal-shell";
 import { PortalBackLink } from "../components/portal/back-link";
 async function readKeys() {
-  const { data } = await api.GET("/api/v1/api-key-requests");
-  if (!data) throw new Error("API keys could not be read.");
-  return data;
+  const [{ data: keys }, { data: grants }] = await Promise.all([
+    api.GET("/api/v1/api-key-requests"),
+    api.GET("/api/v1/oauth-grants"),
+  ]);
+  if (!keys || !grants) throw new Error("API keys and Connected Clients could not be read.");
+  return { keys, grants };
 }
 export async function settingsApiKeysLoader() {
   const user = await requireUser();
   if (user.role === "business_user") return redirect("/portal/settings/api-keys");
-  return { user, keys: await readKeys() };
+  return { user, ...(await readKeys()) };
 }
 export async function portalApiKeysLoader({ request }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
   if (!user) return redirect("/portal/login");
-  return { user, keys: await readKeys() };
+  return { user, ...(await readKeys()) };
 }
 export function SettingsApiKeysPage() {
-  const { keys } = useLoaderData<typeof settingsApiKeysLoader>();
+  const { keys, grants } = useLoaderData<typeof settingsApiKeysLoader>();
   const intl = useIntl();
   return (
     <>
       <PageTitle title={intl.formatMessage({ id: "apiKeys.title", defaultMessage: "API keys" })} />
-      <ApiKeys initial={keys} />
+      <ApiKeys initial={keys} initialGrants={grants} />
     </>
   );
 }
 export function PortalApiKeysPage() {
-  const { user, keys } = useLoaderData<typeof portalApiKeysLoader>();
+  const { user, keys, grants } = useLoaderData<typeof portalApiKeysLoader>();
   const signOut = useSignOut("/portal/login");
   const intl = useIntl();
   return (
@@ -51,7 +54,7 @@ export function PortalApiKeysPage() {
       <h1 className="text-2xl font-semibold">
         <FormattedMessage id="apiKeys.title" defaultMessage="API keys" />
       </h1>
-      <ApiKeys initial={keys} />
+      <ApiKeys initial={keys} initialGrants={grants} />
     </PortalShell>
   );
 }
