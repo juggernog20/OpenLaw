@@ -24,6 +24,7 @@ import {
 } from "../ui/dropdown-menu";
 
 export interface ShellUser {
+  id: string;
   displayName: string;
   email: string;
   /** DD-013 role; the nav draws only this role's destinations. */

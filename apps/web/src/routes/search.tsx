@@ -1,33 +1,54 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * M25's flat ranked answer, with kind and query held in the URL so a
- * reload or a shared link answers the same. Reads the one search
- * endpoint through the generated client (TECH-003); `/` reaches it per
- * DES-010.
- */
-import { useState } from "react";
-import { Search as SearchIcon } from "lucide-react";
+/** Ranked results with the question held in the URL for reload, sharing and Back. */
+import { DEFAULT_SEARCH_SCOPE, SearchQuestionSchema, type SearchQuestion } from "@openlaw/shared";
+import { useEffect, useState } from "react";
+import { Search as SearchIcon, X } from "lucide-react";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { search, type SearchKind, type SearchOutcome, type SearchResult } from "../lib/search";
+import {
+  querySearch,
+  type SearchKind,
+  type QuestionSearchOutcome,
+  type SearchResult,
+} from "../lib/search";
 import { requireUser, useSignOut } from "../lib/session";
+import { recordRecentSearch } from "../lib/recent-searches";
 import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import {
   SEARCH_KIND_ORDER,
   SearchResultRow,
   searchKindLabel,
-  searchPagePath,
 } from "../components/search/search-result-row";
 import { AppShell } from "../components/shell/app-shell";
 import { PageSubBar } from "../components/shell/page-subbar";
 import { Button } from "../components/ui/button";
 
+import {
+  readSearchFields,
+  dropUnavailableFields,
+  FIELD_NOTICES,
+} from "../components/search/field-definitions";
+import { ConditionChips } from "../components/search/condition-chips";
+import { SearchSort } from "../components/search/search-sort";
+import { AdvancedSearchButton } from "../components/search/advanced-search";
+import {
+  questionFromSearch,
+  questionIsEmpty,
+  questionPath,
+  WORD_LABELS,
+  SCOPE_LABELS,
+  CHIP_CLASS,
+  IDLE_CHIP_CLASS,
+  SELECTED_CHIP_CLASS,
+} from "../components/search/search-question";
+
 const PAGE_SIZE = 25;
 
 const MESSAGES: Record<
   | "prompt"
+  | "results"
   | "resultsFor"
   | "allKinds"
   | "filterLabel"
@@ -42,6 +63,7 @@ const MESSAGES: Record<
     id: "search.page.prompt",
     defaultMessage: "Search contracts, matters, documents, entities, counterparties, and requests",
   },
+  results: { id: "search.page.results", defaultMessage: "Search results" },
   resultsFor: {
     id: "search.page.resultsFor",
     defaultMessage: "Search results for “{query}”",
@@ -61,60 +83,107 @@ const MESSAGES: Record<
   showMore: { id: "search.page.showMore", defaultMessage: "Show more" },
 });
 
-function isSearchKind(value: string | null): value is SearchKind {
-  return SEARCH_KIND_ORDER.some((kind) => kind === value);
-}
-
 export async function searchLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (user.role === "business_user") return redirect("/portal");
 
-  const params = new URL(request.url).searchParams;
-  const query = (params.get("q") ?? "").trim();
-  const rawKind = params.get("kind");
-  const kind = isSearchKind(rawKind) ? rawKind : undefined;
-  const outcome: SearchOutcome =
-    query === ""
-      ? { ok: true, results: [], nextCursor: null }
-      : await search(query, { kind, limit: PAGE_SIZE });
-  return { user, query, kind, outcome };
+  const original = questionFromSearch(new URL(request.url).search);
+  const catalog = original.conditions.some((condition) => condition.property.startsWith("field:"))
+    ? await readSearchFields().catch(() => null)
+    : null;
+  const question = catalog ? dropUnavailableFields(original, catalog.fields) : original;
+  const fieldsRemoved = question !== original;
+  const query = Object.values(question.words).filter(Boolean).join(" ");
+  const empty = questionIsEmpty(question);
+  const outcome: QuestionSearchOutcome = empty
+    ? { ok: true, results: [], total: 0, nextCursor: null }
+    : await querySearch(question, { limit: PAGE_SIZE });
+  return { user, query, question, empty, outcome, fieldsRemoved };
 }
 
-function KindFilters({ query, active }: Readonly<{ query: string; active?: SearchKind }>) {
+function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
   const intl = useIntl();
+  const chips: { key: string; label: string; question: SearchQuestion }[] = (
+    Object.keys(WORD_LABELS) as (keyof typeof WORD_LABELS)[]
+  )
+    .filter((key) => question.words[key])
+    .map((key) => ({
+      key,
+      label: intl.formatMessage(
+        { id: "search.chip.words", defaultMessage: "{label}: {value}" },
+        { label: intl.formatMessage(WORD_LABELS[key]), value: question.words[key] },
+      ),
+      question: { ...question, words: { ...question.words, [key]: "" } },
+    }));
+  if (!Object.values(question.scope).every(Boolean)) {
+    const scope = (Object.keys(SCOPE_LABELS) as (keyof typeof SCOPE_LABELS)[])
+      .filter((key) => question.scope[key])
+      .map((key) => intl.formatMessage(SCOPE_LABELS[key]))
+      .join(", ");
+    chips.push({
+      key: "scope",
+      label: intl.formatMessage(
+        { id: "search.scope.chip", defaultMessage: "Search in: {scope}" },
+        { scope },
+      ),
+      question: { ...question, scope: { ...DEFAULT_SEARCH_SCOPE } },
+    });
+  }
   const choices: { kind?: SearchKind; label: string }[] = [
     { label: intl.formatMessage(MESSAGES.allKinds) },
     ...SEARCH_KIND_ORDER.map((kind) => ({ kind, label: searchKindLabel(intl, kind) })),
   ];
   return (
-    <nav aria-label={intl.formatMessage(MESSAGES.filterLabel)} className="flex flex-wrap gap-2">
-      {choices.map(({ kind, label }) => {
-        const selected = kind === active;
-        return (
-          <Link
-            key={kind ?? "all"}
-            to={searchPagePath(query, kind)}
-            aria-current={selected ? "page" : undefined}
-            className={cn(
-              "rounded-chip border px-2.5 py-1 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link",
-              selected
-                ? "border-status-info-fg bg-status-info-bg font-semibold text-status-info-fg"
-                : "border-border-default bg-control text-muted hover:text-primary",
-            )}
-          >
-            {label}
-          </Link>
-        );
-      })}
-    </nav>
+    <div className="flex flex-wrap gap-2">
+      {chips.map((chip) => (
+        <Link
+          key={chip.key}
+          to={questionPath(chip.question)}
+          className={cn(CHIP_CLASS, IDLE_CHIP_CLASS, "inline-flex items-center gap-1")}
+          aria-label={intl.formatMessage(
+            { id: "search.chip.remove", defaultMessage: "Remove {label}" },
+            { label: chip.label },
+          )}
+        >
+          {chip.label}
+          <X size={16} aria-hidden="true" />
+        </Link>
+      ))}
+      <ConditionChips question={question} />
+      <nav aria-label={intl.formatMessage(MESSAGES.filterLabel)} className="flex flex-wrap gap-2">
+        {choices.map(({ kind, label }) => {
+          const selected = kind ? question.kinds.includes(kind) : question.kinds.length === 0;
+          return (
+            <Link
+              key={kind ?? "all"}
+              to={questionPath({
+                ...question,
+                kinds: kind ? [kind] : [],
+                conditions: question.conditions.filter((condition) => condition.kind === kind),
+              })}
+              aria-current={selected ? "page" : undefined}
+              className={cn(CHIP_CLASS, selected ? SELECTED_CHIP_CLASS : IDLE_CHIP_CLASS)}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 
 function SearchAnswer({
   query,
-  kind,
+  question,
+  empty,
   initial,
-}: Readonly<{ query: string; kind?: SearchKind; initial: SearchOutcome }>) {
+}: Readonly<{
+  query: string;
+  question: SearchQuestion;
+  empty: boolean;
+  initial: QuestionSearchOutcome;
+}>) {
   const intl = useIntl();
   const [rows, setRows] = useState<SearchResult[]>(initial.ok ? initial.results : []);
   const [cursor, setCursor] = useState<string | null>(initial.ok ? initial.nextCursor : null);
@@ -125,7 +194,7 @@ function SearchAnswer({
     if (busy || cursor === null) return;
     setBusy(true);
     setPageError(null);
-    const answer = await search(query, { kind, cursor, limit: PAGE_SIZE });
+    const answer = await querySearch(question, { cursor, limit: PAGE_SIZE });
     setBusy(false);
     if (!answer.ok) {
       setPageError(answer.detail ?? intl.formatMessage(MESSAGES.moreError));
@@ -146,7 +215,7 @@ function SearchAnswer({
     );
   }
 
-  if (query === "") {
+  if (empty) {
     return (
       <p className="rounded-card border border-border-default bg-raised px-6 py-12 text-center text-sm text-muted">
         <FormattedMessage {...MESSAGES.prompt} />
@@ -161,7 +230,14 @@ function SearchAnswer({
           <FormattedMessage {...MESSAGES.noMatches} />
         </h2>
         <p className="text-sm text-muted">
-          <FormattedMessage {...MESSAGES.noMatchesBody} values={{ query }} />
+          {query ? (
+            <FormattedMessage {...MESSAGES.noMatchesBody} values={{ query }} />
+          ) : (
+            <FormattedMessage
+              id="search.question.noMatches"
+              defaultMessage="No records match this question."
+            />
+          )}
         </p>
       </div>
     );
@@ -196,12 +272,19 @@ export function SearchPage() {
   const loaded = useLoaderData<typeof searchLoader>();
   const intl = useIntl();
 
+  // Notify history readers after the route commits, so the storage update
+  // cannot interrupt a pending navigation or record a cancelled one.
+  useEffect(() => {
+    if (!loaded.empty) recordRecentSearch(loaded.user.id, loaded.question);
+  }, [loaded.user.id, loaded.question, loaded.empty]);
+
   const signOut = useSignOut("/auth/login");
 
-  const title =
-    loaded.query === ""
-      ? intl.formatMessage(MESSAGES.prompt)
-      : intl.formatMessage(MESSAGES.resultsFor, { query: loaded.query });
+  const title = loaded.empty
+    ? intl.formatMessage(MESSAGES.prompt)
+    : loaded.query
+      ? intl.formatMessage(MESSAGES.resultsFor, { query: loaded.query })
+      : intl.formatMessage(MESSAGES.results);
   return (
     <AppShell
       user={loaded.user}
@@ -214,15 +297,42 @@ export function SearchPage() {
               {title}
             </span>
           }
-          filters={<KindFilters query={loaded.query} active={loaded.kind} />}
+          filters={
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              {(loaded.empty || SearchQuestionSchema.safeParse(loaded.question).success) && (
+                <QuestionFilters question={loaded.question} />
+              )}
+              <AdvancedSearchButton />
+              {SearchQuestionSchema.safeParse(loaded.question).success && (
+                <div className="ml-auto shrink-0">
+                  <SearchSort question={loaded.question} />
+                </div>
+              )}
+            </div>
+          }
         />
       }
     >
       <PageTitle title={title} />
+      {loaded.fieldsRemoved && (
+        <p role="status" className="mb-3 text-sm text-muted">
+          <FormattedMessage {...FIELD_NOTICES.removed} />
+        </p>
+      )}
+      {loaded.outcome.ok && !loaded.empty && (
+        <p className="mb-3 text-sm text-muted">
+          <FormattedMessage
+            id="search.total"
+            defaultMessage="{total, plural, one {# match} other {# matches}}"
+            values={{ total: loaded.outcome.total }}
+          />
+        </p>
+      )}
       <SearchAnswer
-        key={`${loaded.query}:${loaded.kind ?? "all"}`}
+        key={JSON.stringify(loaded.question)}
         query={loaded.query}
-        kind={loaded.kind}
+        question={loaded.question}
+        empty={loaded.empty}
         initial={loaded.outcome}
       />
     </AppShell>

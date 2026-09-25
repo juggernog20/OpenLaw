@@ -496,10 +496,8 @@ describe("being mentioned in a comment (CMT-007)", () => {
     const message = await mailAbout(TARGET, contract);
     expect(message.text).toContain(`http://localhost/contracts/${contract.number}`);
     expect(message.text).toContain(ACTOR.displayName);
-    // The comment's own words never leave the building. A mention is a
-    // prompt to go and read the thread, and the thread is where the
-    // tier is enforced.
-    expect(message.text).not.toContain("indemnity");
+    // NOT-002 reads the current comment words when the email is sent.
+    expect(message.text).toContain("indemnity");
   });
 
   it("raises no mention for a comment that names nobody", async () => {

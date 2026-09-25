@@ -526,21 +526,28 @@ function EntitiesPageState() {
           }
           onSave={async () => {
             if (activeView)
-              adopt(await updateView(activeView.id, { config: layout }), activeView.id);
+              adopt(
+                await updateView(CATALOGUE.surface, activeView.id, { config: layout }),
+                activeView.id,
+              );
           }}
           onSaveAs={async (name) => {
             const next = await createView(CATALOGUE.surface, name, layout);
             adopt(next, next.find((candidate) => candidate.name === name)?.id ?? null);
           }}
           onRename={async (name) => {
-            if (activeView) adopt(await updateView(activeView.id, { name }), activeView.id);
+            if (activeView)
+              adopt(await updateView(CATALOGUE.surface, activeView.id, { name }), activeView.id);
           }}
           onSetDefault={async () => {
             if (activeView)
-              adopt(await updateView(activeView.id, { isDefault: true }), activeView.id);
+              adopt(
+                await updateView(CATALOGUE.surface, activeView.id, { isDefault: true }),
+                activeView.id,
+              );
           }}
           onDelete={async (selected) => {
-            setViews(await deleteView(selected.id));
+            setViews(await deleteView(CATALOGUE.surface, selected.id));
             await commit(builtInLayout(CATALOGUE), null);
           }}
           onReset={() => void commit(storedLayout)}

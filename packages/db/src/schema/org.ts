@@ -76,11 +76,14 @@ export const orgSettings = pgTable(
     name: text("name").notNull().default(""),
     /** The org logo as a data: URI; NULL until one is uploaded. */
     logo: text("logo"),
+    /** DES-093: 48×48 PNG bytes as base64 for inline email attachments. */
+    emailLogoPng: text("email_logo_png"),
     currenciesInUse: jsonb("currencies_in_use").$type<string[]>().notNull().default([]),
     /** BCP 47 tag; the display locale until per-user locales exist (DES-013). */
     defaultLocale: text("default_locale").notNull().default("en-US"),
     /** IANA zone name; the display timezone until a user sets their own (DES-014). */
     defaultTimezone: text("default_timezone").notNull().default("UTC"),
+    commentWordsInEmail: boolean("comment_words_in_email").notNull().default(true),
     /**
      * NOT-004's one reminder-offset list: how many days ahead of a
      * tracked date the morning round fires, seeded `7 / 1 / day-of`.

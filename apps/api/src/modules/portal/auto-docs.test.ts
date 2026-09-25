@@ -168,10 +168,16 @@ it("shows Word while PDF is pending, then offers both downloads and emails the f
   const message = h.mailer
     .messagesTo("portal-auto-doc-0@example.com")
     .find((mail) => mail.subject.includes("Portal delivered NDA"));
-  expect(message?.attachments).toEqual([
+  expect(message?.attachments?.filter((attachment) => !attachment.cid)).toEqual([
     expect.objectContaining({ filename: "Portal delivered NDA.docx", content: word.rawPayload }),
     expect.objectContaining({ filename: "Portal delivered NDA.pdf", content: pdf.rawPayload }),
   ]);
+  expect(message?.html).toContain("/ Legal portal");
+  expect(message?.html).toContain("Portal delivered NDA.docx<br>");
+  expect(message?.html).toContain("Portal delivered NDA.pdf<br>");
+  const logos = message?.attachments?.filter((attachment) => attachment.cid);
+  expect(logos).toHaveLength(1);
+  expect(message?.html).toContain(`cid:${logos![0]!.cid}`);
   await worker.stop();
   worker = undefined;
 });

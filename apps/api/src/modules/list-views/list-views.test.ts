@@ -27,7 +27,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq, users } from "@openlaw/db";
+import { eq, users, listViews } from "@openlaw/db";
 import { MAX_LIST_VIEWS_PER_SURFACE } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -443,4 +443,111 @@ it("persists Inbox views separately and keeps them private", async () => {
   });
   expect(await read(otherCookies, "inbox")).toHaveLength(0);
   expect((await patchRaw(view!.id, { name: "Not mine" }, otherCookies)).statusCode).toBe(404);
+});
+
+describe("saved searches", () => {
+  const question = {
+    version: 1,
+    words: { all: "renewal", phrase: "notice period", any: "extend renew", none: "draft" },
+    scope: { titles: false, text: true, contents: true },
+    kinds: ["contract"],
+    conditions: [{ kind: "contract", property: "expiry", operator: "in_next_days", value: 90 }],
+    match: "any",
+    sort: "expiry",
+  };
+  it("stores, overwrites, forks, renames and deletes the whole question", async () => {
+    const [view] = await create({ surface: "search", name: "Renewals", config: question });
+    expect(view!.config).toEqual(question);
+    expect((await read(memberCookies, "search"))[0]!.config).toEqual(question);
+    const next = { ...question, sort: "title" };
+    expect((await patchRaw(view!.id, { config: next })).json().views[0].config).toEqual(next);
+    const fork = await create({ surface: "search", name: "Copy", config: next });
+    expect(fork).toHaveLength(2);
+    expect((await patchRaw(view!.id, { name: "Named again" })).statusCode).toBe(200);
+    expect((await deleteRaw(view!.id)).json().views).toHaveLength(1);
+    for (const row of await read(memberCookies, "search")) await deleteRaw(row.id);
+  });
+  it("refuses defaults on create and update, without changing the question or name", async () => {
+    const res = await createRaw({
+      surface: "search",
+      name: "Default",
+      config: question,
+      isDefault: true,
+    });
+    expect(res.statusCode, res.body).toBe(400);
+    expect(res.headers["content-type"]).toContain("application/problem+json");
+    const [view] = await create({ surface: "search", name: "No default", config: question });
+    const patch = await patchRaw(view!.id, { isDefault: true, name: "Changed" });
+    expect(patch.statusCode, patch.body).toBe(400);
+    expect(patch.json().detail).toMatch(/default/i);
+    expect((await read(memberCookies, "search"))[0]).toMatchObject({
+      name: "No default",
+      isDefault: false,
+    });
+    await deleteRaw(view!.id);
+  });
+  it("keeps names and the ceiling per person and surface, and refuses other owners with 404", async () => {
+    const [view] = await create({ surface: "search", name: "Private", config: question });
+    expect(
+      (await createRaw({ surface: "search", name: "PRIVATE", config: question })).statusCode,
+    ).toBe(409);
+    await create({ surface: "search", name: "Private", config: question }, otherCookies);
+    expect(await read(otherCookies, "search")).toHaveLength(1);
+    expect((await patchRaw(view!.id, { isDefault: true }, otherCookies)).statusCode).toBe(404);
+    expect((await deleteRaw(view!.id, otherCookies)).statusCode).toBe(404);
+    const fork = await create({ surface: "search", name: "Fork", config: question });
+    expect(
+      (await patchRaw(fork.find((row) => row.name === "Fork")!.id, { name: "PRIVATE" })).statusCode,
+    ).toBe(409);
+    for (let i = 2; i < MAX_LIST_VIEWS_PER_SURFACE; i++)
+      await create({ surface: "search", name: `Search ${i}`, config: question });
+    expect(
+      (await createRaw({ surface: "search", name: "Overflow", config: question })).statusCode,
+    ).toBe(409);
+    for (const row of await read(memberCookies, "search")) await deleteRaw(row.id);
+  });
+  it("holds the ceiling when two saves compete for the last place", async () => {
+    for (let i = 0; i < MAX_LIST_VIEWS_PER_SURFACE - 1; i++)
+      await create({ surface: "search", name: `Concurrent ${i}`, config: question });
+    const results = await Promise.all(
+      ["Last A", "Last B"].map((name) => createRaw({ surface: "search", name, config: question })),
+    );
+    expect(results.map((res) => res.statusCode).sort()).toEqual([201, 409]);
+    expect(await read(memberCookies, "search")).toHaveLength(MAX_LIST_VIEWS_PER_SURFACE);
+    for (const row of await read(memberCookies, "search")) await deleteRaw(row.id);
+  });
+  it("refuses the wrong config for a surface and validates questions on writes", async () => {
+    expect(
+      (await createRaw({ surface: "search", name: "Layout", config: CONFIG })).statusCode,
+    ).toBe(400);
+    expect(
+      (await createRaw({ surface: "contracts", name: "Question", config: question })).statusCode,
+    ).toBe(400);
+    const [view] = await create({ surface: "search", name: "Validated", config: question });
+    for (const config of [
+      CONFIG,
+      { ...question, sort: "wrong" },
+      {
+        ...question,
+        conditions: [{ kind: "contract", property: "removed", operator: "contains", value: "x" }],
+      },
+    ])
+      expect((await patchRaw(view!.id, { config })).statusCode).toBe(400);
+    await deleteRaw(view!.id);
+  });
+  it("returns an old question intact so the reader can drop only unavailable conditions", async () => {
+    const [view] = await create({ surface: "search", name: "Old question", config: question });
+    const old = {
+      ...question,
+      conditions: [
+        ...question.conditions,
+        { kind: "contract", property: "removed", operator: "contains", value: "x" },
+        { kind: "contract", property: "field:archived", operator: "contains", value: "x" },
+      ],
+    };
+    await harness.db.update(listViews).set({ config: old }).where(eq(listViews.id, view!.id));
+    expect((await read(memberCookies, "search"))[0]!.config).toEqual(old);
+    expect((await patchRaw(view!.id, { name: "Still readable" })).statusCode).toBe(200);
+    await deleteRaw(view!.id);
+  });
 });

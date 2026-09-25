@@ -275,9 +275,11 @@ export function SearchResultRow({
   result,
   query,
   option,
+  onNavigate,
 }: Readonly<{
   result: SearchResult;
   query: string;
+  onNavigate?: () => void;
   option?: {
     id: string;
     active: boolean;
@@ -311,6 +313,12 @@ export function SearchResultRow({
     <Link
       className={cn(ROW_CLASS, "bg-raised hover:bg-control")}
       to={searchResultPath(result, query)}
+      onClick={(event) => {
+        // A modifier click opens the record in a new tab and leaves this
+        // page where it is, so the dialog that owns the row stays open.
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        onNavigate?.();
+      }}
     >
       <RowBody result={result} />
     </Link>

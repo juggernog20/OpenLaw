@@ -412,7 +412,10 @@ test.describe.serial("M10 demo path", () => {
       await expect(outsiderPage).toHaveURL(/\/contracts$/);
       const searchAnswer = outsiderPage.getByRole("listbox", { name: "Search results" });
       await expect(searchAnswer.getByText("No matches", { exact: true })).toBeVisible();
-      await expect(searchAnswer.getByRole("option")).toHaveCount(0);
+      await expect(searchAnswer.getByRole("option")).toHaveText([
+        "See all results",
+        "Advanced search…",
+      ]);
       await expect(outsiderPage.getByRole("dialog")).toHaveCount(0);
       // Esc closes the box; the only echo of the title left on the
       // page is the input's own value, which getByText cannot read.

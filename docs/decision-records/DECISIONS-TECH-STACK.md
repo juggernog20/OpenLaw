@@ -530,6 +530,28 @@ The SET-004 wizard surface this decision named (deferred at M2, where env vars c
 
 The mail message accepts buffered attachments with a filename and MIME type. Generation mail uses paired HTML and text, the organization name and OpenLaw branding, the recipient's name, and the Auto-Doc name. Both bodies consume the shared KNW-001 Markdown parser. HTML escapes text and attributes and emits only the fixed tags; relative cover-note links resolve against the application URL. Mailer resolution still happens at send time.
 
+### M43/3 logo copy addendum, 2026-09-24, #1087
+
+[Sharp](https://sharp.pixelplumbing.com/) makes the email logo copy in the API.
+It reads PNG, JPEG, WebP and SVG with one library and ships libvips binaries for
+our Node container. Separate format libraries would add dependencies and different
+resize rules. Sending the original would leave SVG and WebP support to email clients.
+
+Uploading a logo also stores a 48×48 PNG in `org_settings.email_logo_png`, encoded
+as base64 without a data URI prefix. The copy fits the whole logo, preserves its
+proportions and uses transparent padding. Decoding checks the MIME type and limits
+input to 16 million pixels; conversion has a five-second processing timeout. An
+unreadable upload returns 400 before either logo is changed. Clearing the logo
+clears the copy in the same transaction.
+
+After migrations, the API backfills a missing copy using the same conversion.
+A stored copy makes later starts a no-op. A concurrent upload or clear takes
+precedence over the backfill. An unreadable legacy logo stays stored and produces
+a startup warning; email uses the OpenLaw mark until an Administrator replaces it.
+The send path reads the name and copy together. The layout attaches the PNG with
+content id `org-logo@openlaw` and displays it at 24px through `cid:`. No image
+conversion happens during sending.
+
 ## TECH-012: AI providers — three protocol adapters, provider presets, custom option
 
 - **Status:** Accepted

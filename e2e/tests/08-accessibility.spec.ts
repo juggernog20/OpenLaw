@@ -17,6 +17,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { z } from "zod";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs, sweepOrSay } from "./helpers.js";
+import { buildRenewalsQuestion, createSearchFixture } from "./search-fixture.js";
 import { createPopulatedHomeFixture } from "./home-fixture.js";
 
 const KnowledgeTypesEnvelope = z.object({
@@ -306,6 +307,135 @@ test.describe("accessibility floor", () => {
     await expect(page).toHaveTitle("Documents · OpenLaw");
     await expect(page.getByRole("region", { name: "Documents", exact: true })).toBeVisible();
     await reportAxeViolations(page, testInfo, "documents");
+  });
+
+  test("Advanced search: dialog states and results chips are axe clean in Light and Dark", async ({
+    page,
+    request,
+  }, testInfo) => {
+    test.setTimeout(240_000);
+    await ensureAdminExists(request);
+    await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
+    page.setDefaultTimeout(15_000);
+    const fixture = await createSearchFixture(page.request);
+    let theme: "light" | "dark" = "light";
+    let mode: "live" | "loading" | "refused" = "live";
+    let release: (() => void) | undefined;
+    await page.route("**/api/v1/me", async (route) => {
+      const response = await route.fetch();
+      const body = (await response.json()) as { user: Record<string, unknown> };
+      await route.fulfill({ response, json: { ...body, user: { ...body.user, theme } } });
+    });
+    await page.route("**/api/v1/search/query", async (route) => {
+      if (mode === "loading")
+        await new Promise<void>((resolve) => {
+          release = resolve;
+        });
+      if (mode === "refused") {
+        await route.fulfill({
+          status: 422,
+          contentType: "application/problem+json",
+          json: {
+            type: "/problems/search",
+            title: "Search refused",
+            status: 422,
+            detail: "This search is unavailable.",
+          },
+        });
+      } else await route.continue();
+    });
+    const scan = async (state: string, include = '[role="dialog"]') => {
+      expect(
+        await reportAxeViolations(page, testInfo, `advanced-search-${theme}-${state}`, { include }),
+      ).toEqual([]);
+    };
+    try {
+      for (theme of ["light", "dark"] as const) {
+        await page.goto("/");
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await page
+          .getByRole("banner")
+          .getByRole("button", { name: "Advanced search", exact: true })
+          .click();
+        const dialog = page.getByRole("dialog", { name: "Advanced search", exact: true });
+        await expect(dialog.getByText("Build your search", { exact: true })).toBeVisible();
+        await scan("blank");
+
+        mode = "loading";
+        await dialog.getByLabel("All of these words", { exact: true }).fill(fixture.marker);
+        await expect.poll(() => Boolean(release)).toBe(true);
+        await expect(dialog.getByText("Searching…", { exact: true })).toBeVisible();
+        try {
+          await scan("loading");
+        } finally {
+          mode = "live";
+          release?.();
+          release = undefined;
+        }
+        await expect(dialog.getByRole("heading", { name: "4 matches", exact: true })).toBeVisible();
+        await dialog.getByRole("button", { name: "Clear", exact: true }).click();
+        await buildRenewalsQuestion(page, fixture.marker);
+        await scan("populated");
+        const desktop = page.viewportSize()!;
+        await page.setViewportSize({ width: 390, height: 844 });
+        await scan("populated-narrow");
+        await page.setViewportSize(desktop);
+        await dialog.getByRole("button", { name: "Add condition" }).click();
+        await expect(page.getByRole("textbox", { name: "Search properties" })).toBeVisible();
+        await scan("property-picker");
+        await page.keyboard.press("Escape");
+        await dialog.getByRole("button", { name: "Save search", exact: true }).click();
+        await expect(page.getByRole("dialog", { name: "Save this search" })).toBeVisible();
+        await scan("save-name");
+        await page
+          .getByRole("dialog", { name: "Save this search" })
+          .getByRole("button", { name: "Cancel" })
+          .click();
+        await dialog.getByLabel("Document contents", { exact: true }).uncheck();
+        await expect(dialog.getByRole("heading", { name: "1 match", exact: true })).toBeVisible();
+        await dialog.getByRole("button", { name: "Search", exact: true }).click();
+        await expect(
+          page.getByRole("button", {
+            name: "Edit Contract Governing law contains Delaware",
+            exact: true,
+          }),
+        ).toBeVisible();
+        await expect(page.getByRole("main").getByText("1 match", { exact: true })).toBeVisible();
+        // The sub-bar owns the chips and sits outside main, so scan the whole page.
+        expect(
+          await reportAxeViolations(page, testInfo, `advanced-search-${theme}-results`),
+        ).toEqual([]);
+        await page.getByRole("button", { name: "Advanced", exact: true }).click();
+        await dialog.getByLabel("None of these words", { exact: true }).fill(fixture.marker);
+        await expect(dialog.getByText("No matches", { exact: true })).toBeVisible();
+        await scan("no-matches");
+        await dialog.getByLabel("Number of days").fill("0");
+        await expect(dialog.getByRole("alert")).toBeVisible();
+        await scan("invalid-condition");
+        await dialog.getByRole("button", { name: "Clear", exact: true }).click();
+        for (const label of ["Titles and numbers", "Record text", "Document contents"]) {
+          await dialog.getByLabel(label, { exact: true }).uncheck();
+        }
+        await expect(dialog.getByText("Choose at least one search scope.")).toBeVisible();
+        await scan("no-scope");
+        await dialog.getByRole("button", { name: "Clear", exact: true }).click();
+        await dialog.getByLabel("All of these words", { exact: true }).fill("x".repeat(201));
+        await expect(dialog.getByRole("alert")).toContainText("200 characters");
+        await scan("too-long");
+        mode = "refused";
+        await dialog.getByLabel("All of these words", { exact: true }).fill(fixture.marker);
+        await expect(dialog.getByRole("alert")).toContainText("This search is unavailable.");
+        await scan("refused");
+        mode = "live";
+        await dialog.getByRole("button", { name: "Close Advanced search" }).click();
+      }
+    } catch (error) {
+      await sweepOrSay("Advanced search axe scans", fixture.cleanup);
+      throw error;
+    } finally {
+      release?.();
+    }
+    await fixture.cleanup();
   });
 
   test("Document comparison: clean axe scans in Light and Dark", async ({

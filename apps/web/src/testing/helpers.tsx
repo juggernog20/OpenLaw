@@ -623,6 +623,8 @@ export function stubApi(state: ApiState) {
     // M25's global search runs from the staff shell. An empty answer is
     // the ordinary fresh-install state; search surface suites replace
     // it through `extra` before this default runs.
+    if (call.url.pathname === "/api/v1/search/fields" && call.method === "GET")
+      return json(200, { fields: [], people: [], entities: [] });
     if (call.url.pathname === "/api/v1/search" && call.method === "GET") {
       return json(200, { results: [], nextCursor: null });
     }
@@ -781,6 +783,7 @@ export function stubApi(state: ApiState) {
         "/api/v1/knowledge/types": { knowledgeTypes: [] },
         "/api/v1/request-types": { requestTypes: [] },
         "/api/v1/fields": { fields: [] },
+        "/api/v1/org/notifications": { commentWordsInEmail: true },
         "/api/v1/org/reminder-offsets": { offsets: [7, 1, 0] },
         "/api/v1/org/currencies": {
           currencies: ["USD", "EUR", "GBP", "AED", "BHD", "JPY"],
@@ -798,6 +801,7 @@ export function stubApi(state: ApiState) {
             | "/api/v1/knowledge/types"
             | "/api/v1/request-types"
             | "/api/v1/fields"
+            | "/api/v1/org/notifications"
             | "/api/v1/org/reminder-offsets"
             | "/api/v1/org/currencies"
         ]: paths[P]["get"]["responses"][200]["content"]["application/json"];

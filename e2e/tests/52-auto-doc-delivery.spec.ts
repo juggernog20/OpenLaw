@@ -3,7 +3,7 @@
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import { ADMIN, ensureAdminExists, reportAxeViolations, signInAs } from "./helpers.js";
-import { waitForMailDetails } from "./mailpit.js";
+import { rawMail, waitForMailDetails } from "./mailpit.js";
 
 test.setTimeout(150_000);
 test.beforeAll(async ({ request }) => ensureAdminExists(request));
@@ -54,7 +54,9 @@ test("Legal configures a cover note and receives matching Word and PDF downloads
   await output.getByRole("combobox", { name: "Formats", exact: true }).selectOption("both");
   await output
     .getByLabel("Cover note", { exact: true })
-    .fill("Please **review** the attached NDA before signing.");
+    .fill(
+      "Please **review** the attached NDA before signing.\n\nKeep a copy.\n\n- Sign the NDA\n- Send it to Legal",
+    );
   await output.getByLabel("Cover note", { exact: true }).blur();
   await expect(output.getByText("Saved", { exact: true }).last()).toBeVisible();
   await expect(output.getByText("review", { exact: true })).toBeVisible();
@@ -93,10 +95,24 @@ test("Legal configures a cover note and receives matching Word and PDF downloads
   expect(mail.text).toContain("Please review the attached NDA before signing.");
   expect(mail.html).toContain("<strong>review</strong>");
   expect(mail.html).toContain("OpenLaw");
+  expect(mail.html).toMatch(/>[^<]*Auto-Doc<\/p>/);
+  expect(mail.html).toMatch(new RegExp(`<h1[^>]*>${name}</h1>`));
+  expect(mail.html).toMatch(/Note from [^<]+ Legal/);
+  expect(mail.html).toMatch(/<p[^>]*>Keep a copy\.<\/p>/);
+  expect(mail.html).toMatch(/<ul[^>]*><li>Sign the NDA<\/li><li>Send it to Legal<\/li><\/ul>/);
+  expect(mail.html).toMatch(/width="28" height="28"[^>]*>W<\/td>/);
+  expect(mail.html).toMatch(/width="28" height="28"[^>]*>P<\/td>/);
+  expect(mail.html.match(/Attached · /g)).toHaveLength(2);
+  const button = mail.html.match(/<a href="([^"]+)"[^>]*>Download your files<\/a>/);
+  expect(button?.[1]).toBe(page.url());
+  const mime = await rawMail(page.request, mail.id);
+  expect(mime).toMatch(/Content-Disposition: inline/);
+  expect(mime).toMatch(/Content-ID: <(?:openlaw-mark|org-logo)@openlaw>/);
   expect(mail.attachments.map((attachment) => attachment.filename).sort()).toEqual(
     [...files.keys()].sort(),
   );
   for (const attachment of mail.attachments) {
+    expect(mail.html).toContain(`${attachment.filename}<br>`);
     const bytes = await page.request.get(attachment.url);
     expect(bytes.status()).toBe(200);
     expect(await bytes.body()).toEqual(files.get(attachment.filename));

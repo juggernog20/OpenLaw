@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The settled client adapter for M25's one search endpoint, called
- * through the generated OpenAPI client (TECH-003). The engine and the
- * reach rule behind the answer are DOC-009 and DD-014.
- */
+/** Settled adapters for the header search and versioned question endpoints. */
+import type { SearchQuestion } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
+import { resolveTimeZone } from "./format";
 import { api } from "./api";
 import { problem, type Problem } from "./problem";
 
@@ -47,4 +45,27 @@ export async function search(query: string, options: SearchOptions = {}): Promis
   return result?.data
     ? { ok: true, results: result.data.results, nextCursor: result.data.nextCursor }
     : { ok: false, ...(await problem(result)) };
+}
+
+export type QuestionSearchOutcome =
+  | { ok: true; results: SearchResult[]; total: number; nextCursor: string | null }
+  | ({ ok: false } & Problem);
+
+export async function querySearch(
+  question: SearchQuestion,
+  options: { cursor?: string; limit?: number } = {},
+): Promise<QuestionSearchOutcome> {
+  const result = await api
+    .POST("/api/v1/search/query", {
+      body: { ...question, ...options, timeZone: resolveTimeZone() },
+    })
+    .catch(() => undefined);
+  if (result?.data) return { ok: true, ...result.data };
+  const failure = await problem(result);
+  const errors = result?.error?.errors;
+  return {
+    ok: false,
+    ...failure,
+    detail: errors?.length ? errors.map((error) => error.message).join(" ") : failure.detail,
+  };
 }

@@ -8753,8 +8753,80 @@
   "role.legalTeamMember": {
     "defaultMessage": "Legal team member"
   },
+  "search.advanced.button": {
+    "defaultMessage": "Advanced"
+  },
+  "search.advanced.close": {
+    "defaultMessage": "Close Advanced search"
+  },
+  "search.advanced.entry": {
+    "defaultMessage": "Advanced search…"
+  },
+  "search.advanced.title": {
+    "defaultMessage": "Advanced search"
+  },
   "search.autoDoc": {
     "defaultMessage": "Auto-Doc"
+  },
+  "search.build": {
+    "defaultMessage": "Build your search"
+  },
+  "search.build.body": {
+    "defaultMessage": "Add words, choose a kind, or add a condition to see matching records."
+  },
+  "search.chip.edit": {
+    "defaultMessage": "Edit {label}"
+  },
+  "search.chip.remove": {
+    "defaultMessage": "Remove {label}"
+  },
+  "search.chip.words": {
+    "defaultMessage": "{label}: {value}"
+  },
+  "search.choices.error": {
+    "defaultMessage": "Condition choices could not load."
+  },
+  "search.clear": {
+    "defaultMessage": "Clear"
+  },
+  "search.condition.add": {
+    "defaultMessage": "Add condition"
+  },
+  "search.condition.chip": {
+    "defaultMessage": "{kind} {property} {operator} {value}"
+  },
+  "search.condition.choose": {
+    "defaultMessage": "Choose values"
+  },
+  "search.condition.days": {
+    "defaultMessage": "Number of days"
+  },
+  "search.condition.limit": {
+    "defaultMessage": "A search can have at most 20 conditions."
+  },
+  "search.condition.no": {
+    "defaultMessage": "No"
+  },
+  "search.condition.operator": {
+    "defaultMessage": "Operator"
+  },
+  "search.condition.relativeChip": {
+    "defaultMessage": "{kind} {property} {operator}"
+  },
+  "search.condition.remove": {
+    "defaultMessage": "Remove {kind} {property} condition"
+  },
+  "search.condition.row": {
+    "defaultMessage": "{kind} {property} condition"
+  },
+  "search.condition.value": {
+    "defaultMessage": "Value"
+  },
+  "search.condition.yes": {
+    "defaultMessage": "Yes"
+  },
+  "search.conditions.removed": {
+    "defaultMessage": "Conditions for {kind} were removed."
   },
   "search.error.body": {
     "defaultMessage": "The server did not answer. Try again in a moment."
@@ -8762,14 +8834,32 @@
   "search.error.title": {
     "defaultMessage": "Search could not load"
   },
+  "search.fields": {
+    "defaultMessage": "Fields"
+  },
+  "search.fields.error": {
+    "defaultMessage": "Search Fields could not load. Try again."
+  },
+  "search.fields.removed": {
+    "defaultMessage": "Unavailable Field conditions were removed."
+  },
   "search.filter.label": {
     "defaultMessage": "Filter search results"
+  },
+  "search.header.enter": {
+    "defaultMessage": "Enter"
   },
   "search.header.label": {
     "defaultMessage": "Search"
   },
   "search.header.listLabel": {
     "defaultMessage": "Search results"
+  },
+  "search.header.recent": {
+    "defaultMessage": "Recent"
+  },
+  "search.header.saved": {
+    "defaultMessage": "Saved"
   },
   "search.kind.all": {
     "defaultMessage": "All"
@@ -8795,11 +8885,116 @@
   "search.kind.request": {
     "defaultMessage": "Request"
   },
+  "search.kinds": {
+    "defaultMessage": "Kinds"
+  },
+  "search.kinds.help": {
+    "defaultMessage": "No kinds selected searches every kind."
+  },
+  "search.kinds.help.selected": {
+    "defaultMessage": "Only selected kinds are searched."
+  },
+  "search.match": {
+    "defaultMessage": "Match conditions"
+  },
+  "search.match.all": {
+    "defaultMessage": "Match all"
+  },
+  "search.match.any": {
+    "defaultMessage": "Match any"
+  },
   "search.noMatches": {
     "defaultMessage": "No matches"
   },
   "search.noMatchesBody": {
     "defaultMessage": "No matches for “{query}”. Try another word or record number."
+  },
+  "search.openError": {
+    "defaultMessage": "This search could not open. Try again."
+  },
+  "search.operator.after": {
+    "defaultMessage": "after"
+  },
+  "search.operator.any": {
+    "defaultMessage": "is any of"
+  },
+  "search.operator.before": {
+    "defaultMessage": "before"
+  },
+  "search.operator.between": {
+    "defaultMessage": "between"
+  },
+  "search.operator.contains": {
+    "defaultMessage": "contains"
+  },
+  "search.operator.empty": {
+    "defaultMessage": "is empty"
+  },
+  "search.operator.equals": {
+    "defaultMessage": "equals"
+  },
+  "search.operator.greaterThan": {
+    "defaultMessage": "greater than"
+  },
+  "search.operator.includesAll": {
+    "defaultMessage": "includes all"
+  },
+  "search.operator.includesAny": {
+    "defaultMessage": "includes any"
+  },
+  "search.operator.includesNone": {
+    "defaultMessage": "includes none"
+  },
+  "search.operator.is": {
+    "defaultMessage": "is"
+  },
+  "search.operator.lastDays": {
+    "defaultMessage": "in the last N days"
+  },
+  "search.operator.lastDays.count": {
+    "defaultMessage": "in the last {days, plural, one {# day} other {# days}}"
+  },
+  "search.operator.lessThan": {
+    "defaultMessage": "less than"
+  },
+  "search.operator.nextDays": {
+    "defaultMessage": "in the next N days"
+  },
+  "search.operator.nextDays.count": {
+    "defaultMessage": "in the next {days, plural, one {# day} other {# days}}"
+  },
+  "search.operator.no": {
+    "defaultMessage": "is no"
+  },
+  "search.operator.none": {
+    "defaultMessage": "is none of"
+  },
+  "search.operator.notContains": {
+    "defaultMessage": "does not contain"
+  },
+  "search.operator.notEmpty": {
+    "defaultMessage": "is not empty"
+  },
+  "search.operator.on": {
+    "defaultMessage": "on"
+  },
+  "search.operator.thisMonth": {
+    "defaultMessage": "this month"
+  },
+  "search.operator.thisQuarter": {
+    "defaultMessage": "this quarter"
+  },
+  "search.operator.thisWeek": {
+    "defaultMessage": "this week"
+  },
+  "search.operator.thisYear": {
+    "defaultMessage": "this year"
+  },
+  "search.operator.today": {
+    "defaultMessage": "today"
+  },
+  "search.operator.yes": {
+    "defaultMessage": "is yes"
   },
   "search.page.error": {
     "defaultMessage": "Search could not load. Try again."
@@ -8810,14 +9005,227 @@
   "search.page.prompt": {
     "defaultMessage": "Search contracts, matters, documents, entities, counterparties, and requests"
   },
+  "search.page.results": {
+    "defaultMessage": "Search results"
+  },
   "search.page.resultsFor": {
     "defaultMessage": "Search results for “{query}”"
   },
   "search.page.showMore": {
     "defaultMessage": "Show more"
   },
+  "search.preview": {
+    "defaultMessage": "Preview"
+  },
+  "search.preview.help": {
+    "defaultMessage": "Preview updates as you change the question."
+  },
+  "search.preview.limit": {
+    "defaultMessage": "Showing the first {count} of {total, plural, one {# match} other {# matches}}"
+  },
+  "search.properties": {
+    "defaultMessage": "Properties"
+  },
+  "search.properties.search": {
+    "defaultMessage": "Search properties"
+  },
+  "search.property.contract.confidential": {
+    "defaultMessage": "Confidential"
+  },
+  "search.property.contract.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "search.property.contract.effective": {
+    "defaultMessage": "Effective date"
+  },
+  "search.property.contract.entity": {
+    "defaultMessage": "Signing Entity"
+  },
+  "search.property.contract.expiry": {
+    "defaultMessage": "Expiry date"
+  },
+  "search.property.contract.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.contract.includeEnded": {
+    "defaultMessage": "Show ended"
+  },
+  "search.property.contract.noticeDeadline": {
+    "defaultMessage": "Notice deadline"
+  },
+  "search.property.contract.owner": {
+    "defaultMessage": "Owner"
+  },
+  "search.property.contract.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.contract.title": {
+    "defaultMessage": "Title"
+  },
+  "search.property.contract.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.counterparty.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "search.property.document.counterparty": {
+    "defaultMessage": "Counterparty"
+  },
+  "search.property.document.format": {
+    "defaultMessage": "Format"
+  },
+  "search.property.document.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.document.owner": {
+    "defaultMessage": "Owning module"
+  },
+  "search.property.document.textState": {
+    "defaultMessage": "Text state"
+  },
+  "search.property.document.type": {
+    "defaultMessage": "Document type"
+  },
+  "search.property.document.uploaded": {
+    "defaultMessage": "Uploaded date"
+  },
+  "search.property.document.uploader": {
+    "defaultMessage": "Uploader"
+  },
+  "search.property.entity.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.entity.jurisdiction": {
+    "defaultMessage": "Jurisdiction"
+  },
+  "search.property.entity.majorityOwner": {
+    "defaultMessage": "Majority owner"
+  },
+  "search.property.entity.nextObligation": {
+    "defaultMessage": "Next obligation date"
+  },
+  "search.property.entity.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.entity.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.knowledge_item.folder": {
+    "defaultMessage": "Knowledge Folder"
+  },
+  "search.property.knowledge_item.state": {
+    "defaultMessage": "State"
+  },
+  "search.property.knowledge_item.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.matter.businessOwner": {
+    "defaultMessage": "Business Owner"
+  },
+  "search.property.matter.confidential": {
+    "defaultMessage": "Confidential"
+  },
+  "search.property.matter.deadline": {
+    "defaultMessage": "Next deadline"
+  },
+  "search.property.matter.includeArchived": {
+    "defaultMessage": "Show archived"
+  },
+  "search.property.matter.includeClosed": {
+    "defaultMessage": "Show closed"
+  },
+  "search.property.matter.incomplete": {
+    "defaultMessage": "Incomplete"
+  },
+  "search.property.matter.manager": {
+    "defaultMessage": "Matter Manager"
+  },
+  "search.property.matter.opened": {
+    "defaultMessage": "Opened date"
+  },
+  "search.property.matter.priority": {
+    "defaultMessage": "Priority"
+  },
+  "search.property.matter.risk": {
+    "defaultMessage": "Risk"
+  },
+  "search.property.matter.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.matter.title": {
+    "defaultMessage": "Title"
+  },
+  "search.property.matter.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.request.received": {
+    "defaultMessage": "Received date"
+  },
+  "search.property.request.requester": {
+    "defaultMessage": "Requester"
+  },
+  "search.property.request.status": {
+    "defaultMessage": "Status"
+  },
+  "search.property.request.type": {
+    "defaultMessage": "Type"
+  },
+  "search.property.request.urgency": {
+    "defaultMessage": "Urgency"
+  },
+  "search.question.noMatches": {
+    "defaultMessage": "No records match this question."
+  },
+  "search.recent": {
+    "defaultMessage": "Recent searches"
+  },
   "search.result.knowledgeDraft": {
     "defaultMessage": "Draft · Knowledge Item"
+  },
+  "search.save": {
+    "defaultMessage": "Save search"
+  },
+  "search.saved": {
+    "defaultMessage": "Saved searches"
+  },
+  "search.saved.actions": {
+    "defaultMessage": "{name} actions"
+  },
+  "search.saved.conditionsRemoved": {
+    "defaultMessage": "Unavailable search conditions were removed."
+  },
+  "search.saved.delete.body": {
+    "defaultMessage": "{name} is removed. The records it finds are not touched."
+  },
+  "search.saved.delete.title": {
+    "defaultMessage": "Delete this saved search?"
+  },
+  "search.saved.manage": {
+    "defaultMessage": "Manage {name}"
+  },
+  "search.saved.rename.title": {
+    "defaultMessage": "Rename this saved search"
+  },
+  "search.saved.saveAs.title": {
+    "defaultMessage": "Save this search"
+  },
+  "search.scope": {
+    "defaultMessage": "Search in"
+  },
+  "search.scope.chip": {
+    "defaultMessage": "Search in: {scope}"
+  },
+  "search.scope.contents": {
+    "defaultMessage": "Document contents"
+  },
+  "search.scope.required": {
+    "defaultMessage": "Choose at least one search scope."
+  },
+  "search.scope.text": {
+    "defaultMessage": "Record text"
+  },
+  "search.scope.titles": {
+    "defaultMessage": "Titles and numbers"
   },
   "search.searching": {
     "defaultMessage": "Searching…"
@@ -8827,6 +9235,87 @@
   },
   "search.seeAll": {
     "defaultMessage": "See all results"
+  },
+  "search.sort.expiry": {
+    "defaultMessage": "Expiry soonest"
+  },
+  "search.sort.label": {
+    "defaultMessage": "Sort: {sort}"
+  },
+  "search.sort.newest": {
+    "defaultMessage": "Newest"
+  },
+  "search.sort.oldest": {
+    "defaultMessage": "Oldest"
+  },
+  "search.sort.relevance": {
+    "defaultMessage": "Relevance"
+  },
+  "search.sort.title": {
+    "defaultMessage": "Title"
+  },
+  "search.summary.condition": {
+    "defaultMessage": "{property} {operator} {value}"
+  },
+  "search.summary.contract": {
+    "defaultMessage": "Contracts"
+  },
+  "search.summary.counterparty": {
+    "defaultMessage": "Counterparties"
+  },
+  "search.summary.document": {
+    "defaultMessage": "Documents"
+  },
+  "search.summary.entity": {
+    "defaultMessage": "Entities"
+  },
+  "search.summary.knowledge": {
+    "defaultMessage": "Knowledge Items"
+  },
+  "search.summary.matter": {
+    "defaultMessage": "Matters"
+  },
+  "search.summary.or": {
+    "defaultMessage": "OR"
+  },
+  "search.summary.relativeCondition": {
+    "defaultMessage": "{property} {operator}"
+  },
+  "search.summary.request": {
+    "defaultMessage": "Requests"
+  },
+  "search.textState.failed": {
+    "defaultMessage": "Failed"
+  },
+  "search.textState.pending": {
+    "defaultMessage": "Pending"
+  },
+  "search.textState.ready": {
+    "defaultMessage": "Ready"
+  },
+  "search.textState.unsupported": {
+    "defaultMessage": "Unsupported"
+  },
+  "search.total": {
+    "defaultMessage": "{total, plural, one {# match} other {# matches}}"
+  },
+  "search.words": {
+    "defaultMessage": "Words"
+  },
+  "search.words.all": {
+    "defaultMessage": "All of these words"
+  },
+  "search.words.any": {
+    "defaultMessage": "Any of these words"
+  },
+  "search.words.none": {
+    "defaultMessage": "None of these words"
+  },
+  "search.words.phrase": {
+    "defaultMessage": "This exact phrase"
+  },
+  "search.words.tooLong": {
+    "defaultMessage": "Search words rows must be 200 characters or fewer."
   },
   "settings.advanced.accessKey": {
     "defaultMessage": "S3 access key ID"
@@ -11489,8 +11978,17 @@
   "settings.reminders.addUnit": {
     "defaultMessage": "days before the date"
   },
+  "settings.reminders.commentWords": {
+    "defaultMessage": "Include comment words in email"
+  },
+  "settings.reminders.commentWordsHelp": {
+    "defaultMessage": "Applies to everyone in the organization. When off, mention, comment and reply emails link to the record without including the comment's words."
+  },
   "settings.reminders.count": {
     "defaultMessage": "{count, plural, one {# lead time} other {# lead times}}"
+  },
+  "settings.reminders.emailTitle": {
+    "defaultMessage": "Comment emails"
   },
   "settings.reminders.help": {
     "defaultMessage": "These are the default lead times for expiries, notice deadlines, Key dates and obligations. People can set their own in Notifications. Keep at least one lead time."

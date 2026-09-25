@@ -1195,29 +1195,15 @@
     {
       "idx": 170,
       "version": "7",
-      "when": 1790287919069,
-      "tag": "0170_secret_kang",
+      "when": 1790288469379,
+      "tag": "0170_email-layout",
       "breakpoints": true
     },
     {
       "idx": 171,
       "version": "7",
-      "when": 1790292480513,
-      "tag": "0171_mcp-oauth-settings",
-      "breakpoints": true
-    },
-    {
-      "idx": 172,
-      "version": "7",
-      "when": 1790295867816,
-      "tag": "0172_hard_bucky",
-      "breakpoints": true
-    },
-    {
-      "idx": 173,
-      "version": "7",
-      "when": 1790301147311,
-      "tag": "0173_puzzling_maelstrom",
+      "when": 1790319086915,
+      "tag": "0171_m41-oauth-clients",
       "breakpoints": true
     }
   ]

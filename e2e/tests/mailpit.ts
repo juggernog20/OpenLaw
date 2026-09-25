@@ -70,6 +70,7 @@ export async function waitForMailDetails(
   address: string,
   subject?: RegExp,
 ): Promise<{
+  id: string;
   subject: string;
   text: string;
   html: string;
@@ -100,6 +101,7 @@ export async function waitForMailDetails(
   expect(detail.ok()).toBe(true);
   const message = MailpitMessage.parse(await detail.json());
   return {
+    id: newestId!,
     subject: message.Subject,
     text: message.Text,
     html: message.HTML,
@@ -132,4 +134,26 @@ export function extractLink(text: string, pathPrefix: string): string {
   const link = candidates.find((candidate) => new URL(candidate).pathname.startsWith(pathPrefix));
   expect(link, `a link to ${pathPrefix} in:\n${text}`).toBeDefined();
   return link!;
+}
+
+/** Mailpit's weighted compatibility score for the delivered HTML part. */
+export async function htmlSupportScore(
+  request: APIRequestContext,
+  messageId: string,
+): Promise<number> {
+  const response = await request.get(
+    `${MAILPIT_URL}/api/v1/message/${encodeURIComponent(messageId)}/html-check`,
+  );
+  expect(response.ok(), await response.text()).toBe(true);
+  return z.object({ Total: z.object({ Supported: z.number() }) }).parse(await response.json()).Total
+    .Supported;
+}
+
+/** The original MIME message, before Mailpit rewrites inline image URLs for its UI. */
+export async function rawMail(request: APIRequestContext, messageId: string): Promise<string> {
+  const response = await request.get(
+    `${MAILPIT_URL}/api/v1/message/${encodeURIComponent(messageId)}/raw`,
+  );
+  expect(response.ok()).toBe(true);
+  return response.text();
 }

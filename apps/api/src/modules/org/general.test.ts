@@ -54,8 +54,7 @@ const generalRows = () =>
 
 /** A tiny valid PNG (1×1 transparent pixel) as a data: URI. */
 const PNG_LOGO =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk" +
-  "YPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==";
 
 describe("the SET-002 role gate", () => {
   it("refuses an unauthenticated request as 401", async () => {
@@ -126,7 +125,9 @@ describe("PATCH /org/general", () => {
 
   it("accepts a 5 MB logo and rejects one byte more without changing it", async () => {
     const cookies = await signInCookies(ADMIN.email, ADMIN.password);
-    const logo = "data:image/png;base64," + Buffer.alloc(5 * 1024 * 1024).toString("base64");
+    const bytes = Buffer.alloc(5 * 1024 * 1024);
+    Buffer.from(PNG_LOGO.split(",")[1]!, "base64").copy(bytes);
+    const logo = "data:image/png;base64," + bytes.toString("base64");
     const accepted = await harness.app.inject({
       method: "PATCH",
       url: "/api/v1/org/general",

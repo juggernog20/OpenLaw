@@ -1,6 +1,6 @@
 {
-  "id": "cefa392c-1dc5-454c-83af-7e0f4efdbf68",
-  "prevId": "0e88f78e-3651-4c76-8a61-5a87d48c7a82",
+  "id": "d98ad505-1cb3-4c66-bc17-6f7f43072988",
+  "prevId": "9f6a4273-452c-47ba-8187-5d29ebbb5065",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -442,6 +442,186 @@
         "ai_saved_keys_protocol_check": {
           "name": "ai_saved_keys_protocol_check",
           "value": "\"ai_saved_keys\".\"protocol\" in ('anthropic_messages', 'openai_chat_completions', 'gemini')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.allowed_client_links": {
+      "name": "allowed_client_links",
+      "schema": "",
+      "columns": {
+        "client_id": {
+          "name": "client_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "allowed_client_id": {
+          "name": "allowed_client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "allowed_client_links_allowed_idx": {
+          "name": "allowed_client_links_allowed_idx",
+          "columns": [
+            {
+              "expression": "allowed_client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "allowed_client_links_client_id_oauth_clients_client_id_fk": {
+          "name": "allowed_client_links_client_id_oauth_clients_client_id_fk",
+          "tableFrom": "allowed_client_links",
+          "tableTo": "oauth_clients",
+          "columnsFrom": ["client_id"],
+          "columnsTo": ["client_id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "allowed_client_links_allowed_client_id_allowed_clients_id_fk": {
+          "name": "allowed_client_links_allowed_client_id_allowed_clients_id_fk",
+          "tableFrom": "allowed_client_links",
+          "tableTo": "allowed_clients",
+          "columnsFrom": ["allowed_client_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.allowed_clients": {
+      "name": "allowed_clients",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata_url": {
+          "name": "metadata_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "seeded": {
+          "name": "seeded",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "callback_urls": {
+          "name": "callback_urls",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "secret_generated_at": {
+          "name": "secret_generated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registered_by_client": {
+          "name": "registered_by_client",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "allowed_clients_created_by_users_id_fk": {
+          "name": "allowed_clients_created_by_users_id_fk",
+          "tableFrom": "allowed_clients",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "allowed_clients_metadata_url_unique": {
+          "name": "allowed_clients_metadata_url_unique",
+          "nullsNotDistinct": false,
+          "columns": ["metadata_url"]
+        },
+        "allowed_clients_client_id_unique": {
+          "name": "allowed_clients_client_id_unique",
+          "nullsNotDistinct": false,
+          "columns": ["client_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "allowed_clients_kind_check": {
+          "name": "allowed_clients_kind_check",
+          "value": "\"allowed_clients\".\"kind\" in ('published', 'registered')"
+        },
+        "allowed_clients_identity_check": {
+          "name": "allowed_clients_identity_check",
+          "value": "(\"allowed_clients\".\"kind\" = 'published' and \"allowed_clients\".\"metadata_url\" is not null and \"allowed_clients\".\"client_id\" is null) or (\"allowed_clients\".\"kind\" = 'registered' and \"allowed_clients\".\"metadata_url\" is null)"
         }
       },
       "isRLSEnabled": false
@@ -12531,6 +12711,169 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.oauth_grants": {
+      "name": "oauth_grants",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "person_id": {
+          "name": "person_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "allowed_client_id": {
+          "name": "allowed_client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "toolsets": {
+          "name": "toolsets",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "consent_id": {
+          "name": "consent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_used_at": {
+          "name": "last_used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revoked_by": {
+          "name": "revoked_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "oauth_grants_person_client_unique": {
+          "name": "oauth_grants_person_client_unique",
+          "columns": [
+            {
+              "expression": "person_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "allowed_client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "oauth_grants_allowed_client_idx": {
+          "name": "oauth_grants_allowed_client_idx",
+          "columns": [
+            {
+              "expression": "allowed_client_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "oauth_grants_person_id_users_id_fk": {
+          "name": "oauth_grants_person_id_users_id_fk",
+          "tableFrom": "oauth_grants",
+          "tableTo": "users",
+          "columnsFrom": ["person_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "oauth_grants_allowed_client_id_allowed_clients_id_fk": {
+          "name": "oauth_grants_allowed_client_id_allowed_clients_id_fk",
+          "tableFrom": "oauth_grants",
+          "tableTo": "allowed_clients",
+          "columnsFrom": ["allowed_client_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "oauth_grants_consent_id_oauth_consents_id_fk": {
+          "name": "oauth_grants_consent_id_oauth_consents_id_fk",
+          "tableFrom": "oauth_grants",
+          "tableTo": "oauth_consents",
+          "columnsFrom": ["consent_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "oauth_grants_revoked_by_users_id_fk": {
+          "name": "oauth_grants_revoked_by_users_id_fk",
+          "tableFrom": "oauth_grants",
+          "tableTo": "users",
+          "columnsFrom": ["revoked_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "oauth_grants_scope_check": {
+          "name": "oauth_grants_scope_check",
+          "value": "\"oauth_grants\".\"scope\" in ('read', 'write')"
+        },
+        "oauth_grants_toolsets_check": {
+          "name": "oauth_grants_toolsets_check",
+          "value": "cardinality(\"oauth_grants\".\"toolsets\") > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.jwks": {
       "name": "jwks",
       "schema": "",
@@ -13838,6 +14181,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "email_logo_png": {
+          "name": "email_logo_png",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "currencies_in_use": {
           "name": "currencies_in_use",
           "type": "jsonb",
@@ -13858,6 +14207,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'UTC'"
+        },
+        "comment_words_in_email": {
+          "name": "comment_words_in_email",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "reminder_offset_days": {
           "name": "reminder_offset_days",
@@ -13938,6 +14294,13 @@
         },
         "mcp_business_oauth_clients_enabled": {
           "name": "mcp_business_oauth_clients_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "mcp_dynamic_client_registration_enabled": {
+          "name": "mcp_dynamic_client_registration_enabled",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

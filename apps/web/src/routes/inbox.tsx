@@ -267,7 +267,10 @@ export function InboxPage() {
         onSelect={selectView}
         onSave={async () => {
           if (!activeView) return;
-          adopt(await updateView(activeView.id, { config: layout }), activeView.id);
+          adopt(
+            await updateView(CATALOGUE.surface, activeView.id, { config: layout }),
+            activeView.id,
+          );
         }}
         onSaveAs={async (name) => {
           const next = await createView(CATALOGUE.surface, name, layout);
@@ -275,14 +278,17 @@ export function InboxPage() {
         }}
         onRename={async (name) => {
           if (!activeView) return;
-          adopt(await updateView(activeView.id, { name }), activeView.id);
+          adopt(await updateView(CATALOGUE.surface, activeView.id, { name }), activeView.id);
         }}
         onSetDefault={async () => {
           if (!activeView) return;
-          adopt(await updateView(activeView.id, { isDefault: true }), activeView.id);
+          adopt(
+            await updateView(CATALOGUE.surface, activeView.id, { isDefault: true }),
+            activeView.id,
+          );
         }}
         onDelete={async (view) => {
-          setViews(await deleteView(view.id));
+          setViews(await deleteView(CATALOGUE.surface, view.id));
           await commit(defaultInboxLayout(), null);
         }}
         onReset={() => void commit(storedLayout)}

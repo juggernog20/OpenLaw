@@ -12,6 +12,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { eq, orgSettings } from "@openlaw/db";
 import { LOGO_BYTE_LIMIT, LOGO_DATA_URI_LIMIT } from "@openlaw/shared";
+import { makeEmailLogo } from "../../lib/email-logo.js";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import {
@@ -59,6 +60,8 @@ const GeneralPatchSchema = z
   .partial();
 
 type GeneralField = keyof z.infer<typeof GeneralPatchSchema>;
+
+const NotificationSettingsSchema = z.object({ commentWordsInEmail: z.boolean() });
 
 /**
  * What both offset routes answer.
@@ -141,6 +144,17 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const patch = request.body;
+      let emailLogoPng: string | null | undefined;
+      if (patch.logo !== undefined) {
+        try {
+          emailLogoPng = patch.logo === null ? null : await makeEmailLogo(patch.logo);
+        } catch {
+          throw httpError(
+            400,
+            "The logo must be a readable PNG, JPEG, WebP or SVG with no more than 16 million pixels.",
+          );
+        }
+      }
       // The mutation and its audit entries commit or roll back together;
       // the row lock keeps a concurrent PATCH from reading a stale "old"
       // into its audit payload.
@@ -158,7 +172,11 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         // the WHERE binds the write to the row the lock-read locked.
         const [row] = await tx
           .update(orgSettings)
-          .set({ ...patch, updatedAt: new Date() })
+          .set({
+            ...patch,
+            ...(emailLogoPng !== undefined ? { emailLogoPng } : {}),
+            updatedAt: new Date(),
+          })
           .where(eq(orgSettings.id, current.id))
           .returning();
         if (!row) throw httpError(500, "org_settings has no row to update.");
@@ -192,6 +210,66 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
           defaultTimezone: updated.defaultTimezone,
         },
       };
+    },
+  );
+
+  app.get(
+    "/org/notifications",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getOrgNotifications",
+        summary: "Organization notification settings",
+        tags: ["org"],
+        response: { 200: NotificationSettingsSchema, default: problemResponse },
+      },
+    },
+    async () => {
+      const [row] = await app.db
+        .select({ commentWordsInEmail: orgSettings.commentWordsInEmail })
+        .from(orgSettings)
+        .limit(1);
+      if (!row) throw httpError(500, "org_settings has no row to read.");
+      return row;
+    },
+  );
+
+  app.patch(
+    "/org/notifications",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "updateOrgNotifications",
+        summary: "Save comment words in email for the organization",
+        tags: ["org"],
+        body: NotificationSettingsSchema.strict(),
+        response: { 200: NotificationSettingsSchema, default: problemResponse },
+      },
+    },
+    async (request) => {
+      const { commentWordsInEmail } = request.body;
+      return app.db.transaction(async (tx) => {
+        const [current] = await tx.select().from(orgSettings).limit(1).for("update");
+        if (!current) throw httpError(500, "org_settings has no row to update.");
+        if (current.commentWordsInEmail !== commentWordsInEmail) {
+          await tx
+            .update(orgSettings)
+            .set({ commentWordsInEmail, updatedAt: new Date() })
+            .where(eq(orgSettings.id, current.id));
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: {
+              field: "commentWordsInEmail",
+              old: current.commentWordsInEmail,
+              new: commentWordsInEmail,
+            },
+          });
+        }
+        return { commentWordsInEmail };
+      });
     },
   );
 

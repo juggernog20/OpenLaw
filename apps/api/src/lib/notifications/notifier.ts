@@ -511,11 +511,8 @@ export interface RequestDeclinedEvent extends RequestEvent {
   /** Why. INT-006 makes "no" arrive with a why, so the reason travels
    * with the event rather than being a line *about* a reason.
    *
-   * It is the one piece of somebody's prose this seam carries into an
-   * email, and it is carried on purpose: a decline reason is written to
-   * be read by the requester, it is not a room anybody can be moved out
-   * of, and there is no redact for it to outrun (CMT-006 is why a
-   * comment's words stay on the thread). */
+   * The reason is stored in this event. Comment words are read separately
+   * at send time by commentId, under the NOT-002 addendum. */
   reason: string;
 }
 
@@ -1330,9 +1327,8 @@ async function commentOnRecord(
     tx,
     "comment.posted",
     event,
-    // The words are not here, for the mention's reason: the thread
-    // is where DD-016 is enforced and where a redact can still reach
-    // the text (CMT-006). The item is a prompt to go and read it.
+    // CMT-006 keeps words out of the stored payload. Email reads them
+    // from the comment at send time, after any edit, delete or redact.
     { commentId: event.commentId, ...(event.taskId ? { taskId: event.taskId } : {}) },
     {
       except: [
@@ -1693,10 +1689,8 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         .select({ userId: commentMentions.userId })
         .from(commentMentions)
         .where(eq(commentMentions.commentId, event.commentId));
-      // The comment's own words are never in a payload, and never will
-      // be. A mention is a prompt to go and read the thread, where the
-      // tier is enforced and a redact can still reach the text (CMT-006)
-      // — a payload could not be redacted out of.
+      // CMT-006 keeps words out of the payload. The send path reads
+      // the current comment by id under NOT-002.
       const who = { actorId: event.actorId, actorName: event.actorName };
       if (event.entityType === REQUEST_ENTITY) {
         await mentionedOnRequest(tx, event, named, who);
@@ -1883,10 +1877,8 @@ export function createNotifier(deps: NotifierDeps): Notifier {
         tx,
         "request.replied",
         event,
-        // The words are not here, for the contract thread's reason: the
-        // portal is where DD-016 is enforced and where a redact can
-        // still reach the text (CMT-006). The item is a prompt to go and
-        // read the conversation.
+        // Keep only the id here. Email reads the current words at send
+        // time, so a delete or redact before delivery omits them.
         { commentId: event.commentId },
         { narrowing: { tier: event.visibility } },
       );

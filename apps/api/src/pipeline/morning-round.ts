@@ -108,6 +108,7 @@ import {
   MATTER_ENTITY,
   reachedBy,
 } from "../lib/notifications/audience.js";
+import { getOrgSettings } from "../lib/org-settings.js";
 import {
   renderBriefingMail,
   type DigestRow,
@@ -1107,9 +1108,11 @@ async function sendBriefing(
     return { sent: false, skipped: sending.length + skipping.length };
   }
 
+  const { name, emailLogoPng } = await getOrgSettings(deps.db);
   const message = renderBriefingMail(
     {
       recipientName: person.displayName,
+      localDate: person.today,
       surface: portal ? "portal" : "staff",
       approvals,
       tasks,
@@ -1120,6 +1123,7 @@ async function sendBriefing(
     },
     person.email,
     deps.baseUrl,
+    { name, emailLogoPng },
   );
   // Unreachable: the list is non-empty, which is the only thing the
   // renderer refuses on. Loud rather than silent if that ever changes.

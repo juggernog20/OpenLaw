@@ -54,6 +54,7 @@
     "pizzip": "^3.3.0",
     "postal-mime": "^3.0.0",
     "sanitize-html": "^2.17.7",
+    "sharp": "^0.35.4",
     "uuidv7": "^1.2.1",
     "web-push": "^3.6.7",
     "zod": "^4.6.5"

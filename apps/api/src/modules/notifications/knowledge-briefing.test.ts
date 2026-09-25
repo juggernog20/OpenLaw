@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M28/6's Knowledge section over the real morning-round seam. */
+import { readFileSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   contractTypes,
@@ -8,6 +9,7 @@ import {
   knowledgeItems,
   knowledgeTypes,
   notifications,
+  orgSettings,
   users,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
@@ -137,6 +139,12 @@ beforeAll(async () => {
   });
   await item("Upper-bound note", adminId, "2027-04-02T08:00:00Z");
   await item("Tomorrow's item", adminId, "2027-04-02T09:00:00Z");
+  await harness.db.update(orgSettings).set({
+    name: "Updated Legal",
+    emailLogoPng: readFileSync(
+      new URL("../../../assets/openlaw-192.png", import.meta.url),
+    ).toString("base64"),
+  });
   await round("2027-04-02T08:00:00Z");
   secondMemberMail = harness.mailer.messagesTo(MEMBER.email).at(-1)!;
   secondAdminMail = harness.mailer.messagesTo(ADMIN.email).at(-1)!;
@@ -207,6 +215,10 @@ describe("Knowledge in the morning briefing", () => {
     expect(firstMail.text).toContain("Knowledge");
     expect(firstMail.text).toContain("Baseline playbook");
     expect(firstMail.html).toContain("Baseline playbook");
+    expect(firstMail.html).toMatch(/Daily briefing <span[^>]*>· Apr 1, 2027<\/span>/);
+    expect(firstMail.html).toMatch(/Knowledge <span[^>]*>1<\/span>/);
+    expect(firstMail.html).not.toContain('width="33%"');
+    expect(firstMail.html).toContain('src="cid:openlaw-mark@openlaw"');
     expect(firstMail.text).not.toContain("Stale playbook");
     expect(harness.mailer.messagesTo(CONTRIBUTOR.email)).toEqual([]);
     expect(bellCountAfterKnowledgeRound).toBe(bellCountBeforeKnowledgeRound);
@@ -214,6 +226,11 @@ describe("Knowledge in the morning briefing", () => {
 
   it("uses the previous send as an exclusive lower bound and this send as an inclusive upper bound", () => {
     expect(secondMemberMail.text).toContain("Fresh admin playbook");
+    expect(secondMemberMail.html).toContain("Updated Legal · sent by OpenLaw");
+    expect(secondMemberMail.html).toContain('src="cid:org-logo@openlaw"');
+    expect(secondMemberMail.attachments).toEqual([
+      expect.objectContaining({ cid: "org-logo@openlaw", contentType: "image/png" }),
+    ]);
     // Both were published on or before the first send's instant, so the
     // first briefing was their only chance and a later insert missed it.
     expect(secondMemberMail.text).not.toContain("Backdated note");
@@ -240,7 +257,8 @@ describe("Knowledge in the morning briefing", () => {
   it("omits the Knowledge section when its window is empty", () => {
     expect(fourthMemberMail.text).toContain("Empty section control date");
     expect(fourthMemberMail.text).not.toContain("Knowledge\n");
-    expect(fourthMemberMail.html).not.toContain("<h2>Knowledge</h2>");
+    expect(fourthMemberMail.html).not.toContain("Knowledge <span");
+    expect(fourthMemberMail.html).not.toContain('width="33%"');
   });
 
   it("does not send twice when the round is rerun", () => {

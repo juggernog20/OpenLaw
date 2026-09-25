@@ -74,7 +74,7 @@ import {
   documentLinkDraft,
   serializeDocumentLinks,
   type CommentDocumentLink,
-} from "../../lib/comment-document-links";
+} from "@openlaw/shared";
 import { api } from "../../lib/api";
 import {
   composerTiers,

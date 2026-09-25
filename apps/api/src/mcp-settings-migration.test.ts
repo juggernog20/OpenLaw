@@ -89,7 +89,7 @@ it("rolls back a failed MCP upgrade in a multi-migration batch and permits a ret
 it("leaves existing MCP policy intact when adding the off-by-default OAuth Clients toggles", async () => {
   const db = await freshDb(container, "oauth_settings_upgrade");
   try {
-    await migrateThrough(db, "0170_secret_kang", migrationEntries());
+    await migrateThrough(db, "0170_email-layout", migrationEntries());
     await db.execute(sql`update org_settings set mcp_enabled = true,
       mcp_legal_api_keys_enabled = true, mcp_business_api_keys_enabled = true,
       mcp_toolset_ceiling = '["contracts"]', mcp_read_only = true, mcp_api_key_lifetime_days = 30`);
