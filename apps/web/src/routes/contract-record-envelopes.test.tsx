@@ -973,6 +973,19 @@ describe("when the void control is absent", () => {
 });
 
 describe("preparing an unsent Envelope", () => {
+  it("keeps preparation enabled when the live connection re-reads signing state", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    sources[0]!.open();
+    await waitFor(() => expect(api.reads).toBe(2));
+    await act(async () => Promise.resolve());
+    expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+  });
+
   it("selects the exact Version, Signers and Subject and displays the unsent draft", async () => {
     const user = userEvent.setup();
     const api = recordApi({ preparationEnabled: true });
