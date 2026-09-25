@@ -58531,7 +58531,7 @@
       },
       "post": {
         "operationId": "sendContractEnvelope",
-        "summary": "Send the exact primary Document Version to resolved Signers. Reserves one live Envelope before contacting the provider; confirmed sends record Activity and advance to Signature.",
+        "summary": "Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are users of this install, by id, or name-and-email pairs, and every one of them is asked at once: there is no routing order. A successful send moves the contract to its first live Signature status. Sending is legal at any stage. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has a live envelope (preparing, draft, or sent) — two envelopes must never race for one signature. The live envelope is reserved before the provider is called; a send the provider refuses or never answers leaves no row, and an envelope the provider took but the record could not keep is voided again before the refusal is raised. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored",
         "tags": ["envelopes"],
         "requestBody": {
           "required": true,
@@ -58873,7 +58873,7 @@
             }
           },
           "409": {
-            "description": "The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type.",
+            "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -58922,7 +58922,7 @@
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type."
+                  "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type."
                 }
               }
             }
@@ -59285,7 +59285,7 @@
             }
           },
           "409": {
-            "description": "The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type.",
+            "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -59334,7 +59334,7 @@
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type."
+                  "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type."
                 }
               }
             }

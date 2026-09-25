@@ -5210,7 +5210,7 @@ export interface paths {
     /** One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
     get: operations["listContractEnvelopes"];
     put?: never;
-    /** Send the exact primary Document Version to resolved Signers. Reserves one live Envelope before contacting the provider; confirmed sends record Activity and advance to Signature. */
+    /** Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are users of this install, by id, or name-and-email pairs, and every one of them is asked at once: there is no routing order. A successful send moves the contract to its first live Signature status. Sending is legal at any stage. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has a live envelope (preparing, draft, or sent) — two envelopes must never race for one signature. The live envelope is reserved before the provider is called; a send the provider refuses or never answers leaves no row, and an envelope the provider took but the record could not keep is voided again before the refusal is raised. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
     post: operations["sendContractEnvelope"];
     delete?: never;
     options?: never;
@@ -28758,7 +28758,7 @@ export interface operations {
           };
         };
       };
-      /** @description The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type. */
+      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -28889,7 +28889,7 @@ export interface operations {
           };
         };
       };
-      /** @description The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type. */
+      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type. */
       409: {
         headers: {
           [name: string]: unknown;

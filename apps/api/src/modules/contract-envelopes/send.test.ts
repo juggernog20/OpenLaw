@@ -533,7 +533,7 @@ describe("the contract status follows a successful send", () => {
     expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
   });
 
-  it("keeps the durable row, rolls back the Stage and voids the provider send on failure", async () => {
+  it("rolls back the status and envelope together and voids the provider send on failure", async () => {
     const { contract, versionId } = await readyContract("Send transaction rollback");
     const before = await storedContract(contract.id);
     const idsBefore = new Set(provider().sentEnvelopeIds());
@@ -547,9 +547,7 @@ describe("the contract status follows a successful send", () => {
       notification.mockRestore();
     }
     expect((await storedContract(contract.id)).statusId).toBe(before.statusId);
-    expect((await signingState(as(MEMBER), contract.number)).envelopes).toMatchObject([
-      { status: "voided" },
-    ]);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
     expect(await entriesOn(contract.id)).toEqual([]);
     const produced = provider()
       .sentEnvelopeIds()
@@ -1202,6 +1200,63 @@ describe("preparation refusals and reservations", () => {
     expect((await send(as(MEMBER), contract.number, payload.documentVersionId)).statusCode).toBe(
       409,
     );
+    expect(await entriesOn(contract.id)).toEqual([]);
+  });
+
+  it("refuses to void a draft, which has not been sent", async () => {
+    const { contract, prepare } = await ready();
+    expect((await prepare()).statusCode).toBe(201);
+    const [draft] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.contractId, contract.id));
+    const voided = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${draft!.id}/void`,
+      cookies: as(MEMBER),
+      payload: { reason: "Not needed" },
+    });
+    expect(voided.statusCode).toBe(409);
+    expect(voided.json().detail).toContain("has not been sent");
+    expect(await harness.signing!.readEnvelope(draft!.providerEnvelopeId!)).toMatchObject({
+      status: "draft",
+    });
+  });
+
+  it("leaves no row for a direct send the provider refuses, and sends on the retry", async () => {
+    const { contract, payload } = await ready();
+    const refusal = vi
+      .spyOn(provider(), "sendEnvelope")
+      .mockRejectedValueOnce(new SigningRefusedError("Rejected"));
+    try {
+      expect((await send(as(MEMBER), contract.number, payload.documentVersionId)).statusCode).toBe(
+        502,
+      );
+    } finally {
+      refusal.mockRestore();
+    }
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    const retry = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    expect(retry.statusCode, retry.body).toBe(201);
+    expect(retry.json().envelopes).toMatchObject([{ status: "sent" }]);
+  });
+
+  it("releases a direct send's reservation when the provider never answers", async () => {
+    const { contract, payload } = await ready();
+    const lost = vi
+      .spyOn(provider(), "sendEnvelope")
+      .mockRejectedValueOnce(new SigningTimeoutError("No answer."));
+    let response;
+    try {
+      response = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    } finally {
+      lost.mockRestore();
+    }
+    // The default path has no recovery for an uncertain round yet, so the
+    // sender is told to check at the provider rather than being blocked.
+    expect(response.statusCode).toBe(502);
+    expect(response.json().detail).toContain("check at the provider");
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
     expect(await entriesOn(contract.id)).toEqual([]);
   });
 
