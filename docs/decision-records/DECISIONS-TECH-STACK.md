@@ -2001,6 +2001,9 @@ restrictions remain a live acceptance requirement under #1178.
 Worker and browser-return reads share the existing durable claim: reserve twenty
 minutes before the attempt and retain fifteen minutes after it finishes, including
 failure. Creation itself supplies draft evidence, so launch does not read status.
+The worker leaves a draft alone while it has an unconsumed, unexpired return
+correlation, so the browser return keeps the first eligible read. An abandoned
+session expires its correlation after two hours, and the worker polls the draft again.
 The driver returns a fresh Sender View URL unchanged and never sends OAuth credentials
 to the browser. Launch/return responses use no-store and no-referrer; ordinary request
 logging already excludes query strings, cookies and response bodies. No launch URL or

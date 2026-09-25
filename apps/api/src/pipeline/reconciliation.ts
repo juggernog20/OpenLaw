@@ -74,13 +74,16 @@ import {
   and,
   asc,
   contractEnvelopes,
+  envelopeLaunches,
   eq,
   gt,
   inArray,
+  sql,
   type Db,
   type SigningProviderKey,
 } from "@openlaw/db";
 import { requestExecutedCopy } from "../lib/signing/completion.js";
+import { checkEnvelopeStatus, reconciliationDue } from "../lib/signing/status-check.js";
 import {
   isTerminalSigningError,
   SigningConfigError,
@@ -116,7 +119,22 @@ export const RECONCILIATION_REFUSAL_LIMIT = 5;
  * has a durable 15-minute minimum between provider calls. */
 export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
 
-import { checkEnvelopeStatus, reconciliationDue } from "../lib/signing/status-check.js";
+/**
+ * A draft somebody is editing in the provider's own screen right now.
+ * The launch that opened it holds an unconsumed, unexpired return
+ * correlation (#1172). The sweep leaves such a draft alone: the browser
+ * return spends the first eligible status read, and a sweep that read
+ * the draft mid-session would only learn "still a draft" while taking
+ * the return's read away for fifteen minutes. An abandoned session
+ * expires its correlation after two hours, and the draft is polled again.
+ */
+const noOpenLaunch = () =>
+  sql`not exists (
+    select 1 from ${envelopeLaunches}
+    where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
+      and ${envelopeLaunches.consumedAt} is null
+      and ${envelopeLaunches.expiresAt} > clock_timestamp()
+  )`;
 
 /** What the sweep is built from: the rows, the connector, somewhere to
  * ask for follow-on work, and somewhere to say what it did. */
@@ -237,6 +255,7 @@ export async function runReconciliationSweep(
           // nothing left for this sweep to learn.
           inArray(contractEnvelopes.status, ["draft", "sent"]),
           reconciliationDue(),
+          noOpenLaunch(),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
         ),
       )

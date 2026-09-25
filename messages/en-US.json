@@ -459,7 +459,7 @@
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
   },
   "activity.envelope.sent": {
-    "defaultMessage": "{actor} sent this contract for signature"
+    "defaultMessage": "{hasActor, select, yes {{actor} sent this contract for signature} other {This contract was sent for signature}}"
   },
   "activity.envelope.signed": {
     "defaultMessage": "This contract's envelope was signed"

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { and, contractEnvelopes, eq, inArray, isNull, or, sql, type Db } from "@openlaw/db";
-import type { SigningProvider } from "./provider.js";
+import { SigningRefusedError, type SigningProvider } from "./provider.js";
 
 export const reconciliationDue = () =>
   or(
@@ -30,7 +30,9 @@ export async function checkEnvelopeStatus(db: Db, signing: SigningProvider, enve
       (claimed.providerAccountId !== null &&
         claimed.providerAccountId !== (await signing.testConnection()).accountId)
     ) {
-      throw new Error("The Envelope belongs to a different Signing account.");
+      // Terminal for this one Envelope, not for the round: the rows beside
+      // it may belong to the current account.
+      throw new SigningRefusedError("The Envelope belongs to a different Signing account.");
     }
     return await signing.readEnvelope(claimed.providerEnvelopeId);
   } finally {

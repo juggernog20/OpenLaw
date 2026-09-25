@@ -49,6 +49,7 @@ import {
 } from "@openlaw/db";
 import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
 import { checkEnvelopeStatus } from "../../lib/signing/status-check.js";
+import { runReconciliationSweep } from "../../pipeline/reconciliation.js";
 import { provisionUser } from "../../auth/instance.js";
 import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
 import {
@@ -1662,5 +1663,113 @@ describe("shared browser and worker status allowance", () => {
       .where(eq(contractEnvelopes.id, id));
     expect(stored!.nextReconcileAt!.getTime()).toBeGreaterThan(Date.now() + 14 * 60_000);
     read.mockRestore();
+  });
+
+  it("leaves a draft to the browser return while its launch is open, then polls it", async () => {
+    await configureConnector();
+    const contract = await newContract("Sweep waits for the return");
+    await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
+    const before = await signingState(as(MEMBER), contract.number);
+    const prepared = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(MEMBER),
+      payload: {
+        documentVersionId: before.primaryDocument!.versions[0]!.id,
+        signers: [...SIGNERS],
+        idempotencyKey: "sweep-waits",
+      },
+    });
+    expect(prepared.statusCode, prepared.body).toBe(201);
+    const id = prepared.json().envelopes[0].id as string;
+    const [row] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, id));
+    const providerEnvelopeId = row!.providerEnvelopeId!;
+    const launched = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${id}/launch`,
+      cookies: as(MEMBER),
+    });
+    expect(launched.statusCode, launched.body).toBe(200);
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const readsOfDraft = () => read.mock.calls.filter(([asked]) => asked === providerEnvelopeId);
+    const quiet = { info() {}, warn() {}, error() {} };
+    const sweep = () =>
+      runReconciliationSweep(
+        {
+          db: harness.db,
+          log: quiet,
+          resolveSigningProvider: harness.resolveSigningProvider,
+          notifier: harness.notifier,
+        },
+        harness.pipeline,
+      );
+    await sweep();
+    expect(readsOfDraft()).toHaveLength(0);
+    let [held] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, id));
+    expect(held).toMatchObject({ status: "draft", confirmationPending: true });
+    expect(held!.nextReconcileAt).toBeNull();
+    // The return consumes the correlation and spends the first read.
+    const returnUrl = new URL(harness.signing!.launches.at(-1)!.returnUrl);
+    returnUrl.searchParams.set("event", "Save");
+    const navigated = await harness.app.inject({
+      method: "GET",
+      url: returnUrl.pathname + returnUrl.search,
+    });
+    const cookie = navigated.cookies.find((item) => item.name === "openlaw-signing-return")!;
+    const confirmed = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/signing/return",
+      cookies: { ...as(MEMBER), "openlaw-signing-return": cookie.value },
+    });
+    expect(confirmed.statusCode, confirmed.body).toBe(200);
+    expect(readsOfDraft()).toHaveLength(1);
+    // Once the correlation is spent the sweep owns the draft again, on
+    // the same fifteen-minute allowance.
+    await sweep();
+    expect(readsOfDraft()).toHaveLength(1);
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ nextReconcileAt: new Date(0) })
+      .where(eq(contractEnvelopes.id, id));
+    await sweep();
+    expect(readsOfDraft()).toHaveLength(2);
+    [held] = await harness.db.select().from(contractEnvelopes).where(eq(contractEnvelopes.id, id));
+    expect(held).toMatchObject({ status: "draft", confirmationPending: false });
+    read.mockRestore();
+  });
+
+  it("refuses an Envelope from another account without spending the round", async () => {
+    await configureConnector();
+    const contract = await newContract("Another account's draft");
+    await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
+    const before = await signingState(as(MEMBER), contract.number);
+    const prepared = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(MEMBER),
+      payload: {
+        documentVersionId: before.primaryDocument!.versions[0]!.id,
+        signers: [...SIGNERS],
+        idempotencyKey: "other-account",
+      },
+    });
+    const id = prepared.json().envelopes[0].id as string;
+    const original = await harness.signing!.testConnection();
+    const account = vi
+      .spyOn(harness.signing!, "testConnection")
+      .mockResolvedValue({ ...original, accountId: "other-account" });
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    await expect(checkEnvelopeStatus(harness.db, harness.signing!, id)).rejects.toBeInstanceOf(
+      SigningRefusedError,
+    );
+    expect(read).not.toHaveBeenCalled();
+    read.mockRestore();
+    account.mockRestore();
   });
 });

@@ -9,7 +9,10 @@ import {
   envelopeLaunches,
   eq,
   gt,
+  isNotNull,
   isNull,
+  lte,
+  or,
 } from "@openlaw/db";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -87,13 +90,25 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
         .limit(1);
       if (!source) throw httpError(409, "The source Version is no longer available.");
       const signing = await app.resolveSigningProvider();
+      const account = signing ? await signing.testConnection().catch(() => null) : null;
       if (
         !signing ||
+        !account ||
         signing.provider !== envelope.provider ||
         signing.environment !== envelope.providerEnvironment ||
-        (await signing.testConnection()).accountId !== envelope.providerAccountId
+        account.accountId !== envelope.providerAccountId
       )
         throw httpError(409, "The original Signing account is unavailable.");
+      // Spent correlations for this Envelope have nothing left to grant.
+      // Pruned here so the table holds only launches that can still return.
+      await app.db
+        .delete(envelopeLaunches)
+        .where(
+          and(
+            eq(envelopeLaunches.envelopeId, envelope.id),
+            or(isNotNull(envelopeLaunches.consumedAt), lte(envelopeLaunches.expiresAt, new Date())),
+          ),
+        );
       const state = randomBytes(32).toString("base64url");
       await app.db.insert(envelopeLaunches).values({
         stateHash: hash(state),
