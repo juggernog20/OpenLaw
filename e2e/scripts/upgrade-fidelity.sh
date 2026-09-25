@@ -11,12 +11,15 @@
 #
 #   pnpm upgrade-fidelity              # newest release, else dev (its parent on dev)
 #   BASELINE=v0.3.0 pnpm upgrade-fidelity
+#   UPGRADE_COMPOSE_PROJECT=openlaw-upgrade-m42 pnpm upgrade-fidelity   # a second run beside the first
+#   UPGRADE_COMPOSE_OVERRIDE=/abs/path/networks.yml pnpm upgrade-fidelity  # pin subnets, see below
 #
-# It runs in its own compose project (`openlaw-upgrade`) on its own
-# ports and volumes, so the instance you develop against on 3000 and the
-# E2E suite's on 3100 are never touched. Volumes are destroyed at the
-# end. Unlike the E2E suite, accumulated state would defeat the point:
-# every run has to start from a fresh baseline install.
+# It runs in its own compose project (`openlaw-upgrade`, or the
+# UPGRADE_COMPOSE_PROJECT you name) on its own ports and volumes, so the
+# instance you develop against on 3000 and the E2E suite's on 3100 are
+# never touched. Volumes are destroyed at the end. Unlike the E2E suite,
+# accumulated state would defeat the point: every run has to start from
+# a fresh baseline install.
 #
 # AUTH_SECRET and OPENLAW_SECRET_KEY come from .env. The key in
 # particular has to be the same value on both sides, or the credentials
@@ -30,8 +33,13 @@ BASELINE="$(node e2e/scripts/upgrade-baseline.mjs "${BASELINE:-}")"
 APP_PORT="${APP_PORT:-3200}"
 MAILPIT_HOST_PORT="${MAILPIT_PORT:-8225}"
 SIGNING_STUB_PORT="${SIGNING_STUB_PORT:-8229}"
-PROJECT=openlaw-upgrade
+PROJECT="${UPGRADE_COMPOSE_PROJECT:-openlaw-upgrade}"
+export UPGRADE_COMPOSE_PROJECT="$PROJECT"
 COMPOSE=(docker compose -p "$PROJECT" -f compose.yml -f compose.dev.yml)
+# An absolute overlay path can assign subnets when the local engine has no default pools left.
+if [[ -n "${UPGRADE_COMPOSE_OVERRIDE:-}" ]]; then
+  COMPOSE+=(-f "$UPGRADE_COMPOSE_OVERRIDE")
+fi
 
 WORKTREE="$(mktemp -d)/baseline"
 FINGERPRINT="$(mktemp -d)/fingerprint.json"
