@@ -894,3 +894,37 @@ it("accounts for resource scope refusals with the OAuth challenge", async () => 
   expect(rows).toHaveLength(1);
   expect(rows[0]).toMatchObject({ outcome: "tool_outside_grant", clientName: "Test Client" });
 });
+
+it("accounts for prompt scope refusals with the embedded resource's OAuth challenge", async () => {
+  const issued = await issue();
+  for (const [name, args, scope] of [
+    ["summarize_record", { record: "matter M-123" }, "matters"],
+    ["triage_inbox", {}, "requests"],
+  ] as const) {
+    const before = await h.db.select().from(mcpToolCalls);
+    const res = await h.app.inject({
+      method: "POST",
+      url: "/mcp",
+      headers: { authorization: `Bearer ${issued.access_token}` },
+      payload: { jsonrpc: "2.0", id: 1, method: "prompts/get", params: { name, arguments: args } },
+    });
+    expect(res.statusCode, res.body).toBe(403);
+    expect(res.headers["www-authenticate"]).toContain(
+      `error="insufficient_scope" scope="toolset:${scope}"`,
+    );
+    expect(res.json().result).toMatchObject({
+      messages: [],
+      isError: true,
+      content: [{ type: "text", text: expect.stringContaining("tool_outside_grant") }],
+    });
+    const added = (await h.db.select().from(mcpToolCalls)).filter(
+      (row) => !before.some((old) => old.id === row.id),
+    );
+    expect(added).toHaveLength(1);
+    expect(added[0]).toMatchObject({
+      tool: `prompt:${name}`,
+      outcome: "tool_outside_grant",
+      clientName: "Test Client",
+    });
+  }
+});

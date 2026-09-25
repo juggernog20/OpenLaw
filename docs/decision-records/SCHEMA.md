@@ -1434,6 +1434,10 @@ An address that matches no template gets `resource:unknown`. The reservation sto
 to 64 letters, digits, `_` or `-`, with at most one `resource:` or `prompt:` prefix. It stores
 any other name as `unknown_tool`.
 
+A prompt get also reserves one row and counts against that limit, named
+`prompt:triage_inbox` or `prompt:summarize_record`. Reading its embedded resource does
+not reserve another row. Prompt arguments, instructions and record content are not stored.
+
 A call reserves a `pending` row before running and updates its outcome and duration on completion.
 A per-credential database lock serializes reservations. The hourly limit counts reserved calls
 in the current database clock hour, excluding `rate_limited` refusals. Refusals still get a row.
