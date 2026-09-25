@@ -41,6 +41,7 @@ import {
   contracts,
   contractStatuses,
   desc,
+  documentVersions,
   eq,
   signingConnectors,
   users,
@@ -1271,9 +1272,20 @@ describe("preparation refusals and reservations", () => {
   it("leaves no row when the stored file cannot be read, and sends on the retry", async () => {
     const { contract, payload } = await ready();
     const idsBefore = provider().sentEnvelopeIds().length;
+    const [source] = await harness.db
+      .select({ fileRef: documentVersions.fileRef })
+      .from(documentVersions)
+      .where(eq(documentVersions.id, payload.documentVersionId));
+    // Only this version's file fails, for as long as the send runs. A
+    // one-shot rejection could be spent by a pipeline job still reading
+    // the upload, and the send would then go out.
+    const storage = harness.app.storage;
+    const read = storage.get.bind(storage);
     const unreadable = vi
-      .spyOn(harness.app.storage, "get")
-      .mockRejectedValueOnce(new Error("The disk went away."));
+      .spyOn(storage, "get")
+      .mockImplementation((ref) =>
+        ref === source!.fileRef ? Promise.reject(new Error("The disk went away.")) : read(ref),
+      );
     try {
       const response = await send(as(MEMBER), contract.number, payload.documentVersionId);
       expect(response.statusCode).toBe(500);
