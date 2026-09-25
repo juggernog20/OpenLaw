@@ -28,7 +28,7 @@ const EventQuerySchema = z
     message: "entityType and entityId must be supplied together.",
   });
 
-async function reachedRecord(
+export async function reachedRecord(
   app: Parameters<FastifyPluginAsyncZod>[0],
   user: Parameters<typeof contractAudience>[1],
   entityType: LiveRecordEntityType,
@@ -108,7 +108,11 @@ export const eventRoutes: FastifyPluginAsyncZod = async (app) => {
 
       try {
         unsubscribe = app.eventHub.subscribe(
-          { userId: request.user.id, role: request.user.role, record: scopedRecord },
+          {
+            userId: request.user.id,
+            role: request.user.role,
+            record: scopedRecord ? [scopedRecord] : undefined,
+          },
           (event) => {
             writeFrame(`event: ${event.kind}\ndata: ${JSON.stringify(event)}\n\n`);
           },

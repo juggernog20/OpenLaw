@@ -18,6 +18,7 @@ import { z } from "zod";
 import { requireRole } from "../../auth/guards.js";
 import { transactionalOAuth } from "../../auth/oauth-management.js";
 import { MCP_SCOPES, authorizationServerAvailable } from "../../auth/oauth.js";
+import { publishLiveEvent } from "../../lib/live-events.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -232,6 +233,8 @@ export const allowedClientRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "admin_only",
           payload: { allowedClientId: row.id, clientName: updated.name, ...body },
         });
+        if (body.enabled !== undefined && body.enabled !== row.enabled)
+          await publishLiveEvent(tx, { kind: "mcp", change: "policy" });
         return updated;
       });
       return serializeAllowedClient(result);
@@ -320,6 +323,7 @@ export const allowedClientRoutes: FastifyPluginAsyncZod = async (app) => {
           await transactionalOAuth(app.auth, tx).api.setOAuthClientEnabled({
             body: { clientId: row.clientId, enabled: false },
           });
+        await publishLiveEvent(tx, { kind: "mcp", change: "policy" });
         await tx.delete(allowedClients).where(eq(allowedClients.id, row.id));
         await recordActivity(tx, {
           entityType: "system",

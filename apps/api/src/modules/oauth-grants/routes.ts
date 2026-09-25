@@ -27,6 +27,7 @@ import { revokeOAuthRefreshTokens } from "../../auth/oauth-grants.js";
 import { transactionalOAuth } from "../../auth/oauth-management.js";
 import type { Auth } from "../../auth/instance.js";
 import { selectableToolsets } from "../../mcp/selectable-toolsets.js";
+import { publishLiveEvent } from "../../lib/live-events.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -351,6 +352,11 @@ export function oauthGrantRoutes(lifetimeDays: number): FastifyPluginAsyncZod {
               .set({ revokedAt: new Date(), revokedBy: req.user.id })
               .where(eq(oauthGrants.id, grant.id));
             await revokeOAuthRefreshTokens(tx, grant.personId, grant.allowedClientId);
+            await publishLiveEvent(tx, {
+              kind: "mcp",
+              change: "revocation",
+              credentialIds: [grant.id],
+            });
             const [client] = await tx
               .select()
               .from(allowedClients)

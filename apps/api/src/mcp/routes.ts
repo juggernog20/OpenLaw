@@ -9,6 +9,8 @@
 
 import {
   createMcpHandler,
+  classifyInboundRequest,
+  specTypeSchemas,
   McpServer,
   SUPPORTED_PROTOCOL_VERSIONS,
   type Tool,
@@ -21,6 +23,8 @@ import { HttpError } from "../lib/problem.js";
 import { organizationSettingsReader } from "../modules/settings/read.js";
 import type { ResolveIpv4 } from "../modules/mcp-settings/reachability.js";
 import type { Environment, AdvancedRuntime } from "../modules/advanced-settings/config.js";
+import { EventHubFullError } from "../lib/event-hub.js";
+import { createMcpChangeFeed, type ChangeFeedView } from "./change-feed.js";
 import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
@@ -51,6 +55,7 @@ export function mcpRoutes(
   resolveIpv4?: ResolveIpv4,
 ): FastifyPluginAsync {
   return async (app) => {
+    const feed = createMcpChangeFeed(app.eventHub);
     const readSettings = organizationSettingsReader(app, settingsRuntime, resolveIpv4);
     app.decorateRequest("mcpContext", null);
     if (uploadConfig) await app.register(documentUploadRoutes(uploadConfig.secret));
@@ -135,6 +140,38 @@ export function mcpRoutes(
           clientId: context.credentialId,
           scopes: [...context.grant.toolsets, context.grant.scope],
         };
+        let view: ChangeFeedView | undefined;
+        let full = false;
+        const classified = classifyInboundRequest({
+          httpMethod: request.method,
+          protocolVersionHeader: request.headers["mcp-protocol-version"] as string | undefined,
+          mcpMethodHeader: request.headers["mcp-method"] as string | undefined,
+          mcpNameHeader: request.headers["mcp-name"] as string | undefined,
+          body: request.body,
+        });
+        const listen = specTypeSchemas.SubscriptionsListenRequest["~standard"].validate(
+          request.body,
+        );
+        if (
+          classified.kind === "modern" &&
+          classified.classification.revision === "2026-07-28" &&
+          !listen.issues
+        ) {
+          try {
+            view = await feed.open(
+              request,
+              context,
+              tools,
+              listen.value.params.notifications.resourceSubscriptions ?? [],
+              () => {
+                void handler.close();
+              },
+            );
+          } catch (error) {
+            if (!(error instanceof EventHubFullError)) throw error;
+            full = true;
+          }
+        }
         const handler = createMcpHandler(
           ({ era, authInfo: verified }) => {
             if (verified !== authInfo) throw new Error("Verified MCP authentication is required.");
@@ -264,14 +301,19 @@ export function mcpRoutes(
             });
             return server;
           },
-          { legacy: "stateless" },
+          { legacy: "stateless", bus: view?.bus, maxSubscriptions: full ? 0 : undefined },
         );
         reply.hijack();
         try {
           await toNodeHandler({
-            fetch: (req, options) => handler.fetch(req, { ...options, authInfo }),
+            fetch: async (req, options) => {
+              const response = await handler.fetch(req, { ...options, authInfo });
+              if (view?.closed) await handler.close();
+              return response;
+            },
           })(request.raw, reply.raw, request.body);
         } finally {
+          view?.release();
           await handler.close();
         }
       },
