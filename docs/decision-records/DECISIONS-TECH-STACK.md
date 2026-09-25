@@ -1989,7 +1989,7 @@ and through the settings route.
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
 | TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1132, #1134, #1135, #1138                        |
 
-### TECH-007 / TECH-013 addendum — 2026-09-26, #1172: Sender View and shared checks
+### TECH-007 / TECH-013 addendum, 2026-09-26, #1172. Sender View and shared checks
 
 The Sender View uses the discovered account API base URI, envelope-scoped access,
 Tagger and the provider Send action. Requests hide recipient edits, document edits,
