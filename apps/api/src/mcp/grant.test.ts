@@ -54,6 +54,16 @@ beforeAll(async () => {
       read,
       write,
       invalid,
+      ...(["team", "administration"] as const).flatMap((toolset) => [
+        {
+          ...read,
+          name: `test_${toolset}_off`,
+          toolset,
+          legalUser: "off" as const,
+          businessUser: "off" as const,
+        },
+        { ...read, name: `test_${toolset}_on`, toolset },
+      ]),
       ...Array.from({ length: 5 }, (_, index): ToolDefinition => ({
         ...read,
         name: `test_paged_${index}`,
@@ -229,3 +239,41 @@ it("pages tools/list by cursor under the byte budget", async () => {
     ...Array.from({ length: 5 }, (_, index) => `test_paged_${index}`),
   ]);
 });
+
+it.each([false, true])(
+  "enforces Team and Administration audiences at list and call, modern=%s",
+  async (modern) => {
+    const client = await connect(["contracts"], "write", modern);
+    const [policy] = await h.db.select().from(orgSettings);
+    try {
+      await h.db
+        .update(orgSettings)
+        .set({ mcpToolsetCeiling: ["contracts", "team", "administration"] });
+      // A cached credential may still name a Toolset that its owner can no longer choose.
+      await h.db
+        .update(apiKeyRequests)
+        .set({ toolsets: ["contracts", "team", "administration"] })
+        .where(eq(apiKeyRequests.keyId, credentialIds.get(client)!));
+      for (const role of ["administrator", "legal_team_member", "business_user"] as const) {
+        await h.db.update(users).set({ role }).where(eq(users.id, ownerId));
+        const listed = await names(client);
+        for (const toolset of ["team", "administration"]) {
+          expect(listed).not.toContain(`test_${toolset}_off`);
+          await refusal(client, `test_${toolset}_off`, "tool_outside_grant");
+        }
+        if (role === "administrator") {
+          expect(listed).toContain("test_administration_on");
+          expect(
+            (await client.callTool({ name: "test_administration_on" })).structuredContent,
+          ).toEqual({ ok: true });
+        } else {
+          expect(listed).not.toContain("test_administration_on");
+          await refusal(client, "test_administration_on", "tool_outside_grant");
+        }
+      }
+    } finally {
+      await h.db.update(users).set({ role: "administrator" }).where(eq(users.id, ownerId));
+      await h.db.update(orgSettings).set({ mcpToolsetCeiling: policy!.mcpToolsetCeiling });
+    }
+  },
+);

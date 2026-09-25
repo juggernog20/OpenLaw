@@ -10086,7 +10086,7 @@ export interface operations {
             policy: {
               enabled: boolean;
               groupEnabled: boolean;
-              toolsetCeiling: (
+              toolsets: (
                 | "workspace"
                 | "contracts"
                 | "matters"

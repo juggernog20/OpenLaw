@@ -11552,6 +11552,9 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.mcp.administrationCaption": {
+    "defaultMessage": "Starts off. Administrators only."
+  },
   "settings.mcp.apiKeys": {
     "defaultMessage": "API keys"
   },
@@ -11653,6 +11656,9 @@
   },
   "settings.mcp.serverAddress": {
     "defaultMessage": "Server address"
+  },
+  "settings.mcp.teamCaption": {
+    "defaultMessage": "Starts off."
   },
   "settings.mcp.toolCalls": {
     "defaultMessage": "Tool calls in the last day"

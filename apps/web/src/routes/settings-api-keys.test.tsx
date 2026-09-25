@@ -6,7 +6,8 @@ import { json, renderAt, stubApi } from "../testing/helpers";
 const policy = {
   enabled: true,
   groupEnabled: true,
-  toolsetCeiling: ["contracts", "tasks"],
+  toolsetCeiling: ["contracts", "tasks", "team", "administration"],
+  toolsets: ["contracts", "tasks"],
   readOnly: true,
   apiKeyLifetimeDays: 90,
 };
@@ -57,6 +58,10 @@ for (const [path, role] of [
     expect(within(dialog).getByRole("radio", { name: /Read/ })).not.toBeChecked();
     expect(within(dialog).queryByRole("radio", { name: /Write/ })).not.toBeInTheDocument();
     expect(within(dialog).queryByRole("checkbox", { name: "Matters" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("checkbox", { name: "Team" })).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("checkbox", { name: "Administration" }),
+    ).not.toBeInTheDocument();
     await user.type(
       within(dialog).getByRole("textbox", { name: "Client name" }),
       "Research script",

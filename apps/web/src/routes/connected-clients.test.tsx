@@ -21,7 +21,7 @@ const grant: Grant = {
 const policy = {
   enabled: false,
   groupEnabled: false,
-  toolsetCeiling: [],
+  toolsets: [],
   readOnly: true,
   apiKeyLifetimeDays: 90,
 };

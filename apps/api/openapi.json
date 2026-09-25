@@ -4397,7 +4397,7 @@
                         "groupEnabled": {
                           "type": "boolean"
                         },
-                        "toolsetCeiling": {
+                        "toolsets": {
                           "type": "array",
                           "items": {
                             "type": "string",
@@ -4428,7 +4428,7 @@
                       "required": [
                         "enabled",
                         "groupEnabled",
-                        "toolsetCeiling",
+                        "toolsets",
                         "readOnly",
                         "apiKeyLifetimeDays"
                       ],

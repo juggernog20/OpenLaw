@@ -19,6 +19,8 @@ For a [LAN only deployment](deployment-configuration.md#lan-only), run the Clien
 5. Ask an Administrator to open the bell, find your request under **Your approvals**, and select **Approve**. Your row says **Pending approval** until it is handled.
 6. Return to **API keys** and reload. The **Your key is ready** dialog shows the key once. Select **Copy** and retain it in your approved secret store before selecting **Done**. OpenLaw cannot show it again.
 
+The form offers only Toolsets within the organization ceiling that have a Tool your account type may run. OAuth consent uses the same rule and also limits the choices to the Toolsets the Client requested. Team and Administration start off in the ceiling. Business Users cannot choose either; Administration is for Administrators only.
+
 An Administrator's own request approves itself. A Business User follows the same request flow from **API keys** in Portal Settings, if Business Users API keys is on. Their available Tools and record access follow their account.
 
 ## Connect Claude Code

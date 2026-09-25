@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { toolRegister, type ToolDefinition } from "../../mcp/register.js";
 import { createHash } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
@@ -728,3 +729,70 @@ it.each(["legal_team_member", "business_user"] as const)(
     }
   },
 );
+
+it("offers the same audience-filtered Toolsets for consent and API key requests", async () => {
+  const register = toolRegister as ToolDefinition[];
+  const originalLength = register.length;
+  register.push(
+    ...(["team", "administration"] as const).map((toolset) => ({
+      ...register[0]!,
+      name: `test_${toolset}`,
+      toolset,
+      legalUser: "on" as const,
+      businessUser: "off" as const,
+    })),
+  );
+  try {
+    const member = await provisionUser(h.app.auth, {
+      email: "choices-member@example.com",
+      displayName: "Member",
+      password: TEST_ADMIN.password,
+    });
+    await h.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
+    const memberCookies = await signInCookies(
+      h.app,
+      "choices-member@example.com",
+      TEST_ADMIN.password,
+    );
+    await h.db
+      .update(orgSettings)
+      .set({ mcpLegalApiKeysEnabled: true, mcpBusinessApiKeysEnabled: true });
+    for (const [session, expected] of [
+      [cookies, ["contracts", "tasks", "team", "administration"]],
+      [memberCookies, ["contracts", "tasks", "team"]],
+      [business, ["contracts"]],
+    ] as const) {
+      await h.db
+        .update(orgSettings)
+        .set({ mcpToolsetCeiling: ["contracts", "tasks", "team", "administration"] });
+      const consent = await facts(await query(session), session);
+      const keys = await h.app.inject({ url: "/api/v1/api-key-requests", cookies: session });
+      expect(consent.statusCode, consent.body).toBe(200);
+      expect(keys.statusCode, keys.body).toBe(200);
+      expect(consent.json().toolsets).toEqual(expected);
+      expect(keys.json().policy.toolsets).toEqual(expected);
+      for (const toolset of ["contracts", "tasks", "team", "administration"] as const) {
+        const response = await h.app.inject({
+          method: "POST",
+          url: "/api/v1/api-key-requests",
+          cookies: session,
+          payload: { clientName: "Audience test", toolsets: [toolset], scope: "read" },
+        });
+        if ((expected as readonly string[]).includes(toolset))
+          expect(response.statusCode, response.body).toBe(201);
+        else {
+          expect(response.statusCode, response.body).toBe(403);
+          expect(response.json().type).toBe("urn:openlaw:problem:toolset-outside-ceiling");
+        }
+      }
+      await h.db.update(orgSettings).set({ mcpToolsetCeiling: ["contracts"] });
+      expect((await facts(await query(session), session)).json().toolsets).toEqual(["contracts"]);
+      expect(
+        (await h.app.inject({ url: "/api/v1/api-key-requests", cookies: session })).json().policy
+          .toolsets,
+      ).toEqual(["contracts"]);
+    }
+  } finally {
+    register.splice(originalLength);
+  }
+});

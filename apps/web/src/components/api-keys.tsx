@@ -451,7 +451,7 @@ export function ApiKeys({
                 />
               </p>
               <div className="grid grid-cols-1 gap-3 @sm/dialog:grid-cols-3">
-                {state.policy.toolsetCeiling.map((t) => (
+                {state.policy.toolsets.map((t) => (
                   <label key={t} className="flex items-center gap-2">
                     <Checkbox
                       checked={toolsets.includes(t)}

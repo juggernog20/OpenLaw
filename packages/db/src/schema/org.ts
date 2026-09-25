@@ -7,7 +7,7 @@
  * features that read them (TECH-014) — auth policy first.
  */
 
-import { MCP_TOOLSETS, type McpToolset } from "@openlaw/shared";
+import { MCP_DEFAULT_TOOLSET_CEILING, type McpToolset } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -150,7 +150,7 @@ export const orgSettings = pgTable(
     mcpToolsetCeiling: jsonb("mcp_toolset_ceiling")
       .$type<McpToolset[]>()
       .notNull()
-      .default([...MCP_TOOLSETS]),
+      .default([...MCP_DEFAULT_TOOLSET_CEILING]),
     mcpReadOnly: boolean("mcp_read_only").notNull().default(false),
     mcpApiKeyLifetimeDays: integer("mcp_api_key_lifetime_days").notNull().default(90),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

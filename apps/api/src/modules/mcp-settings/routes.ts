@@ -11,6 +11,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { authorizationServerAvailable } from "../../auth/oauth.js";
 import { requireRole } from "../../auth/guards.js";
+import { publishLiveEvent } from "../../lib/live-events.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 
@@ -156,6 +157,18 @@ export function mcpSettingsRoutes(resolveIpv4?: ResolveIpv4): FastifyPluginAsync
           }
           if (Object.keys(changes).length)
             await tx.update(orgSettings).set(changes).where(eq(orgSettings.id, row.id));
+          if (
+            [
+              "mcpEnabled",
+              "mcpReadOnly",
+              "mcpToolsetCeiling",
+              "mcpLegalApiKeysEnabled",
+              "mcpBusinessApiKeysEnabled",
+              "mcpLegalOAuthClientsEnabled",
+              "mcpBusinessOAuthClientsEnabled",
+            ].some((field) => field in changes)
+          )
+            await publishLiveEvent(tx, { kind: "mcp", change: "policy", credentialIds: [] });
           return {
             ...row,
             ...request.body,

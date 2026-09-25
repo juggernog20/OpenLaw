@@ -67,7 +67,11 @@ beforeAll(async () => {
         method: "POST",
         url: "/api/v1/api-key-requests",
         cookies,
-        payload: { clientName: "Matters Tasks test", toolsets: ["matters", "tasks"], scope },
+        payload: {
+          clientName: "Matters Tasks test",
+          toolsets: role === "business_user" ? ["matters"] : ["matters", "tasks"],
+          scope,
+        },
       });
       expect(asked.statusCode, asked.body).toBe(201);
       await h.app.inject({

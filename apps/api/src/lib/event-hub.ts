@@ -82,6 +82,8 @@ function isMemberPlus(role: UserRole): boolean {
 
 function addressedTo(event: LiveEvent, scope: EventConnectionScope): boolean {
   switch (event.kind) {
+    case "mcp":
+      return false;
     case "bell":
       return event.userId === scope.userId;
     case "inbox":
