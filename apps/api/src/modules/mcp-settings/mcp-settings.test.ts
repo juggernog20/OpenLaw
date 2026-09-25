@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { afterAll, beforeAll, expect, it } from "vitest";
+import { LIVE_EVENT_CHANNEL, parseLiveEvent } from "@openlaw/shared";
 import type { LightMyRequestResponse } from "fastify";
 import {
   signInCookies,
@@ -59,8 +60,6 @@ const toolsets = [
   "entities",
   "knowledge",
   "people",
-  "team",
-  "administration",
 ];
 function expectProblem(response: LightMyRequestResponse, status: number) {
   expect(response.statusCode).toBe(status);
@@ -194,4 +193,94 @@ it("refuses the Legal Team Member access to MCP audit rows", async () => {
     }),
     403,
   );
+});
+
+it("publishes one MCP event for access changes, none for other fields, no-ops or rollback", async () => {
+  const listener = await harness.db.$client.connect();
+  const events: unknown[] = [];
+  listener.on("notification", (message) => {
+    if (message.channel === LIVE_EVENT_CHANNEL && message.payload) {
+      const event = parseLiveEvent(JSON.parse(message.payload));
+      if (event?.kind === "mcp") events.push(event);
+    }
+  });
+  await listener.query(`LISTEN ${LIVE_EVENT_CHANNEL}`);
+  async function patch(payload: Record<string, unknown>, expectedCount: number, status = 200) {
+    events.length = 0;
+    const response = await harness.app.inject({ method: "PATCH", url, cookies, payload });
+    expect(response.statusCode, response.body).toBe(status);
+    // A notification from the next transaction marks delivery of the PATCH's notifications.
+    const delivered = new Promise<void>((resolve) => {
+      const receive = (message: { channel: string }) => {
+        if (message.channel === "mcp_test_barrier") {
+          listener.off("notification", receive);
+          resolve();
+        }
+      };
+      listener.on("notification", receive);
+    });
+    await harness.db.$client.query("NOTIFY mcp_test_barrier");
+    await delivered;
+    expect(events).toEqual(
+      Array.from({ length: expectedCount }, () => ({
+        kind: "mcp",
+        change: "policy",
+        credentialIds: [],
+      })),
+    );
+  }
+  try {
+    await listener.query("LISTEN mcp_test_barrier");
+    const current = (await harness.app.inject({ method: "GET", url, cookies })).json();
+    for (const field of [
+      "enabled",
+      "readOnly",
+      "legalApiKeysEnabled",
+      "businessApiKeysEnabled",
+      "legalOAuthClientsEnabled",
+      "businessOAuthClientsEnabled",
+    ]) {
+      await patch({ [field]: !current[field] }, 1);
+      await patch({ [field]: !current[field] }, 0);
+    }
+    await patch({ enabled: current.enabled, readOnly: current.readOnly }, 1);
+    await patch({ toolsetCeiling: ["team", "administration"] }, 1);
+    await patch({ toolsetCeiling: ["team", "administration"] }, 0);
+    await patch({ apiKeyLifetimeDays: 42 }, 0);
+    await patch({ dynamicClientRegistrationEnabled: !current.dynamicClientRegistrationEnabled }, 0);
+    await harness.db.$client.query(
+      `CREATE FUNCTION refuse_mcp_commit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'test rollback'; END $$`,
+    );
+    await harness.db.$client.query(
+      `CREATE CONSTRAINT TRIGGER refuse_mcp_commit AFTER UPDATE ON org_settings DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION refuse_mcp_commit()`,
+    );
+    await patch({ enabled: !current.enabled }, 0, 500);
+    expect((await harness.app.inject({ method: "GET", url, cookies })).json().enabled).toBe(
+      current.enabled,
+    );
+  } finally {
+    await harness.db.$client.query("DROP TRIGGER IF EXISTS refuse_mcp_commit ON org_settings");
+    await harness.db.$client.query("DROP FUNCTION IF EXISTS refuse_mcp_commit()");
+    await listener.query("UNLISTEN *");
+    listener.removeAllListeners("notification");
+    listener.release();
+  }
+});
+it("parses MCP changes and rejects malformed credential lists", () => {
+  expect(parseLiveEvent({ kind: "mcp", change: "policy", organizationId: "ignored" })).toEqual({
+    kind: "mcp",
+    change: "policy",
+  });
+  expect(
+    parseLiveEvent({ kind: "mcp", change: "revocation", credentialIds: ["key-1", "grant-1"] }),
+  ).toEqual({ kind: "mcp", change: "revocation", credentialIds: ["key-1", "grant-1"] });
+  for (const input of [
+    {},
+    { change: "unknown" },
+    { change: "policy", credentialIds: null },
+    { change: "policy", credentialIds: [""] },
+    { change: "policy", credentialIds: [1] },
+    { change: "policy", credentialIds: "key" },
+  ])
+    expect(parseLiveEvent({ kind: "mcp", ...input })).toBeNull();
 });

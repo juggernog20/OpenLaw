@@ -56,12 +56,12 @@ function clientSchema<T>(schema: T): T {
   expandTypes(schema);
   return schema;
 }
-/** DD-029 audience defaults also exclude Tools the audience cannot use. Team is opt-in. */
+/** DD-029 audience flags say whether an account type may run a Tool. */
 export function toolRefusal(tool: ToolDefinition, grant: Grant): ToolError | undefined {
   const audience = grant.role === "business_user" ? tool.businessUser : tool.legalUser;
   if (
     (tool.toolset === "administration" && grant.role !== "administrator") ||
-    (audience === "off" && tool.toolset !== "team" && tool.toolset !== "administration") ||
+    audience === "off" ||
     (tool.toolset !== "guide" && !grant.toolsets.includes(tool.toolset))
   )
     return new ToolError(

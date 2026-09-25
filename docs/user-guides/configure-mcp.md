@@ -13,6 +13,8 @@ You must be an Administrator. Open **Settings → Organization → MCP**, after 
 5. Turn on **Read-only** if no Client should make changes. It also blocks writes from an existing key with Write scope.
 6. Under **API key lifetime**, set **API key lifetime (days)**, from 1 to 365. The default is 90. Leave the field or press Enter to save. The lifetime applies to new keys when approved.
 
+**Team** and **Administration** start unchecked in the ceiling. Select either checkbox to allow that Toolset. Administration is for Administrators only. The key request form and OAuth consent page offer only Toolsets with at least one Tool the person's account type may run. An empty Toolset is not offered.
+
 Settings apply immediately and show **Settings saved.** Each Organization change is recorded in the Audit log. Turning MCP or a group's API keys off blocks that group's next Client request. Removing a Toolset from the ceiling blocks its Tools even on an existing key.
 
 ## Enable OAuth Clients

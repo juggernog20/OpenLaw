@@ -8,7 +8,7 @@ import {
   toolInputJsonSchema,
   toolOutputJsonSchema,
 } from "./register.js";
-import { MCP_TOOLSETS } from "@openlaw/shared";
+import { MCP_TOOLSETS, MCP_DEFAULT_TOOLSET_CEILING } from "@openlaw/shared";
 
 function inspectSchema(value: unknown, description: string) {
   if (!value || typeof value !== "object") return;
@@ -64,10 +64,12 @@ it("serves the input form, so a defaulted argument stays optional for the Client
 it.each(["administrator", "legal_team_member", "business_user"] as const)(
   "pins the current default count for %s",
   (role) => {
-    const grant = { role, toolsets: ["guide", ...MCP_TOOLSETS], scope: "write" as const };
-    const defaults = toolRegister.filter(
-      (t) => (role === "business_user" ? t.businessUser : t.legalUser) !== "off",
-    );
+    const grant = {
+      role,
+      toolsets: ["guide", ...MCP_DEFAULT_TOOLSET_CEILING],
+      scope: "write" as const,
+    };
+    const defaults = toolRegister;
     expect(defaults.filter((t) => !toolRefusal(t, grant))).toHaveLength(
       role === "business_user" ? 24 : 37,
     );
@@ -81,4 +83,28 @@ it("expresses nullable types and positive integer bounds for Client schemas", ()
     expect(JSON.stringify(schema)).toContain('"minimum":1');
     expect(JSON.stringify(schema)).toContain('"anyOf"');
   }
+});
+
+it.each(MCP_TOOLSETS)("refuses an off audience in %s", (toolset) => {
+  for (const role of ["administrator", "legal_team_member", "business_user"] as const) {
+    const tool = {
+      ...toolRegister[0]!,
+      toolset,
+      legalUser: "off" as const,
+      businessUser: "off" as const,
+    };
+    expect(toolRefusal(tool, { role, toolsets: [...MCP_TOOLSETS], scope: "write" })?.code).toBe(
+      "tool_outside_grant",
+    );
+  }
+});
+it("keeps Administration exclusive to Administrators even with an on audience", () => {
+  const tool = { ...toolRegister[0]!, toolset: "administration" as const };
+  for (const role of ["legal_team_member", "business_user"] as const)
+    expect(toolRefusal(tool, { role, toolsets: [...MCP_TOOLSETS], scope: "write" })?.code).toBe(
+      "tool_outside_grant",
+    );
+  expect(
+    toolRefusal(tool, { role: "administrator", toolsets: [...MCP_TOOLSETS], scope: "write" }),
+  ).toBeUndefined();
 });
