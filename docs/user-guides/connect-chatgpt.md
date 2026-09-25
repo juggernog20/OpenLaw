@@ -4,7 +4,7 @@ Connect ChatGPT to OpenLaw with OAuth. ChatGPT has no API key path for this conn
 
 ## Before you start
 
-You need an OpenLaw account and a ChatGPT account with Developer mode available on the web. Your workspace may restrict it. Ask your Administrator to [enable MCP and OAuth Clients for your account group](configure-mcp.md#enable-oauth-clients), enable **ChatGPT** in **Allowed Clients**, and copy the **Server address**. The deployer must use the [publicly reachable profile](deployment-configuration.md#publicly-reachable).
+You need an OpenLaw account and a ChatGPT account with Developer mode available on the web. Your workspace may restrict it. Ask your Administrator to [enable MCP and OAuth Clients for your account group](configure-mcp.md#enable-oauth-clients), check that **ChatGPT** is still enabled in **Allowed Clients**, and copy the **Server address**. The seeded Allowed Clients start enabled. The deployer must use the [publicly reachable profile](deployment-configuration.md#publicly-reachable).
 
 ## Add OpenLaw and scan its Tools
 

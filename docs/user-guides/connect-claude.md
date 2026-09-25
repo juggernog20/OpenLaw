@@ -4,7 +4,7 @@ Let Claude work in OpenLaw as you. You choose its Toolsets and scope on the cons
 
 ## Before you start
 
-You need an OpenLaw account and the **Server address** from your Administrator, including `/mcp`. Ask the Administrator to [enable OAuth Clients for your account group](configure-mcp.md#enable-oauth-clients). In **Allowed Clients**, they must enable **Claude** for claude.ai, Claude Desktop and Cowork, or **Claude Code** for the command-line Client.
+You need an OpenLaw account and the **Server address** from your Administrator, including `/mcp`. Ask the Administrator to [enable OAuth Clients for your account group](configure-mcp.md#enable-oauth-clients). The seeded **Allowed Clients** start enabled. Ask the Administrator to check that **Claude**, for claude.ai, Claude Desktop and Cowork, or **Claude Code**, for the command-line Client, is still enabled.
 
 The custom connector needs the [publicly reachable deployment profile](deployment-configuration.md#publicly-reachable). Claude Code can also use a [LAN only deployment](deployment-configuration.md#lan-only) from the office network or VPN. Your Claude plan and organization must permit custom connectors.
 
@@ -38,7 +38,7 @@ Claude Code has its own published identity, `https://claude.ai/oauth/claude-code
 1. Sign in to OpenLaw if asked. Use your usual password, magic link or SSO. A Business User signs in through the Portal. Sign-in returns you to the consent page.
 2. Check the organization, the Client's identity and the **Allowed Client** pill. The heading is **Claude wants to work in OpenLaw as you**, or **Claude Code wants to work in OpenLaw as you**. Check your name, account type and email below it.
 3. Under **What Claude may use**, select the Toolsets you need. The heading uses **Claude Code** for that Client. The page says **Nothing is selected for you.** Only the requested Toolsets your account and organization permit are offered. Guide Tools remain available.
-4. Under **How far Claude may go**, choose **Read only** or **Read and write**. The heading again uses the actual Client name. Read and write allows changes as you and records each change as you, via the Client. It is hidden when the organization is read-only.
+4. Under **How far Claude may go**, choose **Read only** or **Read and write**. The heading again uses the actual Client name. Read and write allows changes as you and records each change as you, via the Client. It is offered only when the Client requests write access and the organization is not read-only.
 5. Read **This Client can never see or change what you cannot.** Select **Allow** to return to the Client. Allow stays disabled until you choose at least one Toolset and a scope. Select **Deny** to refuse instead.
 
 Ask: "Use OpenLaw to tell me who I am, then find and read the guide Connect Claude." The Client can call `openlaw_whoami`, `openlaw_docs_search` and `openlaw_docs_read`. Guide reads the same articles as Help.

@@ -20,7 +20,7 @@ Settings apply immediately and show **Settings saved.** Each Organization change
 1. Turn on **Enable MCP** and set the **Toolset ceiling** and **Read-only** policy as above.
 2. Turn on **OAuth Clients** for **Legal Users**, **Business Users**, or both. These switches are separate from **API keys**. Legal Users includes Administrators and Legal Team Members.
 3. Check the pill beside **Server address**. **Reachable** means the address passed the three checks below. **Not reachable ·** names each failed check.
-4. Expand **Allowed Clients** and enable the Clients people may connect. Give people the Server address and the guide for [Claude](connect-claude.md), [ChatGPT](connect-chatgpt.md) or [Microsoft 365 Copilot](connect-microsoft-365-copilot.md).
+4. Expand **Allowed Clients**. The four seeded Clients start enabled. Disable the Clients people may not connect. Give people the Server address and the guide for [Claude](connect-claude.md), [ChatGPT](connect-chatgpt.md) or [Microsoft 365 Copilot](connect-microsoft-365-copilot.md).
 
 | Failed check        | Meaning and action                                                                                                                                                                 |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,7 +36,7 @@ OAuth grants need no Administrator approval per person. The consent page lets th
 
 ## Manage Allowed Clients
 
-The card starts with Claude, Claude Code and ChatGPT as **Published identity** entries. Their captions show the vendor's metadata URL. You can enable or disable them. Their identities and callback URLs are not editable.
+The card starts with Claude, Claude Code and ChatGPT as **Published identity** entries. Their captions show the vendor's metadata URL. They start enabled. You can disable and enable them. Their identities and callback URLs are not editable.
 
 **Microsoft 365 Copilot** starts as a **Registered client** template. Select **Edit** to see **Client name**, **Client id** and **Callback URLs**. It has two fixed callbacks for Teams and Visual Studio Code, then an empty slot for the Copilot Studio wizard's consent redirect. Follow [Connect Microsoft 365 Copilot](connect-microsoft-365-copilot.md) to fill that slot.
 

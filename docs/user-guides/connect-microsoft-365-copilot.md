@@ -11,7 +11,7 @@ You need an OpenLaw account and permission to create an agent in the chosen Micr
 1. As an OpenLaw Administrator, open **Settings → Organization → MCP → Allowed Clients**.
 2. Select **Edit** on **Microsoft 365 Copilot**, which has the **Registered client** pill.
 3. Select **Generate secret**. In **Your Client secret is ready**, copy the secret and **Client id** into your approved secret store before selecting **Done**. OpenLaw cannot show the secret again.
-4. Enable **Microsoft 365 Copilot** in Allowed Clients.
+4. Check that **Microsoft 365 Copilot** is still enabled in Allowed Clients. The seeded Clients start enabled.
 
 If the row already has a secret, use the stored value. **Rotate secret** invalidates the old secret at once and leaves grants in place. Update every Microsoft connection using it after rotation.
 
