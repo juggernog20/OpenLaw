@@ -1928,6 +1928,75 @@ A new grant uses the active lifetime. An existing grant retains its absolute exp
 including across token refresh. The API rejects invalid lifetime settings at boot
 and through the settings route.
 
+### Addendum, 2026-09-25, #1166: M42 resources, prompts and the listen stream
+
+M42 is built on the same `/mcp` endpoint. Resource reads use these addresses:
+
+| Address                                   | Content                                                |
+| ----------------------------------------- | ------------------------------------------------------ |
+| `openlaw://contracts/{number}`            | Contract                                               |
+| `openlaw://matters/{number}`              | Matter                                                 |
+| `openlaw://requests/{number}`             | Request                                                |
+| `openlaw://entities/{id}`                 | Entity                                                 |
+| `openlaw://knowledge/{id}`                | Knowledge Item                                         |
+| `openlaw://document-versions/{versionId}` | Extracted Document Version text                        |
+| `openlaw://inbox`                         | Inbox for Legal Users, own Requests for Business Users |
+| `openlaw://tasks/mine`                    | Tasks assigned to the person                           |
+| `openlaw://vocabulary`                    | Configured vocabulary                                  |
+
+Record numbers accept their prefix or a positive integer, such as `C-12` or `12`.
+Entity, Knowledge Item and Version addresses require UUIDs. Each read uses the
+matching Tool's grant, record reach and output budget. Records and views return
+`application/json`. Version text returns `text/plain`, with a T26 continuation
+when more text exists. Resource content has a title in `_meta.title`.
+
+`triage_inbox` accepts an optional string `limit`, from 1 to 100, with default 25.
+It requires Requests and a Legal User. `summarize_record` requires `record`.
+It accepts a record address or a kind and number or id, such as `contract C-12`.
+Its record kinds are Contract, Matter, Request, Entity and Knowledge Item.
+Each prompt returns instructions and an embedded resource in separate user messages.
+It treats record text as data. Triage asks for confirmation before writes and
+hands conversion to the person's Convert dialog. Summary requests no changes.
+A resource read or prompt get reserves one rate-limited call and one ledger row.
+An embedded read does not reserve another call. Ledger names use `resource:<kind>`
+and `prompt:<name>` without record addresses or content.
+
+Modern Clients use `subscriptions/listen` through a long-lived POST response.
+Each stream has one scoped subscription on the shared event hub and its existing
+PostgreSQL LISTEN connection. It adds no database connection per stream.
+The SDK event bus filters the requested notification types and addresses.
+OpenLaw checks the person's grant, record reach and Visibility tiers.
+Subscriptions cover Contract, Matter, Request, Entity and Knowledge Item records,
+plus the Inbox for Legal Users. Other resource addresses do not produce updates.
+
+MCP policy changes recheck the credential and publish
+`notifications/tools/list_changed`, `notifications/resources/list_changed` and
+`notifications/prompts/list_changed`. Record events publish
+`notifications/resources/updated` at the permitted tiers.
+Inbox events publish an Inbox update for subscribed Legal Users.
+A revocation closes the affected stream. The heartbeat rechecks credentials,
+expiry and switches. A role change closes the stream so the Client must reconnect.
+The hub's capacity limit applies. Legacy Clients stay stateless and reload by hand.
+There is no GET stream, `/sse` endpoint or legacy subscription session.
+
+Discovery supplies these cache hints. They never replace a current access check.
+
+| Method                     | `ttlMs` | `cacheScope` |
+| -------------------------- | ------- | ------------ |
+| `tools/list`               | 300000  | `private`    |
+| `resources/templates/list` | 300000  | `private`    |
+| `prompts/list`             | 300000  | `private`    |
+| `resources/list`           | 0       | Not set      |
+| `resources/read`           | 0       | Not set      |
+
+The audience flags mean that an account type may run a Tool. They do not set
+ceiling defaults. T33 and T34 use `team`. T35 and T40 use `administration` and
+require an Administrator. All four declare Legal User `on` and Business User `off`.
+The migration removes both Toolsets from existing ceilings and the column default.
+API key requests and OAuth consent share `selectableToolsets`. It keeps only
+ceiling Toolsets with a Tool the account type may run. Consent also intersects
+this set with the Client's requested scopes. Guide needs no selection.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -1966,4 +2035,4 @@ and through the settings route.
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1132, #1134, #1135, #1138                        |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166            |
