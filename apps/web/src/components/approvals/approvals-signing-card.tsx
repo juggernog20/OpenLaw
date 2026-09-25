@@ -647,15 +647,15 @@ export function SignaturesCard({
                   : sendContractEnvelope(contractNumber, input),
               intl.formatMessage(
                 signing.preparationEnabled
-                  ? {
+                  ? defineMessage({
                       id: "signing.prepareFailed",
                       defaultMessage:
                         "The Envelope could not be prepared. Check its status before trying again.",
-                    }
-                  : {
+                    })
+                  : defineMessage({
                       id: "signing.sendFailed",
                       defaultMessage: "The envelope could not be sent. Try again.",
-                    },
+                    }),
               ),
             );
             if (refusal === null) setSending(false);

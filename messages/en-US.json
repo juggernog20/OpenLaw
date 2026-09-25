@@ -12440,8 +12440,26 @@
   "signing.needSigners": {
     "defaultMessage": "Give every signer a name and an email address."
   },
+  "signing.notSent": {
+    "defaultMessage": "Not sent"
+  },
   "signing.peopleMatches": {
     "defaultMessage": "People in OpenLaw"
+  },
+  "signing.prepare": {
+    "defaultMessage": "Prepare Envelope"
+  },
+  "signing.prepareEnvelope": {
+    "defaultMessage": "Create draft"
+  },
+  "signing.prepareFailed": {
+    "defaultMessage": "The Envelope could not be prepared. Check its status before trying again."
+  },
+  "signing.prepareNote": {
+    "defaultMessage": "Create an unsent draft in DocuSign with this Version and these Signers. No invitations are sent."
+  },
+  "signing.prepareTitle": {
+    "defaultMessage": "Prepare Envelope"
   },
   "signing.reason": {
     "defaultMessage": "Reason"
@@ -12491,11 +12509,23 @@
   "signing.status.declined": {
     "defaultMessage": "Declined"
   },
+  "signing.status.draft": {
+    "defaultMessage": "Draft — not sent"
+  },
+  "signing.status.preparationFailed": {
+    "defaultMessage": "Preparation failed"
+  },
+  "signing.status.preparing": {
+    "defaultMessage": "Preparing"
+  },
   "signing.status.sent": {
     "defaultMessage": "Out for signature"
   },
   "signing.status.signed": {
     "defaultMessage": "Signed"
+  },
+  "signing.status.uncertain": {
+    "defaultMessage": "Creation uncertain — not confirmed sent"
   },
   "signing.status.voided": {
     "defaultMessage": "Voided"
