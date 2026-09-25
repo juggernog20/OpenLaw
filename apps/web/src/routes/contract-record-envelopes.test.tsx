@@ -655,6 +655,34 @@ describe("sending for signature", () => {
     await waitFor(async () => expect(await envelopeRows()).toHaveLength(1));
   });
 
+  it("sends a picked user by id, beside a typed signer, in row order", async () => {
+    const user = userEvent.setup();
+    const api = recordApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/approvals");
+
+    await user.click(await screen.findByRole("button", { name: "Send for signature" }));
+    const dialog = await screen.findByRole("dialog");
+
+    await user.type(within(dialog).getByLabelText("Signer 1 name"), "nad");
+    await user.click(within(dialog).getByRole("option", { name: "Nadia Counsel" }));
+    // A picked user has no email box: the seam reads their address.
+    expect(within(dialog).queryByLabelText("Signer 1 email")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Uses their OpenLaw email")).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("button", { name: "Add signer" }));
+    await user.type(within(dialog).getByLabelText("Signer 2 name"), "Sarah Chen");
+    // Nadia is on row 1, so row 2 does not offer her again.
+    expect(within(dialog).queryByRole("option", { name: "Nadia Counsel" })).not.toBeInTheDocument();
+    await user.type(within(dialog).getByLabelText("Signer 2 email"), "sarah@meridianbio.example");
+    await user.click(within(dialog).getByRole("button", { name: "Send envelope" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.body).toMatchObject({
+      signers: [{ personId: "u2" }, { name: "Sarah Chen", email: "sarah@meridianbio.example" }],
+    });
+  });
+
   it("sends the older round when it is the one picked", async () => {
     const user = userEvent.setup();
     const api = recordApi();

@@ -12431,6 +12431,9 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.emailPlaceholder": {
+    "defaultMessage": "Email address"
+  },
   "signing.executedFailed": {
     "defaultMessage": "The executed copy could not be filed. Upload it to the record instead."
   },
@@ -12440,11 +12443,17 @@
   "signing.executedFiling": {
     "defaultMessage": "Filing the executed copy…"
   },
+  "signing.namePlaceholder": {
+    "defaultMessage": "Search people or type a name"
+  },
   "signing.needReason": {
     "defaultMessage": "Say why this envelope is being voided."
   },
   "signing.needSigners": {
     "defaultMessage": "Give every signer a name and an email address."
+  },
+  "signing.peopleMatches": {
+    "defaultMessage": "People in OpenLaw"
   },
   "signing.reason": {
     "defaultMessage": "Reason"
@@ -12485,6 +12494,9 @@
   "signing.signersHelp": {
     "defaultMessage": "Everyone you name is asked at once. They sign in any order."
   },
+  "signing.signersNote": {
+    "defaultMessage": "Pick someone in OpenLaw, and their email fills in for you. For someone outside OpenLaw, type their name and email address."
+  },
   "signing.status.declined": {
     "defaultMessage": "Declined"
   },
@@ -12505,6 +12517,9 @@
   },
   "signing.subjectHelp": {
     "defaultMessage": "Signers see this on the invitation. Left blank, it names this contract."
+  },
+  "signing.usesAccountEmail": {
+    "defaultMessage": "Uses their OpenLaw email"
   },
   "signing.version": {
     "defaultMessage": "Version {number}"

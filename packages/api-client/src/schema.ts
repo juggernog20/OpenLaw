@@ -28650,11 +28650,16 @@ export interface operations {
       content: {
         "application/json": {
           documentVersionId: string;
-          signers: {
-            name: string;
-            /** Format: email */
-            email: string;
-          }[];
+          signers: (
+            | {
+                personId: string;
+              }
+            | {
+                name: string;
+                /** Format: email */
+                email: string;
+              }
+          )[];
           subject?: string;
         };
       };

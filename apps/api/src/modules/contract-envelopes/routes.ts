@@ -280,6 +280,41 @@ const EnvelopesEnvelope = z.object({
 });
 
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
+
+/**
+ * The send's signers as the provider takes them: a name and an address
+ * each. A user of this install is read from `users`, so the address is
+ * the one they sign in with. An archived user is refused rather than
+ * sent to, for the reason every other picker leaves them out: they
+ * have left, and an invitation to sign should not follow them.
+ */
+async function namedSigners(
+  db: Executor,
+  signers: readonly ({ personId: string } | { name: string; email: string })[],
+): Promise<{ name: string; email: string }[]> {
+  const ids = signers.flatMap((signer) => ("personId" in signer ? [signer.personId] : []));
+  const people =
+    ids.length === 0
+      ? []
+      : await db
+          .select({ id: users.id, name: users.displayName, email: users.email })
+          .from(users)
+          .where(and(inArray(users.id, ids), isNull(users.archivedAt)));
+  const byId = new Map(people.map((person) => [person.id, person]));
+  return signers.map((signer) => {
+    if (!("personId" in signer)) return signer;
+    const person = byId.get(signer.personId);
+    if (!person) {
+      throw httpError(
+        422,
+        "One of the people picked to sign is not an active user of this install. " +
+          "Pick someone else, or enter their name and email address.",
+      );
+    }
+    return { name: person.name, email: person.email };
+  });
+}
+
 /** One envelope, addressed by its own id — as an approval's own writes
  * are addressed (CTR-012's precedent). A void is about the round, not
  * about the record, and the record it belongs to is read from it. */
@@ -788,14 +823,21 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
            * dialog defaults, and a send is too consequential for the
            * seam to guess what the caller meant. */
           documentVersionId: RecordIdSchema,
+          /** A signer is a user of this install, named by id, or
+           * somebody outside it, named by name and address. A user's
+           * name and address are read here, so the sender never types
+           * a colleague's address and cannot get it wrong. */
           signers: z
             .array(
-              z.object({
-                name: z.string().trim().min(1).max(200),
-                // Checked as an address, because it is one: an envelope
-                // that cannot be delivered is worse than a refused send.
-                email: z.email().max(320),
-              }),
+              z.union([
+                z.object({ personId: RecordIdSchema }),
+                z.object({
+                  name: z.string().trim().min(1).max(200),
+                  // Checked as an address, because it is one: an envelope
+                  // that cannot be delivered is worse than a refused send.
+                  email: z.email().max(320),
+                }),
+              ]),
             )
             .min(1)
             .max(MAX_ENVELOPE_SIGNERS),
@@ -821,7 +863,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { documentVersionId, signers } = request.body;
+      const { documentVersionId } = request.body;
 
       // Everything that can be refused without dialling anybody is
       // refused first. A send that was never going to work must not
@@ -866,6 +908,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
             "Pick one from its chain.",
         );
       }
+
+      const signers = await namedSigners(app.db, request.body.signers);
 
       // One address, one signer. Naming somebody twice is a client that
       // built the list badly, and it is refused here rather than left

@@ -270,7 +270,7 @@ const send = (
   jar: Record<string, string>,
   number: number,
   documentVersionId: string,
-  signers: readonly { name: string; email: string }[] = SIGNERS,
+  signers: readonly ({ name: string; email: string } | { personId: string })[] = SIGNERS,
   subject?: string,
 ) =>
   harness.app.inject({
@@ -511,6 +511,45 @@ describe("what a send is refused for", () => {
     ]);
     expect(res.statusCode, res.body).toBe(422);
     expect(res.json().detail).toContain("own email address");
+  });
+
+  it("sends to a picked user by the name and address their account holds", async () => {
+    const picked = await newContract("Signed in house");
+    await paperOn(picked.number, Buffer.from("v1"), Buffer.from("v2"));
+    const paper = (await signingState(as(MEMBER), picked.number)).primaryDocument!;
+
+    const res = await send(as(MEMBER), picked.number, paper.versions[0]!.id, [
+      { personId: idOf(OUTSIDER) },
+      SIGNERS[0],
+    ]);
+    expect(res.statusCode, res.body).toBe(201);
+    const expected = [{ name: OUTSIDER.displayName, email: OUTSIDER.email }, { ...SIGNERS[0] }];
+    const envelope = (res.json() as { envelopes: EnvelopeRow[] }).envelopes[0]!;
+    expect(envelope.signers).toEqual(expected);
+    expect(provider().signersOf(provider().sentEnvelopeIds().at(-1)!)).toEqual(expected);
+  });
+
+  it("refuses a picked user who is archived", async () => {
+    const leaver = await newContract("Sent to a leaver");
+    await paperOn(leaver.number, Buffer.from("v1"), Buffer.from("v2"));
+    const paper = (await signingState(as(MEMBER), leaver.number)).primaryDocument!;
+    await harness.db
+      .update(users)
+      .set({ archivedAt: new Date() })
+      .where(eq(users.id, idOf(OUTSIDER)));
+    try {
+      const res = await send(as(MEMBER), leaver.number, paper.versions[0]!.id, [
+        { personId: idOf(OUTSIDER) },
+      ]);
+      expect(res.statusCode, res.body).toBe(422);
+      expect(res.json().detail).toContain("not an active user");
+      expect((await signingState(as(MEMBER), leaver.number)).envelopes).toEqual([]);
+    } finally {
+      await harness.db
+        .update(users)
+        .set({ archivedAt: null })
+        .where(eq(users.id, idOf(OUTSIDER)));
+    }
   });
 
   it("refuses an archived contract", async () => {

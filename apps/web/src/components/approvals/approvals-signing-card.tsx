@@ -87,10 +87,9 @@
  * decision, and printing its sentence is what keeps the rule in one
  * place (DES-035).
  *
- * **A signer is a name and an email, typed** (CTR-013). The people who
- * sign a contract are on the other side of a deal: they have no account
- * here, so there is no picker to offer them from. Every one of them is
- * asked at once — the send dialog collects a list, not an order.
+ * **A signer is a user of this install or a typed name and email**
+ * (CTR-013). Every one of them is asked at once: the send dialog
+ * collects a list, not an order.
  *
  * **Voiding is the envelope row's one action, and its audience is the
  * cancel's** (M15/4, CTR-013). The person who sent it, the contract's
@@ -145,6 +144,7 @@ import {
   voidContractEnvelope,
   type ContractEnvelope,
   type EnvelopeSigner,
+  type SendSigner,
   type EnvelopeStatus,
   type SendableDocument,
   type SigningOutcome,
@@ -162,6 +162,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { FieldHelp } from "../ui/field-help";
+import { SignerNameField } from "./signer-name-field";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -726,6 +727,7 @@ export function ApprovalsSigningCard({
       {sending && signing.primaryDocument !== null && (
         <SendEnvelopeDialog
           document={signing.primaryDocument}
+          people={users.filter((person) => !person.archived)}
           busy={busy}
           onClose={() => setSending(false)}
           onConfirm={async (input) => {
@@ -1756,11 +1758,14 @@ function VoidEnvelopeDialog({
  * two half-typed rows apart. */
 interface DraftSigner extends EnvelopeSigner {
   key: string;
+  /** The user picked from the list. The seam reads their address, so
+   * the row keeps no typed name or email while one is picked. */
+  person: UserOption | null;
 }
 
 /** A fresh, empty signer row. */
 function blankSigner(): DraftSigner {
-  return { key: crypto.randomUUID(), name: "", email: "" };
+  return { key: crypto.randomUUID(), name: "", email: "", person: null };
 }
 
 /**
@@ -1772,11 +1777,12 @@ function blankSigner(): DraftSigner {
  * is on and the older rounds are under it. A send is consequential
  * enough to name what it is sending rather than to imply it.
  *
- * **A signer is two text boxes.** The mock draws a list of people with
- * avatars and ordinals, which is a picker over an install's own users
- * — and the people who sign a contract are on the other side of a deal.
- * They have no account here, so there is nothing to pick them from, and
- * the ordinals go with the routing order v1 does not have (CTR-013).
+ * **A signer is picked or typed** (CTR-013 addendum, 2026-09-25). The
+ * name box suggests users of this install. A picked user is sent by id
+ * and the seam reads their address, so nobody types a colleague's
+ * email. A name that matches nobody stays typed, with an email box
+ * beside it, for the other side of a deal. The mock's ordinals stay
+ * out: they go with the routing order v1 does not have.
  *
  * **The mock's "Message" block is a Subject field.** The signing seam
  * carries a subject and no body in v1, so a box labelled "Message"
@@ -1793,18 +1799,23 @@ function blankSigner(): DraftSigner {
  */
 function SendEnvelopeDialog({
   document,
+  people,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
   document: SendableDocument;
+  /** The users the signer rows offer. Live people only: an archived
+   * user is refused by the seam, so offering one would set up a
+   * refusal. */
+  people: readonly UserOption[];
   busy: boolean;
   onClose: () => void;
   /** Answers with the refusal to show, or `null` when the send
    * landed. */
   onConfirm: (input: {
     documentVersionId: string;
-    signers: EnvelopeSigner[];
+    signers: SendSigner[];
     subject?: string;
   }) => Promise<string | null>;
 }>) {
@@ -1831,7 +1842,7 @@ function SendEnvelopeDialog({
    * out for signature, that somebody has to go and void by hand. */
   const inFlight = useRef(false);
 
-  function editSigner(key: string, patch: Partial<EnvelopeSigner>) {
+  function editSigner(key: string, patch: Partial<Omit<DraftSigner, "key">>) {
     setSigners((held) =>
       held.map((signer) => (signer.key === key ? { ...signer, ...patch } : signer)),
     );
@@ -1840,10 +1851,17 @@ function SendEnvelopeDialog({
 
   async function submit() {
     if (busy || inFlight.current) return;
-    const named = signers
-      .map((signer) => ({ name: signer.name.trim(), email: signer.email.trim() }))
-      .filter((signer) => signer.name !== "" || signer.email !== "");
-    if (named.length === 0 || named.some((signer) => signer.name === "" || signer.email === "")) {
+    // In the order the rows show, because that is the order the
+    // envelope keeps. A blank typed row is skipped, not refused.
+    const named = signers.flatMap((signer): SendSigner[] => {
+      if (signer.person) return [{ personId: signer.person.id }];
+      const typed = { name: signer.name.trim(), email: signer.email.trim() };
+      return typed.name === "" && typed.email === "" ? [] : [typed];
+    });
+    if (
+      named.length === 0 ||
+      named.some((signer) => "name" in signer && (signer.name === "" || signer.email === ""))
+    ) {
       // One sentence for both, because they are one mistake: a signer
       // the envelope could not reach is not a signer.
       setError(
@@ -1946,27 +1964,66 @@ function SendEnvelopeDialog({
                 </FieldHelp>
               </span>
             </legend>
+            <p className="-mt-1 text-xs text-muted">
+              <FormattedMessage
+                id="signing.signersNote"
+                defaultMessage="Pick someone in OpenLaw, and their email fills in for you. For someone outside OpenLaw, type their name and email address."
+              />
+            </p>
             {signers.map((signer, index) => (
               <div key={signer.key} className="flex items-center gap-2">
-                <input
-                  className={CONTROL_CLASS}
-                  value={signer.name}
-                  aria-label={intl.formatMessage(
-                    { id: "signing.signerName", defaultMessage: "Signer {number} name" },
-                    { number: index + 1 },
-                  )}
-                  onChange={(event) => editSigner(signer.key, { name: event.target.value })}
-                />
-                <input
-                  type="email"
-                  className={CONTROL_CLASS}
-                  value={signer.email}
-                  aria-label={intl.formatMessage(
-                    { id: "signing.signerEmail", defaultMessage: "Signer {number} email" },
-                    { number: index + 1 },
-                  )}
-                  onChange={(event) => editSigner(signer.key, { email: event.target.value })}
-                />
+                {signer.person ? (
+                  <div
+                    role="group"
+                    aria-label={intl.formatMessage(
+                      { id: "signing.signerName", defaultMessage: "Signer {number} name" },
+                      { number: index + 1 },
+                    )}
+                    className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-button border border-border-default bg-raised px-2"
+                  >
+                    <Avatar
+                      name={signer.person.displayName}
+                      image={signer.person.image}
+                      className="size-5"
+                    />
+                    <span className="truncate text-sm">{signer.person.displayName}</span>
+                    <span className="ml-auto shrink-0 text-xs text-muted">
+                      <FormattedMessage
+                        id="signing.usesAccountEmail"
+                        defaultMessage="Uses their OpenLaw email"
+                      />
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <SignerNameField
+                      value={signer.name}
+                      label={intl.formatMessage(
+                        { id: "signing.signerName", defaultMessage: "Signer {number} name" },
+                        { number: index + 1 },
+                      )}
+                      people={people.filter(
+                        (person) => !signers.some((row) => row.person?.id === person.id),
+                      )}
+                      onType={(name) => editSigner(signer.key, { name })}
+                      onPick={(person) => editSigner(signer.key, { person, name: "", email: "" })}
+                    />
+                    <input
+                      type="email"
+                      className={`${CONTROL_CLASS} min-w-0 flex-1`}
+                      value={signer.email}
+                      placeholder={intl.formatMessage({
+                        id: "signing.emailPlaceholder",
+                        defaultMessage: "Email address",
+                      })}
+                      aria-label={intl.formatMessage(
+                        { id: "signing.signerEmail", defaultMessage: "Signer {number} email" },
+                        { number: index + 1 },
+                      )}
+                      onChange={(event) => editSigner(signer.key, { email: event.target.value })}
+                    />
+                  </>
+                )}
                 {/* Absent on the only row, the convention the rest of
                     the record follows: removing the last signer would
                     leave an envelope nobody signs. */}
