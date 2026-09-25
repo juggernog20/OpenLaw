@@ -105,6 +105,30 @@ const RSA_KEY = [
 
 const CONNECT_SECRET = "openlaw-upgrade-fidelity-connect-secret"; // NOSONAR — inert fixture, not a credential
 
+/**
+ * The facts of an M40 API key request that must read back after an
+ * upgrade. Named, not the whole row: a later release may add a field to
+ * the listing, and that is not an upgrade failure (see the header).
+ */
+const API_KEY_REQUEST_FACTS = [
+  "id",
+  "requesterId",
+  "owner",
+  "clientName",
+  "toolsets",
+  "scope",
+  "note",
+  "status",
+  "decisionNote",
+  "decidedAt",
+  "approvedBy",
+  "createdAt",
+  "expiresAt",
+  "lastUsedAt",
+];
+const apiKeyRequestFacts = (row) =>
+  Object.fromEntries(API_KEY_REQUEST_FACTS.map((fact) => [fact, row[fact]]));
+
 /** Words carried only by the pre-M25 PDF's extracted-text row. */
 const SEARCH_PHRASE = "assignor transfers the whole of the rights";
 
@@ -319,7 +343,7 @@ async function seed() {
     );
     mcp = {
       policy,
-      requests,
+      requests: requests.map(apiKeyRequestFacts),
       activeKey: active.key,
       revokedKey: revoked.key,
       activeId: active.id,
@@ -1005,7 +1029,17 @@ async function verify(fingerprint) {
       same(mcpPolicy[field], value, `M40 setting ${field}`);
     }
     const requests = await get("/api/v1/mcp-settings/api-keys");
-    same(requests, fingerprint.mcp.requests, "M40 API keys and requests");
+    same(
+      requests.map((row) => row.id),
+      fingerprint.mcp.requests.map((row) => row.id),
+      "M40 API key requests listed",
+    );
+    for (const seeded of fingerprint.mcp.requests) {
+      const row = requests.find((item) => item.id === seeded.id);
+      for (const fact of API_KEY_REQUEST_FACTS) {
+        same(row[fact], seeded[fact], `M40 API key request ${seeded.clientName} ${fact}`);
+      }
+    }
     // Credential use happens after the metadata comparison because it updates lastUsedAt.
     const callWithKey = (key) =>
       fetch(new URL("/mcp", BASE_URL), {
