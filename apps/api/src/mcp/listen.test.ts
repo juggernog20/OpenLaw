@@ -30,6 +30,7 @@ import { provisionUser } from "../auth/instance.js";
 import { recordActivity } from "../lib/activity.js";
 import { publishLiveEvent } from "../lib/live-events.js";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
+import { MAX_SUBSCRIBED_ADDRESSES } from "./change-feed.js";
 
 let h: TestHarness;
 let admin: Record<string, string>;
@@ -345,6 +346,21 @@ it("counts three addresses as one slot and the sixth stream closes the oldest", 
   remaining.push(await listen(credential.secret));
   await expect.poll(() => first.ended).toBe(true);
   expect(remaining.every((s) => !s.ended)).toBe(true);
+});
+
+it("refuses a listen request that names more than the address cap before any lookup", async () => {
+  const credential = await key();
+  const addresses = Array.from(
+    { length: MAX_SUBSCRIBED_ADDRESSES + 1 },
+    (_, i) => `openlaw://contracts/${i + 1}`,
+  );
+  await expect(listen(credential.secret, addresses)).rejects.toThrow(
+    '"code":-32603,"message":"Subscription limit reached"',
+  );
+  const atCap = await listen(credential.secret, addresses.slice(0, MAX_SUBSCRIBED_ADDRESSES));
+  expect(atCap.ended).toBe(false);
+  atCap.controller.abort();
+  await expect.poll(() => atCap.ended).toBe(true);
 });
 
 it("delivers Inbox changes from Request submission only to subscribed Legal Users", async () => {

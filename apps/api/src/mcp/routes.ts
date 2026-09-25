@@ -24,7 +24,7 @@ import { organizationSettingsReader } from "../modules/settings/read.js";
 import type { ResolveIpv4 } from "../modules/mcp-settings/reachability.js";
 import type { Environment, AdvancedRuntime } from "../modules/advanced-settings/config.js";
 import { EventHubFullError } from "../lib/event-hub.js";
-import { createMcpChangeFeed, type ChangeFeedView } from "./change-feed.js";
+import { createMcpChangeFeed, SubscriptionLimitError, type ChangeFeedView } from "./change-feed.js";
 import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
@@ -168,7 +168,8 @@ export function mcpRoutes(
               },
             );
           } catch (error) {
-            if (!(error instanceof EventHubFullError)) throw error;
+            if (!(error instanceof EventHubFullError || error instanceof SubscriptionLimitError))
+              throw error;
             full = true;
           }
         }
@@ -229,7 +230,7 @@ export function mcpRoutes(
               resources: listResources(tools, context.grant, false),
             }));
             server.server.setRequestHandler("prompts/list", async () => ({
-              prompts: listPrompts(context.grant),
+              prompts: listPrompts(tools, context.grant),
             }));
             server.server.setRequestHandler("prompts/get", async (call) => {
               try {

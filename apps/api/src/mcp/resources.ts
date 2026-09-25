@@ -74,6 +74,25 @@ const definitions = [
   },
 ] as const;
 type Definition = (typeof definitions)[number];
+/** The Tool results these fields come from are already schema-checked; this names what is read. */
+const recordLabel = z.looseObject({
+  number: z.number().optional(),
+  title: z.string().nullish(),
+  legalName: z.string().nullish(),
+  name: z.string().nullish(),
+});
+const versionPage = z.looseObject({
+  text: z.looseObject({ text: z.string().nullable(), state: z.string() }),
+  nextCursor: z.string().nullable(),
+});
+
+/** The get Tools behind the five record templates, in list order. */
+export function recordResourceTools(tools: readonly ToolDefinition[]) {
+  return definitions
+    .filter((definition) => "field" in definition)
+    .map((definition) => tools.find((tool) => tool.name === definition.tool))
+    .filter((tool): tool is ToolDefinition => tool !== undefined);
+}
 const mimeType = (definition: Definition) =>
   definition.name === "document-versions" ? "text/plain" : "application/json";
 
@@ -178,16 +197,13 @@ export async function resourceContent(
   let title: string = definition.title;
   let text = JSON.stringify(content);
   if ("field" in definition) {
-    const record = content[definition.field] as Record<string, unknown>;
+    const record = recordLabel.parse(content[definition.field]);
     const label = record.title ?? record.legalName ?? record.name;
     title =
       "prefix" in definition ? `${definition.prefix}-${record.number}: ${label}` : String(label);
   }
   if (definition.name === "document-versions") {
-    const page = content as {
-      text: { text: string | null; state: string };
-      nextCursor: string | null;
-    };
+    const page = versionPage.parse(content);
     const continuation = page.nextCursor
       ? `\n\nContinue with T26 openlaw_document_read: ${JSON.stringify({ ...args, cursor: page.nextCursor })}`
       : "";

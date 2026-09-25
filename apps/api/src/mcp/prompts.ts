@@ -7,9 +7,20 @@ import { z } from "zod";
 import type { Prompt, PromptMessage } from "@modelcontextprotocol/server";
 import type { Environment } from "../modules/advanced-settings/config.js";
 import { recordCall } from "./calls.js";
-import { ToolError, type Grant, type ToolContext, type ToolDefinition } from "./register.js";
+import {
+  toolRefusal,
+  ToolError,
+  type Grant,
+  type ToolContext,
+  type ToolDefinition,
+} from "./register.js";
 import { pageInput } from "./results.js";
-import { resourceContent, resolveRecordResource, resolveResource } from "./resources.js";
+import {
+  recordResourceTools,
+  resourceContent,
+  resolveRecordResource,
+  resolveResource,
+} from "./resources.js";
 
 const definitions: readonly Prompt[] = [
   {
@@ -38,7 +49,6 @@ const definitions: readonly Prompt[] = [
     ],
   },
 ];
-const recordToolsets = ["contracts", "matters", "requests", "entities", "knowledge"];
 const triageInput = z.strictObject({
   limit: z
     .string()
@@ -49,11 +59,12 @@ const triageInput = z.strictObject({
 });
 const summaryInput = z.strictObject({ record: z.string().trim().min(1) });
 
-export function listPrompts(grant: Grant) {
+/** summarize_record is listed only when the grant can run at least one record get Tool. */
+export function listPrompts(tools: readonly ToolDefinition[], grant: Grant) {
   return definitions.filter((prompt) =>
     prompt.name === "triage_inbox"
       ? grant.role !== "business_user" && grant.toolsets.includes("requests")
-      : recordToolsets.some((toolset) => grant.toolsets.includes(toolset)),
+      : recordResourceTools(tools).some((tool) => !toolRefusal(tool, grant)),
   );
 }
 
@@ -99,7 +110,7 @@ export async function getPrompt(
     const definition = definitions.find((prompt) => prompt.name === name);
     if (!definition)
       throw new ToolError("unknown_prompt", "This prompt is not in the OpenLaw register.");
-    if (!listPrompts(context.grant).includes(definition))
+    if (!listPrompts(tools, context.grant).includes(definition))
       throw new ToolError(
         "tool_outside_grant",
         `${name} is outside this credential's Toolsets or account type.`,

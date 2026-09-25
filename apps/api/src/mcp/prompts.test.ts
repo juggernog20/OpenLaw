@@ -236,6 +236,14 @@ it("lists prompts in fixed order for the current grant and audience in both eras
       toolsets[0] === "documents" ? [] : ["summarize_record"],
     );
   }
+  // A Business User may hold Entities, but openlaw_entity_get is off for that account type,
+  // so summarize_record would only ever refuse and is not listed.
+  const businessEntities = await connect(true, true, ["entities"]);
+  expect((await businessEntities.listPrompts()).prompts.map((p) => p.name)).toEqual([]);
+  const businessKnowledge = await connect(true, true, ["knowledge"]);
+  expect((await businessKnowledge.listPrompts()).prompts.map((p) => p.name)).toEqual([
+    "summarize_record",
+  ]);
 });
 
 async function recordedGet(client: Client, name: string, args?: Record<string, string>) {

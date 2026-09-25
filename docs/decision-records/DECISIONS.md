@@ -1625,6 +1625,12 @@ these two ids from each ceiling. Existing keys, requests and grants remain.
 The captions are "Starts off." for Team and "Starts off. Administrators only."
 for Administration.
 
+The cost is one step per organization. Neither Toolset had a Tool before M42,
+so the upgrade takes away no working access. But an Administrator who had left
+Team or Administration checked in the ceiling must check it again after the
+upgrade. Turning a Toolset on in the ceiling adds it to no existing credential.
+A person who wants it asks for a new API key or consents to the Client again.
+
 API key requests and OAuth consent share one rule. A Toolset must be in the
 ceiling and contain a Tool the person's account type may run. OAuth consent also
 limits choices to the Client's requested Toolsets. Nothing is pre-selected.

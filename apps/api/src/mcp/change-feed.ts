@@ -62,6 +62,16 @@ export interface ChangeFeedView {
   release(): void;
 }
 
+/** One listen stream may name at most this many resource addresses. */
+export const MAX_SUBSCRIBED_ADDRESSES = 100;
+
+/** A listen request that names too many addresses is refused like a full hub. */
+export class SubscriptionLimitError extends Error {
+  constructor() {
+    super(`A listen stream may subscribe to at most ${MAX_SUBSCRIBED_ADDRESSES} resources.`);
+  }
+}
+
 /** The hub owns fan-out and capacity; this wrapper only creates credential-scoped views. */
 export function createMcpChangeFeed(hub: EventHub) {
   return {
@@ -74,7 +84,10 @@ export function createMcpChangeFeed(hub: EventHub) {
     ): Promise<ChangeFeedView> {
       const records: (RecordScope & { uri: string; tool: ToolDefinition })[] = [];
       let inbox: ToolDefinition | undefined;
-      for (const uri of new Set(addresses)) {
+      const unique = [...new Set(addresses)];
+      // Each address costs a lookup and a reach check, so the list is capped before any query.
+      if (unique.length > MAX_SUBSCRIBED_ADDRESSES) throw new SubscriptionLimitError();
+      for (const uri of unique) {
         const resource = resolveResource(tools, uri);
         if (!resource || toolRefusal(resource.tool, context.grant)) continue;
         if (uri === "openlaw://inbox") {
