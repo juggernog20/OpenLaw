@@ -12443,6 +12443,9 @@
   "signing.notSent": {
     "defaultMessage": "Not sent"
   },
+  "signing.openDraft": {
+    "defaultMessage": "Open in DocuSign"
+  },
   "signing.peopleMatches": {
     "defaultMessage": "People in OpenLaw"
   },
@@ -12450,16 +12453,19 @@
     "defaultMessage": "Prepare Envelope"
   },
   "signing.prepareEnvelope": {
-    "defaultMessage": "Create draft"
+    "defaultMessage": "Continue to DocuSign"
   },
   "signing.prepareFailed": {
     "defaultMessage": "The Envelope could not be prepared. Check its status before trying again."
   },
   "signing.prepareNote": {
-    "defaultMessage": "Create an unsent draft in DocuSign with this Version and these Signers. No invitations are sent."
+    "defaultMessage": "Open DocuSign to place fields on this Version, then send to these Signers."
   },
   "signing.prepareTitle": {
     "defaultMessage": "Prepare Envelope"
+  },
+  "signing.preparedBy": {
+    "defaultMessage": "Prepared by {name}"
   },
   "signing.reason": {
     "defaultMessage": "Reason"
@@ -12469,6 +12475,15 @@
   },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
+  },
+  "signing.returnHelp": {
+    "defaultMessage": "Open the Contract from Signatures to see its confirmed status."
+  },
+  "signing.returnHome": {
+    "defaultMessage": "Go to Home"
+  },
+  "signing.returnUnavailable": {
+    "defaultMessage": "This signing return is unavailable"
   },
   "signing.section": {
     "defaultMessage": "Signatures"
@@ -12565,6 +12580,9 @@
   },
   "signing.voidTitle": {
     "defaultMessage": "Void envelope"
+  },
+  "signing.waiting": {
+    "defaultMessage": "Waiting for confirmation"
   },
   "table.columns": {
     "defaultMessage": "Columns"

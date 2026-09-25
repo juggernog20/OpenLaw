@@ -299,6 +299,7 @@ export function parseConnectDelivery(body: Buffer): WebhookDelivery {
   return {
     providerEnvelopeId,
     status,
+    ...(readDate(envelope.sentDateTime) ? { sentAt: readDate(envelope.sentDateTime)! } : {}),
     ...(reason !== undefined ? { reason } : {}),
     ...(completedAt !== undefined ? { completedAt } : {}),
   };
@@ -671,6 +672,21 @@ class DocuSignProvider implements SigningProvider {
     return this.createEnvelope(input, true);
   }
 
+  async launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string> {
+    const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
+    const body = readObject(
+      await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}/views/sender`, {
+        method: "POST",
+        token,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(buildSenderViewRequest(returnUrl)),
+      }),
+    );
+    const launchUrl = body && readString(body, "url");
+    if (!launchUrl) throw new SigningUnavailableError("DocuSign returned no sender session.");
+    return launchUrl;
+  }
+
   async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope> {
     return this.createEnvelope(input, false);
   }
@@ -729,6 +745,7 @@ class DocuSignProvider implements SigningProvider {
       readDate(body.declinedDateTime);
     return {
       status,
+      ...(readDate(body.sentDateTime) ? { sentAt: readDate(body.sentDateTime)! } : {}),
       ...(reason !== undefined ? { reason } : {}),
       ...(completedAt !== undefined ? { completedAt } : {}),
     };
@@ -785,6 +802,7 @@ export function buildEnvelopeDefinition(
   return {
     emailSubject: input.subject,
     status: draft ? "created" : "sent",
+    ...(draft ? { messageLock: "true", recipientsLock: "true" } : {}),
     ...("transactionId" in input ? { transactionId: input.transactionId } : {}),
     documents: [
       {
@@ -817,6 +835,27 @@ export function buildEnvelopeDefinition(
               },
             }),
       })),
+    },
+  };
+}
+
+export function buildSenderViewRequest(returnUrl: string) {
+  return {
+    viewAccess: "envelope",
+    returnUrl,
+    settings: {
+      startingScreen: "Tagger",
+      sendButtonAction: "send",
+      showBackButton: "false",
+      showHeaderActions: "false",
+      showDiscardAction: "true",
+      recipientSettings: { showEditRecipients: "false" },
+      documentSettings: {
+        showEditDocuments: "false",
+        showEditDocumentVisibility: "false",
+        showEditPages: "false",
+      },
+      taggerSettings: { paletteSections: "default" },
     },
   };
 }

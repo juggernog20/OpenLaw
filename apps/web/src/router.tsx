@@ -40,6 +40,7 @@ import { PortalMatterPage, portalMatterLoader } from "./routes/portal-matter";
 import { Fragment, type ReactNode } from "react";
 import { useParams, type RouteObject } from "react-router";
 import { ConsentPage, consentLoader } from "./routes/consent";
+import { SigningReturnPage, signingReturnLoader } from "./routes/signing-return";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
@@ -212,6 +213,12 @@ function KeyedByParam({ name, children }: { name: string; children: ReactNode })
 }
 
 export const routes: RouteObject[] = [
+  {
+    path: "/signing/return",
+    loader: signingReturnLoader,
+    element: <SigningReturnPage />,
+    errorElement: <RouteErrorPage />,
+  },
   {
     // This boundary is available even when a lazy documentation import fails.
     errorElement: <RouteErrorPage />,

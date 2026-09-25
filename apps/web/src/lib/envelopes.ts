@@ -178,3 +178,19 @@ export async function prepareContractEnvelope(
     .catch(() => undefined);
   return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
 }
+
+/** Launch URLs live only in this call and are used immediately in this tab. */
+export async function launchContractEnvelope(envelopeId: string): Promise<string | null> {
+  const result = await api
+    .POST("/api/v1/envelopes/{envelopeId}/launch", {
+      params: { path: { envelopeId } },
+    })
+    .catch(() => undefined);
+  if (!result?.data)
+    return (
+      (await problem(result)).detail ??
+      "DocuSign could not open this draft. Try again from Signatures."
+    );
+  window.location.assign(result.data.url);
+  return null;
+}

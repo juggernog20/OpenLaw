@@ -76,9 +76,7 @@ import {
   contractEnvelopes,
   eq,
   gt,
-  isNull,
-  or,
-  sql,
+  inArray,
   type Db,
   type SigningProviderKey,
 } from "@openlaw/db";
@@ -118,11 +116,7 @@ export const RECONCILIATION_REFUSAL_LIMIT = 5;
  * has a durable 15-minute minimum between provider calls. */
 export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
 
-const reconciliationDue = () =>
-  or(
-    isNull(contractEnvelopes.nextReconcileAt),
-    sql`${contractEnvelopes.nextReconcileAt} <= clock_timestamp()`,
-  );
+import { checkEnvelopeStatus, reconciliationDue } from "../lib/signing/status-check.js";
 
 /** What the sweep is built from: the rows, the connector, somewhere to
  * ask for follow-on work, and somewhere to say what it did. */
@@ -185,6 +179,7 @@ interface LiveEnvelope {
   id: string;
   provider: SigningProviderKey;
   providerEnvelopeId: string | null;
+  status: string;
 }
 
 /**
@@ -231,6 +226,7 @@ export async function runReconciliationSweep(
       .select({
         id: contractEnvelopes.id,
         provider: contractEnvelopes.provider,
+        status: contractEnvelopes.status,
         providerEnvelopeId: contractEnvelopes.providerEnvelopeId,
       })
       .from(contractEnvelopes)
@@ -239,7 +235,7 @@ export async function runReconciliationSweep(
           // The only status anything can move out of. An ending is an
           // ending (see `transitions.ts`), so a finished envelope has
           // nothing left for this sweep to learn.
-          eq(contractEnvelopes.status, "sent"),
+          inArray(contractEnvelopes.status, ["draft", "sent"]),
           reconciliationDue(),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
         ),
@@ -298,25 +294,11 @@ export async function runReconciliationSweep(
         continue;
       }
 
-      // Claim before calling the provider. A concurrent or restarted worker
-      // must respect the same limit even if this process dies during the call.
-      // Five extra minutes cover the bounded authentication and status requests.
-      const [claimed] = await deps.db
-        .update(contractEnvelopes)
-        .set({ nextReconcileAt: sql`clock_timestamp() + interval '20 minutes'` })
-        .where(
-          and(
-            eq(contractEnvelopes.id, envelope.id),
-            eq(contractEnvelopes.status, "sent"),
-            reconciliationDue(),
-          ),
-        )
-        .returning({ id: contractEnvelopes.id });
-      if (!claimed) continue;
-
       let state: EnvelopeState;
       try {
-        state = await signing.readEnvelope(envelope.providerEnvelopeId);
+        const checked = await checkEnvelopeStatus(deps.db, signing, envelope.id);
+        if (!checked) continue;
+        state = checked;
         unreachable = 0;
       } catch (error) {
         // The taxonomy's own split, and the whole of this sweep's
@@ -369,18 +351,15 @@ export async function runReconciliationSweep(
           return summary;
         }
         continue;
-      } finally {
-        // Start the full gap after the attempt, including authentication and
-        // provider delays. Failed attempts also consume the interval.
-        await deps.db
-          .update(contractEnvelopes)
-          .set({ nextReconcileAt: sql`clock_timestamp() + interval '15 minutes'` })
-          .where(eq(contractEnvelopes.id, envelope.id));
       }
 
       // Still out. The record already says so, and the funnel is for
       // changes.
-      if (state.status === "sent") {
+      if (state.status === envelope.status) {
+        await deps.db
+          .update(contractEnvelopes)
+          .set({ confirmationPending: false })
+          .where(eq(contractEnvelopes.id, envelope.id));
         summary.live += 1;
         continue;
       }
@@ -392,6 +371,7 @@ export async function runReconciliationSweep(
         provider: envelope.provider,
         providerEnvelopeId: envelope.providerEnvelopeId,
         status: state.status,
+        ...(state.sentAt !== undefined ? { sentAt: state.sentAt } : {}),
         ...(state.reason !== undefined ? { reason: state.reason } : {}),
         ...(state.completedAt !== undefined ? { completedAt: state.completedAt } : {}),
       });

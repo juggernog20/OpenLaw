@@ -44,6 +44,7 @@ import {
   liveEnvelope,
   sendContractEnvelope,
   prepareContractEnvelope,
+  launchContractEnvelope,
   readContractSigning,
   voidContractEnvelope,
   type ContractEnvelope,
@@ -498,6 +499,7 @@ export function SignaturesCard({
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [sending, setSending] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
   const [voiding, setVoiding] = useState<ContractEnvelope | null>(null);
   const busy = status === "saving";
 
@@ -632,6 +634,28 @@ export function SignaturesCard({
           </div>
         </>
       )}
+      {launchError && (
+        <p role="alert" className="px-4 py-2 text-sm text-primary">
+          {launchError}
+        </p>
+      )}
+      {signing.preparationEnabled &&
+        live?.status === "draft" &&
+        !frozen &&
+        (viewerRole === "administrator" || live.sentBy.id === viewerId || ownerId === viewerId) && (
+          <button
+            type="button"
+            disabled={busy}
+            className="m-4 rounded-control border border-border-default px-3 py-2 text-sm text-primary"
+            onClick={async () => {
+              setStatus("saving");
+              setLaunchError(await launchContractEnvelope(live.id));
+              setStatus("idle");
+            }}
+          >
+            <FormattedMessage id="signing.openDraft" defaultMessage="Open in DocuSign" />
+          </button>
+        )}
       {sending && signing.primaryDocument !== null && (
         <SendEnvelopeDialog
           preparing={signing.preparationEnabled ?? false}
@@ -643,7 +667,32 @@ export function SignaturesCard({
             const refusal = await runSend(
               () =>
                 signing.preparationEnabled
-                  ? prepareContractEnvelope(contractNumber, input)
+                  ? prepareContractEnvelope(contractNumber, input).then(async (outcome) => {
+                      if (!outcome.ok) return outcome;
+                      onSigning(outcome);
+                      const draft = outcome.envelopes.find(
+                        (envelope) => envelope.status === "draft",
+                      );
+                      if (!draft)
+                        return {
+                          ok: false as const,
+                          type: undefined,
+                          status: 409,
+                          network: false,
+                          detail:
+                            "Preparation is awaiting confirmation. Check Signatures before trying again.",
+                        };
+                      const detail = await launchContractEnvelope(draft.id);
+                      return detail
+                        ? {
+                            ok: false as const,
+                            type: undefined,
+                            status: 502,
+                            network: false,
+                            detail,
+                          }
+                        : outcome;
+                    })
                   : sendContractEnvelope(contractNumber, input),
               intl.formatMessage(
                 signing.preparationEnabled
@@ -813,7 +862,9 @@ function EnvelopeRow({
           <span
             className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
           >
-            {envelope.preparationState === "uncertain" ? (
+            {envelope.confirmationPending && envelope.status === "draft" ? (
+              <FormattedMessage id="signing.waiting" defaultMessage="Waiting for confirmation" />
+            ) : envelope.preparationState === "uncertain" ? (
               <FormattedMessage
                 id="signing.status.uncertain"
                 defaultMessage="Creation uncertain — not confirmed sent"
@@ -840,11 +891,19 @@ function EnvelopeRow({
               : intl.formatMessage({ id: "signing.notSent", defaultMessage: "Not sent" })}
           </span>
           <span className="truncate text-xs text-muted">
-            <FormattedMessage
-              id="signing.sentBy"
-              defaultMessage="by {name}"
-              values={{ name: envelope.sentBy.displayName }}
-            />
+            {envelope.preparationState !== null ? (
+              <FormattedMessage
+                id="signing.preparedBy"
+                defaultMessage="Prepared by {name}"
+                values={{ name: envelope.sentBy.displayName }}
+              />
+            ) : (
+              <FormattedMessage
+                id="signing.sentBy"
+                defaultMessage="by {name}"
+                values={{ name: envelope.sentBy.displayName }}
+              />
+            )}
           </span>
         </div>
       </td>
@@ -1807,7 +1866,7 @@ function SendEnvelopeDialog({
           {preparing ? (
             <FormattedMessage
               id="signing.prepareNote"
-              defaultMessage="Create an unsent draft in DocuSign with this Version and these Signers. No invitations are sent."
+              defaultMessage="Open DocuSign to place fields on this Version, then send to these Signers."
             />
           ) : (
             <FormattedMessage
@@ -2017,7 +2076,10 @@ function SendEnvelopeDialog({
             <Button type="submit" disabled={busy || document.versions.length === 0}>
               <Send size={16} aria-hidden="true" />
               {preparing ? (
-                <FormattedMessage id="signing.prepareEnvelope" defaultMessage="Create draft" />
+                <FormattedMessage
+                  id="signing.prepareEnvelope"
+                  defaultMessage="Continue to DocuSign"
+                />
               ) : (
                 <FormattedMessage id="signing.sendEnvelope" defaultMessage="Send envelope" />
               )}

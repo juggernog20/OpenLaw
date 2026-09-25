@@ -52,6 +52,7 @@ import { contractApprovalsRoutes } from "./modules/contract-approvals/routes.js"
 import { contractKeyDatesRoutes } from "./modules/contract-key-dates/routes.js";
 import { contractMattersRoutes } from "./modules/contract-matters/routes.js";
 import { contractTasksRoutes } from "./modules/contract-tasks/routes.js";
+import { envelopeLaunchRoutes } from "./modules/contract-envelopes/launch.js";
 import { contractEnvelopesRoutes } from "./modules/contract-envelopes/routes.js";
 import { contractRelationsRoutes } from "./modules/contract-relations/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
@@ -484,6 +485,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
       (request.method === "GET" || request.method === "HEAD") &&
       !(pathname === "/api" || pathname.startsWith("/api/"))
     ) {
+      if (pathname === "/signing/return")
+        reply.header("cache-control", "no-store").header("referrer-policy", "no-referrer");
       void reply.sendFile("index.html");
       return;
     }
@@ -670,6 +673,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(contractAnalysisRoutes, { prefix: "/api/v1" });
   await app.register(contractApprovalsRoutes, { prefix: "/api/v1" });
   await app.register(contractEnvelopesRoutes, { prefix: "/api/v1" });
+  await app.register(envelopeLaunchRoutes, { prefix: "/api/v1" });
   await app.register(contractKeyDatesRoutes, { prefix: "/api/v1" });
   await app.register(contractMattersRoutes, { prefix: "/api/v1" });
   await app.register(contractRelationsRoutes, { prefix: "/api/v1" });

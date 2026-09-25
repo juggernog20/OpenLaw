@@ -236,6 +236,9 @@ function recordApi(
       }
       return json(200, state);
     }
+    if (call.url.pathname.endsWith("/launch") && call.method === "POST") {
+      return problem(502, "DocuSign could not open this draft. Try again from Signatures.");
+    }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes/prepare" && call.method === "POST") {
       writes.push({ path: call.url.pathname, body: call.body });
       if (refuse) {
@@ -1002,7 +1005,7 @@ describe("preparing an unsent Envelope", () => {
     await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
     await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
     await user.type(within(dialog).getByLabelText("Subject"), "Please review this agreement");
-    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     expect(await screen.findByText("Draft — not sent")).toBeInTheDocument();
     expect(screen.getByText("Not sent")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
@@ -1028,13 +1031,13 @@ describe("preparing an unsent Envelope", () => {
     await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
     const refused = "The provider would not take the envelope.";
     api.refuseNext(502, refused);
-    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     expect(await within(dialog).findByText(refused)).toBeInTheDocument();
     api.refuseNext(502, refused);
-    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     await waitFor(() => expect(api.writes).toHaveLength(2));
     await user.type(within(dialog).getByLabelText("Subject"), "Corrected");
-    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     await waitFor(() => expect(api.writes).toHaveLength(3));
     const keys = api.writes.map(
       (write) => (write.body as { idempotencyKey: string }).idempotencyKey,

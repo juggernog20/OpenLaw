@@ -42,7 +42,16 @@
 
 import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { contracts } from "./contracts.js";
 import { documents, documentVersions } from "./documents.js";
 import { users } from "./auth.js";
@@ -120,6 +129,7 @@ export const contractEnvelopes = pgTable(
       enum: ["pending", "uncertain", "created", "failed"],
     }),
     /** Next permitted provider status check, shared by all worker replicas. */
+    confirmationPending: boolean("confirmation_pending").notNull().default(false),
     nextReconcileAt: timestamp("next_reconcile_at", { withTimezone: true }),
     status: text("status", { enum: ENVELOPE_STATUSES }).notNull().default("sent"),
     /**
@@ -318,3 +328,18 @@ export const contractEnvelopeSigners = pgTable(
 );
 
 export type ContractEnvelopeSigner = typeof contractEnvelopeSigners.$inferSelect;
+
+/** One expiring return correlation per browser launch. Only its hash is stored. */
+export const envelopeLaunches = pgTable("envelope_launches", {
+  stateHash: text("state_hash").primaryKey(),
+  envelopeId: text("envelope_id")
+    .notNull()
+    .references(() => contractEnvelopes.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  providerAccountId: text("provider_account_id").notNull(),
+  providerEnvironment: text("provider_environment").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+});

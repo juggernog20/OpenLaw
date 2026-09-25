@@ -37,6 +37,7 @@ import {
   and,
   asc,
   contractEnvelopes,
+  envelopeLaunches,
   contractEnvelopeSigners,
   contracts,
   contractStatuses,
@@ -47,6 +48,7 @@ import {
   users,
 } from "@openlaw/db";
 import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
+import { checkEnvelopeStatus } from "../../lib/signing/status-check.js";
 import { provisionUser } from "../../auth/instance.js";
 import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
 import {
@@ -1449,5 +1451,216 @@ describe("preparation refusals and reservations", () => {
       sentAt: null,
     });
     expect((await prepare({ idempotencyKey: "corrected-attempt" })).statusCode).toBe(201);
+  });
+});
+
+describe("authenticated Sender View launch and return", () => {
+  async function draft() {
+    await configureConnector();
+    const contract = await newContract("Sender View return");
+    await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
+    const before = await signingState(as(MEMBER), contract.number);
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(MEMBER),
+      payload: {
+        documentVersionId: before.primaryDocument!.versions[0]!.id,
+        signers: [...SIGNERS],
+        idempotencyKey: "launch-round",
+      },
+    });
+    expect(response.statusCode, response.body).toBe(201);
+    const [envelope] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, response.json().envelopes[0].id));
+    return { contract, envelope: envelope! };
+  }
+  async function launch(id: string) {
+    return harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${id}/launch`,
+      cookies: as(MEMBER),
+    });
+  }
+  async function returned(event: string, returnUrl = harness.signing!.launches.at(-1)!.returnUrl) {
+    const url = new URL(returnUrl);
+    url.searchParams.set("event", event);
+    const response = await harness.app.inject({ method: "GET", url: url.pathname + url.search });
+    expect(response.statusCode).toBe(302);
+    expect(response.headers["cache-control"]).toBe("no-store");
+    expect(response.headers["referrer-policy"]).toBe("no-referrer");
+    expect(response.headers.location).toBe("/signing/return");
+    const cookie = response.cookies.find((item) => item.name === "openlaw-signing-return")!;
+    return { "openlaw-signing-return": cookie.value };
+  }
+  const confirm = (cookies: Record<string, string>) =>
+    harness.app.inject({ method: "POST", url: "/api/v1/signing/return", cookies });
+
+  it("launches only after durable creation, preserves the read allowance, and confirms one send without changing Stage", async () => {
+    const { envelope, contract } = await draft();
+    const [initialContract] = await harness.db
+      .select()
+      .from(contracts)
+      .where(eq(contracts.id, contract.id));
+    const envelopeStatusBefore = initialContract!.statusId;
+    const confirmedSentAt = new Date("2026-09-25T12:00:00Z");
+    const read = vi
+      .spyOn(harness.signing!, "readEnvelope")
+      .mockResolvedValueOnce({ status: "sent", sentAt: confirmedSentAt });
+    const response = await launch(envelope.id);
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
+    expect(read).not.toHaveBeenCalled();
+    expect(harness.signing!.launches.at(-1)!.providerEnvelopeId).toBe(envelope.providerEnvelopeId);
+    harness.signing!.sendDraft(envelope.providerEnvelopeId!);
+    const cookies = { ...as(MEMBER), ...(await returned("SeNd")) };
+    const result = await confirm(cookies);
+    expect(result.statusCode, result.body).toBe(200);
+    expect(result.json()).toEqual({
+      destination: `/contracts/${contract.number}/signatures`,
+      waiting: false,
+    });
+    expect(read).toHaveBeenCalledTimes(1);
+    const [stored] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, envelope.id));
+    expect(stored).toMatchObject({ status: "sent", confirmationPending: false });
+    expect(stored!.sentAt).toEqual(confirmedSentAt);
+    expect(await entriesOn(contract.id)).toHaveLength(1);
+    const [record] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+    expect(record!.statusId).toBe(envelopeStatusBefore);
+    expect((await confirm(cookies)).statusCode).toBe(404);
+    expect(read).toHaveBeenCalledTimes(1);
+    read.mockRestore();
+  });
+
+  it("does not spend another read for a delayed confirmation, including after a failed check", async () => {
+    const { envelope } = await draft();
+    await launch(envelope.id);
+    const read = vi
+      .spyOn(harness.signing!, "readEnvelope")
+      .mockRejectedValueOnce(new SigningTimeoutError("timeout"));
+    expect((await confirm({ ...as(MEMBER), ...(await returned("SAVE")) })).json().waiting).toBe(
+      true,
+    );
+    await launch(envelope.id);
+    expect((await confirm({ ...as(MEMBER), ...(await returned("send")) })).json().waiting).toBe(
+      true,
+    );
+    expect(read).toHaveBeenCalledTimes(1);
+    const state = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, envelope.id));
+    expect(state[0]).toMatchObject({ status: "draft", confirmationPending: true, sentAt: null });
+    read.mockRestore();
+  });
+
+  it.each(["SAVE", "Cancel", "error", "SessionEnd"])(
+    "treats %s only as a hint with no provider ID",
+    async (event) => {
+      const { envelope, contract } = await draft();
+      await launch(envelope.id);
+      expect((await confirm({ ...as(MEMBER), ...(await returned(event)) })).statusCode).toBe(200);
+      const state = await signingState(as(MEMBER), contract.number);
+      expect(state.envelopes[0]).toMatchObject({ status: "draft", sentAt: null });
+      expect(await entriesOn(contract.id)).toHaveLength(0);
+    },
+  );
+
+  it("requires sign-in and the original user; altered, expired and unknown returns cannot send", async () => {
+    const { envelope, contract } = await draft();
+    await launch(envelope.id);
+    const cookies = await returned("send");
+    expect((await confirm(cookies)).statusCode).toBe(401);
+    expect((await confirm({ ...as(OUTSIDER), ...cookies })).statusCode).toBe(404);
+    expect(
+      (await confirm({ ...as(MEMBER), "openlaw-signing-return": "A".repeat(43) + ".known" }))
+        .statusCode,
+    ).toBe(404);
+    expect((await confirm({ ...as(MEMBER), ...cookies })).statusCode).toBe(200);
+    await launch(envelope.id);
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    expect(
+      (await confirm({ ...as(MEMBER), ...(await returned("not-a-provider-event")) })).statusCode,
+    ).toBe(200);
+    expect(read).not.toHaveBeenCalled();
+    read.mockRestore();
+    await launch(envelope.id);
+    await harness.db
+      .update(envelopeLaunches)
+      .set({ expiresAt: new Date(0) })
+      .where(eq(envelopeLaunches.envelopeId, envelope.id));
+    const expired = await confirm({ ...as(MEMBER), ...(await returned("send")) });
+    expect(expired.statusCode).toBe(404);
+    expect(expired.body).not.toContain(contract.title);
+    expect(await entriesOn(contract.id)).toHaveLength(0);
+  });
+
+  it("rejects a changed provider account before checking or revealing a return destination", async () => {
+    const { envelope, contract } = await draft();
+    await launch(envelope.id);
+    const cookies = { ...as(MEMBER), ...(await returned("send")) };
+    const original = await harness.signing!.testConnection();
+    const account = vi
+      .spyOn(harness.signing!, "testConnection")
+      .mockResolvedValue({ ...original, accountId: "other-account" });
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const response = await confirm(cookies);
+    expect(response.statusCode).toBe(404);
+    expect(response.body).not.toContain(contract.title);
+    expect(read).not.toHaveBeenCalled();
+    expect((await launch(envelope.id)).statusCode).toBe(409);
+    read.mockRestore();
+    account.mockRestore();
+  });
+
+  it("launch failure leaves the one draft and never falls back to sending", async () => {
+    const { envelope, contract } = await draft();
+    const failure = vi
+      .spyOn(harness.signing!, "launchEnvelope")
+      .mockRejectedValueOnce(new Error("private provider session"));
+    const response = await launch(envelope.id);
+    expect(response.statusCode).toBe(502);
+    expect(response.body).not.toContain("private provider session");
+    expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("draft");
+    expect(await entriesOn(contract.id)).toHaveLength(0);
+    failure.mockRestore();
+  });
+});
+
+describe("shared browser and worker status allowance", () => {
+  it("claims a draft read once across concurrent callers and keeps the full interval", async () => {
+    await configureConnector();
+    const contract = await newContract("Shared confirmation allowance");
+    await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
+    const before = await signingState(as(MEMBER), contract.number);
+    const prepared = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(MEMBER),
+      payload: {
+        documentVersionId: before.primaryDocument!.versions[0]!.id,
+        signers: [...SIGNERS],
+        idempotencyKey: "shared-claim",
+      },
+    });
+    const id = prepared.json().envelopes[0].id as string;
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const outcomes = await Promise.all([
+      checkEnvelopeStatus(harness.db, harness.signing!, id),
+      checkEnvelopeStatus(harness.db, harness.signing!, id),
+    ]);
+    expect(outcomes.filter(Boolean)).toHaveLength(1);
+    expect(read).toHaveBeenCalledTimes(1);
+    const [stored] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, id));
+    expect(stored!.nextReconcileAt!.getTime()).toBeGreaterThan(Date.now() + 14 * 60_000);
+    read.mockRestore();
   });
 });

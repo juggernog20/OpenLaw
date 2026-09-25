@@ -80,6 +80,8 @@ export interface EnvelopeStatusChange {
   /** When the provider says it ended. Absent, the moment we were told
    * is the honest answer, and it is what the row records. */
   completedAt?: Date;
+  /** Provider-reported send time, when available. */
+  sentAt?: Date;
   /** The person who caused it, when a person did. Omitted for the
    * provider's own feeds, which is what attributes the entry to the
    * integration rather than to somebody who happened to be logged in. */
@@ -111,25 +113,13 @@ const TERMINAL_STATUSES: ReadonlySet<EnvelopeStatus> = new Set(["signed", "decli
  * is chosen rather than where it is stored. */
 const REASONED_STATUSES: ReadonlySet<EnvelopeStatus> = new Set(["declined", "voided"]);
 
-/**
- * The three verbs an ending is narrated with. Named, rather than left as
- * the whole vocabulary, so the entry below is one of three shapes rather
- * than one of a hundred — and so `envelope.sent`, which the send route
- * writes with a payload of its own, cannot be reached from here.
- */
+/** Confirmed sends and terminal outcomes share one idempotent writer. */
 type EnvelopeEndingAction = Extract<
   ActivityAction,
-  "envelope.signed" | "envelope.declined" | "envelope.voided"
+  "envelope.sent" | "envelope.signed" | "envelope.declined" | "envelope.voided"
 >;
-
-/**
- * The verb each ending is narrated with (DD-017).
- *
- * `sent` has none on purpose: a row is born `sent` by the send route,
- * which narrates `envelope.sent` itself. Nothing here can ever move an
- * envelope *into* `sent`, so there is no entry to write for it.
- */
 const TRANSITION_ACTION: Partial<Record<EnvelopeStatus, EnvelopeEndingAction>> = {
+  sent: "envelope.sent",
   signed: "envelope.signed",
   declined: "envelope.declined",
   voided: "envelope.voided",
@@ -210,13 +200,9 @@ export async function applyEnvelopeStatus(
       reason: row.reason,
       completedAt: row.completedAt,
     };
-    // An ending stands, and a status that is already the row's is
-    // nothing to write. Both are the same answer to the caller: the
-    // record already says what this feed came to say. A preparation is
-    // not moved here either: its status belongs to its creation, and a
-    // feed that reports on a draft is the recovery slice's to read.
+    // A confirmed draft can become sent; terminal outcomes never regress.
     if (
-      row.status !== "sent" ||
+      !["sent", "draft"].includes(row.status) ||
       TERMINAL_STATUSES.has(row.status) ||
       row.status === change.status
     ) {
@@ -224,21 +210,22 @@ export async function applyEnvelopeStatus(
     }
 
     const action = TRANSITION_ACTION[change.status];
-    // Unreachable while `sent` is the only non-terminal status: the row
-    // is `sent`, so the target is terminal and every terminal status has
-    // a verb. It is a refusal rather than an assertion so that a fifth
-    // status added without a verb cannot silently move a record with no
-    // entry to say it happened.
     if (!action) return { outcome: "unchanged", envelope: held };
 
     const reason = keptReason(change.status, change.reason);
     // The moment we were told, when the provider named none. The column
     // is paired with a terminal status by a check constraint, so a
     // guess is not an option here — an ending has an ending time.
-    const completedAt = change.completedAt ?? new Date();
+    const completedAt = change.status === "sent" ? null : (change.completedAt ?? new Date());
     await tx
       .update(contractEnvelopes)
-      .set({ status: change.status, reason, completedAt })
+      .set({
+        status: change.status,
+        reason,
+        completedAt,
+        confirmationPending: false,
+        ...(row.status === "draft" ? { sentAt: change.sentAt ?? new Date() } : {}),
+      })
       .where(eq(contractEnvelopes.id, row.id));
 
     await recordActivity(tx, {
@@ -263,13 +250,14 @@ export async function applyEnvelopeStatus(
     // the default. **The actor is whoever the entry named, which is
     // usually nobody**: a provider reported the ending, and a webhook is
     // not a person, so no one is excluded and the whole team is told.
-    await notifier.envelopeEnded(tx, {
-      contractId: row.contractId,
-      actorId: change.actorId ?? null,
-      actorName: change.actorName ?? null,
-      envelopeId: row.id,
-      status: change.status,
-    });
+    if (change.status !== "sent")
+      await notifier.envelopeEnded(tx, {
+        contractId: row.contractId,
+        actorId: change.actorId ?? null,
+        actorName: change.actorName ?? null,
+        envelopeId: row.id,
+        status: change.status,
+      });
 
     return {
       outcome: "applied",

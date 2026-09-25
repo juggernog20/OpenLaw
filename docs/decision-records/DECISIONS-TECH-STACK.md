@@ -1988,3 +1988,20 @@ and through the settings route.
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
 | TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1132, #1134, #1135, #1138                        |
+
+### TECH-007 / TECH-013 addendum — 2026-09-26, #1172: Sender View and shared checks
+
+The Sender View uses the discovered account API base URI, envelope-scoped access,
+Tagger and the provider Send action. Requests hide recipient edits, document edits,
+document visibility edits, page edits, Back and advanced header actions. The ordinary
+field palette and native discard remain. Draft creation sets documented message and
+recipient locks. No reserved setting is treated as enforcement; actual native UI
+restrictions remain a live acceptance requirement under #1178.
+
+Worker and browser-return reads share the existing durable claim: reserve twenty
+minutes before the attempt and retain fifteen minutes after it finishes, including
+failure. Creation itself supplies draft evidence, so launch does not read status.
+The driver returns a fresh Sender View URL unchanged and never sends OAuth credentials
+to the browser. Launch/return responses use no-store and no-referrer; ordinary request
+logging already excludes query strings, cookies and response bodies. No launch URL or
+return secret is written to Activity or persistent browser storage.

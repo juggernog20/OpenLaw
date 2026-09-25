@@ -131,6 +131,8 @@ export function stubExecutedPdf(providerEnvelopeId: string): Buffer {
  */
 export class SigningStub {
   private readonly server: Server;
+  readonly launches: { envelopeId: string; request: Record<string, unknown>; returnUrl: string }[] =
+    [];
   private readonly envelopes = new Map<string, StubEnvelope>();
   private minted = 0;
   /** What this instance's envelope ids start with. Stamped per run,
@@ -282,6 +284,27 @@ export class SigningStub {
   private async handle(request: IncomingMessage, response: ServerResponse): Promise<void> {
     const path = new URL(request.url ?? "/", "http://stub.invalid").pathname;
 
+    if (path.startsWith("/sender/")) {
+      const index = Number(path.split("/")[2]);
+      const launch = this.launches[index];
+      if (!launch) {
+        response.writeHead(404).end();
+        return;
+      }
+      const action = new URL(request.url ?? "/", "http://stub.invalid").searchParams.get("action");
+      if (action === "send" || action === "save") {
+        if (action === "send") this.require(launch.envelopeId).status = "sent";
+        const destination = new URL(launch.returnUrl);
+        destination.searchParams.set("event", action === "send" ? "Send" : "Save");
+        response.writeHead(302, { location: destination.href, "cache-control": "no-store" }).end();
+      } else {
+        response.writeHead(200, { "content-type": "text/html", "cache-control": "no-store" });
+        response.end(
+          '<!doctype html><title>DocuSign stand-in</title><h1>Place fields</h1><a href="?action=send">Send</a><a href="?action=save">Save and close</a>',
+        );
+      }
+      return;
+    }
     if (path === "/oauth/token" && request.method === "POST") {
       const form = new URLSearchParams((await readBody(request)).toString("utf8"));
       const claims = assertionClaims(form.get("assertion") ?? "");
@@ -351,6 +374,20 @@ export class SigningStub {
       const envelope = this.envelopes.get(decodeURIComponent(id ?? ""));
       if (!envelope) {
         sendJson(response, 404, { errorCode: "ENVELOPE_DOES_NOT_EXIST" });
+        return;
+      }
+      if (tail.join("/") === "views/sender" && request.method === "POST") {
+        if (envelope.status !== "created") {
+          sendJson(response, 400, { errorCode: "ENVELOPE_INVALID_STATUS" });
+          return;
+        }
+        const body = JSON.parse((await readBody(request)).toString("utf8")) as Record<
+          string,
+          unknown
+        >;
+        const index = this.launches.length;
+        this.launches.push({ envelopeId: id!, request: body, returnUrl: String(body.returnUrl) });
+        sendJson(response, 201, { url: `http://localhost:${this.port}/sender/${index}` });
         return;
       }
       if (tail.join("/") === "documents/combined") {

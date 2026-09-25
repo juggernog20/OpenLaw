@@ -5252,6 +5252,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/envelopes/{envelopeId}/launch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["launchContractEnvelope"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/signing/return": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["confirmEnvelopeReturn"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contracts/{number}/key-date-reminder-options": {
     parameters: {
       query?: never;
@@ -28622,6 +28654,7 @@ export interface operations {
                 image: string | null;
               };
               sentAt: string | null;
+              confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               subject: string | null;
               documentVersionId: string | null;
@@ -28726,6 +28759,7 @@ export interface operations {
                 image: string | null;
               };
               sentAt: string | null;
+              confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               subject: string | null;
               documentVersionId: string | null;
@@ -28857,6 +28891,7 @@ export interface operations {
                 image: string | null;
               };
               sentAt: string | null;
+              confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               subject: string | null;
               documentVersionId: string | null;
@@ -28976,6 +29011,7 @@ export interface operations {
                 image: string | null;
               };
               sentAt: string | null;
+              confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               subject: string | null;
               documentVersionId: string | null;
@@ -29028,6 +29064,71 @@ export interface operations {
               path: string;
               message: string;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  launchContractEnvelope: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        envelopeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            url: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmEnvelopeReturn: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            destination: string;
+            waiting: boolean;
           };
         };
       };
