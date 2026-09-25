@@ -1780,6 +1780,12 @@ describe("shared browser and worker status allowance", () => {
       .update(envelopeLaunches)
       .set({ expiresAt: new Date(Date.now() + (120 - minutes) * 60_000) })
       .where(eq(envelopeLaunches.envelopeId, id));
+  /** Moves the Envelope's creation back in time, past the first-read grace. */
+  const ageCreation = (id: string, minutes: number) =>
+    harness.db
+      .update(contractEnvelopes)
+      .set({ createdAt: new Date(Date.now() - minutes * 60_000) })
+      .where(eq(contractEnvelopes.id, id));
 
   it("leaves a fresh launch to the browser return, which spends the first read", async () => {
     const { id, providerEnvelopeId } = await launchedDraft("Sweep waits for the return", "grace");
@@ -1810,6 +1816,7 @@ describe("shared browser and worker status allowance", () => {
     // The sweep owns the draft again on the same fifteen-minute allowance.
     await sweep();
     expect(readsOfDraft()).toHaveLength(1);
+    await ageCreation(id, 16);
     await harness.db
       .update(contractEnvelopes)
       .set({ nextReconcileAt: new Date(0) })
@@ -1828,8 +1835,8 @@ describe("shared browser and worker status allowance", () => {
     read.mockRestore();
   });
 
-  it("does not read a draft before its first launch, and does after one", async () => {
-    const { id, providerEnvelopeId } = await launchedDraft(
+  it("spends no read on a just-created draft, then polls it unlaunched after the grace", async () => {
+    const { contract, id, providerEnvelopeId } = await launchedDraft(
       "Created, never opened",
       "unlaunched",
       false,
@@ -1837,7 +1844,8 @@ describe("shared browser and worker status allowance", () => {
     expect(await openCorrelations(id)).toHaveLength(0);
     const read = vi.spyOn(harness.signing!, "readEnvelope");
     const readsOfDraft = () => read.mock.calls.filter(([asked]) => asked === providerEnvelopeId);
-    // Its creation response is the evidence that it is a draft (#1170 §7).
+    // Its creation response is the evidence that it is a draft (#1170 §7):
+    // the first tick after creation spends nothing on it.
     await sweep();
     expect(readsOfDraft()).toHaveLength(0);
     expect(await held(id)).toMatchObject({
@@ -1845,18 +1853,18 @@ describe("shared browser and worker status allowance", () => {
       confirmationPending: false,
       nextReconcileAt: null,
     });
-    // Launched, then sent and abandoned: polled once the grace has passed.
-    const launched = await harness.app.inject({
-      method: "POST",
-      url: `/api/v1/envelopes/${id}/launch`,
-      cookies: as(MEMBER),
-    });
-    expect(launched.statusCode, launched.body).toBe(200);
+    // Sent through the provider account with no browser session and no
+    // webhook. Once the creation grace has passed, the sweep alone learns it.
     harness.signing!.sendDraft(providerEnvelopeId);
-    await ageLaunch(id, 16);
-    await sweep();
+    await ageCreation(id, 16);
+    const summary = await sweep();
     expect(readsOfDraft()).toHaveLength(1);
-    expect(await held(id)).toMatchObject({ status: "sent", confirmationPending: false });
+    expect(summary.converged).toBeGreaterThanOrEqual(1);
+    const row = await held(id);
+    expect(row).toMatchObject({ status: "sent", confirmationPending: false });
+    expect(row.sentAt).not.toBeNull();
+    expect(await entriesOn(contract.id)).toHaveLength(1);
+    expect(await openCorrelations(id)).toHaveLength(0);
     read.mockRestore();
   });
 
@@ -1876,7 +1884,7 @@ describe("shared browser and worker status allowance", () => {
       cookies: { ...as(MEMBER), "openlaw-signing-return": cookie.value },
     });
     expect(confirmed.statusCode, confirmed.body).toBe(200);
-    // A reopen the provider refuses must not erase the launch history.
+    // A reopen the provider refuses leaves the rows that were there before.
     const failure = vi
       .spyOn(harness.signing!, "launchEnvelope")
       .mockRejectedValueOnce(new Error("session refused"));
@@ -1895,6 +1903,7 @@ describe("shared browser and worker status allowance", () => {
     ).toHaveLength(1);
     // Sent from the provider's own console later: the sweep still learns it.
     harness.signing!.sendDraft(providerEnvelopeId);
+    await ageCreation(id, 16);
     await harness.db
       .update(contractEnvelopes)
       .set({ nextReconcileAt: new Date(0) })
@@ -1910,6 +1919,7 @@ describe("shared browser and worker status allowance", () => {
     );
     // Sent in the provider's screen, browser closed, no return ever comes.
     harness.signing!.sendDraft(providerEnvelopeId);
+    await ageCreation(id, 16);
     await ageLaunch(id, 16);
     const read = vi.spyOn(harness.signing!, "readEnvelope");
     const readsOfDraft = () => read.mock.calls.filter(([asked]) => asked === providerEnvelopeId);

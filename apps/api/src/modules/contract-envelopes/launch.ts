@@ -120,8 +120,8 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
           .set({ confirmationPending: true })
           .where(eq(contractEnvelopes.id, envelope.id));
         // Spent correlations have nothing left to grant. Pruned only once
-        // the new one stands, so a launched Envelope always keeps at least
-        // one row: the sweep reads "has been launched" from it.
+        // the new one stands, so a launch the provider refuses changes
+        // nothing about the rows that were there before.
         await app.db
           .delete(envelopeLaunches)
           .where(

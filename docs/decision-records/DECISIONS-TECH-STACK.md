@@ -2005,9 +2005,13 @@ The worker leaves a draft alone for fifteen minutes after a launch, so a return
 inside that window keeps the first eligible read. That is a grace, not a lock: an
 open correlation is no proof the editor is still open, so after the grace the worker
 polls the draft on its ordinary cadence and confirms a send whose return was lost. A
-sent Envelope is never deferred, whatever correlations it still holds. A draft that
-has never been launched is not polled at all: its creation response is its evidence,
-and a read before the first launch would only spend the allowance the return needs.
+sent Envelope is never deferred, whatever correlations it still holds. A new draft is
+likewise left alone for fifteen minutes after creation: its creation response is its
+evidence, and its first launch usually follows at once. Both graces are bounded by the
+clock alone. After them a draft is polled whether or not it was ever launched, so a
+preparation sent through the provider account with no browser session still
+reconciles in Polling mode. A launch after a grace may find the allowance already
+spent; its return then waits for the next allowed check, as #1170 permits.
 The driver returns a fresh Sender View URL unchanged and never sends OAuth credentials
 to the browser. Launch/return responses use no-store and no-referrer; ordinary request
 logging already excludes query strings, cookies and response bodies. No launch URL or

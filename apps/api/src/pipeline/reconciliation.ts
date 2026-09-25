@@ -87,6 +87,7 @@ import {
 import { requestExecutedCopy } from "../lib/signing/completion.js";
 import {
   checkEnvelopeStatus,
+  CREATION_READ_GRACE_MINUTES,
   LAUNCH_LIFETIME_MINUTES,
   LAUNCH_RETURN_GRACE_MINUTES,
   reconciliationDue,
@@ -129,21 +130,26 @@ export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
 /**
  * Which drafts the sweep asks about (#1170 §7, #1172).
  *
- * Never one that has not been launched: its creation response is the
- * evidence that it is a draft, and a read before its first launch would
- * learn nothing while spending the allowance the first return needs.
- * A verified notification still moves such a draft; only polling waits.
+ * Two bounded graces, each one read interval long, and no lock:
  *
- * Not one launched less than one read interval ago either. The return
- * usually arrives inside the interval and spends the first eligible read
- * itself, and a sweep read in the meantime would only learn "still a
- * draft" while taking that read away. That is a grace of
- * `LAUNCH_RETURN_GRACE_MINUTES`, never a lock: an unconsumed correlation
- * is not proof that the editor is open — a sender can send and close the
- * browser, or the return can be lost — so once the grace passes the draft
- * is polled on the ordinary cadence however long the correlation stays
- * valid. A launch leaves at least one correlation row behind for as long
- * as the Envelope lives, which is what "has been launched" reads from.
+ * - Not one created less than `CREATION_READ_GRACE_MINUTES` ago. Its
+ *   creation response is the evidence that it is a draft, and its first
+ *   launch usually follows within moments, so a read now would learn
+ *   nothing while spending the allowance the first return needs. Once the
+ *   grace passes the draft is polled whether or not anybody launched it:
+ *   a preparation can be sent through the provider account with no
+ *   browser session, and in Polling mode nothing else would learn it.
+ * - Not one launched less than `LAUNCH_RETURN_GRACE_MINUTES` ago with its
+ *   correlation still unconsumed. The return usually arrives inside the
+ *   interval and spends the first eligible read itself. An unconsumed
+ *   correlation is not proof that the editor is open — a sender can send
+ *   and close the browser, or the return can be lost — so once the grace
+ *   passes the draft is polled however long the correlation stays valid.
+ *
+ * Neither a correlation's existence nor the confirmation flag decides
+ * whether a live draft is ever polled; only the clock does. A later
+ * launch may therefore find the allowance already spent by a poll, and
+ * its return then waits for the next allowed check, which #1170 §7 allows.
  *
  * A `sent` row is never deferred: a verified notification may have moved
  * it while a correlation was still open, and its completion polling must
@@ -153,10 +159,7 @@ const pollableDraft = () =>
   or(
     ne(contractEnvelopes.status, "draft"),
     and(
-      sql`exists (
-        select 1 from ${envelopeLaunches}
-        where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
-      )`,
+      sql`${contractEnvelopes.createdAt} <= clock_timestamp() - make_interval(mins => ${CREATION_READ_GRACE_MINUTES})`,
       sql`not exists (
         select 1 from ${envelopeLaunches}
         where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}

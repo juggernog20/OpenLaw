@@ -14,6 +14,16 @@ export const LAUNCH_LIFETIME_MINUTES = 120;
  * the ordinary cadence, however long the correlation stays valid.
  */
 export const LAUNCH_RETURN_GRACE_MINUTES = 15;
+/**
+ * How long after its creation the sweep leaves a new draft alone. The
+ * creation response already established that it is a draft, and the first
+ * launch usually follows within moments, so a read in this window would
+ * learn nothing while spending the allowance the first return needs
+ * (#1170 §7). Bounded on purpose: a draft nobody ever launches can still
+ * be sent through the provider account, and in Polling mode only this
+ * sweep would learn it. After the grace it is polled like any other.
+ */
+export const CREATION_READ_GRACE_MINUTES = 15;
 
 export const reconciliationDue = () =>
   or(
