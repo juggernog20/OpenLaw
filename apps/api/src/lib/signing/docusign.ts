@@ -44,6 +44,7 @@ import {
   type EnvelopeState,
   type EnvelopeStatus,
   type SendEnvelopeInput,
+  type PrepareEnvelopeInput,
   type SentEnvelope,
   type SigningProvider,
   type WebhookDelivery,
@@ -218,14 +219,17 @@ export function verifyConnectSignature(
 }
 
 /**
- * DocuSign's envelope statuses, mapped onto CTR-013's four. Anything
- * else — `created`, `deleted` — is not a state the record tracks.
+ * DocuSign's envelope statuses, mapped onto CTR-013's. `created` is a
+ * draft (#1171). Anything else — `deleted`, `correct` — is not a state
+ * the record tracks.
  *
  * A `Map`, not an object literal: the key comes off a webhook body, and
  * an object lookup answers `constructor` and `toString` from the
  * prototype. That would turn a forged delivery into a status.
  */
 const STATUS_MAP: ReadonlyMap<string, EnvelopeStatus> = new Map([
+  // DocuSign's name for a draft: created, and not yet sent (#1171).
+  ["created", "draft"],
   ["sent", "sent"],
   ["delivered", "sent"],
   ["signed", "signed"],
@@ -663,7 +667,18 @@ class DocuSignProvider implements SigningProvider {
     };
   }
 
+  async prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope> {
+    return this.createEnvelope(input, true);
+  }
+
   async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope> {
+    return this.createEnvelope(input, false);
+  }
+
+  private async createEnvelope(
+    input: SendEnvelopeInput | PrepareEnvelopeInput,
+    draft: boolean,
+  ): Promise<SentEnvelope> {
     const [token, url, bytes] = await Promise.all([
       this.accessToken(),
       this.envelopesUrl(),
@@ -674,12 +689,12 @@ class DocuSignProvider implements SigningProvider {
         method: "POST",
         token,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(buildEnvelopeDefinition(input, bytes)),
+        body: JSON.stringify(buildEnvelopeDefinition(input, bytes, draft)),
       }),
     );
     const providerEnvelopeId = body && readString(body, "envelopeId");
     if (!providerEnvelopeId) {
-      throw new SigningRefusedError("DocuSign accepted the envelope but named no id for it.");
+      throw new SigningUnavailableError("DocuSign accepted the envelope but named no id for it.");
     }
     return { providerEnvelopeId };
   }
@@ -765,10 +780,12 @@ function fileExtensionOf(fileName: string): string {
 export function buildEnvelopeDefinition(
   input: SendEnvelopeInput,
   document: Buffer,
+  draft = false,
 ): Record<string, unknown> {
   return {
     emailSubject: input.subject,
-    status: "sent",
+    status: draft ? "created" : "sent",
+    ...("transactionId" in input ? { transactionId: input.transactionId } : {}),
     documents: [
       {
         documentId: "1",
@@ -783,18 +800,22 @@ export function buildEnvelopeDefinition(
         routingOrder: "1",
         name: signer.name,
         email: signer.email,
-        tabs: {
-          signHereTabs: [
-            {
-              documentId: "1",
-              anchorString: "/sig/",
-              anchorUnits: "pixels",
-              anchorXOffset: "0",
-              anchorYOffset: "0",
-              anchorIgnoreIfNotPresent: "true",
-            },
-          ],
-        },
+        ...(draft
+          ? {}
+          : {
+              tabs: {
+                signHereTabs: [
+                  {
+                    documentId: "1",
+                    anchorString: "/sig/",
+                    anchorUnits: "pixels",
+                    anchorXOffset: "0",
+                    anchorYOffset: "0",
+                    anchorIgnoreIfNotPresent: "true",
+                  },
+                ],
+              },
+            }),
       })),
     },
   };

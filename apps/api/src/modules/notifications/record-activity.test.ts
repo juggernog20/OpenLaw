@@ -675,7 +675,7 @@ async function recordOutForSignature(
     .from(contractEnvelopes)
     .where(eq(contractEnvelopes.id, envelopeId));
   expect(row, "the envelope row").toBeDefined();
-  return { contract, envelopeId, providerEnvelopeId: row!.providerEnvelopeId };
+  return { contract, envelopeId, providerEnvelopeId: row!.providerEnvelopeId! };
 }
 
 /** How long the pipeline is given before the suite calls it stuck. */

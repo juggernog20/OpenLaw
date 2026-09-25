@@ -130,6 +130,23 @@ export function describeSigningContract(
       await expect(held().provider.readEnvelope(id)).resolves.toMatchObject({ status: "sent" });
     });
 
+    it("prepares an unsent draft", async () => {
+      const result = await held().provider.prepareEnvelope({
+        document: document(),
+        fileName: "agreement.pdf",
+        subject: "Draft agreement",
+        signers: SIGNERS,
+        transactionId: "shared-draft-transaction",
+      });
+      expect(result.providerEnvelopeId).not.toBe("");
+      expect(await held().provider.readEnvelope(result.providerEnvelopeId)).toMatchObject({
+        status: "draft",
+      });
+      await expect(
+        held().provider.fetchExecutedDocument(result.providerEnvelopeId),
+      ).rejects.toBeInstanceOf(SigningRefusedError);
+    });
+
     it("mints a distinct id per envelope", async () => {
       const first = await send(held().provider);
       const second = await send(held().provider);

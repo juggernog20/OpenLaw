@@ -239,9 +239,9 @@ async function owedFetch(deps: ExecutedCopyDeps, envelopeId: string): Promise<Ow
     .leftJoin(documentVersions, eq(contractEnvelopes.documentVersionId, documentVersions.id))
     .where(eq(contractEnvelopes.id, envelopeId))
     .limit(1);
-  if (!row) return null;
+  if (!row || !row.providerEnvelopeId) return null;
   if (row.status !== "signed" || row.executedFetch !== "pending") return null;
-  return row;
+  return { ...row, providerEnvelopeId: row.providerEnvelopeId };
 }
 
 /**

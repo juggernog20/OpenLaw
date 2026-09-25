@@ -43,6 +43,8 @@ import {
   ENVELOPE_PILL,
   liveEnvelope,
   sendContractEnvelope,
+  prepareContractEnvelope,
+  readContractSigning,
   voidContractEnvelope,
   type ContractEnvelope,
   type EnvelopeSigner,
@@ -87,6 +89,12 @@ const STATUS_LABEL = {
 } as const satisfies Record<ApprovalStatus, { id: string; defaultMessage: string }>;
 
 const ENVELOPE_STATUS_LABEL = {
+  preparing: defineMessage({ id: "signing.status.preparing", defaultMessage: "Preparing" }),
+  draft: defineMessage({ id: "signing.status.draft", defaultMessage: "Draft — not sent" }),
+  preparation_failed: defineMessage({
+    id: "signing.status.preparationFailed",
+    defaultMessage: "Preparation failed",
+  }),
   sent: defineMessage({ id: "signing.status.sent", defaultMessage: "Out for signature" }),
   signed: defineMessage({ id: "signing.status.signed", defaultMessage: "Signed" }),
   declined: defineMessage({ id: "signing.status.declined", defaultMessage: "Declined" }),
@@ -511,12 +519,17 @@ export function SignaturesCard({
       // Reported in the dialog, where the reader's attention already is
       // (DES-035 clause 12). The header keeps the same sentence off
       // screen rather than printing it a second time behind a modal.
+      if (signing.preparationEnabled) {
+        const current = await readContractSigning(contractNumber);
+        if (current.ok) onSigning(current);
+      }
       setStatus("idle");
       return outcome.detail ?? fallback;
     }
     onSigning({
       envelopes: outcome.envelopes,
       signingConfigured: outcome.signingConfigured,
+      preparationEnabled: outcome.preparationEnabled,
       updateMode: outcome.updateMode,
       primaryDocument: outcome.primaryDocument,
     });
@@ -540,7 +553,11 @@ export function SignaturesCard({
             {canSend && (
               <Button variant="secondary" disabled={busy} onClick={() => setSending(true)}>
                 <Send size={16} aria-hidden="true" />
-                <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
+                {signing.preparationEnabled ? (
+                  <FormattedMessage id="signing.prepare" defaultMessage="Prepare Envelope" />
+                ) : (
+                  <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
+                )}
               </Button>
             )}
           </div>
@@ -617,17 +634,29 @@ export function SignaturesCard({
       )}
       {sending && signing.primaryDocument !== null && (
         <SendEnvelopeDialog
+          preparing={signing.preparationEnabled ?? false}
           document={signing.primaryDocument}
           people={users.filter((person) => !person.archived)}
           busy={busy}
           onClose={() => setSending(false)}
           onConfirm={async (input) => {
             const refusal = await runSend(
-              () => sendContractEnvelope(contractNumber, input),
-              intl.formatMessage({
-                id: "signing.sendFailed",
-                defaultMessage: "The envelope could not be sent. Try again.",
-              }),
+              () =>
+                signing.preparationEnabled
+                  ? prepareContractEnvelope(contractNumber, input)
+                  : sendContractEnvelope(contractNumber, input),
+              intl.formatMessage(
+                signing.preparationEnabled
+                  ? defineMessage({
+                      id: "signing.prepareFailed",
+                      defaultMessage:
+                        "The Envelope could not be prepared. Check its status before trying again.",
+                    })
+                  : defineMessage({
+                      id: "signing.sendFailed",
+                      defaultMessage: "The envelope could not be sent. Try again.",
+                    }),
+              ),
             );
             if (refusal === null) setSending(false);
             return refusal;
@@ -784,7 +813,14 @@ function EnvelopeRow({
           <span
             className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
           >
-            <FormattedMessage {...ENVELOPE_STATUS_LABEL[envelope.status]} />
+            {envelope.preparationState === "uncertain" ? (
+              <FormattedMessage
+                id="signing.status.uncertain"
+                defaultMessage="Creation uncertain — not confirmed sent"
+              />
+            ) : (
+              <FormattedMessage {...ENVELOPE_STATUS_LABEL[envelope.status]} />
+            )}
           </span>
           {/* Why it ended, under the pill that says it did. The seam
               keeps a reason only for a decline or a void, so nothing
@@ -798,7 +834,11 @@ function EnvelopeRow({
       </td>
       <td className="px-4 py-2.5">
         <div className="flex min-w-0 flex-col">
-          <span className="text-sm text-muted">{formatShortDate(envelope.sentAt)}</span>
+          <span className="text-sm text-muted">
+            {envelope.sentAt
+              ? formatShortDate(envelope.sentAt)
+              : intl.formatMessage({ id: "signing.notSent", defaultMessage: "Not sent" })}
+          </span>
           <span className="truncate text-xs text-muted">
             <FormattedMessage
               id="signing.sentBy"
@@ -843,7 +883,11 @@ function EnvelopeRow({
                       id: "signing.actionsFor",
                       defaultMessage: "Actions for the envelope sent on {date}",
                     },
-                    { date: formatShortDate(envelope.sentAt) },
+                    {
+                      date: envelope.sentAt
+                        ? formatShortDate(envelope.sentAt)
+                        : intl.formatMessage({ id: "signing.notSent", defaultMessage: "Not sent" }),
+                    },
                   )}
                 >
                   <MoreHorizontal size={16} aria-hidden="true" />
@@ -1644,12 +1688,14 @@ function blankSigner(): DraftSigner {
  * this is where the reader's attention already is (DES-035 clause 12).
  */
 function SendEnvelopeDialog({
+  preparing,
   document,
   people,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
+  preparing: boolean;
   document: SendableDocument;
   /** The users the signer rows offer. Live people only: an archived
    * user is refused by the seam, so offering one would set up a
@@ -1661,6 +1707,7 @@ function SendEnvelopeDialog({
    * landed. */
   onConfirm: (input: {
     documentVersionId: string;
+    idempotencyKey: string;
     signers: SendSigner[];
     subject?: string;
   }) => Promise<string | null>;
@@ -1669,6 +1716,11 @@ function SendEnvelopeDialog({
   // The current round is the first one the seam answers, and it is the
   // default for the reason the mock's own dialog implies: the version
   // being negotiated is the version being sent, nearly every time.
+  // One idempotency key per request, not per dialog. A retry of the same
+  // request keeps its key, so a lost answer is not a second draft. A
+  // corrected retry gets a new key, because the seam refuses a reused
+  // key with changed inputs as a conflict.
+  const lastRequest = useRef<{ intent: string; key: string } | null>(null);
   const [versionId, setVersionId] = useState(document.versions[0]?.id ?? "");
   // Each row carries a key of its own. A signer being typed into has
   // no identity yet — two empty rows are indistinguishable — so keying
@@ -1718,13 +1770,18 @@ function SendEnvelopeDialog({
       );
       return;
     }
+    const request = {
+      documentVersionId: versionId,
+      signers: named,
+      ...(subject.trim() ? { subject: subject.trim() } : {}),
+    };
+    const intent = JSON.stringify(request);
+    const idempotencyKey =
+      lastRequest.current?.intent === intent ? lastRequest.current.key : crypto.randomUUID();
+    lastRequest.current = { intent, key: idempotencyKey };
     inFlight.current = true;
     setError(
-      await onConfirm({
-        documentVersionId: versionId,
-        signers: named,
-        ...(subject.trim() ? { subject: subject.trim() } : {}),
-      }).finally(() => {
+      await onConfirm({ ...request, idempotencyKey }).finally(() => {
         inFlight.current = false;
       }),
     );
@@ -1734,7 +1791,11 @@ function SendEnvelopeDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>
-          <FormattedMessage id="signing.sendTitle" defaultMessage="Send for signature" />
+          {preparing ? (
+            <FormattedMessage id="signing.prepareTitle" defaultMessage="Prepare Envelope" />
+          ) : (
+            <FormattedMessage id="signing.sendTitle" defaultMessage="Send for signature" />
+          )}
         </DialogTitle>
         {/* The C12 mock's note, drawn now that the behaviour it
             describes exists (DES-036 clause 9). It says what the act
@@ -1743,10 +1804,17 @@ function SendEnvelopeDialog({
             rather than a status label, because a team renames its
             statuses and the stage behind them is fixed (CTR-001). */}
         <p className="mt-2 text-sm text-muted">
-          <FormattedMessage
-            id="signing.sendNote"
-            defaultMessage="When everyone signs, the executed file lands on this Contract. The Contract advances to Active only if it is still in the Signature Stage."
-          />
+          {preparing ? (
+            <FormattedMessage
+              id="signing.prepareNote"
+              defaultMessage="Create an unsent draft in DocuSign with this Version and these Signers. No invitations are sent."
+            />
+          ) : (
+            <FormattedMessage
+              id="signing.sendNote"
+              defaultMessage="When everyone signs, the executed file lands on this Contract. The Contract advances to Active only if it is still in the Signature Stage."
+            />
+          )}
         </p>
         <form
           className="mt-4 flex flex-col gap-4"
@@ -1948,7 +2016,11 @@ function SendEnvelopeDialog({
             </Button>
             <Button type="submit" disabled={busy || document.versions.length === 0}>
               <Send size={16} aria-hidden="true" />
-              <FormattedMessage id="signing.sendEnvelope" defaultMessage="Send envelope" />
+              {preparing ? (
+                <FormattedMessage id="signing.prepareEnvelope" defaultMessage="Create draft" />
+              ) : (
+                <FormattedMessage id="signing.sendEnvelope" defaultMessage="Send envelope" />
+              )}
             </Button>
           </div>
         </form>

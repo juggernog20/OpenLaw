@@ -114,10 +114,11 @@ test("Business Owner joins the team, and membership grants revocable Portal work
     const businessBox = await businessOwner.boundingBox();
     const legalBox = await legalOwner.boundingBox();
     const entityBox = await page.getByLabel("Our entity", { exact: true }).boundingBox();
-    expect(businessBox!.y).toBeGreaterThan(legalBox!.y);
-    // The Form Rows draw first, in Form order (DD-028), and the two owners
-    // after them. Our entity keeps its full width.
-    expect(entityBox!.y).toBeLessThan(legalBox!.y);
+    // At this desktop width, the Owners card places both pickers on one
+    // row above the Form Rows. Our entity keeps its full width.
+    expect(businessBox!.y).toBeCloseTo(legalBox!.y, 0);
+    expect(businessBox!.x).toBeGreaterThan(legalBox!.x + legalBox!.width);
+    expect(entityBox!.y).toBeGreaterThan(legalBox!.y + legalBox!.height);
     expect(entityBox!.width).toBeGreaterThan(businessBox!.width * 1.5);
     expect((await portal.request.get(`/api/v1/contracts/${contract.number}`)).status()).toBe(403);
     const detail = await portal.request.get(portalPath);

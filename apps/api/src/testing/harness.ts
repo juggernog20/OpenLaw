@@ -339,6 +339,7 @@ function capturingLogger(lines: JobLogLine[]): PipelineLogger {
 
 /** What a suite may vary about the app the harness builds. */
 export interface HarnessOptions {
+  signingPreparationEnabled?: boolean;
   /** Seed a past schema before the current app applies its migrations. */
   beforeMigrations?: (db: Db) => Promise<void>;
   advancedRuntime?: AdvancedRuntime;
@@ -513,6 +514,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       log: { error: (fields, message) => jobLog.push({ level: "error", message, fields }) },
     });
     const app = await buildApp({
+      signingPreparationEnabled: options.signingPreparationEnabled,
       db,
       mcpTools: options.mcpTools,
       config: TEST_AUTH_CONFIG,

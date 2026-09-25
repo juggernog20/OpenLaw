@@ -192,6 +192,7 @@ function recordApi(
   initial: {
     envelopes?: Record<string, unknown>[];
     signingConfigured?: boolean;
+    preparationEnabled?: boolean;
     updateMode?: "polling" | "webhook";
     primaryDocument?: typeof PRIMARY | null;
   } = {},
@@ -200,6 +201,7 @@ function recordApi(
   let state = {
     envelopes: initial.envelopes ?? [],
     signingConfigured: initial.signingConfigured ?? true,
+    preparationEnabled: initial.preparationEnabled ?? false,
     updateMode: initial.updateMode ?? "webhook",
     primaryDocument: initial.primaryDocument === undefined ? PRIMARY : initial.primaryDocument,
   };
@@ -233,6 +235,30 @@ function recordApi(
         return problem(503, "Signing state unavailable");
       }
       return json(200, state);
+    }
+    if (call.url.pathname === "/api/v1/contracts/42/envelopes/prepare" && call.method === "POST") {
+      writes.push({ path: call.url.pathname, body: call.body });
+      if (refuse) {
+        const refusal = refuse;
+        refuse = null;
+        return problem(refusal.status, refusal.detail, refusal.type);
+      }
+      const body = call.body as { documentVersionId: string; signers: typeof SIGNERS };
+      state = {
+        ...state,
+        envelopes: [
+          envelopeRow({
+            status: "draft",
+            preparationState: "created",
+            sentAt: null,
+            signers: body.signers,
+            documentVersionNumber: PRIMARY.versions.find(
+              (round) => round.id === body.documentVersionId,
+            )!.versionNumber,
+          }),
+        ],
+      };
+      return json(201, state);
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes" && call.method === "POST") {
       writes.push({ path: call.url.pathname, body: call.body });
@@ -948,5 +974,88 @@ describe("when the void control is absent", () => {
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+  });
+});
+
+describe("preparing an unsent Envelope", () => {
+  it("keeps preparation enabled when the live connection re-reads signing state", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    sources[0]!.open();
+    await waitFor(() => expect(api.reads).toBe(2));
+    await act(async () => Promise.resolve());
+    expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+  });
+
+  it("selects the exact Version, Signers and Subject and displays the unsent draft", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    await user.click(await screen.findByRole("button", { name: "Prepare Envelope" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("Version"), "v1");
+    await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+    await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    await user.type(within(dialog).getByLabelText("Subject"), "Please review this agreement");
+    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    expect(await screen.findByText("Draft — not sent")).toBeInTheDocument();
+    expect(screen.getByText("Not sent")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+    expect(api.writes[0]).toMatchObject({
+      path: "/api/v1/contracts/42/envelopes/prepare",
+      body: {
+        documentVersionId: "v1",
+        signers: [SIGNERS[0]],
+        subject: "Please review this agreement",
+        idempotencyKey: expect.any(String),
+      },
+    });
+  });
+
+  it("keeps the idempotency key for a repeated request and replaces it for a corrected one", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    await user.click(await screen.findByRole("button", { name: "Prepare Envelope" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+    await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    const refused = "The provider would not take the envelope.";
+    api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    expect(await within(dialog).findByText(refused)).toBeInTheDocument();
+    api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    await user.type(within(dialog).getByLabelText("Subject"), "Corrected");
+    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await waitFor(() => expect(api.writes).toHaveLength(3));
+    const keys = api.writes.map(
+      (write) => (write.body as { idempotencyKey: string }).idempotencyKey,
+    );
+    // A seam that saw the first key again with a new subject would refuse
+    // it as a conflict, so the corrected request needs its own.
+    expect(keys[1]).toBe(keys[0]);
+    expect(keys[2]).not.toBe(keys[0]);
+  });
+
+  it("shows an uncertain creation without offering a second preparation", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({ status: "preparing", preparationState: "uncertain", sentAt: null }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Creation uncertain — not confirmed sent")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 });

@@ -306,7 +306,7 @@ async function providerIdOf(envelopeId: string): Promise<string> {
     .from(contractEnvelopes)
     .where(eq(contractEnvelopes.id, envelopeId));
   expect(row, "the envelope row").toBeDefined();
-  return row!.providerEnvelopeId;
+  return row!.providerEnvelopeId!;
 }
 
 /** The fake this app resolved. Non-null once a request has resolved the

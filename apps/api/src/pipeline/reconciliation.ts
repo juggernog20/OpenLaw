@@ -184,7 +184,7 @@ export interface ReconciliationSummary {
 interface LiveEnvelope {
   id: string;
   provider: SigningProviderKey;
-  providerEnvelopeId: string;
+  providerEnvelopeId: string | null;
 }
 
 /**
@@ -274,6 +274,7 @@ export async function runReconciliationSweep(
     }
 
     for (const envelope of page) {
+      if (!envelope.providerEnvelopeId) continue;
       if (options.signal?.aborted) {
         summary.stopped = true;
         return summary;

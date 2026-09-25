@@ -306,7 +306,7 @@ async function providerIdOf(envelopeId: string): Promise<string> {
     .from(contractEnvelopes)
     .where(eq(contractEnvelopes.id, envelopeId));
   expect(row, "the envelope row").toBeDefined();
-  return row!.providerEnvelopeId;
+  return row!.providerEnvelopeId!;
 }
 
 /** Pushes one delivery at the webhook route, signed by this install's

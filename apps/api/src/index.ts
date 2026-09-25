@@ -326,6 +326,9 @@ await resolveVapid().catch((error: unknown) => {
 
 const app = await buildApp(
   {
+    // Development-only until the complete DocuSign flow is released.
+    signingPreparationEnabled:
+      Boolean(docusignBaseUrl) && process.env.SIGNING_PREPARATION_ENABLED === "true",
     db,
     config: {
       secret: requireEnv("AUTH_SECRET"),

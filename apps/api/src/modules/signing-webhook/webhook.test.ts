@@ -236,7 +236,7 @@ async function recordWithEnvelopeOut(title: string): Promise<{
   return {
     contractId: contract.id,
     number: contract.number,
-    providerEnvelopeId: row!.providerEnvelopeId,
+    providerEnvelopeId: row!.providerEnvelopeId!,
   };
 }
 

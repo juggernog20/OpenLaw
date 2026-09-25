@@ -704,3 +704,11 @@ export {
   MCP_OAUTH_UNAVAILABLE_PROBLEM,
   type McpToolset,
 } from "./mcp.js";
+
+/** One outstanding round, including an unresolved external creation. */
+export const LIVE_ENVELOPE_STATUSES = ["preparing", "draft", "sent"] as const;
+export function isLiveEnvelopeStatus(status: string): boolean {
+  return (LIVE_ENVELOPE_STATUSES as readonly string[]).includes(status);
+}
+export const ENVELOPE_IDEMPOTENCY_CONFLICT_PROBLEM_TYPE =
+  "urn:openlaw:problem:envelope-idempotency-conflict";

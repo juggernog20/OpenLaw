@@ -41,6 +41,7 @@ import {
   contracts,
   contractStatuses,
   desc,
+  documentVersions,
   eq,
   signingConnectors,
   users,
@@ -48,6 +49,11 @@ import {
 import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
 import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
+import {
+  SigningRefusedError,
+  SigningTimeoutError,
+  SigningUnavailableError,
+} from "../../lib/signing/provider.js";
 import { FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import {
   signInCookies,
@@ -133,7 +139,7 @@ interface EnvelopeRow {
   documentTitle: string | null;
   documentVersionNumber: number | null;
   sentBy: { id: string; displayName: string; image: string | null };
-  sentAt: string;
+  sentAt: string | null;
   completedAt: string | null;
 }
 
@@ -144,7 +150,7 @@ interface SendableDocument {
 }
 
 beforeAll(async () => {
-  harness = await startHarness();
+  harness = await startHarness({ signingPreparationEnabled: true });
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -532,7 +538,7 @@ describe("the contract status follows a successful send", () => {
     expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
   });
 
-  it("rolls back the status and envelope together and voids the provider send on failure", async () => {
+  it("rolls back the status, voids the provider send, and ends the round on failure", async () => {
     const { contract, versionId } = await readyContract("Send transaction rollback");
     const before = await storedContract(contract.id);
     const idsBefore = new Set(provider().sentEnvelopeIds());
@@ -546,13 +552,19 @@ describe("the contract status follows a successful send", () => {
       notification.mockRestore();
     }
     expect((await storedContract(contract.id)).statusId).toBe(before.statusId);
-    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    // The provider confirmed the void, so the round has a terminal
+    // outcome: it stays on the record as voided and reserves nothing.
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toMatchObject([
+      { status: "voided", reason: "OpenLaw could not record this send." },
+    ]);
     expect(await entriesOn(contract.id)).toEqual([]);
     const produced = provider()
       .sentEnvelopeIds()
       .filter((id) => !idsBefore.has(id));
     expect(produced).toHaveLength(1);
     expect((await provider().readEnvelope(produced[0]!)).status).toBe("voided");
+    const later = await send(as(MEMBER), contract.number, versionId);
+    expect(later.statusCode, later.body).toBe(201);
   });
 
   it("uses the first live configured Signature status and clears an ended date", async () => {
@@ -954,5 +966,488 @@ describe("erasing an external signer", () => {
     const state = await signingState(as(MEMBER), contract.number);
     expect(state.envelopes).toHaveLength(1);
     expect(state.envelopes[0]!.signers).toEqual([STAYING]);
+  });
+});
+
+describe("durable Envelope preparation", () => {
+  it("keeps the exact Version and Signers as an unsent draft, and reuses the key", async () => {
+    await configureConnector();
+    const contract = await newContract("Durable preparation");
+    await paperOn(contract.number, Buffer.from("first"), Buffer.from("second"));
+    const before = await signingState(as(MEMBER), contract.number);
+    const version = before.primaryDocument!.versions[1]!;
+    const payload = {
+      documentVersionId: version.id,
+      signers: [...SIGNERS],
+      subject: "Review and sign",
+      idempotencyKey: "draft-one",
+    };
+    const prepare = () =>
+      harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+        cookies: as(MEMBER),
+        payload,
+      });
+    const response = await prepare();
+    expect(response.statusCode, response.body).toBe(201);
+    const draft = response.json().envelopes[0];
+    expect(draft).toMatchObject({
+      status: "draft",
+      sentAt: null,
+      documentVersionNumber: version.versionNumber,
+      signers: SIGNERS,
+      sentBy: { id: idOf(MEMBER) },
+    });
+    const [stored] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, draft.id));
+    expect(stored!.providerEnvelopeId).toBeTruthy();
+    expect(await harness.signing!.readEnvelope(stored!.providerEnvelopeId!)).toMatchObject({
+      status: "draft",
+    });
+    expect(harness.signing!.documentOf(stored!.providerEnvelopeId!)).toEqual(Buffer.from("first"));
+    expect(await entriesOn(contract.id)).toHaveLength(0);
+    expect((await prepare()).json().envelopes[0].id).toBe(draft.id);
+    const changed = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(MEMBER),
+      payload: { ...payload, subject: "Different" },
+    });
+    expect(changed.statusCode).toBe(409);
+    expect(changed.json().type).toBe("urn:openlaw:problem:envelope-idempotency-conflict");
+    const changedVersion = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(MEMBER),
+      payload: { ...payload, documentVersionId: "another-version" },
+    });
+    expect(changedVersion.statusCode).toBe(409);
+    expect(changedVersion.json().type).toBe("urn:openlaw:problem:envelope-idempotency-conflict");
+    expect((await send(as(MEMBER), contract.number, version.id)).statusCode).toBe(409);
+  });
+});
+
+describe("preparation refusals and reservations", () => {
+  async function ready() {
+    await configureConnector();
+    const contract = await newContract("Preparation checks");
+    await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
+    const state = await signingState(as(MEMBER), contract.number);
+    const payload = {
+      documentVersionId: state.primaryDocument!.versions[0]!.id,
+      signers: [...SIGNERS],
+      subject: "Please review",
+      idempotencyKey: crypto.randomUUID(),
+    };
+    const prepare = (patch = {}, actor = MEMBER) =>
+      harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+        cookies: as(actor),
+        payload: { ...payload, ...patch },
+      });
+    return { contract, payload, prepare };
+  }
+
+  it("refuses Business Users, unreachable or archived Contracts, foreign Versions and duplicate Signers", async () => {
+    const { contract, payload, prepare } = await ready();
+    const denied = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(CONTRIBUTOR),
+      payload,
+    });
+    expect(denied.statusCode).toBe(403);
+    expect((await prepare({ documentVersionId: "other-version" })).statusCode).toBe(422);
+    expect(
+      (
+        await prepare({
+          signers: [SIGNERS[0], { ...SIGNERS[0], email: SIGNERS[0].email.toUpperCase() }],
+        })
+      ).statusCode,
+    ).toBe(422);
+    expect(
+      (
+        await prepare({
+          signers: [{ personId: idOf(MEMBER) }, { name: MEMBER.displayName, email: MEMBER.email }],
+        })
+      ).statusCode,
+    ).toBe(422);
+    await harness.db
+      .update(contracts)
+      .set({ isConfidential: true })
+      .where(eq(contracts.id, contract.id));
+    const outsider = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+      cookies: as(OUTSIDER),
+      payload,
+    });
+    expect(outsider.statusCode).toBe(404);
+    await harness.db
+      .update(contracts)
+      .set({ archivedAt: new Date() })
+      .where(eq(contracts.id, contract.id));
+    expect((await prepare()).statusCode).toBe(409);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+  });
+
+  it("keeps preparation off until enabled and requires the Signing connector", async () => {
+    const { prepare } = await ready();
+    harness.app.signingPreparationEnabled = false;
+    try {
+      expect((await prepare()).statusCode).toBe(404);
+    } finally {
+      harness.app.signingPreparationEnabled = true;
+    }
+    await clearConnector();
+    const refusal = await prepare();
+    expect(refusal.statusCode).toBe(409);
+    expect(refusal.json().type).toBe(SIGNING_NOT_CONFIGURED_PROBLEM_TYPE);
+  });
+
+  it("resolves an internal Signer and keeps the Contract Stage", async () => {
+    const { contract, prepare } = await ready();
+    const [before] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+    const response = await prepare({ signers: [{ personId: idOf(MEMBER) }, SIGNERS[0]] });
+    expect(response.statusCode, response.body).toBe(201);
+    expect(response.json().envelopes[0].signers).toEqual([
+      { name: MEMBER.displayName, email: MEMBER.email },
+      SIGNERS[0],
+    ]);
+    const [after] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+    expect(after!.statusId).toBe(before!.statusId);
+    expect(await entriesOn(contract.id)).toEqual([]);
+  });
+
+  it("reserves before creation, against concurrent preparations and direct send", async () => {
+    // Isolate the removal check from sent rounds left by earlier cases.
+    await harness.db.delete(contractEnvelopes);
+    const { contract, payload, prepare } = await ready();
+    let release!: () => void;
+    let entered!: () => void;
+    const started = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const wait = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const original = provider().prepareEnvelope.bind(provider());
+    const hold = vi.spyOn(provider(), "prepareEnvelope").mockImplementationOnce(async (input) => {
+      entered();
+      await wait;
+      return original(input);
+    });
+    const pending = prepare().then((response) => response);
+    try {
+      await started;
+      const reading = await signingState(as(MEMBER), contract.number);
+      expect(reading.envelopes[0]).toMatchObject({ status: "preparing", sentAt: null });
+      const [intent] = await harness.db
+        .select()
+        .from(contractEnvelopes)
+        .where(eq(contractEnvelopes.contractId, contract.id));
+      expect(intent).toMatchObject({
+        providerEnvelopeId: null,
+        providerAccountId: "fake-account-0001",
+        providerEnvironment: "demo",
+        subject: payload.subject,
+      });
+      expect(intent!.providerTransactionId).toBeTruthy();
+      expect((await prepare({ idempotencyKey: "another-key" })).statusCode).toBe(409);
+      expect((await send(as(MEMBER), contract.number, payload.documentVersionId)).statusCode).toBe(
+        409,
+      );
+      expect((await prepare()).json().envelopes[0].id).toBe(intent!.id);
+      const removal = await harness.app.inject({
+        method: "DELETE",
+        url: "/api/v1/signing-connectors/docusign",
+        cookies: as(ADMIN),
+      });
+      expect(removal.statusCode).toBe(409);
+    } finally {
+      release();
+      hold.mockRestore();
+    }
+    expect((await pending).statusCode).toBe(201);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toHaveLength(1);
+    const draftRemoval = await harness.app.inject({
+      method: "DELETE",
+      url: "/api/v1/signing-connectors/docusign",
+      cookies: as(ADMIN),
+    });
+    expect(draftRemoval.statusCode).toBe(409);
+  });
+
+  it("keeps an uncertain creation reserved and never creates again for a matching retry", async () => {
+    const { contract, payload, prepare } = await ready();
+    const original = provider().prepareEnvelope.bind(provider());
+    const lost = vi.spyOn(provider(), "prepareEnvelope").mockImplementationOnce(async (input) => {
+      await original(input);
+      throw new SigningTimeoutError("The response was lost.");
+    });
+    try {
+      expect((await prepare()).statusCode).toBe(502);
+    } finally {
+      lost.mockRestore();
+    }
+    const [intent] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.contractId, contract.id));
+    expect(intent).toMatchObject({
+      status: "preparing",
+      preparationState: "uncertain",
+      providerEnvelopeId: null,
+      sentAt: null,
+    });
+    const count = provider().sentEnvelopeIds().length;
+    expect((await prepare()).json().envelopes[0].id).toBe(intent!.id);
+    expect(provider().sentEnvelopeIds()).toHaveLength(count);
+    expect((await prepare({ idempotencyKey: "new-try" })).statusCode).toBe(409);
+    expect((await send(as(MEMBER), contract.number, payload.documentVersionId)).statusCode).toBe(
+      409,
+    );
+    expect(await entriesOn(contract.id)).toEqual([]);
+  });
+
+  it("refuses to void a draft, which has not been sent", async () => {
+    const { contract, prepare } = await ready();
+    expect((await prepare()).statusCode).toBe(201);
+    const [draft] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.contractId, contract.id));
+    const voided = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${draft!.id}/void`,
+      cookies: as(MEMBER),
+      payload: { reason: "Not needed" },
+    });
+    expect(voided.statusCode).toBe(409);
+    expect(voided.json().detail).toContain("has not been sent");
+    expect(await harness.signing!.readEnvelope(draft!.providerEnvelopeId!)).toMatchObject({
+      status: "draft",
+    });
+  });
+
+  it("leaves no row for a direct send the provider refuses, and sends on the retry", async () => {
+    const { contract, payload } = await ready();
+    const refusal = vi
+      .spyOn(provider(), "sendEnvelope")
+      .mockRejectedValueOnce(new SigningRefusedError("Rejected"));
+    try {
+      expect((await send(as(MEMBER), contract.number, payload.documentVersionId)).statusCode).toBe(
+        502,
+      );
+    } finally {
+      refusal.mockRestore();
+    }
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    const retry = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    expect(retry.statusCode, retry.body).toBe(201);
+    expect(retry.json().envelopes).toMatchObject([{ status: "sent" }]);
+  });
+
+  const sendKeyed = (number: number, documentVersionId: string, idempotencyKey: string) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${number}/envelopes`,
+      cookies: as(MEMBER),
+      payload: { documentVersionId, signers: [...SIGNERS], idempotencyKey },
+    });
+
+  const storedRound = async (contractId: string) => {
+    const rows = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.contractId, contractId));
+    expect(rows).toHaveLength(1);
+    return rows[0]!;
+  };
+
+  it("leaves no row when the stored file cannot be read, and sends on the retry", async () => {
+    const { contract, payload } = await ready();
+    const idsBefore = provider().sentEnvelopeIds().length;
+    const [source] = await harness.db
+      .select({ fileRef: documentVersions.fileRef })
+      .from(documentVersions)
+      .where(eq(documentVersions.id, payload.documentVersionId));
+    // Only this version's file fails, for as long as the send runs. A
+    // one-shot rejection could be spent by a pipeline job still reading
+    // the upload, and the send would then go out.
+    const storage = harness.app.storage;
+    const read = storage.get.bind(storage);
+    const unreadable = vi
+      .spyOn(storage, "get")
+      .mockImplementation((ref) =>
+        ref === source!.fileRef ? Promise.reject(new Error("The disk went away.")) : read(ref),
+      );
+    try {
+      const response = await send(as(MEMBER), contract.number, payload.documentVersionId);
+      expect(response.statusCode).toBe(500);
+    } finally {
+      unreadable.mockRestore();
+    }
+    expect(provider().sentEnvelopeIds()).toHaveLength(idsBefore);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    const retry = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    expect(retry.statusCode, retry.body).toBe(201);
+  });
+
+  it.each([
+    ["timeout", () => new SigningTimeoutError("The answer was lost.")],
+    ["unavailable", () => new SigningUnavailableError("The connection dropped.")],
+  ])(
+    "keeps a direct send reserved when the provider accepts it and the answer is lost (%s)",
+    async (_, lostAnswer) => {
+      const { contract, payload, prepare } = await ready();
+      const [before] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      const idsBefore = new Set(provider().sentEnvelopeIds());
+      const created = () =>
+        provider()
+          .sentEnvelopeIds()
+          .filter((id) => !idsBefore.has(id));
+      const key = crypto.randomUUID();
+      // The fake really takes the envelope, and only the answer is lost.
+      const original = provider().sendEnvelope.bind(provider());
+      const lost = vi.spyOn(provider(), "sendEnvelope").mockImplementationOnce(async (input) => {
+        await original(input);
+        throw lostAnswer();
+      });
+      let response;
+      try {
+        response = await sendKeyed(contract.number, payload.documentVersionId, key);
+      } finally {
+        lost.mockRestore();
+      }
+      expect(response.statusCode, response.body).toBe(502);
+      expect(response.json().detail).toContain("stays reserved");
+      expect(created()).toHaveLength(1);
+      expect(await provider().readEnvelope(created()[0]!)).toMatchObject({ status: "sent" });
+
+      // The reservation and its recovery evidence are all still there.
+      const intent = await storedRound(contract.id);
+      expect(intent).toMatchObject({
+        status: "preparing",
+        preparationState: "uncertain",
+        providerEnvelopeId: null,
+        sentAt: null,
+        idempotencyKey: key,
+        providerAccountId: "fake-account-0001",
+        providerEnvironment: "demo",
+        documentVersionId: payload.documentVersionId,
+        sentBy: idOf(MEMBER),
+      });
+      expect(intent.providerTransactionId).toBeTruthy();
+      expect(intent.documentId).toBeTruthy();
+      expect(intent.requestFingerprint).toBeTruthy();
+      expect(
+        await harness.db
+          .select()
+          .from(contractEnvelopeSigners)
+          .where(eq(contractEnvelopeSigners.envelopeId, intent.id)),
+      ).toHaveLength(SIGNERS.length);
+
+      // A matching keyed retry answers with the same round and creates nothing.
+      const retry = await sendKeyed(contract.number, payload.documentVersionId, key);
+      expect(retry.statusCode, retry.body).toBe(201);
+      expect(retry.json().envelopes).toMatchObject([
+        { id: intent.id, status: "preparing", preparationState: "uncertain" },
+      ]);
+      // Another direct send and a new preparation are both refused.
+      const again = await send(as(MEMBER), contract.number, payload.documentVersionId);
+      expect(again.statusCode).toBe(409);
+      expect(again.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+      const prepared = await prepare({ idempotencyKey: crypto.randomUUID() });
+      expect(prepared.statusCode).toBe(409);
+      expect(prepared.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+
+      expect(created()).toHaveLength(1);
+      expect(await storedRound(contract.id)).toMatchObject({ id: intent.id, status: "preparing" });
+      expect(await entriesOn(contract.id)).toEqual([]);
+      const [after] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      expect(after!.statusId).toBe(before!.statusId);
+    },
+  );
+
+  it("keeps the provider id and the reservation when a failed send's void is not confirmed", async () => {
+    const { contract, payload, prepare } = await ready();
+    const [before] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+    const idsBefore = new Set(provider().sentEnvelopeIds());
+    const notification = vi
+      .spyOn(harness.app.notifier, "statusChanged")
+      .mockRejectedValueOnce(new Error("Status notification could not be recorded"));
+    const compensation = vi
+      .spyOn(provider(), "voidEnvelope")
+      .mockRejectedValueOnce(new SigningUnavailableError("The provider went away."));
+    let response;
+    try {
+      response = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    } finally {
+      notification.mockRestore();
+      compensation.mockRestore();
+    }
+    expect(response.statusCode, response.body).toBe(500);
+    const created = provider()
+      .sentEnvelopeIds()
+      .filter((id) => !idsBefore.has(id));
+    expect(created).toHaveLength(1);
+    expect(await provider().readEnvelope(created[0]!)).toMatchObject({ status: "sent" });
+
+    const kept = await storedRound(contract.id);
+    expect(kept).toMatchObject({
+      status: "preparing",
+      preparationState: "uncertain",
+      providerEnvelopeId: created[0],
+      sentAt: null,
+      completedAt: null,
+      providerAccountId: "fake-account-0001",
+      documentVersionId: payload.documentVersionId,
+    });
+    expect(kept.providerTransactionId).toBeTruthy();
+
+    const again = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    expect(again.statusCode).toBe(409);
+    expect(again.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+    const prepared = await prepare({ idempotencyKey: crypto.randomUUID() });
+    expect(prepared.statusCode).toBe(409);
+    expect(prepared.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+    expect(
+      provider()
+        .sentEnvelopeIds()
+        .filter((id) => !idsBefore.has(id)),
+    ).toHaveLength(1);
+    expect(await entriesOn(contract.id)).toEqual([]);
+    const [after] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+    expect(after!.statusId).toBe(before!.statusId);
+  });
+
+  it("records a confirmed refusal without keeping the live reservation", async () => {
+    const { prepare } = await ready();
+    const refusal = vi
+      .spyOn(provider(), "prepareEnvelope")
+      .mockRejectedValueOnce(new SigningRefusedError("Rejected"));
+    try {
+      expect((await prepare()).statusCode).toBe(502);
+    } finally {
+      refusal.mockRestore();
+    }
+    const same = await prepare();
+    expect(same.json().envelopes[0]).toMatchObject({
+      status: "preparation_failed",
+      preparationState: "failed",
+      sentAt: null,
+    });
+    expect((await prepare({ idempotencyKey: "corrected-attempt" })).statusCode).toBe(201);
   });
 });

@@ -212,8 +212,14 @@ export async function applyEnvelopeStatus(
     };
     // An ending stands, and a status that is already the row's is
     // nothing to write. Both are the same answer to the caller: the
-    // record already says what this feed came to say.
-    if (TERMINAL_STATUSES.has(row.status) || row.status === change.status) {
+    // record already says what this feed came to say. A preparation is
+    // not moved here either: its status belongs to its creation, and a
+    // feed that reports on a draft is the recovery slice's to read.
+    if (
+      row.status !== "sent" ||
+      TERMINAL_STATUSES.has(row.status) ||
+      row.status === change.status
+    ) {
       return { outcome: "unchanged", envelope: held };
     }
 

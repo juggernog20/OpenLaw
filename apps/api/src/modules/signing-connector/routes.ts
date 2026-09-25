@@ -46,6 +46,7 @@ import {
   contractEnvelopes,
   count,
   eq,
+  inArray,
   signingConnectors,
   SIGNING_ENVIRONMENTS,
   SIGNING_UPDATE_MODES,
@@ -53,6 +54,7 @@ import {
   type Executor,
   type SigningConnector,
 } from "@openlaw/db";
+import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -428,16 +430,18 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  /** How many rounds this install has out right now.
+  /** How many live rounds this install holds right now: preparing,
+   * draft, or sent (`LIVE_ENVELOPE_STATUSES`). A draft counts, because
+   * removing its connector would strand it at the provider.
    *
    * Read under the connector's own row lock, so a send that raced the
-   * switch is either counted here or refused by the resolver after it —
-   * the send resolves the connector before it dials anybody. */
+   * switch is either counted here or refused after it: the send's
+   * reservation takes a share lock on the same row before it dials. */
   async function liveEnvelopeCount(tx: Executor): Promise<number> {
     const [row] = await tx
       .select({ live: count() })
       .from(contractEnvelopes)
-      .where(eq(contractEnvelopes.status, "sent"));
+      .where(inArray(contractEnvelopes.status, [...LIVE_ENVELOPE_STATUSES]));
     return row?.live ?? 0;
   }
 
