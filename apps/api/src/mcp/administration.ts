@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Administration reads for Administrators with a grant (DD-029, TECH-035).
+ * Audit reads share the page's reach and redaction and write no audit entry.
+ * Payloads over 8 KiB are omitted with payloadTruncated set to true.
+ * Organization settings use the panes' secret masking; no Tool changes settings.
+ */
 import { z } from "zod";
 import { AuditEntrySchema, AuditFilterSchema, queryAuditLog } from "../modules/audit-log/routes.js";
 import { ToolCallEntrySchema, queryToolCalls } from "../modules/audit-log/tool-calls.js";

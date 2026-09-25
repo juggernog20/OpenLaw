@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-/** Organization settings use the pane readers, including their secret projections. */
+/** Organization settings reuse the pane readers and secret masking (SET-002, SET-014). */
 import type { FastifyInstance } from "fastify";
 import { authenticationPolicy } from "../../auth/authentication-policy.js";
 import { getOrgSettings } from "../../lib/org-settings.js";
