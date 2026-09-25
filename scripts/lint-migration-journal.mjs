@@ -154,7 +154,7 @@ const endsInAutocommitBeforeRule = new Set([
   "0088_document-version-provenance",
   "0093_matter_status_groups_and_documents",
   "0132_auto-doc-acknowledgement-policy",
-  "0134_authentication-methods",
+  "0134_authentication-methods", // gitleaks:allow
   "0135_regions",
   "0136_matter-region",
   "0137_custom-value-cadence",
