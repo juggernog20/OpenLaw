@@ -1932,17 +1932,17 @@ and through the settings route.
 
 M42 is built on the same `/mcp` endpoint. Resource reads use these addresses:
 
-| Address | Content |
-| --- | --- |
-| `openlaw://contracts/{number}` | Contract |
-| `openlaw://matters/{number}` | Matter |
-| `openlaw://requests/{number}` | Request |
-| `openlaw://entities/{id}` | Entity |
-| `openlaw://knowledge/{id}` | Knowledge Item |
-| `openlaw://document-versions/{versionId}` | Extracted Document Version text |
-| `openlaw://inbox` | Inbox for Legal Users, own Requests for Business Users |
-| `openlaw://tasks/mine` | Tasks assigned to the person |
-| `openlaw://vocabulary` | Configured vocabulary |
+| Address                                   | Content                                                |
+| ----------------------------------------- | ------------------------------------------------------ |
+| `openlaw://contracts/{number}`            | Contract                                               |
+| `openlaw://matters/{number}`              | Matter                                                 |
+| `openlaw://requests/{number}`             | Request                                                |
+| `openlaw://entities/{id}`                 | Entity                                                 |
+| `openlaw://knowledge/{id}`                | Knowledge Item                                         |
+| `openlaw://document-versions/{versionId}` | Extracted Document Version text                        |
+| `openlaw://inbox`                         | Inbox for Legal Users, own Requests for Business Users |
+| `openlaw://tasks/mine`                    | Tasks assigned to the person                           |
+| `openlaw://vocabulary`                    | Configured vocabulary                                  |
 
 Record numbers accept their prefix or a positive integer, such as `C-12` or `12`.
 Entity, Knowledge Item and Version addresses require UUIDs. Each read uses the
@@ -1981,13 +1981,13 @@ There is no GET stream, `/sse` endpoint or legacy subscription session.
 
 Discovery supplies these cache hints. They never replace a current access check.
 
-| Method | `ttlMs` | `cacheScope` |
-| --- | --- | --- |
-| `tools/list` | 300000 | `private` |
-| `resources/templates/list` | 300000 | `private` |
-| `prompts/list` | 300000 | `private` |
-| `resources/list` | 0 | Not set |
-| `resources/read` | 0 | Not set |
+| Method                     | `ttlMs` | `cacheScope` |
+| -------------------------- | ------- | ------------ |
+| `tools/list`               | 300000  | `private`    |
+| `resources/templates/list` | 300000  | `private`    |
+| `prompts/list`             | 300000  | `private`    |
+| `resources/list`           | 0       | Not set      |
+| `resources/read`           | 0       | Not set      |
 
 The audience flags mean that an account type may run a Tool. They do not set
 ceiling defaults. T33 and T34 use `team`. T35 and T40 use `administration` and
@@ -2035,4 +2035,4 @@ this set with the Client's requested scopes. Guide needs no selection.
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166                        |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166            |
