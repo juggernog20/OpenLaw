@@ -160,3 +160,39 @@ it("renders the card and completes Add, Edit, secret generation, rotation, toggl
   expect(writes).toContain("policy");
   expect(secrets).toBe(2);
 });
+
+it("keeps the switch and names the failed operation when a toggle is refused", async () => {
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      const path = call.url.pathname;
+      if (path === "/api/v1/mcp-settings")
+        return json(200, {
+          enabled: true,
+          legalApiKeysEnabled: false,
+          businessApiKeysEnabled: false,
+          legalOAuthClientsEnabled: true,
+          businessOAuthClientsEnabled: false,
+          reachability: [],
+          serverAddress: "https://legal.example/mcp",
+          toolsetCeiling: [],
+          readOnly: false,
+          apiKeyLifetimeDays: 90,
+          allowedClients: [published],
+          dynamicClientRegistrationEnabled: false,
+          authorizationServerAvailable: true,
+        });
+      if (path === "/api/v1/mcp-settings/allowed-clients") return json(200, [published]);
+      if (path === "/api/v1/mcp-settings/allowed-clients/claude" && call.method === "PATCH")
+        return json(500, { title: "Allowed Client was not updated." });
+      return undefined;
+    },
+  });
+  const user = userEvent.setup();
+  renderAt("/settings/mcp");
+  await user.click(await screen.findByRole("switch", { name: "Enable Claude" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "The Client could not be turned on or off. Try again.",
+  );
+  expect(screen.getByRole("switch", { name: "Enable Claude" })).toBeChecked();
+});

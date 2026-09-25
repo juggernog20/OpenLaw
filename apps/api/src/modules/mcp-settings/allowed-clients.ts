@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Administrator-only routes for the Allowed Clients list: create, edit, toggle,
+ * delete, and the once-shown secret. Registered clients are created and updated
+ * through the plugin server API. See DD-029, DD-013 and TECH-035.
+ */
 import {
   allowedClients,
   allowedClientLinks,
@@ -193,8 +198,10 @@ export const allowedClientRoutes: FastifyPluginAsyncZod = async (app) => {
           !copilotCallbacks.every((url) => body.callbackUrls!.includes(url))
         )
           throw httpError(400, "Keep the fixed Microsoft 365 Copilot callback URLs.");
+        // Without the authorization server the plugin API is absent; the row still changes.
+        const oauth = authorizationServerAvailable(app.baseUrl);
         const auth = transactionalOAuth(app.auth, tx);
-        if (row.clientId && (body.name !== undefined || body.callbackUrls !== undefined))
+        if (oauth && row.clientId && (body.name !== undefined || body.callbackUrls !== undefined))
           await auth.api.adminUpdateOAuthClient({
             headers: fromNodeHeaders(request.headers),
             body: {
@@ -202,7 +209,7 @@ export const allowedClientRoutes: FastifyPluginAsyncZod = async (app) => {
               update: { client_name: body.name, redirect_uris: body.callbackUrls?.filter(Boolean) },
             },
           });
-        if (body.enabled !== undefined) {
+        if (oauth && body.enabled !== undefined) {
           const links = await tx
             .select()
             .from(allowedClientLinks)
@@ -309,7 +316,7 @@ export const allowedClientRoutes: FastifyPluginAsyncZod = async (app) => {
         if (row.seeded || row.kind !== "registered")
           throw httpError(400, "Seeded Clients cannot be deleted.");
         // Keep the protocol row for existing consent and token references. It cannot authorize again.
-        if (row.clientId)
+        if (row.clientId && authorizationServerAvailable(app.baseUrl))
           await transactionalOAuth(app.auth, tx).api.setOAuthClientEnabled({
             body: { clientId: row.clientId, enabled: false },
           });

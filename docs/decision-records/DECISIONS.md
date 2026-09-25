@@ -1549,6 +1549,15 @@ The list varies by grant and the call is enforced too, because a list alone is n
 - **FUTURE-FEATURES rows.** The ChatGPT `openai/fileParams` download-URL variant and SEP-2631 file objects for T27. Unattended automation and service accounts. The AI connector consuming the Tool register. Meta-tools over the REST API. Server-side approval tokens for destructive Tools. The Microsoft admin-center BYO registry.
 - **Unverified before build, tested against a throwaway server.** Whether Claude.ai completes registration through CIMD when DCR is off. Whether ChatGPT's Developer mode is exposed in the desktop app. The protocol revision each client negotiates. Copilot Studio's PKCE, `resource`, `WWW-Authenticate` and session handling, and its exact callback URL. Egress ranges for Microsoft 365 Copilot chat and the Agent 365 gateway. The deprecation status of better-auth's `oidc-provider` plugin. Whether claude.ai, ChatGPT and Microsoft 365 Copilot send an attached chat file to the upload URL T27 returns. Whether ChatGPT's `openai/fileParams` path fires for an unpublished Developer mode connector.
 
+### Addendum (2026-09-25, #1134): four seeded Allowed Clients
+
+Migration 0171 carries four enabled Allowed Clients. Claude, Claude Code and
+ChatGPT are published identities. Microsoft 365 Copilot is a registered Client
+template with no client id until an Administrator generates its secret. Its
+callbacks include the fixed Teams and VS Code URLs and one empty slot for the
+Copilot Studio consent redirect. The earlier three-name seed summary omitted
+Claude Code. Dynamic client registration remains off by default.
+
 ### Addendum (2026-09-25, #1138): M41 consent, connected Clients and deployment profiles
 
 This records the shipped behavior of M41/2, M41/5 and M41/6 (#1133, #1136, #1137).
@@ -1623,13 +1632,4 @@ they do not establish live vendor interoperability.
 | DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |
 | DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |
 | DD-028 | The type Form — one tree per type decides intake, creation, record and Portal             | Accepted                                                                    |
-| DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted                                                                    |
-
-### Addendum (2026-09-25, #1134): four seeded Allowed Clients
-
-Migration 0171 carries four enabled Allowed Clients. Claude, Claude Code and
-ChatGPT are published identities. Microsoft 365 Copilot is a registered Client
-template with no client id until an Administrator generates its secret. Its
-callbacks include the fixed Teams and VS Code URLs and one empty slot for the
-Copilot Studio consent redirect. The earlier three-name seed summary omitted
-Claude Code. Dynamic client registration remains off by default.
+| DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted; addenda #1134, #1138                                              |

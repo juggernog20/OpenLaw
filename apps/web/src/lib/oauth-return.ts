@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
+/**
+ * The sign-in return for the OAuth flow: keeps the plugin's signed query through
+ * sign-in and re-enters the authorize endpoint with it. See DD-029.
+ */
 /** The plugin verifies the signature. Keep its query bytes intact until then. */
 export function oauthLoginSearch(search: string): string {
   const params = new URLSearchParams(search);

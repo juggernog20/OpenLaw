@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
+/**
+ * The six root discovery aliases (authorization server, OpenID configuration and
+ * protected resource, plain and suffixed). Each delegates to the better-auth handler
+ * and answers 404 while the authorization server is unavailable. See TECH-035.
+ */
 import type { FastifyPluginAsync } from "fastify";
 import { authorizationServerAvailable } from "./oauth.js";
 import { httpError } from "../lib/problem.js";

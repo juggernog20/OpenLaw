@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * A transaction-bound better-auth instance for Client management and dynamic
+ * registration, so each protocol row commits with its audit row. See TECH-035.
+ */
 import { betterAuth } from "better-auth";
 import type { Transaction } from "@openlaw/db";
 import type { Auth } from "./instance.js";

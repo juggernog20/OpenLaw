@@ -869,6 +869,9 @@
   "allowedClients.delete": {
     "defaultMessage": "Delete Client"
   },
+  "allowedClients.deleteFailed": {
+    "defaultMessage": "The Client could not be deleted. Try again."
+  },
   "allowedClients.done": {
     "defaultMessage": "Done"
   },
@@ -926,11 +929,17 @@
   "allowedClients.secretDate": {
     "defaultMessage": "Secret generated {date}"
   },
+  "allowedClients.secretFailed": {
+    "defaultMessage": "The Client secret could not be generated. Try again."
+  },
   "allowedClients.selfRegistered": {
     "defaultMessage": "Registered by the Client"
   },
   "allowedClients.title": {
     "defaultMessage": "Allowed Clients"
+  },
+  "allowedClients.toggleFailed": {
+    "defaultMessage": "The Client could not be turned on or off. Try again."
   },
   "apiKeys.actions": {
     "defaultMessage": "Actions"

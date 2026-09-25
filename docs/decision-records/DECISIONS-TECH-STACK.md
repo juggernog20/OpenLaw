@@ -1833,45 +1833,9 @@ The JWT verifier checks the signature, issuer, `/mcp` audience and expiry agains
 the same signing keys served at `/api/auth/jwks`. A verified JWT still receives 401
 until M41/4 can resolve its grant. API keys retain their M40 verifier and guards.
 
-## Index of decisions
-
-| #        | Decision                                                                      | Status                                                                          |
-| -------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted                                                                        |
-| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted                                                                        |
-| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted                                                                        |
-| TECH-004 | Database — PostgreSQL only                                                    | Accepted                                                                        |
-| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted                                                                        |
-| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted                                                                        |
-| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted                                                                        |
-| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted                                                                        |
-| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted                                                                        |
-| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted                                                                        |
-| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted                                                                        |
-| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted                                                                        |
-| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted                                                                        |
-| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted; service-seam tests for non-HTTP callers by the 2026-09-25 addendum    |
-| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)                                                            |
-| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted                                                                        |
-| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted                                                                        |
-| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted                                                                        |
-| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted                                                                        |
-| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted                                                                        |
-| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022                                                          |
-| TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted                                                                        |
-| TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted                                                                        |
-| TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted                                                                        |
-| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                                                                        |
-| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                                                                        |
-| TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026                                                       |
-| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted                                                                        |
-| TECH-029 | The log carries the path and the Postgres code, never a query string or param | Accepted                                                                        |
-| TECH-030 | Connector calls: no redirects, DocuSign host allowlist, bounded reads         | Accepted                                                                        |
-| TECH-031 | First-run setup demands a bootstrap token from the log                        | Accepted                                                                        |
-| TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
-| TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
-| TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1134, #1135                                      |
+Superseded in part by the #1134 and #1135 addenda below: the refuse-every-identity
+CIMD rule, the `/oauth2/create-client` refusal as the only way to create a Client, and
+the JWT-without-grant refusal were interim rules for M41/1.
 
 ### Addendum (2026-09-25, #1134): Allowed Clients and registration
 
@@ -1963,3 +1927,43 @@ The environment pins it. A saved change takes effect after app and worker restar
 A new grant uses the active lifetime. An existing grant retains its absolute expiry,
 including across token refresh. The API rejects invalid lifetime settings at boot
 and through the settings route.
+
+## Index of decisions
+
+| #        | Decision                                                                      | Status                                                                          |
+| -------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| TECH-001 | Frontend stack — React + Tailwind CSS + shadcn/ui (copied) + Radix primitives | Accepted                                                                        |
+| TECH-002 | Backend — TypeScript on Node LTS                                              | Accepted                                                                        |
+| TECH-003 | Application shape — Fastify API + Vite React SPA (REST/OpenAPI)               | Accepted                                                                        |
+| TECH-004 | Database — PostgreSQL only                                                    | Accepted                                                                        |
+| TECH-005 | Deployment — Docker Compose as the blessed path                               | Accepted                                                                        |
+| TECH-006 | ORM — Drizzle (+ drizzle-kit migrations)                                      | Accepted                                                                        |
+| TECH-007 | Background jobs — pg-boss on Postgres                                         | Accepted                                                                        |
+| TECH-008 | Authentication — onboarding-selectable: built-in basic or BYO IdP (OIDC)      | Accepted                                                                        |
+| TECH-009 | Real-time — SSE on live surfaces                                              | Accepted                                                                        |
+| TECH-010 | Document engines — one LibreOffice + OCR sidecar                              | Accepted                                                                        |
+| TECH-011 | Email sending — SMTP first + provider adapter                                 | Accepted                                                                        |
+| TECH-012 | AI providers — three protocol adapters, presets, custom option                | Accepted                                                                        |
+| TECH-013 | DocuSign auth — JWT grant (service integration)                               | Accepted                                                                        |
+| TECH-014 | DX housekeeping — repo, CI, testing, observability, telemetry, storage/search | Accepted; service-seam tests for non-HTTP callers by the 2026-09-25 addendum    |
+| TECH-015 | TypeScript 7 native compiler + TS 6 API shim for typescript-eslint            | Accepted (temporary)                                                            |
+| TECH-016 | API validation vocabulary — Zod as the single schema source                   | Accepted                                                                        |
+| TECH-017 | Compose topology — single app container, BYO proxy, incremental growth        | Accepted                                                                        |
+| TECH-018 | Deployment fidelity — hybrid dev loop, E2E gate on built images, `e2e/` pkg   | Accepted                                                                        |
+| TECH-019 | Code documentation — module-granular doc comments, no coverage percentage     | Accepted                                                                        |
+| TECH-020 | Problem `type` URIs — a refusal names itself only when a client acts on it    | Accepted                                                                        |
+| TECH-021 | Secrets at rest — plaintext for v1, with one owner and one trigger            | Superseded by TECH-022                                                          |
+| TECH-022 | Credentials at rest — sealed columns, one required key, outside the database  | Accepted                                                                        |
+| TECH-023 | Shared machinery grows named per-mount hooks — a third mount is configuration | Accepted                                                                        |
+| TECH-024 | Web data and state model — loaders read, screens own what they show           | Accepted                                                                        |
+| TECH-025 | A record applet's third web mount becomes configuration                       | Accepted                                                                        |
+| TECH-026 | Compile one Markdown source set for bundled Help and standalone documentation | Accepted                                                                        |
+| TECH-027 | Publish approved development guides before verification                       | Accepted, amends TECH-026                                                       |
+| TECH-028 | The Auto-Doc fill engine runs in the API process; the sidecar renders PDF     | Accepted                                                                        |
+| TECH-029 | The log carries the path and the Postgres code, never a query string or param | Accepted                                                                        |
+| TECH-030 | Connector calls: no redirects, DocuSign host allowlist, bounded reads         | Accepted                                                                        |
+| TECH-031 | First-run setup demands a bootstrap token from the log                        | Accepted                                                                        |
+| TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
+| TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
+| TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1132, #1134, #1135, #1138                        |

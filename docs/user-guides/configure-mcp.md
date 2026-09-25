@@ -45,7 +45,7 @@ The card starts with Claude, Claude Code and ChatGPT as **Published identity** e
 3. To change callbacks later, select **Edit**, paste exact URLs under **Callback URLs**, and select **Save**. **Add callback URL** adds another slot. Save callback edits before generating or rotating a secret, because those actions close the editor.
 4. If the secret is lost or must change, select **Rotate secret**. The old secret stops working at once. Grants remain in place. Update every Client configuration that uses the secret.
 
-For another registered client, select **Add Client**, enter **Client name** and at least one callback URL, then **Save**. In the editor, select **Generate secret** to open the same one-time secret dialog. Enable the new row when it may connect. **Delete Client** is available only for entries that were not seeded; deletion stops their access.
+For another registered client, select **Add Client**, enter **Client name** and at least one callback URL, then **Save**. In the editor, select **Generate secret** to open the same one-time secret dialog. A new Client starts enabled. Turn it off if it must not connect yet. **Delete Client** is available only for entries that were not seeded; deletion stops their access.
 
 **Dynamic client registration** starts off. Leave it off for the three guides. The published identities and manually registered clients do not need it. Turning it on lets a Client register itself and adds an enabled registered client marked **Registered by the Client**. Turning it off closes registration and removes its endpoint from discovery, but does not remove entries already created. Disable those entries separately when needed. The protocol deprecates dynamic client registration.
 
@@ -67,7 +67,7 @@ Select **Tool calls in the last day** to open **Audit log → Tool calls**. It l
 
 The calls-per-hour limit is in **Settings → Advanced → MCP**. It defaults to 600 per credential. Unlike MCP policy switches, an Advanced change requires the app and worker to restart. An environment-pinned value cannot be changed in Settings. A refused Client call names the limit and reset time.
 
-The same **MCP** page has **OAuth grant lifetime (days)**, from 1 to 365, with a default of 90. Save and restart app and worker to apply it. A deployment-pinned value is read-only. New grants use the active lifetime; existing grants keep their expiry. Refreshing a token does not extend that expiry.
+**Settings → Advanced → MCP** also has **OAuth grant lifetime (days)**, from 1 to 365, with a default of 90. Save and restart app and worker to apply it. A deployment-pinned value is read-only. New grants use the active lifetime; existing grants keep their expiry. Refreshing a token does not extend that expiry.
 
 ## Use a private deployment
 

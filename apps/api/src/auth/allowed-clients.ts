@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Allowed Client lookup for the OAuth plugins: the code-owned callback rules for
+ * published identities, the CIMD metadata-document gate, and the authorize and
+ * register hooks that admit only a listed, enabled Client. See DD-029 and TECH-035.
+ */
 import {
   allowedClients,
   allowedClientLinks,

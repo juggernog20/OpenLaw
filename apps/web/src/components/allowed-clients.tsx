@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * The Allowed Clients card on Organization → MCP. Seeded rows keep their fixed
+ * callbacks and published identities are not editable. Generate and Rotate close
+ * the editor and discard pending callback edits, so the guide says to save first.
+ * See DD-029 and DES-092.
+ */
 import { useRef, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, defineMessages, useIntl, type MessageDescriptor } from "react-intl";
 import { Bot } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
@@ -9,6 +15,25 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Switch } from "./ui/switch";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
+
+const failures = defineMessages({
+  save: {
+    id: "allowedClients.failed",
+    defaultMessage: "The Client could not be saved. Check the callback URLs and try again.",
+  },
+  toggle: {
+    id: "allowedClients.toggleFailed",
+    defaultMessage: "The Client could not be turned on or off. Try again.",
+  },
+  secret: {
+    id: "allowedClients.secretFailed",
+    defaultMessage: "The Client secret could not be generated. Try again.",
+  },
+  delete: {
+    id: "allowedClients.deleteFailed",
+    defaultMessage: "The Client could not be deleted. Try again.",
+  },
+});
 
 type Client =
   paths["/api/v1/mcp-settings/allowed-clients"]["get"]["responses"][200]["content"]["application/json"][number];
@@ -33,7 +58,7 @@ export function AllowedClients({
   const [error, setError] = useState<string>();
   const [ready, setReady] = useState<{ name: string; clientId: string; secret: string }>();
   const [copied, setCopied] = useState(false);
-  async function run(work: () => Promise<void>) {
+  async function run(work: () => Promise<void>, failure: MessageDescriptor = failures.save) {
     if (saving.current) return;
     saving.current = true;
     setBusy(true);
@@ -41,12 +66,7 @@ export function AllowedClients({
     try {
       await work();
     } catch {
-      setError(
-        intl.formatMessage({
-          id: "allowedClients.failed",
-          defaultMessage: "The Client could not be saved. Check the callback URLs and try again.",
-        }),
-      );
+      setError(intl.formatMessage(failure));
     } finally {
       saving.current = false;
       setBusy(false);
@@ -155,7 +175,7 @@ export function AllowedClients({
                     setClients((rows) =>
                       rows.map((row) => (row.id === client.id ? result.data! : row)),
                     );
-                  })
+                  }, failures.toggle)
                 }
               />
               {client.kind === "registered" && (
@@ -293,7 +313,7 @@ export function AllowedClients({
                     setCopied(false);
                     setEditing(undefined);
                     await refresh();
-                  })
+                  }, failures.secret)
                 }
               >
                 {editing.secretGeneratedAt ? (
@@ -316,7 +336,7 @@ export function AllowedClients({
                     if (!result.response.ok) throw new Error("delete failed");
                     setClients((rows) => rows.filter((row) => row.id !== editing.id));
                     setEditing(undefined);
-                  })
+                  }, failures.delete)
                 }
               >
                 <FormattedMessage id="allowedClients.delete" defaultMessage="Delete Client" />

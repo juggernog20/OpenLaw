@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-
+/**
+ * Assembles the OAuth plugin stack for `/mcp`: the mcp, jwt and cimd plugins plus
+ * the Allowed Clients and grants plugins, registered only when the resource address
+ * passes the HTTPS-or-loopback rule. See TECH-035 and DD-029.
+ */
 import { oauthGrantsPlugin } from "./oauth-grants.js";
 import type { Executor } from "@openlaw/db";
 import {

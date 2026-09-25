@@ -206,7 +206,7 @@ function Consent({ initial, oauthQuery }: { initial: Facts; oauthQuery: string }
                   values={{ client: client.name }}
                 />
               </legend>
-              <p className="mb-3 text-right text-sm text-secondary">
+              <p className="mb-3 text-end text-sm text-secondary">
                 <FormattedMessage
                   id="apiKeys.nothingSelected"
                   defaultMessage="Nothing is selected for you."

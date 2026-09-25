@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/** The scope pill shared by the Organization table and Connected Clients. See DD-029. */
 import { FormattedMessage } from "react-intl";
 
 export function Scope({ scope }: { scope: "read" | "write" }) {

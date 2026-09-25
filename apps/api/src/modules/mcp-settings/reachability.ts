@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * Advisory reachability checks for hosted Clients: HTTPS, an IPv4 record, and a
+ * public IPv4 address, with a 30-second cache. The checks warn and never refuse,
+ * because a proxy may front the API. See the hosted-Client rule in DD-029.
+ */
 import { Resolver } from "node:dns/promises";
 import { isIPv4, isIPv6 } from "node:net";
 import { z } from "zod";
