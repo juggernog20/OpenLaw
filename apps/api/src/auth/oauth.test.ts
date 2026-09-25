@@ -7,7 +7,7 @@ import { getSchema } from "better-auth/db";
 import { verifyMcpJwt } from "../mcp/auth.js";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { MCP_TOOLSETS } from "@openlaw/shared";
-import { orgSettings } from "@openlaw/db";
+import { eq, orgSettings, users } from "@openlaw/db";
 import { buildApp } from "../app.js";
 import { testDeps } from "../testing/deps.js";
 import {
@@ -289,6 +289,27 @@ it("lets a foreign-origin Client reach token validation", async () => {
   expect(res.statusCode, res.body).toBe(400);
   expect(res.json().error).toBeTruthy();
   expect(res.body).not.toContain("own origin");
+});
+
+it("keeps a session check's headers small for a user with a large avatar", async () => {
+  // A proxy refuses a response whose headers pass its limit: 16 KB for
+  // Node's client, which the Vite dev proxy uses, and 4 to 8 KB for nginx.
+  // The jwt plugin once copied the whole user row, avatar included, into
+  // a `set-auth-jwt` header on every session check.
+  const image = `data:image/png;base64,${"A".repeat(600_000)}`;
+  await h.db.update(users).set({ image }).where(eq(users.email, TEST_ADMIN.email));
+  try {
+    const res = await h.app.inject({ url: "/api/auth/get-session", cookies });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(Object.keys(res.headers)).not.toContain("set-auth-jwt");
+    const headerBytes = Object.entries(res.headers).reduce(
+      (total, [name, value]) => total + name.length + String(value).length,
+      0,
+    );
+    expect(headerBytes).toBeLessThan(8 * 1024);
+  } finally {
+    await h.db.update(users).set({ image: null }).where(eq(users.email, TEST_ADMIN.email));
+  }
 });
 
 it("migrates every plugin table with its schema fields", async () => {
