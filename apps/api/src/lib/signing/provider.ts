@@ -141,7 +141,8 @@ export interface EnvelopeSigner {
 
 /** What goes out: the bytes, what to call them, and who signs. */
 export interface SendEnvelopeInput {
-  /** Stable provider correlation, committed before creation. */
+  /** The record's own id for this creation, committed before the call,
+   * so a later lookup can find an envelope whose answer was lost. */
   transactionId?: string;
   /** The document version's bytes, as the storage adapter opens them. */
   document: Readable;
@@ -152,11 +153,13 @@ export interface SendEnvelopeInput {
   signers: EnvelopeSigner[];
 }
 
-/** What the provider answers when it accepts an envelope. */
+/** What an unsent draft is made from. The transaction id is required
+ * here, because an uncertain draft is recovered by it (#1171). */
 export interface PrepareEnvelopeInput extends SendEnvelopeInput {
   transactionId: string;
 }
 
+/** What the provider answers when it accepts an envelope. */
 export interface SentEnvelope {
   /** The provider's own id — the correlation key for every later call. */
   providerEnvelopeId: string;
@@ -214,14 +217,22 @@ export interface SigningProvider {
   testConnection(): Promise<ConnectionCheck>;
 
   /**
-   * Sends one document to its signers and answers the provider's id
-   * for the envelope.
+   * Creates one unsent draft for the document and its signers, and
+   * answers the provider's id for it. Nobody is invited and no signature
+   * fields are placed; the draft reads back as `draft`.
    *
    * Rejects with {@link SigningRefusedError} when the provider will not
    * take the envelope as described.
    */
   prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope>;
 
+  /**
+   * Sends one document to its signers and answers the provider's id
+   * for the envelope.
+   *
+   * Rejects with {@link SigningRefusedError} when the provider will not
+   * take the envelope as described.
+   */
   sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope>;
 
   /**

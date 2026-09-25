@@ -1,7 +1,44 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** A durable signature round. Preparing and draft Envelopes reserve the
- * Contract alongside sent rounds; uncertain creation remains preparing. */
+/**
+ * One signing envelope on one contract, and the people it is for
+ * (CTR-013, M15/2, #1171).
+ *
+ * An envelope is one round of signature on one exact version of a
+ * contract's primary document. The provider holds the ceremony; this row
+ * is what the record knows about it — which adapter carried it, the
+ * provider's own id for it, where it stands, who prepared or sent it,
+ * what it carries, and when.
+ *
+ * **The row is written before the provider is called** (#1171). A send
+ * or a preparation first commits a `preparing` row that holds the
+ * intent: source document and version, subject, signers, preparer,
+ * provider account and environment, idempotency key, and a provider
+ * transaction id. The provider's envelope id and the sent time arrive
+ * later, so both columns are nullable, and check constraints say which
+ * statuses may lack them.
+ *
+ * **Manual hand-off writes nothing here.** A team that never configures
+ * a connector uploads the executed PDF and pins it by hand, exactly as
+ * they do today (CTR-013), and their records hold no envelope row at
+ * all. That is what the record's surfaces read to decide whether to
+ * draw an envelope at all.
+ *
+ * **At most one live envelope per contract**, held by a partial unique
+ * index on `LIVE_ENVELOPE_STATUSES` (`preparing`, `draft`, `sent`) —
+ * the same predicate the send control and connector removal read. A
+ * declined, voided, or failed round blocks nothing: the next round is a
+ * new row, and the earlier one stays on the record.
+ *
+ * **Adapter-keyed, like the connector it was sent through.** A record
+ * sent through one provider is never voided through another, and the
+ * webhook correlates on (`provider`, `provider_envelope_id`) rather than
+ * on the provider's id alone.
+ *
+ * M15/5 adds `executed_version_id`, the version this round filed. The
+ * fetch state says *whether* the executed copy landed; this says *which
+ * file it is*, and the two are different questions.
+ */
 
 import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
@@ -60,13 +97,25 @@ export const contractEnvelopes = pgTable(
     /** The provider's own id for the envelope — the correlation key for
      * every later call and for every inbound webhook delivery. */
     providerEnvelopeId: text("provider_envelope_id"),
+    /** The primary document the version was chosen from. NULL on rows
+     * sent before #1171, which name only their version. */
     documentId: text("document_id").references(() => documents.id, { onDelete: "set null" }),
+    /** The subject line the round carries. NULL on rows sent before #1171. */
     subject: text("subject"),
+    /** The caller's key for one request; unique per contract. */
     idempotencyKey: text("idempotency_key"),
+    /** A hash of the request the key first named, so a reuse with other
+     * inputs is refused as a conflict rather than answered as a match. */
     requestFingerprint: text("request_fingerprint"),
+    /** Our own id for the creation, sent to the provider with it, so an
+     * envelope whose answer was lost can be looked up later. */
     providerTransactionId: text("provider_transaction_id"),
+    /** The provider account and environment the round was created in. */
     providerAccountId: text("provider_account_id"),
     providerEnvironment: text("provider_environment"),
+    /** How far external creation got. `uncertain` means we never heard
+     * back, and the round stays reserved until the outcome is known.
+     * NULL on rows sent before #1171. */
     preparationState: text("preparation_state", {
       enum: ["pending", "uncertain", "created", "failed"],
     }),
@@ -151,6 +200,24 @@ export const contractEnvelopes = pgTable(
       .where(
         sql.raw(`status in (${LIVE_ENVELOPE_STATUSES.map((status) => `'${status}'`).join(", ")})`),
       ),
+    /** One request per key on a contract, and one creation per
+     * transaction id. */
+    uniqueIndex("contract_envelopes_idempotency_idx").on(table.contractId, table.idempotencyKey),
+    uniqueIndex("contract_envelopes_transaction_idx").on(table.providerTransactionId),
+    check(
+      "contract_envelopes_creation_check",
+      sql`preparation_state is null or preparation_state in ('pending', 'uncertain', 'created', 'failed')`,
+    ),
+    /** Only a round the provider has not yet named may lack its id. */
+    check(
+      "contract_envelopes_provider_required",
+      sql`status in ('preparing', 'preparation_failed') or provider_envelope_id is not null`,
+    ),
+    /** A sent time exactly when the round was sent. A draft has none. */
+    check(
+      "contract_envelopes_sent_time",
+      sql`(status in ('preparing', 'draft', 'preparation_failed')) = (sent_at is null)`,
+    ),
     /**
      * `provider`, `status`, and `executed_fetch` hold only the values
      * CTR-013 defines. Drizzle's `{ enum }` is a TypeScript narrowing
@@ -160,20 +227,6 @@ export const contractEnvelopes = pgTable(
      * pair. Every other closed union in this schema is guarded the same
      * way.
      */
-    uniqueIndex("contract_envelopes_idempotency_idx").on(table.contractId, table.idempotencyKey),
-    uniqueIndex("contract_envelopes_transaction_idx").on(table.providerTransactionId),
-    check(
-      "contract_envelopes_creation_check",
-      sql`preparation_state is null or preparation_state in ('pending', 'uncertain', 'created', 'failed')`,
-    ),
-    check(
-      "contract_envelopes_provider_required",
-      sql`status in ('preparing', 'preparation_failed') or provider_envelope_id is not null`,
-    ),
-    check(
-      "contract_envelopes_sent_time",
-      sql`(status in ('preparing', 'draft', 'preparation_failed')) = (sent_at is null)`,
-    ),
     check("contract_envelopes_provider_check", sql`provider in ('docusign')`),
     check(
       "contract_envelopes_status_check",

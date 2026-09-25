@@ -219,14 +219,17 @@ export function verifyConnectSignature(
 }
 
 /**
- * DocuSign's envelope statuses, mapped onto CTR-013's four. Anything
- * else — `created`, `deleted` — is not a state the record tracks.
+ * DocuSign's envelope statuses, mapped onto CTR-013's. `created` is a
+ * draft (#1171). Anything else — `deleted`, `correct` — is not a state
+ * the record tracks.
  *
  * A `Map`, not an object literal: the key comes off a webhook body, and
  * an object lookup answers `constructor` and `toString` from the
  * prototype. That would turn a forged delivery into a status.
  */
 const STATUS_MAP: ReadonlyMap<string, EnvelopeStatus> = new Map([
+  // DocuSign's name for a draft: created, and not yet sent (#1171).
+  ["created", "draft"],
   ["sent", "sent"],
   ["delivered", "sent"],
   ["signed", "signed"],
@@ -237,7 +240,6 @@ const STATUS_MAP: ReadonlyMap<string, EnvelopeStatus> = new Map([
 
 /** The CTR-013 status behind one DocuSign status, or undefined. */
 export function mapEnvelopeStatus(docusignStatus: string): EnvelopeStatus | undefined {
-  if (docusignStatus.toLowerCase() === "created") return "draft";
   return STATUS_MAP.get(docusignStatus.toLowerCase());
 }
 
