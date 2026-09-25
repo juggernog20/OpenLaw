@@ -378,18 +378,19 @@ it("keeps vocabulary readable when one Request type has an unavailable destinati
   }
 });
 
-it.each(["configure-mcp", "connect-headless-client"])(
-  "serves %s through Guide with the same article as Help",
-  async (id) => {
-    const article = compileWorkspace({ development: true }).bundle.articles.find(
-      (a) => a.id === id,
-    );
-    expect(article).toBeDefined();
-    for (const client of [legal, business]) {
-      const found = await call(client, "openlaw_docs_search", { query: article!.title });
-      expect(found.articles.map((a) => a.id)).toContain(id);
-      const read = await call(client, "openlaw_docs_read", { id });
-      expect(read.text).toBe(article!.text);
-    }
-  },
-);
+it.each([
+  "configure-mcp",
+  "connect-headless-client",
+  "connect-claude",
+  "connect-chatgpt",
+  "connect-microsoft-365-copilot",
+])("serves %s through Guide with the same article as Help", async (id) => {
+  const article = compileWorkspace({ development: true }).bundle.articles.find((a) => a.id === id);
+  expect(article).toBeDefined();
+  for (const client of [legal, business]) {
+    const found = await call(client, "openlaw_docs_search", { query: article!.title });
+    expect(found.articles.map((a) => a.id)).toContain(id);
+    const read = await call(client, "openlaw_docs_read", { id });
+    expect(read.text).toBe(article!.text);
+  }
+});

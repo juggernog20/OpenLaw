@@ -1922,3 +1922,22 @@ instance's sole MCP resource. It does not permit an arbitrary token audience.
 Clearing remembered consent when the person's grant is missing, revoked or expired
 forces an interactive consent instead of silently renewing access. This cleanup is
 limited to the signed-in person and their Client.
+
+### Addendum (2026-09-25, #1138): M41/2 reachability and grant lifetime as shipped
+
+M41/2 (#1133) adds three named checks against the active Instance address: HTTPS
+scheme, IPv4 record and Public IPv4 address. The API resolves IPv4 addresses and
+caches the result for 30 seconds. Every resolved address must pass the public-address
+check. Resolution failures produce failed checks rather than blocking startup.
+This is an address check, not a TLS, firewall or vendor connection test. Failed
+reachability checks do not block enabling OAuth when the authorization server is
+available. If the resource rule in the #1132 addendum disables that server, enabling
+either group's OAuth Clients returns the named `mcp-oauth-unavailable` problem and
+the failed checks. Plain-HTTP LAN installs retain API keys and return 404 for the
+six root discovery documents.
+
+`MCP_OAUTH_GRANT_LIFETIME_DAYS` is an Advanced setting, default 90, range 1 to 365.
+The environment pins it. A saved change takes effect after app and worker restart.
+A new grant uses the active lifetime. An existing grant retains its absolute expiry,
+including across token refresh. The API rejects invalid lifetime settings at boot
+and through the settings route.

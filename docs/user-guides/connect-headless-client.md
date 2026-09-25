@@ -2,6 +2,8 @@
 
 Connect Claude Code, Claude Cowork, Claude Desktop, or a script to OpenLaw with an API key issued to your account. The Client can read or change only what you can access, within its approved Toolsets and scope.
 
+For browser sign-in and consent, use [Connect Claude](connect-claude.md), [Connect ChatGPT](connect-chatgpt.md) or [Connect Microsoft 365 Copilot](connect-microsoft-365-copilot.md). ChatGPT has no API key path. This guide remains the API key path for headless Clients.
+
 ## Before you start
 
 You need an OpenLaw account, your Client installed and signed in, and the Server address from your Administrator. Claude Cowork and Claude Desktop also need Node.js 22 or later on the device, because they connect through a small bridge program. Ask the Administrator to [enable MCP and API keys for your account group](configure-mcp.md#enable-api-keys). Allow time for approval before the five-minute connection steps below.
@@ -41,7 +43,7 @@ Other SDK Clients use Streamable HTTP at the same `/mcp` address and send `x-api
 
 ## Connect Claude Cowork or Claude Desktop
 
-Claude Cowork and Claude Desktop have no command to add a Client. They read a configuration file and start each Client as a local program. The `mcp-remote` bridge is that program. It connects to the Server address and sends your key in the `x-api-key` header.
+For this API key path, Claude Cowork and Claude Desktop read a configuration file and start the bridge as a local program. The `mcp-remote` bridge is that program. It connects to the Server address and sends your key in the `x-api-key` header.
 
 1. Open **Settings → Developer** in the app and select **Edit Config**. The app shows the folder that holds `claude_desktop_config.json`. Open that file in a text editor.
 2. Add an `openlaw` entry under `mcpServers`. Replace the example address with your **Server address**, including `/mcp`. Replace the placeholder with the key you copied:
@@ -75,7 +77,7 @@ Three details keep this entry working. Write the header as `x-api-key:${OPENLAW_
 
 The file holds your key in clear text. Keep it readable by your account only. If your secret policy does not permit this, replace the two `--header` arguments with `--header-file` and the path to a file that holds one line, `x-api-key: <your key>`. Remove the `env` block from the entry, and set the permissions of the header file the same way.
 
-The claude.ai website and mobile apps reach a custom connector only at a public HTTPS address, and they cannot send an API key header. OpenLaw does not offer the OAuth sign-in that an authenticated connector needs there, so an API key does not connect them.
+The claude.ai website and mobile apps reach a custom connector only at a public HTTPS address, and they cannot send an API key header. Use the OAuth steps in [Connect Claude](connect-claude.md).
 
 ## Fix a connection or stop access
 
