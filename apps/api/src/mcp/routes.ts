@@ -19,7 +19,7 @@ import { OPENLAW_VERSION } from "@openlaw/shared";
 import { loggable } from "../logging.js";
 import { HttpError } from "../lib/problem.js";
 import type { Environment } from "../modules/advanced-settings/config.js";
-import { authenticateKey } from "./auth.js";
+import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
 import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
@@ -52,9 +52,9 @@ export function mcpRoutes(
       url: "/mcp",
       schema: { hide: true },
       onRequest: async (request, reply) => {
-        request.mcpContext = await authenticateKey(request).catch((error: unknown) => {
+        request.mcpContext = await authenticateMcp(request).catch(async (error: unknown) => {
           if (error instanceof HttpError && error.statusCode === 401)
-            reply.header("WWW-Authenticate", "Bearer");
+            reply.header("WWW-Authenticate", await mcpChallenge(app));
           throw error;
         });
       },
@@ -63,6 +63,42 @@ export function mcpRoutes(
         context.generateAutoDoc = (id, submission) =>
           generateForTool(app, request.log, context.user, id, submission, context.baseUrl);
         if (uploadConfig) context.prepareDocumentUpload = documentUploadIssuer(app, uploadConfig);
+        const body = request.body as
+          | {
+              jsonrpc?: string;
+              id?: string | number;
+              method?: string;
+              params?: { name?: string; arguments?: unknown };
+            }
+          | undefined;
+        if (
+          context.user.via?.kind === "oauth_client" &&
+          body?.method === "tools/call" &&
+          body.jsonrpc === "2.0" &&
+          body.id !== undefined
+        ) {
+          const tool = tools.find((t) => t.name === body.params?.name);
+          if (tool && toolRefusal(tool, context.grant)) {
+            const required = [
+              ...(tool.toolset === "guide" ? [] : [`toolset:${tool.toolset}`]),
+              ...(tool.kind === "read" ? [] : ["write"]),
+            ];
+            const metadata = new URL("/.well-known/oauth-protected-resource", app.baseUrl).href;
+            reply.header(
+              "WWW-Authenticate",
+              `Bearer error="insufficient_scope" scope="${required.join(" ")}" resource_metadata="${metadata}"`,
+            );
+            const result = await callTool(
+              tools,
+              tool.name,
+              body.params?.arguments,
+              context,
+              request.id,
+              active,
+            );
+            return reply.code(403).send({ jsonrpc: "2.0", id: body.id, result });
+          }
+        }
         const authInfo = {
           token: context.credentialId,
           clientId: context.credentialId,

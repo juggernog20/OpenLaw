@@ -7,9 +7,10 @@
  * immediately (DD-013).
  */
 
-import { eq, users, type UserRole, type Executor } from "@openlaw/db";
+import { users, type UserRole } from "@openlaw/db";
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyRequest } from "fastify";
+import { readLiveUser } from "./live-user.js";
 import { httpError } from "../lib/problem.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./user.js";
 import {
@@ -53,23 +54,7 @@ export const userColumns = {
   image: users.image,
 } as const;
 
-/** Session and API key credentials both resolve the current account through this read. */
-export async function readLiveUser(db: Executor, id: string): Promise<AuthenticatedUser> {
-  const [user] = await db
-    .select({ ...guardColumns, archivedAt: users.archivedAt })
-    .from(users)
-    .where(eq(users.id, id))
-    .limit(1);
-  if (!user || user.archivedAt !== null) throw httpError(401, "Authentication required.");
-  return {
-    id: user.id,
-    email: user.email,
-    displayName: user.displayName,
-    role: user.role,
-    theme: user.theme,
-    timezone: user.timezone,
-  };
-}
+export { readLiveUser } from "./live-user.js";
 
 export async function requireSession(request: FastifyRequest): Promise<void> {
   const session = await request.server.auth.api.getSession({

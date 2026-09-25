@@ -165,12 +165,59 @@ it("shows the MCP limit and respects deployment pinning", async () => {
       if (call.url.pathname === "/api/v1/advanced-settings/mcp")
         return json(
           200,
-          state([field("MCP_RATE_LIMIT_PER_HOUR", "600", { locked: true, source: "deployment" })]),
+          state([
+            field("MCP_RATE_LIMIT_PER_HOUR", "600", { locked: true, source: "deployment" }),
+            field("MCP_OAUTH_GRANT_LIFETIME_DAYS", "90", { locked: true, source: "deployment" }),
+          ]),
         );
     },
   });
   renderAt("/settings/mcp-limits");
   expect(await screen.findByLabelText("Calls per hour per credential")).toHaveValue(600);
   expect(screen.getByLabelText("Calls per hour per credential")).toHaveAttribute("readonly");
-  expect(screen.getByText(/Deployment configuration/)).toBeInTheDocument();
+  expect(screen.getAllByText(/Deployment configuration/)).toHaveLength(2);
+  expect(screen.getByLabelText("OAuth grant lifetime (days)")).toHaveValue(90);
+  expect(screen.getByLabelText("OAuth grant lifetime (days)")).toHaveAttribute("readonly");
+});
+
+it("saves the OAuth grant lifetime and keeps its active value until restart", async () => {
+  const writes: unknown[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname !== "/api/v1/advanced-settings/mcp") return;
+      const fields = [
+        field("MCP_RATE_LIMIT_PER_HOUR", "600", { source: "default" }),
+        field("MCP_OAUTH_GRANT_LIFETIME_DAYS", "90", { source: "default" }),
+      ];
+      if (call.method === "PUT") {
+        writes.push(call.body);
+        fields[1] = field("MCP_OAUTH_GRANT_LIFETIME_DAYS", "30", {
+          activeValue: "90",
+          source: "app",
+        });
+        return json(200, { ...state(fields), restartRequired: true });
+      }
+      return json(200, state(fields));
+    },
+  });
+  renderAt("/settings/mcp-limits");
+  const control = await screen.findByLabelText("OAuth grant lifetime (days)");
+  expect(control).toHaveValue(90);
+  expect(control).toHaveAttribute("min", "1");
+  expect(control).toHaveAttribute("max", "365");
+  const user = userEvent.setup();
+  await user.clear(control);
+  await user.type(control, "30");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(
+    await screen.findByText("Settings saved. Restart the API and worker to apply changes."),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Active: 90")).toBeInTheDocument();
+  expect(writes).toEqual([
+    {
+      version: "initial",
+      values: { MCP_RATE_LIMIT_PER_HOUR: "600", MCP_OAUTH_GRANT_LIFETIME_DAYS: "30" },
+    },
+  ]);
 });

@@ -1396,7 +1396,38 @@ type ApiKeyPayloads = Record<
   }
 >;
 
-export type ActivityPayloadMap = ApiKeyPayloads &
+type AllowedClientPayloads = Record<
+  | "allowed_client.created"
+  | "allowed_client.updated"
+  | "allowed_client.toggled"
+  | "allowed_client.secret_generated"
+  | "allowed_client.deleted"
+  | "allowed_client.linked",
+  {
+    allowedClientId: string;
+    clientName: string;
+    clientId?: string;
+    registeredByClient?: boolean;
+    enabled?: boolean;
+    callbackUrls?: string[];
+  }
+>;
+
+type OAuthGrantPayloads = Record<
+  "oauth_grant.granted" | "oauth_grant.revoked",
+  {
+    oauthGrantId: string;
+    clientName: string;
+    personId: string;
+    allowedClientId: string;
+    toolsets?: string[];
+    scope?: "read" | "write";
+  }
+>;
+
+export type ActivityPayloadMap = OAuthGrantPayloads &
+  AllowedClientPayloads &
+  ApiKeyPayloads &
   AutoDocPayloads &
   UserPayloads &
   OrgSettingsPayloads &

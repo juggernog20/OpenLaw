@@ -71,19 +71,23 @@ async function save(section: string, values: Record<string, string>, version?: s
 }
 describe("advanced settings", () => {
   it("saves the MCP calls-per-hour limit for the next boot", async () => {
-    expect((await read("mcp")).fields).toEqual([
-      expect.objectContaining({
-        key: "MCP_RATE_LIMIT_PER_HOUR",
-        value: "600",
-        activeValue: "600",
-        locked: false,
-      }),
-    ]);
+    expect((await read("mcp")).fields).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "MCP_RATE_LIMIT_PER_HOUR",
+          value: "600",
+          activeValue: "600",
+          locked: false,
+        }),
+      ]),
+    );
     const result = await save("mcp", { MCP_RATE_LIMIT_PER_HOUR: "1200" });
     expect(result.statusCode, result.body).toBe(200);
     expect(result.json()).toMatchObject({
       restartRequired: true,
-      fields: [expect.objectContaining({ value: "1200", activeValue: "600" })],
+      fields: expect.arrayContaining([
+        expect.objectContaining({ value: "1200", activeValue: "600" }),
+      ]),
     });
     expect((await resolveAdvancedSettings(harness.db, {})).active.MCP_RATE_LIMIT_PER_HOUR).toBe(
       "1200",
@@ -148,6 +152,7 @@ describe("advanced settings", () => {
           STORAGE_PATH: harness.storageRoot,
           BASE_URL: "https://pinned.corp.example",
           MCP_RATE_LIMIT_PER_HOUR: "900",
+          MCP_OAUTH_GRANT_LIFETIME_DAYS: "30",
           DOC_ENGINE_URL: "http://doc-engine:8080",
         },
         active: effectiveEnvironment(
@@ -155,6 +160,7 @@ describe("advanced settings", () => {
             STORAGE_PATH: harness.storageRoot,
             BASE_URL: "https://pinned.corp.example",
             MCP_RATE_LIMIT_PER_HOUR: "900",
+            MCP_OAUTH_GRANT_LIFETIME_DAYS: "30",
             DOC_ENGINE_URL: "http://doc-engine:8080",
           },
           emptySettings(),
@@ -199,6 +205,12 @@ describe("advanced settings", () => {
           source: "deployment",
           locked: true,
         }),
+        expect.objectContaining({
+          key: "MCP_OAUTH_GRANT_LIFETIME_DAYS",
+          value: "30",
+          source: "deployment",
+          locked: true,
+        }),
       ]);
       const mcpRefused = await pinnedHarness.app.inject({
         method: "PUT",
@@ -209,6 +221,14 @@ describe("advanced settings", () => {
       expect(mcpRefused.statusCode).toBe(400);
       expect(mcpRefused.json().detail).toContain("MCP_RATE_LIMIT_PER_HOUR");
 
+      const lifetimeRefused = await pinnedHarness.app.inject({
+        method: "PUT",
+        url: "/api/v1/advanced-settings/mcp",
+        cookies: pinnedCookies,
+        payload: { version, values: { MCP_OAUTH_GRANT_LIFETIME_DAYS: "45" } },
+      });
+      expect(lifetimeRefused.statusCode).toBe(400);
+      expect(lifetimeRefused.json().detail).toContain("MCP_OAUTH_GRANT_LIFETIME_DAYS");
       const refused = await pinnedHarness.app.inject({
         method: "PUT",
         url: "/api/v1/advanced-settings/instance",
@@ -450,4 +470,42 @@ it("protects old storage locations and refuses undecryptable settings", () => {
       ),
     ),
   ).toThrow();
+});
+
+it("validates, audits and resolves the OAuth grant lifetime at boot", async () => {
+  const key = "MCP_OAUTH_GRANT_LIFETIME_DAYS";
+  expect((await read("mcp")).fields).toContainEqual(
+    expect.objectContaining({
+      key,
+      value: "90",
+      activeValue: "90",
+      source: "default",
+      locked: false,
+    }),
+  );
+  for (const value of ["0", "366", "1.5", "invalid", ""]) {
+    const response = await save("mcp", { [key]: value });
+    expect(response.statusCode, response.body).toBe(400);
+    expect(response.json().detail).toContain(key);
+  }
+  for (const value of ["1", "365"]) {
+    const response = await save("mcp", { [key]: value });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json()).toMatchObject({ restartRequired: true });
+    expect(response.json().fields).toContainEqual(
+      expect.objectContaining({ key, value, activeValue: "90" }),
+    );
+    expect((await resolveAdvancedSettings(harness.db, {})).active[key]).toBe(value);
+  }
+  expect((await resolveAdvancedSettings(harness.db, { [key]: "30" })).active[key]).toBe("30");
+  const audit = await harness.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.action, "org_settings.updated"));
+  expect(audit).toContainEqual(
+    expect.objectContaining({
+      visibility: "admin_only",
+      payload: expect.objectContaining({ field: "advanced.mcp" }),
+    }),
+  );
 });

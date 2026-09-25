@@ -6,7 +6,7 @@ import { freshDb, migrateThrough, migrationEntries } from "./testing/migration-r
 import { buildApp } from "./app.js";
 import { testDeps } from "./testing/deps.js";
 import { provisionUser } from "./auth/instance.js";
-import { signInCookies, TEST_ADMIN } from "./testing/harness.js";
+import { signInCookies, TEST_ADMIN, TEST_AUTH_CONFIG } from "./testing/harness.js";
 
 let container: StartedPostgreSqlContainer;
 beforeAll(async () => {
@@ -19,7 +19,10 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
   let app: Awaited<ReturnType<typeof buildApp>> | undefined;
   try {
     await migrateThrough(db, "0165_api-key-notifications", migrationEntries());
-    app = await buildApp(testDeps({ db }));
+    // The old install has no OAuth tables. Use key-only auth to seed its person.
+    app = await buildApp(
+      testDeps({ db, config: { ...TEST_AUTH_CONFIG, baseUrl: "http://10.0.0.5:3000" } }),
+    );
     const person = await provisionUser(app.auth, TEST_ADMIN);
     await db.execute(sql`update users set role = 'administrator' where id = ${person.id}`);
     await db.execute(
@@ -48,6 +51,8 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
       { id: "done-item", approval_kind: null, handled_at: null },
       { id: "open-item", approval_kind: "contract", handled_at: null },
     ]);
+    await app.close();
+    app = await buildApp(testDeps({ db }));
     const cookies = await signInCookies(app, TEST_ADMIN.email, TEST_ADMIN.password);
     const list = await app.inject({ method: "GET", url: "/api/v1/notifications", cookies });
     expect(list.statusCode, list.body).toBe(200);

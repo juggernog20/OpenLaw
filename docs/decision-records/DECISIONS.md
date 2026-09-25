@@ -1549,6 +1549,57 @@ The list varies by grant and the call is enforced too, because a list alone is n
 - **FUTURE-FEATURES rows.** The ChatGPT `openai/fileParams` download-URL variant and SEP-2631 file objects for T27. Unattended automation and service accounts. The AI connector consuming the Tool register. Meta-tools over the REST API. Server-side approval tokens for destructive Tools. The Microsoft admin-center BYO registry.
 - **Unverified before build, tested against a throwaway server.** Whether Claude.ai completes registration through CIMD when DCR is off. Whether ChatGPT's Developer mode is exposed in the desktop app. The protocol revision each client negotiates. Copilot Studio's PKCE, `resource`, `WWW-Authenticate` and session handling, and its exact callback URL. Egress ranges for Microsoft 365 Copilot chat and the Agent 365 gateway. The deprecation status of better-auth's `oidc-provider` plugin. Whether claude.ai, ChatGPT and Microsoft 365 Copilot send an attached chat file to the upload URL T27 returns. Whether ChatGPT's `openai/fileParams` path fires for an unpublished Developer mode connector.
 
+### Addendum (2026-09-25, #1134): four seeded Allowed Clients
+
+Migration 0171 carries four enabled Allowed Clients. Claude, Claude Code and
+ChatGPT are published identities. Microsoft 365 Copilot is a registered Client
+template with no client id until an Administrator generates its secret. Its
+callbacks include the fixed Teams and VS Code URLs and one empty slot for the
+Copilot Studio consent redirect. The earlier three-name seed summary omitted
+Claude Code. Dynamic client registration remains off by default.
+
+### Addendum (2026-09-25, #1138): M41 consent, connected Clients and deployment profiles
+
+This records the shipped behavior of M41/2, M41/5 and M41/6 (#1133, #1136, #1137).
+M41/1, M41/3 and M41/4 already have TECH-035 addenda (#1132, #1134, #1135).
+
+The Organization MCP pane has separate OAuth Clients and API keys switches for
+Legal Users and Business Users. All start off. Its reachability pill names failed
+checks beside Server address. A private HTTPS address may warn and still save.
+An unavailable authorization server refuses enablement. The Active keys and grants
+table lets an Administrator revoke either credential. Advanced holds the OAuth
+grant lifetime separately from the API key lifetime.
+
+The consent page lives at `/auth/consent`, outside the app shell and the ordinary
+sign-in card. It shows the organization, Allowed Client identity and signed-in
+person. Toolsets and scope start empty. Read and write appears only when requested
+and allowed by the organization. Allow requires a Toolset and a scope. Deny returns
+the Client's refusal redirect. A refused page offers Deny alone; an expired or
+altered query offers neither choices nor actions. The page does not show a grant
+lifetime. The signed query lasts 600 seconds. Staff and Portal sign-in preserve it
+through password, magic-link and SSO sign-in, then resume authorization under the
+session. A timed-out flow starts again from the Client.
+
+Personal API keys and Portal Settings both show Connected Clients. Each person's
+rows show Client name, Toolsets, scope, granted date and last use. Disconnect uses
+the Revoke OAuth grant confirmation and removes the row after revocation. The next
+call is unauthorized. Listing and revocation are scoped to that person; an
+Administrator uses the Organization table for other people's grants.
+
+The public-reachability requirement in paragraph 3 applies to hosted chat Clients.
+Claude Code can reach a private HTTPS instance from the office network or VPN and
+return to its own loopback callback. The API must still fetch its published
+identity. OAuth needs an HTTPS Instance address, or HTTP on a loopback host for
+development, under TECH-035's resource rule. A plain-HTTP LAN instance boots with
+keys but without the authorization server. Its OAuth Clients switches refuse with
+named checks and its well-known documents return 404.
+
+The three Client guides, Configure MCP, the headless key guide and both deployment
+profiles describe those paths. Their catalog and scenario entries retain review
+status until the independent walkthroughs and live vendor checks pass. Automated
+Guide tests establish that search finds each title and reads the same text as Help;
+they do not establish live vendor interoperability.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status                                                                      |
@@ -1581,4 +1632,4 @@ The list varies by grant and the call is enforced too, because a list alone is n
 | DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |
 | DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |
 | DD-028 | The type Form — one tree per type decides intake, creation, record and Portal             | Accepted                                                                    |
-| DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted                                                                    |
+| DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted; addenda #1134, #1138                                              |

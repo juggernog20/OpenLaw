@@ -10,6 +10,7 @@
  */
 
 import { betterAuth } from "better-auth";
+import { oauthPlugins } from "./oauth.js";
 import { admin, magicLink, twoFactor } from "better-auth/plugins";
 import { userAc } from "better-auth/plugins/admin/access";
 import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "better-auth/api";
@@ -49,6 +50,7 @@ export interface AuthConfig {
    * never should.
    */
   disableRateLimit?: boolean;
+  mcpOAuthGrantLifetimeDays?: number;
   /**
    * The reverse proxies whose forwarded client address is believed
    * (TECH-032), as IP addresses or CIDR ranges. Read from
@@ -375,6 +377,7 @@ export function createAuth(
     },
     plugins: [
       apiKeyPlugin(),
+      ...oauthPlugins(config.baseUrl, config.mcpOAuthGrantLifetimeDays, db),
       // Owns the users.role column plus ban/impersonation columns. Bans
       // carry no product semantics yet; adminRoles shields administrators
       // from ban/impersonation targeting. The roles map exists to teach

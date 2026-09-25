@@ -322,7 +322,14 @@ describe("the upgraded install", () => {
       // it is safe to build against a database 0060 has not reached. The
       // row it produces is what 1.6 wrote — the same Argon2id hash, keyed
       // on (provider_id, account_id).
-      const before = createAuth(db, TEST_AUTH_CONFIG, unconfiguredMailer, silent);
+      // A pre-M41 database has no OAuth tables. A LAN HTTP address keeps
+      // those plugins absent while borrowing the unchanged password hasher.
+      const before = createAuth(
+        db,
+        { ...TEST_AUTH_CONFIG, baseUrl: "http://10.0.0.5:3000" },
+        unconfiguredMailer,
+        silent,
+      );
       const hash = await (await before.$context).password.hash(password);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
         values ('a-1', 'u-blair', 'u-blair', 'credential', ${hash})`);

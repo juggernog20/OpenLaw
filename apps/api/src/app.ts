@@ -123,13 +123,17 @@ import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
+import { oauthGrantRoutes } from "./modules/oauth-grants/routes.js";
 import { apiKeyRoutes } from "./modules/api-keys/routes.js";
 import type { ToolDefinition } from "./mcp/register.js";
 import { mcpRoutes } from "./mcp/routes.js";
+import type { ResolveIpv4 } from "./modules/mcp-settings/reachability.js";
+import { allowedClientRoutes } from "./modules/mcp-settings/allowed-clients.js";
 import { mcpSettingsRoutes } from "./modules/mcp-settings/routes.js";
 import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
 import {
   effectiveEnvironment,
+  oauthGrantLifetimeDays,
   emptySettings,
   type AdvancedRuntime,
 } from "./modules/advanced-settings/config.js";
@@ -142,6 +146,7 @@ import { signingWebhookRoutes } from "./modules/signing-webhook/routes.js";
 import { eventRoutes } from "./modules/events/routes.js";
 import { searchRoutes } from "./modules/search/routes.js";
 import { homeRoutes } from "./modules/home/routes.js";
+import { oauthDiscoveryRoutes } from "./auth/discovery.js";
 import { authHandler } from "./auth/handler.js";
 import { createAuth, type Auth, type AuthConfig } from "./auth/instance.js";
 import type { AuthenticatedSession, AuthenticatedUser } from "./auth/guards.js";
@@ -216,6 +221,7 @@ export interface AppDeps {
    */
   maxUploadBytes?: number;
   advancedRuntime?: AdvancedRuntime;
+  mcpResolveIpv4?: ResolveIpv4;
   /** TECH-035 register injection for the MCP adapter seam. Defaults to the code-owned register. */
   mcpTools?: readonly ToolDefinition[];
   /**
@@ -319,9 +325,21 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("notifier", deps.notifier);
   app.decorate("eventHub", deps.eventHub);
   app.decorate("baseUrl", deps.config.baseUrl);
+  const grantLifetimeDays = oauthGrantLifetimeDays(deps.advancedRuntime?.active ?? {});
   const maxUploadBytes = deps.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_MB * MEGABYTE;
   app.decorate("maxUploadBytes", maxUploadBytes);
-  app.decorate("auth", createAuth(deps.db, deps.config, deps.resolveMailer, app.log));
+  // OAuth seeds its resource during initialization. Route-only consumers such as
+  // OpenAPI emission must not open a database; production awaits $context at boot.
+  let auth: Auth | undefined;
+  app.decorate("auth", {
+    getter: () =>
+      (auth ??= createAuth(
+        deps.db,
+        { ...deps.config, mcpOAuthGrantLifetimeDays: grantLifetimeDays },
+        deps.resolveMailer,
+        app.log,
+      )),
+  });
   // Shape hints for V8; guards assign the real values per request.
   app.decorateRequest("user", undefined as unknown as AuthenticatedUser);
   app.decorateRequest("session", undefined as unknown as AuthenticatedSession);
@@ -551,7 +569,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   // context before any route, and scoped by path rather than mounted per
   // plugin, so a module registered later cannot forget it. The better-auth
   // handler lives outside /api/v1 and runs its own origin check. /mcp is
-  // outside too, on purpose: it authenticates by API key, never by cookie,
+  // outside too, on purpose: it authenticates by bearer credentials, never by cookie,
   // so a foreign Origin has nothing to forge (TECH-035). /mcp/uploads sits
   // with it: its only credential is the signed URL T27 issued.
   const ownOrigin = new URL(deps.config.baseUrl).origin;
@@ -564,6 +582,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   });
 
   await app.register(authHandler);
+  await app.register(oauthDiscoveryRoutes);
   await app.register(
     mcpRoutes(
       deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings()),
@@ -592,8 +611,10 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     ),
     { prefix: "/api/v1" },
   );
+  await app.register(oauthGrantRoutes(grantLifetimeDays), { prefix: "/api/v1" });
   await app.register(apiKeyRoutes, { prefix: "/api/v1" });
-  await app.register(mcpSettingsRoutes, { prefix: "/api/v1" });
+  await app.register(allowedClientRoutes, { prefix: "/api/v1" });
+  await app.register(mcpSettingsRoutes(deps.mcpResolveIpv4), { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });
   await app.register(aiConnectorRoutes, { prefix: "/api/v1" });

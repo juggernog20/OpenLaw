@@ -149,6 +149,8 @@ Record the hostname, VPN requirements, certificate renewal owner, and firewall r
 
 ## LAN only
 
+This profile serves API keys and Claude Code's loopback OAuth. OAuth requires an HTTPS `BASE_URL`, or HTTP on a loopback host for development. A plain-HTTP LAN address boots without the authorization server. Keys work, OAuth Clients toggles refuse with failed checks named, and the well-known documents answer 404. Use a trusted private HTTPS origin to enable OAuth on the LAN.
+
 Run MCP at the private HTTPS origin from [Deploy on a private VM](#deploy-on-a-private-vm). Keep the loopback app binding, private DNS, trusted certificate, and office/VPN firewall rules from that profile. No public address, inbound internet forwarding, or OAuth configuration is needed for API keys.
 
 1. Set the intended private Instance address and recreate app and worker as described above. An Administrator copies **Server address** from **Settings → Organization → MCP**. It should read `https://openlaw.company.example/mcp`, with your actual hostname.
@@ -159,7 +161,49 @@ Run MCP at the private HTTPS origin from [Deploy on a private VM](#deploy-on-a-p
 
 The Client device needs private DNS, routing, and certificate trust, even if its model service is hosted elsewhere. Give Node-based Clients the corporate CA through their supported trust configuration, such as `NODE_EXTRA_CA_CERTS` pointing to a PEM CA file before starting Claude Code. Do not disable certificate verification. A private OpenLaw endpoint does not make the Client's model service local; outbound access to that service follows the Client's own requirements.
 
+For [Claude Code with OAuth](connect-claude.md#connect-claude-code), also forward the discovery, authorization, sign-in and consent paths in the publicly reachable profile below. Keep them private. Keep Claude Code enabled in Allowed Clients and enable OAuth Clients for the person's account group. The browser and Client reach OpenLaw over the office network or VPN; the browser returns to Claude Code's loopback callback on the same device. The API needs outbound access to Claude Code's published identity. The public-address pill may warn on this private deployment.
+
 `/mcp` uses Streamable HTTP. There is no separate `/sse` endpoint or browser-cookie authentication. Signed Document upload URLs returned by a Tool use the same private origin and need the same routing and upload limits. Treat the complete signed URL as a credential while it is valid.
+
+## Publicly reachable
+
+Use this profile for claude.ai, Claude Desktop and Cowork custom connectors, ChatGPT, and Microsoft-hosted Copilot connections. Their servers must reach OpenLaw. A VPN on the person's device is not enough.
+
+1. Give the instance a public DNS hostname with a public IPv4 address. Terminate TLS there with a publicly trusted certificate. Use that HTTPS origin as `BASE_URL` or the saved **Instance address**, without an application subpath. Recreate app and worker after environment changes; restart both after app-saved changes.
+2. Keep the app port behind the reverse proxy and the database and document engine unpublished. Forward the paths below unchanged on the same host. Do not redirect a Client to another hostname, rewrite paths, or put an interactive proxy sign-in in front of the protocol endpoints.
+3. Preserve `Authorization`, MCP protocol headers, `Accept` and `Content-Type`, and preserve `x-api-key` if keys are enabled. Preserve browser cookies, `Origin`, `Host` and query strings for sign-in and consent. Keep Streamable HTTP responses unbuffered. Allow signed uploads within the app's upload limit.
+4. Apply the vendor source allowlists below if the firewall limits incoming connections. Also allow the people's browsers to reach sign-in and consent. Allow the API outbound HTTPS and DNS access to the published identity metadata and signing-key URLs. Keep the existing outbound identity-provider access for SSO.
+5. Ask an Administrator to [enable OAuth Clients](configure-mcp.md#enable-oauth-clients). Inspect the **Reachable** or **Not reachable ·** pill beside **Server address**. Test a connection from each intended vendor, choose consent, call a Tool, then disconnect and confirm the next call is refused.
+
+| Paths to forward unchanged                                                                       | Purpose                                                                           |
+| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `/mcp` and `/mcp/uploads`                                                                        | Streamable HTTP and signed Document uploads                                       |
+| `/.well-known/oauth-authorization-server` and `/.well-known/oauth-authorization-server/api/auth` | Authorization server discovery                                                    |
+| `/.well-known/openid-configuration` and `/.well-known/openid-configuration/api/auth`             | Alternate authorization server discovery                                          |
+| `/.well-known/oauth-protected-resource` and `/.well-known/oauth-protected-resource/mcp`          | MCP resource discovery                                                            |
+| `/api/auth/*`, including `/api/auth/oauth2/*`, `/api/auth/jwks` and `/api/auth/.well-known/*`    | Authorization, token exchange, signing keys, discovery aliases and normal sign-in |
+| `/auth/consent` and `/api/v1/oauth-grants/consent`                                               | Consent page, its facts and its answer                                            |
+| `/auth/*`, `/portal/login`, the app's static assets and normal sign-in API routes                | Browser sign-in and its return to consent                                         |
+
+Forwarding the complete app origin, as in the Caddy example above, preserves these routes. A path-restricted gateway must also carry the normal browser sign-in flow and its callbacks. Discovery must return JSON, not the SPA HTML fallback. An unauthenticated `/mcp` request should return 401 with a `WWW-Authenticate` header pointing to resource discovery.
+
+The reachability warning checks the HTTPS scheme, an IPv4 record and public IPv4 addresses from the API's view. Private DNS or a missing IPv4 record does not block saving OAuth Clients when the authorization server is available, because a proxy may front it. A passing pill does not prove vendor reachability or certificate trust. See [each failed check](configure-mcp.md#enable-oauth-clients).
+
+OAuth requires an HTTPS `BASE_URL`, or HTTP on a loopback host for development. Loopback development is not a publicly reachable deployment. A plain-HTTP LAN address boots without the authorization server: API keys work, OAuth Clients toggles refuse with failed checks named, and the well-known documents return 404. Putting TLS on a proxy without updating the effective Instance address does not enable OAuth.
+
+The OAuth grant lifetime is in **Settings → Advanced → MCP → OAuth grant lifetime (days)**. It defaults to 90 days, with a range of 1 to 365. `MCP_OAUTH_GRANT_LIFETIME_DAYS` pins the value when set in the deployment. Restart app and worker after app-saved changes.
+
+### Allow vendor egress addresses
+
+These are the vendors' outbound source addresses, allowed inbound to your public HTTPS listener. They do not replace OAuth or the Allowed Clients list.
+
+| Client service | Source allowlist and maintenance                                                                                                                                                                                                                                                                                            |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Anthropic      | Allow `160.79.104.0/21`. Track [Anthropic's outbound IP addresses](https://platform.claude.com/docs/en/api/ip-addresses).                                                                                                                                                                                                   |
+| OpenAI         | Read the current prefixes from [chatgpt-connectors.json](https://openai.com/chatgpt-connectors.json). Refresh the firewall on a schedule, for example daily, and alert on failed refreshes. See [OpenAI's egress guidance](https://developers.openai.com/api/docs/guides/ip-addresses).                                     |
+| Copilot Studio | Use the regional `AzureConnectors` and `PowerPlatformPlex` service tags for the tenant's geography. Refresh their address ranges at least every 90 days using Microsoft's discovery API or download. See [managed connector outbound addresses](https://learn.microsoft.com/en-us/connectors/common/outbound-ip-addresses). |
+
+Copilot Studio's ranges do not establish the egress ranges for Microsoft 365 Copilot chat or the Agent 365 gateway. Those ranges are not published in the cited connector list. Confirm the network requirements for that path before applying a source-only restriction.
 
 ## Connect the database
 
