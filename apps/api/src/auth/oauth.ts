@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import type { Executor } from "@openlaw/db";
+import {
+  allowedClientsPlugin,
+  dynamicRegistrationEnabled,
+  findAllowedClient,
+  linkPublishedClient,
+} from "./allowed-clients.js";
 import { mcp } from "@better-auth/mcp";
 import { cimd } from "@better-auth/cimd";
 import { fetchClientMetadataResource } from "@better-auth/cimd/node";
@@ -35,7 +42,7 @@ export function authorizationServerAvailable(baseUrl: string): boolean {
   return url.protocol === "https:" || (url.protocol === "http:" && loopback);
 }
 
-export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90) {
+export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90, db?: Executor) {
   if (!authorizationServerAvailable(baseUrl)) return [];
   const provider = mcp({
     resource: mcpResource(baseUrl),
@@ -44,14 +51,15 @@ export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90) {
     consentPage: "/auth/consent",
     scopes: MCP_SCOPES,
     grantTypes: ["authorization_code", "refresh_token"],
-    allowDynamicClientRegistration: false,
-    allowUnauthenticatedClientRegistration: false,
-    // M41/3 owns Client management. Only the server API can create Clients for now.
+    allowDynamicClientRegistration: true,
+    allowUnauthenticatedClientRegistration: true,
+    clientReference: () => "openlaw",
+    clientRegistrationDefaultScopes: MCP_SCOPES,
     clientPrivileges: ({ user }) => user?.role === "administrator",
     resourcePrivileges: () => false,
   });
   const serveDiscovery = provider.onRequest;
-  provider.onRequest = (request, ctx) => {
+  provider.onRequest = async (request, ctx) => {
     const url = new URL(request.url);
     // 1.7.5 serves resource metadata only at the root. Give it the auth-prefix alias.
     if (url.pathname === "/api/auth/.well-known/oauth-protected-resource") {
@@ -61,17 +69,45 @@ export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90) {
     if (url.pathname === "/api/auth/.well-known/openid-configuration") {
       url.pathname = "/api/auth/.well-known/oauth-authorization-server";
     }
-    return serveDiscovery?.(url.href === request.url ? request : new Request(url, request), ctx);
+    const response = await serveDiscovery?.(
+      url.href === request.url ? request : new Request(url, request),
+      ctx,
+    );
+    if (
+      response &&
+      "response" in response &&
+      url.pathname.includes("/.well-known/") &&
+      (!db || !(await dynamicRegistrationEnabled(db)))
+    ) {
+      const document = await response.response.json();
+      delete document.registration_endpoint;
+      return {
+        response: Response.json(document, {
+          status: response.response.status,
+          headers: response.response.headers,
+        }),
+      };
+    }
+    return response;
   };
   return [
     // The adapter pluralizes model names; the physical key table is jwks.
     jwt({ schema: { jwks: { modelName: "jwk" } } }),
     provider,
+    ...(db ? [allowedClientsPlugin(db)] : []),
     cimd({
       fetchClientMetadataResource,
       metadataProfile: "mcp-2026-07-28",
-      // M41/3 supplies the Allowed Clients gate. Refuse before transport or DNS work.
-      isMetadataDocumentUrlAllowed: () => false,
+      isMetadataDocumentUrlAllowed: async (clientId) => {
+        const row = db ? await findAllowedClient(db, clientId) : undefined;
+        return row?.kind === "published" && row.enabled;
+      },
+      onClientCreated: async ({ client }) => {
+        if (db) await linkPublishedClient(db, client.clientId);
+      },
+      onClientRefreshed: async ({ client }) => {
+        if (db) await linkPublishedClient(db, client.clientId);
+      },
     }),
   ];
 }

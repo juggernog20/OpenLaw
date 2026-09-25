@@ -179,6 +179,8 @@ it("lets an Administrator approve and deny with an optional note on the MCP pane
           readOnly: false,
           apiKeyLifetimeDays: 90,
           serverAddress: "https://legal.test/mcp",
+          allowedClients: [],
+          dynamicClientRegistrationEnabled: false,
         });
       if (call.url.pathname === "/api/v1/mcp-settings/api-keys")
         return json(200, [{ ...row, status: "pending", note: "For research" }]);

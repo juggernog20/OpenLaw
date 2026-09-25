@@ -726,6 +726,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/mcp-settings/allowed-clients": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAllowedClients"];
+    put?: never;
+    post: operations["createAllowedClient"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/allowed-clients/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteAllowedClient"];
+    options?: never;
+    head?: never;
+    patch: operations["updateAllowedClient"];
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/allowed-clients/{id}/secret": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["generateAllowedClientSecret"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/mcp-settings": {
     parameters: {
       query?: never;
@@ -10155,6 +10203,218 @@ export interface operations {
       };
     };
   };
+  listAllowedClients: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "published" | "registered";
+            metadataUrl: string | null;
+            clientId: string | null;
+            enabled: boolean;
+            seeded: boolean;
+            callbackUrls: string[];
+            secretGeneratedAt: string | null;
+            registeredByClient: boolean;
+            createdBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          }[];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createAllowedClient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name: string;
+          callbackUrls: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "published" | "registered";
+            metadataUrl: string | null;
+            clientId: string | null;
+            enabled: boolean;
+            seeded: boolean;
+            callbackUrls: string[];
+            secretGeneratedAt: string | null;
+            registeredByClient: boolean;
+            createdBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteAllowedClient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateAllowedClient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          callbackUrls?: string[];
+          enabled?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "published" | "registered";
+            metadataUrl: string | null;
+            clientId: string | null;
+            enabled: boolean;
+            seeded: boolean;
+            callbackUrls: string[];
+            secretGeneratedAt: string | null;
+            registeredByClient: boolean;
+            createdBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  generateAllowedClientSecret: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            clientId: string;
+            secret: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getMcpSettings: {
     parameters: {
       query?: never;
@@ -10172,6 +10432,7 @@ export interface operations {
         content: {
           "application/json": {
             enabled: boolean;
+            dynamicClientRegistrationEnabled: boolean;
             legalApiKeysEnabled: boolean;
             businessApiKeysEnabled: boolean;
             legalOAuthClientsEnabled: boolean;
@@ -10200,6 +10461,22 @@ export interface operations {
                   passed: boolean;
                 }[]
               | null;
+            allowedClients: {
+              id: string;
+              name: string;
+              /** @enum {string} */
+              kind: "published" | "registered";
+              metadataUrl: string | null;
+              clientId: string | null;
+              enabled: boolean;
+              seeded: boolean;
+              callbackUrls: string[];
+              secretGeneratedAt: string | null;
+              registeredByClient: boolean;
+              createdBy: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
             serverAddress: string;
             authorizationServerAvailable: boolean;
           };
@@ -10227,6 +10504,7 @@ export interface operations {
       content: {
         "application/json": {
           enabled?: boolean;
+          dynamicClientRegistrationEnabled?: boolean;
           legalApiKeysEnabled?: boolean;
           businessApiKeysEnabled?: boolean;
           legalOAuthClientsEnabled?: boolean;
@@ -10260,6 +10538,7 @@ export interface operations {
         content: {
           "application/json": {
             enabled: boolean;
+            dynamicClientRegistrationEnabled: boolean;
             legalApiKeysEnabled: boolean;
             businessApiKeysEnabled: boolean;
             legalOAuthClientsEnabled: boolean;
@@ -10288,6 +10567,22 @@ export interface operations {
                   passed: boolean;
                 }[]
               | null;
+            allowedClients: {
+              id: string;
+              name: string;
+              /** @enum {string} */
+              kind: "published" | "registered";
+              metadataUrl: string | null;
+              clientId: string | null;
+              enabled: boolean;
+              seeded: boolean;
+              callbackUrls: string[];
+              secretGeneratedAt: string | null;
+              registeredByClient: boolean;
+              createdBy: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
             serverAddress: string;
             authorizationServerAvailable: boolean;
           };

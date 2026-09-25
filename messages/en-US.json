@@ -89,6 +89,24 @@
   "activity.aiSavedKey.stored": {
     "defaultMessage": "{actor} stored a Saved key for {provider} at {baseUrl}"
   },
+  "activity.allowedClient.created": {
+    "defaultMessage": "{actor} added Allowed Client {client}"
+  },
+  "activity.allowedClient.deleted": {
+    "defaultMessage": "{actor} deleted Allowed Client {client}"
+  },
+  "activity.allowedClient.linked": {
+    "defaultMessage": "{actor} linked a published identity for Allowed Client {client}"
+  },
+  "activity.allowedClient.secret_generated": {
+    "defaultMessage": "{actor} generated a secret for Allowed Client {client}"
+  },
+  "activity.allowedClient.toggled": {
+    "defaultMessage": "{actor} changed access for Allowed Client {client}"
+  },
+  "activity.allowedClient.updated": {
+    "defaultMessage": "{actor} edited Allowed Client {client}"
+  },
   "activity.apiKey.approved": {
     "defaultMessage": "{selfApproved, select, yes {{actor} approved their own API key request for {client}} other {{actor} approved the API key request for {client}}}"
   },
@@ -453,7 +471,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -814,6 +832,99 @@
   },
   "activity.user.unarchived": {
     "defaultMessage": "{actor} restored {email}"
+  },
+  "allowedClients.add": {
+    "defaultMessage": "Add Client"
+  },
+  "allowedClients.addCallback": {
+    "defaultMessage": "Add callback URL"
+  },
+  "allowedClients.callback": {
+    "defaultMessage": "Callback URL {number}"
+  },
+  "allowedClients.callbacks": {
+    "defaultMessage": "Callback URLs"
+  },
+  "allowedClients.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "allowedClients.clientId": {
+    "defaultMessage": "Client id"
+  },
+  "allowedClients.copied": {
+    "defaultMessage": "Copied"
+  },
+  "allowedClients.copy": {
+    "defaultMessage": "Copy"
+  },
+  "allowedClients.copyFailed": {
+    "defaultMessage": "Copy failed. Select and copy the secret before closing this dialog."
+  },
+  "allowedClients.delete": {
+    "defaultMessage": "Delete Client"
+  },
+  "allowedClients.done": {
+    "defaultMessage": "Done"
+  },
+  "allowedClients.dynamic": {
+    "defaultMessage": "Dynamic client registration"
+  },
+  "allowedClients.dynamicHelp": {
+    "defaultMessage": "The protocol deprecates dynamic client registration. A registered Client does not need it."
+  },
+  "allowedClients.edit": {
+    "defaultMessage": "Edit"
+  },
+  "allowedClients.editNamed": {
+    "defaultMessage": "Edit {client}"
+  },
+  "allowedClients.editTitle": {
+    "defaultMessage": "Edit Client"
+  },
+  "allowedClients.enable": {
+    "defaultMessage": "Enable {client}"
+  },
+  "allowedClients.failed": {
+    "defaultMessage": "The Client could not be saved. Check the callback URLs and try again."
+  },
+  "allowedClients.generate": {
+    "defaultMessage": "Generate secret"
+  },
+  "allowedClients.name": {
+    "defaultMessage": "Client name"
+  },
+  "allowedClients.noSecret": {
+    "defaultMessage": "No secret generated"
+  },
+  "allowedClients.notGenerated": {
+    "defaultMessage": "Generate a secret to create the client id."
+  },
+  "allowedClients.once": {
+    "defaultMessage": "OpenLaw will not show this secret again. Rotation invalidates the old secret at once and leaves grants in place."
+  },
+  "allowedClients.published": {
+    "defaultMessage": "Published identity"
+  },
+  "allowedClients.ready": {
+    "defaultMessage": "Your Client secret is ready"
+  },
+  "allowedClients.registered": {
+    "defaultMessage": "Registered client"
+  },
+  "allowedClients.rotate": {
+    "defaultMessage": "Rotate secret"
+  },
+  "allowedClients.save": {
+    "defaultMessage": "Save"
+  },
+  "allowedClients.secretDate": {
+    "defaultMessage": "Secret generated {date}"
+  },
+  "allowedClients.selfRegistered": {
+    "defaultMessage": "Registered by the Client"
+  },
+  "allowedClients.title": {
+    "defaultMessage": "Allowed Clients"
   },
   "apiKeys.actions": {
     "defaultMessage": "Actions"

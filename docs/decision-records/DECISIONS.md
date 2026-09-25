@@ -1576,3 +1576,12 @@ The list varies by grant and the call is enforced too, because a list alone is n
 | DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |
 | DD-028 | The type Form — one tree per type decides intake, creation, record and Portal             | Accepted                                                                    |
 | DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted                                                                    |
+
+### Addendum (2026-09-25, #1134): four seeded Allowed Clients
+
+Migration 0172 carries four enabled Allowed Clients. Claude, Claude Code and
+ChatGPT are published identities. Microsoft 365 Copilot is a registered Client
+template with no client id until an Administrator generates its secret. Its
+callbacks include the fixed Teams and VS Code URLs and one empty slot for the
+Copilot Studio consent redirect. The earlier three-name seed summary omitted
+Claude Code. Dynamic client registration remains off by default.

@@ -1618,3 +1618,16 @@ The five `entity_share_*` tables above. The Register of members is not a table: 
 ### `individual_holdings`
 
 Migration 0146 adds individual owners alongside `entity_holdings`: UUIDv7 `id`, `owned_entity_id` FK, `name` (1–200 trimmed characters), `ownership_percent` (numeric 5,2; 0–100), and timestamps. Individuals are recorded per Holding; names are not unique and do not identify app users or registry Entities. The owned Entity's access and archival rules govern reads and writes. Holdings routes use `individual:<id>` to distinguish individual owners, while chart nodes mark them with `kind: individual`. The existing graph advisory lock also serializes individual writes, combined percentage totals, and transactional Activity entries.
+
+### `allowed_clients` and `allowed_client_links` (#1134)
+
+An Allowed Client holds its name, `published` or `registered` kind, metadata
+document URL or registered client id, enabled and seeded flags, callback URLs,
+last secret generation time, creator and creation time. `registered_by_client`
+marks dynamic registration. Secrets remain hashed in the better-auth table and
+are never columns on the Allowed Client. Four enabled rows are seeded, including
+Claude Code. Microsoft 365 Copilot starts without a client id.
+
+`allowed_client_links` maps plugin client ids to the Allowed Client. A published
+ChatGPT identity can own many connection ids. `org_settings` adds
+`mcp_dynamic_client_registration_enabled`, false by default.

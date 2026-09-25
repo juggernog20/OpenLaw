@@ -127,6 +127,7 @@ import { apiKeyRoutes } from "./modules/api-keys/routes.js";
 import type { ToolDefinition } from "./mcp/register.js";
 import { mcpRoutes } from "./mcp/routes.js";
 import type { ResolveIpv4 } from "./modules/mcp-settings/reachability.js";
+import { allowedClientRoutes } from "./modules/mcp-settings/allowed-clients.js";
 import { mcpSettingsRoutes } from "./modules/mcp-settings/routes.js";
 import { advancedSettingsRoutes } from "./modules/advanced-settings/routes.js";
 import {
@@ -610,6 +611,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     { prefix: "/api/v1" },
   );
   await app.register(apiKeyRoutes, { prefix: "/api/v1" });
+  await app.register(allowedClientRoutes, { prefix: "/api/v1" });
   await app.register(mcpSettingsRoutes(deps.mcpResolveIpv4), { prefix: "/api/v1" });
   await app.register(emailSettingsRoutes, { prefix: "/api/v1" });
   await app.register(signingConnectorRoutes, { prefix: "/api/v1" });

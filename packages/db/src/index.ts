@@ -143,6 +143,8 @@ export * from "./schema/signing-connectors.js";
 export * from "./migration-journal.js";
 export * from "./rewrap.js";
 export * from "./secrets.js";
+import * as allowedClientsSchema from "./schema/allowed-clients.js";
+export * from "./schema/allowed-clients.js";
 import * as oauthSchema from "./schema/oauth.js";
 export * from "./schema/oauth.js";
 import * as apiKeysSchema from "./schema/api-keys.js";
@@ -153,6 +155,7 @@ export const schema = {
   ...mcpToolCallsSchema,
   ...apiKeysSchema,
   ...oauthSchema,
+  ...allowedClientsSchema,
   ...typeFormsSchema,
   ...activitySchema,
   ...aiConnectorSchema,

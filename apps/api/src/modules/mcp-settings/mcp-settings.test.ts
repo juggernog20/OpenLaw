@@ -87,6 +87,8 @@ it("reads the fresh-install policy and server address in one call", async () => 
   expect(response.statusCode).toBe(200);
   expect(response.json()).toEqual({
     authorizationServerAvailable: true,
+    allowedClients: expect.any(Array),
+    dynamicClientRegistrationEnabled: false,
     reachability: null,
     legalOAuthClientsEnabled: false,
     businessOAuthClientsEnabled: false,
