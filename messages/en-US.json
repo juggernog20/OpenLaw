@@ -8618,6 +8618,9 @@
   "records.department": {
     "defaultMessage": "Department"
   },
+  "records.people.section": {
+    "defaultMessage": "Owners"
+  },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
   },

@@ -61,7 +61,7 @@ export function DescribedFieldLabel({
           type="button"
           variant="ghost"
           size="icon"
-          className="shrink-0 cursor-help text-muted"
+          className="-my-1 shrink-0 cursor-help text-muted"
           aria-label={intl.formatMessage(
             { id: "fields.descriptionFor", defaultMessage: "Show description for {field}" },
             { field: fieldName },

@@ -2820,6 +2820,68 @@ function ContractRecord() {
               opens that applet from any section. */}
             {tab === "overview" && (
               <>
+                <section
+                  aria-label={intl.formatMessage({
+                    id: "records.people.section",
+                    defaultMessage: "Owners",
+                  })}
+                  className="grid w-full grid-cols-1 gap-4 rounded-card border border-border-default bg-raised p-4 @2xl/page:grid-cols-2"
+                >
+                  <RecordPersonField
+                    id="contract-owner"
+                    label={intl.formatMessage({
+                      id: "contracts.form.legalOwner",
+                      defaultMessage: "Legal Owner",
+                    })}
+                    frozen={frozen}
+                    value={saved.manager ?? null}
+                    people={
+                      saved.manager &&
+                      !ownerOptions.some((person) => person.id === saved.manager!.id)
+                        ? [saved.manager, ...ownerOptions]
+                        : ownerOptions
+                    }
+                    status={fieldStatus.managerId ?? "idle"}
+                    error={fieldError.managerId}
+                    onChange={async (value) => {
+                      const result = await commit("managerId", { managerId: value });
+                      return result.ok
+                        ? undefined
+                        : (result.detail ??
+                            intl.formatMessage({
+                              id: "matters.edit.error",
+                              defaultMessage: "The change could not be saved.",
+                            }));
+                    }}
+                  />
+                  <RecordPersonField
+                    id="contract-business-owner"
+                    label={intl.formatMessage({
+                      id: "contracts.form.businessOwner",
+                      defaultMessage: "Business Owner",
+                    })}
+                    frozen={frozen}
+                    value={saved.businessOwner ?? null}
+                    people={
+                      saved.businessOwner &&
+                      !users.some((person) => person.id === saved.businessOwner!.id)
+                        ? [saved.businessOwner, ...users]
+                        : users
+                    }
+                    status={fieldStatus.businessOwnerId ?? "idle"}
+                    error={fieldError.businessOwnerId}
+                    onChange={async (value) => {
+                      const result = await commit("businessOwnerId", { businessOwnerId: value });
+                      return result.ok
+                        ? undefined
+                        : (result.detail ??
+                            intl.formatMessage({
+                              id: "matters.edit.error",
+                              defaultMessage: "The change could not be saved.",
+                            }));
+                    }}
+                  />
+                </section>
                 <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
                   <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
                     <h2 className="text-base font-semibold">
@@ -2828,60 +2890,6 @@ function ContractRecord() {
                   </header>
                   <div className="grid grid-cols-1 gap-4 p-4 @2xl/page:grid-cols-2">
                     {orderedRows}
-                    <RecordPersonField
-                      id="contract-owner"
-                      label={intl.formatMessage({
-                        id: "contracts.form.legalOwner",
-                        defaultMessage: "Legal Owner",
-                      })}
-                      frozen={frozen}
-                      value={saved.manager ?? null}
-                      people={
-                        saved.manager &&
-                        !ownerOptions.some((person) => person.id === saved.manager!.id)
-                          ? [saved.manager, ...ownerOptions]
-                          : ownerOptions
-                      }
-                      status={fieldStatus.managerId ?? "idle"}
-                      error={fieldError.managerId}
-                      onChange={async (value) => {
-                        const result = await commit("managerId", { managerId: value });
-                        return result.ok
-                          ? undefined
-                          : (result.detail ??
-                              intl.formatMessage({
-                                id: "matters.edit.error",
-                                defaultMessage: "The change could not be saved.",
-                              }));
-                      }}
-                    />
-                    <RecordPersonField
-                      id="contract-business-owner"
-                      label={intl.formatMessage({
-                        id: "contracts.form.businessOwner",
-                        defaultMessage: "Business Owner",
-                      })}
-                      frozen={frozen}
-                      value={saved.businessOwner ?? null}
-                      people={
-                        saved.businessOwner &&
-                        !users.some((person) => person.id === saved.businessOwner!.id)
-                          ? [saved.businessOwner, ...users]
-                          : users
-                      }
-                      status={fieldStatus.businessOwnerId ?? "idle"}
-                      error={fieldError.businessOwnerId}
-                      onChange={async (value) => {
-                        const result = await commit("businessOwnerId", { businessOwnerId: value });
-                        return result.ok
-                          ? undefined
-                          : (result.detail ??
-                              intl.formatMessage({
-                                id: "matters.edit.error",
-                                defaultMessage: "The change could not be saved.",
-                              }));
-                      }}
-                    />
                     <ReadOnlyField
                       label={
                         <FormattedMessage
