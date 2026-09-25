@@ -1605,7 +1605,12 @@
         "An expired consent link requires a fresh connection; disabled Clients and account groups are refused."
       ],
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/connect-claude.json"]
+      }
     },
     {
       "id": "V-M41-C60",

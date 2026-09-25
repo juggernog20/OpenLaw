@@ -31,22 +31,26 @@ const { chromium, request: pwRequest } = require(
 export const COMMIT = "067c1646829df85e62b809ee9157921e867c84e7";
 const WORK = path.join(os.homedir(), ".cache/openlaw-doc030/operator-cfg");
 const PRIVATE = path.join(WORK, "private");
-const INSTALL = path.join(WORK, "cfg1", "openlaw");
-const FIX = path.join(WORK, "fx");
-const PROJECT = "openlaw-doc030-cfg-1";
-const FX_PROJECT = "openlaw-doc030-cfg-fx";
+// Round 2 (DOC030_LAB=cfg2) re-walks the owner's corrections on a fresh installation with its own
+// project names and ports; round 1 is the default.
+const R2 = process.env.DOC030_LAB === "cfg2";
+const OFF = R2 ? 20 : 0;
+const INSTALL = path.join(WORK, R2 ? "cfg2" : "cfg1", "openlaw");
+const FIX = path.join(WORK, R2 ? "fx2" : "fx");
+const PROJECT = R2 ? "openlaw-doc030-cfg-2" : "openlaw-doc030-cfg-1";
+const FX_PROJECT = R2 ? "openlaw-doc030-cfg-fx2" : "openlaw-doc030-cfg-fx";
 const APP_IMAGE_ID = "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba";
 const ENGINE_IMAGE_ID = "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e";
 const APP_TAG = `openlaw-doc030-cfg-app:${COMMIT}`;
 const ENGINE_TAG = `openlaw-doc030-cfg-engine:${COMMIT}`;
-const APP_PORT = 25710;
-const PROXY_PORT = 25711;
-const CADDY_HTTP_PORT = 25712;
-const MAIL_UI = "http://127.0.0.1:25713";
-const MINIO_HOST = "http://127.0.0.1:25714";
-const AZURITE_HOST = "http://127.0.0.1:25715";
-const LAN_PORT = 25716;
-const LAN_HTTP_PORT = 25717;
+const APP_PORT = 25710 + OFF;
+const PROXY_PORT = 25711 + OFF;
+const CADDY_HTTP_PORT = 25712 + OFF;
+const MAIL_UI = `http://127.0.0.1:${25713 + OFF}`;
+const MINIO_HOST = `http://127.0.0.1:${25714 + OFF}`;
+const AZURITE_HOST = `http://127.0.0.1:${25715 + OFF}`;
+const LAN_PORT = 25716 + OFF;
+const LAN_HTTP_PORT = 25717 + OFF;
 const LAN_IP = "192.168.0.59";
 const TAILNET_IP = "100.68.96.37";
 const LAN_HOST = "openlaw-cfg.company.example";
@@ -577,7 +581,7 @@ services:
   relay:
     image: axllent/mailpit:v1.30
     networks: { backend: { aliases: [relay] } }
-    ports: ["127.0.0.1:25713:8025"]
+    ports: ["127.0.0.1:${25713 + OFF}:8025"]
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     command: server /data
@@ -585,12 +589,12 @@ services:
       MINIO_ROOT_USER: \${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: \${MINIO_ROOT_PASSWORD}
     networks: { backend: { aliases: [minio] } }
-    ports: ["127.0.0.1:25714:9000"]
+    ports: ["127.0.0.1:${25714 + OFF}:9000"]
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:3.36.0
     command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
     networks: { backend: { aliases: [azurite] } }
-    ports: ["127.0.0.1:25715:10000"]
+    ports: ["127.0.0.1:${25715 + OFF}:10000"]
   extdb:
     image: postgres:16
     environment:
@@ -624,7 +628,7 @@ volumes:
         imgs[s] = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q ${s})`, { cwd: FIX }).stdout.trim();
       log.fixtureImages = imgs;
       log.images.postgres = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q postgres)`).stdout.trim();
-      return `up -d --no-build --pull never exited 0; readyz 200; docker compose ps: ${ps.join("; ")}. Fixture project ${FX_PROJECT} started: Mailpit as the relay stand-in (relay:1025 on the installation's backend network, UI 127.0.0.1:25713), MinIO (127.0.0.1:25714, alias minio), Azurite (127.0.0.1:25715, alias azurite), a separate postgres:16 (extdb, backend network only), and caddy:2-alpine on the host network serving ${ORIGIN} with "reverse_proxy 127.0.0.1:${APP_PORT}" and its internal CA. Fixture image IDs: ${JSON.stringify(imgs)}.`;
+      return `up -d --no-build --pull never exited 0; readyz 200; docker compose ps: ${ps.join("; ")}. Fixture project ${FX_PROJECT} started: Mailpit as the relay stand-in (relay:1025 on the installation's backend network, UI ${MAIL_UI}), MinIO (${MINIO_HOST}, alias minio), Azurite (${AZURITE_HOST}, alias azurite), a separate postgres:16 (extdb, backend network only), and caddy:2-alpine on the host network serving ${ORIGIN} with "reverse_proxy 127.0.0.1:${APP_PORT}" and its internal CA. Fixture image IDs: ${JSON.stringify(imgs)}.`;
     },
   );
 };
@@ -3757,6 +3761,178 @@ phases["vendor-lists"] = async () => {
       return `Anthropic outbound IP page: ${a.status}, lists 160.79.104.0/21: ${anth}. OpenAI chatgpt-connectors.json: ${o.status}, ${prefixes}. OpenAI egress guidance: ${og.status}. Microsoft managed connector outbound addresses: ${m.status}${/AzureConnectors/.test(m.text) ? ", mentions AzureConnectors" : ""}. Applying these to a firewall in front of a public listener is part of the pending live session: this lab has no public listener.`;
     },
   );
+};
+
+phases["r2-setup"] = async () => {
+  mkdirSync(FIX, { recursive: true, mode: 0o700 });
+  await phases.prep();
+  await phases.fixtures();
+  await phases.firstrun();
+};
+
+function r2Caddy() {
+  // The same proxy site, also bound on the LAN address, so a browser that connects there has a
+  // client address other than 127.0.0.1.
+  writeFileSync(
+    path.join(FIX, "Caddyfile"),
+    `{
+\tadmin off
+\thttp_port ${CADDY_HTTP_PORT}
+\tauto_https disable_redirects
+\tskip_install_trust
+}
+
+openlaw-cfg.localhost:${PROXY_PORT} {
+\tbind 127.0.0.1 ${LAN_IP}
+\treverse_proxy 127.0.0.1:${APP_PORT}
+}
+`,
+  );
+  expect(sh("docker compose restart proxy", { cwd: FIX }).code === 0, "proxy restart failed");
+}
+
+phases["r2-trusted"] = async () => {
+  r2Caddy();
+  const gwCmd = `docker network inspect ${PROJECT}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'`;
+  const logCmd = `docker compose logs --since=5m app | grep -o '"remoteAddress":"[^"]*"' | sort | uniq -c`;
+  const counts = () => sh(logCmd).stdout.trim().split("\n").map((l) => l.trim().replace(/\s+/, "× ")).join("; ");
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Find the trusted proxy address (corrected text, fresh installation): with the non-matching 127.0.0.1,::1, sign in from a browser that reaches Caddy on the LAN address and run the log check",
+    "Apart from the 127.0.0.1 health-check lines, every request shows the gateway, so the list does not match.",
+    async () => {
+      setEnv({ TRUSTED_PROXIES: "127.0.0.1,::1" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      await sleep(305_000);
+      await browserSignInVia(LAN_IP);
+      const out = counts();
+      const hc = sh(`docker compose logs --since=5m app | grep '"remoteAddress":"127.0.0.1"' | grep -o '"path":"[^"]*"' | sort -u | tr '\\n' ' '`).stdout.trim();
+      const gw = sh(gwCmd).stdout.trim().split(" ")[0];
+      state.backendGateway = gw;
+      saveState();
+      expect(out.includes(gw) && !out.includes(LAN_IP) && hc === '"path":"/readyz"', `${out} | ${hc}`);
+      return `${gwCmd} printed "${sh(gwCmd).stdout.trim()}". After a browser sign-in through Caddy on ${LAN_IP}, the log check printed: ${out}. The 127.0.0.1 lines are only ${hc} (the container health check). Every other line is the gateway ${gw}.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set TRUSTED_PROXIES to the gateway, up -d --no-build --pull never, sign in again from the LAN-side browser and run the log check",
+    "Ignoring the 127.0.0.1 lines, the other lines show the browser's address.",
+    async () => {
+      setEnv({ TRUSTED_PROXIES: state.backendGateway });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      await sleep(305_000);
+      await browserSignInVia(LAN_IP);
+      const out = counts();
+      const others = out.split("; ").filter((l) => !l.includes('"127.0.0.1"'));
+      expect(others.length > 0 && others.every((l) => l.includes(`"${LAN_IP}"`)), out);
+      return `TRUSTED_PROXIES=${state.backendGateway}. The log check printed: ${out}. Ignoring the 127.0.0.1 health-check lines, every other line is the browser's address ${LAN_IP}.`;
+    },
+  );
+};
+
+phases["r2-status"] = async () => {
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "browser-walkthrough",
+    "System status (corrected text, fresh installation): docker compose stop worker, wait over a minute, Refresh; then start it",
+    "A cleanly stopped worker removes its own row; the page warns that a heartbeat is missing; after start the worker is Running and Current.",
+    async () => {
+      compose("stop worker");
+      await sleep(75_000);
+      const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+      try {
+        await s.page.goto(`${ORIGIN}/settings/system-status`);
+        await s.page.getByRole("button", { name: "Refresh" }).waitFor({ timeout: 20_000 });
+        const down = await statusRows(s.page);
+        compose("start worker");
+        await sleep(20_000);
+        const back = await statusRows(s.page);
+        const warn = /An API or worker heartbeat is missing\. Check that both services are running\./.test(down.text);
+        expect(warn && !down.rows.some((r) => /^Worker/.test(r)) && back.rows.some((r) => /^Worker Running Current/.test(r)), `${down.rows} ${warn} ${back.rows}`);
+        return `75 s after docker compose stop worker, Refresh showed only: ${down.rows.join(" | ")} (no Worker row), with "An API or worker heartbeat is missing. Check that both services are running." After docker compose start worker and Refresh: ${back.rows.join(" | ")}.`;
+      } finally {
+        await s.context.close();
+      }
+    },
+  );
+};
+
+phases["r2-wrongkey"] = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Wrong key with no STORAGE_DRIVER in .env (corrected text, fresh installation): save an S3 store in Document storage, restart, upload; then set a different OPENLAW_SECRET_KEY and recreate",
+    "Storage uses the local driver because .env sets no STORAGE_DRIVER; the Document stored only in the app-saved bucket fails to download; the correct key restores it.",
+    async () => {
+      const s3 = await s3Client();
+      await s3.create("doc030-r2");
+      setEnv({ OPENLAW_PLAIN_HTTP_HOSTS: "minio" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+      try {
+        const page = s.page;
+        await storageForm(page);
+        await page.getByLabel("Store new documents in").selectOption("s3");
+        await page.getByLabel("S3 bucket").fill("doc030-r2");
+        await page.getByLabel("S3 endpoint (optional for AWS)").fill("http://minio:9000");
+        await page.getByLabel("S3 path-style addressing").selectOption("true");
+        await page.getByLabel("S3 access key ID").fill(state.minioUser);
+        await page.getByLabel("S3 secret access key").fill(state.minioPassword);
+        await page.getByRole("button", { name: "Test connection" }).click();
+        await page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
+        await page.getByRole("button", { name: "Save" }).click();
+        await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
+      } finally {
+        await s.context.close();
+      }
+      await restartBoth();
+      const api = await adminApi();
+      const contract = await ensureContract(api, `DOC-030 operator r2 ${Date.now()}`);
+      state.contractNumber = contract.number ?? contract.id;
+      const u = await upload(api, state.contractNumber, pdfFile("doc030-r2-s3.pdf", "DOC-030 operator round 2 S3"));
+      const ref = storageRef(u.versionId);
+      const ok = await download(api, u);
+      state.r2Doc = u;
+      state.r2Key = envValue("OPENLAW_SECRET_KEY");
+      saveState();
+      expect(ref.startsWith("s3:") && ok.matches && !envValue("STORAGE_DRIVER"), `${ref} ${ok.status}`);
+      setEnv({ OPENLAW_SECRET_KEY: randomBytes(32).toString("base64") });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      expect((await waitReady(120_000)) === 200, "not ready");
+      const api2 = await adminApi();
+      const sys = await json(await api2.get("/api/v1/system-status"));
+      const st = await json(await api2.get("/api/v1/advanced-settings/storage"));
+      const drv = st.fields.find((f) => f.key === "STORAGE_DRIVER");
+      const bad = await download(api2, u, 20_000);
+      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /No configured key opens/.test(l)) ?? "";
+      setEnv({ OPENLAW_SECRET_KEY: state.r2Key });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api3 = await adminApi();
+      const again = await download(api3, u);
+      expect(sys.storageDriver === "local" && drv.source === "default" && bad.status !== 200 && again.matches, `${sys.storageDriver} ${JSON.stringify(drv)} ${bad.status} ${again.status}`);
+      return `.env sets no STORAGE_DRIVER. Document storage saved S3-compatible storage for bucket doc030-r2 (Test connection passed, Save, restart); a new PDF was stored under s3: and downloaded. With a different OPENLAW_SECRET_KEY and up: readyz 200; System status reports storage driver ${sys.storageDriver}; Store new documents in shows ${drv.value} with source ${drv.source}; the S3 Document's download answered ${bad.status}; start log "${line.slice(0, 160)}". With the correct key restored and up, the S3 Document downloaded with identical bytes.`;
+    },
+  );
+};
+
+phases["r2-setup-2"] = async () => {
+  // Repeat after the first r2-setup stopped: Docker's default address pools were exhausted on this
+  // host, so the reviewer created the engine network with an explicit subnet (10.241.91.0/24,
+  // internal, Compose labels) and removed the SETUP_TOKEN the failed attempt had written.
+  await phases.fixtures();
+  await phases.firstrun();
 };
 
 // PHASES-END

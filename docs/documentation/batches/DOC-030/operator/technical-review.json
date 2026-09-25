@@ -17,7 +17,7 @@
       "articleId": "deployment-configuration",
       "scenario": ["V-C45", "V-C45-advanced-settings", "V-M40-LAN", "V-M41-PUBLIC"],
       "contentSha256Before": "4aac5cc67a960ec02db974c5ae4bebe1aecae538dba7fd08f4138c7821bc8c99",
-      "contentSha256": "db82804288801ddce5a9a70e536e62d2093a780d450e0bb62bdbf09c236105de",
+      "contentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -176,6 +176,13 @@
           "after": "Storage uses STORAGE_DRIVER from .env, or the local driver when it is unset.",
           "source": "apps/api/src/lib/storage/config.ts (read(env, \"STORAGE_DRIVER\") ?? DEFAULT_STORAGE_DRIVER)",
           "correctedBy": "DOC-030 batch owner, from the operator walkthrough notes of 2026-09-25"
+        },
+        {
+          "claim": "Publicly reachable profile, step 1",
+          "before": "Set that HTTPS origin as BASE_URL, without an application subpath.",
+          "after": "Serve it on the default HTTPS port, 443. Set that HTTPS origin as BASE_URL, without a port or an application subpath. claude.ai did not reach an origin on port 8443.",
+          "source": "docs/documentation/batches/DOC-030/claude-live/walkthrough.json (guideFailures; v-m41-public.json)",
+          "correctedBy": "DOC-030 batch owner, from the claude-live walkthrough of 2026-09-25 (live claude.ai session)"
         }
       ],
       "confirmed": [

@@ -1,0 +1,129 @@
+{
+  "kind": "scenario-rows-for-merge",
+  "articleId": "deployment-configuration",
+  "scenario": "V-M41-PUBLIC",
+  "note": "Rows for the owner of evidence/deployment-configuration.json to merge. Only V-M41-PUBLIC; the LAN and plain-HTTP parts of this scenario's actions, the cross-host redirect and blocked-path negative check and the scheduled vendor allowlist refresh were not walked here.",
+  "contentSha256AtWalk": {
+    "operatorSteps": "97bf7342ce83… (before 5c007acf; the Publicly reachable section is unchanged by that commit)",
+    "outsideAndLive": "db82804288801ddce5a9a70e536e62d2093a780d450e0bb62bdbf09c236105de"
+  },
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-claudelive",
+  "walkthroughReviewer": "DOC-030 independent live-provider walkthrough agent (claude-live)",
+  "reviewerKind": "agent",
+  "guideFailures": [
+    {
+      "step": "Publicly reachable, step 1",
+      "expected": "Any public HTTPS origin that passes the guide's checks serves claude.ai custom connectors.",
+      "observed": "https://omarchy.tail0a8904.ts.net:8443 passed every check in the guide from outside, but claude.ai's Add custom connector said \"Couldn't reach this address\" and no request reached the app. The same host on 443 was reached at once. The guide does not say hosted vendors need the default HTTPS port."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "operator",
+      "method": "container-operation",
+      "prerequisites": [
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "Publicly reachable steps 1-2 on the lab's Compose project: BASE_URL set to the HTTPS origin with no subpath in .env; docker compose config --quiet printed nothing; up -d --no-build --pull never recreated app and worker, both with the new BASE_URL. TRUSTED_PROXIES set to the backend gateway 192.168.208.1 from docker network inspect; the start log had no TRUSTED_PROXIES warning. docker compose port app 3000 printed 127.0.0.1:43330; postgres and doc-engine publish nothing. From outside: /readyz 200 with a verified certificate; all six well-known paths and /api/auth/jwks 200 application/json with issuer <origin>/api/auth and resource <origin>/mcp; unauthenticated POST /mcp 401 with WWW-Authenticate Bearer resource_metadata=\"<origin>/.well-known/oauth-protected-resource\"; /auth/login, /auth/consent and /portal/login returned the app. Ingress ports 443 (while only 8443 was funnelled), 43330, 48450, 5432 and 5901 and the host LAN address :43330 got no connection. Repeated on the 443 origin after the move with the same results.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "administrator",
+      "method": "container-operation",
+      "prerequisites": [
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address.",
+        "Daniel Okafor signs in with the lab password at the public origin in Playwright Chromium, pinned to a public Funnel ingress address."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "Publicly reachable step 5 and configure-mcp Enable OAuth Clients: Server address read https://omarchy.tail0a8904.ts.net:8443/mcp, later https://omarchy.tail0a8904.ts.net/mcp. Enable MCP, Legal Users OAuth Clients and Business Users OAuth Clients each saved with PATCH 200. The pill read \"Not reachable · Public IPv4 address\": the API container resolves the hostname through the host's Tailscale MagicDNS to 100.68.96.37 (100.64.0.0/10), while public resolvers return the Funnel addresses. The switches still saved, as the guide says. Allowed Clients: Claude, Claude Code, ChatGPT and Microsoft 365 Copilot enabled.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "operator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address.",
+        "The batch owner's claude.ai account, driven by the coordinator and the person; observations relayed by the coordinator."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "On :8443 claude.ai's Add custom connector check said \"Couldn't reach this address\" and the app log showed no request, while public relay requests on 8443 returned 200 (guide failure above). On 443, requests arrived from 160.79.106.x, inside the guide's Anthropic range 160.79.104.0/21: POST /mcp 401, then /.well-known/oauth-protected-resource and /.well-known/oauth-authorization-server/api/auth 200, the browser's authorize → /auth/login → /auth/consent, POST /api/auth/oauth2/token 200 and POST /mcp 200. The API fetched Claude's published identity (oauth_clients row for https://claude.ai/oauth/mcp-oauth-client-metadata). Three roles consented, called openlaw_whoami, openlaw_docs_search and openlaw_docs_read, and after Disconnect every /mcp call got 401 and the refresh 400.",
+      "result": "fail",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "administrator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address.",
+        "The batch owner's claude.ai account; Daniel Okafor consented as himself in round 2."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "Daniel Okafor connected claude.ai on the 443 origin: grant with 11 Toolsets and write (Team and Administration are not offered, no Tools at this commit); tool calls openlaw_whoami, openlaw_docs_search, openlaw_docs_read as Daniel via Claude; Claude answered \"OpenLaw has you signed in as Daniel Okafor (daniel.okafor@helix.example), an Administrator at Helix Software Group.\" Disconnect at 19:20:59Z; the next four /mcp calls from Anthropic got 401. The pill beside Server address did not predict the 8443 failure and read Not reachable on the working 443 origin, as the guide warns (a pill does not prove vendor reachability). Fails with the operator row because the guide as written led to the unreachable 8443 origin.",
+      "result": "fail",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    }
+  ],
+  "limitations": [
+    "Scheduled vendor allowlist refresh not walked: Funnel has no source allowlist to apply.",
+    "LAN profile, Claude Code loopback OAuth over private HTTPS and the plain-HTTP LAN boot belong to this scenario's actions but were not in this agent's assignment.",
+    "Cross-host redirect and blocked protocol path negative check not walked.",
+    "Claude Desktop, Cowork and other vendors (ChatGPT, Copilot) not connected here."
+  ]
+}

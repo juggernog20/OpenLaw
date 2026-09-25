@@ -23,10 +23,10 @@
       "engine": "openlaw-doc030-cfg-engine:067c1646829df85e62b809ee9157921e867c84e7"
     },
     "builtBy": "scripts/documentation/lab.mjs up from 067c1646 (the work2 lab's images); tagged, not rebuilt",
-    "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c (postgres:16 on this host)"
+    "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
   },
   "articleHashes": {
-    "deployment-configuration": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0"
+    "deployment-configuration": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b"
   },
   "runs": [
     {
@@ -318,6 +318,26 @@
       "phase": "vendor-lists",
       "startedAt": "2026-09-25T14:56:39.669Z",
       "completedAt": "2026-09-25T14:56:47.586Z"
+    },
+    {
+      "phase": "r2-setup",
+      "startedAt": "2026-09-25T20:32:07.744Z",
+      "completedAt": "2026-09-25T20:38:09.148Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "startedAt": "2026-09-25T20:38:41.649Z",
+      "completedAt": "2026-09-25T20:40:23.784Z"
+    },
+    {
+      "phase": "r2-status",
+      "startedAt": "2026-09-25T20:40:30.614Z",
+      "completedAt": "2026-09-25T20:42:40.954Z"
+    },
+    {
+      "phase": "r2-trusted",
+      "startedAt": "2026-09-25T20:42:41.579Z",
+      "completedAt": null
     }
   ],
   "steps": [
@@ -1904,14 +1924,182 @@
       "result": "pass",
       "startedAt": "2026-09-25T14:56:39.669Z",
       "at": "2026-09-25T14:56:47.584Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare a production-like installation directory from the pinned commit, as install.md establishes it",
+      "expected": "A directory with the pinned source, a .env made by the installation guide's grouped commands, the project name and file list in .env, and a compose.operator.yml naming revision-tagged images.",
+      "actual": "git archive of 067c1646829df85e62b809ee9157921e867c84e7 extracted into the installation directory (outside the repository). install.md's grouped .env commands exited 0; .env has mode 600 with two generated keys (not recorded). .env has COMPOSE_PROJECT_NAME=openlaw-doc030-cfg-2, COMPOSE_FILE=compose.yml:compose.operator.yml, OPENLAW_BUILD_COMMIT=067c1646829df85e62b809ee9157921e867c84e7, OPENLAW_BUILD_DIRTY=false, BASE_URL=https://openlaw-cfg.localhost:25731, PORT=25730. No TRUSTED_PROXIES yet, to see the start warning first. compose.operator.yml names openlaw-doc030-cfg-app:067c1646829df85e62b809ee9157921e867c84e7 and openlaw-doc030-cfg-engine:067c1646829df85e62b809ee9157921e867c84e7, which are sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba and sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, both labelled revision 067c1646829df85e62b809ee9157921e867c84e7. docker compose config --quiet exited 0 and printed nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:32:07.745Z",
+      "at": "2026-09-25T20:32:08.135Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start the installation, then owned fixtures: an SMTP relay stand-in, MinIO, Azurite, a separate Postgres 16, and Caddy on the host",
+      "expected": "docker compose up -d --no-build --pull never starts app, worker, postgres and doc-engine; readyz answers 200; the fixture project joins the installation's backend network without changing its services.",
+      "actual": "Check did not pass: up exited 1: Volume openlaw-doc030-cfg-2_openlaw-files Creating | Volume openlaw-doc030-cfg-2_openlaw-files Creating | Network openlaw-doc030-cfg-2_openlaw-doc-engine Creating | Network openlaw-doc030-cfg-2_openlaw-doc-engine Creating | Network openlaw-doc030-cfg-2_openlaw-backend Creating | Network openlaw-doc030-cfg-2_openlaw-backend Creating",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:32:08.137Z",
+      "at": "2026-09-25T20:32:08.196Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SETUP_TOKEN unset: restart the app twice while the installation has no users and compare the printed tokens",
+      "expected": "While there are no users the app prints a setup token at each start, and each start prints a new one.",
+      "actual": "Check did not pass: not ready",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:32:08.199Z",
+      "at": "2026-09-25T20:35:08.492Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start without TRUSTED_PROXIES and read the app's start log",
+      "expected": "Without TRUSTED_PROXIES the app logs a warning at start.",
+      "actual": "Check did not pass: no TRUSTED_PROXIES warning in the log",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:35:08.494Z",
+      "at": "2026-09-25T20:35:08.576Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set SETUP_TOKEN in .env, recreate with up -d --no-build --pull never, and check the setup screen accepts only that token",
+      "expected": "The app logs that setup asks for SETUP_TOKEN; the previously printed token is refused; the chosen token creates the first Administrator.",
+      "actual": "Check did not pass: up exited 1",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:35:08.579Z",
+      "at": "2026-09-25T20:35:08.665Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restart with SETUP_TOKEN still set after a user exists",
+      "expected": "The app ignores SETUP_TOKEN once a user exists: no setup line in the log, and setup is closed.",
+      "actual": "Check did not pass: not ready",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:35:08.666Z",
+      "at": "2026-09-25T20:38:09.037Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start the installation, then owned fixtures: an SMTP relay stand-in, MinIO, Azurite, a separate Postgres 16, and Caddy on the host",
+      "expected": "docker compose up -d --no-build --pull never starts app, worker, postgres and doc-engine; readyz answers 200; the fixture project joins the installation's backend network without changing its services.",
+      "actual": "up -d --no-build --pull never exited 0; readyz 200; docker compose ps: app running; doc-engine running; postgres running; worker running. Fixture project openlaw-doc030-cfg-fx2 started: Mailpit as the relay stand-in (relay:1025 on the installation's backend network, UI http://127.0.0.1:25733), MinIO (http://127.0.0.1:25734, alias minio), Azurite (http://127.0.0.1:25735, alias azurite), a separate postgres:16 (extdb, backend network only), and caddy:2-alpine on the host network serving https://openlaw-cfg.localhost:25731 with \"reverse_proxy 127.0.0.1:25730\" and its internal CA. Fixture image IDs: {\"relay\":\"sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0\",\"minio\":\"sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9\",\"azurite\":\"sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1\",\"extdb\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\",\"proxy\":\"sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:38:41.650Z",
+      "at": "2026-09-25T20:39:14.564Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SETUP_TOKEN unset: restart the app twice while the installation has no users and compare the printed tokens",
+      "expected": "While there are no users the app prints a setup token at each start, and each start prints a new one.",
+      "actual": "Two docker compose restart app runs each logged \"First-run setup is open. Paste this setup token into the setup screen:\" with a token (values not recorded) and \"It is printed once per boot and a restart makes a new one.\" The two tokens differ (SHA-256 prefixes 14fe0728 and 79db6193).",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:39:14.567Z",
+      "at": "2026-09-25T20:39:43.725Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start without TRUSTED_PROXIES and read the app's start log",
+      "expected": "Without TRUSTED_PROXIES the app logs a warning at start.",
+      "actual": "The app log carries \"TRUSTED_PROXIES is not set. Sign-in rate limits are keyed on the socket address, which behind a reverse proxy is the proxy itself. Set TRUSTED_PROXIES to the proxy's address so each client gets its own bucket.\"",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:39:43.728Z",
+      "at": "2026-09-25T20:39:43.818Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set SETUP_TOKEN in .env, recreate with up -d --no-build --pull never, and check the setup screen accepts only that token",
+      "expected": "The app logs that setup asks for SETUP_TOKEN; the previously printed token is refused; the chosen token creates the first Administrator.",
+      "actual": "After up, the app logged \"First-run setup is open. The setup screen asks for the token in SETUP_TOKEN.\" and printed no generated token. On https://openlaw-cfg.localhost:25731 the \"Set up OpenLaw\" form with the earlier printed token showed \"The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.\" and stayed on setup. With the SETUP_TOKEN value, Create Administrator created the fictional Avery Morgan and opened \"Welcome to OpenLaw\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:39:43.823Z",
+      "at": "2026-09-25T20:40:01.823Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restart with SETUP_TOKEN still set after a user exists",
+      "expected": "The app ignores SETUP_TOKEN once a user exists: no setup line in the log, and setup is closed.",
+      "actual": "After docker compose restart app with SETUP_TOKEN still in .env, the log had no \"First-run setup is open\" line and GET /api/v1/auth/setup answered needsSetup=false. SETUP_TOKEN was then removed from .env.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:40:01.825Z",
+      "at": "2026-09-25T20:40:14.612Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Complete the welcome wizard with an app-saved relay (fixture for the email and key checks)",
+      "expected": "The relay saved in the wizard delivers a test email; the wizard finishes.",
+      "actual": "Wizard: organization \"DOC-030 operator Organization\"; Outbound email relay \"relay\", port 1025, no TLS, no authentication, sender openlaw@doc030-cfg.example; Send test email delivered \"OpenLaw test email\". The invitation to the fictional Rowan Operator arrived with a link on https://openlaw-cfg.localhost:25731. Finish entered /.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:40:15.206Z",
+      "at": "2026-09-25T20:40:23.668Z"
+    },
+    {
+      "phase": "r2-status",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "System status (corrected text, fresh installation): docker compose stop worker, wait over a minute, Refresh; then start it",
+      "expected": "A cleanly stopped worker removes its own row; the page warns that a heartbeat is missing; after start the worker is Running and Current.",
+      "actual": "Check did not pass: locator.innerText: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for locator('main')\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:40:30.615Z",
+      "at": "2026-09-25T20:42:40.952Z"
+    },
+    {
+      "phase": "r2-trusted",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Find the trusted proxy address (corrected text, fresh installation): with the non-matching 127.0.0.1,::1, sign in from a browser that reaches Caddy on the LAN address and run the log check",
+      "expected": "Apart from the 127.0.0.1 health-check lines, every request shows the gateway, so the list does not match.",
+      "actual": "docker network inspect openlaw-doc030-cfg-2_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}' printed \"192.168.240.1 192.168.240.0/20\". After a browser sign-in through Caddy on 192.168.0.59, the log check printed: 10× \"remoteAddress\":\"127.0.0.1\"; 15× \"remoteAddress\":\"192.168.240.1\". The 127.0.0.1 lines are only \"path\":\"/readyz\" (the container health check). Every other line is the gateway 192.168.240.1.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:42:41.781Z",
+      "at": "2026-09-25T20:48:02.310Z"
     }
   ],
   "fixtureImages": {
-    "relay": "axllent/mailpit:v1.30 sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0",
-    "minio": "minio/minio:RELEASE.2025-09-07T16-13-09Z sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9 (already on the host; nothing pulled)",
-    "azurite": "mcr.microsoft.com/azure-storage/azurite:3.36.0 sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1",
-    "extdb": "postgres:16 sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
-    "proxy": "caddy:2-alpine sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe"
+    "relay": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0",
+    "minio": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9",
+    "azurite": "sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1",
+    "extdb": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
+    "proxy": "sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe"
   },
   "contentSha256History": [
     {

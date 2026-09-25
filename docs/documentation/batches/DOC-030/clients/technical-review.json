@@ -18,7 +18,7 @@
       "articleId": "connect-claude",
       "scenario": ["V-M41-C59"],
       "contentSha256Before": "b8107eb019f47db7d03e9dd2b0cfa1e7153c0433d6485c26909fccbcfdd217a9",
-      "contentSha256": "cd63acafb142c8420b8023911175e4e6ee51e762bd01837ae806ad6e84c395d2",
+      "contentSha256": "50532b15c33c8fef038024c3e928be6771c1567346568febbd897731da9bc3d1",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -117,6 +117,20 @@
           "before": "Client unlisted and Client off rows told the reader to check the identity or enablement, as if seen at consent.",
           "after": "Those two consent messages appear only after the Client changed mid-flow; the usual case is 'Client is not on the enabled Allowed Clients list.' before any sign-in page. Switching off MCP, the group or the Client also refuses the next call.",
           "source": "apps/api/src/auth/allowed-clients.ts allowedClientsPlugin before hook; apps/api/src/auth/oauth.test.ts; apps/api/src/auth/oauth-grants.ts liveOAuthGrantFor"
+        },
+        {
+          "claim": "claude.ai custom connector steps",
+          "before": "Select +, then Add custom connector; enter the Server address; leave the OAuth Client ID and secret in Advanced settings empty; select Add, then Connect.",
+          "after": "Select Add, then Add custom connector; enter a Name and the MCP server URL, then Continue; keep Sign in now and Use Claude's published identity, then Add; select Connect on the connector page.",
+          "source": "docs/documentation/batches/DOC-030/claude-live/walkthrough.json (runs.origin443.coordinatorReport; claude.ai as observed on 2026-09-25)",
+          "correctedBy": "DOC-030 batch owner, from the claude-live walkthrough of 2026-09-25 (live claude.ai session)"
+        },
+        {
+          "claim": "Troubleshooting when claude.ai cannot reach the server",
+          "before": "No row for the add-connector check.",
+          "after": "Row: adding the connector shows Couldn't reach this address and No server responded at this URL; the address must be reachable on the default HTTPS port, 443, with no port.",
+          "source": "docs/documentation/batches/DOC-030/claude-live/walkthrough.json (guideFailures: port 8443 unreachable from claude.ai, 443 reached); both messages seen in the claude.ai Add custom connector dialog (check line and red banner) by the coordinator on 2026-09-25",
+          "correctedBy": "DOC-030 batch owner, from the claude-live walkthrough of 2026-09-25 (live claude.ai session)"
         }
       ],
       "confirmed": [

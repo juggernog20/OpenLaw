@@ -829,7 +829,7 @@
       "destinations": ["staff-help", "formal", "portal-help"],
       "priority": "P1",
       "contexts": ["settings.api-keys"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "connect-chatgpt",
