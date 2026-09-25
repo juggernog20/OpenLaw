@@ -102,7 +102,7 @@ export function SignerNameField({
             id: "signing.peopleMatches",
             defaultMessage: "People in OpenLaw",
           })}
-          className="absolute top-full z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-card border border-border-default bg-overlay p-1 shadow-lg"
+          className="absolute top-full z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-card border border-border-default bg-raised p-1 shadow-md"
         >
           {matches.map((person, index) => (
             <li
@@ -110,7 +110,7 @@ export function SignerNameField({
               key={person.id}
               role="option"
               aria-selected={index === activeIndex}
-              className={`flex cursor-pointer items-center gap-2 rounded-button px-2 py-1.5 text-sm ${index === activeIndex ? "bg-selected" : ""}`}
+              className={`flex cursor-pointer items-center gap-2 rounded-chip px-2 py-1.5 text-sm ${index === activeIndex ? "bg-control" : ""}`}
               // Keeps focus in the box, so the blur does not close the
               // list before the click lands.
               onMouseDown={(event) => event.preventDefault()}

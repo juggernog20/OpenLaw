@@ -186,9 +186,9 @@ function recordApi(
   return { handler, writes };
 }
 
-/** The Approvals & signing card, which is where the renewal rows and
+/** The Approvals card, which is where the renewal rows and
  * the Renew control both live. */
-const card = async () => within(await screen.findByRole("region", { name: "Approvals & signing" }));
+const card = async () => within(await screen.findByRole("region", { name: "Approvals" }));
 
 describe("the renewal-pending banner (CTR-006, DES-043)", () => {
   it("draws the banner and its call to action on a record the seam says is pending", async () => {
@@ -403,7 +403,7 @@ describe("the Renew dialog (CTR-007's first vehicle)", () => {
   });
 });
 
-describe("the Renew control on the Approvals & signing card", () => {
+describe("the Renew control on the Approvals card", () => {
   it("draws it on a record that can roll, and opens the same dialog", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi().handler });
     renderAt("/contracts/42/approvals");

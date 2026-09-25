@@ -2,13 +2,12 @@
 
 /**
  * The signing half of the record (#246, #247, CTR-013, DES-036,
- * DES-037) at `/contracts/42/approvals`, through the real route table
+ * DES-037) at `/contracts/42/signatures`, through the real route table
  * with the standard fetch stub.
  *
  * What it draws: the envelope row with its status pill, its signers,
  * the version that went out, and when — plus the ending the provider's
- * feed reported (its date, and its reason on a decline) and the chip in
- * the record's sub-bar that says where the signature stands.
+ * feed reported (its date, and its reason on a decline).
  *
  * What it offers: the send dialog, which defaults to the current round
  * of the primary document, collects signers as name-and-email pairs,
@@ -75,7 +74,15 @@ const PEOPLE = [
 
 const OPTIONS = {
   contractTypes: [{ id: "t-msa", slug: "msa", displayName: "MSA", fields: [] }],
-  contractStatuses: [{ id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" }],
+  contractStatuses: [
+    { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
+    {
+      id: "s-signature",
+      slug: "out_for_signature",
+      displayName: "Out for signature",
+      stage: "signature",
+    },
+  ],
   users: PEOPLE,
   approverGroups: [],
 };
@@ -168,12 +175,6 @@ function envelopeRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** The C20 mock's note, whole now that every behaviour it names
- * exists (DES-039). */
-const WEBHOOK_NOTE =
-  "Signed, declined, and voided status arrives by webhook. " +
-  "The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage.";
-
 /** The executed copy one signed round filed back onto the chain. */
 const EXECUTED_COPY = {
   documentId: "d1",
@@ -245,6 +246,12 @@ function recordApi(
           ...state.envelopes,
         ],
       };
+      row = {
+        ...row,
+        statusId: "s-signature",
+        statusName: "Out for signature",
+        stage: "signature",
+      };
       return json(201, state);
     }
     // The withdrawal, addressed by the envelope's own id. It answers
@@ -291,7 +298,7 @@ function recordApi(
 
 /** The signing block's own table, once the card has drawn it. */
 async function envelopeRows() {
-  const table = await screen.findByRole("table", { name: "Signing" });
+  const table = await screen.findByRole("table", { name: "Signatures" });
   return within(table).getAllByRole("row").slice(1);
 }
 
@@ -300,9 +307,9 @@ describe("the record's signing block", () => {
     const sources = stubEventSource();
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
-    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    expect(await screen.findByText("Out for signature")).toBeInTheDocument();
     expect(api.reads).toBe(1);
     api.replaceEnvelopes([
       envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" }),
@@ -316,7 +323,7 @@ describe("the record's signing block", () => {
       visibility: "working_team",
     });
 
-    expect(await screen.findByText("Envelope signed")).toBeInTheDocument();
+    expect(await screen.findByText("Signed")).toBeInTheDocument();
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(api.reads).toBe(2);
@@ -326,9 +333,9 @@ describe("the record's signing block", () => {
     const sources = stubEventSource();
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
-    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    expect(await screen.findByText("Out for signature")).toBeInTheDocument();
     api.refuseNextRead();
     sources[0]!.emit({
       kind: "record",
@@ -341,7 +348,7 @@ describe("the record's signing block", () => {
     await waitFor(() => expect(api.reads).toBe(2));
     await act(async () => Promise.resolve());
 
-    expect(screen.getByText("Envelope sent")).toBeInTheDocument();
+    expect(screen.getByText("Out for signature")).toBeInTheDocument();
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Out for signature")).toBeInTheDocument();
   });
@@ -350,9 +357,9 @@ describe("the record's signing block", () => {
     const sources = stubEventSource();
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
-    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    expect(await screen.findByText("Out for signature")).toBeInTheDocument();
     expect(api.reads).toBe(1);
 
     // An ending the worker's sweep applied while this tab was
@@ -363,7 +370,7 @@ describe("the record's signing block", () => {
     ]);
     sources[0]!.open();
 
-    expect(await screen.findByText("Envelope voided")).toBeInTheDocument();
+    expect(await screen.findByText("Voided")).toBeInTheDocument();
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Voided")).toBeInTheDocument();
     expect(api.reads).toBe(2);
@@ -377,7 +384,7 @@ describe("the record's signing block", () => {
     });
     const api = recordApi({ envelopes: [signed] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Filing the executed copy…")).toBeInTheDocument();
@@ -411,7 +418,7 @@ describe("the record's signing block", () => {
   it("draws the envelope with its pill, signers, version, and sender", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(rows).toHaveLength(1);
@@ -426,61 +433,78 @@ describe("the record's signing block", () => {
     expect(within(row).getByText("by Nadia Counsel")).toBeInTheDocument();
   });
 
-  it("takes the card's two-part name", async () => {
+  it("keeps signature history in its own tab when navigating from approvals", async () => {
+    const user = userEvent.setup();
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    const { router } = renderAt("/contracts/42/approvals");
 
-    expect(await screen.findByRole("heading", { name: "Approvals & signing" })).toBeInTheDocument();
+    await screen.findByRole("region", { name: "Approvals" });
+    expect(screen.queryByRole("table", { name: "Signatures" })).not.toBeInTheDocument();
+    const strip = within(screen.getByRole("navigation", { name: "Contract sections" }));
+    await user.click(strip.getByRole("link", { name: "Signatures" }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/contracts/42/signatures"));
+    expect(await envelopeRows()).toHaveLength(1);
+    expect(strip.getByRole("link", { name: "Signatures" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("region", { name: "Approvals" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add approver" })).not.toBeInTheDocument();
   });
 
-  it("says where the signature stands in the record's sub-bar", async () => {
-    const api = recordApi({ envelopes: [envelopeRow()] });
+  it("offers sending only from the signatures tab", async () => {
+    const user = userEvent.setup();
+    const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/approvals");
 
-    expect(await screen.findByText("Envelope sent")).toBeInTheDocument();
+    await screen.findByRole("region", { name: "Approvals" });
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("link", { name: "Signatures" }));
+    expect(await screen.findByRole("button", { name: "Send for signature" })).toBeInTheDocument();
+    expect(screen.getByText("No signature requests on this contract yet.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("link", { name: "Approvals" }));
+    expect(await screen.findByRole("button", { name: "Add approver" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+  });
+
+  it("shows only the contract status in the header", async () => {
+    const api = recordApi(
+      { envelopes: [envelopeRow()] },
+      contractRow({
+        statusId: "s-signature",
+        statusName: "Out for signature",
+        stage: "signature",
+      }),
+    );
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+
+    await envelopeRows();
+    const header = within(screen.getByRole("region", { name: "Acme master services agreement" }));
+    expect(header.getAllByText("Out for signature")).toHaveLength(1);
   });
 
   it("prints the em dash for an envelope that has not ended", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("—")).toBeInTheDocument();
   });
 
-  it("says a delivery is coming, and what it brings, while an envelope is out", async () => {
-    const api = recordApi({ envelopes: [envelopeRow()] });
-    stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
-
-    expect(await screen.findByText(WEBHOOK_NOTE)).toBeInTheDocument();
-  });
-
-  it("says nothing about deliveries once the envelope has ended", async () => {
+  it("shows a signed envelope with the date it ended", async () => {
     const api = recordApi({
       envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
-
-    await envelopeRows();
-    expect(screen.queryByText(WEBHOOK_NOTE)).not.toBeInTheDocument();
-  });
-
-  it("shows a signed envelope with the date it ended, on the row and the chip", async () => {
-    const api = recordApi({
-      envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
-    });
-    stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(within(rows[0]!).getByText("Aug 12")).toBeInTheDocument();
-    expect(await screen.findByText("Envelope signed")).toBeInTheDocument();
+    expect(await screen.findByText("Signed")).toBeInTheDocument();
   });
 
   it("hands over the executed copy on a signed row", async () => {
@@ -495,7 +519,7 @@ describe("the record's signing block", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     const link = within(rows[0]!).getByRole("link", { name: "Executed copy" });
@@ -508,7 +532,7 @@ describe("the record's signing block", () => {
       envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Filing the executed copy…")).toBeInTheDocument();
@@ -525,7 +549,7 @@ describe("the record's signing block", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(
@@ -550,7 +574,7 @@ describe("the record's signing block", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).queryByText("Filing the executed copy…")).not.toBeInTheDocument();
@@ -568,7 +592,7 @@ describe("the record's signing block", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).queryByText("Filing the executed copy…")).not.toBeInTheDocument();
@@ -586,23 +610,27 @@ describe("the record's signing block", () => {
       ],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Declined")).toBeInTheDocument();
     expect(within(rows[0]!).getByText("The indemnity cap is wrong.")).toBeInTheDocument();
     expect(within(rows[0]!).getByText("Aug 11")).toBeInTheDocument();
-    expect(await screen.findByText("Envelope declined")).toBeInTheDocument();
+    expect(await screen.findByText("Declined")).toBeInTheDocument();
   });
 
-  it("draws no chip and no signing block on a record signed by hand", async () => {
+  it("shows an empty signature section on a record signed by hand", async () => {
     const api = recordApi({ envelopes: [], signingConfigured: false });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
-    await screen.findByRole("heading", { name: "Approvals & signing" });
-    expect(screen.queryByText("Envelope sent")).not.toBeInTheDocument();
-    expect(screen.queryByRole("table", { name: "Signing" })).not.toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Signatures" });
+    expect(
+      screen.queryByText("Out for signature", {
+        selector: "section[aria-labelledby=page-title] span",
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Signatures" })).not.toBeInTheDocument();
   });
 });
 
@@ -611,7 +639,7 @@ describe("sending for signature", () => {
     const user = userEvent.setup();
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
@@ -627,7 +655,7 @@ describe("sending for signature", () => {
     const user = userEvent.setup();
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
@@ -653,13 +681,17 @@ describe("sending for signature", () => {
     });
     // The state the write answered with is what the card now draws.
     await waitFor(async () => expect(await envelopeRows()).toHaveLength(1));
+    const header = within(screen.getByRole("region", { name: "Acme master services agreement" }));
+    expect(await header.findByText("Out for signature")).toBeInTheDocument();
+    expect(header.getAllByText("Out for signature")).toHaveLength(1);
+    expect(header.queryByText("Draft", { selector: ".rounded-pill" })).not.toBeInTheDocument();
   });
 
   it("sends a picked user by id, beside a typed signer, in row order", async () => {
     const user = userEvent.setup();
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
@@ -687,7 +719,7 @@ describe("sending for signature", () => {
     const user = userEvent.setup();
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
@@ -704,7 +736,7 @@ describe("sending for signature", () => {
     const user = userEvent.setup();
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
@@ -734,7 +766,7 @@ describe("sending for signature", () => {
       ENVELOPE_LIVE_PROBLEM_TYPE,
     );
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
@@ -756,7 +788,7 @@ describe("sending for signature", () => {
     const user = userEvent.setup();
     const api = recordApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
@@ -774,25 +806,25 @@ describe("when the send control is absent", () => {
   it("is absent on an install with no connector", async () => {
     const api = recordApi({ signingConfigured: false });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
-    await screen.findByRole("button", { name: "Add approver" });
+    await screen.findByRole("region", { name: "Signatures" });
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 
   it("is absent on a record with no primary document", async () => {
     const api = recordApi({ primaryDocument: null });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
-    await screen.findByRole("button", { name: "Add approver" });
+    await screen.findByRole("region", { name: "Signatures" });
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 
   it("is absent while an envelope is already out", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await envelopeRows();
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
@@ -801,7 +833,7 @@ describe("when the send control is absent", () => {
   it("comes back once the envelope is no longer live", async () => {
     const api = recordApi({ envelopes: [envelopeRow({ status: "voided" })] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Voided")).toBeInTheDocument();
@@ -817,7 +849,7 @@ describe("voiding a live envelope", () => {
     const user = userEvent.setup();
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: ROW_ACTIONS }));
     await user.click(await screen.findByRole("menuitem", { name: "Void envelope" }));
@@ -845,7 +877,7 @@ describe("voiding a live envelope", () => {
     const user = userEvent.setup();
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: ROW_ACTIONS }));
     await user.click(await screen.findByRole("menuitem", { name: "Void envelope" }));
@@ -863,7 +895,7 @@ describe("voiding a live envelope", () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     api.refuseNext(409, "This envelope has already ended. It cannot be voided.");
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await user.click(await screen.findByRole("button", { name: ROW_ACTIONS }));
     await user.click(await screen.findByRole("menuitem", { name: "Void envelope" }));
@@ -878,7 +910,7 @@ describe("voiding a live envelope", () => {
   it("offers the act to the contract's Owner, who sent nothing", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] }, contractRow({ manager: OWNER_PERSON }));
     stubApi({ signedIn: OWNER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await envelopeRows();
     expect(await screen.findByRole("button", { name: ROW_ACTIONS })).toBeInTheDocument();
@@ -887,7 +919,7 @@ describe("voiding a live envelope", () => {
   it("offers the act to an Administrator", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: ADMIN, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     await envelopeRows();
     expect(await screen.findByRole("button", { name: ROW_ACTIONS })).toBeInTheDocument();
@@ -898,7 +930,7 @@ describe("when the void control is absent", () => {
   it("draws no menu for a Member+ who neither sent it nor owns the record", async () => {
     const api = recordApi({ envelopes: [envelopeRow()] });
     stubApi({ signedIn: BYSTANDER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     // They read the round; absence is about standing, not about reach.
     const rows = await envelopeRows();
@@ -911,20 +943,10 @@ describe("when the void control is absent", () => {
       envelopes: [envelopeRow({ status: "signed", completedAt: "2026-08-12T00:00:00.000Z" })],
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/contracts/42/approvals");
+    renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
   });
-});
-
-it("describes polling updates and the conditional Signature Stage transition", async () => {
-  const api = recordApi({ envelopes: [envelopeRow()], updateMode: "polling" });
-  stubApi({ signedIn: MEMBER, extra: api.handler });
-  renderAt("/contracts/42/approvals");
-  expect(
-    await screen.findByText(/status is checked by polling, about every 15–20 minutes/),
-  ).toHaveTextContent("only if it is still in the Signature Stage");
-  expect(screen.queryByText(WEBHOOK_NOTE)).not.toBeInTheDocument();
 });

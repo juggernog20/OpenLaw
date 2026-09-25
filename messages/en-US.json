@@ -1235,9 +1235,6 @@
   "approvals.requestedBy": {
     "defaultMessage": "Requested by {name}"
   },
-  "approvals.sectionSigning": {
-    "defaultMessage": "Approvals & signing"
-  },
   "approvals.source.manual": {
     "defaultMessage": "Added manually"
   },
@@ -3176,18 +3173,6 @@
   "contracts.record.documents.searchLanding": {
     "defaultMessage": "Document search landing"
   },
-  "contracts.record.envelope.declined": {
-    "defaultMessage": "Envelope declined"
-  },
-  "contracts.record.envelope.sent": {
-    "defaultMessage": "Envelope sent"
-  },
-  "contracts.record.envelope.signed": {
-    "defaultMessage": "Envelope signed"
-  },
-  "contracts.record.envelope.voided": {
-    "defaultMessage": "Envelope voided"
-  },
   "contracts.record.notRecorded": {
     "defaultMessage": "—"
   },
@@ -3229,6 +3214,9 @@
   },
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
+  },
+  "contracts.record.tab.signatures": {
+    "defaultMessage": "Signatures"
   },
   "contracts.record.tab.tasks": {
     "defaultMessage": "Tasks"
@@ -12410,9 +12398,6 @@
   "signing.addSigner": {
     "defaultMessage": "Add signer"
   },
-  "signing.block": {
-    "defaultMessage": "Signing"
-  },
   "signing.column.actions": {
     "defaultMessage": "Actions"
   },
@@ -12433,6 +12418,9 @@
   },
   "signing.emailPlaceholder": {
     "defaultMessage": "Email address"
+  },
+  "signing.empty": {
+    "defaultMessage": "No signature requests on this contract yet."
   },
   "signing.executedFailed": {
     "defaultMessage": "The executed copy could not be filed. Upload it to the record instead."
@@ -12463,6 +12451,9 @@
   },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
+  },
+  "signing.section": {
+    "defaultMessage": "Signatures"
   },
   "signing.send": {
     "defaultMessage": "Send for signature"
@@ -12508,9 +12499,6 @@
   },
   "signing.status.voided": {
     "defaultMessage": "Voided"
-  },
-  "signing.statusArrives": {
-    "defaultMessage": "{mode, select, polling {Signed, declined, and voided status is checked by polling, about every 15–20 minutes.} webhook {Signed, declined, and voided status arrives by webhook.} other {Automatic status updates are unavailable while the connector is disabled.}} The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage."
   },
   "signing.subject": {
     "defaultMessage": "Subject"

@@ -1,104 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The "Approvals & signing" section of the contract record (M14/3,
- * M15/2), drawn from the C5 and C12 mocks: who was asked to sign the
- * record off, what they decided — and the paper this record has sent
- * out for signature.
- *
- * **The card takes its two-part name now that it holds both kinds of
- * row** (DES-035 clause 3, DES-036). Until M15 it held approval rows
- * alone and was called "Approvals", because a heading naming two things
- * while showing one reads as broken. Envelope rows are the second kind;
- * confirmed-renewal rows are the third, and they arrived with M16/4.
- *
- * **The renewal history is the third family, and it is drawn last**
- * (M16/4, CTR-006, DES-043). The first two say where the contract is
- * going — who still has to sign it off, and what paper is out — and
- * this one says where it has been. Every row is one
- * `contract.renewal_confirmed` entry read back out of the activity log,
- * because nothing stores a renewal; a record with no confirmed roll
- * draws no block at all rather than an empty line for a history most
- * contracts never have.
- *
- * **Renewing is the card's third act, and it is the whole reason a
- * fourth control is in the head.** A roll writes a renewal row, so the
- * control that raises it sits where those rows land, exactly as the
- * send sits beside the envelopes it makes. The dialog itself lives on
- * the record rather than in this card, because the pending banner
- * raises the same dialog from the page's chrome where every section can
- * reach it — the move `SoftGateDialog` already makes.
- *
- * **The roster is a set, not a queue** (CTR-012). Every request runs in
- * parallel, so nothing here draws an order of play — the rows are the
- * asks in the order they were made, oldest first, which is what makes a
- * re-request read underneath the rejection it answers rather than
- * beside it.
- *
- * **Rows are auto-derived and nothing here authors an event**
- * (grill-plan H.H4). The section shows `contract_approvals` and
- * `contract_envelopes`, and nothing else.
- *
- * **The signing block is drawn only when there is an envelope** (grill
- * row E.5's conditional, applied to the row as well as to the chip). A
- * record signed by hand holds no envelope, and the card then reads
- * exactly as it did before M15: one table, no sub-headings. The
- * sub-headings appear only when both blocks are on screen, for the
- * reason the card's own name waited for its second row family.
- *
- * **Sending is absent, never disabled** (DES-035's absence rule). The
- * control is drawn when this install has a connector, the record has a
- * primary document, and no envelope is out. Any of those missing and
- * there is no control at all: a greyed-out send on an install that
- * cannot sign advertises a feature the deployment does not have, and
- * the manual hand-off is not a lesser path that needs explaining
- * (CTR-013).
- *
- * **Deciding is a form; cancelling is one click** (DES-017). An
- * approver answers with a decision **and** an optional note, and those
- * two commit together — the compound edit DES-017 carves out of the
- * inline rule — so approve and reject each open a dialog with the note
- * in it. Cancelling collects nothing and destroys nothing that matters:
- * the ask goes, the activity entry keeps it (CTR-012), and asking again
- * is one dialog away.
- *
- * **Controls are absent rather than disabled**, the convention the
- * documents row and the comment row already follow. Only the named
- * approver decides their own request, and only the requester, the
- * Owner, or an Administrator cancels one — everybody else gets no menu
- * at all, because a greyed-out control on somebody else's sign-off is
- * an invitation to ask why.
- *
- * **The picker offers people who can actually be asked.** Member+ only
- * (CTR-012, DD-013), nobody who already has a pending request on this
- * contract, and — on a confidential record — nobody outside its
- * audience. That last rule mirrors the seam's `inNamedAudience` exactly
- * rather than approximating it, for the reason the record's own
- * confidentiality control gives: the API is the authority, and a second
- * rule would drift. The seam refuses either way, by name; this is only
- * what keeps a stale list from being the normal case.
- *
- * **Applying a group is one more write through the same door** (M14/4,
- * CTR-012). The apply dialog picks one live template and says who it
- * would ask before it asks them, because applying a group asks several
- * people at once and the reader should see the set before it becomes
- * requests. The dialog **describes** the skip rule and refuses nothing
- * itself: whether a group has anybody left to ask is the seam's
- * decision, and printing its sentence is what keeps the rule in one
- * place (DES-035).
- *
- * **A signer is a user of this install or a typed name and email**
- * (CTR-013). Every one of them is asked at once: the send dialog
- * collects a list, not an order.
- *
- * **Voiding is the envelope row's one action, and its audience is the
- * cancel's** (M15/4, CTR-013). The person who sent it, the contract's
- * Owner, and an Administrator withdraw a live round; everybody else
- * gets no menu on that row at all, which is the absence rule again. The
- * act opens a dialog because it collects the reason the provider and
- * the row both keep — and because a round already out to signers is not
- * a thing to end by reflex.
- */
+/** Approval and signature sections for the contract record. */
 
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useRef, useState } from "react";
@@ -206,9 +108,8 @@ interface Candidate {
   image: string | null;
 }
 
-export function ApprovalsSigningCard({
+export function ApprovalsCard({
   approvals,
-  signing,
   renewals,
   canRenew,
   onRenew,
@@ -217,13 +118,8 @@ export function ApprovalsSigningCard({
   approvalDefault,
   team,
   onApprovals,
-  onSigning,
 }: Readonly<{
   approvals: readonly ContractApproval[];
-  /** The record's signing state (CTR-013): its envelopes, whether this
-   * install has a connector at all, and the primary document a send
-   * would offer. All three decide whether the send control is drawn. */
-  signing: SigningState;
   /** Every confirmed roll on this record, most recent first (M16/4,
    * CTR-006). Read back out of the activity log — nothing stores a
    * renewal — so an empty list means no roll has been confirmed, which
@@ -249,7 +145,6 @@ export function ApprovalsSigningCard({
    * record's audience, and the Owner is the other half. */
   team: readonly ContractTeamMember[];
   onApprovals: (approvals: ContractApproval[]) => void;
-  onSigning: (signing: SigningState) => void;
 }>) {
   // Who is looking, the record's Owner, and whether any control is
   // drawn at all come from the record page (TECH-024 rule 7).
@@ -261,9 +156,7 @@ export function ApprovalsSigningCard({
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [detail, setDetail] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
-  const [sending, setSending] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [voiding, setVoiding] = useState<ContractEnvelope | null>(null);
   const [deciding, setDeciding] = useState<{
     approval: ContractApproval;
     decision: ApprovalDecision;
@@ -323,21 +216,6 @@ export function ApprovalsSigningCard({
   const peopleById = new Map(users.map((person) => [person.id, person]));
 
   /**
-   * Whether a send is offered at all (DES-035's absence rule, DES-036).
-   *
-   * Three facts, all of them the seam's: an install with no connector
-   * cannot send, a record with no primary document has nothing to send,
-   * and a record with an envelope already out is refused a second one.
-   * Each of them makes the control **absent** rather than disabled, so
-   * the card never advertises an act the seam would refuse — and never
-   * has to explain the manual hand-off, which is the whole path on an
-   * install that has no connector (CTR-013).
-   */
-  const live = liveEnvelope(signing.envelopes);
-  const canSend =
-    !frozen && signing.signingConfigured && signing.primaryDocument !== null && live === null;
-
-  /**
    * Every write says saving, then saved or why not, and replaces the
    * roster it is given — because a write moves more rows than the one
    * it was addressed at (DES-017).
@@ -375,56 +253,7 @@ export function ApprovalsSigningCard({
     return null;
   }
 
-  /**
-   * The same shape for the signing half (CTR-013).
-   *
-   * It is its own function rather than a generic one over both, because
-   * what a write answers with is what tells them apart: an approval
-   * write answers the roster, and a send answers the record's whole
-   * signing state — the envelopes, whether a connector is configured,
-   * and the chain a next send would offer. Collapsing the two would
-   * mean a caller unpacking a union at every call site.
-   */
-  async function runSend(
-    write: () => Promise<SigningOutcome>,
-    /** What to print when the seam refused without a sentence of its
-     * own. It is the caller's, because a send and a void fail at
-     * different things and one message could only describe one of
-     * them. */
-    fallback: string,
-  ): Promise<string | null> {
-    setStatus("saving");
-    setDetail(null);
-    const outcome = await write();
-    if (!outcome.ok) {
-      // Reported in the dialog, where the reader's attention already is
-      // (DES-035 clause 12). The header keeps the same sentence off
-      // screen rather than printing it a second time behind a modal.
-      setStatus("idle");
-      setDetail(null);
-      return outcome.detail ?? fallback;
-    }
-    onSigning({
-      envelopes: outcome.envelopes,
-      signingConfigured: outcome.signingConfigured,
-      updateMode: outcome.updateMode,
-      primaryDocument: outcome.primaryDocument,
-    });
-    setStatus("saved");
-    setDetail(null);
-    return null;
-  }
-
-  /**
-   * Whether more than one row family is on screen. The sub-headings
-   * appear only then: a card drawing one kind of row needs no label
-   * saying which kind it is, and a heading over the only table on a
-   * card would label an absence.
-   *
-   * The roster is always drawn — as a table or as its empty line — so
-   * either of the two conditional families turns the headings on.
-   */
-  const manyBlocks = signing.envelopes.length > 0 || renewals.length > 0;
+  const manyBlocks = renewals.length > 0;
 
   return (
     <section
@@ -435,18 +264,8 @@ export function ApprovalsSigningCard({
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
         <div className="flex min-w-0 items-center gap-2">
           <h2 id="contract-approvals-heading" className="text-base font-semibold">
-            <FormattedMessage id="approvals.sectionSigning" defaultMessage="Approvals & signing" />
+            <FormattedMessage id="approvals.block" defaultMessage="Approvals" />
           </h2>
-          {/* The neutral counter badge (grill-plan H.H3), drawn the way
-              the Documents section draws its own: a bare number on
-              screen, and a whole phrase for a screen reader, because a
-              lone "3" after a heading says nothing.
-
-              It counts the asks, not the sends. The badge sits beside
-              the tally, and the tally answers "where does sign-off
-              stand" — one question, one number. Where the signature
-              stands is answered by the envelope row itself and by the
-              chip in the record's sub-bar. */}
           <span
             role="img"
             aria-label={intl.formatMessage(
@@ -478,26 +297,6 @@ export function ApprovalsSigningCard({
         {!frozen && (
           <div className="flex shrink-0 items-center gap-2">
             <StatusNote status={status} detail={detail} />
-            {/* Sending comes first, because it is the act the card's
-                second half exists for. Absent — never disabled — on an
-                install with no connector, on a record with no primary
-                document, and while an envelope is already out
-                (DES-035's absence rule). */}
-            {canSend && (
-              <Button variant="secondary" disabled={busy} onClick={() => setSending(true)}>
-                <Send size={16} aria-hidden="true" />
-                <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
-              </Button>
-            )}
-            {/* The Renew act (M16/4, CTR-007). It lives on this card
-                because this is where the rows it writes land, exactly
-                as "Send for signature" lives beside the envelope rows
-                it makes. Absent — never disabled — on a record that
-                cannot roll: a contract that does not auto-renew or
-                records no expiry has no term for a roll to advance, and
-                a greyed-out control would be an invitation to work out
-                why (DES-035 clause 9). The pending banner's own call to
-                action opens the same dialog from the page's chrome. */}
             {canRenew && (
               <Button variant="secondary" disabled={busy} onClick={onRenew}>
                 <RotateCw size={16} aria-hidden="true" />
@@ -521,20 +320,244 @@ export function ApprovalsSigningCard({
           </div>
         )}
       </header>
-      {/* The signing block, drawn only when this record has sent paper
-          out (grill row E.5's conditional). A contract signed by hand
-          holds no envelope, and the card then reads exactly as it did
-          before M15. */}
-      {signing.envelopes.length > 0 && (
+      {manyBlocks && (
+        <h3
+          id="contract-approvals-block-heading"
+          className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
+        >
+          <FormattedMessage id="approvals.block" defaultMessage="Approvals" />
+        </h3>
+      )}
+      {approvals.length === 0 ? (
+        <p className="px-4 py-3 text-base text-muted">
+          <FormattedMessage
+            id="approvals.empty"
+            defaultMessage="No approvals requested on this contract yet."
+          />
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table
+            className="w-full"
+            aria-labelledby={manyBlocks ? "contract-approvals-block-heading" : undefined}
+          >
+            <thead>
+              <tr className="text-start text-sm font-medium text-muted">
+                <th scope="col" className="px-4 py-2 text-start font-medium">
+                  <FormattedMessage id="approvals.column.approver" defaultMessage="Approver" />
+                </th>
+                <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
+                  <FormattedMessage id="approvals.column.source" defaultMessage="Source" />
+                </th>
+                <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
+                  <FormattedMessage id="approvals.column.decision" defaultMessage="Decision" />
+                </th>
+                <th scope="col" className="w-80 px-4 py-2 text-start font-medium">
+                  <FormattedMessage id="approvals.column.note" defaultMessage="Note" />
+                </th>
+                <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
+                  <FormattedMessage id="approvals.column.decided" defaultMessage="Decided" />
+                </th>
+                {!frozen && (
+                  <th scope="col" className="w-16 px-4 py-2 text-end font-medium">
+                    <span className="sr-only">
+                      <FormattedMessage id="approvals.column.actions" defaultMessage="Actions" />
+                    </span>
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {approvals.map((approval) => (
+                <ApprovalRow
+                  key={approval.id}
+                  approval={approval}
+                  intl={intl}
+                  busy={busy}
+                  frozen={frozen}
+                  canDecide={approval.status === "pending" && approval.approver.id === viewerId}
+                  canCancel={
+                    approval.status === "pending" &&
+                    (viewerRole === "administrator" ||
+                      approval.requestedBy.id === viewerId ||
+                      ownerId === viewerId)
+                  }
+                  onDecide={(decision) => setDeciding({ approval, decision })}
+                  onCancel={() => void run(() => cancelContractApproval(approval.id))}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {renewals.length > 0 && (
         <>
           <h3
-            id="contract-signing-heading"
-            className="border-b border-border-muted px-4 py-2 text-sm font-medium text-muted"
+            id="contract-renewals-heading"
+            className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
           >
-            <FormattedMessage id="signing.block" defaultMessage="Signing" />
+            <FormattedMessage id="renewal.block" defaultMessage="Renewals" />
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full" aria-labelledby="contract-signing-heading">
+            <table className="w-full" aria-labelledby="contract-renewals-heading">
+              <thead>
+                <tr className="text-start text-sm font-medium text-muted">
+                  <th scope="col" className="px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="renewal.column.renewal" defaultMessage="Renewal" />
+                  </th>
+                  <th scope="col" className="w-64 px-4 py-2 text-start font-medium">
+                    <FormattedMessage
+                      id="renewal.column.confirmedBy"
+                      defaultMessage="Confirmed by"
+                    />
+                  </th>
+                  <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
+                    <FormattedMessage id="renewal.column.confirmed" defaultMessage="Confirmed" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {renewals.map((renewal) => (
+                  <RenewalRow key={renewal.id} renewal={renewal} intl={intl} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      {asking && (
+        <AddApproverDialog
+          candidates={candidates}
+          busy={busy}
+          onClose={() => setAsking(false)}
+          onConfirm={async (approverIds) => {
+            const refusal = await run(
+              () => requestContractApprovals(contractNumber, approverIds),
+              true,
+            );
+            if (refusal === null) setAsking(false);
+            return refusal;
+          }}
+        />
+      )}
+      {applying && (
+        <ApplyGroupDialog
+          groups={approverGroups}
+          approvalDefault={approvalDefault}
+          peopleById={peopleById}
+          pendingApprovers={pendingApprovers}
+          busy={busy}
+          onClose={() => setApplying(false)}
+          onConfirm={async (groupId) => {
+            const refusal = await run(() => applyApproverGroup(contractNumber, groupId), true);
+            if (refusal === null) setApplying(false);
+            return refusal;
+          }}
+        />
+      )}
+      {deciding && (
+        <DecisionDialog
+          decision={deciding.decision}
+          busy={busy}
+          onClose={() => setDeciding(null)}
+          onConfirm={async (note) => {
+            const refusal = await run(
+              () => decideContractApproval(deciding.approval.id, deciding.decision, note),
+              true,
+            );
+            if (refusal === null) setDeciding(null);
+            return refusal;
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+export function SignaturesCard({
+  signing,
+  users,
+  onSigning,
+}: Readonly<{
+  signing: SigningState;
+  users: readonly UserOption[];
+  onSigning: (signing: SigningState) => void;
+}>) {
+  const { record, viewer, ownerId, frozen } = useRecord();
+  const contractNumber = record.number;
+  const viewerId = viewer.id;
+  const viewerRole = viewer.role;
+  const intl = useIntl();
+  const [status, setStatus] = useState<FieldStatus>("idle");
+  const [sending, setSending] = useState(false);
+  const [voiding, setVoiding] = useState<ContractEnvelope | null>(null);
+  const busy = status === "saving";
+
+  const live = liveEnvelope(signing.envelopes);
+  const canSend =
+    !frozen && signing.signingConfigured && signing.primaryDocument !== null && live === null;
+
+  async function runSend(
+    write: () => Promise<SigningOutcome>,
+    /** What to print when the seam refused without a sentence of its
+     * own. It is the caller's, because a send and a void fail at
+     * different things and one message could only describe one of
+     * them. */
+    fallback: string,
+  ): Promise<string | null> {
+    setStatus("saving");
+    const outcome = await write();
+    if (!outcome.ok) {
+      // Reported in the dialog, where the reader's attention already is
+      // (DES-035 clause 12). The header keeps the same sentence off
+      // screen rather than printing it a second time behind a modal.
+      setStatus("idle");
+      return outcome.detail ?? fallback;
+    }
+    onSigning({
+      envelopes: outcome.envelopes,
+      signingConfigured: outcome.signingConfigured,
+      updateMode: outcome.updateMode,
+      primaryDocument: outcome.primaryDocument,
+    });
+    setStatus("saved");
+    return null;
+  }
+
+  return (
+    <section
+      id="contract-signatures"
+      aria-labelledby="contract-signatures-heading"
+      className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
+    >
+      <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
+        <h2 id="contract-signatures-heading" className="text-base font-semibold">
+          <FormattedMessage id="signing.section" defaultMessage="Signatures" />
+        </h2>
+        {!frozen && (
+          <div className="flex shrink-0 items-center gap-2">
+            <StatusNote status={status} />
+            {canSend && (
+              <Button variant="secondary" disabled={busy} onClick={() => setSending(true)}>
+                <Send size={16} aria-hidden="true" />
+                <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
+              </Button>
+            )}
+          </div>
+        )}
+      </header>
+      {signing.envelopes.length === 0 && (
+        <p className="px-4 py-3 text-base text-muted">
+          <FormattedMessage
+            id="signing.empty"
+            defaultMessage="No signature requests on this contract yet."
+          />
+        </p>
+      )}
+      {signing.envelopes.length > 0 && (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full" aria-labelledby="contract-signatures-heading">
               <thead>
                 <tr className="text-start text-sm font-medium text-muted">
                   <th scope="col" className="px-4 py-2 text-start font-medium">
@@ -590,138 +613,6 @@ export function ApprovalsSigningCard({
               </tbody>
             </table>
           </div>
-          {live !== null && (
-            <p className="px-4 pb-3 text-xs text-muted">
-              <FormattedMessage
-                id="signing.statusArrives"
-                defaultMessage="{mode, select, polling {Signed, declined, and voided status is checked by polling, about every 15–20 minutes.} webhook {Signed, declined, and voided status arrives by webhook.} other {Automatic status updates are unavailable while the connector is disabled.}} The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage."
-                values={{ mode: signing.updateMode ?? "disabled" }}
-              />
-            </p>
-          )}
-        </>
-      )}
-      {/* The roster's own sub-heading, drawn whenever the card holds a
-          second family — an envelope block above it, a renewal block
-          below it, or both. It carries the block above's closing rule
-          as well as its own, which is why it takes `border-y` where the
-          other two take `border-b`. */}
-      {manyBlocks && (
-        <h3
-          id="contract-approvals-block-heading"
-          className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
-        >
-          <FormattedMessage id="approvals.block" defaultMessage="Approvals" />
-        </h3>
-      )}
-      {approvals.length === 0 ? (
-        <p className="px-4 py-3 text-base text-muted">
-          <FormattedMessage
-            id="approvals.empty"
-            defaultMessage="No approvals requested on this contract yet."
-          />
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          {/* Named only when the signing block is above it, because
-              that is when the card holds two tables and a reader has
-              to be told which one they are in. */}
-          <table
-            className="w-full"
-            aria-labelledby={manyBlocks ? "contract-approvals-block-heading" : undefined}
-          >
-            <thead>
-              <tr className="text-start text-sm font-medium text-muted">
-                <th scope="col" className="px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="approvals.column.approver" defaultMessage="Approver" />
-                </th>
-                <th scope="col" className="w-44 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="approvals.column.source" defaultMessage="Source" />
-                </th>
-                <th scope="col" className="w-32 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="approvals.column.decision" defaultMessage="Decision" />
-                </th>
-                <th scope="col" className="w-80 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="approvals.column.note" defaultMessage="Note" />
-                </th>
-                <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
-                  <FormattedMessage id="approvals.column.decided" defaultMessage="Decided" />
-                </th>
-                {!frozen && (
-                  <th scope="col" className="w-16 px-4 py-2 text-end font-medium">
-                    <span className="sr-only">
-                      <FormattedMessage id="approvals.column.actions" defaultMessage="Actions" />
-                    </span>
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {approvals.map((approval) => (
-                <ApprovalRow
-                  key={approval.id}
-                  approval={approval}
-                  intl={intl}
-                  busy={busy}
-                  frozen={frozen}
-                  canDecide={approval.status === "pending" && approval.approver.id === viewerId}
-                  canCancel={
-                    approval.status === "pending" &&
-                    (viewerRole === "administrator" ||
-                      approval.requestedBy.id === viewerId ||
-                      ownerId === viewerId)
-                  }
-                  onDecide={(decision) => setDeciding({ approval, decision })}
-                  onCancel={() => void run(() => cancelContractApproval(approval.id))}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {/* The record's renewal history (M16/4, CTR-006, grill rows G.R5
-          and I.B3), drawn only when a roll has been confirmed. It is
-          last because the card's first two families say where the
-          contract is going — who still has to sign it off, and what
-          paper is out — and this one says where it has been. A record
-          with no confirmed roll draws nothing at all rather than an
-          empty line: the roster's own empty line already tells the
-          reader this card holds nothing, and a second one under it
-          would announce the absence of a history most contracts never
-          have. */}
-      {renewals.length > 0 && (
-        <>
-          <h3
-            id="contract-renewals-heading"
-            className="border-y border-border-muted px-4 py-2 text-sm font-medium text-muted"
-          >
-            <FormattedMessage id="renewal.block" defaultMessage="Renewals" />
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full" aria-labelledby="contract-renewals-heading">
-              <thead>
-                <tr className="text-start text-sm font-medium text-muted">
-                  <th scope="col" className="px-4 py-2 text-start font-medium">
-                    <FormattedMessage id="renewal.column.renewal" defaultMessage="Renewal" />
-                  </th>
-                  <th scope="col" className="w-64 px-4 py-2 text-start font-medium">
-                    <FormattedMessage
-                      id="renewal.column.confirmedBy"
-                      defaultMessage="Confirmed by"
-                    />
-                  </th>
-                  <th scope="col" className="w-28 px-4 py-2 text-start font-medium">
-                    <FormattedMessage id="renewal.column.confirmed" defaultMessage="Confirmed" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {renewals.map((renewal) => (
-                  <RenewalRow key={renewal.id} renewal={renewal} intl={intl} />
-                ))}
-              </tbody>
-            </table>
-          </div>
         </>
       )}
       {sending && signing.primaryDocument !== null && (
@@ -756,51 +647,6 @@ export function ApprovalsSigningCard({
               }),
             );
             if (refusal === null) setVoiding(null);
-            return refusal;
-          }}
-        />
-      )}
-      {asking && (
-        <AddApproverDialog
-          candidates={candidates}
-          busy={busy}
-          onClose={() => setAsking(false)}
-          onConfirm={async (approverIds) => {
-            const refusal = await run(
-              () => requestContractApprovals(contractNumber, approverIds),
-              true,
-            );
-            if (refusal === null) setAsking(false);
-            return refusal;
-          }}
-        />
-      )}
-      {applying && (
-        <ApplyGroupDialog
-          groups={approverGroups}
-          approvalDefault={approvalDefault}
-          peopleById={peopleById}
-          pendingApprovers={pendingApprovers}
-          busy={busy}
-          onClose={() => setApplying(false)}
-          onConfirm={async (groupId) => {
-            const refusal = await run(() => applyApproverGroup(contractNumber, groupId), true);
-            if (refusal === null) setApplying(false);
-            return refusal;
-          }}
-        />
-      )}
-      {deciding && (
-        <DecisionDialog
-          decision={deciding.decision}
-          busy={busy}
-          onClose={() => setDeciding(null)}
-          onConfirm={async (note) => {
-            const refusal = await run(
-              () => decideContractApproval(deciding.approval.id, deciding.decision, note),
-              true,
-            );
-            if (refusal === null) setDeciding(null);
             return refusal;
           }}
         />

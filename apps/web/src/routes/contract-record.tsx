@@ -24,18 +24,19 @@ import { identifierLabel } from "../lib/identifier-label";
  * as selects. The status is the one field that does not live in a card:
  * it commits from the sub-bar's own stage strip (DES-053).
  *
- * Six sections, six addresses. **Overview** (`/contracts/42`) is
+ * Seven sections, seven addresses. **Overview** (`/contracts/42`) is
  * the record's own columns: the Contract card, the Description card
  * under it, and the Term timeline card that closes the section.
  * **Fields** (`/contracts/42/fields`) is what this contract's
  * type asks for on top of them. **Documents**
  * (`/contracts/42/documents`) is the paper. **Approvals**
  * (`/contracts/42/approvals`) is who has been asked to sign it off
- * (CTR-012, DES-035). **Key dates** (`/contracts/42/key-dates`) is
+ * (CTR-012, DES-035). **Signatures** (`/contracts/42/signatures`) holds
+ * signature requests and their history. **Key dates** (`/contracts/42/key-dates`) is
  * every date the record has, as one union — the team's own named dates,
  * the expiry, and the derived notice deadline (CTR-009, DES-042).
  * **Tasks** (`/contracts/42/tasks`) is the lightweight checklist
- * (CTR-017). The Team roster is not one of the six — it lives in the
+ * (CTR-017). The Team roster is not one of the seven — it lives in the
  * activity bar beside all of them (DES-047), because who is on a
  * contract is context for reading any part of it.
  *
@@ -153,7 +154,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { FormattedMessage, defineMessage, useIntl } from "react-intl";
-import { ChevronRight, FileText, PenLine, Settings, X } from "lucide-react";
+import { ChevronRight, FileText, Settings, X } from "lucide-react";
 import { RENEWAL_EXPIRY_MOVED_PROBLEM_TYPE, SOFT_GATE_PROBLEM_TYPE } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { readRegistry } from "../lib/entities";
@@ -177,12 +178,7 @@ import {
   type TermType,
   type UserOption,
 } from "../lib/contracts";
-import {
-  ENVELOPE_PILL,
-  readContractSigning,
-  type ContractEnvelope,
-  type SigningState,
-} from "../lib/envelopes";
+import { readContractSigning, type SigningState } from "../lib/envelopes";
 import {
   commitsOnChange,
   sameDraft,
@@ -227,7 +223,7 @@ import { useCommentApplet } from "../components/comments/comment-applet";
 import { RecordApplets } from "../components/shell/record-applets";
 import { RecordTabs } from "../components/shell/record-tabs";
 import type { Applet } from "../components/shell/applets";
-import { ApprovalsSigningCard } from "../components/approvals/approvals-signing-card";
+import { ApprovalsCard, SignaturesCard } from "../components/approvals/approvals-signing-card";
 import { Avatar } from "../components/avatar";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
@@ -276,7 +272,14 @@ import { RecordContext, type RecordFacts } from "../components/record-context";
 
 /** The record's sections (DES-032), in the order the strip draws them.
  * The Overview is the bare address, so it has no segment of its own. */
-const RECORD_TABS = ["fields", "documents", "approvals", "key-dates", "tasks"] as const;
+const RECORD_TABS = [
+  "fields",
+  "documents",
+  "approvals",
+  "signatures",
+  "key-dates",
+  "tasks",
+] as const;
 type RecordTabName = "overview" | (typeof RECORD_TABS)[number];
 
 /** A corrupted paging seam must fail closed instead of holding the filing dialog forever. */
@@ -525,55 +528,6 @@ function termDrafts(row: ContractRow): Record<TermDraftKey, string> {
     renewalPeriodMonths: row.renewalPeriodMonths === null ? "" : String(row.renewalPeriodMonths),
     noticePeriodDays: row.noticePeriodDays === null ? "" : String(row.noticePeriodDays),
   };
-}
-
-/** What the envelope chip says, one sentence per status (DES-036). Each
- * one names the envelope rather than only its state, so the chip reads
- * on its own beside a status pill that may say something similar and
- * mean the contract instead. */
-const ENVELOPE_CHIP_LABEL = {
-  sent: defineMessage({ id: "contracts.record.envelope.sent", defaultMessage: "Envelope sent" }),
-  signed: defineMessage({
-    id: "contracts.record.envelope.signed",
-    defaultMessage: "Envelope signed",
-  }),
-  declined: defineMessage({
-    id: "contracts.record.envelope.declined",
-    defaultMessage: "Envelope declined",
-  }),
-  voided: defineMessage({
-    id: "contracts.record.envelope.voided",
-    defaultMessage: "Envelope voided",
-  }),
-} as const satisfies Record<ContractEnvelope["status"], { id: string; defaultMessage: string }>;
-
-/**
- * Where the record's paper stands with its signers (grill row E.5).
- *
- * Conditional by design: a contract that has never been sent through a
- * connector draws nothing at all, because CTR-013's manual hand-off is
- * the whole path on an install with no connector and a chip saying so
- * would be chrome about an absence.
- *
- * It takes the same DES-005 family the envelope row's pill takes, and
- * carries a glyph, so two pills side by side in the sub-bar are not
- * read as one: the left one names the contract's status, and this one
- * names its envelope.
- */
-function EnvelopeChip({ envelope }: Readonly<{ envelope: ContractEnvelope | null }>) {
-  if (!envelope) return null;
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
-    >
-      {/* 12px, not DES-008's 16: the glyph sits inside a 12px pill
-          beside 12px text, which is the carve-out DES-034 records for
-          the stage pipeline's own interior glyphs. A 16px glyph here
-          would read as the larger of the two. */}
-      <PenLine size={12} aria-hidden="true" />
-      <FormattedMessage {...ENVELOPE_CHIP_LABEL[envelope.status]} />
-    </span>
-  );
 }
 
 /** SET-001's deep link to the contract configuration behind this
@@ -850,7 +804,8 @@ function ContractRecord() {
         }
         if (
           event.action.startsWith("contract.analysis_") ||
-          event.action === "contract.field_confirmed"
+          event.action === "contract.field_confirmed" ||
+          event.action === "contract.status_changed"
         ) {
           void revalidate();
           // The Key dates union is section state, not loader data, so
@@ -2561,12 +2516,6 @@ function ContractRecord() {
                     <FormattedMessage id="contracts.archivedPill" defaultMessage="Archived" />
                   </span>
                 )}
-                {/* The envelope chip (grill row E.5, DES-036): drawn when
-                  this record has sent paper out, and absent otherwise,
-                  so a contract signed by hand carries no chrome about a
-                  feature it never used. It says the newest round, which
-                  is the one anybody asking is asking about. */}
-                <EnvelopeChip envelope={signing.envelopes[0] ?? null} />
               </div>
               {/* CTR-001's six-stage backbone, beside the pill that names
                 the status behind it (grill-plan D.8), and — for a
@@ -2691,6 +2640,15 @@ function ContractRecord() {
                         "{count, plural, one {# open approval} other {# open approvals}}",
                     },
                     { count: openApprovalCount },
+                  ),
+                },
+                {
+                  to: `/contracts/${saved.number}/signatures`,
+                  label: (
+                    <FormattedMessage
+                      id="contracts.record.tab.signatures"
+                      defaultMessage="Signatures"
+                    />
                   ),
                 },
                 {
@@ -3137,10 +3095,19 @@ function ContractRecord() {
                 }}
               />
             )}
-            {tab === "approvals" && (
-              <ApprovalsSigningCard
-                approvals={approvals}
+            {tab === "signatures" && (
+              <SignaturesCard
                 signing={signing}
+                users={users}
+                onSigning={(next) => {
+                  setSigning(next);
+                  void revalidate();
+                }}
+              />
+            )}
+            {tab === "approvals" && (
+              <ApprovalsCard
+                approvals={approvals}
                 renewals={renewals}
                 // A record rolls when it auto-renews and records an
                 // expiry to advance — the seam's own two conditions,
@@ -3159,7 +3126,6 @@ function ContractRecord() {
                 // audience on the same page.
                 team={roster}
                 onApprovals={setApprovals}
-                onSigning={setSigning}
               />
             )}
           </div>

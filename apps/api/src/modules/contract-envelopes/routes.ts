@@ -106,6 +106,7 @@ import {
   contractEnvelopes,
   contractEnvelopeSigners,
   contracts,
+  contractStatuses,
   signingConnectors,
   desc,
   documents,
@@ -802,8 +803,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           "v1, because the executed copy comes back to the chain the " +
           "send left from. Signers are name-and-email pairs and every " +
           "one of them is asked at once: there is no routing order. " +
-          "Sending is legal at any stage; CTR-001's transitions stay " +
-          "unrestricted. Refused with a typed problem when this install " +
+          "A successful send moves the contract to its first live Signature status. " +
+          "Sending is legal at any stage. Refused with a typed problem when this install " +
           "has no e-signature connector, and with another when the " +
           "contract already has an envelope out — two envelopes must " +
           "never race for one signature. The provider is called first " +
@@ -942,7 +943,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       // goes wrong takes it back rather than leaving it out there.
       let answer: z.infer<typeof EnvelopesEnvelope>;
       try {
-        answer = await app.db.transaction(async (tx) => {
+        answer = await app.notifier.notifying(async (tx) => {
           // The lock, and the two questions asked again under it: a
           // send that raced this one may have archived the record or
           // put an envelope out since the checks above.
@@ -996,6 +997,54 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               signers: signers.map((signer) => ({ name: signer.name, email: signer.email })),
             },
           });
+
+          const [currentStatus] = await tx
+            .select({
+              id: contractStatuses.id,
+              displayName: contractStatuses.displayName,
+              stage: contractStatuses.stage,
+            })
+            .from(contracts)
+            .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+            .where(eq(contracts.id, locked.id));
+          const [signatureStatus] = await tx
+            .select()
+            .from(contractStatuses)
+            .where(
+              and(eq(contractStatuses.stage, "signature"), isNull(contractStatuses.archivedAt)),
+            )
+            .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
+            .limit(1)
+            .for("share");
+          if (!currentStatus || !signatureStatus) {
+            throw httpError(409, "Configure a live Signature status before sending for signature.");
+          }
+          if (currentStatus.id !== signatureStatus.id) {
+            await tx
+              .update(contracts)
+              .set({ statusId: signatureStatus.id, endedAt: null })
+              .where(eq(contracts.id, locked.id));
+            const change = {
+              from: currentStatus.displayName,
+              to: signatureStatus.displayName,
+              fromStage: currentStatus.stage,
+              toStage: signatureStatus.stage,
+            };
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: locked.id,
+              actorId: request.user.id,
+              action: "contract.status_changed",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: { number: locked.number, title: locked.title, ...change },
+            });
+            await app.notifier.statusChanged(tx, {
+              contractId: locked.id,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              ...change,
+            });
+          }
 
           return {
             envelopes: await envelopesOf(tx, locked.id),

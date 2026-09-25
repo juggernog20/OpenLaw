@@ -31,7 +31,7 @@
  * what it was handed is read back through the questions it answers.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   activityLog,
   and,
@@ -39,6 +39,7 @@ import {
   contractEnvelopes,
   contractEnvelopeSigners,
   contracts,
+  contractStatuses,
   desc,
   eq,
   signingConnectors,
@@ -396,6 +397,33 @@ describe("sending the primary document for signature", () => {
     });
   });
 
+  it("moves the contract from Draft to Out for signature and records the change", async () => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}`,
+      cookies: as(MEMBER),
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().contract).toMatchObject({
+      stage: "signature",
+      statusName: "Out for signature",
+    });
+    const changes = await harness.db
+      .select()
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.entityId, contract.id),
+          eq(activityLog.action, "contract.status_changed"),
+        ),
+      );
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({
+      actorId: idOf(MEMBER),
+      payload: { from: "Draft", to: "Out for signature", fromStage: "draft", toStage: "signature" },
+    });
+  });
+
   it("reads the envelope back on the record, signers and all", async () => {
     const state = await signingState(as(MEMBER), contract.number);
     expect(state.envelopes).toHaveLength(1);
@@ -472,6 +500,105 @@ describe("sending the primary document for signature", () => {
     ).rejects.toMatchObject({
       cause: { code: "23505", constraint: "contract_envelope_signers_email_idx" },
     });
+  });
+});
+
+describe("the contract status follows a successful send", () => {
+  beforeAll(configureConnector);
+
+  async function readyContract(title: string) {
+    const contract = await newContract(title);
+    await paperOn(contract.number, Buffer.from("v1"), Buffer.from("v2"));
+    const paper = (await signingState(as(MEMBER), contract.number)).primaryDocument!;
+    return { contract, versionId: paper.versions[0]!.id };
+  }
+
+  async function storedContract(id: string) {
+    const [row] = await harness.db.select().from(contracts).where(eq(contracts.id, id));
+    return row!;
+  }
+
+  it("keeps Draft when the provider cannot accept the send", async () => {
+    const { contract, versionId } = await readyContract("Provider unavailable");
+    const before = await storedContract(contract.id);
+    provider().outage();
+    try {
+      const res = await send(as(MEMBER), contract.number, versionId);
+      expect(res.statusCode, res.body).toBe(502);
+    } finally {
+      provider().online();
+    }
+    expect((await storedContract(contract.id)).statusId).toBe(before.statusId);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+  });
+
+  it("rolls back the status and envelope together and voids the provider send on failure", async () => {
+    const { contract, versionId } = await readyContract("Send transaction rollback");
+    const before = await storedContract(contract.id);
+    const idsBefore = new Set(provider().sentEnvelopeIds());
+    const notification = vi
+      .spyOn(harness.app.notifier, "statusChanged")
+      .mockRejectedValueOnce(new Error("Status notification could not be recorded"));
+    try {
+      const res = await send(as(MEMBER), contract.number, versionId);
+      expect(res.statusCode, res.body).toBe(500);
+    } finally {
+      notification.mockRestore();
+    }
+    expect((await storedContract(contract.id)).statusId).toBe(before.statusId);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    expect(await entriesOn(contract.id)).toEqual([]);
+    const produced = provider()
+      .sentEnvelopeIds()
+      .filter((id) => !idsBefore.has(id));
+    expect(produced).toHaveLength(1);
+    expect((await provider().readEnvelope(produced[0]!)).status).toBe("voided");
+  });
+
+  it("uses the first live configured Signature status and clears an ended date", async () => {
+    const { contract, versionId } = await readyContract("Configured Signature status");
+    const [custom] = await harness.db
+      .insert(contractStatuses)
+      .values({
+        slug: "awaiting_signatures_test",
+        displayName: "Awaiting signatures",
+        stage: "signature",
+        displayOrder: -1,
+      })
+      .returning();
+    const [ended] = await harness.db
+      .select()
+      .from(contractStatuses)
+      .where(eq(contractStatuses.stage, "ended"));
+    await harness.db
+      .update(contracts)
+      .set({ statusId: ended!.id, endedAt: new Date() })
+      .where(eq(contracts.id, contract.id));
+    try {
+      const res = await send(as(MEMBER), contract.number, versionId);
+      expect(res.statusCode, res.body).toBe(201);
+      expect(await storedContract(contract.id)).toMatchObject({
+        statusId: custom!.id,
+        endedAt: null,
+      });
+      const again = await send(as(MEMBER), contract.number, versionId);
+      expect(again.statusCode).toBe(409);
+      const changes = await harness.db
+        .select()
+        .from(activityLog)
+        .where(
+          and(
+            eq(activityLog.entityId, contract.id),
+            eq(activityLog.action, "contract.status_changed"),
+          ),
+        );
+      expect(changes).toHaveLength(1);
+    } finally {
+      await harness.db
+        .update(contractStatuses)
+        .set({ archivedAt: new Date() })
+        .where(eq(contractStatuses.id, custom!.id));
+    }
   });
 });
 
