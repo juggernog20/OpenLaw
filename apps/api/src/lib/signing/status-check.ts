@@ -2,6 +2,17 @@
 import { and, contractEnvelopes, eq, inArray, isNull, or, sql, type Db } from "@openlaw/db";
 import { SigningRefusedError, type SigningProvider } from "./provider.js";
 
+/** How long a browser return correlation stays valid after launch. */
+export const LAUNCH_LIFETIME_MINUTES = 120;
+/**
+ * How long after a launch the sweep leaves a draft to the browser return.
+ * One read interval: the return usually arrives inside it and then spends
+ * the first eligible read itself. It is a grace, not a lock — a sender who
+ * sends and closes the browser is polled at the first tick after it, on
+ * the ordinary cadence, however long the correlation stays valid.
+ */
+export const LAUNCH_RETURN_GRACE_MINUTES = 15;
+
 export const reconciliationDue = () =>
   or(
     isNull(contractEnvelopes.nextReconcileAt),

@@ -15,8 +15,9 @@ sessionStorage. Return correlations expire after two hours and are single use.
 
 Configure the application base URL to the browser-reachable OpenLaw origin. The
 browser return uses `/api/v1/signing/return`; this is independent of Connect's public
-webhook address. Polling retains its fifteen-minute per-Envelope read allowance, and
-it skips a draft while a launch is open so the return can confirm at once.
+webhook address. Polling retains its fifteen-minute per-Envelope read allowance. It
+leaves a draft alone for fifteen minutes after a launch so a prompt return can confirm
+at once; a send whose return was lost is confirmed on the next ordinary poll after that.
 
 Protocol tests and a scripted browser stand-in establish application behavior only.
 Before rollout, #1178 must record real DocuSign checks for recipient and message locks,

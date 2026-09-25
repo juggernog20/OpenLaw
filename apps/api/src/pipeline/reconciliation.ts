@@ -78,12 +78,19 @@ import {
   eq,
   gt,
   inArray,
+  ne,
+  or,
   sql,
   type Db,
   type SigningProviderKey,
 } from "@openlaw/db";
 import { requestExecutedCopy } from "../lib/signing/completion.js";
-import { checkEnvelopeStatus, reconciliationDue } from "../lib/signing/status-check.js";
+import {
+  checkEnvelopeStatus,
+  LAUNCH_LIFETIME_MINUTES,
+  LAUNCH_RETURN_GRACE_MINUTES,
+  reconciliationDue,
+} from "../lib/signing/status-check.js";
 import {
   isTerminalSigningError,
   SigningConfigError,
@@ -120,21 +127,31 @@ export const RECONCILIATION_REFUSAL_LIMIT = 5;
 export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
 
 /**
- * A draft somebody is editing in the provider's own screen right now.
- * The launch that opened it holds an unconsumed, unexpired return
- * correlation (#1172). The sweep leaves such a draft alone: the browser
- * return spends the first eligible status read, and a sweep that read
- * the draft mid-session would only learn "still a draft" while taking
- * the return's read away for fifteen minutes. An abandoned session
- * expires its correlation after two hours, and the draft is polled again.
+ * A draft launched into the provider's own screen less than one read
+ * interval ago (#1172). The sweep leaves it to the browser return for
+ * that long: the return usually arrives inside the interval and spends
+ * the first eligible read itself, and a sweep read in the meantime would
+ * only learn "still a draft" while taking that read away.
+ *
+ * It is a grace of `LAUNCH_RETURN_GRACE_MINUTES`, never a lock. An
+ * unconsumed correlation is not proof that the editor is open — a sender
+ * can send and close the browser, or the return can be lost — so once the
+ * grace passes the draft is polled on the ordinary cadence however long
+ * the correlation stays valid. A `sent` row is never deferred: a verified
+ * notification may have moved it while a correlation was still open, and
+ * its completion polling must carry on.
  */
-const noOpenLaunch = () =>
-  sql`not exists (
-    select 1 from ${envelopeLaunches}
-    where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
-      and ${envelopeLaunches.consumedAt} is null
-      and ${envelopeLaunches.expiresAt} > clock_timestamp()
-  )`;
+const outsideReturnGrace = () =>
+  or(
+    ne(contractEnvelopes.status, "draft"),
+    sql`not exists (
+      select 1 from ${envelopeLaunches}
+      where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
+        and ${envelopeLaunches.consumedAt} is null
+        and ${envelopeLaunches.expiresAt} - make_interval(mins => ${LAUNCH_LIFETIME_MINUTES})
+            > clock_timestamp() - make_interval(mins => ${LAUNCH_RETURN_GRACE_MINUTES})
+    )`,
+  );
 
 /** What the sweep is built from: the rows, the connector, somewhere to
  * ask for follow-on work, and somewhere to say what it did. */
@@ -255,7 +272,7 @@ export async function runReconciliationSweep(
           // nothing left for this sweep to learn.
           inArray(contractEnvelopes.status, ["draft", "sent"]),
           reconciliationDue(),
-          noOpenLaunch(),
+          outsideReturnGrace(),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
         ),
       )

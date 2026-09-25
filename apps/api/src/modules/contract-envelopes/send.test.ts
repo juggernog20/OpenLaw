@@ -38,6 +38,7 @@ import {
   asc,
   contractEnvelopes,
   envelopeLaunches,
+  isNull,
   contractEnvelopeSigners,
   contracts,
   contractStatuses,
@@ -50,6 +51,7 @@ import {
 import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
 import { checkEnvelopeStatus } from "../../lib/signing/status-check.js";
 import { runReconciliationSweep } from "../../pipeline/reconciliation.js";
+import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 import { provisionUser } from "../../auth/instance.js";
 import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
 import {
@@ -1665,9 +1667,10 @@ describe("shared browser and worker status allowance", () => {
     read.mockRestore();
   });
 
-  it("leaves a draft to the browser return while its launch is open, then polls it", async () => {
+  /** One prepared draft with a fresh launch, as the sweep tests need it. */
+  async function launchedDraft(title: string, idempotencyKey: string) {
     await configureConnector();
-    const contract = await newContract("Sweep waits for the return");
+    const contract = await newContract(title);
     await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
     const before = await signingState(as(MEMBER), contract.number);
     const prepared = await harness.app.inject({
@@ -1677,7 +1680,7 @@ describe("shared browser and worker status allowance", () => {
       payload: {
         documentVersionId: before.primaryDocument!.versions[0]!.id,
         signers: [...SIGNERS],
-        idempotencyKey: "sweep-waits",
+        idempotencyKey,
       },
     });
     expect(prepared.statusCode, prepared.body).toBe(201);
@@ -1686,34 +1689,51 @@ describe("shared browser and worker status allowance", () => {
       .select()
       .from(contractEnvelopes)
       .where(eq(contractEnvelopes.id, id));
-    const providerEnvelopeId = row!.providerEnvelopeId!;
     const launched = await harness.app.inject({
       method: "POST",
       url: `/api/v1/envelopes/${id}/launch`,
       cookies: as(MEMBER),
     });
     expect(launched.statusCode, launched.body).toBe(200);
+    return { contract, id, providerEnvelopeId: row!.providerEnvelopeId! };
+  }
+  const quiet = { info() {}, warn() {}, error() {} };
+  const sweep = () =>
+    runReconciliationSweep(
+      {
+        db: harness.db,
+        log: quiet,
+        resolveSigningProvider: harness.resolveSigningProvider,
+        notifier: harness.notifier,
+      },
+      harness.pipeline,
+    );
+  const held = async (id: string) =>
+    (await harness.db.select().from(contractEnvelopes).where(eq(contractEnvelopes.id, id)))[0]!;
+  const openCorrelations = (id: string) =>
+    harness.db
+      .select()
+      .from(envelopeLaunches)
+      .where(and(eq(envelopeLaunches.envelopeId, id), isNull(envelopeLaunches.consumedAt)));
+  /** Moves the Envelope's open correlation back in time, as if the launch
+   * had happened that many minutes ago. Still unconsumed, still valid. */
+  const ageLaunch = (id: string, minutes: number) =>
+    harness.db
+      .update(envelopeLaunches)
+      .set({ expiresAt: new Date(Date.now() + (120 - minutes) * 60_000) })
+      .where(eq(envelopeLaunches.envelopeId, id));
+
+  it("leaves a fresh launch to the browser return, which spends the first read", async () => {
+    const { id, providerEnvelopeId } = await launchedDraft("Sweep waits for the return", "grace");
     const read = vi.spyOn(harness.signing!, "readEnvelope");
     const readsOfDraft = () => read.mock.calls.filter(([asked]) => asked === providerEnvelopeId);
-    const quiet = { info() {}, warn() {}, error() {} };
-    const sweep = () =>
-      runReconciliationSweep(
-        {
-          db: harness.db,
-          log: quiet,
-          resolveSigningProvider: harness.resolveSigningProvider,
-          notifier: harness.notifier,
-        },
-        harness.pipeline,
-      );
     await sweep();
     expect(readsOfDraft()).toHaveLength(0);
-    let [held] = await harness.db
-      .select()
-      .from(contractEnvelopes)
-      .where(eq(contractEnvelopes.id, id));
-    expect(held).toMatchObject({ status: "draft", confirmationPending: true });
-    expect(held!.nextReconcileAt).toBeNull();
+    expect(await held(id)).toMatchObject({
+      status: "draft",
+      confirmationPending: true,
+      nextReconcileAt: null,
+    });
     // The return consumes the correlation and spends the first read.
     const returnUrl = new URL(harness.signing!.launches.at(-1)!.returnUrl);
     returnUrl.searchParams.set("event", "Save");
@@ -1729,8 +1749,7 @@ describe("shared browser and worker status allowance", () => {
     });
     expect(confirmed.statusCode, confirmed.body).toBe(200);
     expect(readsOfDraft()).toHaveLength(1);
-    // Once the correlation is spent the sweep owns the draft again, on
-    // the same fifteen-minute allowance.
+    // The sweep owns the draft again on the same fifteen-minute allowance.
     await sweep();
     expect(readsOfDraft()).toHaveLength(1);
     await harness.db
@@ -1739,8 +1758,61 @@ describe("shared browser and worker status allowance", () => {
       .where(eq(contractEnvelopes.id, id));
     await sweep();
     expect(readsOfDraft()).toHaveLength(2);
-    [held] = await harness.db.select().from(contractEnvelopes).where(eq(contractEnvelopes.id, id));
-    expect(held).toMatchObject({ status: "draft", confirmationPending: false });
+    expect(await held(id)).toMatchObject({ status: "draft", confirmationPending: false });
+    read.mockRestore();
+  });
+
+  it("confirms a draft sent without a return once the grace has passed", async () => {
+    const { contract, id, providerEnvelopeId } = await launchedDraft(
+      "Sent and closed the browser",
+      "lost-return-draft",
+    );
+    // Sent in the provider's screen, browser closed, no return ever comes.
+    harness.signing!.sendDraft(providerEnvelopeId);
+    await ageLaunch(id, 16);
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const readsOfDraft = () => read.mock.calls.filter(([asked]) => asked === providerEnvelopeId);
+    const summary = await sweep();
+    expect(readsOfDraft()).toHaveLength(1);
+    expect(summary.converged).toBeGreaterThanOrEqual(1);
+    const row = await held(id);
+    expect(row).toMatchObject({ status: "sent", confirmationPending: false });
+    expect(row.sentAt).not.toBeNull();
+    expect(row.nextReconcileAt!.getTime()).toBeGreaterThan(Date.now() + 14 * 60_000);
+    expect(await entriesOn(contract.id)).toHaveLength(1);
+    // The correlation is still open and valid; it was never a lock.
+    const [correlation] = await openCorrelations(id);
+    expect(correlation!.expiresAt.getTime()).toBeGreaterThan(Date.now());
+    read.mockRestore();
+  });
+
+  it("keeps polling a sent Envelope to completion while a correlation is still open", async () => {
+    const { contract, id, providerEnvelopeId } = await launchedDraft(
+      "Notified sent, return lost",
+      "lost-return-sent",
+    );
+    // A verified notification moved the row to sent while the launch is
+    // still fresh and its correlation unconsumed.
+    harness.signing!.sendDraft(providerEnvelopeId);
+    const moved = await applyEnvelopeStatus(harness.notifier, {
+      provider: "docusign",
+      providerEnvelopeId,
+      status: "sent",
+    });
+    expect(moved.outcome).toBe("applied");
+    expect(await held(id)).toMatchObject({ status: "sent", confirmationPending: false });
+    expect(await openCorrelations(id)).toHaveLength(1);
+    // Then the signers finished. The sweep must learn that now, not in two hours.
+    harness.signing!.complete(providerEnvelopeId);
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const readsOfDraft = () => read.mock.calls.filter(([asked]) => asked === providerEnvelopeId);
+    await sweep();
+    expect(readsOfDraft()).toHaveLength(1);
+    expect(await held(id)).toMatchObject({ status: "signed" });
+    // One sent entry from the notification; the signed entry has its own verb.
+    expect(await entriesOn(contract.id)).toHaveLength(1);
+    const [correlation] = await openCorrelations(id);
+    expect(correlation!.expiresAt.getTime()).toBeGreaterThan(Date.now());
     read.mockRestore();
   });
 

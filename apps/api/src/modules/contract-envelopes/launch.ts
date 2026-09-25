@@ -19,7 +19,7 @@ import { z } from "zod";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { contractTeamScope, documentAudienceScope } from "../../lib/contract-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
-import { checkEnvelopeStatus } from "../../lib/signing/status-check.js";
+import { checkEnvelopeStatus, LAUNCH_LIFETIME_MINUTES } from "../../lib/signing/status-check.js";
 import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 import { requestExecutedCopy } from "../../lib/signing/completion.js";
 
@@ -116,7 +116,7 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
         userId: request.user.id,
         providerAccountId: envelope.providerAccountId!,
         providerEnvironment: signing.environment,
-        expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + LAUNCH_LIFETIME_MINUTES * 60_000),
       });
       const returnUrl = new URL(RETURN_PATH, app.baseUrl);
       returnUrl.searchParams.set("state", state);
