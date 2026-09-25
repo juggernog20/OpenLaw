@@ -1149,7 +1149,7 @@ test.describe("M15 demo path", () => {
       // envelope row (#48, DES-011).
       expect(
         await reportAxeViolations(senderPage, testInfo, "m15-signing-card", {
-          include: 'section[aria-labelledby="contract-approvals-heading"]',
+          include: 'section[aria-labelledby="contract-signatures-heading"]',
         }),
       ).toEqual([]);
 
