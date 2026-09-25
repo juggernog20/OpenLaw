@@ -82,7 +82,18 @@ export class EnvelopeEditConflictError extends SigningRefusedError {
   }
 }
 
-export class EnvelopeAccessError extends SigningError {}
+/**
+ * The provider holds the envelope but the connector's user may not act
+ * on it — a 403 on an envelope path, or a permission error code. Not a
+ * credentials fault: the token works, and the fix is a permission on
+ * the account, not a repaired connector. Terminal for this envelope.
+ */
+export class EnvelopeAccessError extends SigningError {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "EnvelopeAccessError";
+  }
+}
 
 /** No envelope with that provider id. Terminal — a webhook for an
  * envelope we do not know is ignored, not retried. */

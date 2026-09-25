@@ -462,11 +462,15 @@ class DocuSignProvider implements SigningProvider {
       relayFetchError(error);
     }
     if (response.ok) return response;
-    // Authentication refusals and Envelope access failures have separate remedies.
-    // A 404 is a missing envelope, and
-    // every other 4xx is DocuSign saying no to this request — all
-    // terminal. 5xx and 429 are the provider's own trouble, which a
-    // retry heals. The refusal body is kept as a bounded cause only.
+    // The error code is read first, because DocuSign says the same
+    // thing under more than one status: an edit lock and a wrong status
+    // arrive as 400, a permission fault as 403. A 403 on an envelope
+    // path is that envelope's permissions, not the credentials, which
+    // is a different remedy. 401/403 elsewhere is the credential
+    // answer, 404 is a missing envelope, and every other 4xx is
+    // DocuSign saying no to this request — all terminal. 5xx and 429
+    // are the provider's own trouble, which a retry heals. The refusal
+    // body is kept as a bounded cause only.
     const body = await readBoundedBody(response.body, {
       maxBytes: MAX_REFUSAL_BYTES,
       onChunk: deadline.touch,

@@ -155,6 +155,7 @@ import {
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
+  EnvelopeAccessError,
   EnvelopeNotFoundError,
   SigningConfigError,
   SigningRefusedError,
@@ -713,6 +714,18 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         502,
         "The provider refused this install's credentials. An Administrator has to " +
           "check the e-signature connector before anything can be withdrawn.",
+        { expose: true },
+      );
+    }
+    // The credentials work but this one envelope is off limits to the
+    // connector's user. The row stays live: the provider still holds
+    // the round, so ending it here would be a guess.
+    if (error instanceof EnvelopeAccessError) {
+      app.log.error({ err: error }, "signing: the provider denied access to a void");
+      return httpError(
+        502,
+        "The provider's signing user cannot access this envelope. An Administrator has to " +
+          "check its permissions in the provider account before it can be withdrawn.",
         { expose: true },
       );
     }
