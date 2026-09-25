@@ -72,7 +72,10 @@ export function installNotificationWorker(scope: ServiceWorkerGlobalScope) {
       icon: "/icons/openlaw-192.png",
       data: { ...data, href },
     };
-    await scope.registration.showNotification("OpenLaw", options);
+    await scope.registration.showNotification(
+      intl.formatMessage({ id: "notifications.push.title", defaultMessage: "OpenLaw" }),
+      options,
+    );
   }
 
   async function open(data: Prompt & { href?: string }) {
