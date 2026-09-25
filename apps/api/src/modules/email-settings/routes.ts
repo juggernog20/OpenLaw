@@ -11,6 +11,7 @@
  * cannot send arbitrary mail.
  */
 
+import type { MailerResolver } from "../../lib/mailer.js";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { orgSettings } from "@openlaw/db";
@@ -90,10 +91,7 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: StateSchema, default: problemResponse },
       },
     },
-    async () => {
-      const { source, from } = await app.resolveMailer();
-      return { source, fromAddress: from };
-    },
+    () => readEmailSettings(app.resolveMailer),
   );
 
   app.put(
@@ -224,3 +222,8 @@ export const emailSettingsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function readEmailSettings(resolveMailer: MailerResolver) {
+  const { source, from } = await resolveMailer();
+  return { source, fromAddress: from };
+}

@@ -5,6 +5,7 @@
  * Each changed field writes an org_settings.updated row at admin_only in
  * the same transaction as the policy update (DD-017).
  */
+import type { Db } from "@openlaw/db";
 import { orgSettings, eq } from "@openlaw/db";
 import { MCP_TOOLSETS, MCP_OAUTH_UNAVAILABLE_PROBLEM } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -87,17 +88,7 @@ export function mcpSettingsRoutes(resolveIpv4?: ResolveIpv4): FastifyPluginAsync
           response: { 200: State, default: problemResponse },
         },
       },
-      async () => {
-        const [row] = await app.db.select(columns).from(orgSettings);
-        if (!row) throw httpError(500, "Organization settings are unavailable.");
-        return {
-          ...row,
-          allowedClients: await listAllowedClients(app.db),
-          serverAddress,
-          authorizationServerAvailable: available,
-          reachability: await reachability(row),
-        };
-      },
+      () => readMcpSettings(app.db, app.baseUrl, check),
     );
     app.patch(
       "/mcp-settings",
@@ -183,5 +174,22 @@ export function mcpSettingsRoutes(resolveIpv4?: ResolveIpv4): FastifyPluginAsync
         };
       },
     );
+  };
+}
+
+export async function readMcpSettings(
+  db: Db,
+  baseUrl: string,
+  check: ReturnType<typeof createReachabilityCheck>,
+) {
+  const [row] = await db.select(columns).from(orgSettings);
+  if (!row) throw httpError(500, "Organization settings are unavailable.");
+  return {
+    ...row,
+    allowedClients: await listAllowedClients(db),
+    serverAddress: `${baseUrl.replace(/\/$/, "")}/mcp`,
+    authorizationServerAvailable: authorizationServerAvailable(baseUrl),
+    reachability:
+      row.legalOAuthClientsEnabled || row.businessOAuthClientsEnabled ? await check() : null,
   };
 }

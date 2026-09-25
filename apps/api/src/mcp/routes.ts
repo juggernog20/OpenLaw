@@ -18,7 +18,9 @@ import type { FastifyPluginAsync } from "fastify";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { loggable } from "../logging.js";
 import { HttpError } from "../lib/problem.js";
-import type { Environment } from "../modules/advanced-settings/config.js";
+import { organizationSettingsReader } from "../modules/settings/read.js";
+import type { ResolveIpv4 } from "../modules/mcp-settings/reachability.js";
+import type { Environment, AdvancedRuntime } from "../modules/advanced-settings/config.js";
 import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
@@ -43,8 +45,11 @@ export function mcpRoutes(
   active: Environment,
   tools: readonly ToolDefinition[] = toolRegister,
   uploadConfig?: { baseUrl: string; secret: string },
+  settingsRuntime: AdvancedRuntime = { baseline: {}, active },
+  resolveIpv4?: ResolveIpv4,
 ): FastifyPluginAsync {
   return async (app) => {
+    const readSettings = organizationSettingsReader(app, settingsRuntime, resolveIpv4);
     app.decorateRequest("mcpContext", null);
     if (uploadConfig) await app.register(documentUploadRoutes(uploadConfig.secret));
     app.route({
@@ -60,6 +65,7 @@ export function mcpRoutes(
       },
       handler: async (request, reply) => {
         const context = request.mcpContext!;
+        context.readOrganizationSettings = readSettings;
         context.generateAutoDoc = (id, submission) =>
           generateForTool(app, request.log, context.user, id, submission, context.baseUrl);
         if (uploadConfig) context.prepareDocumentUpload = documentUploadIssuer(app, uploadConfig);

@@ -6,6 +6,7 @@
  * auth flows are better-auth's own handler under /api/auth/*.
  */
 
+import type { Db } from "@openlaw/db";
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { fromNodeHeaders } from "better-auth/node";
@@ -765,18 +766,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
-      const rows = await app.db.select().from(ssoProviders).orderBy(ssoProviders.createdAt);
-      return {
-        providers: rows.map((row) => ({
-          id: row.id,
-          providerId: row.providerId,
-          issuer: row.issuer,
-          domain: row.domain,
-          clientId: oidcConfigOf(row).clientId ?? null,
-        })),
-      };
-    },
+    () => readSsoProviders(app.db),
   );
 
   app.patch(
@@ -1041,10 +1031,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
     },
-    async () => {
-      const settings = await getOrgSettings(app.db);
-      return { domains: settings.allowedEmailDomains };
-    },
+    () => readAllowedDomains(app.db),
   );
 
   app.put(
@@ -1274,3 +1261,21 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   }
 };
+
+export async function readSsoProviders(db: Db) {
+  const rows = await db.select().from(ssoProviders).orderBy(ssoProviders.createdAt);
+  return {
+    providers: rows.map((row) => ({
+      id: row.id,
+      providerId: row.providerId,
+      issuer: row.issuer,
+      domain: row.domain,
+      clientId: oidcConfigOf(row).clientId ?? null,
+    })),
+  };
+}
+
+export async function readAllowedDomains(db: Db) {
+  const settings = await getOrgSettings(db);
+  return { domains: settings.allowedEmailDomains };
+}
