@@ -335,6 +335,8 @@ it("refuses outside Toolsets and writes with M40 errors and HTTP scope challenge
   const issued = await issue();
   for (const [name, scope, code] of [
     ["openlaw_matters_list", "toolset:matters", "tool_outside_grant"],
+    ["openlaw_team_add", "toolset:team write", "tool_outside_grant"],
+    ["openlaw_team_remove", "toolset:team write", "tool_outside_grant"],
     ["openlaw_document_upload", "toolset:documents write", "mcp_read_only"],
   ]) {
     const res = await call(issued.access_token, name);
@@ -346,6 +348,67 @@ it("refuses outside Toolsets and writes with M40 errors and HTTP scope challenge
       isError: true,
       content: [{ type: "text", text: expect.stringContaining(code!) }],
     });
+  }
+});
+it("lets a Legal Team Member change a team through OAuth and refuses removal under read scope", async () => {
+  const issued = await issue(["team"], "write");
+  const type = (await h.db.select().from(contractTypes).limit(1))[0]!;
+  const status = (
+    await h.db.select().from(contractStatuses).where(eq(contractStatuses.stage, "draft")).limit(1)
+  )[0]!;
+  const [record] = await h.db
+    .insert(contracts)
+    .values({
+      title: "OAuth team",
+      contractTypeId: type.id,
+      statusId: status.id,
+      createdBy: personId,
+      managerId: personId,
+    })
+    .returning();
+  await h.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, personId));
+  try {
+    for (const operation of ["add", "remove"]) {
+      const response = await call(issued.access_token, `openlaw_team_${operation}`, {
+        record: "contract",
+        number: record!.number,
+        userId: businessId,
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      expect(response.json().result.isError).not.toBe(true);
+      expect(response.json().result.structuredContent.team).toHaveLength(
+        operation === "add" ? 1 : 0,
+      );
+    }
+    const entries = await h.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.entityId, record!.id));
+    for (const action of ["contract.team_added", "contract.team_removed"])
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          action,
+          actorId: personId,
+          viaKind: "oauth_client",
+          viaClientName: "Test Client",
+        }),
+      );
+    const read = await issue(["team"], "read");
+    const response = await call(read.access_token, "openlaw_team_remove", {
+      record: "contract",
+      number: record!.number,
+      userId: businessId,
+    });
+    expect(response.statusCode).toBe(403);
+    expect(response.headers["www-authenticate"]).toContain(
+      'error="insufficient_scope" scope="toolset:team write"',
+    );
+    expect(response.json().result).toMatchObject({
+      isError: true,
+      content: [{ type: "text", text: expect.stringContaining("mcp_read_only") }],
+    });
+  } finally {
+    await h.db.update(users).set({ role: "administrator" }).where(eq(users.id, personId));
   }
 });
 it.each(["master", "group", "client", "archived", "missing", "owner", "administrator"])(

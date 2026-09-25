@@ -13,7 +13,6 @@ import {
   isNull,
   matters,
   matterStatuses,
-  matterTeam,
   matterTypeFields,
   matterTypes,
   sql,
@@ -32,6 +31,7 @@ import {
 } from "../../lib/custom-fields.js";
 import { incompleteMatter } from "../../lib/incomplete-matter.js";
 import { matterTeamScope, NO_MATTER } from "../../lib/matter-access.js";
+import { addMatterTeamMember } from "../../lib/matter-team.js";
 import { nextDeadline } from "../../lib/next-deadline.js";
 import { httpError } from "../../lib/problem.js";
 import { choiceFilter, dateFilter } from "../../lib/record-filters.js";
@@ -226,21 +226,7 @@ export async function patchMatter(
             "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
           );
         }
-        const inserted = await tx
-          .insert(matterTeam)
-          .values({ matterId: target.id, userId: next.id })
-          .onConflictDoNothing()
-          .returning();
-        if (inserted.length > 0) {
-          await recordActivity(tx, {
-            entityType: "matter",
-            entityId: target.id,
-            actorId: user.id,
-            action: "matter.team_added",
-            visibility: RECORD_ACTIVITY_TIER,
-            payload: { number: target.number, title: target.title, member: next.displayName },
-          });
-        }
+        await addMatterTeamMember(tx, target, user, next);
       }
       patch.businessOwnerId = next?.id ?? null;
       changed.businessOwner = {

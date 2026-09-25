@@ -1802,3 +1802,22 @@ it("names the Auto-Doc and Generation in the Contract's creation entry", () => {
   expect(sentence).toContain("Approved NDA");
   expect(sentence).toContain("generation-7");
 });
+
+it.each(["contract", "matter"])(
+  "narrates %s team changes as the person via the Client",
+  (record) => {
+    for (const [action, verb] of [
+      ["added", "added Daniel Okafor to"],
+      ["removed", "took Daniel Okafor off"],
+    ]) {
+      const result = narrateActivity(intl, {
+        action: `${record}.team_${action}`,
+        actor: { displayName: "Sarah Chen" },
+        viaKind: "api_key",
+        viaClientName: "Claude Code",
+        payload: { number: 1, title: "Team record", member: "Daniel Okafor" },
+      });
+      expect(result.sentence).toBe(`Sarah Chen, via Claude Code, ${verb} the team`);
+    }
+  },
+);

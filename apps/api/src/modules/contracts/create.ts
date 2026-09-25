@@ -97,19 +97,8 @@ import { httpError } from "../../lib/problem.js";
 /** The protected CTR-001 seed every contract is born on. */
 const DRAFT_STATUS_SLUG = "draft";
 
-/**
- * CTR-007's two routed vehicles (M16/5).
- *
- * `child` and `successor` are separate values rather than a relation
- * type, because they are two shapes and not two spellings: a child sits
- * *under* its predecessor in the CTR-015 hierarchy, and a successor
- * stands beside it holding a `renews` link. Naming the link type at the
- * seam would make the caller responsible for a choice the vehicle
- * already makes.
- */
-export const CONTRACT_RENEWAL_VEHICLES = ["child", "successor"] as const;
-
-export type ContractRenewalVehicle = (typeof CONTRACT_RENEWAL_VEHICLES)[number];
+import type { ContractRenewalVehicle } from "./renewal-vehicle.js";
+export { CONTRACT_RENEWAL_VEHICLES, type ContractRenewalVehicle } from "./renewal-vehicle.js";
 
 /**
  * A renewal being routed, as this write needs it: the vehicle, and the

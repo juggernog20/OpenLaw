@@ -537,7 +537,7 @@ it("refuses audience-ineligible and empty Toolsets and rechecks the audience at 
     });
     for (const [cookies, toolsets] of [
       [business, ["tasks"]],
-      [member, ["team"]],
+      [business, ["team"]],
       [admin, ["administration"]],
     ] as const) {
       const response = await h.app.inject({
@@ -553,7 +553,7 @@ it("refuses audience-ineligible and empty Toolsets and rechecks the audience at 
       method: "POST",
       url,
       cookies: member,
-      payload: { ...ask, toolsets: ["tasks"] },
+      payload: { ...ask, toolsets: ["team"] },
     });
     expect(pending.statusCode, pending.body).toBe(201);
     await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, owner!.id));

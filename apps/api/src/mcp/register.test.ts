@@ -108,3 +108,32 @@ it("keeps Administration exclusive to Administrators even with an on audience", 
     toolRefusal(tool, { role: "administrator", toolsets: [...MCP_TOOLSETS], scope: "write" }),
   ).toBeUndefined();
 });
+
+it.each(["legal_team_member", "business_user"] as const)(
+  "lists the Team Tools only for Legal Users with Team enabled: %s",
+  (role) => {
+    const grant = {
+      role,
+      toolsets: [...MCP_DEFAULT_TOOLSET_CEILING, "team"],
+      scope: "write" as const,
+    };
+    expect(toolRegister.filter((tool) => !toolRefusal(tool, grant))).toHaveLength(
+      role === "business_user" ? 24 : 39,
+    );
+    for (const name of ["openlaw_team_add", "openlaw_team_remove"]) {
+      const tool = toolRegister.find((entry) => entry.name === name)!;
+      expect(tool).toMatchObject({
+        toolset: "team",
+        legalUser: "on",
+        businessUser: "off",
+        kind: name.endsWith("remove") ? "destr" : "write",
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: name.endsWith("remove"),
+          idempotentHint: false,
+        },
+      });
+      expect(toolRefusal(tool, { ...grant, toolsets: [] })?.code).toBe("tool_outside_grant");
+    }
+  },
+);
