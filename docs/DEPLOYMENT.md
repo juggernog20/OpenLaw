@@ -16,6 +16,16 @@ Follow [Deploy on a private VM](user-guides/deployment-configuration.md#deploy-o
 
 Set `BASE_URL` to the HTTPS address employees use, such as `https://openlaw.company.example`, in both app and worker. Email recipients must be on the office network or VPN to open links. `localhost` points to the recipient's own computer; changing the origin requires recreating the containers and issuing fresh email links.
 
+## MCP deployment profiles
+
+The [LAN only profile](user-guides/deployment-configuration.md#lan-only) serves API keys and Claude Code's loopback OAuth from the office network or VPN. OAuth requires an HTTPS `BASE_URL`, or HTTP on a loopback host for development. A plain-HTTP LAN address boots without the authorization server: keys work, OAuth Clients toggles refuse with failed checks named, and the well-known documents return 404.
+
+The [publicly reachable profile](user-guides/deployment-configuration.md#publicly-reachable) serves hosted chat Clients through TLS on a public IPv4 host without cross-host redirects. OAuth requires an HTTPS `BASE_URL`; HTTP on loopback is only for development. A plain-HTTP LAN address still boots with keys but no authorization server, refuses OAuth Clients toggles with named checks, and returns 404 for well-known documents.
+
+Forward `/mcp`, `/mcp/uploads`, the root `/.well-known/oauth-*` and `/.well-known/openid-configuration` routes and their path-suffixed variants, `/api/auth/*`, `/auth/consent` and `/api/v1/oauth-grants/consent` unchanged. Preserve the normal browser sign-in routes and assets too. The profile lists each path, the reachability pill's limits, and the checks to run from a vendor Client.
+
+For incoming vendor traffic, allow Anthropic's `160.79.104.0/21`, refresh OpenAI's `chatgpt-connectors.json` on a schedule, and refresh the regional `AzureConnectors` and `PowerPlatformPlex` service-tag ranges at least every 90 days. The profile links the vendors' source lists and distinguishes Copilot Studio from Microsoft 365 chat and Agent 365 egress.
+
 ## Quickstart
 
 ```bash

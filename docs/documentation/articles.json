@@ -817,6 +817,45 @@
       "priority": "P1",
       "contexts": ["settings.api-keys"],
       "status": "review"
+    },
+    {
+      "id": "connect-claude",
+      "title": "Connect Claude",
+      "section": "reference",
+      "kind": "how-to",
+      "coverage": ["C59"],
+      "ownerTask": "DOC-031",
+      "audiences": ["legal_team_member", "administrator", "business_user"],
+      "destinations": ["staff-help", "formal", "portal-help"],
+      "priority": "P1",
+      "contexts": ["settings.api-keys"],
+      "status": "review"
+    },
+    {
+      "id": "connect-chatgpt",
+      "title": "Connect ChatGPT",
+      "section": "reference",
+      "kind": "how-to",
+      "coverage": ["C60"],
+      "ownerTask": "DOC-031",
+      "audiences": ["legal_team_member", "administrator", "business_user"],
+      "destinations": ["staff-help", "formal", "portal-help"],
+      "priority": "P1",
+      "contexts": ["settings.api-keys"],
+      "status": "review"
+    },
+    {
+      "id": "connect-microsoft-365-copilot",
+      "title": "Connect Microsoft 365 Copilot",
+      "section": "reference",
+      "kind": "how-to",
+      "coverage": ["C61"],
+      "ownerTask": "DOC-031",
+      "audiences": ["legal_team_member", "administrator", "business_user"],
+      "destinations": ["staff-help", "formal", "portal-help"],
+      "priority": "P1",
+      "contexts": ["settings.api-keys"],
+      "status": "review"
     }
   ]
 }

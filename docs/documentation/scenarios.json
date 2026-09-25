@@ -1566,6 +1566,127 @@
       "negativeChecks": ["An expired or revoked key cannot connect."],
       "requiredMethods": ["container-operation"],
       "status": "pending"
+    },
+    {
+      "id": "V-M41-C59",
+      "coverage": ["C59"],
+      "articles": ["connect-claude"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M41 instance, fictional accounts, and the vendor accounts and network profile required by the guide."
+      ],
+      "actions": [
+        "Connect claude.ai, Claude Desktop and Cowork through the custom connector and Claude Code through HTTP and /mcp; choose consent and disconnect.",
+        "Connect Claude Code over private HTTPS with its loopback callback.",
+        "Search for Connect Claude and read it through Guide; compare the text with Help."
+      ],
+      "expectedResults": [
+        "The Client acts as the signed-in person within the selected Toolsets, scope and record access.",
+        "Disconnect removes the grant and the next call is unauthorized."
+      ],
+      "negativeChecks": [
+        "Allow stays disabled without a Toolset and scope. Read and write is absent when the organization is read-only.",
+        "An expired consent link requires a fresh connection; disabled Clients and account groups are refused."
+      ],
+      "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M41-C60",
+      "coverage": ["C60"],
+      "articles": ["connect-chatgpt"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M41 instance, fictional accounts, and the vendor accounts and network profile required by the guide."
+      ],
+      "actions": [
+        "Enable Developer mode, add OpenLaw with OAuth and CIMD, choose consent, scan Tools and disconnect.",
+        "Search for Connect ChatGPT and read it through Guide; compare the text with Help."
+      ],
+      "expectedResults": [
+        "The Client acts as the signed-in person within the selected Toolsets, scope and record access.",
+        "Disconnect removes the grant and the next call is unauthorized."
+      ],
+      "negativeChecks": [
+        "Allow stays disabled without a Toolset and scope. Read and write is absent when the organization is read-only.",
+        "An expired consent link requires a fresh connection; disabled Clients and account groups are refused."
+      ],
+      "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M41-C61",
+      "coverage": ["C61"],
+      "articles": ["connect-microsoft-365-copilot"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M41 instance, fictional accounts, and the vendor accounts and network profile required by the guide."
+      ],
+      "actions": [
+        "Generate the registered Client secret; follow the Manual OAuth wizard and paste its redirect into the empty callback slot.",
+        "Connect a declarative agent with the fixed Teams redirect; choose consent and disconnect.",
+        "Search for Connect Microsoft 365 Copilot and read it through Guide; compare the text with Help."
+      ],
+      "expectedResults": [
+        "The Client acts as the signed-in person within the selected Toolsets, scope and record access.",
+        "Disconnect removes the grant and the next call is unauthorized."
+      ],
+      "negativeChecks": [
+        "Allow stays disabled without a Toolset and scope. Read and write is absent when the organization is read-only.",
+        "An expired consent link requires a fresh connection; disabled Clients and account groups are refused."
+      ],
+      "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M41-MCP",
+      "coverage": ["C57"],
+      "articles": ["configure-mcp"],
+      "roles": ["administrator"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M41 instance, fictional accounts, and the vendor accounts and network profile required by the guide."
+      ],
+      "actions": [
+        "Toggle OAuth Clients, inspect each reachability failure and manage both Allowed Client kinds.",
+        "Generate and rotate a secret, change dynamic registration, set grant lifetime and revoke a grant from Active keys and grants."
+      ],
+      "expectedResults": [
+        "Labels and results match the article; new grants use the lifetime after restart."
+      ],
+      "negativeChecks": [
+        "A plain-HTTP LAN address refuses OAuth enablement by name while keys work.",
+        "Rotation invalidates the old secret without deleting grants."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": ["C45"],
+      "articles": ["deployment-configuration"],
+      "roles": ["operator", "administrator"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M41 instance, fictional accounts, and the vendor accounts and network profile required by the guide."
+      ],
+      "actions": [
+        "Follow the public TLS and IPv4 profile, forward all listed routes and apply scheduled vendor allowlist updates.",
+        "Check the LAN profile with keys and Claude Code loopback OAuth; check a plain-HTTP LAN boot."
+      ],
+      "expectedResults": [
+        "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection.",
+        "Plain-HTTP LAN boots with working keys, unavailable OAuth toggles and 404 discovery documents."
+      ],
+      "negativeChecks": [
+        "A cross-host redirect or blocked protocol path prevents the hosted connection.",
+        "Private endpoints remain unreachable outside the permitted network."
+      ],
+      "requiredMethods": ["container-operation", "live-provider-check"],
+      "status": "pending"
     }
   ]
 }
