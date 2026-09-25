@@ -131,6 +131,8 @@ test("a Legal Team Member consents to a Client, creates a Matter and disconnects
     });
     expect(enabled.status()).toBe(200);
     await page.goto("/settings/mcp");
+    await expect(page.getByRole("switch", { name: "Legal Users OAuth Clients" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Legal Users OAuth Clients" })).not.toBeChecked();
     await expect(page.getByText(/Not reachable|^Reachable$/)).toHaveCount(0);
     const saved = page.waitForResponse(
       (response) =>
@@ -194,7 +196,7 @@ test("a Legal Team Member consents to a Client, creates a Matter and disconnects
     await requester.getByRole("checkbox", { name: "Matters", exact: true }).check();
     await requester.getByRole("radio", { name: "Read and write", exact: true }).check();
     await allow.click();
-    await expect(requester).toHaveURL(new RegExp(`^${redirectUri.replaceAll(".", "\\.")}\\?`));
+    await expect(requester).toHaveURL((url) => `${url.origin}${url.pathname}` === redirectUri);
     expect(callback?.searchParams.get("state")).toBe(state);
     expect(callback?.searchParams.has("error")).toBe(false);
     const code = z.string().min(1).parse(callback?.searchParams.get("code"));

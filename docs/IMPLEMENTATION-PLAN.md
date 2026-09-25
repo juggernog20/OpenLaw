@@ -773,7 +773,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - The `mcp()`, `jwt()` and `cimd()` plugins; Allowed Clients with both entry kinds
   - The consent page, connected Clients on the API keys pane, and the reachability warning
   - Client guides for Claude, ChatGPT and Microsoft 365 Copilot; public vendor connections follow the deployment checklist
-  - A browser journey through sign-in, consent, PKCE, SDK v2 Matter creation, activity attribution and Disconnect; an M40 upgrade rehearsal preserves API keys, requests and settings
+  - A browser journey through sign-in, consent, PKCE, SDK v2 Matter creation, activity attribution and Disconnect; an M40 upgrade rehearsal preserves API keys, API key requests and MCP settings
   - _Tickets:_ [#1132](https://github.com/juggernog20/OpenLaw/issues/1132), [#1133](https://github.com/juggernog20/OpenLaw/issues/1133), [#1134](https://github.com/juggernog20/OpenLaw/issues/1134), [#1135](https://github.com/juggernog20/OpenLaw/issues/1135), [#1136](https://github.com/juggernog20/OpenLaw/issues/1136), [#1137](https://github.com/juggernog20/OpenLaw/issues/1137), [#1138](https://github.com/juggernog20/OpenLaw/issues/1138), [#1139](https://github.com/juggernog20/OpenLaw/issues/1139)
   - _Decisions:_ DD-029, TECH-035, SET-014, DES-092
 

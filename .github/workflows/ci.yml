@@ -224,6 +224,8 @@ jobs:
         # Keep a populated M40 install in the gate so M41 migrations run over API keys.
         baseline: ["", "b1437fa8"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Two image builds, not one. The second reuses most of the first's
     # layers, but the bound has to clear both.
     timeout-minutes: 45
