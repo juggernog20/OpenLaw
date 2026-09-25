@@ -24,7 +24,7 @@
       "articleId": "first-run",
       "scenario": ["V-C35"],
       "contentSha256Before": "d92bccc13622ee49ae8bc69de8b1e77b7e062060b1adb819c263ce72bc176b2a",
-      "contentSha256": "3811a3457a036c364c43f7791060ac5b99b07473471533c47f1237325472c1ac",
+      "contentSha256": "ef145063a10347be4696a2ce3e25f507e520450f4fa0b10c8f80729e9d03b47f",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -134,6 +134,12 @@
           "before": "Each row links to the Settings page that finishes that step, including Outbound email.",
           "after": "The card lists only unfinished steps: Organization, Business-user portal, Email, Invite your team, E-signature, AI analysis, Review seeded types. Every row except Review seeded types links; Email opens Settings → Advanced → Outbound email.",
           "source": "apps/web/src/routes/settings-general.tsx SETUP_STEPS and SETUP_LABELS (settings.setup.email = Email); apps/api/src/modules/onboarding/routes.ts SETTINGS_PATHS email /settings/email, review null"
+        },
+        {
+          "claim": "Create the first Administrator, step 3, empty setup token (walkthrough finding)",
+          "before": "A missing or wrong token shows \"The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.\"",
+          "after": "An empty required field stops the form before it is sent. A wrong token shows \"The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.\"",
+          "source": "apps/web/src/routes/setup.tsx (setupToken Input has required, so the browser blocks an empty field before POST /auth/setup); independent walkthrough of first-run on the DOC-030 lab"
         }
       ],
       "confirmed": [
@@ -204,8 +210,10 @@
         "The registry does not ask for the setup-token or origin negative checks, but the guide now states both messages; the walkthrough can check a wrong token and a wrong-origin save cheaply.",
         "Start blank refusals for a user-added row and an in-use seed row need a row created before Review. The first is reachable by adding a type in Settings from a Review list link. The onboarding-complete refusal needs two Administrator sessions and is realistic only as a race.",
         "The email-header logo was checked in source only: the test email and set-password invitation pass the org settings row, and the layout attaches the 48x48 PNG copy as cid:org-logo@openlaw. A walkthrough can confirm it in Mailpit after uploading a logo.",
-        "The structural check printed 'ok, warnings: 2' (stale review only) on the final content. One intermediate run failed on another group's in-progress entity-records anchor in the shared worktree; it passed once that group's edit landed."
-      ]
+        "The structural check printed 'ok, warnings: 2' (stale review only) on the final content. One intermediate run failed on another group's in-progress entity-records anchor in the shared worktree; it passed once that group's edit landed.",
+        "After the first record, prettier reformatted first-run.md at commit a9f1ffdb, so the committed hash was 175f145d…, not 3811a345…. The walkthrough then failed on the empty-token sentence. The corrected content is ef145063…. The Setup token field is in apps/web/src/routes/setup.tsx, the /auth/setup route, not in the welcome route."
+      ],
+      "contentSha256AtCommit": "175f145dbb885d6dcc6751427bfbe772157ff2419453f384620c8d8f9ac8e86e"
     }
   ],
   "productBugs": [

@@ -47,7 +47,7 @@ A class name must be unique on the Entity. You can edit a class at any time. Its
 6. Under **Certificates**, select the checkbox of each live certificate the entry cancels. To issue a certificate, select **Issue certificate** and enter its number, its Holder, its share count, and optionally its distinctive numbers.
 7. Select **Enter in register**. Check the new row in **Register of allotments and transfers** and the Holder's balance in **Register of members**.
 
-To correct an entry, use its edit control, labeled with the entry number, for example **Edit entry 003**. Change the values and select **Save**. To delete it, use **Remove entry 003**, then select **Remove** in the confirmation. OpenLaw replays the register without the entry and never reuses its number.
+To correct an entry, use the edit control in its row. The label has the entry number without leading zeros, for example **Edit entry 3**. The dialog title shows the padded number, **Edit entry 003**. Change the values and select **Save**. To delete the entry, use **Remove entry 3** in its row. The confirmation asks **Remove entry 003 from the register?** Select **Remove**. OpenLaw replays the register without the entry and never reuses its number.
 
 OpenLaw replays the whole register with every change. It refuses an entry that would take any balance below zero on any date, cancel a certificate that is not live for that Holder and class, repeat a certificate number, or create an ownership loop. The refusal shows in the dialog, and the register keeps its saved entries. Allotting more shares than a class authorizes is not refused. A warning such as **1,200 Ordinary shares are issued against 1,000 authorized.** shows above the register.
 

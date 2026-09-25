@@ -162,7 +162,7 @@
       "articleId": "contract-analysis",
       "scenario": ["V-C21"],
       "contentSha256Before": "fec93c1aef7d6ecdd43af6c5d2b4fbf22ce80ec45fbf999d7064f7992687eff6",
-      "contentSha256": "afdd6d9130ba438a92d2b14e4a13f587d1988fffdb2a129281a6dad959ce5741",
+      "contentSha256": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3",
       "sources": [
         "CONTEXT.md",
         "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-008 addenda 2026-09-11 and 2026-09-20, M37/6 note)",
@@ -184,7 +184,8 @@
         "apps/api/src/lib/conversion-draft.ts",
         "apps/api/src/pipeline/contract-analysis.ts",
         "apps/api/src/pipeline/conversion-analysis.ts",
-        "packages/shared/src/form-evaluator.ts"
+        "packages/shared/src/form-evaluator.ts",
+        "apps/api/src/modules/contracts/record.ts"
       ],
       "corrections": [
         {
@@ -252,6 +253,12 @@
           "before": "A refusal can mean there is no primary Document or its text is not ready. A failed run reports its reason in the Fields section header.",
           "after": "Adds 'you cannot read the primary Document'. A refused run from the Contract actions menu shows its reason under the Fields header. A failed run shows Analysis failed: and its reason there.",
           "source": "contract-analysis/service.ts documentAudienceScope 404 'No readable primary Document exists on this Contract.'; analysis.tsx contracts.analysis.failedShort and runError"
+        },
+        {
+          "claim": "Confirm all and hidden Risk, Region, Department markers (walkthrough round 1 finding)",
+          "before": "Confirm all still counts and clears their markers.",
+          "after": "No page shows a marker, evidence or Confirm for those three values. They do not count towards showing Confirm all, so the Fields header can show only Run analysis. Check the three Rows on Overview. When Confirm all appears for other values, it also clears these hidden markers.",
+          "source": "apps/api/src/modules/contracts/record.ts toContract filters aiUnverified to key_date:, visible field: and BUILTIN_ANALYSIS_SLUGS (no risk, region, owning_department); analysis.tsx shows Confirm all only when the public map has more than one entry; contracts/routes.ts confirmAnalysisFields clears every stored flag when no slug is named"
         }
       ],
       "confirmed": [
@@ -302,8 +309,8 @@
   ],
   "productBugs": [
     {
-      "file": "apps/web/src/routes/contract-record.tsx; apps/api/src/modules/contracts/service.ts",
-      "symptom": "Request-context Analysis writes Risk, Region and Department (owning_department) with Unverified markers, but the Overview rows draw no marker, evidence or Confirm. Editing those rows does not clear the marker or record the slot as human-set, so only Confirm all clears them and a human clear is not protected on retry.",
+      "file": "apps/web/src/routes/contract-record.tsx; apps/api/src/modules/contracts/service.ts; apps/api/src/modules/contracts/record.ts",
+      "symptom": "Request-context Analysis writes Risk, Region and Department (owning_department) with Unverified markers. record.ts filters those slugs out of the public aiUnverified map, so no page shows their marker, evidence or Confirm, and they do not count towards showing Confirm all. Editing them does not clear the stored marker or record the slot as human-set. Only a Confirm all shown for other values clears them, and a human clear is not protected on retry.",
       "contradicts": "DD-028 clause 9 (Record Rows wear the Unverified marker); CTR-008 addendum 2026-09-11 (new values carry Unverified, DES-070 treatment and sparkles; explicit clears stay protected); DES-075 amendment 2026-09-22 (marker, evidence and Confirm stay where the value is)"
     },
     {
@@ -341,6 +348,6 @@
   "statusChange": null,
   "notes": [
     "No catalog status, evidence file, scenario or articles.json entry was changed. No H2 heading was renamed or removed, so redirects.json is unchanged.",
-    "The workspace structural check currently throws on another group's in-progress edit: 'missing anchor entity-structure-and-access.md#keep-the-share-register from entity-records'. Compiling a scratch copy with every other guide at HEAD and only these two guides edited prints 'ok, warnings: 2'."
+    "After the round-1 fix the workspace structural check prints 'ok, warnings: 25'; the earlier entity-records anchor error is gone."
   ]
 }

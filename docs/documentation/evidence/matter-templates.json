@@ -1,104 +1,109 @@
 {
   "articleId": "matter-templates",
-  "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (admin-config, round 1)",
+  "contentSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (contracts-c)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-config)",
-  "technicalReviewer": "DOC-029 source-review author agent (admin-config)",
-  "verifiedAt": "2026-09-16T16:26:15Z",
+  "technicalReviewer": "DOC-030 source-review author agent (contracts-c)",
+  "author": "DOC-030 source-review author agent (contracts-c)",
+  "verifiedAt": "2026-09-25T11:34:23.683Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/matter-templates.md",
+    "docs/documentation/batches/DOC-030/contracts-c/technical-review.json",
+    "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/contracts-c/walkthrough.json",
+    "docs/documentation/batches/DOC-030/contracts-c/lib.mjs",
+    "docs/documentation/batches/DOC-030/contracts-c/templates.mjs",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/evidence/matter-templates.json",
     "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
-    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json"
+    "docs/decision-records/DECISIONS.md (DD-028 built-Form corrections)",
+    "docs/decision-records/DECISIONS-MATTERS.md (MTR-013)",
+    "messages/en-US.json",
+    "apps/web/src/routes/settings-matter-templates.tsx",
+    "apps/web/src/routes/settings-matter-template-editor.tsx",
+    "apps/web/src/components/matters/create-matter-dialog.tsx",
+    "apps/web/src/components/type-form/creation-rows.tsx",
+    "apps/web/src/components/intake/convert-dialog.tsx",
+    "apps/web/src/components/intake/conversion-values.ts",
+    "apps/api/src/modules/matters/create.ts",
+    "apps/api/src/modules/requests/convert.ts",
+    "apps/api/src/modules/requests/convert-form.ts",
+    "apps/api/src/lib/creation-form.ts",
+    "apps/api/src/lib/intake-form.ts",
+    "packages/shared/src/form-evaluator.ts",
+    "packages/shared/src/form-builtins.ts"
   ],
   "scenarios": [
     {
       "id": "V-C39",
-      "coverage": ["C39"],
+      "coverage": [
+        "C39"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator signed in on the admin documentation lab.",
-        "Reviewer-created Matter type with an optional Text Field, a required Text Field and a Global Entity Field; a No-target Matter request form submitted by the seeded Business User."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 (app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e), Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context; staff use password sign-in, Business Users a fresh magic link read from the lab Mailpit.",
+        "Fixture setup through the lab API (another guide owns these steps): Matter Fields \"DOC-030 contracts-c optional note 20260925113332\", \"DOC-030 contracts-c required note 20260925113332\" and \"DOC-030 contracts-c record note 20260925113332\"; Matter type \"DOC-030 contracts-c template type 20260925113332\" whose Form has Description, Priority and Risk On intake form, the optional note On intake form, the required note Required for creation, and the record note as neither. Priority and Risk are therefore creation Rows on this type. A Matter-targeting Request type \"DOC-030 contracts-c matter request 20260925113332\"; Requests R-113 and R-114 submitted through the Portal API by Ade Balogun (seeded Business User, fresh magic link) with Urgency High, the optional note answered and Risk unanswered.",
+        "Daniel Okafor (Administrator) creates and edits the template, creates Matters directly and converts R-113; Nadia Haddad (Legal Team Member) converts R-114. AI is disabled on work2."
       ],
-      "expected": "The template saves Priority, Risk, Title prefix, Field defaults, ordered Tasks and Key dates. Direct creation and Request conversion create Tasks and Key dates from the Matter's UTC creation date. Direct creation uses the template defaults; conversion keeps the Request's Urgency and title, leaves Risk unset and makes the converting person Matter Manager. A Matter Manager Task stays unassigned without a manager. Editing the template does not change earlier Matters. An archived template is not offered and is refused.",
-      "actual": "8 recorded steps passed on 3fa407e3. Add template, Edit, Matter defaults (Low, Medium, \"Supplier -\"), Custom field defaults, three Tasks with offsets 2, blank and 5 (the third moved up with ArrowUp) and Key dates at 10 and 0 saved and read back after reload. 3651 and a blank Key date offset were refused with \"Give every row a name and use whole-number offsets from 0 to 3650 days.\" and nothing saved. Create matter with the template suggested \"Supplier -\", Low, Medium, the Field defaults and Daniel Okafor as Matter Manager; with the optional Field cleared, M-45 kept it empty, got Tasks due 2026-09-18 and 2026-09-21 assigned to Daniel Okafor plus one undated unassigned Task, and Key dates 2026-09-16 and 2026-09-26 from the 2026-09-16 UTC creation date. With Matter Manager Unassigned every Task stayed unassigned. Converting R-50 with the template created M-47 with the Request title, Priority high (template Low), Risk unset (template Medium), Daniel Okafor as Matter Manager with the Manager Tasks, the carried Entity answer, the template Field defaults and the same relative dates. After the template Task was edited, M-45 kept its Tasks and a new Matter used the edit. Archive template removed it from Create matter, POST /api/v1/matters with it answered 400 \"The template must be live and belong to the selected matter type.\", and Show archived > Restore brought it back. A detached Field's default was named as retained and returned after reattach.",
+      "expected": "Each path creates the intended defaults using its actual date anchor (the Matter creation date in UTC). Direct creation shows the type Form's creation Rows with the template's Priority, Risk and Field values; a template default for a Row the dialog does not show still goes on the Matter. Conversion reviews the Request's Title and Urgency and the target Form's Rows (Request answer before template default), makes the converter Matter Manager, and does not apply the template Risk or title prefix. Changing the template does not rewrite already-created work; archived templates and templates of an archived type are not offered and are refused.",
+      "actual": "11 recorded browser steps for this role passed on 067c1646 (sections templates of walkthrough.json). (1) Before you start: a live Matter type with the Fields the template should fill (fixture setup through the API): Matter type \"DOC-030 contracts-c template type 20260925113332\" Form rows [\"title required\",\"matter_type required\",\"description intake\",\"priority intake\",\"risk intake\",\"department\",\"region\",\"needed_by\",\"doc_030_contracts_c_optional_note_20260925113332 intake\",\"doc_030_contracts_c_required_note_20260925113332 required\",\"doc_030_contracts_c_record_note_20260925113332\"]. Priority creation Row: yes (On intake form). Risk creation Row: yes (On intake form, optional). Request type \"DOC-030 contracts-c matter request 20260925113332\" targets the type. Ade Balogun submitted R-113 and R-114 (Urgency High, optional note answered, Risk not answered). (2) Create and edit a template, steps 1-7: profile menu > Settings > Matters > Templates; Matter type; Add template (Name, Description); Edit; Matter defaults; Custom field defaults; Tasks (Add task, offsets, Matter Manager / Unassigned, reorder); Key dates (Add key date); Save template; reopen and confirm: Templates list after Add template: \"template DOC-030 contracts-c onboarding template 20260925113332 DOC-030 fictional onboarding checklist. 0 tasks 0 dates 0 f\". Edit opened the editor (\"Matter type: DOC-030 contracts-c template type 20260925113332\"). Task role options [\"Matter Manager\",\"Unassigned\"]. Save template reported saved=true. After reload: Priority \"Low\", Risk \"Critical\", Title prefix \"DOC-030 CC -\"; Field defaults [\"Template optional default\",\"Template required default\",\"Template record default\"]; Tasks [[\"DOC-030 contracts-c manager task 20260925113332\",\"2\",\"Matter Manager\"],[\"DOC-030 contracts-c second manager task 20260925113332\",\"5\",\"Matter Manager\"],[\"DOC-030 contracts-c open task 20260925113332\",\"\",\"Unassigned\"]] (the third Task moved up with ArrowUp on its reorder handle); Key dates [[\"DOC-030 contracts-c review 20260925113332\",\"10\",\"Fictional review with the supplier.\"],[\"DOC-030 contracts-c kick-off 20260925113332\",\"0\",\"\"]]. (3) Offsets: enter Task 1 due offset 3651 and save; then clear Key date 1's offset and save (Recover a failed save: correct invalid offsets): Priority Critical with Task 1 offset 3651: Save template showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload Priority \"Low\", Task 1 offset \"2\". Blank Key date 1 offset: \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload it reads \"10\". Both were refused before any section saved. (4) Test both creation paths, direct creation: choose the type, then the template in Matter template; read the hint, the title, the creation Rows, and Matter Manager; clear the optional Field; Create; check Overview, Tasks, Task assignments and Key dates: Template choices [\"No template\",\"DOC-030 contracts-c onboarding template 20260925113332\"]; hint \"Template adds 3 tasks and 2 key dates.\"; suggested {\"title\":\"DOC-030 CC -\",\"priority\":\"Low\",\"risk\":\"Critical\",\"manager\":\"Daniel Okafor\",\"fOpt\":\"Template optional default\",\"fReq\":\"Template required default\",\"fRecShown\":0} (the record-only Field is not a creation Row, so it is not drawn). Cleared the optional Field, Create opened M-150 created 2026-09-25T11:33:50.268Z (UTC anchor 2026-09-25). Saved priority low, risk critical, optional null, required \"Template required default\", record-only \"Template record default\" (template default for a Row the dialog did not show). Tasks [[\"DOC-030 contracts-c manager task 20260925113332\",\"2026-09-27\",\"Daniel Okafor\"],[\"DOC-030 contracts-c second manager task 20260925113332\",\"2026-09-30\",\"Daniel Okafor\"],[\"DOC-030 contracts-c open task 20260925113332\",null,null]]; Key dates [[\"DOC-030 contracts-c kick-off 20260925113332\",\"2026-09-25\"],[\"DOC-030 contracts-c review 20260925113332\",\"2026-10-05\"]]. Overview, Tasks and Key dates pages show the title, Tasks and Key dates. (5) Direct creation with explicit values: clear the Required for creation Field and select Create; then fill it, set Priority to Medium and Matter Manager to Unassigned, and Create: Empty required Row: the dialog stayed open with \"Fill DOC-030 contracts-c required note 20260925113332.\". After filling it, Priority Medium and Unassigned: M-151 priority medium (template Low), risk critical, manager null, required \"Typed required value\"; Tasks [[\"DOC-030 contracts-c manager task 20260925113332\",\"2026-09-27\",null],[\"DOC-030 contracts-c second manager task 20260925113332\",\"2026-09-30\",null],[\"DOC-030 contracts-c open task 20260925113332\",null,null]] (Manager Tasks unassigned). (6) Test both creation paths, Request conversion: open R-113, Triage > Convert to matter, confirm the configured Matter type, choose the template in Matter template, review the creation Rows, fill Risk Medium, and select Convert to matter: Dialog \"Convert R-113 to a matter\" opened on Matter type \"DOC-030 contracts-c template type 20260925113332\" with Priority \"High\" (Urgency High). After choosing the template: {\"title\":\"DOC-030 contracts-c matter-templates administrator convert 20260925113332\",\"priority\":\"High\",\"risk\":\"Not set\",\"fOpt\":\"Requester answer administrator\",\"fReq\":\"Template required default\",\"fRecShown\":0}; no carried or not-carried lists. Filled Risk Medium. Converted to M-152 created 2026-09-25T11:33:58.251Z (the Request was submitted 2026-09-25T11:33:34.567Z). Saved title \"DOC-030 contracts-c matter-templates administrator convert 20260925113332\" (no \"DOC-030 CC -\" prefix), priority high (template Low), risk \"medium\" (template Critical does not apply), Matter Manager \"Daniel Okafor\", optional \"Requester answer administrator\", required \"Template required default\", record-only \"Template record default\". Tasks [[\"DOC-030 contracts-c manager task 20260925113332\",\"2026-09-27\",\"Daniel Okafor\"],[\"DOC-030 contracts-c second manager task 20260925113332\",\"2026-09-30\",\"Daniel Okafor\"],[\"DOC-030 contracts-c open task 20260925113332\",null,null]]; Key dates [[\"DOC-030 contracts-c kick-off 20260925113332\",\"2026-09-25\"],[\"DOC-030 contracts-c review 20260925113332\",\"2026-10-05\"]] (anchor 2026-09-25 UTC). (7) Change or archive a template: rename Task 1 and change its offset to 3, save; compare the earlier Matter and a new Matter: Saved Task 1 as \"DOC-030 contracts-c manager task 20260925113332 revised\" with offset 3. M-150 still has [[\"DOC-030 contracts-c manager task 20260925113332\",\"2026-09-27\",\"Daniel Okafor\"],[\"DOC-030 contracts-c second manager task 20260925113332\",\"2026-09-30\",\"Daniel Okafor\"],[\"DOC-030 contracts-c open task 20260925113332\",null,null]]. New M-154 (created 2026-09-25T11:34:14.553Z) has [\"DOC-030 contracts-c manager task 20260925113332 revised\",\"2026-09-28\",\"Daniel Okafor\"]. (8) Archive the template (Archive control, Archive template), check creation, then Show archived > Restore: Archive dialog: \"Archive DOC-030 contracts-c onboarding template 20260925113332? The template leaves new Matter creation. Existing Matters are unchanged, and restoring the template brings its full definition back. Cancel Archive template\". After Archive template the Create matter dialog offered [\"No template\"]; a create naming the archived template answered 400 \"The template must be live and belong to the selected matter type.\". Show archived > Restore: the editor holds 3 Tasks, 2 Key dates and the Field defaults; the dialog offers [\"No template\",\"DOC-030 contracts-c onboarding template 20260925113332\"] again. (9) A template whose Matter type is unavailable: a second, unused DOC-030 Matter type with its own template is archived (setup through the API); open Create matter and try that template; then restore the type: While live, Create matter offered \"DOC-030 contracts-c template type 20260925113332 unused\" with template choices [\"No template\",\"DOC-030 contracts-c onboarding template 20260925113332 unused\"]. After the type was archived, Create matter no longer listed it; a create naming the archived type and its template answered 400 \"The matter type must be a live matter type.\". (10) A Field detached from the template's type: remove the record-only Field's Row from the type Form (setup through the API), open the template editor, then attach it again: After the Row was removed, the editor read \"DOC-030 contracts-c record note 20260925113332 is no longer attached to this Matter type. Its saved value (Template record default) is retained.\". After the Row was added again, the default control shows \"Template record default\". (11) Guide text check: the steps walked are the ones in the reviewed content: All eight labels are in the reviewed guide text.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.json",
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/lib.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/templates.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/matter-template-editor.png",
+        "docs/documentation/batches/DOC-030/contracts-c/administrator-convert-matter-template.png",
+        "docs/documentation/batches/DOC-030/contracts-c/legal_team_member-convert-matter-template.png"
       ]
     },
     {
       "id": "V-C39",
-      "coverage": ["C39"],
+      "coverage": [
+        "C39"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member signed in on the admin documentation lab in a separate browser context."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 (app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e), Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context; staff use password sign-in, Business Users a fresh magic link read from the lab Mailpit.",
+        "Fixture setup through the lab API (another guide owns these steps): Matter Fields \"DOC-030 contracts-c optional note 20260925113332\", \"DOC-030 contracts-c required note 20260925113332\" and \"DOC-030 contracts-c record note 20260925113332\"; Matter type \"DOC-030 contracts-c template type 20260925113332\" whose Form has Description, Priority and Risk On intake form, the optional note On intake form, the required note Required for creation, and the record note as neither. Priority and Risk are therefore creation Rows on this type. A Matter-targeting Request type \"DOC-030 contracts-c matter request 20260925113332\"; Requests R-113 and R-114 submitted through the Portal API by Ade Balogun (seeded Business User, fresh magic link) with Urgency High, the optional note answered and Risk unanswered.",
+        "Daniel Okafor (Administrator) creates and edits the template, creates Matters directly and converts R-113; Nadia Haddad (Legal Team Member) converts R-114. AI is disabled on work2."
       ],
-      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
-      "actual": "Role confirmed as legal_team_member from /api/v1/me. /settings/matters/templates sent the browser to /settings/profile. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\").",
+      "expected": "Each path creates the intended defaults using its actual date anchor (the Matter creation date in UTC). Direct creation shows the type Form's creation Rows with the template's Priority, Risk and Field values; a template default for a Row the dialog does not show still goes on the Matter. Conversion reviews the Request's Title and Urgency and the target Form's Rows (Request answer before template default), makes the converter Matter Manager, and does not apply the template Risk or title prefix. Changing the template does not rewrite already-created work; archived templates and templates of an archived type are not offered and are refused.",
+      "actual": "1 recorded browser steps for this role passed on 067c1646 (sections templates of walkthrough.json). The registry lists only the administrator role for V-C39; the Convert path was also walked as a Legal Team Member, as the triage and the technical review ask. (1) Test both creation paths, Request conversion: open R-114, Triage > Convert to matter, confirm the configured Matter type, choose the template in Matter template, review the creation Rows, leave Risk empty, and select Convert to matter: Dialog \"Convert R-114 to a matter\" opened on Matter type \"DOC-030 contracts-c template type 20260925113332\" with Priority \"High\" (Urgency High). After choosing the template: {\"title\":\"DOC-030 contracts-c matter-templates legal_team_member convert 20260925113332\",\"priority\":\"High\",\"risk\":\"Not set\",\"fOpt\":\"Requester answer legal_team_member\",\"fReq\":\"Template required default\",\"fRecShown\":0}; no carried or not-carried lists. Left Risk Not set. Converted to M-153 created 2026-09-25T11:34:05.785Z (the Request was submitted 2026-09-25T11:33:34.656Z). Saved title \"DOC-030 contracts-c matter-templates legal_team_member convert 20260925113332\" (no \"DOC-030 CC -\" prefix), priority high (template Low), risk null (template Critical does not apply), Matter Manager \"Nadia Haddad\", optional \"Requester answer legal_team_member\", required \"Template required default\", record-only \"Template record default\". Tasks [[\"DOC-030 contracts-c manager task 20260925113332\",\"2026-09-27\",\"Nadia Haddad\"],[\"DOC-030 contracts-c second manager task 20260925113332\",\"2026-09-30\",\"Nadia Haddad\"],[\"DOC-030 contracts-c open task 20260925113332\",null,null]]; Key dates [[\"DOC-030 contracts-c kick-off 20260925113332\",\"2026-09-25\"],[\"DOC-030 contracts-c review 20260925113332\",\"2026-10-05\"]] (anchor 2026-09-25 UTC).",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
-      ]
-    },
-    {
-      "id": "V-C39",
-      "coverage": ["C39"],
-      "role": "business_user",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Seeded fictional Business User signed in to the Portal with a fresh emailed sign-in link in a separate browser context."
-      ],
-      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
-      "actual": "Role confirmed as business_user from /api/v1/me. /settings/matters/templates sent the browser to /portal. GET /api/v1/matter-templates answered 403 (\"You do not have permission to perform this action.\").",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.json",
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/lib.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/templates.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/matter-template-editor.png",
+        "docs/documentation/batches/DOC-030/contracts-c/administrator-convert-matter-template.png",
+        "docs/documentation/batches/DOC-030/contracts-c/legal_team_member-convert-matter-template.png"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not feature-owner approval.",
-    "The admin lab is shared with other DOC-029 agents. Records were named DOC-029 admin-config. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
-    "Earlier development runs of the same script (logs not kept) failed only on reviewer script errors and left extra DOC-029 admin-config records with other suffixes; walkthrough-r1.json reviewerNotes lists them.",
-    "Negative access checks used the seeded Legal Team Member (nadia.haddad) and Business User (jonas.weber), each in its own browser context; roles were confirmed from /api/v1/me.",
-    "AI preparation was off, so AI-proposed values in conversion were not observed.",
-    "A template section failing after an earlier section saved could not be produced from the browser: the editor refuses invalid rows before any section saves. The walkthrough confirmed that a refused save changed nothing.",
-    "Key date reorder and a template whose Matter type is archived were not checked in the browser; the archived-template refusal was checked with POST /api/v1/matters using the body the dialog had sent."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "Priority and Risk were creation Rows (On intake form) on the Matter type used. The claim that a template default for an undrawn Row still lands on the Matter was checked with a record-only Field (neither On intake form nor Required for creation), not with an undrawn Priority or Risk Row.",
+    "AI is disabled on work2, so AI preparation and the AI-suggestion step of the Field start order were not exercised. The Request-answer-before-template-default order was.",
+    "Recover a failed save: invalid offsets (3651, a blank Key date offset) were refused before any section saved. A partial save, where an earlier section saves and a later one fails, could not be produced from the browser and was not exercised.",
+    "A Row inside a Branch whose condition does not hold was not exercised; the type used has no Branch.",
+    "The unavailable-type check used a second, unused DOC-030 Matter type, because archiving a type that has Matters requires reassigning them. Field detach and reattach were done through the type Form API (the type Form belongs to another guide); the editor note was read in the browser.",
+    "work2 is shared with other DOC-030 agents. Only records named DOC-030 contracts-c were created; no organisation setting was changed. Development runs before the recorded run left more DOC-030 contracts-c Fields, Matter types, templates, Matters and Requests (some unconverted); they are named with their run stamp and not credited."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "c458f44480e167baf2930bdad0f03a944b0f10b890c7ff10468543328016f9e9",
-    "verifiedAt": "2026-09-08T06:33:42Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
+    "verifiedAt": "2026-09-25T11:34:23.683Z"
   },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (admin-config)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and found no change to the Matter template settings, the template editor, the Create matter and Convert dialogs, or the matter-templates, matters, requests and fields API modules; the shared list-editor and Settings changes do not alter any step in the article. I replayed the round 1 V-C39 walkthrough on the admin2 lab built from 57e77e38, and all eight Administrator steps and both negative role checks passed with the same outcomes. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/admin-config.json",
-        "sha256": "3ec15a6a6c5f8872032b2f938ab2477c300cecb21d5ff9155b06b77e71a02f38"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

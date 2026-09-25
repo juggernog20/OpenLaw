@@ -23,7 +23,7 @@ If the page offers **Continue with single sign-on**, select it and complete your
 
 If **Email me a sign-in link** is available, select it, enter your work **Email**, and select **Send link**. **Check your email** appears whether or not the address is eligible. Select **Sign in** in the newest email within five minutes. The link works once. You can request three links for one email address in 15 minutes. Another request shows **Too many sign-in link requests. Try again later.** This option depends on the organization's authentication settings and email delivery.
 
-An expired or used link opens **Sign-in link expired**. Enter your email there to get a new link, or select **Back to sign-in**. If the sign-in page shows **This sign-in link could not be used. Request a new link or contact your administrator.**, OpenLaw refused the sign-in itself. For example, sign-in links may be off for your role, or your account may be archived. Ask your Administrator.
+An expired or used link opens **Sign-in link expired**. While sign-in links are on and OpenLaw can send email, the page shows **Email** and **Send link**. Enter your email and select **Send link** to get a new link. Otherwise the page shows only **Back to sign-in**. Select it and use another sign-in method. If the sign-in page shows **This sign-in link could not be used. Request a new link or contact your administrator.**, OpenLaw refused the sign-in itself. For example, sign-in links may be off for your role, or your account may be archived. Ask your Administrator.
 
 ## Turn on two-factor authentication
 

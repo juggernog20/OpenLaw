@@ -83,13 +83,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 compatibility reviewer (compat)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-b)) found the article compatible: I inspected the app diff 3fa407e3..57e77e38 and found only Settings, sign-in, first-run and archived-user styling changes, none in the Contract record surfaces this article describes. I replayed the round 1 V-C20 (parent and typed links, refusals, Restricted contract, Matter link, ending, archive and restore) walkthrough for Legal Team Member and Administrator on lab openlaw-docs-41255c61-work2 built from 57e77e38, and every step passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-25T11:14:39.367Z",
+    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of record-filter-bar.tsx, property-list.tsx, contracts.tsx, contract-record.tsx, contracts/routes.ts and the new activity-redaction.ts. The Related contracts and Matter cards, link dialogs, record actions menu and filter definitions did not change; the filter list moved into property-list.tsx with the same Show ended and Show archived flags; the redaction hides a far record the reader cannot reach, as the guide says. I replayed the DOC-029 V-C20 script for both roles on lab compatcmp built from 067c1646; all 20 steps passed. Only the fixture Matter type changed in the script, because seeded Employment now requires Country. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-b)) found the article compatible: I inspected the app diff 3fa407e3..57e77e38 and found only Settings, sign-in, first-run and archived-user styling changes, none in the Contract record surfaces this article describes. I replayed the round 1 V-C20 (parent and typed links, refusals, Restricted contract, Matter link, ending, archive and restore) walkthrough for Legal Team Member and Administrator on lab openlaw-docs-41255c61-work2 built from 57e77e38, and every step passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/contracts-b.json",
@@ -98,6 +98,42 @@
       {
         "path": "batches/DOC-029/compat-r3/review.json",
         "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      },
+      {
+        "path": "batches/DOC-030/compat/compat.json",
+        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-relations-and-ending-replay.mjs",
+        "sha256": "d2d61a3fd3966034b4e6f82950c260e085ef7e345c422d563f50d5b5e4362518"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-relations-and-ending-replay/lib.mjs",
+        "sha256": "2a38ee9ef414ed511a9376eabac1c6eab0df15b20b1aa57fb9b1ddb8b090d286"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-relations-and-ending-replay/c20.mjs",
+        "sha256": "c087309077d6cc589e70bf28fc5d425cc8db3e0ccc2851fc364e85861146b7fa"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-relations-and-ending-replay.json",
+        "sha256": "9ab56c409f64e3ded8f1abcd901a89b1afcad474bba45cd52b406daf7607fd40"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/contract-relations-and-ending-compatcmp.log",
+        "sha256": "e803a3e569b48e82e9328c4418a1a060852ed1f1f24331a790c8263086458fe3"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/contract-relations-and-ending-work2-attempt.json",
+        "sha256": "472d498cbf82c6169598ce87113e00bb90c546bf2ec632c6c11c9fee169f0ede"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-relations-and-ending-administrator-restricted-related.png",
+        "sha256": "8d8c1d29d606a321f13cf9ea48b64fec6c9a42cf6897dae0ab209c784f573ff6"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-relations-and-ending-legal_team_member-restricted-related.png",
+        "sha256": "8d8c1d29d606a321f13cf9ea48b64fec6c9a42cf6897dae0ab209c784f573ff6"
       }
     ]
   }

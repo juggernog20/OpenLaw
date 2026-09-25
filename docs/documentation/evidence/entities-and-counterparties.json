@@ -1,123 +1,100 @@
 {
   "articleId": "entities-and-counterparties",
-  "contentSha256": "ddbbf1cfcd46f72fc735c67dcd9162a47480641221e06d2fcd2362d660607c35",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-entities",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (entities)",
-  "technicalReviewer": "DOC-029 source-review author agent (entities)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (entities, round 1)",
+  "contentSha256": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (entities)",
+  "technicalReviewer": "DOC-030 source-review author agent (entities)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (entities)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:53:13.127Z",
+  "verifiedAt": "2026-09-25T11:38:23.867Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/entities-and-counterparties.md",
+    "docs/documentation/batches/DOC-030/entities/technical-review.json",
+    "docs/documentation/batches/DOC-030/entities/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/entities/walkthrough.json",
     "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/decision-records/DECISIONS.md",
+    "docs/decision-records/DECISIONS-DESIGN.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "messages/en-US.json",
     "apps/web/src/routes/entities.tsx",
-    "apps/web/src/components/entities/entity-list-filter-bar.tsx",
+    "apps/web/src/components/entities/entity-filter-definitions.ts",
+    "apps/web/src/components/table/record-filter-bar.tsx",
+    "apps/web/src/components/type-form/creation-rows.tsx",
+    "apps/web/src/components/documents/create-attachments.tsx",
     "apps/web/src/routes/entity-record.tsx",
     "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/components/type-form/record-rows.tsx",
+    "packages/shared/src/form-evaluator.ts",
+    "packages/shared/src/form-builtins.ts",
+    "apps/api/src/lib/type-form-routes.ts",
     "apps/web/src/components/counterparty-picker.tsx",
+    "apps/web/src/lib/contracts.ts",
     "apps/api/src/modules/entities/routes.ts",
-    "apps/api/src/lib/entity-access.ts",
-    "apps/api/src/lib/counterparty-link.ts",
-    "apps/api/src/modules/contracts/routes.ts",
-    "messages/en-US.json",
-    "docs/decision-records/DECISIONS.md (DD-014 amendment 10 September 2026)",
-    "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 amendment)",
-    "docs/documentation/batches/DOC-029/entities/technical-review.json",
-    "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
+    "apps/api/src/lib/counterparty-link.ts"
   ],
   "scenarios": [
     {
       "id": "V-C31",
-      "coverage": ["C31"],
+      "coverage": [
+        "C31"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded entities lab; the reviewer's own fictional Entities and a fixture NDA Contract per role."
+        "Shared lab openlaw-docs-80ceef9e-work2 (lab work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Nadia Haddad (Legal Team Member) signs in with a password in an isolated headless Chromium context.",
+        "Editable Entity types and a separate external Counterparty fixture.",
+        "Fixtures named \"DOC-030 entities V-C31 0925-1129 ...\" created as listed in the log's fixtures array (walkthrough run tag 0925-1129)."
       ],
-      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Business User cannot use the Member+ Entities destination (Contributor is a removed role); duplicate/invalid input has a clear outcome.",
-      "actual": "Nadia Haddad opened Entities on the Compliance calendar and switched to List. Search entities by name narrowed to one Helix Software GmbH row; Type LLC with Status Active narrowed the table and Clear all restored it. Add entity opened with Status Active; Register saved Legal name, type, Formation jurisdiction, Formed on 2019-03-14, Registration no., Tax ID, Registered agent and Registered address, and the new record's access list named Nadia Haddad (the creator Grant). Registered agent saved on focus change and Status Dormant on selection; both survived a reload and the record still offered Archive, not Restore. Registering the same legal name again created a second, distinct record. Register with an empty Legal name kept the dialog open with \"Name the entity — its registered legal name.\" and created nothing. On a fixture Contract, Our entity kept the chosen Entity after a reload. Create \"DOC-029 entities Cedar Supply L 9U3SZ\" added it with the only Primary mark; a second Counterparty took Primary through Make primary. The upper-case name of an attached Counterparty offered no Create row and did not re-offer it. \"Take <name> off the contract\" on the Primary returned the mark to the remaining Counterparty; the removed shared record was still offered (no Create row) when typed in upper case; removing the last one showed \"Nobody is recorded on the other side yet.\". With the Entity archived, the Contract still showed it as Our entity and another Contract's Our entity choices did not include the archived record; it was then restored.",
+      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Business User cannot open the staff Entities destination; duplicate/invalid input has a clear outcome.",
+      "actual": "13 recorded browser steps passed for this role, plus 1 step(s) by other identities (business_user (Diego Salas, magic link)). [Register step 1: open Entities; its first view is Calendar; select List] Entities opened at /entities with the Compliance calendar heading (Calendar link aria-current=page). List moved to ?view=list and showed a table headed \"Legal name Type Jurisdiction Registration no. Status Portal-listed Next obligation\". [Register step 2: Search entities by name; Filter with Type, Status, Jurisdiction, Majority owner (one value, Apply, chips); Clear all] Search \"DOC-030 access confidential entity Ltd 09251012\" left 1 matching row(s). Filter listed [\"Type\",\"Status\",\"Jurisdiction\",\"Majority owner\",\"Show archived\"]. Type LLC then Status Active (one radio value each, Apply) showed chips [\"Type: LLC\",\"Status: Active\"] and left 13 of 50 rows, all LLC and Active. Jurisdiction \"Brazil\" left 1 rows with that jurisdiction. Majority owner \"DOC-030 entities V-C32 0925-1100 L main\" showed chip \"Majority owner: DOC-030 entities V-C32 0925-1100 L main\" and left 1 rows. Clear all removed every chip and returned 50 rows. [Refusals: Register with no Legal name, then no Entity type] Register with nothing showed \"Name the entity — its registered legal name.\"; with a name but no type it showed \"Pick an entity type.\" and the dialog stayed open. Registry rows for the prefix stayed 0. [Register step 5: a type whose Form requires a Field for creation shows it after the identity details; blank gives 'Fill {Field}'; filled, it saves] Before a type was chosen the dialog had no Local counsel control. Choosing \"DOC-030 entities V-C31 0925-1129 required type\" added Local counsel after Registered address. Register with it blank showed \"Fill Local counsel.\". Filled, Register saved \"DOC-030 entities V-C31 0925-1129 L Required Field Ltd\" with Local counsel \"Harbour & Pike LLP (fictional)\". [Register steps 3-4, 6-8: Add entity with identity details, Status default Active, Portal-listed (Administrators only, off by default), Attach documents with a Document type, Register, open it; creator Grant] Add entity opened with Status Active. Portal-listed in the dialog: not shown. Attach documents took doc030-entities-certificate.pdf (no Document type choice was offered). Register saved \"DOC-030 entities V-C31 0925-1129 L Aldoria Holdings\"; opened from List it read {\"Formation jurisdiction\":\"Republic of Aldoria\",\"Formed on\":\"2019-03-14\",\"Registration no.\":\"ALD-L-0925-1129\",\"Tax ID\":\"TX-L-0925-1129\",\"Registered agent\":\"Aldoria Corporate Agents\",\"Registered address\":\"1 Harbour Row, Port Aldo\"} and Status Active. Manage access was offered and the access list named [\"Nadia Haddad\"]. Portal card: \"Portal Portal-listed Only an Administrator can change Portal-listed.\" (switch on=false, disabled=true). The Documents tab listed \"doc030-entities-certificate.pdf — v1 Sep 25 Uploaded by Nadia Haddad NH\". [Register step 8: change a field and move focus away; a selection saves when chosen; Status Dormant does not archive] After a reload Registered agent read \"Aldoria Registered Agents Ltd\" and Status read Dormant. The header still offered Archive and showed no Archived mark. [Names are not unique: registering the same legal name again creates another Entity] Searching the name listed 2 rows linking to 2 records: [\"DOC-030 entities V-C31 0925-1129 L Aldoria Holdings Corporation Republic of Aldoria ALD-L-0925-1129 Dormant No —\",\"DOC-030 entities V-C31 0925-1129 L Aldoria Holdings LLC Duchy of Kessel — Active No —\"]. The first kept Republic of Aldoria and Dormant. [Parties step 1: choose Our entity on a Contract; check the saved name; Not known yet clears it] C-367 Our entity read \"DOC-030 entities V-C31 0925-1129 L Aldoria Holdings\" after a reload. Not known yet read \"Not known yet\" after a reload (stored entity null). It was then set back to \"DOC-030 entities V-C31 0925-1129 L Aldoria Holdings\". [Parties steps 2-3: type a new name and select Create \"<name>\"; the first Counterparty is Primary] The picker offered Create \"DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd\" and it added the Counterparty. After a reload the Contract showed 1 Primary mark; parties [\"DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd\"], primary \"DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd\". [Parties step 4: add another Counterparty and Make primary] After Make primary and a reload the primary Counterparty was \"DOC-030 entities V-C31 0925-1129 L Birch Logistics\"; parties [\"DOC-030 entities V-C31 0925-1129 L Birch Logistics\",\"DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd\"]. [Picker rules: an exact existing name in another case offers no creation; a Counterparty on the Contract is not offered again] Typing \"DOC-030 ENTITIES V-C31 0925-1129 L CEDAR SUPPLY LTD\" listed [\"No counterparties to add.\"]: no Create row, and DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd (already on the Contract) was not offered. [Parties step 5: Take <name> off the contract; the next remaining takes Primary; the shared record remains; the final removal leaves none] Take DOC-030 entities V-C31 0925-1129 L Birch Logistics off the contract left [\"DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd\"] with DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd Primary. Typing \"DOC-030 ENTITIES V-C31 0925-1129 L BIRCH LOGISTICS\" again offered the shared record and no Create row ([\"DOC-030 entities V-C31 0925-1129 L Birch Logistics\"]). Taking DOC-030 entities V-C31 0925-1129 L Cedar Supply Ltd off showed \"Nobody is recorded on the other side yet.\". [Recovery: an archived Entity is not offered for a new selection; an existing Contract keeps its reference] With the first \"DOC-030 entities V-C31 0925-1129 L Aldoria Holdings\" archived, C-367 still showed \"DOC-030 entities V-C31 0925-1129 L Aldoria Holdings\". On C-381 Our entity offered 1 option with that name, the live duplicate, not the archived record. The Entity was then restored. [Negative: a Business User cannot open the staff Entities destination; an Entities address returns them to their home page] Signed in with a fresh magic link as Diego Salas. Home was /portal; no Entities link. /entities landed on /portal; an Entity record address landed on /portal; GET /api/v1/entities returned 403.",
       "result": "pass",
-      "startedAt": "2026-09-16T15:44:26.617Z",
-      "completedAt": "2026-09-16T15:44:58.639Z",
-      "stepsSummarized": "12 recorded steps for this role, all pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/entities/walkthrough.json",
+        "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C31",
-      "coverage": ["C31"],
+      "coverage": [
+        "C31"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded entities lab; the reviewer's own fictional Entities and a fixture NDA Contract per role."
+        "Shared lab openlaw-docs-80ceef9e-work2 (lab work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Daniel Okafor (Administrator) signs in with a password in an isolated headless Chromium context.",
+        "Editable Entity types and a separate external Counterparty fixture.",
+        "Fixtures named \"DOC-030 entities V-C31 0925-1129 ...\" created as listed in the log's fixtures array (walkthrough run tag 0925-1129)."
       ],
-      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Business User cannot use the Member+ Entities destination (Contributor is a removed role); duplicate/invalid input has a clear outcome.",
-      "actual": "Daniel Okafor opened Entities on the Compliance calendar and switched to List. Search entities by name narrowed to one Helix Software GmbH row; Type LLC with Status Active narrowed the table and Clear all restored it. Add entity opened with Status Active; Register saved Legal name, type, Formation jurisdiction, Formed on 2019-03-14, Registration no., Tax ID, Registered agent and Registered address, and the new record's access list named Daniel Okafor (the creator Grant). Registered agent saved on focus change and Status Dormant on selection; both survived a reload and the record still offered Archive, not Restore. Registering the same legal name again created a second, distinct record. Register with an empty Legal name kept the dialog open with \"Name the entity — its registered legal name.\" and created nothing. On a fixture Contract, Our entity kept the chosen Entity after a reload. Create \"DOC-029 entities Cedar Supply A 9U3SZ\" added it with the only Primary mark; a second Counterparty took Primary through Make primary. The upper-case name of an attached Counterparty offered no Create row and did not re-offer it. \"Take <name> off the contract\" on the Primary returned the mark to the remaining Counterparty; the removed shared record was still offered (no Create row) when typed in upper case; removing the last one showed \"Nobody is recorded on the other side yet.\". With the Entity archived, the Contract still showed it as Our entity and another Contract's Our entity choices did not include the archived record; it was then restored.",
+      "expected": "Our Entity and external Counterparty retain their distinct roles and labels. A Business User cannot open the staff Entities destination; duplicate/invalid input has a clear outcome.",
+      "actual": "13 recorded browser steps passed for this role, plus 1 step(s) by other identities (business_user (Diego Salas, magic link)). [Register step 1: open Entities; its first view is Calendar; select List] Entities opened at /entities with the Compliance calendar heading (Calendar link aria-current=page). List moved to ?view=list and showed a table headed \"Legal name Type Jurisdiction Registration no. Status Portal-listed Next obligation\". [Register step 2: Search entities by name; Filter with Type, Status, Jurisdiction, Majority owner (one value, Apply, chips); Clear all] Search \"DOC-030 documents-2 Admin folders Entity 09251124 Ltd\" left 1 matching row(s). Filter listed [\"Type\",\"Status\",\"Jurisdiction\",\"Majority owner\",\"Show archived\"]. Type LLC then Status Active (one radio value each, Apply) showed chips [\"Type: LLC\",\"Status: Active\"] and left 14 of 50 rows, all LLC and Active. Jurisdiction \"Brazil\" left 1 rows with that jurisdiction. Majority owner \"DOC-030 entities V-C32 0925-1100 L main\" showed chip \"Majority owner: DOC-030 entities V-C32 0925-1100 L main\" and left 1 rows. Clear all removed every chip and returned 50 rows. [Refusals: Register with no Legal name, then no Entity type] Register with nothing showed \"Name the entity — its registered legal name.\"; with a name but no type it showed \"Pick an entity type.\" and the dialog stayed open. Registry rows for the prefix stayed 0. [Register step 5: a type whose Form requires a Field for creation shows it after the identity details; blank gives 'Fill {Field}'; filled, it saves] Before a type was chosen the dialog had no Local counsel control. Choosing \"DOC-030 entities V-C31 0925-1129 required type\" added Local counsel after Registered address. Register with it blank showed \"Fill Local counsel.\". Filled, Register saved \"DOC-030 entities V-C31 0925-1129 A Required Field Ltd\" with Local counsel \"Harbour & Pike LLP (fictional)\". [Register steps 3-4, 6-8: Add entity with identity details, Status default Active, Portal-listed (Administrators only, off by default), Attach documents with a Document type, Register, open it; creator Grant] Add entity opened with Status Active. Portal-listed in the dialog: shown, off by default (false), turned on. Attach documents took doc030-entities-certificate.pdf (no Document type choice was offered). Register saved \"DOC-030 entities V-C31 0925-1129 A Aldoria Holdings\"; opened from List it read {\"Formation jurisdiction\":\"Republic of Aldoria\",\"Formed on\":\"2019-03-14\",\"Registration no.\":\"ALD-A-0925-1129\",\"Tax ID\":\"TX-A-0925-1129\",\"Registered agent\":\"Aldoria Corporate Agents\",\"Registered address\":\"1 Harbour Row, Port Aldo\"} and Status Active. Manage access was offered and the access list named [\"Daniel Okafor\"]. Portal card: \"Portal Portal-listed Business Users can pick this Entity by name on Portal forms.\" (switch on=true, disabled=false). The Documents tab listed \"doc030-entities-certificate.pdf — v1 Sep 25 Uploaded by Daniel Okafor DO\". [Register step 8: change a field and move focus away; a selection saves when chosen; Status Dormant does not archive] After a reload Registered agent read \"Aldoria Registered Agents Ltd\" and Status read Dormant. The header still offered Archive and showed no Archived mark. [Names are not unique: registering the same legal name again creates another Entity] Searching the name listed 2 rows linking to 2 records: [\"DOC-030 entities V-C31 0925-1129 A Aldoria Holdings Corporation Republic of Aldoria ALD-A-0925-1129 Dormant Yes —\",\"DOC-030 entities V-C31 0925-1129 A Aldoria Holdings LLC Duchy of Kessel — Active No —\"]. The first kept Republic of Aldoria and Dormant. [Parties step 1: choose Our entity on a Contract; check the saved name; Not known yet clears it] C-383 Our entity read \"DOC-030 entities V-C31 0925-1129 A Aldoria Holdings\" after a reload. Not known yet read \"Not known yet\" after a reload (stored entity null). It was then set back to \"DOC-030 entities V-C31 0925-1129 A Aldoria Holdings\". [Parties steps 2-3: type a new name and select Create \"<name>\"; the first Counterparty is Primary] The picker offered Create \"DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd\" and it added the Counterparty. After a reload the Contract showed 1 Primary mark; parties [\"DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd\"], primary \"DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd\". [Parties step 4: add another Counterparty and Make primary] After Make primary and a reload the primary Counterparty was \"DOC-030 entities V-C31 0925-1129 A Birch Logistics\"; parties [\"DOC-030 entities V-C31 0925-1129 A Birch Logistics\",\"DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd\"]. [Picker rules: an exact existing name in another case offers no creation; a Counterparty on the Contract is not offered again] Typing \"DOC-030 ENTITIES V-C31 0925-1129 A CEDAR SUPPLY LTD\" listed [\"No counterparties to add.\"]: no Create row, and DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd (already on the Contract) was not offered. [Parties step 5: Take <name> off the contract; the next remaining takes Primary; the shared record remains; the final removal leaves none] Take DOC-030 entities V-C31 0925-1129 A Birch Logistics off the contract left [\"DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd\"] with DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd Primary. Typing \"DOC-030 ENTITIES V-C31 0925-1129 A BIRCH LOGISTICS\" again offered the shared record and no Create row ([\"DOC-030 entities V-C31 0925-1129 A Birch Logistics\"]). Taking DOC-030 entities V-C31 0925-1129 A Cedar Supply Ltd off showed \"Nobody is recorded on the other side yet.\". [Recovery: an archived Entity is not offered for a new selection; an existing Contract keeps its reference] With the first \"DOC-030 entities V-C31 0925-1129 A Aldoria Holdings\" archived, C-383 still showed \"DOC-030 entities V-C31 0925-1129 A Aldoria Holdings\". On C-386 Our entity offered 1 option with that name, the live duplicate, not the archived record. The Entity was then restored. [Negative: a Business User cannot open the staff Entities destination; an Entities address returns them to their home page] Signed in with a fresh magic link as Diego Salas. Home was /portal; no Entities link. /entities landed on /portal; an Entity record address landed on /portal; GET /api/v1/entities returned 403.",
       "result": "pass",
-      "startedAt": "2026-09-16T15:44:58.938Z",
-      "completedAt": "2026-09-16T15:45:30.808Z",
-      "stepsSummarized": "12 recorded steps for this role, all pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
-      ]
-    },
-    {
-      "id": "V-C31",
-      "coverage": ["C31"],
-      "role": "business_user",
-      "method": "browser-walkthrough",
-      "prerequisites": ["Fresh magic links requested during the run; link text is not recorded."],
-      "expected": "A Business User cannot use the Member+ Entities destination.",
-      "actual": "Ravi Menon and Jonas Weber each signed in with a fresh magic link from this lab's Mailpit (the seed gives Business Users no password). Signed in as Ravi Menon: 0 Entities links, /entities landed on /portal, and GET /api/v1/entities returned 403. Signed in as Jonas Weber: 0 Entities links, /entities landed on /portal, and GET /api/v1/entities returned 403.",
-      "result": "pass",
-      "startedAt": "2026-09-16T15:45:30.809Z",
-      "completedAt": "2026-09-16T15:45:34.107Z",
-      "stepsSummarized": "2 recorded steps for this role, all pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/entities/walkthrough.json",
+        "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough in headless Chromium by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
-    "The lab openlaw-docs-41255c61-entities is shared with other DOC-029 walkthrough agents. This run created only records named \"DOC-029 entities ...\" (run tag 9U3SZ) plus records from earlier development runs of the same script with other tags. It changed no organization settings.",
-    "Recorded against app source 3fa407e3a846559914aa1a63249741f30cfb4f69, which differs from edition.json's supportedAppCommit; the edition pin or a compatibility review is outside this walkthrough's file ownership.",
-    "API calls prepared fixtures (Entities, Holdings, Contracts, a Registration) or read back results the browser had already shown; every documented action was performed through the browser controls.",
-    "The scenario's Contributor negative check was run as Business Users (Ravi Menon, Jonas Weber): Contributor is a removed role (DD-023) and the article names Business Users.",
-    "Not exercised in the browser: an archived Contract's hidden party controls, an Entity type becoming unavailable and its in-use count (Administrator type settings were not changed in the shared lab), and archived Counterparties, which have no archive control in this edition. These statements were checked by the source reviewer only."
+    "The lab openlaw-docs-80ceef9e-work2 (work2) is shared with other DOC-030 walkthrough agents. This run created only records named \"DOC-030 entities ...\" (run tag 0925-1129), plus records from earlier development runs of the same script with other tags. API calls prepared fixtures or read back results the browser had already shown; every documented action ran through the browser controls.",
+    "Author limitation, checked on the lab: The V-C31 duplicate-input check has no refusal to show for Entities: a repeated legal name creates a second Entity by design. The guide says so. For Counterparties the picker withholds a second creation of an exact existing name.",
+    "Author limitation, checked on the lab: Counterparty rename, merge, archive and restore have no staff page in this build; the guide states this rather than inventing a control.",
+    "3 page loads showed the app's \"Something went wrong.\" screen with net::ERR_NETWORK_CHANGED while other labs changed the host's Docker networks; the script reloaded once and the step then passed. This is an environment effect, not an app finding.",
+    "Step 5 (Fields required for creation) needs an Entity type whose Form marks a Field required. No seeded type has one, so the walkthrough added its own type \"DOC-030 entities V-C31 <tag> required type\" (Local counsel required), reassigned its Entities to Corporation afterwards and archived it. No seeded type or organization setting was changed.",
+    "The Business User check used Diego Salas (Business User, fresh magic link from the lab Mailpit) instead of Jonas Weber, whose sign-in link budget is shared with other walkthrough agents on this lab.",
+    "Not exercised: the recovery notes about a Contract type Form Branch hiding Our entity or Counterparties, and about an unavailable Entity type. Both need a change to a shared type on the lab that other walkthroughs depend on."
   ],
   "previousEvidence": {
-    "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
-    "contentSha256": "7313af8226fa554a32c4e86919d581a972fd574654e4b8559ccd8df591fe177e",
-    "verifiedAt": "2026-09-08T01:14:28.623Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "ddbbf1cfcd46f72fc735c67dcd9162a47480641221e06d2fcd2362d660607c35",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (entities)) found the article compatible: Inspected git diff 3fa407e3..57e77e38 (apps, packages, messages); it changes no Entity, Counterparty, or Contract party code or label. Replayed the round 1 V-C31 walkthrough on lab entities2 as Legal Team Member, Administrator, and Business Users: 26 of 26 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/entities.json",
-        "sha256": "82ac9e118330c7ab4b627e90dc772cd4a020d75a596f0ac9831876cb47c9d2ad"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:53:13.127Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

@@ -14,7 +14,7 @@ This version has nine wizard steps: Welcome to OpenLaw, Your organization, Authe
 
 1. Open the instance address. On **Set up OpenLaw**, enter **Setup token**, **Name**, **Email**, **Password**, and **Confirm password**. The setup token proves that you, and not another person on the network, claim the first Administrator account. If the operator set `SETUP_TOKEN`, the token is that value. If not, the app prints a new token in its log each time it starts while the instance has no users. Under Compose, the operator reads it with `docker compose logs app`. A restart replaces a printed token, so ask the operator for the current one.
 2. Use at least eight characters for the password and enter the same value in both password fields. Select **Create Administrator**.
-3. Correct any validation message and submit again. A missing or wrong token shows "The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN." Different password values show "The passwords do not match." A successful setup signs you in and opens **Welcome to OpenLaw**.
+3. Correct any validation message and submit again. An empty required field stops the form before it is sent. A wrong token shows "The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN." Different password values show "The passwords do not match." A successful setup signs you in and opens **Welcome to OpenLaw**.
 
 Account setup is available only while the instance has no users. If setup has already been completed, use **Sign in** or ask an existing Administrator for an invitation. Do not create a new installation to recover an existing account. Follow [sign-in recovery](staff-sign-in.md).
 

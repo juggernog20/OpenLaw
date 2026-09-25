@@ -1,0 +1,1523 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-030",
+  "issue": 1157,
+  "group": "inbox",
+  "independentReview": true,
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (inbox)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "lab": "work2",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "appUrl": "http://127.0.0.1:43300",
+  "mailUrl": "http://127.0.0.1:48425",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-25T09:59:53.804Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-25T10:00:16.340Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules, headless, 1440x1000 staff and 1280x900 Portal; one isolated browser context per identity",
+  "articleHashesAtStart": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  },
+  "fixtures": {
+    "contractType": {
+      "id": "01a0d808-1655-70ee-a87e-9f7658980a08",
+      "name": "DOC-030 inbox Supplier agreement",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "contract_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "entity",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "counterparties",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "owning_department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "term_type",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "effective_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "expiry_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "renewal_period_months",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "notice_period_days",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "value",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_supplier_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_budget_note",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_contracting_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_contract_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "matterType": {
+      "id": "01a0d808-1674-7723-9b38-ea15321e30f3",
+      "name": "DOC-030 inbox Advisory",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "matter_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_adviser_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_matter_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_matter_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_region_choice",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_engagement_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "requestTypes": {
+      "contract": {
+        "id": "01a0d808-7c87-782e-9282-7d9d37833244",
+        "name": "DOC-030 inbox Supplier contract request"
+      },
+      "matter": {
+        "id": "01a0d808-7c9c-7be1-a3f9-c0eba47ccaf8",
+        "name": "DOC-030 inbox Advisory matter request"
+      }
+    },
+    "fields": {
+      "carry": {
+        "id": "01a0d808-7b3d-706c-83e3-c0d0d3f6e5e5",
+        "slug": "doc_030_inbox_supplier_name",
+        "name": "DOC-030 inbox Supplier name",
+        "type": "text"
+      },
+      "stay": {
+        "id": "01a0d808-7b5e-7297-978c-f556c48a70f3",
+        "slug": "doc_030_inbox_budget_note",
+        "name": "DOC-030 inbox Budget note",
+        "type": "text"
+      },
+      "required": {
+        "id": "01a0d808-7b7e-70a5-b9aa-7010320e6087",
+        "slug": "doc_030_inbox_cost_centre",
+        "name": "DOC-030 inbox Cost centre",
+        "type": "text"
+      },
+      "entity": {
+        "id": "01a0d808-7ba1-72de-b33b-ba0b0d6ee788",
+        "slug": "doc_030_inbox_contracting_entity",
+        "name": "DOC-030 inbox Contracting entity",
+        "type": "entity"
+      },
+      "recordC": {
+        "id": "01a0d808-7bbd-78cd-bdfe-d7cee40d3749",
+        "slug": "doc_030_inbox_contract_summary",
+        "name": "DOC-030 inbox Contract summary",
+        "type": "text"
+      },
+      "mCarry": {
+        "id": "01a0d808-7bd7-72f5-b386-92a532d13933",
+        "slug": "doc_030_inbox_adviser_name",
+        "name": "DOC-030 inbox Adviser name",
+        "type": "text"
+      },
+      "mRequired": {
+        "id": "01a0d808-7bf3-791b-94af-ddc45c08e86e",
+        "slug": "doc_030_inbox_matter_cost_centre",
+        "name": "DOC-030 inbox Matter cost centre",
+        "type": "text"
+      },
+      "mEntity": {
+        "id": "01a0d808-7c09-74e5-860b-15611168200d",
+        "slug": "doc_030_inbox_matter_entity",
+        "name": "DOC-030 inbox Matter entity",
+        "type": "entity"
+      },
+      "choice": {
+        "id": "01a0d808-7c1f-7e98-853e-b29e84b8e6b7",
+        "slug": "doc_030_inbox_region_choice",
+        "name": "DOC-030 inbox Region choice",
+        "type": "single_select"
+      },
+      "record": {
+        "id": "01a0d808-7c37-7c64-935f-a0df865d77dc",
+        "slug": "doc_030_inbox_engagement_summary",
+        "name": "DOC-030 inbox Engagement summary",
+        "type": "text"
+      }
+    },
+    "templates": {
+      "good": {
+        "id": "01a0d808-7d43-75c5-9d06-66eaa100fb4c",
+        "name": "DOC-030 inbox Advisory template"
+      },
+      "stale": {
+        "id": "01a0d808-7d77-7b66-9761-546163f9dd31",
+        "name": "DOC-030 inbox Stale template"
+      }
+    }
+  },
+  "requests": {
+    "administrator:triage-review": {
+      "number": 50,
+      "reference": "R-50",
+      "id": "01a0d817-a1ce-7eb6-86aa-17f956a3f6c8",
+      "title": "DOC-030 inbox Admin triage-review 822346",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-triage-review-1.pdf",
+          "bytes": 950
+        },
+        {
+          "name": "doc030-inbox-admin-triage-review-2.docx",
+          "bytes": 1090
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:42.635Z"
+    },
+    "administrator:triage-resolve": {
+      "number": 51,
+      "reference": "R-51",
+      "id": "01a0d817-a236-73e4-9553-f69d78317e02",
+      "title": "DOC-030 inbox Admin triage-resolve 822346",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-triage-resolve-1.pdf",
+          "bytes": 952
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:42.711Z"
+    },
+    "administrator:triage-race": {
+      "number": 52,
+      "reference": "R-52",
+      "id": "01a0d817-a282-7960-a145-0240136f66ac",
+      "title": "DOC-030 inbox Admin triage-race 822346",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:42.751Z"
+    },
+    "administrator:conv-contract": {
+      "number": 53,
+      "reference": "R-53",
+      "id": "01a0d817-a2cb-765e-867f-11f1ee0e4762",
+      "title": "DOC-030 inbox Admin conv-contract 822346",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": "2026-10-15",
+      "files": [
+        {
+          "name": "doc030-inbox-admin-conv-contract-1.pdf",
+          "bytes": 950
+        },
+        {
+          "name": "doc030-inbox-admin-conv-contract-2.pdf",
+          "bytes": 950
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-25T10:23:42.862Z"
+    },
+    "administrator:conv-matter": {
+      "number": 54,
+      "reference": "R-54",
+      "id": "01a0d817-a317-76cb-88b3-1e9e41040e1f",
+      "title": "DOC-030 inbox Admin conv-matter 822346",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-conv-matter-1.pdf",
+          "bytes": 946
+        },
+        {
+          "name": "doc030-inbox-admin-conv-matter-2.pdf",
+          "bytes": 946
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-25T10:23:43.013Z"
+    },
+    "administrator:conv-retarget": {
+      "number": 55,
+      "reference": "R-55",
+      "id": "01a0d817-a3b0-7f4d-b8c8-585682f9e66f",
+      "title": "DOC-030 inbox Admin conv-retarget 822346",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.048Z"
+    },
+    "administrator:conv-race": {
+      "number": 56,
+      "reference": "R-56",
+      "id": "01a0d817-a3e7-7030-9b14-82548b3ebc51",
+      "title": "DOC-030 inbox Admin conv-race 822346",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.099Z"
+    },
+    "administrator:conv-stale": {
+      "number": 57,
+      "reference": "R-57",
+      "id": "01a0d817-a418-71c0-94c6-b7f31a4dc748",
+      "title": "DOC-030 inbox Admin conv-stale 822346",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.151Z"
+    },
+    "legal_team_member:triage-review": {
+      "number": 58,
+      "reference": "R-58",
+      "id": "01a0d817-a4a4-7e2b-af33-a2cf7c6f4f11",
+      "title": "DOC-030 inbox Member triage-review 822346",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-triage-review-1.pdf",
+          "bytes": 952
+        },
+        {
+          "name": "doc030-inbox-member-triage-review-2.docx",
+          "bytes": 1091
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.337Z"
+    },
+    "legal_team_member:triage-resolve": {
+      "number": 59,
+      "reference": "R-59",
+      "id": "01a0d817-a4ef-76fb-9874-adf9e62f9273",
+      "title": "DOC-030 inbox Member triage-resolve 822346",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-triage-resolve-1.pdf",
+          "bytes": 954
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.390Z"
+    },
+    "legal_team_member:triage-race": {
+      "number": 60,
+      "reference": "R-60",
+      "id": "01a0d817-a524-7efc-9c1f-a910cb4ed904",
+      "title": "DOC-030 inbox Member triage-race 822346",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.414Z"
+    },
+    "legal_team_member:conv-contract": {
+      "number": 61,
+      "reference": "R-61",
+      "id": "01a0d817-a54e-7a2c-989d-771cbef67858",
+      "title": "DOC-030 inbox Member conv-contract 822346",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": "2026-10-15",
+      "files": [
+        {
+          "name": "doc030-inbox-member-conv-contract-1.pdf",
+          "bytes": 952
+        },
+        {
+          "name": "doc030-inbox-member-conv-contract-2.pdf",
+          "bytes": 952
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-25T10:23:43.502Z"
+    },
+    "legal_team_member:conv-matter": {
+      "number": 62,
+      "reference": "R-62",
+      "id": "01a0d817-a593-7695-992b-b5258406e773",
+      "title": "DOC-030 inbox Member conv-matter 822346",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-conv-matter-1.pdf",
+          "bytes": 948
+        },
+        {
+          "name": "doc030-inbox-member-conv-matter-2.pdf",
+          "bytes": 948
+        }
+      ],
+      "carriesArchivedEntity": true,
+      "createdAt": "2026-09-25T10:23:43.605Z"
+    },
+    "legal_team_member:conv-retarget": {
+      "number": 63,
+      "reference": "R-63",
+      "id": "01a0d817-a5fe-7a77-b075-39635071c75c",
+      "title": "DOC-030 inbox Member conv-retarget 822346",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.637Z"
+    },
+    "legal_team_member:conv-race": {
+      "number": 64,
+      "reference": "R-64",
+      "id": "01a0d817-a62f-7cfa-a9e5-fc6a7046ee00",
+      "title": "DOC-030 inbox Member conv-race 822346",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.684Z"
+    },
+    "legal_team_member:conv-stale": {
+      "number": 65,
+      "reference": "R-65",
+      "id": "01a0d817-a660-7901-af7e-11f52bc7a202",
+      "title": "DOC-030 inbox Member conv-stale 822346",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T10:23:43.738Z"
+    }
+  },
+  "phases": [
+    "triage",
+    "convert",
+    "access"
+  ],
+  "roles": [
+    "administrator",
+    "legal_team_member"
+  ],
+  "startedAt": "2026-09-25T10:23:49.300Z",
+  "finishedAt": "2026-09-25T10:26:59.645Z",
+  "steps": [
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Before any legal user opens them, Oliver Grant views R-51 in the Portal and the Inbox list is browsed: both leave it New",
+      "expected": "Browsing the Inbox list and the Portal view do not mark a Request Read",
+      "page": "/inbox",
+      "actual": "R-51 stayed \"new\" after Oliver Grant's Portal view (Portal pill (no New pill)) and after the Inbox list was loaded in the browser.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:51.739Z",
+      "at": "2026-09-25T10:23:55.831Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open Inbox: Requests tab first, built-in view Status: New, Read, ordered by urgency and then age",
+      "expected": "Requests tab current; chip Status: New, Read; rows New or Read, sorted by urgency then oldest first",
+      "page": "/inbox",
+      "actual": "Tabs Requests (29) and Unassigned contracts (0); /inbox opened on Requests with the chip \"Status: New, Read\". 29 first-page rows ({\"new\":26,\"read\":3}) are ordered by urgency, then by submission time oldest first.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:55.832Z",
+      "at": "2026-09-25T10:23:56.312Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open R-50 from its row and read Form responses (Description as a Row), Attachments, Converts to, Requester, Department, Urgency",
+      "expected": "Named facts visible; the Contract type's Form collects Description, so it shows under Form responses with no Description card; opening marks it Read",
+      "page": "/inbox/50",
+      "actual": "Opened from the list row link. Hero: Requester Oliver Grant, Converts to Contract · DOC-030 inbox Supplier agreement, Department Marketing, Urgency High. Form responses: \"Form responses Description Fictional description for DOC-030 inbox Admin triage-review 822346. Please prepare the paperwork. Counterparties DOC-030 inbox Fictional Counterparty Admin 822346 DOC-030 inbox Supplier name Northwind Fictional Supplies Admin DOC-030\". No separate Description card. Attachments doc030-inbox-admin-triage-review-1.pdf, doc030-inbox-admin-triage-review-2.docx. Opening the page changed the status from new to read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:56.312Z",
+      "at": "2026-09-25T10:23:58.305Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "A Matter Request (R-52) whose Matter type does not collect Description shows a separate Description card",
+      "expected": "Description card present",
+      "page": "/inbox/52",
+      "actual": "R-52 (Matter · DOC-030 inbox Advisory) shows a Description card: \"Description Fictional description for DOC-030 inbox Admin triage-race 822346. Please prepare the paperwork.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:58.305Z",
+      "at": "2026-09-25T10:23:59.054Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Select attachment filenames: PDF displays, Word file is prepared for reading, Download saves the original bytes",
+      "expected": "Viewer shows PDF and Word text; Download bytes equal the stored original",
+      "page": "/inbox/50",
+      "actual": "doc030-inbox-admin-triage-review-1.pdf opened in the viewer with its text and Download saved 950 bytes identical to the submitted file; doc030-inbox-admin-triage-review-2.docx opened in the viewer with its text and Download saved 1090 bytes identical to the submitted file. The row control \"Download doc030-inbox-admin-triage-review-2.docx\" saved 1090 bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:59.055Z",
+      "at": "2026-09-25T10:24:02.139Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Assign R-50 from the list row: Search people, choose Nadia Haddad, Save assignment; status unchanged; the other legal session still has Triage",
+      "expected": "Row and Request page show the saved assignee; status unchanged; other session sees Triage",
+      "page": "/inbox/50",
+      "actual": "Dialog \"Assign R-50 for triage\" listed only active legal people (25: Unassigned, Blair Wentworth, Daniel Okafor, C-030 access-2 V-C05 1790331597412 Administrator, DOC-030 access-2 V-C05 1790331597412 Legal Team Member, C-030 access-2 V-C05 1790331616456 Administrator, DOC-030 access-2 V-C05 1790331616456 Legal Team Member, C-030 access-2 V-C05 1790331802061 Administrator, C-030 access-2 V-C05 1790331802061 Legal Team Member, DOC-030 admin-org V-C36 Avery mugsxnse, DOC-030 admin-org V-C36 Avery mugszvyl, DOC-030 admin-org V-C36 Casey mugsxnse, DOC-030 admin-org V-C36 Casey mugszvyl, D0\nDOC-030 conversations Admin 040441, D0\nDOC-030 conversations Legal Los Angeles 040441, D0\nDOC-030 conversations Legal No Date Bell 040441, D0\nDOC-030 conversations Legal Own List 040441, D5\nDOC-030 search Administrator 5958, D5\nDOC-030 search Legal Team Member 5958, Ines Duarte, Marcus Oyelaran, Nadia Haddad, Priya Raman, Sofia Lindqvist, Tom Iwu); typed \"Nadia\" in Search people, chose Nadia Haddad, Save assignment. Row and Request page read \"Reassign R-50: Nadia Haddad\"; status stayed read; Nadia Haddad's own session still shows Triage on R-50.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:02.140Z",
+      "at": "2026-09-25T10:24:04.656Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Portal shows the saved triage assignee as Legal Owner, and Read once Legal opened the record",
+      "expected": "Oliver Grant's Portal page shows Legal Owner Nadia Haddad and the Read status",
+      "page": "/inbox/50",
+      "actual": "Oliver Grant's Portal page for R-50 shows \"Legal Owner Nadia Haddad\", the Read pill and \"Your request has been opened by the Legal team.\"",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:04.657Z",
+      "at": "2026-09-25T10:24:07.705Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Reassign from the avatar control; Cancel leaves the saved assignment; Unassigned clears it and the Portal shows Not assigned yet",
+      "expected": "Cancel no change; Unassigned saves none; Portal Legal Owner Not assigned yet",
+      "page": "/inbox/50",
+      "actual": "Cancel after choosing Daniel Okafor kept Nadia Haddad; reassigning to Daniel Okafor saved; choosing Unassigned and Save assignment cleared it (button reads Assign R-50, status read); Portal shows \"Legal Owner Not assigned yet\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:07.705Z",
+      "at": "2026-09-25T10:24:12.074Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: people list failure offers Retry; a failed save shows the error and keeps the saved assignee",
+      "expected": "Retry reloads people; failed save leaves the prior assignee",
+      "page": "/inbox/50",
+      "actual": "An aborted people load showed \"People could not be loaded.\" with Retry; Retry listed people. A 503 save showed \"The assignment could not be saved. Try again.\"; reopening the Request showed it still unassigned.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:12.074Z",
+      "at": "2026-09-25T10:24:13.757Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Clarify through Comments: audience starts on Legal Only; Shared with requester reaches the Requester; Legal Only does not; the Request stays undecided",
+      "expected": "Default Legal Only; shared text on Portal; Legal Only text absent; status unchanged",
+      "page": "/inbox/50",
+      "actual": "Composer offered Legal Only (checked) and Shared with requester; posted a Legal Only note, then a Shared with requester question with Comment. Oliver Grant's Portal page shows the question only; status stays read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:13.757Z",
+      "at": "2026-09-25T10:24:17.836Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Triage menu offers Convert to contract, Convert to matter, Resolve request without converting, and no Decline",
+      "expected": "Exactly the three actions",
+      "page": "/inbox/51",
+      "actual": "Menu items: Convert to contract | Convert to matter | Resolve request without converting. No Decline.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:17.837Z",
+      "at": "2026-09-25T10:24:18.705Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Resolve R-51: blank note refused; Cancel leaves it undecided with nothing posted",
+      "expected": "Refusal message; status undecided; no comment",
+      "page": "/inbox/51",
+      "actual": "Dialog \"Resolve R-51 without converting\" with Resolution note (required); an empty submit showed \"Explain why this request is being resolved without converting.\"; Cancel with typed text left status read and posted nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:18.705Z",
+      "at": "2026-09-25T10:24:20.207Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Assign R-51 to Nadia Haddad, then resolve it as Daniel Okafor with a note: Status card Resolved, note in Comments, assignee kept read-only, controls gone",
+      "expected": "Assignment does not reserve; Resolved; note in Comments; no Assign or Triage",
+      "page": "/inbox/51",
+      "actual": "Saved Nadia Haddad as assignee, then Daniel Okafor resolved it; assignment did not reserve it. Dialog text: \"Resolve R-51 without converting Explain why this request can be closed without creating a contract or matter. Resolution note (required) This goes on the request's thread, and to the requester by email. Cancel Resolve re\". Status card reads Resolved; Assign and Triage are gone; Nadia Haddad stays as assignee (read-only); Comments holds the note at the full_thread tier; Form responses and doc030-inbox-admin-triage-resolve-1.pdf remain.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:20.208Z",
+      "at": "2026-09-25T10:24:21.667Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Requester reads the resolution note on the Portal, receives the email, and a later reply does not reopen R-51",
+      "expected": "Note on Portal; email arrives; status stays resolved after reply",
+      "page": "/inbox/51",
+      "actual": "Portal page shows the resolution note; mail \"Your request is resolved: R-51 · DOC-030 inbox Admin triage-resolve 822346\" reached Oliver Grant in the lab Mailpit; Oliver Grant's reply posted and the Request stayed resolved.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:21.667Z",
+      "at": "2026-09-25T10:24:24.771Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Lost race on R-52: Nadia Haddad resolves while the dialog is open; the dialog states their outcome with Close; the losing note is not posted",
+      "expected": "Somebody else already resolved this request.; Close; only the winning note",
+      "page": "/inbox/52",
+      "actual": "Nadia Haddad's resolution landed through the lab API while the browser write was held. The dialog said \"Somebody else already resolved this request.\" and \"Close this to read what they recorded.\" with Close. After Close the Status card reads Resolved; the thread holds only Nadia Haddad's note.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:24.771Z",
+      "at": "2026-09-25T10:24:25.915Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "New and Read: the Status filter shows only New or only Read Requests",
+      "expected": "R-50 (opened) under Read only; an unopened Request under New only",
+      "page": "/inbox?filters=1&view=all&status=new",
+      "actual": "Status chip > Read only > Apply showed \"Status: Read\" with R-50 and only read rows; New only showed \"Status: New\" without R-50 and only new rows (23 on the first page).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:25.916Z",
+      "at": "2026-09-25T10:24:28.696Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Find decided Requests: Status filter Resolved lists them; removing the Status filter lists all outcomes",
+      "expected": "R-51 appears under Resolved and without the Status filter; not in the built-in New, Read view",
+      "page": "/inbox?filters=1&view=all&status=resolved",
+      "actual": "The built-in view omitted R-51; Remove Status filter listed it; Filter > Status > Resolved > Apply showed the \"Status: Resolved\" chip and listed it.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:28.696Z",
+      "at": "2026-09-25T10:24:32.680Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Historical Declined Request shows its reason and no Assign or Triage controls",
+      "expected": "Status: Declined lists a seeded declined Request; its Status card shows Declined and the reason",
+      "page": "/inbox/1",
+      "actual": "Status: Declined listed R-1, R-47, R-3, R-6, R-10, R-38, R-41; R-1 Status card reads \"Status Declined This is a duplicate of an earlier request that is already in progress.\"; no Triage or Assign controls; Form responses kept.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:32.680Z",
+      "at": "2026-09-25T10:24:35.124Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Before converting R-53 and R-54: assign Nadia Haddad for triage and post a Legal Only note and a Shared with requester message, each with paper",
+      "expected": "Comments posted with attachments; the Requester sees only the shared one",
+      "page": "/inbox/54",
+      "actual": "R-53: assignee Nadia Haddad; Legal Only and Shared with requester comments with PDFs posted; the Portal shows only the shared one; R-54: assignee Nadia Haddad; Legal Only and Shared with requester comments with PDFs posted; the Portal shows only the shared one.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:35.993Z",
+      "at": "2026-09-25T10:24:44.755Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open R-53 Triage > Convert to contract with preparation off: the manual Convert dialog opens directly",
+      "expected": "No Getting contract ready and no Unverified; Title, Type, Priority, destination Intake and Creation Rows in Form order, Counterparties picker, Needed by date picker, archived Entity note, Documents with the Request's files, Convert to matter instead; no Carries into / Does not carry into lists",
+      "page": "/inbox/53",
+      "actual": "AI connector enabled by another group (doc030-contracts-b-standin-model); all three Request conversion switches off. Dialog \"Convert R-53 to a contract\" opened directly: no \"Getting contract ready\", no Unverified, no Carries into / Does not carry into lists. Labels in order: Title > Contract type > Priority > Description > Counterparties > Needed by > DOC-030 inbox Supplier name > DOC-030 inbox Budget note > DOC-030 inbox Contracting entity > DOC-030 inbox Cost centre > Documents. Title = Request title; Contract type = DOC-030 inbox Supplier agreement; Priority High; Description prefilled (its Row is collected); Counterparties picker holds the proposed name; Needed by date picker reads \"Oct 15, 2026\"; DOC-030 inbox Supplier name prefilled; \"DOC-030 inbox Old Holdings Ltd is archived. Pick a live entity to convert.\"; the Entity picker does not offer the archived Entity; required DOC-030 inbox Cost centre empty. Documents shows 2 Request files as tiles. Convert to matter instead is offered.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:44.756Z",
+      "at": "2026-09-25T10:24:45.622Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If conversion is refused: empty Title, empty required Row and the archived reference are refused by name; Cancel leaves the Request undecided",
+      "expected": "Named refusals; status undecided after Cancel",
+      "page": "/inbox/53",
+      "actual": "Empty Title: \"Name the contract.\". With the Title back, the archived Entity: \"Pick a live value for DOC-030 inbox Contracting entity.\". After choosing DOC-030 inbox Live Holdings Ltd, the empty required Row: \"Fill DOC-030 inbox Cost centre — this contract type requires it.\". No press decided the Request; Cancel closed the dialog and it stayed read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:45.623Z",
+      "at": "2026-09-25T10:24:48.631Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Convert R-53: change Type and back, replace the archived Entity, answer the required Row, attach two documents and remove one, convert once",
+      "expected": "Changing Type shows the new Type's Rows; one Contract; staged file uploads after the record exists; Request Converted with C- link and Converted by",
+      "page": "/inbox/53",
+      "actual": "Changing Contract type to NDA removed the DOC-030 inbox Supplier name Row (NDA Rows: Title, Contract type, Priority, Description, Counterparties, Needed by, Documents); back on DOC-030 inbox Supplier agreement, the edited Title read \"DOC-030 inbox Admin conv-contract 822346 reviewed\" and DOC-030 inbox Cost centre read \"CC-administrator-001\". Picked DOC-030 inbox Live Holdings Ltd. Attach documents staged doc030-inbox-administrator-added-53.pdf and doc030-inbox-administrator-removed-53.pdf; Document type offered: Draft · ours; \"Remove doc030-inbox-administrator-removed-53.pdf\" took it off. Convert to contract closed the dialog. Status card: \"Status Converted C-128 Converted by Daniel Okafor on Sep 25\". Exactly one Contract carries the title (C-128).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:48.632Z",
+      "at": "2026-09-25T10:24:52.131Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Converted R-53 in the Inbox keeps assignee, Description and Form responses, shows no Attachments card or Comments, and has no Assign or Triage",
+      "expected": "Detail as described for a converted Request",
+      "page": "/inbox/53",
+      "actual": "Converted R-53 shows Form responses with the Description answer, keeps assignee Nadia Haddad (read-only), has a C-128 link on the Status card, no Attachments card, no Comments control, and no Triage or Assign.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:52.132Z",
+      "at": "2026-09-25T10:24:52.978Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open C-128 from the Status card and check Title, Type, Priority, Description, Department, Needed by Key date, Fields, owners, team, Risk, Current / Requester switch",
+      "expected": "Values as the guide states",
+      "page": "/contracts/128/fields",
+      "actual": "C-128: Title \"DOC-030 inbox Admin conv-contract 822346 reviewed\" (edited in the dialog), Type DOC-030 inbox Supplier agreement, Priority high, Risk unset, not Confidential, Description equals the Request's, Department Marketing from the Request, Legal Owner Daniel Okafor (not the triage assignee Nadia Haddad), Business Owner Oliver Grant, team Daniel Okafor, Oliver Grant, Priya Raman, Counterparties [\"DOC-030 inbox Fictional Counterparty Admin 822346\"]. Fields shows DOC-030 inbox Supplier name, DOC-030 inbox Budget note (both Rows on this Type), DOC-030 inbox Cost centre and the live Entity, with no Unverified marker. One Needed by Key date on 2026-10-15. The Current / Requester switch shows the Requester text. The Request keeps its answers, Department and Description.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:52.979Z",
+      "at": "2026-09-25T10:24:56.395Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "C-128 Documents: each Request attachment is a root Document at Version 1 with its bytes; the first is primary; the staged file uploaded; comment paper is not filed; comments keep tiers and authors",
+      "expected": "Request files plus the added one; primary set; comments moved with tiers",
+      "page": "/contracts/128/documents",
+      "actual": "Documents: doc030-inbox-admin-conv-contract-1.pdf, doc030-inbox-admin-conv-contract-2.pdf at the root, one Version each with the original bytes; doc030-inbox-admin-conv-contract-1.pdf is primary; doc030-inbox-administrator-added-53.pdf uploaded after creation; the removed file and comment paper are not Documents. The Legal Only and shared comments moved to C-128 with tiers legal_only and full_thread, author Daniel Okafor, and their PDFs still on the comments.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:56.396Z",
+      "at": "2026-09-25T10:24:58.655Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "After conversion the original R-53 attachment links stop working (staff and Portal)",
+      "expected": "404 on original attachment routes",
+      "page": "/contracts/128/documents",
+      "actual": "doc030-inbox-admin-conv-contract-1.pdf: staff 404, Portal 404; doc030-inbox-admin-conv-contract-2.pdf: staff 404, Portal 404.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:58.656Z",
+      "at": "2026-09-25T10:24:58.689Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Portal: Oliver Grant's R- address redirects to C-128, the Request leaves Your requests, Original request is shown; Rosa Iglesias is refused",
+      "expected": "Redirect; not in Your requests; Original request; other Business User refused",
+      "page": "/contracts/128/documents",
+      "actual": "R-53 opened /portal/contracts/128, which shows Original request; Your requests on /portal no longer lists it; Rosa Iglesias saw no title at the R- address and the Portal contract API answered 404.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:24:58.690Z",
+      "at": "2026-09-25T10:25:04.983Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "R-54 Convert to matter: Matter template defaults (carried answer wins, template fills), No template removes them, explicitly clear the archived Entity, answer the required Row, pick Needed by",
+      "expected": "Template shows defaults; No template removes them; conversion succeeds",
+      "page": "/inbox/54",
+      "actual": "Dialog rows: Title > Matter type > Matter template > Priority > Needed by > DOC-030 inbox Adviser name > DOC-030 inbox Matter entity > DOC-030 inbox Matter cost centre > DOC-030 inbox Region choice > Documents (no Description: the Matter type does not collect it and there is no prepared draft). Template control opened on \"No template\". Choosing DOC-030 inbox Advisory template kept DOC-030 inbox Adviser name \"Fictional Adviser Admin\" and showed DOC-030 inbox Region choice = North; No template emptied it; re-choosing showed North again. Typed DOC-030 inbox Matter cost centre, set DOC-030 inbox Matter entity to Not set, picked Needed by in the date picker (button reads \"Oct 15, 2026\"), Title \"DOC-030 inbox Admin conv-matter 822346\", Priority high. Converted to M-48.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:04.984Z",
+      "at": "2026-09-25T10:25:08.367Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "M-48: Title and Priority kept, Risk unset, Matter Manager and Business Owner, Matter section on Overview, template Tasks and Key dates from the creation date in UTC, Needed by, Documents without primary; Prepare Matter Rows is off so no Unverified values",
+      "expected": "Values as the guide states",
+      "page": "/matters/48",
+      "actual": "M-48: Title unchanged (no \"TPL - \" prefix), Priority high (not the template's low), Risk unset (not critical), Matter Manager Daniel Okafor, Business Owner Oliver Grant on the team. The Overview tab's Matter section shows DOC-030 inbox Adviser name \"Fictional Adviser Admin\" (carried), DOC-030 inbox Region choice North (template), DOC-030 inbox Matter cost centre (typed), DOC-030 inbox Matter entity Not set, DOC-030 inbox Engagement summary empty, Needed by 2026-10-15. With Prepare Matter conversions with AI off, aiUnverified is empty, DOC-030 inbox Engagement summary (a Record Row) stays empty and no Unverified marker shows. Tasks: manager task due 2026-09-28 assigned to Daniel Okafor; open task without due date. Key dates: checkpoint 2026-09-30 and one Needed by on 2026-10-15. Two Documents at Version 1 with original bytes, none primary. Comments kept legal_only and full_thread tiers. Current / Requester switch shown. Oliver Grant's R-54 address opened /portal/matters/48 with Original request.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:08.368Z",
+      "at": "2026-09-25T10:25:11.719Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Re-target R-55 (configured for Contract): Convert to matter, check the destination, switch with Convert to contract instead and back, then convert once; contract-only answers stay on the Request",
+      "expected": "Matter dialog shows only Matter Rows and does not list stay-behind answers; one Matter; Request keeps Supplier name, Budget note and Counterparties",
+      "page": "/inbox/55",
+      "actual": "Convert to matter opened with Matter type \"(none selected)\" and listed no DOC-030 inbox Supplier name, DOC-030 inbox Budget note or Counterparties Row and no stay-behind list; submitting without a type showed \"Pick a matter type.\". Convert to contract instead showed the Contract Rows (DOC-030 inbox Supplier name present) and kept the edited Title (\"DOC-030 inbox Admin conv-retarget 822346 retargeted\"); switching back and converting made M-49 \"DOC-030 inbox Admin conv-retarget 822346 retargeted\". The Matter has no DOC-030 inbox Supplier name or DOC-030 inbox Budget note; the Request page still shows them under Form responses.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:11.720Z",
+      "at": "2026-09-25T10:25:15.061Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Lost race on R-56: Nadia Haddad converts first; the dialog states the outcome and names the record with Close; no second Contract; a second conversion is refused",
+      "expected": "Somebody else already converted this request.; It became C-n.; one record",
+      "page": "/inbox/56",
+      "actual": "Nadia Haddad's conversion landed through the lab API while the browser write was held. Dialog: \"Somebody else already converted this request.\" \"It became C-131.\" \"Close this to read what they recorded.\" with Close. The Status card then read \"Status Converted C-131 Converted by Nadia Haddad on Sep 25\". One Contract has the title; a second convert call answered 409.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:15.062Z",
+      "at": "2026-09-25T10:25:16.310Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "R-57: a refused template default is recovered with No template and the required answers; a failed added upload offers Retry failed uploads and Continue",
+      "expected": "Refusal names the Field and leaves the Request undecided; record created; Retry failed uploads uploads the file",
+      "page": "/inbox/57",
+      "actual": "With DOC-030 inbox Stale template the dialog showed DOC-030 inbox Region choice \"\" and the conversion was refused: \"DOC-030 inbox Region choice: pick one of the options.\"; the Request stayed undecided. No template, DOC-030 inbox Matter cost centre and DOC-030 inbox Region choice North, plus an attached file, converted it to M-50. The first upload was answered 503 by the browser route: the dialog said \"Record created. Some documents could not be uploaded.\" with Continue and Retry failed uploads; Retry failed uploads uploaded doc030-inbox-administrator-retry-57.pdf and the dialog closed.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:16.311Z",
+      "at": "2026-09-25T10:25:22.040Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Before any legal user opens them, Rosa Iglesias views R-59 in the Portal and the Inbox list is browsed: both leave it New",
+      "expected": "Browsing the Inbox list and the Portal view do not mark a Request Read",
+      "page": "/inbox",
+      "actual": "R-59 stayed \"new\" after Rosa Iglesias's Portal view (Portal pill (no New pill)) and after the Inbox list was loaded in the browser.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:22.041Z",
+      "at": "2026-09-25T10:25:26.029Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open Inbox: Requests tab first, built-in view Status: New, Read, ordered by urgency and then age",
+      "expected": "Requests tab current; chip Status: New, Read; rows New or Read, sorted by urgency then oldest first",
+      "page": "/inbox",
+      "actual": "Tabs Requests (24) and Unassigned contracts (0); /inbox opened on Requests with the chip \"Status: New, Read\". 24 first-page rows ({\"read\":5,\"new\":19}) are ordered by urgency, then by submission time oldest first.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:26.030Z",
+      "at": "2026-09-25T10:25:26.365Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open R-58 from its row and read Form responses (Description as a Row), Attachments, Converts to, Requester, Department, Urgency",
+      "expected": "Named facts visible; the Contract type's Form collects Description, so it shows under Form responses with no Description card; opening marks it Read",
+      "page": "/inbox/58",
+      "actual": "Opened from the list row link. Hero: Requester Rosa Iglesias, Converts to Contract · DOC-030 inbox Supplier agreement, Department Procurement, Urgency High. Form responses: \"Form responses Description Fictional description for DOC-030 inbox Member triage-review 822346. Please prepare the paperwork. Counterparties DOC-030 inbox Fictional Counterparty Member 822346 DOC-030 inbox Supplier name Northwind Fictional Supplies Member DOC-\". No separate Description card. Attachments doc030-inbox-member-triage-review-1.pdf, doc030-inbox-member-triage-review-2.docx. Opening the page changed the status from new to read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:26.366Z",
+      "at": "2026-09-25T10:25:28.347Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A Matter Request (R-60) whose Matter type does not collect Description shows a separate Description card",
+      "expected": "Description card present",
+      "page": "/inbox/60",
+      "actual": "R-60 (Matter · DOC-030 inbox Advisory) shows a Description card: \"Description Fictional description for DOC-030 inbox Member triage-race 822346. Please prepare the paperwork.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:28.348Z",
+      "at": "2026-09-25T10:25:29.120Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Select attachment filenames: PDF displays, Word file is prepared for reading, Download saves the original bytes",
+      "expected": "Viewer shows PDF and Word text; Download bytes equal the stored original",
+      "page": "/inbox/58",
+      "actual": "doc030-inbox-member-triage-review-1.pdf opened in the viewer with its text and Download saved 952 bytes identical to the submitted file; doc030-inbox-member-triage-review-2.docx opened in the viewer with its text and Download saved 1091 bytes identical to the submitted file. The row control \"Download doc030-inbox-member-triage-review-2.docx\" saved 1091 bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:29.121Z",
+      "at": "2026-09-25T10:25:32.217Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Assign R-58 from the list row: Search people, choose Daniel Okafor, Save assignment; status unchanged; the other legal session still has Triage",
+      "expected": "Row and Request page show the saved assignee; status unchanged; other session sees Triage",
+      "page": "/inbox/58",
+      "actual": "Dialog \"Assign R-58 for triage\" listed only active legal people (33: Unassigned, Blair Wentworth, Daniel Okafor, DOC-030 access-2 V-C03 1790331876668 Administrator, DOC-030 access-2 V-C03 1790331876668 Administrator without Grant, DOC-030 access-2 V-C03 1790331876668 Legal Team Member, DOC-030 access-2 V-C03 1790331897015 Administrator, DOC-030 access-2 V-C03 1790331897015 Administrator without Grant, DOC-030 access-2 V-C03 1790331897015 Legal Team Member, C-030 access-2 V-C05 1790331597412 Administrator, DOC-030 access-2 V-C05 1790331597412 Legal Team Member, C-030 access-2 V-C05 1790331616456 Administrator, DOC-030 access-2 V-C05 1790331616456 Legal Team Member, C-030 access-2 V-C05 1790331802061 Administrator, C-030 access-2 V-C05 1790331802061 Legal Team Member, DOC-030 access-2 V-C05 1790331802061 No Password Member, C-030 access-2 V-C05 1790331802061 Photo Bug Member, DOC-030 admin-org V-C36 Avery mugsxnse, DOC-030 admin-org V-C36 Avery mugszvyl, DOC-030 admin-org V-C36 Casey mugsxnse, DOC-030 admin-org V-C36 Casey mugszvyl, D0\nDOC-030 conversations Admin 040441, D0\nDOC-030 conversations Legal Los Angeles 040441, D0\nDOC-030 conversations Legal No Date Bell 040441, D0\nDOC-030 conversations Legal Own List 040441, D5\nDOC-030 search Administrator 5958, D5\nDOC-030 search Legal Team Member 5958, Ines Duarte, Marcus Oyelaran, Nadia Haddad, Priya Raman, Sofia Lindqvist, Tom Iwu); typed \"Daniel\" in Search people, chose Daniel Okafor, Save assignment. Row and Request page read \"Reassign R-58: Daniel Okafor\"; status stayed read; Daniel Okafor's own session still shows Triage on R-58.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:32.218Z",
+      "at": "2026-09-25T10:25:34.808Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Portal shows the saved triage assignee as Legal Owner, and Read once Legal opened the record",
+      "expected": "Rosa Iglesias's Portal page shows Legal Owner Daniel Okafor and the Read status",
+      "page": "/inbox/58",
+      "actual": "Rosa Iglesias's Portal page for R-58 shows \"Legal Owner Daniel Okafor\", the Read pill and \"Your request has been opened by the Legal team.\"",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:34.809Z",
+      "at": "2026-09-25T10:25:37.836Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Reassign from the avatar control; Cancel leaves the saved assignment; Unassigned clears it and the Portal shows Not assigned yet",
+      "expected": "Cancel no change; Unassigned saves none; Portal Legal Owner Not assigned yet",
+      "page": "/inbox/58",
+      "actual": "Cancel after choosing Nadia Haddad kept Daniel Okafor; reassigning to Nadia Haddad saved; choosing Unassigned and Save assignment cleared it (button reads Assign R-58, status read); Portal shows \"Legal Owner Not assigned yet\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:37.837Z",
+      "at": "2026-09-25T10:25:42.332Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: people list failure offers Retry; a failed save shows the error and keeps the saved assignee",
+      "expected": "Retry reloads people; failed save leaves the prior assignee",
+      "page": "/inbox/58",
+      "actual": "An aborted people load showed \"People could not be loaded.\" with Retry; Retry listed people. A 503 save showed \"The assignment could not be saved. Try again.\"; reopening the Request showed it still unassigned.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:42.333Z",
+      "at": "2026-09-25T10:25:44.049Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Clarify through Comments: audience starts on Legal Only; Shared with requester reaches the Requester; Legal Only does not; the Request stays undecided",
+      "expected": "Default Legal Only; shared text on Portal; Legal Only text absent; status unchanged",
+      "page": "/inbox/58",
+      "actual": "Composer offered Legal Only (checked) and Shared with requester; posted a Legal Only note, then a Shared with requester question with Comment. Rosa Iglesias's Portal page shows the question only; status stays read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:44.050Z",
+      "at": "2026-09-25T10:25:48.011Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Triage menu offers Convert to contract, Convert to matter, Resolve request without converting, and no Decline",
+      "expected": "Exactly the three actions",
+      "page": "/inbox/59",
+      "actual": "Menu items: Convert to contract | Convert to matter | Resolve request without converting. No Decline.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:48.012Z",
+      "at": "2026-09-25T10:25:48.830Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Resolve R-59: blank note refused; Cancel leaves it undecided with nothing posted",
+      "expected": "Refusal message; status undecided; no comment",
+      "page": "/inbox/59",
+      "actual": "Dialog \"Resolve R-59 without converting\" with Resolution note (required); an empty submit showed \"Explain why this request is being resolved without converting.\"; Cancel with typed text left status read and posted nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:48.831Z",
+      "at": "2026-09-25T10:25:50.319Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Assign R-59 to Daniel Okafor, then resolve it as Nadia Haddad with a note: Status card Resolved, note in Comments, assignee kept read-only, controls gone",
+      "expected": "Assignment does not reserve; Resolved; note in Comments; no Assign or Triage",
+      "page": "/inbox/59",
+      "actual": "Saved Daniel Okafor as assignee, then Nadia Haddad resolved it; assignment did not reserve it. Dialog text: \"Resolve R-59 without converting Explain why this request can be closed without creating a contract or matter. Resolution note (required) This goes on the request's thread, and to the requester by email. Cancel Resolve re\". Status card reads Resolved; Assign and Triage are gone; Daniel Okafor stays as assignee (read-only); Comments holds the note at the full_thread tier; Form responses and doc030-inbox-member-triage-resolve-1.pdf remain.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:50.320Z",
+      "at": "2026-09-25T10:25:51.976Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Requester reads the resolution note on the Portal, receives the email, and a later reply does not reopen R-59",
+      "expected": "Note on Portal; email arrives; status stays resolved after reply",
+      "page": "/inbox/59",
+      "actual": "Portal page shows the resolution note; mail \"Your request is resolved: R-59 · DOC-030 inbox Member triage-resolve 822346\" reached Rosa Iglesias in the lab Mailpit; Rosa Iglesias's reply posted and the Request stayed resolved.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:51.977Z",
+      "at": "2026-09-25T10:25:55.145Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Lost race on R-60: Daniel Okafor resolves while the dialog is open; the dialog states their outcome with Close; the losing note is not posted",
+      "expected": "Somebody else already resolved this request.; Close; only the winning note",
+      "page": "/inbox/60",
+      "actual": "Daniel Okafor's resolution landed through the lab API while the browser write was held. The dialog said \"Somebody else already resolved this request.\" and \"Close this to read what they recorded.\" with Close. After Close the Status card reads Resolved; the thread holds only Daniel Okafor's note.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:55.146Z",
+      "at": "2026-09-25T10:25:56.273Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "New and Read: the Status filter shows only New or only Read Requests",
+      "expected": "R-58 (opened) under Read only; an unopened Request under New only",
+      "page": "/inbox?filters=1&view=all&status=new",
+      "actual": "Status chip > Read only > Apply showed \"Status: Read\" with R-58 and only read rows; New only showed \"Status: New\" without R-58 and only new rows (15 on the first page).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:56.273Z",
+      "at": "2026-09-25T10:25:59.300Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Find decided Requests: Status filter Resolved lists them; removing the Status filter lists all outcomes",
+      "expected": "R-59 appears under Resolved and without the Status filter; not in the built-in New, Read view",
+      "page": "/inbox?filters=1&view=all&status=resolved",
+      "actual": "The built-in view omitted R-59; Remove Status filter listed it; Filter > Status > Resolved > Apply showed the \"Status: Resolved\" chip and listed it.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:25:59.301Z",
+      "at": "2026-09-25T10:26:03.259Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Historical Declined Request shows its reason and no Assign or Triage controls",
+      "expected": "Status: Declined lists a seeded declined Request; its Status card shows Declined and the reason",
+      "page": "/inbox/1",
+      "actual": "Status: Declined listed R-1, R-47, R-3, R-6, R-10, R-38, R-41; R-1 Status card reads \"Status Declined This is a duplicate of an earlier request that is already in progress.\"; no Triage or Assign controls; Form responses kept.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:03.260Z",
+      "at": "2026-09-25T10:26:05.610Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Before converting R-61 and R-62: assign Daniel Okafor for triage and post a Legal Only note and a Shared with requester message, each with paper",
+      "expected": "Comments posted with attachments; the Requester sees only the shared one",
+      "page": "/inbox/62",
+      "actual": "R-61: assignee Daniel Okafor; Legal Only and Shared with requester comments with PDFs posted; the Portal shows only the shared one; R-62: assignee Daniel Okafor; Legal Only and Shared with requester comments with PDFs posted; the Portal shows only the shared one.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:05.611Z",
+      "at": "2026-09-25T10:26:14.352Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open R-61 Triage > Convert to contract with preparation off: the manual Convert dialog opens directly",
+      "expected": "No Getting contract ready and no Unverified; Title, Type, Priority, destination Intake and Creation Rows in Form order, Counterparties picker, Needed by date picker, archived Entity note, Documents with the Request's files, Convert to matter instead; no Carries into / Does not carry into lists",
+      "page": "/inbox/61",
+      "actual": "AI connector enabled by another group (doc030-contracts-b-standin-model); all three Request conversion switches off. Dialog \"Convert R-61 to a contract\" opened directly: no \"Getting contract ready\", no Unverified, no Carries into / Does not carry into lists. Labels in order: Title > Contract type > Priority > Description > Counterparties > Needed by > DOC-030 inbox Supplier name > DOC-030 inbox Budget note > DOC-030 inbox Contracting entity > DOC-030 inbox Cost centre > Documents. Title = Request title; Contract type = DOC-030 inbox Supplier agreement; Priority High; Description prefilled (its Row is collected); Counterparties picker holds the proposed name; Needed by date picker reads \"Oct 15, 2026\"; DOC-030 inbox Supplier name prefilled; \"DOC-030 inbox Old Holdings Ltd is archived. Pick a live entity to convert.\"; the Entity picker does not offer the archived Entity; required DOC-030 inbox Cost centre empty. Documents shows 2 Request files as tiles. Convert to matter instead is offered.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:14.353Z",
+      "at": "2026-09-25T10:26:15.251Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If conversion is refused: empty Title, empty required Row and the archived reference are refused by name; Cancel leaves the Request undecided",
+      "expected": "Named refusals; status undecided after Cancel",
+      "page": "/inbox/61",
+      "actual": "Empty Title: \"Name the contract.\". With the Title back, the archived Entity: \"Pick a live value for DOC-030 inbox Contracting entity.\". After choosing DOC-030 inbox Live Holdings Ltd, the empty required Row: \"Fill DOC-030 inbox Cost centre — this contract type requires it.\". No press decided the Request; Cancel closed the dialog and it stayed read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:15.252Z",
+      "at": "2026-09-25T10:26:18.256Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Convert R-61: change Type and back, replace the archived Entity, answer the required Row, attach two documents and remove one, convert once",
+      "expected": "Changing Type shows the new Type's Rows; one Contract; staged file uploads after the record exists; Request Converted with C- link and Converted by",
+      "page": "/inbox/61",
+      "actual": "Changing Contract type to NDA removed the DOC-030 inbox Supplier name Row (NDA Rows: Title, Contract type, Priority, Description, Counterparties, Needed by, Documents); back on DOC-030 inbox Supplier agreement, the edited Title read \"DOC-030 inbox Member conv-contract 822346 reviewed\" and DOC-030 inbox Cost centre read \"CC-legal_team_member-001\". Picked DOC-030 inbox Live Holdings Ltd. Attach documents staged doc030-inbox-legal_team_member-added-61.pdf and doc030-inbox-legal_team_member-removed-61.pdf; Document type offered: Draft · ours; \"Remove doc030-inbox-legal_team_member-removed-61.pdf\" took it off. Convert to contract closed the dialog. Status card: \"Status Converted C-135 Converted by Nadia Haddad on Sep 25\". Exactly one Contract carries the title (C-135).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:18.256Z",
+      "at": "2026-09-25T10:26:21.144Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Converted R-61 in the Inbox keeps assignee, Description and Form responses, shows no Attachments card or Comments, and has no Assign or Triage",
+      "expected": "Detail as described for a converted Request",
+      "page": "/inbox/61",
+      "actual": "Converted R-61 shows Form responses with the Description answer, keeps assignee Daniel Okafor (read-only), has a C-135 link on the Status card, no Attachments card, no Comments control, and no Triage or Assign.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:21.145Z",
+      "at": "2026-09-25T10:26:21.842Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open C-135 from the Status card and check Title, Type, Priority, Description, Department, Needed by Key date, Fields, owners, team, Risk, Current / Requester switch",
+      "expected": "Values as the guide states",
+      "page": "/contracts/135/fields",
+      "actual": "C-135: Title \"DOC-030 inbox Member conv-contract 822346 reviewed\" (edited in the dialog), Type DOC-030 inbox Supplier agreement, Priority high, Risk unset, not Confidential, Description equals the Request's, Department Procurement from the Request, Legal Owner Nadia Haddad (not the triage assignee Daniel Okafor), Business Owner Rosa Iglesias, team Nadia Haddad, Priya Raman, Rosa Iglesias, Counterparties [\"DOC-030 inbox Fictional Counterparty Member 822346\"]. Fields shows DOC-030 inbox Supplier name, DOC-030 inbox Budget note (both Rows on this Type), DOC-030 inbox Cost centre and the live Entity, with no Unverified marker. One Needed by Key date on 2026-10-15. The Current / Requester switch shows the Requester text. The Request keeps its answers, Department and Description.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:21.842Z",
+      "at": "2026-09-25T10:26:25.224Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "C-135 Documents: each Request attachment is a root Document at Version 1 with its bytes; the first is primary; the staged file uploaded; comment paper is not filed; comments keep tiers and authors",
+      "expected": "Request files plus the added one; primary set; comments moved with tiers",
+      "page": "/contracts/135/documents",
+      "actual": "Documents: doc030-inbox-member-conv-contract-1.pdf, doc030-inbox-member-conv-contract-2.pdf at the root, one Version each with the original bytes; doc030-inbox-member-conv-contract-1.pdf is primary; doc030-inbox-legal_team_member-added-61.pdf uploaded after creation; the removed file and comment paper are not Documents. The Legal Only and shared comments moved to C-135 with tiers legal_only and full_thread, author Nadia Haddad, and their PDFs still on the comments.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:25.226Z",
+      "at": "2026-09-25T10:26:27.433Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "After conversion the original R-61 attachment links stop working (staff and Portal)",
+      "expected": "404 on original attachment routes",
+      "page": "/contracts/135/documents",
+      "actual": "doc030-inbox-member-conv-contract-1.pdf: staff 404, Portal 404; doc030-inbox-member-conv-contract-2.pdf: staff 404, Portal 404.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:27.434Z",
+      "at": "2026-09-25T10:26:27.466Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Portal: Rosa Iglesias's R- address redirects to C-135, the Request leaves Your requests, Original request is shown; Oliver Grant is refused",
+      "expected": "Redirect; not in Your requests; Original request; other Business User refused",
+      "page": "/contracts/135/documents",
+      "actual": "R-61 opened /portal/contracts/135, which shows Original request; Your requests on /portal no longer lists it; Oliver Grant saw no title at the R- address and the Portal contract API answered 404.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:27.467Z",
+      "at": "2026-09-25T10:26:33.683Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "R-62 Convert to matter: Matter template defaults (carried answer wins, template fills), No template removes them, explicitly clear the archived Entity, answer the required Row, pick Needed by",
+      "expected": "Template shows defaults; No template removes them; conversion succeeds",
+      "page": "/inbox/62",
+      "actual": "Dialog rows: Title > Matter type > Matter template > Priority > Needed by > DOC-030 inbox Adviser name > DOC-030 inbox Matter entity > DOC-030 inbox Matter cost centre > DOC-030 inbox Region choice > Documents (no Description: the Matter type does not collect it and there is no prepared draft). Template control opened on \"No template\". Choosing DOC-030 inbox Advisory template kept DOC-030 inbox Adviser name \"Fictional Adviser Member\" and showed DOC-030 inbox Region choice = North; No template emptied it; re-choosing showed North again. Typed DOC-030 inbox Matter cost centre, set DOC-030 inbox Matter entity to Not set, picked Needed by in the date picker (button reads \"Oct 15, 2026\"), Title \"DOC-030 inbox Member conv-matter 822346\", Priority high. Converted to M-53.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:33.684Z",
+      "at": "2026-09-25T10:26:36.894Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "M-53: Title and Priority kept, Risk unset, Matter Manager and Business Owner, Matter section on Overview, template Tasks and Key dates from the creation date in UTC, Needed by, Documents without primary; Prepare Matter Rows is off so no Unverified values",
+      "expected": "Values as the guide states",
+      "page": "/matters/53",
+      "actual": "M-53: Title unchanged (no \"TPL - \" prefix), Priority high (not the template's low), Risk unset (not critical), Matter Manager Nadia Haddad, Business Owner Rosa Iglesias on the team. The Overview tab's Matter section shows DOC-030 inbox Adviser name \"Fictional Adviser Member\" (carried), DOC-030 inbox Region choice North (template), DOC-030 inbox Matter cost centre (typed), DOC-030 inbox Matter entity Not set, DOC-030 inbox Engagement summary empty, Needed by 2026-10-15. With Prepare Matter conversions with AI off, aiUnverified is empty, DOC-030 inbox Engagement summary (a Record Row) stays empty and no Unverified marker shows. Tasks: manager task due 2026-09-28 assigned to Nadia Haddad; open task without due date. Key dates: checkpoint 2026-09-30 and one Needed by on 2026-10-15. Two Documents at Version 1 with original bytes, none primary. Comments kept legal_only and full_thread tiers. Current / Requester switch shown. Rosa Iglesias's R-62 address opened /portal/matters/53 with Original request.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:36.894Z",
+      "at": "2026-09-25T10:26:40.274Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Re-target R-63 (configured for Contract): Convert to matter, check the destination, switch with Convert to contract instead and back, then convert once; contract-only answers stay on the Request",
+      "expected": "Matter dialog shows only Matter Rows and does not list stay-behind answers; one Matter; Request keeps Supplier name, Budget note and Counterparties",
+      "page": "/inbox/63",
+      "actual": "Convert to matter opened with Matter type \"(none selected)\" and listed no DOC-030 inbox Supplier name, DOC-030 inbox Budget note or Counterparties Row and no stay-behind list; submitting without a type showed \"Pick a matter type.\". Convert to contract instead showed the Contract Rows (DOC-030 inbox Supplier name present) and kept the edited Title (\"DOC-030 inbox Member conv-retarget 822346 retargeted\"); switching back and converting made M-54 \"DOC-030 inbox Member conv-retarget 822346 retargeted\". The Matter has no DOC-030 inbox Supplier name or DOC-030 inbox Budget note; the Request page still shows them under Form responses.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:40.276Z",
+      "at": "2026-09-25T10:26:43.634Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Lost race on R-64: Daniel Okafor converts first; the dialog states the outcome and names the record with Close; no second Contract; a second conversion is refused",
+      "expected": "Somebody else already converted this request.; It became C-n.; one record",
+      "page": "/inbox/64",
+      "actual": "Daniel Okafor's conversion landed through the lab API while the browser write was held. Dialog: \"Somebody else already converted this request.\" \"It became C-137.\" \"Close this to read what they recorded.\" with Close. The Status card then read \"Status Converted C-137 Converted by Daniel Okafor on Sep 25\". One Contract has the title; a second convert call answered 409.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:43.635Z",
+      "at": "2026-09-25T10:26:44.840Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "R-65: a refused template default is recovered with No template and the required answers; a failed added upload offers Retry failed uploads and Continue",
+      "expected": "Refusal names the Field and leaves the Request undecided; record created; Retry failed uploads uploads the file",
+      "page": "/inbox/65",
+      "actual": "With DOC-030 inbox Stale template the dialog showed DOC-030 inbox Region choice \"\" and the conversion was refused: \"DOC-030 inbox Region choice: pick one of the options.\"; the Request stayed undecided. No template, DOC-030 inbox Matter cost centre and DOC-030 inbox Region choice North, plus an attached file, converted it to M-55. The first upload was answered 503 by the browser route: the dialog said \"Record created. Some documents could not be uploaded.\" with Continue and Retry failed uploads; Retry failed uploads uploaded doc030-inbox-legal_team_member-retry-65.pdf and the dialog closed.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:44.841Z",
+      "at": "2026-09-25T10:26:50.495Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Business Users cannot open or triage the Inbox",
+      "expected": "Inbox redirects to the Portal; staff Request list, detail, assignment and convert API refused",
+      "page": null,
+      "actual": "Oliver Grant: /inbox landed on /portal, /inbox/50 on /portal; staff list API 403, Request detail 403, assignment 403, convert 403; Rosa Iglesias: /inbox landed on /portal, /inbox/50 on /portal; staff list API 403, Request detail 403, assignment 403, convert 403.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:26:50.496Z",
+      "at": "2026-09-25T10:26:59.643Z"
+    }
+  ],
+  "records": [
+    {
+      "role": "administrator",
+      "request": "R-53",
+      "record": "C-128"
+    },
+    {
+      "role": "administrator",
+      "request": "R-54",
+      "record": "M-48"
+    },
+    {
+      "role": "administrator",
+      "request": "R-55",
+      "record": "M-49"
+    },
+    {
+      "role": "administrator",
+      "request": "R-56",
+      "record": "C-131",
+      "note": "won by Nadia Haddad"
+    },
+    {
+      "role": "administrator",
+      "request": "R-57",
+      "record": "M-50"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-61",
+      "record": "C-135"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-62",
+      "record": "M-53"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-63",
+      "record": "M-54"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-64",
+      "record": "C-137",
+      "note": "won by Daniel Okafor"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-65",
+      "record": "M-55"
+    }
+  ],
+  "productBugs": [],
+  "guideFailures": [],
+  "resolveTimes": {
+    "R-51": 1790331861293,
+    "R-59": 1790331951311
+  },
+  "aiConnectorAtConvert": {
+    "at": "2026-09-25T10:24:44.763Z",
+    "enabled": true,
+    "preset": "custom",
+    "model": "doc030-contracts-b-standin-model",
+    "matterPreparation": false,
+    "contractPreparation": false,
+    "contractConversionAnalysis": false
+  },
+  "articleHashesAtEnd": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  }
+}

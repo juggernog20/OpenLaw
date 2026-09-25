@@ -1,0 +1,260 @@
+{
+  "section": "policy",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2",
+  "labProject": "openlaw-docs-80ceef9e-auth2",
+  "appUrl": "http://127.0.0.1:43310",
+  "mailUrl": "http://127.0.0.1:48435",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "base: lab environment (SMTP_URL smtp://mailpit:1025, SMTP_FROM OpenLaw <legal@helix.example>, BASE_URL http://127.0.0.1:43310); OIDC fixture running",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:23:57.360Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Open Settings, Advanced, Authentication: two policy cards with four switches; SSO unavailable before a provider is registered, with its help tooltip; the emergency password line",
+      "expected": "Legal User Authentication and Business Portal Authentication; four labelled switches; SSO disabled; tooltip text",
+      "startedAt": "2026-09-25T10:23:58.247Z",
+      "finishedAt": "2026-09-25T10:23:59.117Z",
+      "actual": "The rail's Advanced group expanded to Authentication (/settings/authentication). Switches: {\"Legal User Authentication\":[\"Email and password:true\",\"Email magic link:true\",\"Single sign-on (SSO):false:disabled\",\"Require two-factor authentication:false\"],\"Business Portal Authentication\":[\"Email and password:true\",\"Email magic link:true\",\"Single sign-on (SSO):false:disabled\",\"Require two-factor authentication:false\"]}. The SSO help tooltip read \"Configure an identity provider below to enable single sign-on.\". The Legal card said \"Administrators retain emergency password sign-in. Any required two-factor authentication still applies.\"",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Keep at least one sign-in method on in each card: a policy with no method is refused",
+      "expected": "\"Enable at least one sign-in method.\" in both cards; stored policy unchanged",
+      "startedAt": "2026-09-25T10:23:59.118Z",
+      "finishedAt": "2026-09-25T10:24:01.976Z",
+      "actual": "Observed {\"Legal User Authentication\":{\"first\":\"Saved\",\"second\":\"Enable at least one sign-in method.\",\"stored\":{\"password\":true,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false}},\"Business Portal Authentication\":{\"first\":\"Saved\",\"second\":\"Enable at least one sign-in method.\",\"stored\":{\"password\":true,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false}}}. Email magic link was turned back on in both cards ({\"legal\":{\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false},\"business\":{\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}}).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Emergency password sign-in: Email and password off under Legal User Authentication",
+      "expected": "An Administrator with a password still signs in; a Legal Team Member cannot",
+      "startedAt": "2026-09-25T10:24:01.977Z",
+      "finishedAt": "2026-09-25T10:24:05.722Z",
+      "actual": "With Email and password off (\"Saved\"), the staff page offered [\"Send link\",\"Administrator sign-in\",\"Back to sign-in\"]. Daniel (Administrator with a password) signed in with a password (me 200, role administrator). Nadia (Legal Team Member) was refused: \"Password sign-in is disabled for this account.\" (me 401). Email and password was turned back on.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/users",
+      "action": "Prepare staff: invite a pending Legal Team Member on helix.example, one on a domain that is not allowed, and one for single sign-on",
+      "expected": "Three Invited rows",
+      "startedAt": "2026-09-25T10:24:05.722Z",
+      "finishedAt": "2026-09-25T10:24:06.576Z",
+      "actual": "Rows: {\"doc030-auth-pending-p31639@helix.example\":\"Invited\",\"doc030-auth-offdomain-p31639@elsewhere.example\":\"Invited\",\"doc030-auth-sso-p31639@helix.example\":\"Invited\"}. Allowed domains: [\"helix.example\"].",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/users",
+      "action": "Email magic link: a pending staff invitation gets a sign-in link, even off the allowed domains; the first sign-in through a link activates it; the link expires in 5 minutes and works once",
+      "expected": "Links arrive; sign-ins succeed as Legal team member; rows Active; a reused link fails",
+      "startedAt": "2026-09-25T10:24:06.577Z",
+      "finishedAt": "2026-09-25T10:24:09.818Z",
+      "actual": "Allowed domains held only helix.example. [{\"email\":\"doc030-auth-pending-p31639@helix.example\",\"sent\":\"It expires in 5 minutes and works once.\",\"me\":200,\"role\":\"legal_team_member\",\"mailLine\":true},{\"email\":\"doc030-auth-offdomain-p31639@elsewhere.example\",\"sent\":\"It expires in 5 minutes and works once.\",\"me\":200,\"role\":\"legal_team_member\",\"mailLine\":true}]. Rows after sign-in: {\"doc030-auth-pending-p31639@helix.example\":\"Active\",\"doc030-auth-offdomain-p31639@elsewhere.example\":\"Active\"}. Opening the spent link again in a new browser gave {\"path\":\"/auth/link-expired\",\"me\":401,\"text\":\"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get a fresh one. Email Send link Help with this page\"}.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/users",
+      "action": "A Business User who signs in on the staff sign-in page lands in the Portal",
+      "expected": "Seeded Business User requests a link on /auth/login and lands under /portal",
+      "startedAt": "2026-09-25T10:24:09.819Z",
+      "finishedAt": "2026-09-25T10:24:10.817Z",
+      "actual": "Felix Brandt requested a link on the staff sign-in page; opening it landed on /portal as business_user.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Control Business Portal entry: Add northwind.example under Allowed email domains; Remove control; saved list survives reload",
+      "expected": "Saved; Remove northwind.example; reload keeps it",
+      "startedAt": "2026-09-25T10:24:10.817Z",
+      "finishedAt": "2026-09-25T10:24:11.777Z",
+      "actual": "After Add, northwind.example appeared with a \"Remove northwind.example\" control and stayed after reload ([\"helix.example\",\"northwind.example\"]).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "A new Portal entrant on an allowed domain gets a link and a Business User account; an unapproved address gets no sign-in link or password setup link and no account",
+      "expected": "Allowed address becomes a Business User; unapproved address: neutral page, no mail, no account",
+      "startedAt": "2026-09-25T10:24:11.778Z",
+      "finishedAt": "2026-09-25T10:24:16.236Z",
+      "actual": "doc030-auth-portal-p31639@northwind.example got \"Sign in to OpenLaw\", opened the Portal and is a business_user. doc030-auth-unapproved-p31639@unlisted.example saw \"Helix Software Group Legal Portal Powered by OpenLaw Check your email If doc030-auth-unapproved-p31639@unlisted.example \" and the neutral password-setup confirmation, but Mailpit received 0 messages and no account exists.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "A Business User sets a password through the Portal password setup link and signs in with Email and password",
+      "expected": "Password setup email; password sign-in reaches the Portal",
+      "startedAt": "2026-09-25T10:24:16.237Z",
+      "finishedAt": "2026-09-25T10:24:18.019Z",
+      "actual": "\"Set your OpenLaw password\" arrived, the password was set, and Email and password sign-in on the Portal page reached /portal/onboarding as business_user.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Remove the domain: new accounts on it are refused, while existing Business Users keep signing in (new link, held session, earlier link, password)",
+      "expected": "Existing BU gets a new link; session, earlier link and password still work; a new address gets no link; a new address refused at password setup completion and at link redemption; staff unaffected",
+      "startedAt": "2026-09-25T10:24:18.019Z",
+      "finishedAt": "2026-09-25T10:24:30.835Z",
+      "actual": "Check failed: {\"existingNewLink\":true,\"existingNewLinkMe\":200,\"newAddressLinks\":0,\"heldSession\":200,\"earlierLink\":\"/portal/onboarding me 200\",\"passwordSignIn\":\"me 200 business_user\",\"latePasswordSetup\":\"Helix Software Group Legal Portal Powered by OpenLaw Set your password At least 8 characters. Password setup is no longer available for this address. New password Confirm password Set password Help wi\",\"lateLink\":\"/portal/login?error=EMAIL_DOMAIN_NOT_ALLOWED me 401: Helix Software Group Legal Portal Powered by OpenLaw Business Portal sign-in This sign-in link could not be used. Request a new link or contact your administrat\",\"staffLink\":true,\"lateAccounts\":0}",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "With an empty list, the card shows the no-domains message; Invite user offers staff roles only; existing Business Users keep signing in",
+      "expected": "\"No domains allowed yet. New users must be invited individually.\"; two invite roles; existing BU password sign-in works",
+      "startedAt": "2026-09-25T10:24:30.836Z",
+      "finishedAt": "2026-09-25T10:24:33.663Z",
+      "actual": "With every domain removed the card read \"No domains allowed yet. New users must be invited individually.\" An existing Business User still signed in with a password (me 200). Invite user offered [\"Legal team member\",\"Administrator\"], so no Business User can be invited. The list was restored to [\"helix.example\",\"northwind.example\"].",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Turn off Email magic link under Business Portal Authentication: links sent earlier stop working; the Portal page offers other methods; a Business User with a password still signs in",
+      "expected": "Earlier link gives no session; no magic-link choice; password sign-in works",
+      "startedAt": "2026-09-25T10:24:33.663Z",
+      "finishedAt": "2026-09-25T10:24:37.990Z",
+      "actual": "Turning off Email magic link showed \"Saved\". Opening Clara Fontaine's link sent before the change landed on /portal/login?error&method with \"Helix Software Group Legal Portal Powered by OpenLaw Business Portal sign-in This sign-in link could not be used. Request a new link or contact your administrator. Email Password Sign in Set up or res\" and no session (me 401). The Portal sign-in page offered [\"Sign in\",\"Set up or reset your password\"]. A Business User with a password still signed in (me 200). Email magic link was turned back on.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/auth/link-expired",
+      "action": "A sign-in link expires after 5 minutes",
+      "expected": "A link opened more than 5 minutes after it was sent gives no session",
+      "startedAt": "2026-09-25T10:24:37.990Z",
+      "finishedAt": "2026-09-25T10:29:13.830Z",
+      "actual": "A staff sign-in link for Tom Iwu opened 316 seconds after it was sent landed on /auth/link-expired with \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get a fresh one. Email Send link Help with this page\" and no session (me 401).",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:29:13.838Z",
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "Daniel Okafor (seeded)"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "Nadia Haddad (seeded)"
+    },
+    {
+      "role": "business_user",
+      "account": "Felix Brandt (seeded)"
+    },
+    {
+      "key": "pending",
+      "account": "doc030-auth-pending-p31639@helix.example"
+    },
+    {
+      "key": "offDomain",
+      "account": "doc030-auth-offdomain-p31639@elsewhere.example"
+    },
+    {
+      "key": "ssoStaff",
+      "account": "doc030-auth-sso-p31639@helix.example"
+    },
+    {
+      "key": "portalNew",
+      "account": "doc030-auth-portal-p31639@northwind.example"
+    },
+    {
+      "key": "portalPassword",
+      "account": "doc030-auth-portal-pw-p31639@northwind.example"
+    },
+    {
+      "key": "portalLate",
+      "account": "doc030-auth-portal-late-p31639@northwind.example"
+    },
+    {
+      "key": "portalLateLink",
+      "account": "doc030-auth-portal-latelink-p31639@northwind.example"
+    },
+    {
+      "key": "unapproved",
+      "account": "doc030-auth-unapproved-p31639@unlisted.example"
+    },
+    {
+      "key": "uninvitedStaff",
+      "account": "doc030-auth-uninvited-p31639@helix.example"
+    },
+    {
+      "key": "ssoBu",
+      "account": "doc030-auth-ssobu-p31639@helix.example"
+    },
+    {
+      "key": "newcomer",
+      "account": "doc030-auth-newcomer-p31639@helix.example"
+    }
+  ]
+}

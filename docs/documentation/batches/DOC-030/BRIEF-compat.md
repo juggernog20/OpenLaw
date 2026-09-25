@@ -16,7 +16,7 @@ wrong, or by walking them again when the triage says the app moved under them.
   of `compat` or `rewalk`, the files inspected, the reason and a replay script if
   DOC-029 left one.
 - The labs are described in `BRIEF-walkthrough.md` (same folder); the rules for
-  sharing the `work` lab apply to you too. Pass the seed password only through
+  sharing the `work2` lab apply to you too. Pass the seed password only through
   `LAB_PASSWORD`.
 - Rules for records are in `docs/documentation/PUBLISHING.md`, section "Editions
   and publication states". Read the DOC-029 examples:

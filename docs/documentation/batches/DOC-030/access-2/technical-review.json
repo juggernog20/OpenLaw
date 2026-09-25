@@ -30,7 +30,7 @@
       "articleId": "staff-sign-in",
       "scenario": ["V-C01"],
       "contentSha256Before": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
-      "contentSha256": "6a8ac93d95419cf8bf834ae112740517b4f9a7d7a3589758f3d9f45167cd7f90",
+      "contentSha256": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35",
       "sources": [
         "CONTEXT.md",
         "messages/en-US.json",
@@ -103,6 +103,12 @@
           "before": "Follow the email's link within one hour and set a new password.",
           "after": "Select Set password in the email within one hour. The new password signs out every session on every device. Three setup requests per address in 15 minutes, then Too many password setup requests. Try again later.",
           "source": "instance.ts revokeSessionsOnPasswordReset: true; authentication-policy-routes.ts POST /auth/password-setup budget; TECH-032"
+        },
+        {
+          "claim": "Sign-in link expired page controls (walkthrough finding)",
+          "before": "Enter your email there to get a new link, or select Back to sign-in.",
+          "after": "While sign-in links are on and OpenLaw can send email, the page shows Email and Send link. Otherwise it shows only Back to sign-in.",
+          "source": "apps/web/src/routes/link-expired.tsx (MagicLinkRequest when policy magicLink and emailConfigured, else Back to sign-in card); apps/web/src/components/magic-link-request.tsx"
         }
       ],
       "confirmed": [

@@ -1,76 +1,75 @@
 {
   "articleId": "portal-knowledge",
-  "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (portal, round 1)",
+  "contentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (access-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (access-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access-2)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (portal)",
-  "technicalReviewer": "DOC-029 source-review author agent (portal)",
-  "verifiedAt": "2026-09-16T15:23:35.996Z",
+  "verifiedAt": "2026-09-25T10:37:48.051Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/portal-knowledge.md",
-    "docs/documentation/batches/DOC-029/portal/technical-review.json",
-    "docs/documentation/batches/DOC-029/portal/walkthrough-r1.json",
+    "docs/documentation/batches/DOC-030/access-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "docs/decision-records/DECISIONS-KNOWLEDGE.md (KNW-004 and its 2026-09-18 addendum)",
+    "apps/api/src/modules/portal/routes.ts (getPortalKnowledge, download route, intake links)",
+    "apps/api/src/modules/knowledge/service.ts (portalKnowledgeScope)",
+    "apps/api/src/lib/contract-access.ts (documentAudienceScope)",
+    "apps/api/src/modules/portal/knowledge.test.ts",
     "apps/web/src/routes/portal-knowledge.tsx",
     "apps/web/src/components/portal/deflection-panel.tsx",
+    "apps/web/src/routes/portal.tsx",
+    "apps/web/src/routes/portal-request-form.tsx",
     "apps/web/src/components/portal/portal-nav.tsx",
-    "apps/api/src/modules/portal/routes.ts"
+    "apps/web/src/components/portal/portal-shell.tsx",
+    "apps/web/src/components/documents/documents-card.tsx (Mark confidential, canFlag)"
   ],
   "scenarios": [
     {
       "id": "V-C11",
-      "coverage": ["C11"],
+      "coverage": [
+        "C11"
+      ],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3 with its seeded Portal home deflection links (four Knowledge links, one external intranet.helix.example link that does not resolve).",
-        "fixtures-r1.mjs created DOC-029 portal guidance (published Everyone, supporting PDF uploaded before the primary PDF, written guidance), restricted (published Legal Only with a PDF), draft (unpublished Everyone with a PDF) and archived (archived Everyone with a PDF) Knowledge Items as Nadia Haddad through the API.",
-        "Jonas Weber signs in with a fresh Portal magic link; Nadia adds a Version and unpublishes/republishes in a separate context; a signed-out context checks anonymous access."
+        "A throwaway Business User (doc030.access2.bu.*@helix.example) signed in to the Portal with a fresh sign-in link from the lab Mailpit. It was JIT-provisioned, and its first run was finished through the API with Department Engineering.",
+        "Seeded Before you submit links: four Knowledge links and one external link to intranet.helix.example.",
+        "DOC-030 Knowledge Items created by the seeded Administrator through the API: a published Everyone item with a supporting and a primary Document and Guidance; a published Everyone item whose primary Document is marked Confidential; one whose only Document is Confidential; and Legal only, draft and archived items."
       ],
       "expected": "Only eligible published Knowledge appears and allowed files open through their intended links. Unpublished or out-of-audience items and their files remain unavailable; a broken external link does not block the Request form.",
-      "actual": "Before you submit on the home listed four Knowledge links, each a published Everyone item, and the external link with intranet.helix.example beneath it and target _blank; the Contract review form had no panel. \"How to ask legal for help\" opened in the same tab with From Legal above the title and Guidance, and Your requests returned to /portal. The DOC-029 guidance item listed the primary Document first although the supporting one was created earlier; each Download matched the staff current Version bytes; there was no version picker or reader; Guidance showed the written text. After Nadia added a Version, the page listed the new filename and Download and the earlier saved address served the new bytes. Draft, restricted, archived and unknown items (and the seeded draft Everyone item) returned the page to /portal and answered 404 for the item and for their files. After Nadia unpublished the guidance, its page returned to /portal and the saved download address answered 404; after republishing it answered 200. The external link opened a new tab that failed to load; the original tab stayed on /portal and the Legal question form then confirmed R-86. Portal navigation offered Requests, Contracts, Matters, Auto-Docs; /knowledge returned to /portal and the staff list API answered 403; the Portal item page had no editing controls. A signed-out browser went to /portal/login and the item and file APIs answered 401. Help search for the guidance title found no link to it.",
+      "actual": "11 recorded steps passed (one of them signed out). Before you submit on the Portal home listed How to ask legal for help, Contract review turnaround times, When you need a DPA, Using customer names in marketing and Helix intranet - Legal. Every Knowledge link pointed at a published Everyone item. The Contract review form had no links, so the lists differ. How to ask legal for help opened in the same tab with From Legal above its title and a Guidance section, and Your requests returned to /portal. The shared DOC-030 guidance link listed the primary Document first, then the supporting one. Download gave each current Version byte for byte. There was no version picker or embedded reader, and Guidance showed the written text. On the item whose primary Document is Confidential, only the supporting Document appeared. The Confidential Document's download address answered 404 and the open one 200. After Legal added a Version, Download and the earlier saved address both served the new file. Draft, Legal only, archived and unknown items returned to /portal, and their item and file addresses answered 404. After Legal unpublished the guidance, its page returned to /portal and its saved download address answered 404. Republishing restored it (200). Helix intranet - Legal showed intranet.helix.example beneath the label and opened a new tab, which failed to load. The original tab stayed on /portal, and the Legal question form then submitted with Thanks! Your request has been submitted to legal. The Portal navigation had Requests, Approvals, Contracts, Matters and Auto-Docs, with no Knowledge. /knowledge sent the Business User to /portal, the staff Knowledge API answered 403, and the item page had no editing controls. A signed-out browser went to /portal/login, with item and file answering 401. Portal Help search for the guidance title found no Knowledge Item.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/portal/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/portal/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/portal/r1-knowledge-documents.png"
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
-    "The work lab is shared with other DOC-029 agents. Only records named DOC-029 portal were created; no organisation settings changed. Debug runs of the same script before the recorded run left further DOC-029 portal Requests; they are not credited.",
-    "Knowledge fixtures, the new Version, and unpublish/republish were applied through the API as the Legal Team Member; the Knowledge authoring guides own those controls.",
-    "The seed has no form-specific deflection links and no links to unavailable items, and this shared lab's intake settings were not changed. The form panel difference and hidden links were therefore observed only as home versus an empty form panel; unavailable items were checked by direct address.",
-    "The unreachable external website is a real DNS failure in headless Chromium; the original tab and form were not affected."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer. It is not a human user study and not the feature owner's approval.",
+    "The work2 lab (openlaw-docs-80ceef9e-work2, source 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z) is shared with other DOC-030 walkthrough agents. Counts on Home and Inbox moved during the run, so the log compares each count with the database at the same moment. This walkthrough created only records named DOC-030 access-2 and doc030.access2.* throwaway accounts, changed no organization settings, and archived only its own two Entities. walkthrough.json lists every fixture.",
+    "Fixtures (accounts invited by the seeded Administrator, Contracts, Tasks, Entities, Obligations, Grants, Requests, Knowledge Items, Confidential flags, saved search views and the Business User's first run) were written through the lab API or, for this walkthrough's own rows only, the lab database. Every guide step ran in the browser as the named role in its own browser context.",
+    "Documents were marked Confidential through the API as the seeded Administrator, as the technical review advises; the flagging control belongs to the Knowledge guides.",
+    "The seeded Before you submit Knowledge links point at items without Documents, so Download was exercised on the DOC-030 items opened by their Portal Knowledge links.",
+    "An item whose only Document is Confidential showed no Documents section and kept its Guidance. The guide does not describe this case. It is recorded as an observation.",
+    "The external website failed in the lab because intranet.helix.example does not resolve. That served as the broken-link case.",
+    "Help search was checked for organization Knowledge only; Requests were not searched."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
-    "verifiedAt": "2026-09-07T10:07:20.254Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+    "verifiedAt": "2026-09-25T10:37:48.051Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (portal)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Portal Knowledge, Before you submit, downloads or Portal navigation. I replayed the round 1 V-C11 walkthrough on the work2 lab and all 12 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/portal.json",
-        "sha256": "16d6ed753c45c8962449190096edcbd94fecc19f3cd1ae56b1b00a294b153966"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

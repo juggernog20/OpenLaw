@@ -1,0 +1,62 @@
+{
+  "section": "settingsIncomplete",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2w",
+  "labProject": "openlaw-docs-80ceef9e-auth2w",
+  "appUrl": "http://127.0.0.1:43311",
+  "mailUrl": "http://127.0.0.1:48436",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "incomplete: SMTP_URL set, SMTP_FROM empty (overlay-mail-incomplete.json); wizard finished",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:42:41.547Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/email",
+      "action": "Settings, Advanced, Outbound email with SMTP_URL but no SMTP_FROM: the incomplete warning; Send test email unavailable",
+      "expected": "Managed message and the SMTP_FROM warning; Send test email disabled",
+      "startedAt": "2026-09-25T10:42:42.483Z",
+      "finishedAt": "2026-09-25T10:42:43.411Z",
+      "actual": "The pane read \"Outbound email Managed by your deployment configuration. Contact your system administrator to change the relay. The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment. Send test email\". Send test email was disabled.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/users",
+      "action": "If OpenLaw cannot send email, Send invite and Resend invite show the not-sent message; no Invited row is added",
+      "expected": "\"The invite was not sent: this instance cannot send email.\" with both remedies",
+      "startedAt": "2026-09-25T10:42:43.411Z",
+      "finishedAt": "2026-09-25T10:42:44.145Z",
+      "actual": "With SMTP_URL set and SMTP_FROM empty, Send invite showed \"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\" and no row was added (2 users before and after). Resend invite on the pending row showed \"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\".",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/users",
+      "action": "When outbound email is not configured, the sign-in pages do not offer Email me a sign-in link (finished instance)",
+      "expected": "No Email me a sign-in link",
+      "startedAt": "2026-09-25T10:42:44.145Z",
+      "finishedAt": "2026-09-25T10:42:46.805Z",
+      "actual": "The pages offered {\"/auth/login\":[\"Sign in\"],\"/portal/login\":[\"Sign in\"]}.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:42:46.811Z"
+}

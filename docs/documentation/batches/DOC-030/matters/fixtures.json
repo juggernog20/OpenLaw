@@ -1,0 +1,226 @@
+{
+  "fieldRequired": {
+    "id": "01a0d806-5e7f-7d04-886b-de547ad99e23",
+    "slug": "doc_030_matters_required_note",
+    "displayName": "DOC-030 matters required note",
+    "fieldType": "text"
+  },
+  "fieldOptional": {
+    "id": "01a0d806-5e8f-7f37-9d9e-e0df73662596",
+    "slug": "doc_030_matters_optional_note",
+    "displayName": "DOC-030 matters optional note",
+    "fieldType": "text"
+  },
+  "fieldEntity": {
+    "id": "01a0d806-5ea0-71c8-969f-4e42551bdfee",
+    "slug": "doc_030_matters_entity",
+    "displayName": "DOC-030 matters Entity",
+    "fieldType": "entity"
+  },
+  "fieldPerson": {
+    "id": "01a0d806-5eae-781f-96e0-ac70c34c2ac9",
+    "slug": "doc_030_matters_person",
+    "displayName": "DOC-030 matters person",
+    "fieldType": "user"
+  },
+  "fieldNumber": {
+    "id": "01a0d806-5ebb-789b-8b19-33ac19a5a4d4",
+    "slug": "doc_030_matters_retype_number",
+    "displayName": "DOC-030 matters retype number",
+    "fieldType": "number"
+  },
+  "typeMain": {
+    "id": "01a0d806-5ed6-72f8-98c8-f662d445e122",
+    "displayName": "DOC-030 matters type",
+    "form": [
+      {
+        "rowRef": "title",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "matter_type",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "description",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "department",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "priority",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "risk",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "needed_by",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "region",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_matters_required_note",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_030_matters_optional_note",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_matters_entity",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_matters_person",
+        "onIntakeForm": true,
+        "isRequired": false
+      }
+    ]
+  },
+  "typeRetype": {
+    "id": "01a0d806-5f22-74c4-999c-ac0511c03331",
+    "displayName": "DOC-030 matters retype",
+    "form": [
+      {
+        "rowRef": "title",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "matter_type",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "description",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "department",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "region",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "priority",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "risk",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "needed_by",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_matters_required_note",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_030_matters_retype_number",
+        "onIntakeForm": false,
+        "isRequired": true
+      }
+    ]
+  },
+  "typeDept": {
+    "id": "01a0d806-5f5f-738e-a8ad-111cec085315",
+    "displayName": "DOC-030 matters department required",
+    "form": [
+      {
+        "rowRef": "title",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "matter_type",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "description",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "department",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "region",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "priority",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "risk",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "needed_by",
+        "onIntakeForm": false,
+        "isRequired": false
+      }
+    ]
+  },
+  "templateAlpha": {
+    "id": "01a0d806-5fa4-7734-a31c-4f8fb056bdcd",
+    "name": "DOC-030 matters alpha playbook",
+    "titlePrefix": "DOC-030 alpha review -"
+  },
+  "templateBeta": {
+    "id": "01a0d806-5fe0-7e25-99e7-a9e960e92cd8",
+    "name": "DOC-030 matters beta playbook",
+    "titlePrefix": "DOC-030 beta review -"
+  },
+  "templateGamma": {
+    "id": "01a0d806-6012-747d-a03c-81c6eb715c18",
+    "name": "DOC-030 matters gamma playbook",
+    "titlePrefix": "DOC-030 gamma review -"
+  },
+  "templateUndrawn": {
+    "id": "01a0d806-603d-787f-b4ea-df5b247cbb14",
+    "name": "DOC-030 matters undrawn defaults playbook",
+    "titlePrefix": "DOC-030 undrawn -"
+  },
+  "entity": {
+    "id": "01a0d801-e7ea-752b-af00-ab1bef8937d2",
+    "legalName": "Helix Analytics, Inc."
+  },
+  "matterDocumentTypes": [],
+  "createdAt": "2026-09-25T10:04:51.710Z"
+}

@@ -1,20 +1,28 @@
 {
   "articleId": "triage-requests",
-  "contentSha256": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
-  "environment": "openlaw-docs-41255c61-work",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (inbox, round 1)",
+  "contentSha256": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (inbox)",
   "reviewerKind": "agent",
-  "technicalReviewer": "DOC-029 source-review author agent (inbox)",
-  "verifiedAt": "2026-09-16T15:33:24.989Z",
+  "technicalReviewer": "DOC-030 source-review author agent (inbox)",
+  "author": "DOC-030 source-review author agent (inbox)",
+  "verifiedAt": "2026-09-25T11:18:51.559Z",
   "status": "pass",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (inbox)",
   "sources": [
     "docs/user-guides/triage-requests.md",
+    "docs/documentation/batches/DOC-030/inbox/technical-review.json",
+    "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/inbox/walkthrough.json",
+    "docs/documentation/batches/DOC-030/inbox/setup-config.mjs",
+    "docs/documentation/batches/DOC-030/inbox/setup-requests.mjs",
+    "docs/documentation/batches/DOC-030/inbox/api.mjs",
     "CONTEXT.md",
-    "docs/decision-records/DECISIONS-INTAKE.md",
+    "docs/decision-records/DECISIONS-INTAKE.md (INT-003, INT-006, INT-007, INT-008 2026-09-19 addendum, DD-028 amendment)",
+    "docs/decision-records/DECISIONS.md (DD-028)",
     "messages/en-US.json",
+    "packages/shared/src/index.ts (isOpenRequestStatus)",
     "apps/web/src/routes/inbox.tsx",
     "apps/web/src/routes/inbox-request.tsx",
     "apps/web/src/components/inbox/inbox-columns.tsx",
@@ -24,90 +32,71 @@
     "apps/web/src/lib/comments.ts",
     "apps/web/src/components/comments/comment-applet.tsx",
     "apps/web/src/lib/roles.ts",
+    "apps/web/src/lib/requests.ts",
+    "apps/web/src/lib/requester-status.ts",
     "apps/web/src/components/portal/request-owner.tsx",
     "apps/web/src/routes/portal-request.tsx",
-    "apps/api/src/modules/requests/inbox.ts",
     "apps/api/src/modules/requests/assignment.ts",
-    "apps/api/src/modules/requests/resolve.ts",
+    "apps/api/src/modules/requests/service.ts",
+    "apps/api/src/modules/requests/disposition.ts",
+    "apps/api/src/modules/requests/list.ts",
+    "apps/api/src/modules/requests/read.ts",
     "apps/api/src/modules/requests/request-detail.ts",
-    "apps/api/src/modules/requests/routes.ts",
-    "apps/api/src/modules/requests/projection.ts",
-    "docs/documentation/batches/DOC-029/inbox/technical-review.json",
-    "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.json"
+    "apps/api/src/modules/requests/resolve.ts"
   ],
   "scenarios": [
     {
       "id": "V-C12",
-      "coverage": ["C12"],
+      "coverage": [
+        "C12"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Daniel Okafor (Administrator) signs in with a password in an isolated browser context; Nadia Haddad acts as the second legal session through the lab API.",
-        "Jonas Weber (Business User) and Amara Nwosu (second Business User) sign in to the Portal with fresh magic links from the lab Mailpit.",
-        "Fixtures from setup-config-r1.mjs and setup-requests-r1.mjs in the batch folder; the AI connector is unconfigured with every Request conversion switch off."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Daniel Okafor (Administrator) signs in with a password in an isolated Playwright Chromium context; Nadia Haddad is the second legal session through the lab API for competing writes.",
+        "Fixtures from setup-config.mjs and setup-requests.mjs: Contract type \"DOC-030 inbox Supplier agreement\" and Matter type \"DOC-030 inbox Advisory\" with Forms (intake, creation and Record Rows), two Request types, catalog Fields, a live and an archived Entity, two Matter templates. Requests submitted through the Portal API by Oliver Grant, a seeded Business User, who reads the Portal with a fresh magic link from the lab Mailpit; Rosa Iglesias is the second Business User reader."
       ],
       "expected": "Assignment persists without deciding the Request or reserving it. Dispositioned Requests leave the undecided Inbox and retain their outcome. Resolve requires an explanatory Full Thread note; Decline is absent from the current Triage menu. A concurrent disposition produces a clear lost-race result rather than a second outcome.",
-      "actual": "16 recorded browser steps passed for this role. Daniel Okafor opened Inbox on the Requests tab with Status: New ordered by urgency then age, opened R-106 from its row and read Description, Form responses, Attachments, Converts to, Requester, Department and Urgency. The PDF and Word attachments opened in the viewer and Download saved the submitted bytes. Assign on the row with Search people saved Nadia Haddad; status stayed New, her session still had Triage, and the Portal read Owner: Nadia Haddad. Cancel kept the assignment, the avatar control reassigned, and Unassigned cleared it to Owner: Not assigned yet. A people-load failure offered Retry; a failed save showed \"The assignment could not be saved. Try again.\" and kept the saved state. Comments started on Legal only; a Shared with requester message reached Jonas and the Legal only note did not. Triage offered Convert to contract, Convert to matter and Resolve request without converting, with no Decline. A blank Resolution note (required) was refused and Cancel posted nothing. R-107, assigned to Nadia, was resolved by Daniel: Status card Resolved, note in Comments and on the Portal, assignee read-only, Assign and Triage gone, attachments kept, and Jonas's later reply left it resolved. Nadia's competing resolution on R-108 made the dialog say \"Somebody else already resolved this request.\" with Close, and only her note was posted. Status Resolved and removing the Status filter listed R-107; Status Declined listed seeded R-8 with its reason and no Assign or Triage. Converted R-109 kept its assignee, Description and Form responses, showed C-109 and Converted by on the Status card, and had no Attachments card, Comments, Assign or Triage. Jonas and Amara Nwosu were sent from /inbox to /portal and refused by the staff API.",
+      "actual": "18 browser steps passed, plus the Business User access step. Browsing the Inbox list and Oliver Grant's Portal view left R-51 New. Inbox opened on the Requests tab with the chip \"Status: New, Read\" and 29 New or Read rows ordered by urgency, then oldest first. Opening R-50 from its row showed Requester, Converts to Contract · DOC-030 inbox Supplier agreement, Department, Urgency High, Form responses with the Description answer (no separate Description card, because the Contract type's Form collects Description), and Attachments; opening it changed New to Read. Matter Request R-52, whose Form does not collect Description, showed a Description card. The PDF and Word attachments opened in the viewer and Download saved the submitted bytes. Assign on the row, Search people, choosing Nadia Haddad and Save assignment saved her without changing the status; her own session still had Triage. The Portal showed \"Legal Owner Nadia Haddad\", the Read pill and \"Your request has been opened by the Legal team.\" Cancel kept the assignment, the avatar control reassigned it, Unassigned cleared it and the Portal showed \"Legal Owner Not assigned yet\". An aborted people load showed \"People could not be loaded.\" with Retry; a failed save showed \"The assignment could not be saved. Try again.\" and kept the saved state. The composer started on Legal Only; a Shared with requester question reached the Requester and the Legal Only note did not. Triage offered Convert to contract, Convert to matter and Resolve request without converting, and no Decline. A blank Resolution note (required) was refused with \"Explain why this request is being resolved without converting.\" and Cancel posted nothing. R-51, assigned to Nadia, was resolved by Daniel: Status card Resolved, note in Comments at the full_thread tier and on the Portal, email \"Your request is resolved: R-51 · …\", assignee read-only, Assign and Triage gone, attachments kept; the Requester's later reply left it resolved. Nadia's competing resolution of R-52 made the dialog say \"Somebody else already resolved this request.\" and \"Close this to read what they recorded.\" with Close, and only her note was posted. The Status filter showed only Read or only New Requests; Remove Status filter and Status Resolved listed R-51; Status Declined listed seeded R-1 with its reason and no Assign or Triage. Converted R-53 kept assignee, Description and Form responses, showed C-128 and Converted by Daniel Okafor on the Status card, and had no Attachments card, Comments, Assign or Triage. Oliver Grant and Rosa Iglesias (Business Users) were sent from /inbox and /inbox/50 to /portal and got 403 from the staff list, detail, assignment and convert APIs.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/inbox/technical-review.json"
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.json",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C12",
-      "coverage": ["C12"],
+      "coverage": [
+        "C12"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Nadia Haddad (Legal Team Member) signs in with a password in an isolated browser context; Daniel Okafor acts as the second legal session through the lab API.",
-        "Jonas Weber (Business User) and Amara Nwosu (second Business User) sign in to the Portal with fresh magic links from the lab Mailpit.",
-        "Fixtures from setup-config-r1.mjs and setup-requests-r1.mjs in the batch folder; the AI connector is unconfigured with every Request conversion switch off."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Nadia Haddad (Legal Team Member) signs in with a password in an isolated Playwright Chromium context; Daniel Okafor is the second legal session through the lab API for competing writes.",
+        "Fixtures from setup-config.mjs and setup-requests.mjs: Contract type \"DOC-030 inbox Supplier agreement\" and Matter type \"DOC-030 inbox Advisory\" with Forms (intake, creation and Record Rows), two Request types, catalog Fields, a live and an archived Entity, two Matter templates. Requests submitted through the Portal API by Rosa Iglesias, a seeded Business User, who reads the Portal with a fresh magic link from the lab Mailpit; Oliver Grant is the second Business User reader."
       ],
       "expected": "Assignment persists without deciding the Request or reserving it. Dispositioned Requests leave the undecided Inbox and retain their outcome. Resolve requires an explanatory Full Thread note; Decline is absent from the current Triage menu. A concurrent disposition produces a clear lost-race result rather than a second outcome.",
-      "actual": "16 recorded browser steps passed for this role. Nadia Haddad followed the same path: R-114 review, viewer and downloads, assignment of Daniel Okafor from the row, Portal Owner, Cancel, reassignment and Unassigned, Retry and failed save, Legal only and Shared with requester comments, the three Triage actions without Decline, blank and cancelled resolution, R-115 resolved over Daniel's assignment with the note in Comments, on the Portal and in the email \"Your request is resolved: R-115\", Jonas's reply without reopening, Daniel's competing resolution on R-116 with Close and only his note, Status filters for R-115 and seeded R-8 Declined with its reason, and converted R-117 showing C-125 without Attachments, Comments, Assign or Triage.",
+      "actual": "18 browser steps passed, plus the Business User access step. Nadia Haddad followed the same path with Requests from Rosa Iglesias: R-59 stayed New after the Portal view and list browse; Requests tab with \"Status: New, Read\" and 24 rows in urgency then age order; R-58 opened from its row with Description under Form responses and changed to Read; R-60 showed a Description card; viewer and Download bytes for the PDF and Word files; assignment of Daniel Okafor from the row without a status change while his session kept Triage; Portal \"Legal Owner Daniel Okafor\" and Read; Cancel, reassignment and Unassigned to \"Legal Owner Not assigned yet\"; Retry and failed save; Legal Only default and Shared with requester reach; the three Triage actions without Decline; blank and cancelled resolution; R-59 resolved over Daniel's assignment with the note in Comments, on the Portal and in the email; the Requester's reply did not reopen it; Daniel's competing resolution of R-60 with Close and only his note; New-only and Read-only Status filters; Resolved and Declined filters with R-1's reason; converted R-61 showing C-135 without Attachments, Comments, Assign or Triage.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/inbox/technical-review.json"
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.json",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
-    "The work lab is shared with other DOC-029 agents. Only records named DOC-029 inbox were created, including a Contract type, a Matter type, two request types, five global Fields, two Entities and two Matter templates; no organisation settings changed. Development runs of the same script before the recorded run left further decided DOC-029 inbox Requests and records; they are not credited.",
-    "Competing resolutions and conversions were written by the other legal role through the lab API while the browser write was held. The people-load failure used an aborted browser request and the failed save a controlled 503 browser response.",
-    "No resolution email for the Administrator's R-107 reached the lab Mailpit, while R-115 and the race Requests did. The guide makes the email subject to notification preferences and delivery, so the step is not failed; other agents share Jonas in this lab and his preferences were not inspected.",
-    "The unavailable-person note was not exercised because archiving a staff account in the shared lab was not appropriate. Older Working team Request comments were not created.",
-    "A Contributor refusal was not checked: the seed Contributor had another role at run time. The guide names Business Users, whose refusal was checked. The first access step failed on that sign-in and is kept in the log with its superseding rerun.",
-    "The linked conversion guide was walked in the same run; the linked request-forms, notifications and search guides were not followed."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named DOC-030 inbox were created; no organisation setting was changed on work2. Development runs before the recorded runs left more DOC-030 inbox Requests and records from Diego Salas, Felix Brandt, Karim Aziz and Lena Vogel; they are not credited.",
+    "Requests came from the seeded Business Users Oliver Grant and Rosa Iglesias, not Jonas Weber and Amara Nwosu, to keep the shared sign-in link and submission budgets free for other groups.",
+    "Competing resolutions and conversions were written by the other legal role through the lab API while the browser write was held. The people-load failure used an aborted browser request; the failed assignment save and failed document upload used controlled 503 browser responses.",
+    "Confirmed the author's limitation: the Portal labels the triage assignee \"Legal Owner\" (seen as \"Legal Owner Nadia Haddad\" and \"Legal Owner Not assigned yet\"). The guide states this label; the naming clash is the author's recorded product bug, not a guide failure.",
+    "The Filter menu was used only for Status, through its Search filters box. Type, Urgency, Requester and Received date filters and saved views were not exercised. Linked guides were not followed. Older Working team messages were not created."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "b28fe6456b9259168173d057309994db811044beac40c09dcafd96ea7da36eea",
-    "verifiedAt": "2026-09-07T11:33:34.068Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
+    "verifiedAt": "2026-09-16T15:33:24.989Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "be05b73bf3fb7268290203a1a1e4da003a652f000d19f30f9eb901c8da38a32d",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (inbox)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and messages/en-US.json; no change touches the Inbox, assignment, Triage, resolution, comment tiers or Portal Request pages, only the archived-person text colour in the comment applet. I replayed the round 1 V-C12 walkthrough on the work2 lab built from 57e77e38, and all 33 triage steps passed for the Administrator, Legal Team Member and Business User refusal. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/inbox.json",
-        "sha256": "640e1adf49673000fb8b6c6ac0cd9b00cd9bf75984c5994fb83b79312fedcf13"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

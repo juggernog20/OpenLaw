@@ -1,92 +1,106 @@
 {
   "articleId": "staff-sign-in",
-  "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
-  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
-  "environment": "openlaw-docs-41255c61-work2",
-  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (access, round 1)",
+  "contentSha256": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (access-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (access-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access-2)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access); round 2 corrections by DOC-029r2 source-review author agent (access)",
-  "technicalReviewer": "DOC-029r2 source-review author agent (access)",
-  "verifiedAt": "2026-09-16T18:13:19Z",
+  "verifiedAt": "2026-09-25T10:45:02.630Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/staff-sign-in.md",
-    "docs/documentation/batches/DOC-029/access/technical-review.json",
-    "docs/documentation/batches/DOC-029/access/technical-review-r2.json",
-    "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.json"
+    "docs/documentation/batches/DOC-030/access-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-032)",
+    "apps/web/src/routes/login.tsx",
+    "apps/web/src/routes/set-password.tsx",
+    "apps/web/src/routes/link-expired.tsx",
+    "apps/web/src/components/magic-link-request.tsx",
+    "apps/web/src/routes/two-factor.tsx",
+    "apps/web/src/routes/two-factor-enroll.tsx",
+    "apps/web/src/routes/settings-profile.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/web/src/lib/session.ts",
+    "apps/web/src/components/shell/app-header.tsx",
+    "apps/web/src/components/shell/user-menu.tsx",
+    "apps/api/src/auth/instance.ts",
+    "apps/api/src/auth/limits.ts",
+    "apps/api/src/auth/handler.ts",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/modules/auth/authentication-policy-routes.ts",
+    "apps/api/src/modules/auth/magic-link.test.ts",
+    "apps/api/src/modules/auth/sign-in-lockout.test.ts",
+    "node_modules better-auth 1.7.5 dist/plugins/magic-link/index.mjs (verify redirects)"
   ],
   "scenarios": [
     {
       "id": "V-C01",
-      "coverage": ["C01"],
+      "coverage": [
+        "C01"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A newly invited DOC-029r2 access account for this role, invited by the seeded Administrator through the API, and its Mailpit set-password email.",
-        "Test preparation only: the account's first invitation token was expired in the lab database to exercise refusal."
+        "A fresh DOC-030 access-2 Administrator account invited by the seeded Administrator (Daniel Okafor) through the API, with its Set your OpenLaw password email read from the lab Mailpit.",
+        "Test preparation only: the account's first invitation token was expired in the lab database, on this walkthrough's own row, to exercise refusal.",
+        "A second browser context for the other-device, revoked-session and password-reset checks. The expired-link re-walk used another fresh account of the same role."
       ],
       "expected": "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects. Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account.",
-      "actual": "20 recorded account steps passed on 57e77e38, plus the unknown-address check and two supplementary rendering checks. The expired invitation link was refused with This link has expired or was already used. Ask for a new one. A link without its token said This link is not valid. Ask for a new invitation or password reset. After the Administrator re-sent the invitation, a password mismatch was refused with The passwords do not match., and Set password showed Password set with Sign in. The sign-in page showed Helix Software Group above the Sign in heading and form, with no Organization logo image, which matches the public branding answer (name saved, no logo). A wrong password was refused with Check your email and password., and the right password reached Home with the account name in the header. The consumed link was refused. Settings > Profile > Password & two-factor > Turn on two-factor asked for Password, showed the QR code and the manual secret, refused a wrong Code, accepted the current Code and showed 10 backup codes. After Done, Profile said two-factor is on and offered Re-enroll and Turn off two-factor. Password sign-in then opened Two-factor authentication: a wrong code was refused, the current code with Verify reached Home, a backup code worked once and its reuse was refused, and Sign out on the challenge page returned to sign-in. Sign out other devices sent a second browser to sign-in on reload while this session stayed. Re-enroll issued a new secret; closing the dialog before confirming left two-factor off and password-only sign-in worked. Turn off two-factor refused a wrong password, then removed the challenge, and Sign out in the name menu returned to sign-in. Email me a sign-in link signed the account in once; the reused link opened Sign-in link expired. Set up or reset your password showed the neutral Check your email text, the emailed link (60-minute token) set a new password, the old password was refused and the new one reached Home. An address outside the allowed domains got the same neutral page and no email. Supplementary, with mocked answers in the browser only: Continue with single sign-on, Administrator sign-in (which opens the password form) and Single sign-on is not configured yet render as the article says; a saved logo shows above the form, a logo that fails to load is hidden, and with no saved name the page shows OpenLaw.",
+      "actual": "25 recorded Administrator steps passed. An Administrator invite sent Set your OpenLaw password with a Set password control, the line The link expires in one hour., and the token in the URL fragment. An expired link showed This link has expired or was already used. Ask for a new one. Opening /auth/set-password without the fragment showed This link is not valid. Ask for a new invitation or password reset. After a fresh invitation, a mismatch showed The passwords do not match. Set password then showed Password set with Sign in. The sign-in page showed Helix Software Group above the Sign in heading and form and no logo, which matches the public branding (no logo saved). A wrong password showed Check your email and password. The right one landed on /. The name menu showed the name and email, and the header showed Helix Software Group at 1440 px but not at 700 px. The used invitation link was refused. Turn on two-factor took Password, then a QR code and manual secret. A wrong Code was refused, and Confirm showed 10 backup codes. After Done, Profile said two-factor is on. At Two-factor authentication a wrong code showed Wrong code. Try again, or restart sign-in., and the current code with Verify reached /. A backup code worked once and its reuse was refused. Sign out on the challenge restarted sign-in. Sign out other devices sent a second browser to sign-in while this one stayed. An abandoned Re-enroll left two-factor off. Turn off two-factor refused a wrong password with Check your password., then worked with the right one. Email me a sign-in link with Send link showed Check your email. Sign in to OpenLaw (5 minutes) signed in once, and the reused link opened Sign-in link expired. Re-walk against the corrected paragraph: with sign-in links on (the real lab setting), that page showed Email and Send link and no Back to sign-in, and Send link gave a new link that signed in. With links off, mocked in the browser only, it showed only Back to sign-in, which returned to sign-in, and password sign-in worked. The fourth sign-in link request showed Too many sign-in link requests. Try again later. Set up or reset your password sent a 60-minute link. Password set ended a session held by another browser, the old password was refused, and the new one worked. The fourth setup request showed Too many password setup requests. Try again later. Nine wrong passwords then a correct one cleared the counter. After 10 wrong codes across two challenges, the next attempt, and the current code, showed Too many attempts. Wait 15 minutes, then try again. After 10 wrong passwords, the next attempt and the correct password showed the same message. An ineligible address got the same Check your email page for both requests and no email. Supplementary mocked checks rendered Continue with single sign-on, Single sign-on is not configured yet and Administrator sign-in (which opens the password form).",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r2-1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-staff-sign-in-r2-1.mjs"
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
       ]
     },
     {
       "id": "V-C01",
-      "coverage": ["C01"],
+      "coverage": [
+        "C01"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A newly invited DOC-029r2 access account for this role, invited by the seeded Administrator through the API, and its Mailpit set-password email.",
-        "Test preparation only: the account's first invitation token was expired in the lab database to exercise refusal."
+        "A fresh DOC-030 access-2 Legal Team Member account invited by the seeded Administrator (Daniel Okafor) through the API, with its Set your OpenLaw password email read from the lab Mailpit.",
+        "Test preparation only: the account's first invitation token was expired in the lab database, on this walkthrough's own row, to exercise refusal.",
+        "A second browser context for the other-device, revoked-session and password-reset checks. The expired-link re-walk used another fresh account of the same role."
       ],
       "expected": "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects. Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account.",
-      "actual": "19 recorded steps passed on 57e77e38 and 1 step was not run, for a newly invited Legal Team Member. Expired, token-less and consumed invitation links were refused with the documented messages. Mismatch and wrong password were refused. The sign-in page showed Helix Software Group above the Sign in heading and form with no logo, and Home opened with the account name in the header. Turn on two-factor used Password, QR code, manual secret, Code, Confirm, 10 backup codes and Done, then Profile said two-factor is on. At Two-factor authentication a wrong code was refused and the current code was accepted; a backup code worked once and its reuse was refused; Sign out on the challenge page restarted sign-in. Sign out other devices ended only the other browser's session. An abandoned Re-enroll left two-factor off. Turn off two-factor needed the password. Email me a sign-in link worked once and the reused link opened Sign-in link expired. Set up or reset your password (one-hour link) set a new password and the old one was refused. The wait time after repeated wrong codes was not observable in this lab and is recorded as not-run.",
+      "actual": "23 recorded Legal Team Member steps passed. An Administrator invite sent Set your OpenLaw password with a Set password control, the line The link expires in one hour., and the token in the URL fragment. An expired link showed This link has expired or was already used. Ask for a new one. Opening /auth/set-password without the fragment showed This link is not valid. Ask for a new invitation or password reset. After a fresh invitation, a mismatch showed The passwords do not match. Set password then showed Password set with Sign in. The sign-in page showed Helix Software Group above the Sign in heading and form and no logo, which matches the public branding (no logo saved). A wrong password showed Check your email and password. The right one landed on /. The name menu showed the name and email, and the header showed Helix Software Group at 1440 px but not at 700 px. The used invitation link was refused. Turn on two-factor took Password, then a QR code and manual secret. A wrong Code was refused, and Confirm showed 10 backup codes. After Done, Profile said two-factor is on. At Two-factor authentication a wrong code showed Wrong code. Try again, or restart sign-in., and the current code with Verify reached /. A backup code worked once and its reuse was refused. Sign out on the challenge restarted sign-in. Sign out other devices sent a second browser to sign-in while this one stayed. An abandoned Re-enroll left two-factor off. Turn off two-factor refused a wrong password with Check your password., then worked with the right one. Email me a sign-in link with Send link showed Check your email. Sign in to OpenLaw (5 minutes) signed in once, and the reused link opened Sign-in link expired. Re-walk against the corrected paragraph: with sign-in links on (the real lab setting), that page showed Email and Send link and no Back to sign-in, and Send link gave a new link that signed in. With links off, mocked in the browser only, it showed only Back to sign-in, which returned to sign-in, and password sign-in worked. The fourth sign-in link request showed Too many sign-in link requests. Try again later. Set up or reset your password sent a 60-minute link. Password set ended a session held by another browser, the old password was refused, and the new one worked. The fourth setup request showed Too many password setup requests. Try again later. Nine wrong passwords then a correct one cleared the counter. After 10 wrong codes across two challenges, the next attempt, and the current code, showed Too many attempts. Wait 15 minutes, then try again. After 10 wrong passwords, the next attempt and the correct password showed the same message. A throwaway Legal Team Member archived after requesting a link was returned to sign-in with This sign-in link could not be used. Request a new link or contact your administrator.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r2-1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r2-1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-staff-sign-in-r2-1.mjs"
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
-    "The work2 lab is shared with other DOC-029 round 2 agents. Seeded records and counts changed during the run. The walkthrough created only accounts and Contracts named DOC-029r2 access and changed no organization settings. Nothing was deleted. Three earlier attempts are kept as walkthrough-r2-1-attempt1.json, walkthrough-r2-1-attempt2.portal.json and walkthrough-r2-1-attempt3.json; their dispositions (reviewer script errors and too few rows for Show more) are in walkthrough-r2-1.json.",
-    "The lab app container runs with AUTH_RATE_LIMIT=off (lab configuration).",
-    "The seeded organization has no saved logo, and adding one needs an organization setting change that the shared lab does not allow. The live pages showed the organization name and no logo. A saved logo, a logo that fails to load, and no saved name were checked only as browser rendering with a mocked branding answer.",
-    "Single sign-on, Administrator sign-in and the server refusal Password sign-in is disabled for this account. need an organization-wide policy change, which the shared lab does not allow. Only the browser rendering was checked, with a mocked methods answer. No live identity provider was used.",
-    "Required two-factor authentication (the organization setting, the Your organization requires two-factor authentication. page and Required by your organization in Profile) was not exercised, for the same reason.",
-    "The wait time after repeated wrong codes was not observable because the lab disables the sign-in rate limiter (AUTH_RATE_LIMIT=off). The log records this step as not-run.",
-    "The five-minute link expiry was not waited out; the used-link refusal was observed. The one-hour password setup token lifetime was read from the lab database.",
-    "An Administrator landing on unfinished organization setup was not exercised; the lab onboarding is complete."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer. It is not a human user study and not the feature owner's approval.",
+    "The work2 lab (openlaw-docs-80ceef9e-work2, source 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7) is shared with other DOC-030 agents. Only doc030.access2.* throwaway accounts were created, and no organization setting was changed. One throwaway account was archived by this walkthrough. The lab runs with AUTH_RATE_LIMIT=off, but the lockouts and email budgets are database counters and were observed.",
+    "The first run (10:31-10:35 UTC) walked guide bytes 6a8ac93d. Its expired-link step failed on both roles because the page had no Back to sign-in while sign-in links were on. The author then corrected only that paragraph (29d19f72). The step was walked again for both roles at 10:41-10:45 UTC. walkthrough.json keeps the failed records under supersededSteps. Every other step keeps its first-run observation, because the rest of the guide text did not change (git diff: one line).",
+    "Required two-factor authentication (the organization policy, Your organization requires two-factor authentication. and Required by your organization) was not exercised: it needs an organization-wide policy change on the shared lab.",
+    "Single sign-on, Administrator sign-in, Password sign-in is disabled for this account. and Sign-in link expired with sign-in links off need organization-wide policy changes. They were checked only as browser rendering with a mocked methods answer. No live identity provider was used.",
+    "The seeded organization has no saved logo, so only the no-logo branch was observed live.",
+    "The five-minute sign-in link expiry was not waited out; used-link refusal was observed. The one-hour password setup token lifetime was read from the lab database.",
+    "An Administrator landing on unfinished organization setup was not exercised, because the lab onboarding is complete. The OAuth Client sign-in return (M41) is left to the Connect guides.",
+    "The per-client-address budget of 30 sign-in link requests in 15 minutes is shared by every agent on this lab; the walkthrough waited for room instead of exhausting it."
   ],
   "previousEvidence": {
-    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "contentSha256": "b22aca8fd72c0407831c1314910999c3773ecb789912f9859b63516218d20725",
-    "verifiedAt": "2026-09-16T16:23:21Z"
+    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
+    "verifiedAt": "2026-09-16T18:13:19Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. It describes required two-factor enrollment after sign-in, Profile enrollment and the code challenge. The change only moves the setup wizard to /auth/two-factor/enroll after the wizard saves a policy that requires two-factor authentication. The enroll route, its loader and the session guard in lib/session.ts did not change, so every statement stays correct.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

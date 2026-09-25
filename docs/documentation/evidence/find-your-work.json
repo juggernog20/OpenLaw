@@ -1,94 +1,107 @@
 {
   "articleId": "find-your-work",
-  "contentSha256": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (access, round 1)",
+  "contentSha256": "01c1bcf58fea70d121d132f90808ff57fb17a3bbd8521216a5650295fd23f0ce",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (access-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (access-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access-2)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access)",
-  "technicalReviewer": "DOC-029 source-review author agent (access)",
-  "verifiedAt": "2026-09-16T16:23:21Z",
+  "verifiedAt": "2026-09-25T10:37:48.051Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/find-your-work.md",
-    "docs/documentation/batches/DOC-029/access/technical-review.json",
-    "docs/documentation/batches/DOC-029/access/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-030/access-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "apps/web/src/routes/home.tsx",
+    "apps/web/src/components/home/section-card.tsx",
+    "apps/web/src/components/home/inbox-card.tsx",
+    "apps/web/src/components/home/obligations-card.tsx",
+    "apps/web/src/components/home/welcome-card.tsx",
+    "apps/api/src/modules/home/routes.ts",
+    "apps/api/src/modules/home/sections/inbox.ts",
+    "apps/api/src/modules/home/sections/obligations.ts",
+    "apps/api/src/modules/home/sections/tasks.ts",
+    "apps/api/src/lib/entity-access.ts",
+    "apps/api/src/modules/requests/request-detail.ts (POST /requests/:number/read)",
+    "apps/api/src/modules/requests/inbox.ts",
+    "apps/web/src/routes/inbox.tsx",
+    "apps/web/src/components/shell/search-input.tsx",
+    "apps/web/src/components/search/empty-search-entries.tsx",
+    "apps/web/src/lib/recent-searches.ts",
+    "apps/web/src/routes/home-tasks.tsx",
+    "apps/web/src/components/tasks/completed-toggle.tsx",
+    "apps/web/src/components/shell/keyboard-shortcuts.tsx",
+    "apps/web/src/routes/not-found.tsx",
+    "apps/web/src/routes/help.tsx",
+    "docs/user-guides/search-and-views.md"
   ],
   "scenarios": [
     {
       "id": "V-C03",
-      "coverage": ["C03"],
+      "coverage": [
+        "C03"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) with the seeded and shared-lab Tasks, Key dates and records.",
-        "Reviewer fixtures created by Daniel through the API: a DOC-029 access Home contract with one overdue Task for each seeded account and 55 Tasks for each fresh DOC-029 access account (53 dated, 2 undated), and a Confidential Contract outside Nadia's reach."
+        "Seeded Daniel Okafor (Administrator) signs in with a password in an isolated browser context for Home, Inbox, keyboard, Help and not-found checks.",
+        "Fresh DOC-030 access-2 Administrator accounts (one with a Grant on a DOC-030 Confidential Entity, one without) for Entity obligations, the saved-search list and Your Tasks; 55 Tasks (53 dated, 2 undated) assigned by the API.",
+        "A DOC-030 Contract with a Task for each seeded account due 400 days ago, a Confidential DOC-030 Contract, and a critical DOC-030 Request per role submitted by a throwaway Business User."
       ],
       "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
-      "actual": "10 recorded steps passed on 3fa407e3 as Daniel Okafor and a fresh Administrator. Home in the navigation showed Approvals waiting on you, Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts and Your matters in that order, with no zero-total section. The reviewer Task title on Home opened its Contract's Tasks with the C- number and title; the Fields and Documents section links worked; Home returned. Your contracts rows all had Daniel as Owner, and Your matters rows all had him as Matter Manager. The Task's due date was absent from Dates approaching, whose View all opened Your dates. ? opened Keyboard shortcuts and Escape closed it. Escape closed the name menu. / focused Search, and ?/x typed there stayed in the field. Tab moved focus and Enter on a link navigated. Help in the header opened Help, and its search found Find your work on Home, not records. /contracts/999999 and /matters/999999 showed Contract not found and Matter not found with {reference} does not exist, or you cannot open it., and Back to Contracts and Back to Matters returned to the lists. The fresh Administrator's My Tasks said No open Tasks assigned to you. and Home had no Tasks card. With 55 Tasks, View all 55 opened Your Tasks with 50 rows, Load more Tasks added 5, and rows followed due date with undated Tasks last. Completing a Task showed Completed: {title} and Undo reopened it. Show completed changed the label to Hide completed and listed the completed Task; clearing its control showed Reopened: {title}. A Task title opened its Contract and Home in the navigation returned.",
+      "actual": "14 recorded Administrator steps passed. Home showed Inbox > Entity obligations > Tasks assigned to you > Dates approaching > Your contracts > Your matters, which is the documented order (no pending Approvals, so that card was omitted), and no empty section. The fixture Task on Tasks assigned to you opened C-187 with its number and title; Fields and Documents opened and Home returned. Inbox: the card said View all 19 while the database held 12 New and 7 Read Requests. Fixture R-70 was New, opening it from the Inbox list made it Read, and it stayed on Home's count and the Inbox list. Your contracts and Your matters rows all had Daniel as Owner or Matter Manager. The fixture Task's due date was absent from Dates approaching, and View all opened Your dates. ? opened Keyboard shortcuts and Escape closed it and the name menu. / focused Search, and ? and / typed in the box stayed there. After one search the empty box opened a Recent group and Advanced search…, Escape closed it, and the Recent entry ran the search. With a saved search the fresh Administrator saw Saved and Recent groups, and the saved entry ran at once. Tab moved focus, and Enter opened Contracts. Help found this guide and no record. C-999999 and M-999999 showed Contract not found and Matter not found with the does-not-exist-or-cannot-open sentence and working Back to Contracts and Back to Matters links. Entity obligations for the fresh Administrator with a Grant listed the Unassigned Obligation (marked Unassigned, Overdue) and the Confidential Entity Obligation whose Administrator assignee has no Grant, overdue first. It left out the Obligation assigned to a Legal Team Member who can reach the Entity, and a row opened the Entity's Obligations. The Administrator assignee without a Grant and Daniel (no Grant) did not see that Confidential Entity Obligation but did see the Unassigned one. Your Tasks for the fresh Administrator: No open Tasks assigned to you. with no Home Tasks card at first. With 55 Tasks, View all 55 opened Your Tasks with 50 rows, and Load more Tasks gave 55 in due-date order with the two undated last. Completing showed Completed with Undo, and Undo reopened. Show completed listed the completed Task and read Hide completed. Clearing its control showed Reopened. A Task title opened C-187, and Home returned.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-find-your-work-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/r1-administrator-your-tasks-show-completed.png"
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
       ]
     },
     {
       "id": "V-C03",
-      "coverage": ["C03"],
+      "coverage": [
+        "C03"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) with the seeded and shared-lab Tasks, Key dates and records.",
-        "Reviewer fixtures created by Daniel through the API: a DOC-029 access Home contract with one overdue Task for each seeded account and 55 Tasks for each fresh DOC-029 access account (53 dated, 2 undated), and a Confidential Contract outside Nadia's reach."
+        "Seeded Nadia Haddad (Legal Team Member) signs in with a password in an isolated browser context for Home, Inbox, keyboard, Help and not-found checks.",
+        "Fresh DOC-030 access-2 Legal Team Member account for Entity obligations, the saved-search list and Your Tasks; 55 Tasks (53 dated, 2 undated) assigned by the API.",
+        "A DOC-030 Contract with a Task for each seeded account due 400 days ago, a Confidential DOC-030 Contract, and a critical DOC-030 Request per role submitted by a throwaway Business User."
       ],
       "expected": "Links reach the intended records; Tasks remain distinct from deadline surfaces; ? opens shortcuts. Empty sections and unavailable records have useful outcomes; / and Escape retain their existing behavior.",
-      "actual": "10 recorded steps passed on 3fa407e3 as Nadia Haddad and a fresh Legal Team Member. The Home section order, Task-to-record links, Owner and Matter Manager checks, the separation of Dates approaching and Your dates, keyboard behaviour, Help search and not-found pages matched the Administrator's results. In addition, the Confidential reviewer Contract outside Nadia's reach showed Contract not found without its title. The fresh account's My Tasks was empty with no Home Tasks card. With 55 Tasks, Load more Tasks, due-date order, Completed and Undo, Show completed and Hide completed, Reopened, and the Task title link all behaved as documented.",
+      "actual": "14 recorded Legal Team Member steps passed. Nadia's Home showed Inbox > Entity obligations > Tasks assigned to you > Dates approaching > Your contracts > Your matters in the documented order, and none was empty. The fixture Task opened C-187; Fields, Documents and Home worked. The Inbox card said View all 19 against 11 New and 8 Read Requests. Fixture R-71 went from New to Read when she opened it and stayed in Inbox. Your contracts and Your matters rows were hers, and the Task's due date stayed out of Dates approaching and Your dates. ?, Escape, /, the Recent list, Tab, Enter and Help behaved as for the Administrator. With a saved search, a fresh Legal Team Member saw Saved and Recent groups and ran the saved entry. C-999999, M-999999 and the Confidential DOC-030 Contract C-188 showed Contract not found or Matter not found without leaking the title. Back to Contracts and Back to Matters worked. Entity obligations for a fresh Legal Team Member listed only the two Obligations assigned to them: the overdue one first, then one due in 20 days. There was no Unassigned row. Your Tasks gave the same empty state, then 50 then 55 rows, the same order, Completed, Undo, Show completed, Hide completed and Reopened results, and the Task link to C-187. Supplementary: with a mocked empty Home answer the browser showed Welcome to OpenLaw.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-find-your-work-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/r1-administrator-your-tasks-show-completed.png"
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
-    "The work lab is shared with other DOC-029 agents. Seeded records and counts changed during the run. The walkthrough created only accounts and records named DOC-029 access and changed no organisation settings. Nothing was deleted. Two earlier full runs are kept as walkthrough-r1-attempt1.json and walkthrough-r1-attempt2.json; their dispositions (a reviewer script timing error and shared-lab data drift) are in walkthrough-r1.json.",
-    "The lab app container runs with AUTH_RATE_LIMIT=off (lab configuration).",
-    "Welcome to OpenLaw was not observed: fresh Administrator and Legal Team Member accounts still see Inbox (and Entity obligations for the Administrator) in this lab.",
-    "Save failures and the retry instruction for Task completion were not forced.",
-    "The Approvals waiting on you, Entity obligations and Inbox sections were checked by heading and order only; their row rules were not checked against data."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer. It is not a human user study and not the feature owner's approval.",
+    "The work2 lab (openlaw-docs-80ceef9e-work2, source 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z) is shared with other DOC-030 walkthrough agents. Counts on Home and Inbox moved during the run, so the log compares each count with the database at the same moment. This walkthrough created only records named DOC-030 access-2 and doc030.access2.* throwaway accounts, changed no organization settings, and archived only its own two Entities. walkthrough.json lists every fixture.",
+    "Fixtures (accounts invited by the seeded Administrator, Contracts, Tasks, Entities, Obligations, Grants, Requests, Knowledge Items, Confidential flags, saved search views and the Business User's first run) were written through the lab API or, for this walkthrough's own rows only, the lab database. Every guide step ran in the browser as the named role in its own browser context.",
+    "Approvals waiting on you was not shown: Daniel and Nadia had no pending Approval requests. Its row meaning was not checked on this run.",
+    "Welcome to OpenLaw could not appear live: every staff account in this lab sees Inbox because New Requests exist. It was checked only as browser rendering with a mocked empty Home answer.",
+    "The saved search for the Saved group was created through the lab API from the account's own recorded recent search, because saving a search belongs to Search, filter, and save views. Recent searches came from real browser searches.",
+    "Opening the fixture Requests changed them from New to Read, which is the documented behavior. No seeded Request was opened.",
+    "The Obligations sat on DOC-030 Entities with due dates in 2001 so they sorted first. Both Entities were archived after the checks."
   ],
   "previousEvidence": {
-    "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-    "contentSha256": "6fa8eb3a4f1302279ec5419435fbeeb34596a17d1897bc90d62c52037f8ac8d0",
-    "verifiedAt": "2026-09-07T05:06:42.050Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "01c1bcf58fea70d121d132f90808ff57fb17a3bbd8521216a5650295fd23f0ce",
+    "verifiedAt": "2026-09-25T10:37:48.051Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (access)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38, with messages/en-US.json, and found no change to Home sections, Your Tasks, keyboard shortcuts, Help or not-found pages. I replayed the round 1 V-C03 walkthrough on the work2 lab for Administrator and Legal Team Member, and all 20 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/access.json",
-        "sha256": "0439676e5a91edbbfd06066c56706e08609c7e99c3e074f1e90ba7c538cc1e9a"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

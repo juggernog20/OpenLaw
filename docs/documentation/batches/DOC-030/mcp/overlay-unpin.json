@@ -1,0 +1,6 @@
+{
+  "services": {
+    "app": { "environment": { "BASE_URL": "" } },
+    "worker": { "environment": { "BASE_URL": "" } }
+  }
+}

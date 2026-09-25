@@ -1,0 +1,1305 @@
+{
+  "batch": "DOC-030",
+  "group": "access-2",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access-2)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-80ceef9e-work2",
+    "appUrl": "http://127.0.0.1:43300",
+    "mailUrl": "http://127.0.0.1:48425",
+    "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-25T09:59:53.804Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-25T10:00:16.340Z"
+    },
+    "runningImages": {
+      "app": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+      "worker": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+      "doc-engine": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  "runs": [
+    {
+      "articles": [
+        "personal-settings"
+      ],
+      "startedAt": "2026-09-25T10:23:22.123Z",
+      "finishedAt": "2026-09-25T10:24:30.223Z",
+      "stamp": 1790331802061,
+      "articleContentSha256": {
+        "personal-settings": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807"
+      },
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 19,
+          "secondsLeft": 394
+        },
+        "passwordSetup": {
+          "used": 0,
+          "secondsLeft": 0
+        }
+      },
+      "created": [
+        "administrator account doc030.access2.c05.admin.1790331802061@helix.example",
+        "legal_team_member account doc030.access2.c05.member.1790331802061@helix.example",
+        "legal_team_member account doc030.access2.c05.nopassword.1790331802061@helix.example without a password",
+        "legal_team_member account doc030.access2.c05.photobug.1790331802061@helix.example (photo bug reproduction)",
+        "Business User doc030.access2.bu.1790331802061@helix.example (JIT-provisioned by a Portal sign-in link; Portal first run finished through the API with Department Engineering)"
+      ],
+      "productBugs": [
+        {
+          "article": "personal-settings",
+          "summary": "On 067c1646 a profile photo that is still large after the browser resizes it (here a 512x512 detailed PNG stored as a ~1 MB data URL) saves with Saved, but afterwards Settings > Profile shows Something went wrong. The page could not load. The session endpoint GET /api/auth/get-session answers with a set-auth-jwt response header that carries the whole photo (about 1.4 MB measured on the lab), which Chromium refuses (ERR_RESPONSE_HEADERS_TOO_BIG). Home and other pages still load; the person has no way to remove the photo. dev commit 7abd2a8f (PR #1158, after the pinned commit) stops the jwt plugin from sending set-auth-jwt.",
+          "reproduction": "As doc030.access2.c05.photobug.1790331802061@helix.example: Settings > Profile > Upload a 6.4 MB 1500x1500 noisy PNG; Saved true; stored data URL 1050222 characters; reload Profile: error page true; console: Failed to load resource: net::ERR_RESPONSE_HEADERS_TOO_BIG",
+          "observedAt": "2026-09-25T10:24:23.445Z"
+        }
+      ],
+      "summary": {
+        "total": 18,
+        "passed": 18,
+        "failed": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "articles": [
+        "staff-sign-in"
+      ],
+      "startedAt": "2026-09-25T10:31:11.130Z",
+      "finishedAt": "2026-09-25T10:35:31.421Z",
+      "stamp": 1790332271055,
+      "articleContentSha256": {
+        "staff-sign-in": "6a8ac93d95419cf8bf834ae112740517b4f9a7d7a3589758f3d9f45167cd7f90"
+      },
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 7,
+          "secondsLeft": 826
+        },
+        "passwordSetup": {
+          "used": 0,
+          "secondsLeft": 0
+        }
+      },
+      "created": [
+        "administrator account doc030.access2.c01.admin.1790332271055@helix.example (DOC-030 access-2 V-C01 1790332271055 Administrator)",
+        "legal_team_member account doc030.access2.c01.member.1790332271055@helix.example (DOC-030 access-2 V-C01 1790332271055 Legal Team Member)",
+        "legal_team_member account doc030.access2.c01.archived.1790332271055@helix.example, archived by this walkthrough"
+      ],
+      "productBugs": [],
+      "summary": {
+        "total": 48,
+        "passed": 46,
+        "failed": 2,
+        "notRun": 0
+      }
+    },
+    {
+      "articles": [
+        "find-your-work",
+        "portal-knowledge"
+      ],
+      "startedAt": "2026-09-25T10:35:39.019Z",
+      "finishedAt": "2026-09-25T10:37:48.051Z",
+      "stamp": 1790332538951,
+      "articleContentSha256": {
+        "find-your-work": "01c1bcf58fea70d121d132f90808ff57fb17a3bbd8521216a5650295fd23f0ce",
+        "portal-knowledge": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed"
+      },
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 21,
+          "secondsLeft": 558
+        },
+        "passwordSetup": {
+          "used": 7,
+          "secondsLeft": 721
+        }
+      },
+      "created": [
+        "Contract C-187 DOC-030 access-2 V-C03 1790332538951 Home contract",
+        "Confidential Contract C-188 DOC-030 access-2 V-C03 1790332538951 confidential contract",
+        "administrator account doc030.access2.c03.admin.1790332538951@helix.example",
+        "administrator account doc030.access2.c03.nogrant.1790332538951@helix.example",
+        "legal_team_member account doc030.access2.c03.member.1790332538951@helix.example",
+        "Entities \"DOC-030 access-2 V-C03 1790332538951 open entity\" and Confidential \"DOC-030 access-2 V-C03 1790332538951 confidential entity\" (Grant: the fresh Administrator) with four Obligations; both Entities archived at the end",
+        "Business User doc030.access2.bu.1790332538951@helix.example (JIT-provisioned by a Portal sign-in link; Portal first run finished through the API with Department Engineering)",
+        "Request R-70 DOC-030 access-2 V-C03 1790332538951 inbox request administrator",
+        "Request R-71 DOC-030 access-2 V-C03 1790332538951 inbox request legal_team_member",
+        "Saved search \"DOC-030 access-2 V-C03 1790332538951 saved search admin\" for doc030.access2.c03.admin.1790332538951@helix.example",
+        "55 Tasks on C-187 assigned to doc030.access2.c03.admin.1790332538951@helix.example",
+        "Saved search \"DOC-030 access-2 V-C03 1790332538951 saved search member\" for doc030.access2.c03.member.1790332538951@helix.example",
+        "55 Tasks on C-187 assigned to doc030.access2.c03.member.1790332538951@helix.example",
+        "Knowledge Item \"DOC-030 access-2 V-C11 1790332538951 guidance\" (everyone, published, 2 Documents)",
+        "Knowledge Item \"DOC-030 access-2 V-C11 1790332538951 confidential primary\" (everyone, published, 2 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-030 access-2 V-C11 1790332538951 all confidential\" (everyone, published, 1 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-030 access-2 V-C11 1790332538951 restricted\" (legal_only, published, 1 Documents)",
+        "Knowledge Item \"DOC-030 access-2 V-C11 1790332538951 draft\" (everyone, draft, 1 Documents)",
+        "Knowledge Item \"DOC-030 access-2 V-C11 1790332538951 archived\" (everyone, published, archived, 1 Documents)",
+        "Request R-72 \"DOC-030 access-2 V-C11 1790332538951 request after an external link\""
+      ],
+      "productBugs": [],
+      "summary": {
+        "total": 39,
+        "passed": 39,
+        "failed": 0,
+        "notRun": 0
+      }
+    },
+    {
+      "articles": [
+        "staff-sign-in"
+      ],
+      "startedAt": "2026-09-25T10:41:26.708Z",
+      "finishedAt": "2026-09-25T10:45:02.630Z",
+      "stamp": 1790332886484,
+      "articleContentSha256": {
+        "staff-sign-in": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35"
+      },
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 26,
+          "secondsLeft": 210
+        },
+        "passwordSetup": {
+          "used": 7,
+          "secondsLeft": 373
+        }
+      },
+      "created": [
+        "administrator account doc030.access2.c01r.admin.1790332886484@helix.example (DOC-030 access-2 V-C01 1790332886484 re-walk Administrator)",
+        "legal_team_member account doc030.access2.c01r.member.1790332886484@helix.example (DOC-030 access-2 V-C01 1790332886484 re-walk Legal Team Member)"
+      ],
+      "productBugs": [],
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "notRun": 0
+      },
+      "append": true
+    }
+  ],
+  "productBugs": [
+    {
+      "article": "personal-settings",
+      "summary": "On 067c1646 a profile photo that is still large after the browser resizes it (here a 512x512 detailed PNG stored as a ~1 MB data URL) saves with Saved, but afterwards Settings > Profile shows Something went wrong. The page could not load. The session endpoint GET /api/auth/get-session answers with a set-auth-jwt response header that carries the whole photo (about 1.4 MB measured on the lab), which Chromium refuses (ERR_RESPONSE_HEADERS_TOO_BIG). Home and other pages still load; the person has no way to remove the photo. dev commit 7abd2a8f (PR #1158, after the pinned commit) stops the jwt plugin from sending set-auth-jwt.",
+      "reproduction": "As doc030.access2.c05.photobug.1790331802061@helix.example: Settings > Profile > Upload a 6.4 MB 1500x1500 noisy PNG; Saved true; stored data URL 1050222 characters; reload Profile: error page true; console: Failed to load resource: net::ERR_RESPONSE_HEADERS_TOO_BIG",
+      "observedAt": "2026-09-25T10:24:23.445Z"
+    }
+  ],
+  "summary": {
+    "staff-sign-in": {
+      "steps": 48,
+      "passed": 48,
+      "failed": 0,
+      "notRun": 0
+    },
+    "find-your-work": {
+      "steps": 28,
+      "passed": 28,
+      "failed": 0,
+      "notRun": 0
+    },
+    "personal-settings": {
+      "steps": 18,
+      "passed": 18,
+      "failed": 0,
+      "notRun": 0
+    },
+    "portal-knowledge": {
+      "steps": 11,
+      "passed": 11,
+      "failed": 0,
+      "notRun": 0
+    }
+  },
+  "steps": [
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal",
+      "page": "/settings",
+      "expected": "The Personal group has exactly those five entries in that order; API keys opens its pane",
+      "actual": "Settings navigation links: Profile, Appearance, Notifications, API keys, View Business Portal, General, Regions, Departments, Users, Matters, Contracts, Intake, Entities, Knowledge, Documents, Auto-Docs, Notifications, AI analysis, Integrations, MCP; Personal entries Profile, Appearance, Notifications, API keys, View Business Portal; API keys opened /settings/api-keys true (\"Personal Profile Appearance Notifications API keys View Business Portal Organization General Regions Departments Users Matters Contracts Int\")",
+      "result": "pass",
+      "at": "2026-09-25T10:23:24.665Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Update your profile, steps 1-5",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves with Enter or on leaving the field; Timezone search and select saves; Saved shows; reload keeps both; Use browser timezone removes the preference",
+      "actual": "Name saved with Enter true, after reload \"DOC-030 access-2 V-C05 1790331802061 Administrator edited\", header name menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; name restored by leaving the field Saved true, stored \"DOC-030 access-2 V-C05 1790331802061 Administrator\"",
+      "result": "pass",
+      "at": "2026-09-25T10:23:28.192Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Email and Role are read-only; the More information icon beside Role",
+      "page": "/settings/profile",
+      "expected": "Email is read-only; Role has no control; More information beside Role says Roles are managed in Organization → Users.",
+      "actual": "Email read-only with the account email true; Role editable controls 0; More information popover text shown true",
+      "result": "pass",
+      "at": "2026-09-25T10:23:28.958Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Change your photo: Upload a JPG or PNG up to 10 MB; larger files and other types are refused",
+      "page": "/settings/profile",
+      "expected": "Hint JPG or PNG, up to 10 MB. Resized automatically.; a large photo is scaled down and saved with Saved; a file over 10 MB shows Choose a photo smaller than 10 MB.; another type shows Choose a JPG or PNG photo.",
+      "actual": "Hint true; picker filter \"image/png,image/jpeg\"; 12420-byte PNG via Upload saved true; 9.3 MB 1500x1500 PNG saved true, stored as a 512x512 image of 9694 bytes, Profile reloads true; 10.3 MB PNG refused with the 10 MB message true; a GIF set on the input past the picker's JPG/PNG filter refused with Choose a JPG or PNG photo. true",
+      "result": "pass",
+      "at": "2026-09-25T10:23:37.602Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Choose a theme, steps 1-3; another account's preferences unchanged",
+      "page": "/settings/appearance",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing the theme does not sign out; the other account is unchanged",
+      "actual": "Saved/stored {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true; still signed in true; other legal_team_member account name|timezone|theme|photo unchanged true (\"|light|false\")",
+      "result": "pass",
+      "at": "2026-09-25T10:23:41.489Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Open your own Portal view, steps 1-4",
+      "page": "/settings/app-view",
+      "expected": "View Business Portal is its own Personal pane at /settings/app-view; View as business user opens the Portal with the Viewing as business user banner; own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Pane /settings/app-view true; banner true; Portal header shows the account true; role unchanged true; Return to legal view -> /settings/app-view true; still signed in true",
+      "result": "pass",
+      "at": "2026-09-25T10:23:41.750Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Change your password, steps 1-3",
+      "page": "/settings/profile",
+      "expected": "Change password asks for Current password and New password; a wrong current password or fewer than 8 characters is refused; Save changes it, keeps this session and signs out other devices",
+      "actual": "Card true; dialog says \"Change password Current password New password Saving signs you out on your other devices. Cancel Save\"; wrong current password message true; 6-character password refused true; dialog closed after Save true; this session open true; other device sent to sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:23:45.844Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "page": "/settings/profile",
+      "expected": "Sign out other devices ends every other session and this one stays; Sign out in the name menu ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session open true; Sign out -> sign-in true; Profile afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:23:49.156Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal",
+      "page": "/settings",
+      "expected": "The Personal group has exactly those five entries in that order; API keys opens its pane",
+      "actual": "Settings navigation links: Profile, Appearance, Notifications, API keys, View Business Portal; Personal entries Profile, Appearance, Notifications, API keys, View Business Portal; API keys opened /settings/api-keys true (\"Personal Profile Appearance Notifications API keys View Business Portal API keys Client Toolsets Scope Status Expires Actions No API keys to\")",
+      "result": "pass",
+      "at": "2026-09-25T10:23:50.265Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Update your profile, steps 1-5",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves with Enter or on leaving the field; Timezone search and select saves; Saved shows; reload keeps both; Use browser timezone removes the preference",
+      "actual": "Name saved with Enter true, after reload \"DOC-030 access-2 V-C05 1790331802061 Legal Team Member edited\", header name menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; name restored by leaving the field Saved true, stored \"DOC-030 access-2 V-C05 1790331802061 Legal Team Member\"",
+      "result": "pass",
+      "at": "2026-09-25T10:23:53.822Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Email and Role are read-only; the More information icon beside Role",
+      "page": "/settings/profile",
+      "expected": "Email is read-only; Role has no control; More information beside Role says Roles are managed in Organization → Users.",
+      "actual": "Email read-only with the account email true; Role editable controls 0; More information popover text shown true",
+      "result": "pass",
+      "at": "2026-09-25T10:23:54.576Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Change your photo: Upload a JPG or PNG up to 10 MB; larger files and other types are refused",
+      "page": "/settings/profile",
+      "expected": "Hint JPG or PNG, up to 10 MB. Resized automatically.; a large photo is scaled down and saved with Saved; a file over 10 MB shows Choose a photo smaller than 10 MB.; another type shows Choose a JPG or PNG photo.",
+      "actual": "Hint true; picker filter \"image/png,image/jpeg\"; 12420-byte PNG via Upload saved true; 9.3 MB 1500x1500 PNG saved true, stored as a 512x512 image of 9694 bytes, Profile reloads true; 10.3 MB PNG refused with the 10 MB message true; a GIF set on the input past the picker's JPG/PNG filter refused with Choose a JPG or PNG photo. true",
+      "result": "pass",
+      "at": "2026-09-25T10:24:03.155Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Choose a theme, steps 1-3; another account's preferences unchanged",
+      "page": "/settings/appearance",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing the theme does not sign out; the other account is unchanged",
+      "actual": "Saved/stored {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true; still signed in true; other administrator account name|timezone|theme|photo unchanged true (\"|light|true\")",
+      "result": "pass",
+      "at": "2026-09-25T10:24:07.034Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Open your own Portal view, steps 1-4",
+      "page": "/settings/app-view",
+      "expected": "View Business Portal is its own Personal pane at /settings/app-view; View as business user opens the Portal with the Viewing as business user banner; own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Pane /settings/app-view true; banner true; Portal header shows the account true; role unchanged true; Return to legal view -> /settings/app-view true; still signed in true",
+      "result": "pass",
+      "at": "2026-09-25T10:24:07.295Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Change your password, steps 1-3",
+      "page": "/settings/profile",
+      "expected": "Change password asks for Current password and New password; a wrong current password or fewer than 8 characters is refused; Save changes it, keeps this session and signs out other devices",
+      "actual": "Card true; dialog says \"Change password Current password New password Saving signs you out on your other devices. Cancel Save\"; wrong current password message true; 6-character password refused true; dialog closed after Save true; this session open true; other device sent to sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:24:11.342Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "page": "/settings/profile",
+      "expected": "Sign out other devices ends every other session and this one stays; Sign out in the name menu ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session open true; Sign out -> sign-in true; Profile afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:24:14.628Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "If this password section is absent",
+      "page": "/settings/profile",
+      "expected": "Profile shows Password & two-factor only when the account has a password",
+      "actual": "Invite 201; sign-in link reached the app true; Profile without Password & two-factor true",
+      "result": "pass",
+      "at": "2026-09-25T10:24:15.840Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "business_user",
+      "step": "Business Users do not have the View Business Portal control",
+      "page": "/portal",
+      "expected": "Settings sends a Business User to the Portal; no View Business Portal or View as business user control",
+      "actual": "Business User doc030.access2.bu.1790331802061@helix.example: {\"/settings\":\"/portal\",\"/settings/app-view\":\"/portal\",\"/settings/profile\":\"/portal\"}; control text present false",
+      "result": "pass",
+      "at": "2026-09-25T10:24:30.190Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Accept a password invitation, step 1: the invitation email",
+      "page": "Mailpit",
+      "expected": "Email Set your OpenLaw password with a Set password control; the link expires in one hour",
+      "actual": "Invite API 201; subject \"Set your OpenLaw password\"; HTML has a Set password control true; text says \"The link expires in one hour.\"; link opens /auth/set-password with the token in the URL fragment true",
+      "result": "pass",
+      "at": "2026-09-25T10:31:11.901Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "If it does not work: an expired invitation link",
+      "page": "/auth/set-password",
+      "expected": "This link has expired or was already used. Ask for a new one.",
+      "actual": "Shown: This link has expired or was already used. Ask for a new one.",
+      "result": "pass",
+      "at": "2026-09-25T10:31:12.290Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "If it does not work: the browser opened only part of the link",
+      "page": "/auth/set-password",
+      "expected": "This link is not valid. Ask for a new invitation or password reset.",
+      "actual": "Opening /auth/set-password without the #token fragment showed: This link is not valid. Ask for a new invitation or password reset.",
+      "result": "pass",
+      "at": "2026-09-25T10:31:12.334Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "fixture: the Administrator sends a fresh invitation",
+      "page": "Mailpit",
+      "expected": "A new Set your OpenLaw password email",
+      "actual": "Invite API 200; subject \"Set your OpenLaw password\"",
+      "result": "pass",
+      "at": "2026-09-25T10:31:12.399Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "If it does not work: passwords that do not match",
+      "page": "/auth/set-password",
+      "expected": "The passwords do not match.",
+      "actual": "Shown: The passwords do not match.",
+      "result": "pass",
+      "at": "2026-09-25T10:31:12.449Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Accept a password invitation, steps 2-5",
+      "page": "/auth/set-password",
+      "expected": "New password (at least eight characters), Confirm password, Set password, then Password set with Sign in",
+      "actual": "Form hint mentions eight characters true; Password set true; Sign in control true",
+      "result": "pass",
+      "at": "2026-09-25T10:31:12.576Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Introduction: the sign-in page shows the organization's name above the form, and its logo if saved",
+      "page": "/auth/login",
+      "expected": "Organization name above the Sign in form; a logo only when the Administrator saved one",
+      "actual": "Public branding answer name \"Helix Software Group\", logo none; name shown true; above the Sign in heading and form true; Organization logo images 0",
+      "result": "pass",
+      "at": "2026-09-25T10:31:12.660Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Accept a password invitation, step 6 and the check after it",
+      "page": "/",
+      "expected": "Wrong password shows Check your email and password.; Email and Password with Sign in reach the app; the name menu (photo or initials) shows name and email; a wide window shows the organization's name in the header",
+      "actual": "Wrong password message true; landed on / true; name menu \"DOC-030 access-2 V-C01 1790332271055 Administrator doc030.access2.c01.admin.1790332271055@helix.example Settings Sign out\"; organization name \"Helix Software Group\" in the header at 1440 px true, at 700 px false",
+      "result": "pass",
+      "at": "2026-09-25T10:31:13.589Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "A successful activation consumes the invitation link",
+      "page": "/auth/set-password",
+      "expected": "Reopening the used link shows This link has expired or was already used. Ask for a new one.",
+      "actual": "The used link was refused with the expired-or-used message",
+      "result": "pass",
+      "at": "2026-09-25T10:31:13.929Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Turn on two-factor authentication, steps 1-8",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Turn on two-factor; Password and Continue; QR code or manual secret; Code and Confirm; backup codes; Done; Profile says two-factor is on",
+      "actual": "Profile said off before true; QR true; manual secret shown true; wrong code refused true; backup codes shown 10; after Done Profile says on true",
+      "result": "pass",
+      "at": "2026-09-25T10:31:14.673Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Sign in with a second factor, steps 1-3",
+      "page": "/auth/two-factor",
+      "expected": "Password sign-in opens Two-factor authentication; a wrong code shows Wrong code. Try again, or restart sign-in.; the current Code with Verify signs in",
+      "actual": "Challenge true; wrong code message true; current code reached / true",
+      "result": "pass",
+      "at": "2026-09-25T10:31:30.685Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Use a backup code once; Sign out on the challenge restarts sign-in",
+      "page": "/auth/two-factor",
+      "expected": "An unused Backup code with Verify signs in; the same code cannot be reused; Sign out returns to sign-in",
+      "actual": "First use reached the app true; reuse stayed on the challenge true with Wrong code. Try again, or restart sign-in. true; Sign out -> sign-in true; / afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:31:32.906Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "End or recover a session: Sign out other devices; a revoked session goes to sign-in",
+      "page": "/settings/profile",
+      "expected": "The other browser's session ends and reload sends it to sign-in; this session stays",
+      "actual": "Second browser signed in true; Saved true; second browser reload -> sign-in true; this browser still on Profile true",
+      "result": "pass",
+      "at": "2026-09-25T10:32:33.593Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Re-enroll turns off the old authenticator; closing before a new code leaves two-factor off",
+      "page": "/settings/profile",
+      "expected": "A new secret; after closing the dialog Profile says two-factor is off and the password alone signs in",
+      "actual": "New secret differs true; Profile off true; password-only sign-in reached the app true",
+      "result": "pass",
+      "at": "2026-09-25T10:32:34.134Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Turn off two-factor requires the password; Sign out in the name menu ends the session",
+      "page": "/settings/profile",
+      "expected": "A wrong password is refused; the right one turns two-factor off; password sign-in has no challenge; Sign out returns to sign-in",
+      "actual": "Wrong password message Check your password. true; Profile off true; Sign out -> sign-in true; password-only sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:32:35.205Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Use your organization's sign-in method: Email me a sign-in link",
+      "page": "/auth/link-expired",
+      "expected": "Email, Send link, Check your email; Sign in in the newest email signs in within five minutes; the link works once, and a used link opens Sign-in link expired",
+      "actual": "Check your email true; subject \"Sign in to OpenLaw\"; email has a Sign in control true and says 5 minutes true; link signed in true; reuse opened \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get \"",
+      "result": "pass",
+      "at": "2026-09-25T10:32:35.874Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Sign-in link budget: three links for one email address in 15 minutes",
+      "page": "/auth/login",
+      "expected": "The fourth request shows Too many sign-in link requests. Try again later.",
+      "actual": "Third request: \"Helix Software Group Legal Portal Powered by OpenLaw Check your email If doc030.access2.c0\"; fourth request: \"Helix Software Group Legal Portal Powered by OpenLaw Get a sign-in link Too many sign-in link requests. Try again later. Enter your work email to get a single-u\"",
+      "result": "pass",
+      "at": "2026-09-25T10:32:39.514Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "If you forgot your password: Set up or reset your password",
+      "page": "/auth/set-password",
+      "expected": "Email and Send password setup link; Check your email; Set password in the email within one hour sets a new password; the new password signs out every session",
+      "actual": "Check your email true; email \"Set your OpenLaw password\"; token lifetime 60 min; Password set true; a browser signed in before the reset was sent to sign-in on reload true; old password refused true; new password signed in true",
+      "result": "pass",
+      "at": "2026-09-25T10:32:40.680Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Password setup budget: three setup emails for one email address in 15 minutes",
+      "page": "/auth/login",
+      "expected": "The fourth request shows Too many password setup requests. Try again later.",
+      "actual": "Second: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; third: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; fourth: \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Email Send password setup link Back to sign-in Too many pas\"",
+      "result": "pass",
+      "at": "2026-09-25T10:32:45.762Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Sign in with a second factor: after 10 wrong codes the page shows Too many attempts",
+      "page": "/auth/two-factor",
+      "expected": "Wrong codes show Wrong code. Try again, or restart sign-in.; after 10 wrong codes the page shows Too many attempts. Wait 15 minutes, then try again.",
+      "actual": "Attempt messages in order (Sign out and password sign-in between rounds): wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; wrong-code messages before the lock 10; the current code during the lock was also refused true",
+      "result": "pass",
+      "at": "2026-09-25T10:33:03.543Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "End or recover a session: wrong passwords and the 15-minute lock",
+      "page": "/auth/login",
+      "expected": "A wrong password shows Check your email and password.; a successful sign-in before the limit resets the count; after 10 wrong passwords the page shows Too many attempts. Wait 15 minutes, then try again., even for the correct password",
+      "actual": "9 wrong passwords left a live failure counter (1 row); the correct password then signed in true and the counter rows became 0. Then 11 wrong passwords showed: wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; the correct password afterwards stayed on sign-in with Too many attempts true",
+      "result": "pass",
+      "at": "2026-09-25T10:33:19.342Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Accept a password invitation, step 1: the invitation email",
+      "page": "Mailpit",
+      "expected": "Email Set your OpenLaw password with a Set password control; the link expires in one hour",
+      "actual": "Invite API 201; subject \"Set your OpenLaw password\"; HTML has a Set password control true; text says \"The link expires in one hour.\"; link opens /auth/set-password with the token in the URL fragment true",
+      "result": "pass",
+      "at": "2026-09-25T10:33:19.436Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "If it does not work: an expired invitation link",
+      "page": "/auth/set-password",
+      "expected": "This link has expired or was already used. Ask for a new one.",
+      "actual": "Shown: This link has expired or was already used. Ask for a new one.",
+      "result": "pass",
+      "at": "2026-09-25T10:33:19.801Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "If it does not work: the browser opened only part of the link",
+      "page": "/auth/set-password",
+      "expected": "This link is not valid. Ask for a new invitation or password reset.",
+      "actual": "Opening /auth/set-password without the #token fragment showed: This link is not valid. Ask for a new invitation or password reset.",
+      "result": "pass",
+      "at": "2026-09-25T10:33:19.845Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "fixture: the Administrator sends a fresh invitation",
+      "page": "Mailpit",
+      "expected": "A new Set your OpenLaw password email",
+      "actual": "Invite API 200; subject \"Set your OpenLaw password\"",
+      "result": "pass",
+      "at": "2026-09-25T10:33:19.910Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "If it does not work: passwords that do not match",
+      "page": "/auth/set-password",
+      "expected": "The passwords do not match.",
+      "actual": "Shown: The passwords do not match.",
+      "result": "pass",
+      "at": "2026-09-25T10:33:19.957Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Accept a password invitation, steps 2-5",
+      "page": "/auth/set-password",
+      "expected": "New password (at least eight characters), Confirm password, Set password, then Password set with Sign in",
+      "actual": "Form hint mentions eight characters true; Password set true; Sign in control true",
+      "result": "pass",
+      "at": "2026-09-25T10:33:20.084Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Introduction: the sign-in page shows the organization's name above the form, and its logo if saved",
+      "page": "/auth/login",
+      "expected": "Organization name above the Sign in form; a logo only when the Administrator saved one",
+      "actual": "Public branding answer name \"Helix Software Group\", logo none; name shown true; above the Sign in heading and form true; Organization logo images 0",
+      "result": "pass",
+      "at": "2026-09-25T10:33:20.173Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Accept a password invitation, step 6 and the check after it",
+      "page": "/",
+      "expected": "Wrong password shows Check your email and password.; Email and Password with Sign in reach the app; the name menu (photo or initials) shows name and email; a wide window shows the organization's name in the header",
+      "actual": "Wrong password message true; landed on / true; name menu \"DOC-030 access-2 V-C01 1790332271055 Legal Team Member doc030.access2.c01.member.1790332271055@helix.example Settings Sign out\"; organization name \"Helix Software Group\" in the header at 1440 px true, at 700 px false",
+      "result": "pass",
+      "at": "2026-09-25T10:33:21.036Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "A successful activation consumes the invitation link",
+      "page": "/auth/set-password",
+      "expected": "Reopening the used link shows This link has expired or was already used. Ask for a new one.",
+      "actual": "The used link was refused with the expired-or-used message",
+      "result": "pass",
+      "at": "2026-09-25T10:33:21.318Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Turn on two-factor authentication, steps 1-8",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Turn on two-factor; Password and Continue; QR code or manual secret; Code and Confirm; backup codes; Done; Profile says two-factor is on",
+      "actual": "Profile said off before true; QR true; manual secret shown true; wrong code refused true; backup codes shown 10; after Done Profile says on true",
+      "result": "pass",
+      "at": "2026-09-25T10:33:21.978Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Sign in with a second factor, steps 1-3",
+      "page": "/auth/two-factor",
+      "expected": "Password sign-in opens Two-factor authentication; a wrong code shows Wrong code. Try again, or restart sign-in.; the current Code with Verify signs in",
+      "actual": "Challenge true; wrong code message true; current code reached / true",
+      "result": "pass",
+      "at": "2026-09-25T10:33:30.718Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Use a backup code once; Sign out on the challenge restarts sign-in",
+      "page": "/auth/two-factor",
+      "expected": "An unused Backup code with Verify signs in; the same code cannot be reused; Sign out returns to sign-in",
+      "actual": "First use reached the app true; reuse stayed on the challenge true with Wrong code. Try again, or restart sign-in. true; Sign out -> sign-in true; / afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:33:32.959Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "End or recover a session: Sign out other devices; a revoked session goes to sign-in",
+      "page": "/settings/profile",
+      "expected": "The other browser's session ends and reload sends it to sign-in; this session stays",
+      "actual": "Second browser signed in true; Saved true; second browser reload -> sign-in true; this browser still on Profile true",
+      "result": "pass",
+      "at": "2026-09-25T10:34:33.549Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Re-enroll turns off the old authenticator; closing before a new code leaves two-factor off",
+      "page": "/settings/profile",
+      "expected": "A new secret; after closing the dialog Profile says two-factor is off and the password alone signs in",
+      "actual": "New secret differs true; Profile off true; password-only sign-in reached the app true",
+      "result": "pass",
+      "at": "2026-09-25T10:34:34.105Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Turn off two-factor requires the password; Sign out in the name menu ends the session",
+      "page": "/settings/profile",
+      "expected": "A wrong password is refused; the right one turns two-factor off; password sign-in has no challenge; Sign out returns to sign-in",
+      "actual": "Wrong password message Check your password. true; Profile off true; Sign out -> sign-in true; password-only sign-in true",
+      "result": "pass",
+      "at": "2026-09-25T10:34:35.146Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Use your organization's sign-in method: Email me a sign-in link",
+      "page": "/auth/link-expired",
+      "expected": "Email, Send link, Check your email; Sign in in the newest email signs in within five minutes; the link works once, and a used link opens Sign-in link expired",
+      "actual": "Check your email true; subject \"Sign in to OpenLaw\"; email has a Sign in control true and says 5 minutes true; link signed in true; reuse opened \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get \"",
+      "result": "pass",
+      "at": "2026-09-25T10:34:35.742Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Sign-in link budget: three links for one email address in 15 minutes",
+      "page": "/auth/login",
+      "expected": "The fourth request shows Too many sign-in link requests. Try again later.",
+      "actual": "Third request: \"Helix Software Group Legal Portal Powered by OpenLaw Check your email If doc030.access2.c0\"; fourth request: \"Helix Software Group Legal Portal Powered by OpenLaw Get a sign-in link Too many sign-in link requests. Try again later. Enter your work email to get a single-u\"",
+      "result": "pass",
+      "at": "2026-09-25T10:34:39.408Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "If you forgot your password: Set up or reset your password",
+      "page": "/auth/set-password",
+      "expected": "Email and Send password setup link; Check your email; Set password in the email within one hour sets a new password; the new password signs out every session",
+      "actual": "Check your email true; email \"Set your OpenLaw password\"; token lifetime 60 min; Password set true; a browser signed in before the reset was sent to sign-in on reload true; old password refused true; new password signed in true",
+      "result": "pass",
+      "at": "2026-09-25T10:34:40.659Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Password setup budget: three setup emails for one email address in 15 minutes",
+      "page": "/auth/login",
+      "expected": "The fourth request shows Too many password setup requests. Try again later.",
+      "actual": "Second: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; third: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; fourth: \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Email Send password setup link Back to sign-in Too many pas\"",
+      "result": "pass",
+      "at": "2026-09-25T10:34:45.707Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Sign in with a second factor: after 10 wrong codes the page shows Too many attempts",
+      "page": "/auth/two-factor",
+      "expected": "Wrong codes show Wrong code. Try again, or restart sign-in.; after 10 wrong codes the page shows Too many attempts. Wait 15 minutes, then try again.",
+      "actual": "Attempt messages in order (Sign out and password sign-in between rounds): wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; wrong-code messages before the lock 10; the current code during the lock was also refused true",
+      "result": "pass",
+      "at": "2026-09-25T10:35:03.524Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "End or recover a session: wrong passwords and the 15-minute lock",
+      "page": "/auth/login",
+      "expected": "A wrong password shows Check your email and password.; a successful sign-in before the limit resets the count; after 10 wrong passwords the page shows Too many attempts. Wait 15 minutes, then try again., even for the correct password",
+      "actual": "9 wrong passwords left a live failure counter (1 row); the correct password then signed in true and the counter rows became 0. Then 11 wrong passwords showed: wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; the correct password afterwards stayed on sign-in with Too many attempts true",
+      "result": "pass",
+      "at": "2026-09-25T10:35:19.323Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Check your email appears whether or not the address is eligible",
+      "page": "/auth/login",
+      "expected": "An ineligible address gets the same Check your email page for Send link and Send password setup link, and no email",
+      "actual": "Sign-in link: Check your email true; password setup: Check your email true; messages to the address 0",
+      "result": "pass",
+      "at": "2026-09-25T10:35:24.862Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "If the sign-in page shows This sign-in link could not be used",
+      "page": "/auth/login",
+      "expected": "OpenLaw refuses the sign-in for an archived account and the sign-in page shows This sign-in link could not be used. Request a new link or contact your administrator.",
+      "actual": "Link emailed true; account archived by the Administrator (API 200) before the link was opened; the link ended on /auth/login; message shown true",
+      "result": "pass",
+      "at": "2026-09-25T10:35:28.817Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "supplementary (mocked methods answer): Sign-in link expired when sign-in links are off",
+      "page": "/auth/link-expired",
+      "expected": "Observation for the author: which control Sign-in link expired shows when staff sign-in links are off",
+      "actual": "With staff sign-in links off: Back to sign-in true; Email field false. Browser rendering only; the server policy was not changed.",
+      "result": "pass",
+      "at": "2026-09-25T10:35:30.234Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "supplementary (mocked methods answer): Continue with single sign-on, Single sign-on is not configured yet, Administrator sign-in",
+      "page": "/auth/login",
+      "expected": "The controls render as the guide names them; Administrator sign-in opens the password form",
+      "actual": "Continue with single sign-on true; Administrator sign-in true, opens the password form true; Single sign-on is not configured yet shown when no provider true. Browser rendering only; the server policy was not changed.",
+      "result": "pass",
+      "at": "2026-09-25T10:35:31.335Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Open work from Home, steps 1-5, and the section order",
+      "page": "/",
+      "expected": "Home shows only sections with work, Inbox and Entity obligations first, then Approvals, Tasks, Dates, Your contracts, Your matters; a Task title opens its record; number and title show; Fields and Documents open; Home returns",
+      "actual": "Sections on screen: Inbox > Entity obligations > Tasks assigned to you > Dates approaching > Your contracts > Your matters (documented order true); API sections tasks:12, dates:19, obligations:13, inbox:19, contracts:56, matters:19 (none empty true); fixture Task on the card true; opened C-187 with number and title true; Fields true; Documents true; Home true",
+      "result": "pass",
+      "at": "2026-09-25T10:35:45.817Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Inbox: Requests with the status New or Read; View all counts both; opening a New Request makes it Read and it stays in Inbox",
+      "page": "/inbox",
+      "expected": "View all counts New and Read Requests; the fixture Request is New before an Administrator or Legal Team Member opens it and Read after; it stays in Inbox",
+      "actual": "Home card \"View all 19\" with New/Read in the database new:12,read:7 (API total 19); fixture R-70 listed on the Inbox list true, status new before opening and read after; Home Inbox total after 19 against 19 New or Read Requests in the database; the Read Request is still on the Inbox list true",
+      "result": "pass",
+      "at": "2026-09-25T10:35:54.010Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Section contents: Your contracts by Owner, Your matters by Matter Manager, open Tasks",
+      "page": "/",
+      "expected": "Your contracts rows have you as Owner; Your matters rows have you as Matter Manager; Tasks rows are open",
+      "actual": "Your contracts 4 rows, all owned by this account true; Your matters 4 rows, all managed by this account true; Task rows open true",
+      "result": "pass",
+      "at": "2026-09-25T10:35:56.159Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Task due dates do not feed Dates approaching; View all opens Your dates",
+      "page": "/",
+      "expected": "The fixture Task's due date is absent from Dates approaching and Your dates; View all opens Your dates",
+      "actual": "Fixture Task or its Contract in Dates approaching false; Your dates opened without the Task true",
+      "result": "pass",
+      "at": "2026-09-25T10:35:56.737Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Keyboard navigation: ?, Escape, / and the empty search list with Saved, Recent and Advanced search…",
+      "page": "/",
+      "expected": "? opens Keyboard shortcuts; Escape closes a dialog, a menu and the search list; / focuses record search; typing in a field keeps ? and /; with a recent search the empty box opens Recent (and Saved when present) and Advanced search…; selecting an entry runs that search",
+      "actual": "Sheet true, closed by Escape true; name menu true, closed by Escape true; / focused Search true; typed \"?/x\" with no sheet true; after one search the empty box opened a list true with groups [Recent], first Recent entry \"DOC-030 access-2 V-C03 1790332538951 Home Enter\", Advanced search… true; Escape closed the list true; selecting the Recent entry opened /search true and listed the Home contract true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:02.845Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Tab and Enter; Help opens product instructions and its search searches guides",
+      "page": "/help",
+      "expected": "Tab moves focus; Enter activates a focused link; Help in the header opens guides; its search finds the guide and not records",
+      "actual": "Tab moved focus to \"Documents\"; Enter on Contracts opened /contracts true; Help at /help; guide found true; fixture Contract title in Help false",
+      "result": "pass",
+      "at": "2026-09-25T10:36:04.735Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "If a record becomes unavailable: Contract not found and Matter not found",
+      "page": "/contracts/:number",
+      "expected": "The page says the record does not exist or you cannot open it; Back to Contracts or Back to Matters returns to the list; nothing about a Confidential record leaks",
+      "actual": "{'/contracts/999999':{'title':true,'message':true,'backLink':true,'leaked':false},'/matters/999999':{'title':true,'message':true,'backLink':true,'leaked':false}}",
+      "result": "pass",
+      "at": "2026-09-25T10:36:05.332Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Open work from Home, steps 1-5, and the section order",
+      "page": "/",
+      "expected": "Home shows only sections with work, Inbox and Entity obligations first, then Approvals, Tasks, Dates, Your contracts, Your matters; a Task title opens its record; number and title show; Fields and Documents open; Home returns",
+      "actual": "Sections on screen: Inbox > Entity obligations > Tasks assigned to you > Dates approaching > Your contracts > Your matters (documented order true); API sections tasks:8, dates:11, obligations:13, inbox:19, contracts:83, matters:12 (none empty true); fixture Task on the card true; opened C-187 with number and title true; Fields true; Documents true; Home true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:09.029Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Inbox: Requests with the status New or Read; View all counts both; opening a New Request makes it Read and it stays in Inbox",
+      "page": "/inbox",
+      "expected": "View all counts New and Read Requests; the fixture Request is New before an Administrator or Legal Team Member opens it and Read after; it stays in Inbox",
+      "actual": "Home card \"View all 19\" with New/Read in the database new:11,read:8 (API total 19); fixture R-71 listed on the Inbox list true, status new before opening and read after; Home Inbox total after 19 against 19 New or Read Requests in the database; the Read Request is still on the Inbox list true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:17.179Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Section contents: Your contracts by Owner, Your matters by Matter Manager, open Tasks",
+      "page": "/",
+      "expected": "Your contracts rows have you as Owner; Your matters rows have you as Matter Manager; Tasks rows are open",
+      "actual": "Your contracts 4 rows, all owned by this account true; Your matters 4 rows, all managed by this account true; Task rows open true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:19.312Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Task due dates do not feed Dates approaching; View all opens Your dates",
+      "page": "/",
+      "expected": "The fixture Task's due date is absent from Dates approaching and Your dates; View all opens Your dates",
+      "actual": "Fixture Task or its Contract in Dates approaching false; Your dates opened without the Task true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:19.880Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Keyboard navigation: ?, Escape, / and the empty search list with Saved, Recent and Advanced search…",
+      "page": "/",
+      "expected": "? opens Keyboard shortcuts; Escape closes a dialog, a menu and the search list; / focuses record search; typing in a field keeps ? and /; with a recent search the empty box opens Recent (and Saved when present) and Advanced search…; selecting an entry runs that search",
+      "actual": "Sheet true, closed by Escape true; name menu true, closed by Escape true; / focused Search true; typed \"?/x\" with no sheet true; after one search the empty box opened a list true with groups [Recent], first Recent entry \"DOC-030 access-2 V-C03 1790332538951 Home Enter\", Advanced search… true; Escape closed the list true; selecting the Recent entry opened /search true and listed the Home contract true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:26.003Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Tab and Enter; Help opens product instructions and its search searches guides",
+      "page": "/help",
+      "expected": "Tab moves focus; Enter activates a focused link; Help in the header opens guides; its search finds the guide and not records",
+      "actual": "Tab moved focus to \"Documents\"; Enter on Contracts opened /contracts true; Help at /help; guide found true; fixture Contract title in Help false",
+      "result": "pass",
+      "at": "2026-09-25T10:36:27.942Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "If a record becomes unavailable: Contract not found and Matter not found",
+      "page": "/contracts/:number",
+      "expected": "The page says the record does not exist or you cannot open it; Back to Contracts or Back to Matters returns to the list; nothing about a Confidential record leaks",
+      "actual": "{'/contracts/999999':{'title':true,'message':true,'backLink':true,'leaked':false},'/matters/999999':{'title':true,'message':true,'backLink':true,'leaked':false},'/contracts/188':{'title':true,'message':true,'backLink':true,'leaked':false}}",
+      "result": "pass",
+      "at": "2026-09-25T10:36:28.811Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Entity obligations for an Administrator: Unassigned and unreachable-assignee Obligations, overdue first",
+      "page": "/",
+      "expected": "An Administrator with a Grant sees Unassigned Obligations and Obligations whose assignee cannot reach the (Confidential) Entity, overdue first; not an Obligation assigned to a Legal Team Member who can reach it; a row opens the Entity's Obligations",
+      "actual": "Sections Inbox > Entity obligations; card rows: [\"DOC-030 access-2 V-C03 1790332538951 unassigned obligation Unassigned DOC-030 access-2 V-C03 1790332538951 open entity · Due Jan 1, 2001 Overdue Jan 1, 2001\",\"DOC-030 access-2 V-C03 1790332538951 unreachable-assignee obligation DOC-030 access-2 V-C03 1790332538951 confidential entity · Due Jan 3, 2001 Overdue Jan 3, 2001\",\"Registered agent renewal Helix Software GmbH · Due Sep 18, 2026 Overdue Sep 18 (7 days overdue)\",\"Corporate income tax return Helix Software Poland sp. z o.o. · Due Apr 27, 2027 Apr 27, 2027\"]; Unassigned row \"DOC-030 access-2 V-C03 1790332538951 unassigned obligation Unassigned DOC-030 access-2 V-C03 1790332538951 open entity · Due Jan 1, 2001 Overdue Jan 1, 2001\" marked Unassigned true; unreachable-assignee Obligation listed true; member-assigned Obligation listed false; row opened /entities/<id>/obligations true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:30.582Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Entity obligations: an Administrator needs a Grant to see a Confidential Entity's Obligations",
+      "page": "/",
+      "expected": "An Administrator without a Grant does not see the Confidential Entity's Obligation, even when assigned to it; Unassigned Obligations on open Entities still show",
+      "actual": "Administrator without a Grant (the assignee): Confidential Entity Obligation listed false, Unassigned listed true; Daniel Okafor (no Grant): Confidential Entity Obligation listed false, Unassigned listed true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:34.174Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Entity obligations for a Legal Team Member: open Obligations assigned to you, overdue first",
+      "page": "/",
+      "expected": "Only Obligations assigned to this Legal Team Member on reachable Entities, overdue first; no Unassigned rows",
+      "actual": "Sections Inbox > Entity obligations; card rows: [\"DOC-030 access-2 V-C03 1790332538951 member obligation DOC-030 access-2 V-C03 1790332538951 open entity · Due Jan 2, 2001 Overdue Jan 2, 2001\",\"DOC-030 access-2 V-C03 1790332538951 member future obligation DOC-030 access-2 V-C03 1790332538951 open entity · Due Oct 15, 2026 Oct 15 (in 20 days)\"]; total 2; overdue member Obligation first true; future member Obligation listed true; Unassigned listed false",
+      "result": "pass",
+      "at": "2026-09-25T10:36:36.179Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Keyboard navigation: with a saved search the empty box opens Saved and Recent groups; selecting the Saved entry runs it",
+      "page": "/",
+      "expected": "The list has Saved and Recent groups and Advanced search…; selecting the saved search runs it at once",
+      "actual": "Saved view API 201; groups [Saved, Recent]; saved entry listed true; selecting it opened /search true and listed the Home contract true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:43.579Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Open all your Tasks: an empty list and an absent Home card",
+      "page": "/home/tasks",
+      "expected": "No open Tasks assigned to you. on Your Tasks; no Tasks assigned to you card on Home",
+      "actual": "Empty message true; Home sections Inbox > Entity obligations; Tasks card absent true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:46.932Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Open all your Tasks, steps 1-3: View all, Your Tasks, Load more Tasks, due-date order",
+      "page": "/home/tasks",
+      "expected": "View all with the count opens Your Tasks; Load more Tasks adds the next page; Tasks follow due date with undated Tasks last",
+      "actual": "View all 55 opened /home/tasks true; rows 50, then 55 after Load more Tasks (shown true); due-date order true; last two undated true",
+      "result": "pass",
+      "at": "2026-09-25T10:36:52.520Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Your Tasks: complete, Undo, Show completed and Hide completed, reopen",
+      "page": "/home/tasks",
+      "expected": "Completion shows Completed with Undo; Undo reopens; Show completed adds completed Tasks and the label says Hide completed; clearing a completed Task's control shows Reopened",
+      "actual": "Completed true; Undo reopened true; completed row left the open list true; Show completed: label Hide completed true, completed row listed true; Reopened true, open in the database true; switch off, label Show completed true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:01.014Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "administrator",
+      "step": "Open all your Tasks, steps 2 and 4: a Task title opens its owning record; Home returns",
+      "page": "/home/tasks",
+      "expected": "The Task title opens the Contract; Home in the app navigation returns",
+      "actual": "Opened /contracts/187/tasks true; Home true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:01.669Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Keyboard navigation: with a saved search the empty box opens Saved and Recent groups; selecting the Saved entry runs it",
+      "page": "/",
+      "expected": "The list has Saved and Recent groups and Advanced search…; selecting the saved search runs it at once",
+      "actual": "Saved view API 201; groups [Saved, Recent]; saved entry listed true; selecting it opened /search true and listed the Home contract true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:09.857Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Open all your Tasks: an empty list and an absent Home card",
+      "page": "/home/tasks",
+      "expected": "No open Tasks assigned to you. on Your Tasks; no Tasks assigned to you card on Home",
+      "actual": "Empty message true; Home sections Inbox > Entity obligations; Tasks card absent true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:13.362Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Open all your Tasks, steps 1-3: View all, Your Tasks, Load more Tasks, due-date order",
+      "page": "/home/tasks",
+      "expected": "View all with the count opens Your Tasks; Load more Tasks adds the next page; Tasks follow due date with undated Tasks last",
+      "actual": "View all 55 opened /home/tasks true; rows 50, then 55 after Load more Tasks (shown true); due-date order true; last two undated true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:19.628Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Your Tasks: complete, Undo, Show completed and Hide completed, reopen",
+      "page": "/home/tasks",
+      "expected": "Completion shows Completed with Undo; Undo reopens; Show completed adds completed Tasks and the label says Hide completed; clearing a completed Task's control shows Reopened",
+      "actual": "Completed true; Undo reopened true; completed row left the open list true; Show completed: label Hide completed true, completed row listed true; Reopened true, open in the database true; switch off, label Show completed true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:28.227Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "Open all your Tasks, steps 2 and 4: a Task title opens its owning record; Home returns",
+      "page": "/home/tasks",
+      "expected": "The Task title opens the Contract; Home in the app navigation returns",
+      "actual": "Opened /contracts/187/tasks true; Home true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:28.531Z"
+    },
+    {
+      "article": "find-your-work",
+      "role": "legal_team_member",
+      "step": "supplementary (mocked empty Home answer): Welcome to OpenLaw when nothing matches",
+      "page": "/",
+      "expected": "Home shows Welcome to OpenLaw when no section has work",
+      "actual": "Welcome to OpenLaw shown true. Browser rendering only: every live staff account here has at least the Inbox section.",
+      "result": "pass",
+      "at": "2026-09-25T10:37:29.093Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, step 1: Before you submit on the Portal home and a request form",
+      "page": "/portal",
+      "expected": "Before you submit lists only eligible guidance; the links can differ between the home page and a form",
+      "actual": "Home links: How to ask legal for help -> /portal/knowledge/01a0d801-f7e3-7fde-b27b-642983d213d8; Contract review turnaround times -> /portal/knowledge/01a0d801-f7e3-7fde-b27b-642a3d125360; When you need a DPA -> /portal/knowledge/01a0d801-f811-73bf-a754-0a2f0c502c5a; Using customer names in marketing -> /portal/knowledge/01a0d801-f81a-723f-bc60-72033dba992f; Helix intranet - Legal -> https://intranet.helix.example/legal (_blank, shows \"intranet.helix.example\"); every Knowledge link is a published Everyone item true; Contract review form links [] differ from home true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:39.019Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 2-6 from a Before you submit link",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Knowledge link opens in the same tab; From Legal above the title; Documents with Download and Guidance when present; Your requests returns to the Portal home",
+      "actual": "\"How to ask legal for help\" opened /portal/knowledge/01a0d801-f7e3-7fde-b27b-642983d213d8 in the same tab true; \"From Legal\" above \"How to ask legal for help\" true; Guidance section true; Documents section false, no Documents on this item; Your requests -> /portal true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:39.366Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 4-5: primary Document first, Download gives the current Version, Guidance",
+      "page": "/portal/knowledge/:id",
+      "expected": "The primary Document (uploaded second) is listed first; Download gives each current Version; no version picker or embedded reader; Guidance shows the written instructions",
+      "actual": "Documents order: doc030-primary-1790332538951.pdf | doc030-supporting-1790332538951.pdf; downloads: doc030-primary-1790332538951.pdf matches; doc030-supporting-1790332538951.pdf matches; version pickers 0; embedded readers 0; Guidance \"Guidance Read this DOC-030 guidance before you ask Legal for a review. Send the latest draft with your Request.\"",
+      "result": "pass",
+      "at": "2026-09-25T10:37:39.592Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "A Document that Legal marked Confidential does not appear, even when it is the primary Document; its download address does not work",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Confidential primary is absent and the supporting Document shows; the Confidential Document's address answers 404 while the open one works",
+      "actual": "Staff primary is the Confidential Document true; Portal Documents list: doc030-open-supporting-1790332538951.pdf; Confidential Document address HTTP 404; open Document address HTTP 200. Observation: an item whose only Document is Confidential shows no Documents section (true) and keeps its Guidance (true).",
+      "result": "pass",
+      "at": "2026-09-25T10:37:39.911Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Unavailable guidance: a file downloaded earlier does not update; Download gives the current Version",
+      "page": "/portal/knowledge/:id",
+      "expected": "After Legal adds a Version, reload lists the new file and Download and the saved address serve it",
+      "actual": "Version upload HTTP 201; Download gave doc030-primary-v2-1790332538951.pdf with the new bytes true; saved address now serves the new bytes true",
+      "result": "pass",
+      "at": "2026-09-25T10:37:40.220Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Draft, restricted, archived and unknown items do not open; the same check applies to their files",
+      "page": "/portal",
+      "expected": "Each item returns to the Portal home; item and file addresses answer 404",
+      "actual": "draft: page -> /portal, item HTTP 404, file HTTP 404; restricted: page -> /portal, item HTTP 404, file HTTP 404; archived: page -> /portal, item HTTP 404, file HTTP 404; unknown: page -> /portal, item HTTP 404, file HTTP n/a",
+      "result": "pass",
+      "at": "2026-09-25T10:37:40.775Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "An internal Knowledge link returns you to the Portal home when the item is no longer available, including a saved download address",
+      "page": "/portal",
+      "expected": "After Legal unpublishes, the page returns home and the saved address answers 404; republishing restores it",
+      "actual": "Unpublished: page -> /portal true, saved address HTTP 404; republished: HTTP 200",
+      "result": "pass",
+      "at": "2026-09-25T10:37:41.126Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "External links: the website shows beneath the label and opens in a new tab; a broken website does not block the Request",
+      "page": "/portal",
+      "expected": "A new tab opens; the original tab stays on the Portal; the Request can still be submitted",
+      "actual": "\"Helix intranet - Legal\" shows \"intranet.helix.example\" beneath it; new tab at chrome-error://chromewebdata/ (\"\"); original tab on /portal true; the Legal question form then confirmed \"Thanks! Your request has been submitted to legal. (R-72)\"",
+      "result": "pass",
+      "at": "2026-09-25T10:37:42.860Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "The Portal does not offer the staff Knowledge library or its editing controls",
+      "page": "/portal",
+      "expected": "No Knowledge entry in the Portal navigation; the staff Knowledge address sends a Business User to the Portal; no editing controls on the item page",
+      "actual": "Portal navigation: Requests, Approvals, Contracts, Matters, Auto-Docs; /knowledge ended at /portal; staff list API HTTP 403; editing buttons 0",
+      "result": "pass",
+      "at": "2026-09-25T10:37:45.623Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "anonymous",
+      "step": "Before you start: Everyone still requires a signed-in Portal session",
+      "page": "/portal/login",
+      "expected": "A signed-out browser goes to the Portal sign-in; item and file answer 401",
+      "actual": "Page -> /portal/login true; item HTTP 401; file HTTP 401",
+      "result": "pass",
+      "at": "2026-09-25T10:37:45.802Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Before you start: searching product Help does not search organization Knowledge",
+      "page": "/portal/help",
+      "expected": "Help search for the guidance title finds no Knowledge Item",
+      "actual": "Help at /portal/help; links named \"DOC-030 access-2 V-C11 1790332538951 guidance\" 0; page starts \"Browse guides Overview BROWSE GUIDES Business Portal Working with Legal Documents Reference and troubleshooting Help All\"",
+      "result": "pass",
+      "at": "2026-09-25T10:37:47.953Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Re-walk after the author's correction: Sign-in link expired shows Email and Send link while sign-in links are on and email works, otherwise only Back to sign-in",
+      "page": "/auth/link-expired",
+      "expected": "Links on: a used link opens Sign-in link expired with Email and Send link (no Back to sign-in), and Send link gets a new link that signs in. Links off: the page shows only Back to sign-in, which returns to sign-in for another method",
+      "actual": "Links on (live lab setting): first link signed in true; reused link opened Sign-in link expired true with controls [input email, Send link, Help with this page]: Email true, Send link true, Back to sign-in false; Send link showed Check your email true; new email \"Sign in to OpenLaw\" signed in true. Links off (mocked methods answer in the browser only; the shared setting was not changed): Sign-in link expired true with controls [Back to sign-in, Help with this page], Email field false; Back to sign-in returned to sign-in true; password sign-in as another method reached the app true",
+      "result": "pass",
+      "at": "2026-09-25T10:41:34.805Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Re-walk after the author's correction: Sign-in link expired shows Email and Send link while sign-in links are on and email works, otherwise only Back to sign-in",
+      "page": "/auth/link-expired",
+      "expected": "Links on: a used link opens Sign-in link expired with Email and Send link (no Back to sign-in), and Send link gets a new link that signs in. Links off: the page shows only Back to sign-in, which returns to sign-in for another method",
+      "actual": "Links on (live lab setting): first link signed in true; reused link opened Sign-in link expired true with controls [input email, Send link, Help with this page]: Email true, Send link true, Back to sign-in false; Send link showed Check your email true; new email \"Sign in to OpenLaw\" signed in true. Links off (mocked methods answer in the browser only; the shared setting was not changed): Sign-in link expired true with controls [Back to sign-in, Help with this page], Email field false; Back to sign-in returned to sign-in true; password sign-in as another method reached the app true",
+      "result": "pass",
+      "at": "2026-09-25T10:45:02.413Z"
+    }
+  ],
+  "supersededSteps": [
+    {
+      "article": "staff-sign-in",
+      "role": "administrator",
+      "step": "Sign-in link expired: enter your email there to get a new link, or select Back to sign-in",
+      "page": "/auth/link-expired",
+      "expected": "The email field on Sign-in link expired sends a new link that signs in; a Back to sign-in control returns to the sign-in page",
+      "actual": "Enter your email: Check your email true; new email \"Sign in to OpenLaw\"; new link signed in true. Back to sign-in: the page's controls are [input email, Send link, Help with this page]; Back to sign-in present false. The organization has sign-in links on, and link-expired.tsx shows Back to sign-in only when sign-in links are off or email cannot be sent.",
+      "result": "fail",
+      "at": "2026-09-25T10:32:36.248Z",
+      "supersededAt": "2026-09-25T10:45:02.630Z",
+      "supersededBecause": "The author corrected the guide paragraph (staff-sign-in.md 29d19f72); the step was walked again against the corrected text."
+    },
+    {
+      "article": "staff-sign-in",
+      "role": "legal_team_member",
+      "step": "Sign-in link expired: enter your email there to get a new link, or select Back to sign-in",
+      "page": "/auth/link-expired",
+      "expected": "The email field on Sign-in link expired sends a new link that signs in; a Back to sign-in control returns to the sign-in page",
+      "actual": "Enter your email: Check your email true; new email \"Sign in to OpenLaw\"; new link signed in true. Back to sign-in: the page's controls are [input email, Send link, Help with this page]; Back to sign-in present false. The organization has sign-in links on, and link-expired.tsx shows Back to sign-in only when sign-in links are off or email cannot be sent.",
+      "result": "fail",
+      "at": "2026-09-25T10:34:36.143Z",
+      "supersededAt": "2026-09-25T10:45:02.630Z",
+      "supersededBecause": "The author corrected the guide paragraph (staff-sign-in.md 29d19f72); the step was walked again against the corrected text."
+    }
+  ]
+}

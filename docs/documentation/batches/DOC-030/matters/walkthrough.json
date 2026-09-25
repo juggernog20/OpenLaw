@@ -1,0 +1,869 @@
+{
+  "batch": "DOC-030",
+  "issue": 1157,
+  "group": "matters",
+  "reviewer": "DOC-030 independent walkthrough agent (matters)",
+  "reviewerKind": "agent",
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-80ceef9e-work2",
+    "appUrl": "http://127.0.0.1:43300",
+    "mailUrl": "http://127.0.0.1:48425",
+    "sourceCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-25T09:59:53.804Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-25T10:00:16.340Z"
+    }
+  },
+  "articles": {
+    "create-matter": {
+      "contentSha256": "27c935b35a5a7c80c8cd0ef80251dab68145a0bf9c8950f1505e7881c726bbf7"
+    },
+    "matter-work": {
+      "contentSha256": "44f50c0d10154808d3824afdb9a811eb915fc456f9badb4ccd9a2e771cd9ec34"
+    }
+  },
+  "finalRun": 1790333890346,
+  "fixtures": {
+    "script": "docs/documentation/batches/DOC-030/matters/setup.mjs",
+    "record": "docs/documentation/batches/DOC-030/matters/fixtures.json",
+    "createdAt": "2026-09-25T10:04:51.710Z",
+    "matterTypes": {
+      "DOC-030 matters type": "The lab type for the create dialog. Form (in order): Title, Matter type (pinned); Description, Department, Priority, Risk and Needed by On intake form; Region a record Row; DOC-030 matters required note Required for creation; DOC-030 matters optional note, DOC-030 matters Entity and DOC-030 matters person On intake form. Templates: alpha, beta, gamma playbooks.",
+      "DOC-030 matters retype": "Built-in Rows as a new type gets them (only Description On intake form), plus DOC-030 matters required note and DOC-030 matters retype number Required for creation. Template: undrawn defaults playbook (Priority High, Risk Low).",
+      "DOC-030 matters department required": "Description On intake form and Department Required for creation; no Fields."
+    },
+    "organizationSettingsTouched": "Each direct-create step added one Matter Document type named DOC-030 matters paper <stamp> <role> through the Administrator API and archived it at the end of the same step. Development runs left two of them live for about ten minutes before they were archived; all seven are archived. The gamma template is archived and restored inside its step."
+  },
+  "productBugs": [
+    {
+      "id": "matters-relation-search-prefix",
+      "severity": "low",
+      "summary": "The Set parent and Add related Matter search does not accept the M- prefix. Typing \"M-103\" lists 0 candidates; typing \"103\" lists M-103. The API treats only a bare number as a number (matter-relations/routes.ts relation-candidates).",
+      "reproduction": "On a Matter, Related Matters > Set parent, type the reference of another reachable Matter as shown on its header (for example M-103). No candidate appears. Type the digits only and it appears."
+    },
+    {
+      "id": "matters-relation-search-number-ranking",
+      "severity": "low",
+      "summary": "A bare-number search does not rank the exact Matter number first. Candidates are ordered by number and capped at 20, and titles that contain the digits also match, so the Matter with that number can fall outside the list.",
+      "reproduction": "Development run 1790332254512: on M-78, Set parent, typed \"79\". More than 20 lower-numbered Matters had titles containing 79 (walkthrough stamps), and M-79 was not listed within 30 seconds. The title search found it."
+    }
+  ],
+  "guideFailures": [],
+  "notes": [
+    "Development runs 1790330932552, 1790331402866 and 1790332254512 used earlier versions of the scripts; their steps were replaced by the final run 1790333890346. Failures in them were script selector errors, the shared magic-link rate limit (3 per address and 30 per client address in 15 minutes, shared by every agent on 127.0.0.1) and the relation search ranking listed under productBugs.",
+    "The Business User session is signed in once per run from a fresh magic link read from Mailpit; the script waits a minute on each 429. BU_STATE keeps that context in the session scratchpad, outside docs/, so reruns do not spend the shared budget.",
+    "Upload and comment failures are browser-route stand-ins (route.abort) for network failures."
+  ],
+  "runs": [
+    {
+      "stamp": 1790330932552,
+      "startedAt": "2026-09-25T10:08:52.552Z",
+      "finishedAt": "2026-09-25T10:14:59.194Z",
+      "articles": [
+        "create-matter"
+      ],
+      "roles": [
+        "administrator"
+      ],
+      "lab": "work2",
+      "baseUrl": "http://127.0.0.1:43300"
+    },
+    {
+      "stamp": 1790331402866,
+      "startedAt": "2026-09-25T10:16:42.866Z",
+      "finishedAt": "2026-09-25T10:30:09.430Z",
+      "articles": [
+        "create-matter"
+      ],
+      "roles": [
+        "administrator"
+      ],
+      "lab": "work2",
+      "baseUrl": "http://127.0.0.1:43300"
+    },
+    {
+      "stamp": 1790332254512,
+      "startedAt": "2026-09-25T10:30:54.512Z",
+      "finishedAt": "2026-09-25T10:49:04.438Z",
+      "articles": [
+        "create-matter",
+        "matter-work"
+      ],
+      "roles": [
+        "administrator",
+        "legal_team_member"
+      ],
+      "lab": "work2",
+      "baseUrl": "http://127.0.0.1:43300"
+    },
+    {
+      "stamp": 1790333890346,
+      "startedAt": "2026-09-25T10:58:10.347Z",
+      "finishedAt": "2026-09-25T11:02:20.097Z",
+      "articles": [
+        "create-matter",
+        "matter-work"
+      ],
+      "roles": [
+        "administrator",
+        "legal_team_member"
+      ],
+      "lab": "work2",
+      "baseUrl": "http://127.0.0.1:43300"
+    }
+  ],
+  "steps": [
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter: open Matters, select New matter, and read the starting values and the Rows the Form draws",
+      "expected": "The Create matter dialog starts on the default type; Matter Manager starts with the reader, offers Unassigned and only Legal Team Members or Administrators; Matter template appears for a chosen type and starts on No template; the dialog draws only the Rows the type's Form collects at creation (Department with No Department, Priority Medium, Risk, Needed by on the lab type; only Description on a new type; a required Department starts on Choose a Department).",
+      "actual": "Matters > New matter opened \"Create matter\" on Matter type \"Default\" (the type marked default). Built-in Rows drawn on it: [\"Description\"]. Matter Manager started on \"Daniel Okafor\"; options [\"Unassigned\",\"Blair Wentworth\",\"Daniel Okafor\",\"DOC-030 access-2 V-C01 1790332033696 Administrator\",\"DOC-030 access-2 V-C01 1790332271055 Administrator\",\"DOC-030 access-2 V-C01 1790332271055 Legal Team Member\",\"DOC-030 access-2 V-C01 1790332886484 re-walk Administrator\",\"DOC-030 access-2 V-C01 1790332886484 re-walk Legal Team Member\",\"DOC-030 access-2 V-C03 1790331876668 Administrator\",\"DOC-030 access-2 V-C03 1790331876668 Administrator without Grant\",\"DOC-030 access-2 V-C03 1790331876668 Legal Team Member\",\"DOC-030 access-2 V-C03 1790331897015 Administrator\",\"DOC-030 access-2 V-C03 1790331897015 Administrator without Grant\",\"DOC-030 access-2 V-C03 1790331897015 Legal Team Member\",\"DOC-030 access-2 V-C03 1790332538951 Administrator\",\"DOC-030 access-2 V-C03 1790332538951 Administrator without Grant\",\"DOC-030 access-2 V-C03 1790332538951 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331597412 Administrator\",\"DOC-030 access-2 V-C05 1790331597412 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331616456 Administrator\",\"DOC-030 access-2 V-C05 1790331616456 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331802061 Administrator\",\"DOC-030 access-2 V-C05 1790331802061 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331802061 No Password Member\",\"DOC-030 access-2 V-C05 1790331802061 Photo Bug Member\",\"DOC-030 admin-org V-C36 Avery mugsxnse\",\"DOC-030 admin-org V-C36 Avery mugszvyl\",\"DOC-030 admin-org V-C36 Avery mugtybq7\",\"DOC-030 admin-org V-C36 Casey mugsxnse\",\"DOC-030 admin-org V-C36 Casey mugszvyl\",\"DOC-030 admin-org V-C36 Casey mugtybq7\",\"DOC-030 conversations Admin 040441\",\"DOC-030 conversations Legal Los Angeles 040441\",\"DOC-030 conversations Legal No Date Bell 040441\",\"DOC-030 conversations Legal Own List 040441\",\"DOC-030 search Administrator 5958\",\"DOC-030 search Legal Team Member 5958\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"] (no Business Users). After choosing \"DOC-030 matters type\" (Form: Description, Department, Priority, Risk, Needed by On intake form; Region a record Row): Matter template \"No template\" of [\"No template\",\"DOC-030 matters alpha playbook\",\"DOC-030 matters beta playbook\",\"DOC-030 matters gamma playbook\"]; built-in Rows drawn [\"Description\",\"Department\",\"Priority\",\"Risk\",\"Needed by\"]; Department \"No Department\" (options [\"No Department\",\"Engineering\",\"Finance\",\"Marketing\",\"People\",\"Procurement\",\"Sales\"]); Priority \"Medium\"; Risk \"Not set\" (options [\"Not set\",\"Low\",\"Medium\",\"High\",\"Critical\"]); Needed by button reads \"Select a date\"; the four attached Fields drawn [\"DOC-030 matters required note\",\"DOC-030 matters optional note\",\"DOC-030 matters Entity\",\"DOC-030 matters person\"]. \"DOC-030 matters retype\" (the Form a new type gets, plus two required Fields) drew built-in Rows [\"Description\"]. \"DOC-030 matters department required\" (Department Required for creation) drew [\"Description\",\"Department\"] with Department starting on \"Choose a Department\". Cancel closed the dialog.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:58:11.294Z",
+      "at": "2026-09-25T10:58:12.055Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter / If creation is refused: missing Title and required Field, a required Department, then Cancel",
+      "expected": "Create is refused with a message naming the missing values; a required Department left on Choose a Department blocks Create; choosing a Department then creates the Matter; Cancel closes without creating.",
+      "actual": "On \"DOC-030 matters type\": Create with no Title showed \"Fill Title, DOC-030 matters required note.\"; with the Title filled it showed \"Fill DOC-030 matters required note.\"; Cancel closed the dialog and no Matter titled \"DOC-030 matters create-matter admin refused 1790333890346\" exists. On \"DOC-030 matters department required\": Create with Department on Choose a Department kept the dialog open, sent 0 create requests and showed the browser's required-field message on Department (\"Please select an item in the list.\"; 0 alert elements); no Matter existed. Choosing Finance and Create made M-84 with Department \"Finance\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:58:12.056Z",
+      "at": "2026-09-25T10:58:14.374Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter: fill the drawn Rows, Entity and person references, Needed by, attach a document with a Document type; an upload failure leaves the dialog open with Retry failed uploads and Continue",
+      "expected": "The Matter already exists after the failed upload; Retry failed uploads completes it; the new Matter opens with its M- reference, open-category Status, chosen Manager, Department, Priority, Risk, references, a Key date named Needed by and the Document with the chosen type.",
+      "actual": "Dialog had Attach documents (2) and \"or drag and drop files here\" (1); no Document type control before a file was staged (0). Fixture: the Administrator API added the Matter Document type \"DOC-030 matters paper 1790333890346 admin\" for this step. After staging the PDF, Document type started on \"No type\" and \"DOC-030 matters paper 1790333890346 admin\" was chosen. With the first upload request failed by the reviewer's browser route (a network stand-in), the dialog read \"Record created. Some documents could not be uploaded.\" with Retry failed uploads and Continue, and \"DOC-030 matters create-matter admin direct 1790333890346\" already existed as M-85. Retry failed uploads opened /matters/85: header M-85, Status \"Open\" (category open), Priority high, Risk low, Manager Priya Raman, Department Finance, Entity \"Helix Analytics, Inc.\", person Jonas Weber, 1 Document typed \"DOC-030 matters paper 1790333890346 admin\". Key dates: 1 named \"Needed by\" on 2026-10-15 (picked 2026-10-15). Jonas Weber, named only in the person Field, got 404 reading the Matter in the Portal.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:58:14.374Z",
+      "at": "2026-09-25T11:00:16.986Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Use a template: choose, change and remove templates in the dialog",
+      "expected": "A template prefills title, Priority, Risk and Fields and states its Task and Key date counts; changing or removing it resets Priority, Risk and every Field value (typed Field values replaced); a typed title survives unless it still matches the previous prefix.",
+      "actual": "Alpha: {\"title\":\"DOC-030 alpha review -\",\"priority\":\"High\",\"risk\":\"Critical\",\"required\":\"Alpha required default\",\"optional\":\"Alpha optional default\",\"hint\":\"Template adds 2 tasks and 2 key dates.\"}. After typing \"Typed optional value\" and choosing beta: {\"title\":\"DOC-030 beta review -\",\"priority\":\"Low\",\"risk\":\"Low\",\"required\":\"\",\"optional\":\"Beta optional default\",\"hint\":\"Template adds 1 task and 1 key date.\"}. After typing a title and choosing No template: {\"title\":\"DOC-030 matters create-matter admin template typed 1790333890346\",\"priority\":\"Medium\",\"risk\":\"Not set\",\"required\":\"\",\"optional\":\"\",\"hint\":null} (the dialog's empty Risk choice reads \"Not set\"). Choosing alpha again: {\"title\":\"DOC-030 matters create-matter admin template typed 1790333890346\",\"priority\":\"High\",\"risk\":\"Critical\",\"required\":\"Alpha required default\",\"optional\":\"Alpha optional default\",\"hint\":\"Template adds 2 tasks and 2 key dates.\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:16.987Z",
+      "at": "2026-09-25T11:00:17.474Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Use a template: clear a prefilled optional Field, create, then check Overview, Tasks, Key dates, Status and team",
+      "expected": "The cleared optional Field stays empty; defaults are saved; Tasks and Key dates are copied at UTC offsets from the creation date; the Manager-targeted Task goes to the chosen Manager or stays unassigned without one; the template sets no Status and no team.",
+      "actual": "The typed title \"DOC-030 matters create-matter admin from template 1790333890346\" stayed after choosing alpha (the field read \"DOC-030 matters create-matter admin from template 1790333890346\"). The prefilled optional Field was cleared; M-86 was created 2026-09-25T11:00:17.897Z with Status \"Open\", Priority high (Overview \"High\"), Risk critical (Overview \"Critical\"), required \"Alpha required default\", optional null; Overview shows the optional Field empty. Tasks tab: \"DOC-030 alpha evidence review\" due 2026-09-28 (+3 UTC days), \"Change assignee for DOC-030 alpha evidence review: Daniel Okafor\"; \"DOC-030 alpha discussion\" undated. Key dates tab: kickoff 2026-09-25 (+0) and filing 2026-10-02 (+7). Team: [\"Daniel Okafor\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:17.474Z",
+      "at": "2026-09-25T11:00:18.808Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter / Use a template: Rows the dialog does not draw; template defaults for them are saved, and without a template Priority is Medium and Risk Not assessed",
+      "expected": "On a type whose Form collects only Description, the dialog draws no Priority or Risk; a template's Priority and Risk defaults are still saved and show on Overview; a Matter made without a template shows Priority Medium and Risk Not assessed.",
+      "actual": "On \"DOC-030 matters retype\" with \"DOC-030 matters undrawn defaults playbook\" (Priority High, Risk Low) the dialog drew built-in Rows [\"Description\"] and prefilled the required note \"Undrawn required default\". M-87 saved Priority high, Risk low; Overview shows Priority \"High\" and Risk \"Low\". M-84, made without a template on \"DOC-030 matters department required\" (Priority and Risk not drawn), shows Priority \"Medium\" and Risk \"Not assessed\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:18.809Z",
+      "at": "2026-09-25T11:00:19.427Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "If creation is refused: a template archived after the form opened",
+      "expected": "Create is refused with a message, no Matter is created, and a reopened form no longer lists the template.",
+      "actual": "Fixture: the Administrator API archived \"DOC-030 matters gamma playbook\" after the form had it selected. Create showed \"The template must be live and belong to the selected matter type.\" and created nothing. A reopened form listed [\"No template\",\"DOC-030 matters alpha playbook\",\"DOC-030 matters beta playbook\"]. The fixture template was restored afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:19.427Z",
+      "at": "2026-09-25T11:00:20.108Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility and maintain the record: Overview Row order, Region, Needed by, owners, Priority and rename",
+      "expected": "The Matter section starts with Title; Form Rows follow in Form order (Matter type, built-in Rows, attached Fields) with no separate custom-field section; Matter Manager and Business Owner come after the Rows; Region saves and No Region clears it; the Needed by Row edits the Needed by Key date; both owner controls search people and show an avatar; renaming keeps the M- reference.",
+      "actual": "Overview controls in document order: [\"Title\",\"Matter type\",\"Description\",\"Department\",\"Priority\",\"Risk\",\"Needed by\",\"Region\",\"DOC-030 matters required note\",\"DOC-030 matters optional note\",\"DOC-030 matters Entity\",\"DOC-030 matters person\",\"Matter Manager\",\"Business Owner\"]; section headings [\"Matter\",\"Description\",\"Related Matters\",\"Linked Contracts\"] (no separate custom-field section). Region EMEA saved (200, \"EMEA\"); No Region cleared it (200, null). The Needed by Row showed 2026-10-15; entering 2026-11-04 saved (200) and the one Key date named Needed by now reads 2026-11-04. Business Owner picker searched \"Jonas\" and saved Jonas Weber (200); the control reads \"JW Jonas Weber\" with 1 avatar element(s). Matter Manager reads \"PR Priya Raman\" with 1 avatar element(s); its picker has Search people and offers only eligible legal people (43 buttons, no Jonas Weber). Priority Critical saved (200). Rename saved (200); the header still shows M-85.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:20.108Z",
+      "at": "2026-09-25T11:00:22.181Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: a required value cannot be cleared; Change matter type to asks for the new type's required Fields; detached values are retained but hidden",
+      "expected": "Clearing the required Field is refused and the value stays; the Change matter type to dialog Cancel keeps the type and Change type saves; switching back keeps the detached value stored but not shown.",
+      "actual": "Clearing the required Field showed \"DOC-030 matters department required | Fill DOC-030 matters required note first — the type requires it. | DOC-030 entities V-C31 0925-1057 L Required Field Ltd | DOC-030 entities V-C31 0925-1058 A Required Field Ltd | DOC-030 entities V-C31 0925-1058 L Required Field Ltd\"; the stored value stayed \"Fictional scope note\". Choosing \"DOC-030 matters retype\" opened \"Change matter type to DOC-030 matters retype Complete the new type's required fields before changing it. DOC-030 matters retype number* (required) Cancel Change type\"; Cancel kept \"DOC-030 matters type\". Entering 42 and Change type saved (200) with the number stored. Switching back to \"DOC-030 matters type\" saved (200) with no dialog; the record still stores doc_030_matters_retype_number=42 and Overview shows no \"DOC-030 matters retype number\" control.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:22.181Z",
+      "at": "2026-09-25T11:00:25.363Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: Matter team roster, Add team member, and the Business Owner membership",
+      "expected": "The roster has one row per person with Matter Manager, Business Owner and Creator statements; assigning the Business Owner added them to the team and their row has no remove control; Add team member > Person > Add adds a row; after clearing the Business Owner, the former owner stays on the team and can be removed.",
+      "actual": "Roster after naming Jonas Weber Business Owner on Overview: [\"PR Matter Manager Priya Raman\",\"JW Business Owner Jonas Weber\",\"DO Creator Daniel Okafor\"]. Jonas Weber's row had 0 remove controls (Priya Raman's had 0); his Portal read answered 200. Add team member > Person Tom Iwu > Add gave [\"PR Matter Manager Priya Raman\",\"JW Business Owner Jonas Weber\",\"DO Creator Daniel Okafor\",\"TI Tom Iwu\"] (one row each for Priya Raman and Jonas Weber). Clearing Business Owner to Unassigned saved (200); roster [\"PR Matter Manager Priya Raman\",\"DO Creator Daniel Okafor\",\"JW Jonas Weber\",\"TI Tom Iwu\"]; Jonas Weber stays with 1 remove control.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:25.364Z",
+      "at": "2026-09-25T11:00:26.118Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: Confidential audience control, Matter Manager and Business Owner changes",
+      "expected": "On a Confidential Matter, a Legal Team Member added to the team can read and edit details but cannot change the team, the Matter Manager or the Business Owner, or the flag; the Administrator, Matter Manager or Creator can.",
+      "actual": "Fixture Confidential M-88 created by Daniel Okafor with no Manager. Priya Raman (Legal Team Member, not on the team) read it: 404. After Add team member > Priya Raman, her read 200, Description edit 200; in her browser Add team member was disabled and the Confidential switch disabled=true; choosing herself in her Matter Manager control: picker opened; PATCH 403; message \"Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.\". Her direct writes: team 403, flag 403, Matter Manager 403, Business Owner 403; the Matter still has Manager null and Business Owner null. The Administrator flag write answered 200 and Matter Manager change 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:26.119Z",
+      "at": "2026-09-25T11:00:28.137Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: link a Contract with a Counterparty and open History",
+      "expected": "Linking a Contract does not copy its Fields, team or Documents onto the Matter, and its Counterparty stays on the Contract; History lists the recorded changes.",
+      "actual": "Fixture NDA C-292 with Counterparty \"Ashgrove Cleaning Services\" linked through Link Contract > search > Link. The Matter's team (3 people), Field values and Documents (1) were unchanged, and the Counterparty is still \"Ashgrove Cleaning Services\" on the Contract. History shows 15 entries, first ones: [\"Daniel Okafor changed Business Owner Jonas Weber → Not set this minute\",\"Daniel Okafor added Tom Iwu to the team this minute\",\"Daniel Okafor reassigned this matter's type DOC-030 matters retype → DOC-030 matters type this minute\",\"Daniel Okafor reassigned this matter's type DOC-030 matters type → DOC-030 matters retype this minute\",\"Daniel Okafor changed Doc 030 matters retype number Not set → 42 this minute\",\"Daniel Okafor changed Title DOC-030 matters create-matter admin direct 1790333890346 → DOC-030 matters create-matter admin direct 1790333890346 renamed this minute\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:28.137Z",
+      "at": "2026-09-25T11:00:28.914Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter: switch Confidential — restrict to the matter team on, then Continue after a failed upload",
+      "expected": "The Confidential — restrict to the matter team switch saves the flag; Continue leaves the failed file behind and opens the Matter that already exists.",
+      "actual": "The switch named \"Confidential — restrict to the matter team\" read aria-checked true before Create. With no Matter Document types live, staging a file showed 1 Document type controls. With every upload failed by the reviewer's route, Continue closed the dialog and opened M-89 \"DOC-030 matters create-matter admin confidential continue 1790333890346\": Confidential true, 0 Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:28.915Z",
+      "at": "2026-09-25T11:00:29.455Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start (negative): a Business User cannot create a Matter",
+      "expected": "A Business User has no New matter control and a direct create is refused.",
+      "actual": "Jonas Weber's Portal Matters page has 0 New matter buttons; opening /matters ended at /portal; his direct create answered 403. Fixture Document type archive from the direct-create step answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:29.455Z",
+      "at": "2026-09-25T11:00:30.681Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter: open Matters, select New matter, and read the starting values and the Rows the Form draws",
+      "expected": "The Create matter dialog starts on the default type; Matter Manager starts with the reader, offers Unassigned and only Legal Team Members or Administrators; Matter template appears for a chosen type and starts on No template; the dialog draws only the Rows the type's Form collects at creation (Department with No Department, Priority Medium, Risk, Needed by on the lab type; only Description on a new type; a required Department starts on Choose a Department).",
+      "actual": "Matters > New matter opened \"Create matter\" on Matter type \"Default\" (the type marked default). Built-in Rows drawn on it: [\"Description\"]. Matter Manager started on \"Nadia Haddad\"; options [\"Unassigned\",\"Blair Wentworth\",\"Daniel Okafor\",\"DOC-030 access-2 V-C01 1790332033696 Administrator\",\"DOC-030 access-2 V-C01 1790332271055 Administrator\",\"DOC-030 access-2 V-C01 1790332271055 Legal Team Member\",\"DOC-030 access-2 V-C01 1790332886484 re-walk Administrator\",\"DOC-030 access-2 V-C01 1790332886484 re-walk Legal Team Member\",\"DOC-030 access-2 V-C03 1790331876668 Administrator\",\"DOC-030 access-2 V-C03 1790331876668 Administrator without Grant\",\"DOC-030 access-2 V-C03 1790331876668 Legal Team Member\",\"DOC-030 access-2 V-C03 1790331897015 Administrator\",\"DOC-030 access-2 V-C03 1790331897015 Administrator without Grant\",\"DOC-030 access-2 V-C03 1790331897015 Legal Team Member\",\"DOC-030 access-2 V-C03 1790332538951 Administrator\",\"DOC-030 access-2 V-C03 1790332538951 Administrator without Grant\",\"DOC-030 access-2 V-C03 1790332538951 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331597412 Administrator\",\"DOC-030 access-2 V-C05 1790331597412 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331616456 Administrator\",\"DOC-030 access-2 V-C05 1790331616456 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331802061 Administrator\",\"DOC-030 access-2 V-C05 1790331802061 Legal Team Member\",\"DOC-030 access-2 V-C05 1790331802061 No Password Member\",\"DOC-030 access-2 V-C05 1790331802061 Photo Bug Member\",\"DOC-030 admin-org V-C36 Avery mugsxnse\",\"DOC-030 admin-org V-C36 Avery mugszvyl\",\"DOC-030 admin-org V-C36 Avery mugtybq7\",\"DOC-030 admin-org V-C36 Casey mugsxnse\",\"DOC-030 admin-org V-C36 Casey mugszvyl\",\"DOC-030 admin-org V-C36 Casey mugtybq7\",\"DOC-030 conversations Admin 040441\",\"DOC-030 conversations Legal Los Angeles 040441\",\"DOC-030 conversations Legal No Date Bell 040441\",\"DOC-030 conversations Legal Own List 040441\",\"DOC-030 search Administrator 5958\",\"DOC-030 search Legal Team Member 5958\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"] (no Business Users). After choosing \"DOC-030 matters type\" (Form: Description, Department, Priority, Risk, Needed by On intake form; Region a record Row): Matter template \"No template\" of [\"No template\",\"DOC-030 matters alpha playbook\",\"DOC-030 matters beta playbook\",\"DOC-030 matters gamma playbook\"]; built-in Rows drawn [\"Description\",\"Department\",\"Priority\",\"Risk\",\"Needed by\"]; Department \"No Department\" (options [\"No Department\",\"Engineering\",\"Finance\",\"Marketing\",\"People\",\"Procurement\",\"Sales\"]); Priority \"Medium\"; Risk \"Not set\" (options [\"Not set\",\"Low\",\"Medium\",\"High\",\"Critical\"]); Needed by button reads \"Select a date\"; the four attached Fields drawn [\"DOC-030 matters required note\",\"DOC-030 matters optional note\",\"DOC-030 matters Entity\",\"DOC-030 matters person\"]. \"DOC-030 matters retype\" (the Form a new type gets, plus two required Fields) drew built-in Rows [\"Description\"]. \"DOC-030 matters department required\" (Department Required for creation) drew [\"Description\",\"Department\"] with Department starting on \"Choose a Department\". Cancel closed the dialog.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:30.682Z",
+      "at": "2026-09-25T11:00:31.262Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter / If creation is refused: missing Title and required Field, a required Department, then Cancel",
+      "expected": "Create is refused with a message naming the missing values; a required Department left on Choose a Department blocks Create; choosing a Department then creates the Matter; Cancel closes without creating.",
+      "actual": "On \"DOC-030 matters type\": Create with no Title showed \"Fill Title, DOC-030 matters required note.\"; with the Title filled it showed \"Fill DOC-030 matters required note.\"; Cancel closed the dialog and no Matter titled \"DOC-030 matters create-matter legal refused 1790333890346\" exists. On \"DOC-030 matters department required\": Create with Department on Choose a Department kept the dialog open, sent 0 create requests and showed the browser's required-field message on Department (\"Please select an item in the list.\"; 0 alert elements); no Matter existed. Choosing Finance and Create made M-90 with Department \"Finance\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:31.263Z",
+      "at": "2026-09-25T11:00:33.324Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter: fill the drawn Rows, Entity and person references, Needed by, attach a document with a Document type; an upload failure leaves the dialog open with Retry failed uploads and Continue",
+      "expected": "The Matter already exists after the failed upload; Retry failed uploads completes it; the new Matter opens with its M- reference, open-category Status, chosen Manager, Department, Priority, Risk, references, a Key date named Needed by and the Document with the chosen type.",
+      "actual": "Dialog had Attach documents (2) and \"or drag and drop files here\" (1); no Document type control before a file was staged (0). Fixture: the Administrator API added the Matter Document type \"DOC-030 matters paper 1790333890346 legal\" for this step. After staging the PDF, Document type started on \"No type\" and \"DOC-030 matters paper 1790333890346 legal\" was chosen. With the first upload request failed by the reviewer's browser route (a network stand-in), the dialog read \"Record created. Some documents could not be uploaded.\" with Retry failed uploads and Continue, and \"DOC-030 matters create-matter legal direct 1790333890346\" already existed as M-91. Retry failed uploads opened /matters/91: header M-91, Status \"Open\" (category open), Priority high, Risk low, Manager Priya Raman, Department Finance, Entity \"Helix Analytics, Inc.\", person Jonas Weber, 1 Document typed \"DOC-030 matters paper 1790333890346 legal\". Key dates: 1 named \"Needed by\" on 2026-10-15 (picked 2026-10-15). Jonas Weber, named only in the person Field, got 404 reading the Matter in the Portal.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:33.324Z",
+      "at": "2026-09-25T11:00:34.289Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Use a template: choose, change and remove templates in the dialog",
+      "expected": "A template prefills title, Priority, Risk and Fields and states its Task and Key date counts; changing or removing it resets Priority, Risk and every Field value (typed Field values replaced); a typed title survives unless it still matches the previous prefix.",
+      "actual": "Alpha: {\"title\":\"DOC-030 alpha review -\",\"priority\":\"High\",\"risk\":\"Critical\",\"required\":\"Alpha required default\",\"optional\":\"Alpha optional default\",\"hint\":\"Template adds 2 tasks and 2 key dates.\"}. After typing \"Typed optional value\" and choosing beta: {\"title\":\"DOC-030 beta review -\",\"priority\":\"Low\",\"risk\":\"Low\",\"required\":\"\",\"optional\":\"Beta optional default\",\"hint\":\"Template adds 1 task and 1 key date.\"}. After typing a title and choosing No template: {\"title\":\"DOC-030 matters create-matter legal template typed 1790333890346\",\"priority\":\"Medium\",\"risk\":\"Not set\",\"required\":\"\",\"optional\":\"\",\"hint\":null} (the dialog's empty Risk choice reads \"Not set\"). Choosing alpha again: {\"title\":\"DOC-030 matters create-matter legal template typed 1790333890346\",\"priority\":\"High\",\"risk\":\"Critical\",\"required\":\"Alpha required default\",\"optional\":\"Alpha optional default\",\"hint\":\"Template adds 2 tasks and 2 key dates.\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:34.289Z",
+      "at": "2026-09-25T11:00:34.843Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Use a template: clear a prefilled optional Field, create, then check Overview, Tasks, Key dates, Status and team",
+      "expected": "The cleared optional Field stays empty; defaults are saved; Tasks and Key dates are copied at UTC offsets from the creation date; the Manager-targeted Task goes to the chosen Manager or stays unassigned without one; the template sets no Status and no team.",
+      "actual": "The typed title \"DOC-030 matters create-matter legal from template 1790333890346\" stayed after choosing alpha (the field read \"DOC-030 matters create-matter legal from template 1790333890346\"). The prefilled optional Field was cleared and Matter Manager set to Unassigned; M-92 was created 2026-09-25T11:00:35.229Z with Status \"Open\", Priority high (Overview \"High\"), Risk critical (Overview \"Critical\"), required \"Alpha required default\", optional null; Overview shows the optional Field empty. Tasks tab: \"DOC-030 alpha evidence review\" due 2026-09-28 (+3 UTC days), \"Change assignee for DOC-030 alpha evidence review: Unassigned\"; \"DOC-030 alpha discussion\" undated. Key dates tab: kickoff 2026-09-25 (+0) and filing 2026-10-02 (+7). Team: [\"Nadia Haddad\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:34.844Z",
+      "at": "2026-09-25T11:00:36.239Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter / Use a template: Rows the dialog does not draw; template defaults for them are saved, and without a template Priority is Medium and Risk Not assessed",
+      "expected": "On a type whose Form collects only Description, the dialog draws no Priority or Risk; a template's Priority and Risk defaults are still saved and show on Overview; a Matter made without a template shows Priority Medium and Risk Not assessed.",
+      "actual": "On \"DOC-030 matters retype\" with \"DOC-030 matters undrawn defaults playbook\" (Priority High, Risk Low) the dialog drew built-in Rows [\"Description\"] and prefilled the required note \"Undrawn required default\". M-93 saved Priority high, Risk low; Overview shows Priority \"High\" and Risk \"Low\". M-90, made without a template on \"DOC-030 matters department required\" (Priority and Risk not drawn), shows Priority \"Medium\" and Risk \"Not assessed\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:36.240Z",
+      "at": "2026-09-25T11:00:37.014Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "If creation is refused: a template archived after the form opened",
+      "expected": "Create is refused with a message, no Matter is created, and a reopened form no longer lists the template.",
+      "actual": "Fixture: the Administrator API archived \"DOC-030 matters gamma playbook\" after the form had it selected. Create showed \"The template must be live and belong to the selected matter type.\" and created nothing. A reopened form listed [\"No template\",\"DOC-030 matters alpha playbook\",\"DOC-030 matters beta playbook\"]. The fixture template was restored afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:37.015Z",
+      "at": "2026-09-25T11:00:37.789Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility and maintain the record: Overview Row order, Region, Needed by, owners, Priority and rename",
+      "expected": "The Matter section starts with Title; Form Rows follow in Form order (Matter type, built-in Rows, attached Fields) with no separate custom-field section; Matter Manager and Business Owner come after the Rows; Region saves and No Region clears it; the Needed by Row edits the Needed by Key date; both owner controls search people and show an avatar; renaming keeps the M- reference.",
+      "actual": "Overview controls in document order: [\"Title\",\"Matter type\",\"Description\",\"Department\",\"Priority\",\"Risk\",\"Needed by\",\"Region\",\"DOC-030 matters required note\",\"DOC-030 matters optional note\",\"DOC-030 matters Entity\",\"DOC-030 matters person\",\"Matter Manager\",\"Business Owner\"]; section headings [\"Matter\",\"Description\",\"Related Matters\",\"Linked Contracts\"] (no separate custom-field section). Region EMEA saved (200, \"EMEA\"); No Region cleared it (200, null). The Needed by Row showed 2026-10-15; entering 2026-11-04 saved (200) and the one Key date named Needed by now reads 2026-11-04. Business Owner picker searched \"Jonas\" and saved Jonas Weber (200); the control reads \"JW Jonas Weber\" with 1 avatar element(s). Matter Manager reads \"PR Priya Raman\" with 1 avatar element(s); its picker has Search people and offers only eligible legal people (43 buttons, no Jonas Weber). Priority Critical saved (200). Rename saved (200); the header still shows M-91.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:37.790Z",
+      "at": "2026-09-25T11:00:39.841Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: a required value cannot be cleared; Change matter type to asks for the new type's required Fields; detached values are retained but hidden",
+      "expected": "Clearing the required Field is refused and the value stays; the Change matter type to dialog Cancel keeps the type and Change type saves; switching back keeps the detached value stored but not shown.",
+      "actual": "Clearing the required Field showed \"DOC-030 matters department required | Fill DOC-030 matters required note first — the type requires it. | DOC-030 entities V-C31 0925-1057 L Required Field Ltd | DOC-030 entities V-C31 0925-1058 A Required Field Ltd | DOC-030 entities V-C31 0925-1058 L Required Field Ltd\"; the stored value stayed \"Fictional scope note\". Choosing \"DOC-030 matters retype\" opened \"Change matter type to DOC-030 matters retype Complete the new type's required fields before changing it. DOC-030 matters retype number* (required) Cancel Change type\"; Cancel kept \"DOC-030 matters type\". Entering 42 and Change type saved (200) with the number stored. Switching back to \"DOC-030 matters type\" saved (200) with no dialog; the record still stores doc_030_matters_retype_number=42 and Overview shows no \"DOC-030 matters retype number\" control.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:39.842Z",
+      "at": "2026-09-25T11:00:43.229Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: Matter team roster, Add team member, and the Business Owner membership",
+      "expected": "The roster has one row per person with Matter Manager, Business Owner and Creator statements; assigning the Business Owner added them to the team and their row has no remove control; Add team member > Person > Add adds a row; after clearing the Business Owner, the former owner stays on the team and can be removed.",
+      "actual": "Roster after naming Jonas Weber Business Owner on Overview: [\"PR Matter Manager Priya Raman\",\"JW Business Owner Jonas Weber\",\"NH Creator Nadia Haddad\"]. Jonas Weber's row had 0 remove controls (Priya Raman's had 0); his Portal read answered 200. Add team member > Person Tom Iwu > Add gave [\"PR Matter Manager Priya Raman\",\"JW Business Owner Jonas Weber\",\"NH Creator Nadia Haddad\",\"TI Tom Iwu\"] (one row each for Priya Raman and Jonas Weber). Clearing Business Owner to Unassigned saved (200); roster [\"PR Matter Manager Priya Raman\",\"NH Creator Nadia Haddad\",\"JW Jonas Weber\",\"TI Tom Iwu\"]; Jonas Weber stays with 1 remove control.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:43.230Z",
+      "at": "2026-09-25T11:00:44.134Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: Confidential audience control, Matter Manager and Business Owner changes",
+      "expected": "On a Confidential Matter, a Legal Team Member added to the team can read and edit details but cannot change the team, the Matter Manager or the Business Owner, or the flag; the Administrator, Matter Manager or Creator can.",
+      "actual": "Fixture Confidential M-94 created by Nadia Haddad with no Manager. Priya Raman (Legal Team Member, not on the team) read it: 404. After Add team member > Priya Raman, her read 200, Description edit 200; in her browser Add team member was disabled and the Confidential switch disabled=true; choosing herself in her Matter Manager control: picker opened; PATCH 403; message \"Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.\". Her direct writes: team 403, flag 403, Matter Manager 403, Business Owner 403; the Matter still has Manager null and Business Owner null. The Creator flag write answered 200 and Matter Manager change 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:44.135Z",
+      "at": "2026-09-25T11:00:45.806Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Set responsibility: link a Contract with a Counterparty and open History",
+      "expected": "Linking a Contract does not copy its Fields, team or Documents onto the Matter, and its Counterparty stays on the Contract; History lists the recorded changes.",
+      "actual": "Fixture NDA C-294 with Counterparty \"Ashgrove Cleaning Services\" linked through Link Contract > search > Link. The Matter's team (3 people), Field values and Documents (1) were unchanged, and the Counterparty is still \"Ashgrove Cleaning Services\" on the Contract. History shows 15 entries, first ones: [\"Nadia Haddad changed Business Owner Jonas Weber → Not set this minute\",\"Nadia Haddad added Tom Iwu to the team this minute\",\"Nadia Haddad reassigned this matter's type DOC-030 matters retype → DOC-030 matters type this minute\",\"Nadia Haddad reassigned this matter's type DOC-030 matters type → DOC-030 matters retype this minute\",\"Nadia Haddad changed Doc 030 matters retype number Not set → 42 this minute\",\"Nadia Haddad changed Title DOC-030 matters create-matter legal direct 1790333890346 → DOC-030 matters create-matter legal direct 1790333890346 renamed this minute\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:45.807Z",
+      "at": "2026-09-25T11:00:46.597Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Create the Matter: switch Confidential — restrict to the matter team on, then Continue after a failed upload",
+      "expected": "The Confidential — restrict to the matter team switch saves the flag; Continue leaves the failed file behind and opens the Matter that already exists.",
+      "actual": "The switch named \"Confidential — restrict to the matter team\" read aria-checked true before Create. With no Matter Document types live, staging a file showed 1 Document type controls. With every upload failed by the reviewer's route, Continue closed the dialog and opened M-95 \"DOC-030 matters create-matter legal confidential continue 1790333890346\": Confidential true, 0 Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:46.597Z",
+      "at": "2026-09-25T11:00:47.156Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "create-matter",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Before you start (negative): a Business User cannot create a Matter",
+      "expected": "A Business User has no New matter control and a direct create is refused.",
+      "actual": "Jonas Weber's Portal Matters page has 0 New matter buttons; opening /matters ended at /portal; his direct create answered 403. Fixture Document type archive from the direct-create step answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:47.157Z",
+      "at": "2026-09-25T11:00:48.429Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Fixture: a work Matter with a Business User on the team, parent and related candidates, a Confidential Matter related by another reader, and two standalone Contracts",
+      "expected": "Reviewer prerequisites exist; they are set up through the API and are not article steps.",
+      "actual": "Work M-96 (Manager Daniel Okafor, Jonas Weber on the team), parent candidate M-97, related candidate M-98, second work M-99; Confidential M-100 created by Nadia Haddad and related to M-96; Confidential NDA C-295 with Counterparty \"Ashgrove Cleaning Services\"; NDA C-296.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:48.471Z",
+      "at": "2026-09-25T11:00:48.672Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Add Task without a title is refused; a person staged with Use this person is discarded by Cancel",
+      "expected": "The dialog refuses a missing title; Cancel before saving saves neither the Task nor the team membership.",
+      "actual": "Add Task with no title showed \"Name what needs doing.\". Assignee > Add someone to the team… > Tom Iwu > Use this person showed \"TI Tom Iwu\"; the hint \"Team membership and assignment are saved when you save the task.\" was visible: true. Cancel closed the dialog: 0 Tasks, team [\"Daniel Okafor\",\"Jonas Weber\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:48.673Z",
+      "at": "2026-09-25T11:00:50.204Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Add Task with a staged person, due date and Add a note saves the Task, membership and assignment; the note has no audience choice",
+      "expected": "The dialog offers no audience choice under Comments & attachments; saving the Task saves both team membership and assignment; the initial note posts on the Task conversation, not the record conversation.",
+      "actual": "The Add a Task dialog shows Comments & attachments with Add a note and 0 audience controls (no \"Legal only\" or \"Working team\" text). Saved \"DOC-030 work review task\": assignee Tom Iwu, due 2026-10-05; team now [\"Daniel Okafor\",\"Jonas Weber\",\"Tom Iwu\"]. The Task conversation holds 1 comment (stored visibility \"working_team\"); the record conversation (0 comments) does not contain the note.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:50.205Z",
+      "at": "2026-09-25T11:00:51.117Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Add to team and assign on a row is immediate; clearing the assignee keeps membership; Close in Task details discards a staged person",
+      "expected": "The row change saves at once; Unassigned leaves the team membership; Close before saving saves neither membership nor assignment.",
+      "actual": "Row picker > Add someone to the team… > Ines Duarte > Add to team and assign saved at once: assignee Ines Duarte, team [\"Daniel Okafor\",\"Ines Duarte\",\"Jonas Weber\",\"Tom Iwu\"]. Choosing Unassigned left assignee null and Ines Duarte still on the team. In Task details, staging Marcus Oyelaran with Use this person and then Close left the assignee null and team [\"Daniel Okafor\",\"Ines Duarte\",\"Jonas Weber\",\"Tom Iwu\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:51.118Z",
+      "at": "2026-09-25T11:00:54.920Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: order by due date, completion with Show completed, Edit Task and Save",
+      "expected": "Tasks are listed by due date with undated last; done Tasks are hidden until Show completed; the completion control reopens; Edit Task opens Task details and Save renames; the done/total count updates.",
+      "actual": "Rows in order [\"DOC-030 work empty task\",\"DOC-030 work review task\",\"DOC-030 work plain task\"] (due 2026-09-30, due 2026-10-05, undated). Completing the review Task hid it (hidden true); count \"1 of 3 done\". Show completed showed it with the Reopen Task control, which reopened it (isDone false). Actions > Edit Task opened Task details; Save renamed the plain Task; count \"0 of 3 done\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:54.921Z",
+      "at": "2026-09-25T11:00:58.751Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Task details conversation has no audience selector; Remove Task on an empty Task and on a Task with conversation history",
+      "expected": "The Task thread has no audience selector and says Visible to everyone who can access this task.; Remove Task removes an empty Task; a Task with a conversation cannot be removed.",
+      "actual": "Task details for the review Task shows the initial note; audience controls 0; sentence visible true (\"Visible to everyone who can access this task.\"). Remove Task on the empty Task (confirmation dialog shown: false) removed its row (remaining [\"DOC-030 work review task\",\"DOC-030 work renamed task\"]). Remove Task on the review Task showed \"This Task has a conversation on it, so it cannot be removed. Mark it done instead.\" and the Task stayed.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:00:58.752Z",
+      "at": "2026-09-25T11:01:03.640Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: a failed initial note offers Retry note & attachments without creating another Task",
+      "expected": "The Task saves, the dialog stays open with Retry note & attachments, and the retry adds the note to the same Task.",
+      "actual": "With the comment request failed once by the reviewer's browser route (a network stand-in), the dialog stayed open with \"Task saved. Your note and attachments could not be added. Please try again.\" and Retry note & attachments. Retry closed the dialog; 1 Task has that title and it holds 1 comment. Fixture: the author deleted that comment (200); Remove Task on the Task then showed \"This Task has a conversation on it, so it cannot be removed. Mark it done instead.\" and the Task stayed (true).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:03.640Z",
+      "at": "2026-09-25T11:01:07.448Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: Add date refusals, reminder lead times and recipient choices",
+      "expected": "Missing Date or Event is refused; Reminders show Global reminders and This date will remind; Add lead time and Remove change the schedule; Recipients list the usual audience including the active Business User on the team; the saved date keeps chosen lead times and recipients.",
+      "actual": "Add date with nothing showed \"Pick a date.\"; with only a Date \"Name what the date is.\". \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 left Add lead time disabled: true. After adding 3: \"This date will remind: 30 days before, 14 days before, 7 days before, 3 days before, 1 day before, On the day\"; after Remove: \"This date will remind: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". Reminder group text from Recipients: \"Recipients Daniel Okafor Ines Duarte Jonas Weber Tom Iwu\"; Jonas Weber (active Business User on the team) is listed. Saved 2026-10-25 \"DOC-030 work filing\" with lead times [45] and 2 recipients; the row has no assignee field.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:07.449Z",
+      "at": "2026-09-25T11:01:08.473Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: header and tab counts, a departed recipient, Remove unavailable recipients and Use the usual audience",
+      "expected": "The header counts upcoming and overdue dates and the tab counts upcoming; when a selected person leaves the team the dialog says so, Remove unavailable recipients keeps the others, and Use the usual audience clears the selection; clearing every checkbox restores the default.",
+      "actual": "Fixture: an overdue date and a date whose only recipient is Tom Iwu. Header tally \"2 upcoming · 1 overdue\"; tab \"Key dates 2\". Fixture: Tom Iwu left the team (200). Edit date on the filing date showed the departed notice with Remove unavailable recipients true and Use the usual audience true; Remove unavailable recipients then Save kept 1 recipient. On the Tom-only date the notice offered only Use the usual audience (0 Remove buttons); it saved 0 recipients. Clearing the last checkbox on the filing date saved 0 recipients.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:08.474Z",
+      "at": "2026-09-25T11:01:09.859Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: Edit date and Remove date with confirmation; a closed Matter keeps editable dates without Next deadline",
+      "expected": "Edit date saves with Save; Remove date asks for confirmation (Cancel keeps the date); a closed Matter keeps its dates, still edits them, and has no Next deadline until reopened.",
+      "actual": "Edit date > Save renamed the overdue date. Remove date opened \"Remove Key date? Remove DOC-030 work overdue edited on Sep 23 (2 days overdue)? This cannot be undone. Cancel Remove date\"; Cancel kept it (true); Remove date removed it (true). Next deadline while open {\"date\":\"2026-10-05\",\"label\":\"DOC-030 work review task\",\"source\":\"task\"}. Fixture: closed through the API (200); the Key dates tab still listed the filing date and Edit date saved a note; Next deadline null. Fixture: reopened (200); Next deadline {\"date\":\"2026-10-05\",\"label\":\"DOC-030 work review task\",\"source\":\"task\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:09.860Z",
+      "at": "2026-09-25T11:01:12.619Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: a Needed by date set from the Overview Row is an ordinary Key date named Needed by",
+      "expected": "Entering Needed by on Overview adds a Key date named Needed by on the Key dates tab with the same Edit date and Remove date actions; editing it there changes the Overview Row.",
+      "actual": "On M-99 Overview, Needed by 2026-10-16 saved (201). The Key dates tab lists \"Needed by\" with actions [\"Edit date\",\"Remove date\"]; Edit date changed it to 2026-10-17 with a note; Overview's Needed by Row now reads 2026-10-17; 1 Key date named Needed by.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:12.620Z",
+      "at": "2026-09-25T11:01:13.768Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Connect related Matters: Set parent Cancel and confirm, a hierarchy loop is refused",
+      "expected": "Cancel changes nothing; Set parent saves one parent shown on both Matters; choosing the Matter's own child as the parent's parent is refused.",
+      "actual": "Set parent search box null. Typing \"M-97\" listed 0 candidates (M-97 among them: false); typing \"97\" listed 1 (M-97 among them: true); the title search listed it. Set parent > M-97 > Cancel left parent null. Confirming Set parent showed Parent \"M-97 DOC-030 matters matter-work admin parent candidate 1790333890346\" and the button became Change parent. M-97 lists M-96 under Children. On M-97, Set parent to M-96 showed \"That parent would close a loop in the Matter hierarchy.\"; Cancel left its parent null.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:13.768Z",
+      "at": "2026-09-25T11:01:17.133Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Connect related Matters: Add related Matter, Remove, New sub-Matter, detach a child, and Restricted Matter",
+      "expected": "A flat relation appears on both Matters and Remove deletes only the link; New sub-Matter creates a separate child that copies nothing; removing the child's Parent detaches it; an unreadable relation shows Restricted Matter without title or link and its direct read is refused.",
+      "actual": "Add related Matter > M-98 > Add relation showed M-98 under Related; M-98 lists M-96 ([96]). The card also shows \"Restricted Matter\" for M-100 with 0 links and no title; its direct read answered 404. Remove on the Related row deleted the link on both sides ([]); M-98 still reads 200. New sub-Matter showed \"Parent: M-96 DOC-030 matters matter-work admin work 1790333890346\"; the child M-101 has Manager null, team [\"Daniel Okafor\"], 0 Tasks, Confidential false, while the parent keeps Manager Daniel Okafor and 3 team members. Remove on the child's Parent row left parent null.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:17.133Z",
+      "at": "2026-09-25T11:01:21.560Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Link Contracts: Link Contract with differing Confidential flags, Leave them as they are, Restricted contract for another reader",
+      "expected": "Linking shows the flags stay independent and Confidentiality differs with Leave them as they are; both flags stay unchanged; the Counterparty stays on the Contract; a reader who cannot open the Contract sees Restricted contract.",
+      "actual": "Link Contract > C-295 showed \"These records have different Confidential flags. Linking will not change either one.\"; Link opened \"Confidentiality differs C-295 and M-96 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record. Leave them as they are\"; Leave them as they are closed it. Matter Confidential false, Contract Confidential true; linked [295]; Counterparty still \"Ashgrove Cleaning Services\" on the Contract. Nadia Haddad (Contract read 404) sees \"Restricted contract\" with 0 links to C-295.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:21.561Z",
+      "at": "2026-09-25T11:01:22.865Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Link Contracts: one Matter at a time, Unlink and move, New contract with the Matter chosen, archived Contracts excluded",
+      "expected": "A second link is refused until Unlink; after Unlink the Contract links to another Matter; New contract opens creation with this Matter chosen; an archived linked Contract leaves the list while its link is retained.",
+      "actual": "A direct second link of C-295 to M-99 answered 409 (\"This contract already belongs to a matter. Unlink it before linking it elsewhere.\"); M-99's Link Contract search offered C-295 0 times. Unlink on M-96 (confirmation shown: false) left []; linking from M-99 then succeeded ([295]). New contract opened a form reading \"Create contract Title* Contract type* Type… NDA MSA SOW Sales Vendor Employment License Other Default DPA Reseller Lease DOC-030 portal Evaluation 1790330794487 DOC-030 inbox Supplier agreement DOC-030 access Form type 09251012 DOC-030 access Second type 09251\" (Matter control \"M-96 DOC-030 matters matter-work admin work 1790333890346\"); Cancel closed it. Fixture: C-296 linked (201) and archived (200); the Linked Contracts card shows it 0 times and its Matter link reads {\"matter\":{\"restricted\":false,\"number\":96,\"title\":\"DOC-030 matters matter-work admin work 1790333890346\",\"statusName\":\"Open\",\"statusCategory\":\"open\",\"isConfidential\":false,\"archived\":false}}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:22.866Z",
+      "at": "2026-09-25T11:01:28.965Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supplementary checks: lead time 0 and the 20 lead time limit, search by title, and overdue Tasks in Next deadline",
+      "expected": "0 means on the date; no more than 20 additional lead times can be added; Set parent searches by title; Next deadline includes an overdue unfinished Task.",
+      "actual": "Lead time 0 was accepted and shown as \"On the day\" (1 chip). After 20 additional lead times (20 Remove chips) the lead time control accepted no more (Add lead time enabled false, input visible true); Cancel discarded the draft. Set parent on M-99 found M-97 by title (1 results). Fixture on M-99: an unfinished Task due 2026-09-22 and a Key date 2026-09-29; Next deadline {\"date\":\"2026-09-22\",\"label\":\"DOC-030 work overdue task\",\"source\":\"task\"}. Settings > Notifications shows the \"Reminder lead times\" card with 1 \"Use the organization's default lead times\" switch (not changed).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:28.966Z",
+      "at": "2026-09-25T11:01:31.180Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: an archived Matter refuses changes to this work; restore keeps the rows; History records the changes; a Business User cannot open these sections",
+      "expected": "Archived: no Add Task, Add date or relationship controls and writes are refused; Restore keeps Tasks and Key dates; History lists Task, Key date and relationship changes; a Business User is sent to the Portal and direct writes are refused.",
+      "actual": "Fixture: archived through the API (200). Tasks tab Add Task count 0; Key dates Add date count 0; relationship and link controls 0; direct Task, Key date and relation writes answered 409/409/409. Fixture: restored (200); 3 Tasks and 2 Key dates remain. History entries (first 12): [\"Daniel Okafor restored this matter this minute\",\"Daniel Okafor archived this matter this minute\",\"Daniel Okafor removed the relation to M-98 (DOC-030 matters matter-work admin related candidate 1790333890346) this minute\",\"Daniel Okafor related this Matter to M-98 (DOC-030 matters matter-work admin related candidate 1790333890346) this minute\",\"Daniel Okafor put this Matter under M-97 (DOC-030 matters matter-work admin parent candidate 1790333890346) this minute\",\"Daniel Okafor changed the status Closed → Open this minute\",\"Daniel Okafor changed the key date DOC-030 work filing Fictional filing note. → Edited while closed. this minute\",\"Daniel Okafor changed the status Open → Closed Closing note DOC-030 closed for the Key date check. this minute\",\"Daniel Okafor removed the key date DOC-030 work overdue edited on Sep 23 this minute\",\"Daniel Okafor changed the key date DOC-030 work overdue edited DOC-030 work overdue → DOC-030 work overdue edited this minute\",\"Daniel Okafor changed the key date DOC-030 work filing Daniel Okafor → Usual audience this minute\",\"Daniel Okafor changed the key date DOC-030 work Tom only Tom Iwu → Usual audience this minute\"]. Jonas Weber (Business User on the team) opening /matters/96/tasks ended at /portal; his direct Task, Key date and relation writes answered 403/403/403. History names the hidden Confidential Matter's title: false. Daniel Okafor's direct Task and relation writes on that hidden M-100 answered 404/404.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:31.181Z",
+      "at": "2026-09-25T11:01:34.221Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Fixture: a work Matter with a Business User on the team, parent and related candidates, a Confidential Matter related by another reader, and two standalone Contracts",
+      "expected": "Reviewer prerequisites exist; they are set up through the API and are not article steps.",
+      "actual": "Work M-102 (Manager Nadia Haddad, Jonas Weber on the team), parent candidate M-103, related candidate M-104, second work M-105; Confidential M-106 created by Daniel Okafor and related to M-102; Confidential NDA C-299 with Counterparty \"Ashgrove Cleaning Services\"; NDA C-300.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:34.256Z",
+      "at": "2026-09-25T11:01:34.422Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Add Task without a title is refused; a person staged with Use this person is discarded by Cancel",
+      "expected": "The dialog refuses a missing title; Cancel before saving saves neither the Task nor the team membership.",
+      "actual": "Add Task with no title showed \"Name what needs doing.\". Assignee > Add someone to the team… > Tom Iwu > Use this person showed \"TI Tom Iwu\"; the hint \"Team membership and assignment are saved when you save the task.\" was visible: true. Cancel closed the dialog: 0 Tasks, team [\"Jonas Weber\",\"Nadia Haddad\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:34.423Z",
+      "at": "2026-09-25T11:01:35.853Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Add Task with a staged person, due date and Add a note saves the Task, membership and assignment; the note has no audience choice",
+      "expected": "The dialog offers no audience choice under Comments & attachments; saving the Task saves both team membership and assignment; the initial note posts on the Task conversation, not the record conversation.",
+      "actual": "The Add a Task dialog shows Comments & attachments with Add a note and 0 audience controls (no \"Legal only\" or \"Working team\" text). Saved \"DOC-030 work review task\": assignee Tom Iwu, due 2026-10-05; team now [\"Jonas Weber\",\"Nadia Haddad\",\"Tom Iwu\"]. The Task conversation holds 1 comment (stored visibility \"working_team\"); the record conversation (0 comments) does not contain the note.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:35.854Z",
+      "at": "2026-09-25T11:01:36.738Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Add to team and assign on a row is immediate; clearing the assignee keeps membership; Close in Task details discards a staged person",
+      "expected": "The row change saves at once; Unassigned leaves the team membership; Close before saving saves neither membership nor assignment.",
+      "actual": "Row picker > Add someone to the team… > Ines Duarte > Add to team and assign saved at once: assignee Ines Duarte, team [\"Ines Duarte\",\"Jonas Weber\",\"Nadia Haddad\",\"Tom Iwu\"]. Choosing Unassigned left assignee null and Ines Duarte still on the team. In Task details, staging Marcus Oyelaran with Use this person and then Close left the assignee null and team [\"Ines Duarte\",\"Jonas Weber\",\"Nadia Haddad\",\"Tom Iwu\"].",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:36.739Z",
+      "at": "2026-09-25T11:01:40.553Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: order by due date, completion with Show completed, Edit Task and Save",
+      "expected": "Tasks are listed by due date with undated last; done Tasks are hidden until Show completed; the completion control reopens; Edit Task opens Task details and Save renames; the done/total count updates.",
+      "actual": "Rows in order [\"DOC-030 work empty task\",\"DOC-030 work review task\",\"DOC-030 work plain task\"] (due 2026-09-30, due 2026-10-05, undated). Completing the review Task hid it (hidden true); count \"1 of 3 done\". Show completed showed it with the Reopen Task control, which reopened it (isDone false). Actions > Edit Task opened Task details; Save renamed the plain Task; count \"0 of 3 done\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:40.554Z",
+      "at": "2026-09-25T11:01:44.364Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: Task details conversation has no audience selector; Remove Task on an empty Task and on a Task with conversation history",
+      "expected": "The Task thread has no audience selector and says Visible to everyone who can access this task.; Remove Task removes an empty Task; a Task with a conversation cannot be removed.",
+      "actual": "Task details for the review Task shows the initial note; audience controls 0; sentence visible true (\"Visible to everyone who can access this task.\"). Remove Task on the empty Task (confirmation dialog shown: false) removed its row (remaining [\"DOC-030 work review task\",\"DOC-030 work renamed task\"]). Remove Task on the review Task showed \"This Task has a conversation on it, so it cannot be removed. Mark it done instead.\" and the Task stayed.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:44.365Z",
+      "at": "2026-09-25T11:01:49.204Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Tasks: a failed initial note offers Retry note & attachments without creating another Task",
+      "expected": "The Task saves, the dialog stays open with Retry note & attachments, and the retry adds the note to the same Task.",
+      "actual": "With the comment request failed once by the reviewer's browser route (a network stand-in), the dialog stayed open with \"Task saved. Your note and attachments could not be added. Please try again.\" and Retry note & attachments. Retry closed the dialog; 1 Task has that title and it holds 1 comment. Fixture: the author deleted that comment (200); Remove Task on the Task then showed \"This Task has a conversation on it, so it cannot be removed. Mark it done instead.\" and the Task stayed (true).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:49.205Z",
+      "at": "2026-09-25T11:01:52.918Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: Add date refusals, reminder lead times and recipient choices",
+      "expected": "Missing Date or Event is refused; Reminders show Global reminders and This date will remind; Add lead time and Remove change the schedule; Recipients list the usual audience including the active Business User on the team; the saved date keeps chosen lead times and recipients.",
+      "actual": "Add date with nothing showed \"Pick a date.\"; with only a Date \"Name what the date is.\". \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 left Add lead time disabled: true. After adding 3: \"This date will remind: 30 days before, 14 days before, 7 days before, 3 days before, 1 day before, On the day\"; after Remove: \"This date will remind: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". Reminder group text from Recipients: \"Recipients Ines Duarte Jonas Weber Nadia Haddad Tom Iwu\"; Jonas Weber (active Business User on the team) is listed. Saved 2026-10-25 \"DOC-030 work filing\" with lead times [45] and 2 recipients; the row has no assignee field.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:52.919Z",
+      "at": "2026-09-25T11:01:54.035Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: header and tab counts, a departed recipient, Remove unavailable recipients and Use the usual audience",
+      "expected": "The header counts upcoming and overdue dates and the tab counts upcoming; when a selected person leaves the team the dialog says so, Remove unavailable recipients keeps the others, and Use the usual audience clears the selection; clearing every checkbox restores the default.",
+      "actual": "Fixture: an overdue date and a date whose only recipient is Tom Iwu. Header tally \"2 upcoming · 1 overdue\"; tab \"Key dates 2\". Fixture: Tom Iwu left the team (200). Edit date on the filing date showed the departed notice with Remove unavailable recipients true and Use the usual audience true; Remove unavailable recipients then Save kept 1 recipient. On the Tom-only date the notice offered only Use the usual audience (0 Remove buttons); it saved 0 recipients. Clearing the last checkbox on the filing date saved 0 recipients.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:54.035Z",
+      "at": "2026-09-25T11:01:55.523Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: Edit date and Remove date with confirmation; a closed Matter keeps editable dates without Next deadline",
+      "expected": "Edit date saves with Save; Remove date asks for confirmation (Cancel keeps the date); a closed Matter keeps its dates, still edits them, and has no Next deadline until reopened.",
+      "actual": "Edit date > Save renamed the overdue date. Remove date opened \"Remove Key date? Remove DOC-030 work overdue edited on Sep 23 (2 days overdue)? This cannot be undone. Cancel Remove date\"; Cancel kept it (true); Remove date removed it (true). Next deadline while open {\"date\":\"2026-10-05\",\"label\":\"DOC-030 work review task\",\"source\":\"task\"}. Fixture: closed through the API (200); the Key dates tab still listed the filing date and Edit date saved a note; Next deadline null. Fixture: reopened (200); Next deadline {\"date\":\"2026-10-05\",\"label\":\"DOC-030 work review task\",\"source\":\"task\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:55.524Z",
+      "at": "2026-09-25T11:01:58.236Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Maintain Key dates: a Needed by date set from the Overview Row is an ordinary Key date named Needed by",
+      "expected": "Entering Needed by on Overview adds a Key date named Needed by on the Key dates tab with the same Edit date and Remove date actions; editing it there changes the Overview Row.",
+      "actual": "On M-105 Overview, Needed by 2026-10-16 saved (201). The Key dates tab lists \"Needed by\" with actions [\"Edit date\",\"Remove date\"]; Edit date changed it to 2026-10-17 with a note; Overview's Needed by Row now reads 2026-10-17; 1 Key date named Needed by.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:58.237Z",
+      "at": "2026-09-25T11:01:59.271Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Connect related Matters: Set parent Cancel and confirm, a hierarchy loop is refused",
+      "expected": "Cancel changes nothing; Set parent saves one parent shown on both Matters; choosing the Matter's own child as the parent's parent is refused.",
+      "actual": "Set parent search box null. Typing \"M-103\" listed 0 candidates (M-103 among them: false); typing \"103\" listed 3 (M-103 among them: true); the title search listed it. Set parent > M-103 > Cancel left parent null. Confirming Set parent showed Parent \"M-103 DOC-030 matters matter-work legal parent candidate 1790333890346\" and the button became Change parent. M-103 lists M-102 under Children. On M-103, Set parent to M-102 showed \"That parent would close a loop in the Matter hierarchy.\"; Cancel left its parent null.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:01:59.272Z",
+      "at": "2026-09-25T11:02:02.697Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Connect related Matters: Add related Matter, Remove, New sub-Matter, detach a child, and Restricted Matter",
+      "expected": "A flat relation appears on both Matters and Remove deletes only the link; New sub-Matter creates a separate child that copies nothing; removing the child's Parent detaches it; an unreadable relation shows Restricted Matter without title or link and its direct read is refused.",
+      "actual": "Add related Matter > M-104 > Add relation showed M-104 under Related; M-104 lists M-102 ([102]). The card also shows \"Restricted Matter\" for M-106 with 0 links and no title; its direct read answered 404. Remove on the Related row deleted the link on both sides ([]); M-104 still reads 200. New sub-Matter showed \"Parent: M-102 DOC-030 matters matter-work legal work 1790333890346\"; the child M-108 has Manager null, team [\"Nadia Haddad\"], 0 Tasks, Confidential false, while the parent keeps Manager Nadia Haddad and 3 team members. Remove on the child's Parent row left parent null.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:02:02.698Z",
+      "at": "2026-09-25T11:02:07.062Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Link Contracts: Link Contract with differing Confidential flags, Leave them as they are, Restricted contract for another reader",
+      "expected": "Linking shows the flags stay independent and Confidentiality differs with Leave them as they are; both flags stay unchanged; the Counterparty stays on the Contract; a reader who cannot open the Contract sees Restricted contract.",
+      "actual": "Link Contract > C-299 showed \"These records have different Confidential flags. Linking will not change either one.\"; Link opened \"Confidentiality differs C-299 and M-102 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record. Leave them as they are\"; Leave them as they are closed it. Matter Confidential false, Contract Confidential true; linked [299]; Counterparty still \"Ashgrove Cleaning Services\" on the Contract. Daniel Okafor (Contract read 404) sees \"Restricted contract\" with 0 links to C-299.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:02:07.063Z",
+      "at": "2026-09-25T11:02:08.426Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Link Contracts: one Matter at a time, Unlink and move, New contract with the Matter chosen, archived Contracts excluded",
+      "expected": "A second link is refused until Unlink; after Unlink the Contract links to another Matter; New contract opens creation with this Matter chosen; an archived linked Contract leaves the list while its link is retained.",
+      "actual": "A direct second link of C-299 to M-105 answered 409 (\"This contract already belongs to a matter. Unlink it before linking it elsewhere.\"); M-105's Link Contract search offered C-299 0 times. Unlink on M-102 (confirmation shown: false) left []; linking from M-105 then succeeded ([299]). New contract opened a form reading \"Create contract Title* Contract type* Type… NDA MSA SOW Sales Vendor Employment License Other Default DPA Reseller Lease DOC-030 portal Evaluation 1790330794487 DOC-030 inbox Supplier agreement DOC-030 access Form type 09251012 DOC-030 access Second type 09251\" (Matter control \"M-102 DOC-030 matters matter-work legal work 1790333890346\"); Cancel closed it. Fixture: C-300 linked (201) and archived (200); the Linked Contracts card shows it 0 times and its Matter link reads {\"matter\":{\"restricted\":false,\"number\":102,\"title\":\"DOC-030 matters matter-work legal work 1790333890346\",\"statusName\":\"Open\",\"statusCategory\":\"open\",\"isConfidential\":false,\"archived\":false}}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:02:08.428Z",
+      "at": "2026-09-25T11:02:14.702Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supplementary checks: lead time 0 and the 20 lead time limit, search by title, and overdue Tasks in Next deadline",
+      "expected": "0 means on the date; no more than 20 additional lead times can be added; Set parent searches by title; Next deadline includes an overdue unfinished Task.",
+      "actual": "Lead time 0 was accepted and shown as \"On the day\" (1 chip). After 20 additional lead times (20 Remove chips) the lead time control accepted no more (Add lead time enabled false, input visible true); Cancel discarded the draft. Set parent on M-105 found M-103 by title (1 results). Fixture on M-105: an unfinished Task due 2026-09-22 and a Key date 2026-09-29; Next deadline {\"date\":\"2026-09-22\",\"label\":\"DOC-030 work overdue task\",\"source\":\"task\"}. Settings > Notifications shows the \"Reminder lead times\" card with 1 \"Use the organization's default lead times\" switch (not changed).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:02:14.703Z",
+      "at": "2026-09-25T11:02:16.925Z",
+      "runStamp": 1790333890346
+    },
+    {
+      "article": "matter-work",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Before you start: an archived Matter refuses changes to this work; restore keeps the rows; History records the changes; a Business User cannot open these sections",
+      "expected": "Archived: no Add Task, Add date or relationship controls and writes are refused; Restore keeps Tasks and Key dates; History lists Task, Key date and relationship changes; a Business User is sent to the Portal and direct writes are refused.",
+      "actual": "Fixture: archived through the API (200). Tasks tab Add Task count 0; Key dates Add date count 0; relationship and link controls 0; direct Task, Key date and relation writes answered 409/409/409. Fixture: restored (200); 3 Tasks and 2 Key dates remain. History entries (first 12): [\"Nadia Haddad restored this matter this minute\",\"Nadia Haddad archived this matter this minute\",\"Nadia Haddad removed the relation to M-104 (DOC-030 matters matter-work legal related candidate 1790333890346) this minute\",\"Nadia Haddad related this Matter to M-104 (DOC-030 matters matter-work legal related candidate 1790333890346) this minute\",\"Nadia Haddad put this Matter under M-103 (DOC-030 matters matter-work legal parent candidate 1790333890346) this minute\",\"Nadia Haddad changed the status Closed → Open this minute\",\"Nadia Haddad changed the key date DOC-030 work filing Fictional filing note. → Edited while closed. this minute\",\"Nadia Haddad changed the status Open → Closed Closing note DOC-030 closed for the Key date check. this minute\",\"Nadia Haddad removed the key date DOC-030 work overdue edited on Sep 23 this minute\",\"Nadia Haddad changed the key date DOC-030 work overdue edited DOC-030 work overdue → DOC-030 work overdue edited this minute\",\"Nadia Haddad changed the key date DOC-030 work filing Nadia Haddad → Usual audience this minute\",\"Nadia Haddad changed the key date DOC-030 work Tom only Tom Iwu → Usual audience this minute\"]. Jonas Weber (Business User on the team) opening /matters/102/tasks ended at /portal; his direct Task, Key date and relation writes answered 403/403/403. History names the hidden Confidential Matter's title: false. Nadia Haddad's direct Task and relation writes on that hidden M-106 answered 404/404.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:02:16.926Z",
+      "at": "2026-09-25T11:02:20.096Z",
+      "runStamp": 1790333890346
+    }
+  ]
+}

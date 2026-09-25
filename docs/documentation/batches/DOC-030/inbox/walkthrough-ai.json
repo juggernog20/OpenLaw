@@ -1,0 +1,793 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-030",
+  "issue": 1157,
+  "group": "inbox",
+  "independentReview": true,
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (inbox)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "lab": "inboxai",
+  "environment": "openlaw-docs-80ceef9e-inboxai",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48465",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-25T10:23:18.931Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-25T10:23:36.405Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules, headless, 1440x1000 staff and 1280x900 Portal; one isolated browser context per identity",
+  "articleHashesAtStart": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  },
+  "fixtures": {
+    "contractType": {
+      "id": "01a0d818-f3eb-79a1-b022-f6b5c83243ce",
+      "name": "DOC-030 inbox Supplier agreement",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "contract_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "entity",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "counterparties",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "owning_department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "term_type",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "effective_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "expiry_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "renewal_period_months",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "notice_period_days",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "value",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_supplier_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_budget_note",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_contracting_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_contract_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "matterType": {
+      "id": "01a0d818-f3fd-7515-bb25-987d6fc4b57d",
+      "name": "DOC-030 inbox Advisory",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "matter_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_adviser_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_matter_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_matter_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_region_choice",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_engagement_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "requestTypes": {
+      "contract": {
+        "id": "01a0d818-f4ce-7d27-bedd-38f7b9f71114",
+        "name": "DOC-030 inbox Supplier contract request"
+      },
+      "matter": {
+        "id": "01a0d818-f4d9-7ece-be9b-2c2d2e126f82",
+        "name": "DOC-030 inbox Advisory matter request"
+      }
+    },
+    "fields": {
+      "carry": {
+        "id": "01a0d818-f40c-7549-84c3-967cbb35e015",
+        "slug": "doc_030_inbox_supplier_name",
+        "name": "DOC-030 inbox Supplier name",
+        "type": "text"
+      },
+      "stay": {
+        "id": "01a0d818-f41a-70e2-84e9-d3527d1d48aa",
+        "slug": "doc_030_inbox_budget_note",
+        "name": "DOC-030 inbox Budget note",
+        "type": "text"
+      },
+      "required": {
+        "id": "01a0d818-f426-784a-a933-d820f81be4c0",
+        "slug": "doc_030_inbox_cost_centre",
+        "name": "DOC-030 inbox Cost centre",
+        "type": "text"
+      },
+      "entity": {
+        "id": "01a0d818-f432-7768-b352-ac899e9c9a22",
+        "slug": "doc_030_inbox_contracting_entity",
+        "name": "DOC-030 inbox Contracting entity",
+        "type": "entity"
+      },
+      "recordC": {
+        "id": "01a0d818-f443-750b-9d1d-b54e7393df87",
+        "slug": "doc_030_inbox_contract_summary",
+        "name": "DOC-030 inbox Contract summary",
+        "type": "text"
+      },
+      "mCarry": {
+        "id": "01a0d818-f452-7385-8831-35f610de3595",
+        "slug": "doc_030_inbox_adviser_name",
+        "name": "DOC-030 inbox Adviser name",
+        "type": "text"
+      },
+      "mRequired": {
+        "id": "01a0d818-f467-7842-aa82-7bc130135918",
+        "slug": "doc_030_inbox_matter_cost_centre",
+        "name": "DOC-030 inbox Matter cost centre",
+        "type": "text"
+      },
+      "mEntity": {
+        "id": "01a0d818-f476-783b-b4e6-00b7e68d0934",
+        "slug": "doc_030_inbox_matter_entity",
+        "name": "DOC-030 inbox Matter entity",
+        "type": "entity"
+      },
+      "choice": {
+        "id": "01a0d818-f487-7ece-b94a-7f7dd00e6ec3",
+        "slug": "doc_030_inbox_region_choice",
+        "name": "DOC-030 inbox Region choice",
+        "type": "single_select"
+      },
+      "record": {
+        "id": "01a0d818-f499-7db6-9d23-e7b659a106b9",
+        "slug": "doc_030_inbox_engagement_summary",
+        "name": "DOC-030 inbox Engagement summary",
+        "type": "text"
+      }
+    },
+    "templates": {
+      "good": {
+        "id": "01a0d818-f53f-7fd4-b779-00db8025e9b9",
+        "name": "DOC-030 inbox Advisory template"
+      },
+      "stale": {
+        "id": "01a0d818-f563-751e-8ece-722bbaedbcbb",
+        "name": "DOC-030 inbox Stale template"
+      }
+    }
+  },
+  "requests": {
+    "administrator:ai-matter": {
+      "number": 37,
+      "reference": "R-37",
+      "id": "01a0d846-3d8f-7bb6-9aa5-65c377b66f67",
+      "title": "DOC-030 inbox Admin ai-matter 876878",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-matter-1.pdf",
+          "bytes": 942
+        },
+        {
+          "name": "doc030-inbox-admin-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.137Z"
+    },
+    "administrator:ai-matter-edit": {
+      "number": 38,
+      "reference": "R-38",
+      "id": "01a0d846-3ddf-774c-992d-d3d28a12a093",
+      "title": "DOC-030 inbox Admin ai-matter-edit 876878",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.166Z"
+    },
+    "administrator:ai-contract": {
+      "number": 39,
+      "reference": "R-39",
+      "id": "01a0d846-3dfa-7749-8b32-4e8efa135aed",
+      "title": "DOC-030 inbox Admin ai-contract 876878",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-contract-1.pdf",
+          "bytes": 946
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.206Z"
+    },
+    "administrator:ai-contract-fail": {
+      "number": 40,
+      "reference": "R-40",
+      "id": "01a0d846-3e1f-735e-aebb-5b8cfc807724",
+      "title": "DOC-030 inbox Admin ai-contract-fail 876878",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-contract-fail-1.pdf",
+          "bytes": 956
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.238Z"
+    },
+    "legal_team_member:ai-matter": {
+      "number": 41,
+      "reference": "R-41",
+      "id": "01a0d846-3e9e-7a5e-80b0-298fd1ec87df",
+      "title": "DOC-030 inbox Member ai-matter 876878",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-matter-1.pdf",
+          "bytes": 944
+        },
+        {
+          "name": "doc030-inbox-member-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.384Z"
+    },
+    "legal_team_member:ai-matter-edit": {
+      "number": 42,
+      "reference": "R-42",
+      "id": "01a0d846-3ed3-7173-8ee1-e3d608367a39",
+      "title": "DOC-030 inbox Member ai-matter-edit 876878",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.410Z"
+    },
+    "legal_team_member:ai-contract": {
+      "number": 43,
+      "reference": "R-43",
+      "id": "01a0d846-3eed-76d8-be83-b05b4c96ec74",
+      "title": "DOC-030 inbox Member ai-contract 876878",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-contract-1.pdf",
+          "bytes": 948
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.453Z"
+    },
+    "legal_team_member:ai-contract-fail": {
+      "number": 44,
+      "reference": "R-44",
+      "id": "01a0d846-3f1a-7ef1-b2cb-d9210bb911eb",
+      "title": "DOC-030 inbox Member ai-contract-fail 876878",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-contract-fail-1.pdf",
+          "bytes": 958
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.500Z"
+    }
+  },
+  "phases": [
+    "ai"
+  ],
+  "roles": [
+    "administrator",
+    "legal_team_member"
+  ],
+  "startedAt": "2026-09-25T11:14:37.751Z",
+  "finishedAt": "2026-09-25T11:18:09.105Z",
+  "steps": [
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Prerequisite: the three AI conversion switches and the stand-in's cited facts; Daniel Okafor posts a Shared with requester message on R-37",
+      "expected": "Prepare Matter conversions with AI on; Fill Contract Fields after conversion on; the message reaches the Request thread",
+      "page": "/inbox/37",
+      "actual": "Administrator API (setup, not a guide step): matterPreparation true, contractPreparation false, contractConversionAnalysis true; connector Custom, model doc030-inbox-standin-model. Daniel Okafor posted \"Please call the matter: AI suggested matter title R-37. Correction pending: the region may be South.\" with Shared with requester in the Comments applet.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:14:38.465Z",
+      "at": "2026-09-25T11:14:39.531Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "R-37 Triage > Convert to matter with preparation on: Getting matter ready, then Close to keep working",
+      "expected": "Conversion draft dialog with Getting matter ready…, elapsed time, the leave hint, Close and Continue manually; Close leaves the Request undecided",
+      "page": "/inbox/37",
+      "actual": "Dialog \"Conversion draft\": \"Conversion draft Getting matter ready… The provider reads the Request and its attachments. A long attachment can take a few minutes. Working for 2 seconds. You can close this and keep working. Preparation continues, and a notification tells you when the draft is ready. Close Continue manually\". Buttons: Close, Continue manually. The stand-in held the provider call. Close shut the dialog; R-37 stayed read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:14:39.532Z",
+      "at": "2026-09-25T11:14:43.247Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "The completion notification returns to the Convert dialog for R-37 with the prepared draft",
+      "expected": "Bell item The Conversion draft for <Request title> is ready to review opens the Convert dialog",
+      "page": "/inbox/37?convert=matter",
+      "actual": "After the stand-in answered, the Notifications menu listed \"The Conversion draft for DOC-030 inbox Admin ai-matter 876878 is ready to review\". Selecting it opened /inbox/37?convert=matter and the dialog \"Convert R-37 to a matter\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:14:43.248Z",
+      "at": "2026-09-25T11:15:06.111Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Review the prepared R-37 dialog: Unverified AI values, unchanged carried values, the Description switch, conflicting sources and Attachment reading details",
+      "expected": "AI-changed values carry Unverified with a sparkle; carried unchanged values do not; Description switch AI generated / Requester; Conflicting sources need your review:; the unreadable file is listed",
+      "page": "/inbox/37?convert=matter",
+      "actual": "Title \"AI suggested matter title R-37\", Description \"Advisory support for onboarding a new supplier.\", DOC-030 inbox Matter cost centre \"MC-AI-4411\" and DOC-030 inbox Adviser name \"Adviser named in the attachment\" carry Unverified; unmarked: Matter type, Matter template, Priority, Needed by, DOC-030 inbox Matter entity, DOC-030 inbox Region choice. The Description switch reads AI generated / Requester; Requester shows the read-only submitted text, and switching back kept the AI text. \"Conflicting sources need your review:\" lists DOC-030 inbox Region choice. \"Some attachments could not be fully read. …\" shows, and Attachment reading details reads \"Attachment reading details doc030-inbox-admin-ai-matter-2.pdf: unreadable\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:15:06.112Z",
+      "at": "2026-09-25T11:15:06.406Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open a sparkle: the saved explanation and supporting passages, no new model call; an attachment opens above the Convert dialog, which keeps your work",
+      "expected": "Popover titled with the value's label, the explanation, Sources; stand-in extraction count unchanged; the reader closes back to the dialog",
+      "page": "/inbox/37?convert=matter",
+      "actual": "After editing the Title, the DOC-030 inbox Matter cost centre sparkle (\"View source evidence\") opened a popover: \"DOC-030 inbox Matter cost centre Why this value The source names this value. Sources R-37 description Confirm\". The DOC-030 inbox Adviser name sparkle, cited from doc030-inbox-admin-ai-matter-1.pdf, opened the reader above the Convert dialog: \"DOC-030 inbox Adviser name Close the document Why this value The source names this value. Confirm doc030-inbox-admin-ai-matter-1.pdf Download Page 1 of 1 100% 1 of 1 DOC-030 inbox Admin ai-matter 8768\". \"Close the document\" returned to the dialog with the edited Title intact. Stand-in extractions stayed 20, so no new model call.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:15:06.406Z",
+      "at": "2026-09-25T11:15:09.252Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Discard AI suggestions removes untouched AI suggestions and keeps your edits; then complete the required Rows and convert",
+      "expected": "Edited Title kept; untouched AI values gone; no Unverified; one Matter",
+      "page": "/inbox/37",
+      "actual": "After Discard AI suggestions: Title kept the edit (\"AI suggested matter title R-37 edited\"), DOC-030 inbox Matter cost centre emptied, DOC-030 inbox Adviser name back to the carried \"Fictional Adviser Admin\", Description box gone, no Unverified. Typed DOC-030 inbox Matter cost centre, chose DOC-030 inbox Region choice North and converted to M-24.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:15:09.253Z",
+      "at": "2026-09-25T11:15:10.919Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Prepare Matter Rows after conversion: M-24's empty Record Row fills in the background with an Unverified value, with no progress or retry control; sparkle and Confirm work",
+      "expected": "DOC-030 inbox Engagement summary filled from the Request with Unverified; typed values untouched; Confirm clears the marker",
+      "page": "/matters/24",
+      "actual": "Check did not complete: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('dialog', { name: 'DOC-030 inbox Engagement summary' }) to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:15:10.920Z",
+      "at": "2026-09-25T11:15:26.518Z",
+      "supersededBy": "docs/documentation/batches/DOC-030/inbox/walkthrough-ai-record.json",
+      "note": "Script fault, not a guide or product failure: the Matter page names the evidence popover \"Unverified value\", not the Row label the script looked for. The value, marker and Confirm were checked again on the same Matter by PHASES=ai-record and passed."
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "R-38: Continue manually during preparation, convert, then edit the Matter while the Record Row run waits: the run writes nothing",
+      "expected": "Continue manually opens the manual dialog; the edited Matter gets no Unverified values",
+      "page": "/matters/25",
+      "actual": "\"Getting matter ready…\" then Continue manually opened \"Convert R-38 to a matter\" with no Unverified and no Discard AI suggestions. Converted to M-25 while the stand-in held calls. With the Record Row run held, Daniel Okafor changed Priority to Low on the Matter page. After release, DOC-030 inbox Engagement summary stayed \"\" and the Matter has no Unverified values. \"If no Unverified values appear, complete the Rows yourself\" applies.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:15:26.519Z",
+      "at": "2026-09-25T11:15:36.383Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "R-39: with Contract preparation off, the manual dialog opens directly; Fill Contract Fields after conversion runs after creation, Run analysis reads Running…, then Unverified values land",
+      "expected": "Manual dialog; Fields header Running… while held; Record Rows filled with Unverified; typed value untouched",
+      "page": "/contracts/37/fields",
+      "actual": "Switches: matterPreparation true, contractPreparation false, contractConversionAnalysis true. Triage > Convert to contract opened \"Convert R-39 to a contract\" directly. Converted to C-37 with the stand-in holding calls; the Fields section header showed \"Running…\". After release, without a reload, DOC-030 inbox Contract summary read \"Two-year supply of fictional widgets\" and Risk medium, marked Unverified (keys [\"doc_030_inbox_contract_summary\"]); DOC-030 inbox Cost centre kept \"CC-administrator-typed\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:15:36.384Z",
+      "at": "2026-09-25T11:16:10.790Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "R-40: with Contract preparation on, a failed draft offers Retry, Cancel and Continue manually; Retry prepares the draft; an accepted AI value stays Unverified on the Contract; a failed Analysis run offers Retry Request-context Analysis",
+      "expected": "Preparation could not finish…; Retry succeeds; Unverified carried to the record; Retry Request-context Analysis recovers",
+      "page": "/contracts/38/fields",
+      "actual": "Switches: matterPreparation true, contractPreparation true, contractConversionAnalysis true. With the stand-in breaking replies, the \"Conversion draft\" dialog read \"The AI provider returned a response that did not match the required format. Retry or continue manually.\" with Cancel, Continue manually, Retry. Retry prepared the draft: \"Convert R-40 to a contract\" showed DOC-030 inbox Cost centre \"CC-AI-9911\" with Unverified. Converted unchanged to C-38; the Contract keeps that value Unverified (keys [\"field:doc_030_inbox_cost_centre\"]). With the stand-in breaking replies, the Fields header offered Retry Request-context Analysis (\"Fields Retry Request-context Analysis Run analysis Request-context Analysis failed.\"). After the stand-in recovered, Retry Request-context Analysis filled DOC-030 inbox Contract summary \"Two-year supply of fictional widgets\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:10.791Z",
+      "at": "2026-09-25T11:16:22.722Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Prerequisite: the three AI conversion switches and the stand-in's cited facts; Nadia Haddad posts a Shared with requester message on R-41",
+      "expected": "Prepare Matter conversions with AI on; Fill Contract Fields after conversion on; the message reaches the Request thread",
+      "page": "/inbox/41",
+      "actual": "Administrator API (setup, not a guide step): matterPreparation true, contractPreparation false, contractConversionAnalysis true; connector Custom, model doc030-inbox-standin-model. Nadia Haddad posted \"Please call the matter: AI suggested matter title R-41. Correction pending: the region may be South.\" with Shared with requester in the Comments applet.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:23.220Z",
+      "at": "2026-09-25T11:16:24.305Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "R-41 Triage > Convert to matter with preparation on: Getting matter ready, then Close to keep working",
+      "expected": "Conversion draft dialog with Getting matter ready…, elapsed time, the leave hint, Close and Continue manually; Close leaves the Request undecided",
+      "page": "/inbox/41",
+      "actual": "Dialog \"Conversion draft\": \"Conversion draft Getting matter ready… The provider reads the Request and its attachments. A long attachment can take a few minutes. Working for 2 seconds. You can close this and keep working. Preparation continues, and a notification tells you when the draft is ready. Close Continue manually\". Buttons: Close, Continue manually. The stand-in held the provider call. Close shut the dialog; R-41 stayed read.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:24.306Z",
+      "at": "2026-09-25T11:16:28.041Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The completion notification returns to the Convert dialog for R-41 with the prepared draft",
+      "expected": "Bell item The Conversion draft for <Request title> is ready to review opens the Convert dialog",
+      "page": "/inbox/41?convert=matter",
+      "actual": "After the stand-in answered, the Notifications menu listed \"The Conversion draft for DOC-030 inbox Member ai-matter 876878 is ready to review\". Selecting it opened /inbox/41?convert=matter and the dialog \"Convert R-41 to a matter\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:28.042Z",
+      "at": "2026-09-25T11:16:54.355Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Review the prepared R-41 dialog: Unverified AI values, unchanged carried values, the Description switch, conflicting sources and Attachment reading details",
+      "expected": "AI-changed values carry Unverified with a sparkle; carried unchanged values do not; Description switch AI generated / Requester; Conflicting sources need your review:; the unreadable file is listed",
+      "page": "/inbox/41?convert=matter",
+      "actual": "Title \"AI suggested matter title R-41\", Description \"Advisory support for onboarding a new supplier.\", DOC-030 inbox Matter cost centre \"MC-AI-4411\" and DOC-030 inbox Adviser name \"Adviser named in the attachment\" carry Unverified; unmarked: Matter type, Matter template, Priority, Needed by, DOC-030 inbox Matter entity, DOC-030 inbox Region choice. The Description switch reads AI generated / Requester; Requester shows the read-only submitted text, and switching back kept the AI text. \"Conflicting sources need your review:\" lists DOC-030 inbox Region choice. \"Some attachments could not be fully read. …\" shows, and Attachment reading details reads \"Attachment reading details doc030-inbox-member-ai-matter-2.pdf: unreadable\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:54.356Z",
+      "at": "2026-09-25T11:16:54.591Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open a sparkle: the saved explanation and supporting passages, no new model call; an attachment opens above the Convert dialog, which keeps your work",
+      "expected": "Popover titled with the value's label, the explanation, Sources; stand-in extraction count unchanged; the reader closes back to the dialog",
+      "page": "/inbox/41?convert=matter",
+      "actual": "After editing the Title, the DOC-030 inbox Matter cost centre sparkle (\"View source evidence\") opened a popover: \"DOC-030 inbox Matter cost centre Why this value The source names this value. Sources R-41 description Confirm\". The DOC-030 inbox Adviser name sparkle, cited from doc030-inbox-member-ai-matter-1.pdf, opened the reader above the Convert dialog: \"DOC-030 inbox Adviser name Close the document Why this value The source names this value. Confirm doc030-inbox-member-ai-matter-1.pdf Download Page 1 of 1 100% 1 of 1 DOC-030 inbox Member ai-matter 87\". \"Close the document\" returned to the dialog with the edited Title intact. Stand-in extractions stayed 31, so no new model call.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:54.592Z",
+      "at": "2026-09-25T11:16:57.361Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Discard AI suggestions removes untouched AI suggestions and keeps your edits; then complete the required Rows and convert",
+      "expected": "Edited Title kept; untouched AI values gone; no Unverified; one Matter",
+      "page": "/inbox/41",
+      "actual": "After Discard AI suggestions: Title kept the edit (\"AI suggested matter title R-41 edited\"), DOC-030 inbox Matter cost centre emptied, DOC-030 inbox Adviser name back to the carried \"Fictional Adviser Member\", Description box gone, no Unverified. Typed DOC-030 inbox Matter cost centre, chose DOC-030 inbox Region choice North and converted to M-26.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:57.362Z",
+      "at": "2026-09-25T11:16:58.394Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Prepare Matter Rows after conversion: M-26's empty Record Row fills in the background with an Unverified value, with no progress or retry control; sparkle and Confirm work",
+      "expected": "DOC-030 inbox Engagement summary filled from the Request with Unverified; typed values untouched; Confirm clears the marker",
+      "page": "/matters/26",
+      "actual": "Check did not complete: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('dialog', { name: 'DOC-030 inbox Engagement summary' }) to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:16:58.395Z",
+      "at": "2026-09-25T11:17:13.670Z",
+      "supersededBy": "docs/documentation/batches/DOC-030/inbox/walkthrough-ai-record.json",
+      "note": "Script fault, not a guide or product failure: the Matter page names the evidence popover \"Unverified value\", not the Row label the script looked for. The value, marker and Confirm were checked again on the same Matter by PHASES=ai-record and passed."
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "R-42: Continue manually during preparation, convert, then edit the Matter while the Record Row run waits: the run writes nothing",
+      "expected": "Continue manually opens the manual dialog; the edited Matter gets no Unverified values",
+      "page": "/matters/27",
+      "actual": "\"Getting matter ready…\" then Continue manually opened \"Convert R-42 to a matter\" with no Unverified and no Discard AI suggestions. Converted to M-27 while the stand-in held calls. With the Record Row run held, Nadia Haddad changed Priority to Low on the Matter page. After release, DOC-030 inbox Engagement summary stayed \"\" and the Matter has no Unverified values. \"If no Unverified values appear, complete the Rows yourself\" applies.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:17:13.671Z",
+      "at": "2026-09-25T11:17:23.268Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "R-43: with Contract preparation off, the manual dialog opens directly; Fill Contract Fields after conversion runs after creation, Run analysis reads Running…, then Unverified values land",
+      "expected": "Manual dialog; Fields header Running… while held; Record Rows filled with Unverified; typed value untouched",
+      "page": "/contracts/39/fields",
+      "actual": "Switches: matterPreparation true, contractPreparation false, contractConversionAnalysis true. Triage > Convert to contract opened \"Convert R-43 to a contract\" directly. Converted to C-39 with the stand-in holding calls; the Fields section header showed \"Running…\". After release, without a reload, DOC-030 inbox Contract summary read \"Two-year supply of fictional widgets\" and Risk medium, marked Unverified (keys [\"doc_030_inbox_contract_summary\"]); DOC-030 inbox Cost centre kept \"CC-legal_team_member-typed\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:17:23.269Z",
+      "at": "2026-09-25T11:17:57.601Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "R-44: with Contract preparation on, a failed draft offers Retry, Cancel and Continue manually; Retry prepares the draft; an accepted AI value stays Unverified on the Contract; a failed Analysis run offers Retry Request-context Analysis",
+      "expected": "Preparation could not finish…; Retry succeeds; Unverified carried to the record; Retry Request-context Analysis recovers",
+      "page": "/contracts/40/fields",
+      "actual": "Switches: matterPreparation true, contractPreparation true, contractConversionAnalysis true. With the stand-in breaking replies, the \"Conversion draft\" dialog read \"The AI provider returned a response that did not match the required format. Retry or continue manually.\" with Cancel, Continue manually, Retry. Retry prepared the draft: \"Convert R-44 to a contract\" showed DOC-030 inbox Cost centre \"CC-AI-9911\" with Unverified. Converted unchanged to C-40; the Contract keeps that value Unverified (keys [\"field:doc_030_inbox_cost_centre\"]). With the stand-in breaking replies, the Fields header offered Retry Request-context Analysis (\"Fields Retry Request-context Analysis Run analysis Request-context Analysis failed.\"). After the stand-in recovered, Retry Request-context Analysis filled DOC-030 inbox Contract summary \"Two-year supply of fictional widgets\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:17:57.602Z",
+      "at": "2026-09-25T11:18:09.104Z"
+    }
+  ],
+  "records": [
+    {
+      "role": "administrator",
+      "request": "R-37",
+      "record": "M-24",
+      "lab": "inboxai"
+    },
+    {
+      "role": "administrator",
+      "request": "R-38",
+      "record": "M-25",
+      "lab": "inboxai"
+    },
+    {
+      "role": "administrator",
+      "request": "R-39",
+      "record": "C-37",
+      "lab": "inboxai"
+    },
+    {
+      "role": "administrator",
+      "request": "R-40",
+      "record": "C-38",
+      "lab": "inboxai"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-41",
+      "record": "M-26",
+      "lab": "inboxai"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-42",
+      "record": "M-27",
+      "lab": "inboxai"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-43",
+      "record": "C-39",
+      "lab": "inboxai"
+    },
+    {
+      "role": "legal_team_member",
+      "request": "R-44",
+      "record": "C-40",
+      "lab": "inboxai"
+    }
+  ],
+  "productBugs": [],
+  "guideFailures": [],
+  "articleHashesAtEnd": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  }
+}

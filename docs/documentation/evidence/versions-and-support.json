@@ -108,13 +108,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 compatibility reviewer (compat)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Help, the documentation reader, Edition details or the standalone export. I replayed the round 1 V-C51 walkthrough on the admin2 lab and all 15 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-25T11:14:39.367Z",
+    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of help.tsx, vite-documentation.ts, compiler.mjs, build.mjs, app-header.tsx, portal-shell.tsx and the Dockerfile. The reader, Help links and Edition details did not change; development builds now show pending-review guides with validation badges, which the guide already describes; the headers changed only branding. I replayed the DOC-029 V-C51 section for Administrator, Legal Team Member, Business User and operator on lab compatcmp built from 067c1646; all 15 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Help, the documentation reader, Edition details or the standalone export. I replayed the round 1 V-C51 walkthrough on the admin2 lab and all 15 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/support.json",
@@ -123,6 +123,30 @@
       {
         "path": "batches/DOC-029/compat-r3/review.json",
         "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      },
+      {
+        "path": "batches/DOC-030/compat/compat.json",
+        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
+      },
+      {
+        "path": "batches/DOC-030/compat/versions-and-support-replay.mjs",
+        "sha256": "ee3cf07518ff4dd612dce517cede9e449fba1e4bcbc51df45f4c11b95ef8266b"
+      },
+      {
+        "path": "batches/DOC-030/compat/versions-and-support-replay/lib.mjs",
+        "sha256": "6635d3892e430ad9a4d8a1526fa880f7f7a666bc9ba000117408c1d6ad3b0823"
+      },
+      {
+        "path": "batches/DOC-030/compat/versions-and-support-replay.json",
+        "sha256": "982b474b98e6b0597e3be2cd7fc5ee27f43de7fce1e05ad771ebbeb5d78f5318"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/versions-and-support-compatcmp.log",
+        "sha256": "87b693d408dc360378c6f4e0d2af817ccbc17ea5397aeeea97f44bb409eec43f"
+      },
+      {
+        "path": "batches/DOC-030/compat/versions-and-support-replay/doc030-admin-edition-details.png",
+        "sha256": "dba2d7748b5a195a2ebff343711ec4c564f22e83b259b7aaf3b0ca5d61e35465"
       }
     ]
   }

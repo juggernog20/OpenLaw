@@ -32,8 +32,8 @@ image IDs and seed timestamps; record them in your evidence.
 
 | Lab        | App                    | Mailpit                | State                                    |
 | ---------- | ---------------------- | ---------------------- | ---------------------------------------- |
-| `work`     | http://127.0.0.1:43300 | http://127.0.0.1:48425 | Helix seed, light profile, random seed 7 |
-| `firstrun` | http://127.0.0.1:43301 | http://127.0.0.1:48426 | Empty; for the first-run guide only      |
+| `work2`    | http://127.0.0.1:43300 | http://127.0.0.1:48425 | Helix seed, light profile, random seed 7 |
+| `firstrun2` | http://127.0.0.1:43301 | http://127.0.0.1:48426 | Empty; for the first-run guide only      |
 
 Accounts and roles are in `docs/documentation/VALIDATION.md` ("Repeatable
 fictional data and accounts"). Pass the seed demo password through the
@@ -41,7 +41,7 @@ environment variable `LAB_PASSWORD` only; never write it, a magic link, a cookie
 or a raw mail message into any file under `docs/`. Business Users sign in with a
 fresh magic link read from the lab's Mailpit API.
 
-The `work` lab is shared with other walkthrough agents running at the same time.
+The `work2` lab is shared with other walkthrough agents running at the same time.
 Create your own records, named `DOC-030 <group> <scenario> <timestamp>`, for every
 mutating step. Do not archive, delete or reconfigure seeded records or
 organization settings that another guide depends on; when a guide's step needs an

@@ -1,77 +1,93 @@
 {
   "articleId": "organisation-and-users",
-  "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
-  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
-  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-org, round 1)",
+  "contentSha256": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2 (shared Helix lab); openlaw-docs-80ceef9e-auth2w (owned unseeded lab) for the no-name branding, no-mailer invitation and last-Administrator checks",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org); DOC-030 corrections by DOC-030 source-review author agent (admin-org)",
+  "technicalReviewer": "DOC-030 source-review author agent (admin-org)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-org)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org)",
-  "technicalReviewer": "DOC-029r2 source-review author agent (admin-org)",
-  "verifiedAt": "2026-09-16T18:24:39Z",
+  "verifiedAt": "2026-09-25T11:12:56.625Z",
   "status": "pass",
-  "environment": "openlaw-docs-41255c61-admin2",
   "sources": [
     "docs/user-guides/organisation-and-users.md",
-    "docs/documentation/batches/DOC-029/admin-org/technical-review-r2.json",
-    "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json"
+    "docs/documentation/batches/DOC-030/admin-org/technical-review.json",
+    "docs/documentation/batches/DOC-030/admin-org/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/admin-org/walkthrough.json",
+    "docs/documentation/batches/DOC-030/admin-org/lib.mjs",
+    "docs/documentation/batches/DOC-030/admin-org/run.sh",
+    "docs/documentation/batches/DOC-030/admin-org/phase.sh",
+    "docs/documentation/batches/DOC-030/admin-org/org-users-restored.png",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md (SET-005 and its 2026-09-18 invite addendum)",
+    "docs/decision-records/DECISIONS-TECH-STACK.md (M43/3 logo copy addendum)",
+    "docs/decision-records/DECISIONS-DESIGN.md (DES-093)",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-users.tsx",
+    "apps/web/src/lib/roles.ts",
+    "apps/web/src/lib/organization-branding.ts",
+    "apps/web/src/components/shell/app-header.tsx",
+    "apps/web/src/components/portal/portal-brand.tsx",
+    "apps/web/src/routes/auth-layout.tsx",
+    "apps/api/src/modules/users/routes.ts",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/auth/instance.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/api/src/lib/email-logo.ts",
+    "apps/api/src/lib/email-layout.ts",
+    "apps/api/src/pipeline/notification-email.ts",
+    "apps/api/src/lib/mailer.ts",
+    "docs/user-guides/create-contract.md",
+    "docs/user-guides/create-matter.md",
+    "docs/user-guides/contract-tasks-and-dates.md",
+    "docs/user-guides/entity-obligations.md",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C36",
-      "coverage": ["C36"],
+      "coverage": [
+        "C36"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded Administrator Daniel Okafor and Legal Team Member Nadia Haddad on the shared admin2 documentation lab built from 57e77e38, with Mailpit.",
-        "Disposable invited users, a Portal-created Business User and one Contract, all named DOC-029r2 admin-org * or doc029r2-org-*.",
-        "The last-Administrator and no-saved-name checks ran on the owned unseeded lab openlaw-docs-41255c61-adminorg-auth2, which has one Administrator and no organization name."
+        "Shared work2 lab (openlaw-docs-80ceef9e-work2, Helix seed, light profile, random seed 7) built from 067c1646. Daniel Okafor (Administrator) signs in with a password in his own browser context; Nadia Haddad (Legal Team Member) and a Portal-created Business User check unauthorized administration in their own contexts.",
+        "Disposable invited users named DOC-030 admin-org V-C36 * (doc030-org-*@helix.example); sign-in and invitation links read from the lab Mailpit API.",
+        "Owned unseeded lab auth2w (openlaw-docs-80ceef9e-auth2w) with one Administrator (DOC-030 admin-org Avery Morgan) for the no-name branding, the no-mailer invitation messages under SMTP_URL-without-SMTP_FROM and unset email, the last-Administrator safeguards and the first Show archived."
       ],
       "expected": "Changes apply to the intended account and revoked sessions cease granting access. Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented.",
-      "actual": "27 recorded steps passed on 57e77e38. Nadia Haddad was redirected from Settings General and Users to /settings/profile, and the users and invite APIs answered 403. Organization name saved on Enter, Escape put the saved name back, and reload kept the saved value. A .txt file and a PNG just over 5 MB each showed \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\" and changed nothing; a 300 KB PNG and then an SVG saved. In a browser with no session, /auth/login and /portal/login showed the saved name above the sign-in form with one image named Organization logo. On the unseeded lab with no saved name both pages showed OpenLaw and no logo. Name and logo were restored and the sign-in page followed. Default timezone saved America/Toronto; Default locale offered only English (United States); the timezone was restored. Invite user offered Legal team member and Administrator; Send invite added an Invited row with Resend invite and Revoke invite and sent a set-password email. An address without @ kept the dialog open. Re-inviting the pending address with the same role resent with one row; a different role showed \"This user already exists with a different role.\" with no email; an active account showed \"This user has already activated their account.\"; a Business User's address was refused. After a magic-link sign-in the colleague's row stayed Invited with both invite actions. Setting a password from the latest link made it Active, and that Legal team member had no administration. Revoke invite removed a pending row. The role menu offered Administrator, Legal team member and Business user; promotion gave the colleague's live session Settings Users on its next navigation, and demotion made the next request 403. A Portal-created Business User promoted to Legal team member became Invited with no role control; Resend invite and a set password made it Active again; an activated account stayed Active when demoted and promoted again. Daniel's own row had no Sign out user or Archive, and self-archive was refused (409). Sign out user ended the colleague's session (401) while the row stayed Active and a password sign-in worked. Archive removed the row from the list, ended the session, and sign-in showed \"This account has been archived.\"; a Contract kept the archived person as Legal Owner. Show archived then Restore returned the row to Active; the old session stayed revoked and a new sign-in worked. On the owned auth lab, demoting the only Administrator showed \"You cannot demote the last Administrator.\" and archiving it was refused with \"You cannot archive the last Administrator.\" In the same lab, an invited staff account became Active by signing in through single sign-on while Legal User Authentication had it on.",
+      "actual": "31 recorded browser steps passed for this article (25 on work2, 6 on auth2w). Nadia was sent from Settings General and Users to /settings/profile and the users and invite APIs answered 403; a Business User opening /settings, /settings/general and /settings/users landed in the Portal. Organization name saved on Enter, Escape restored the saved name, reload kept it. Upload refused a text file and a PNG over 5 MB with \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\" and an unreadable .png and a 4001 x 4001 PNG with \"The logo must be a readable PNG, JPEG, WebP or SVG with no more than 16 million pixels.\"; a PNG and an SVG saved; the pane had no remove control. The name and logo appeared on /auth/login and /portal/login without a session, in the staff app header and in the Portal header, and in the invitation email header (org-logo image); with no name the sign-in pages and a test email showed OpenLaw and the OpenLaw mark. Default timezone saved America/Toronto and was restored; Default locale offered only English (United States). Invite user offered Legal team member and Administrator; Send invite added an Invited row with Resend invite and Revoke invite and sent \"Set your OpenLaw password\" with a Set password button and a 1 hour expiry. An invalid address kept the dialog open; a same-role re-invite resent with one row; a different role gave \"This user already exists with a different role.\"; Nadia and Jonas Weber gave \"This user has already activated their account.\"; Resend invite showed Saved and a new link. A first sign-in by a sign-in link and a Set password sign-in each turned the row Active; Revoke invite removed a pending row. With no mailer, Send invite and Resend invite showed \"The invite was not sent: this instance cannot send email.\" followed by \"Set SMTP_URL and SMTP_FROM together in the environment.\" (environment relay without SMTP_FROM) or \"Set up outbound email in Settings → Advanced → Outbound email.\" (unset), and no row was added. The role control offered Administrator, Legal team member, Business user; Administrator applied on the colleague's next navigation and the demotion gave 403 on the next request; a Portal-created Business User promoted to Legal team member stayed Active with its role control. Daniel's own row had no Archive and no … button; self-archive answered \"You cannot archive yourself.\"; on auth2w the only Administrator got \"You cannot demote the last Administrator.\" and \"You cannot archive the last Administrator.\". The row's … button (\"More actions for\" the email) offered Sign out user; the session went from 200 to 401 and a new password sign-in worked. Archive hid the row, ended the session, refused sign-in with \"This account has been archived.\", sent no sign-in link, and left the archived colleague as Legal Owner of a fixture Contract. Show archived appeared only once an account was archived; Restore returned the row to Active, the old session stayed 401 and a new sign-in worked.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r2-1.mjs",
-        "docs/documentation/batches/DOC-029/admin-org/lib.mjs",
-        "docs/documentation/batches/DOC-029/admin-org/runs-r2/org-2026-09-16T18-06-08-941Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs-r2/emailStored-2026-09-16T18-18-29-961Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs-r2/sso-2026-09-16T18-20-42-380Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/runs-r2/twoFactor-2026-09-16T18-21-22-503Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/org-users-restored-r2.png",
-        "docs/documentation/batches/DOC-029/admin-org/fixtures-r2/doc029r2-logo.svg",
-        "docs/documentation/batches/DOC-029/admin-org/fixtures-r2/doc029r2-not-an-image.txt"
+        "docs/documentation/batches/DOC-030/admin-org/walkthrough.json",
+        "docs/documentation/batches/DOC-030/admin-org/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/admin-org/lib.mjs",
+        "docs/documentation/batches/DOC-030/admin-org/run.sh",
+        "docs/documentation/batches/DOC-030/admin-org/phase.sh",
+        "docs/documentation/batches/DOC-030/admin-org/org-users-restored.png",
+        "docs/documentation/batches/DOC-030/admin-org/technical-review.json"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
-    "The last-Administrator safeguard and the no-saved-name sign-in branding were checked on the owned auth lab (one Administrator, no organization name) because the shared admin2 lab has several Administrators and a saved name that were not changed for that purpose.",
-    "The pane has no logo removal control. The original empty logo was restored through PATCH /api/v1/org/general after the check.",
-    "Logo checks used a PNG, an SVG, a text file and an oversize PNG. JPEG and WebP uploads were not tried. The two PNG fixtures were a 1x1 PNG padded with zero bytes, generated at run time in a scratch directory and not retained.",
-    "Offboarding reassignment was checked as the negative claim only: a Contract kept its archived Legal Owner. Reassigning Owners, Matter roles, Tasks, Obligations and Approvals belongs to the linked guides and was not replayed here.",
-    "The admin2 lab is shared with other DOC-029r2 agents. This walkthrough created only records named DOC-029r2 admin-org * or doc029r2-org-* and restored every organization setting it changed.",
-    "Help discovery for settings.general and settings.users was not part of V-C36 and was not checked."
+    "The work2 lab is shared with other DOC-030 agents. This walkthrough created only records named DOC-030 admin-org V-C36 * or doc030-org-*, and a Contract titled 'DOC-030 admin-org V-C36 offboarding contract'. It changed the organization name, logo and default timezone for about a minute and restored them; the logo (none) was restored through PATCH /api/v1/org/general because the pane has no remove control.",
+    "The no-name branding, no-mailer invitation messages, last-Administrator safeguards and first appearance of Show archived were checked on the owned auth2w lab, because work2 has a saved name, a mailer, several Administrators and archived accounts that other guides depend on.",
+    "The promoted-Business-User Invited branch needs an account that has never signed in; every Portal-created Business User has, so the row stayed Active as the guide says. The Invited branch was not reproduced.",
+    "Upgrade-time copies of logos saved before email logos existed were not exercised; the labs were built fresh.",
+    "Reassignment was checked as the negative claim only (a Contract kept its archived Legal Owner). Reassigning records belongs to the linked guides. JPEG and WebP uploads were not tried.",
+    "The seeded Business User Jonas Weber hit the sign-in link limit ('Too many sign-in link requests. Try again later.') on the shared lab in a development run; the recorded run used a fresh Portal-created Business User for the Settings refusal and Jonas only for the refused invitation."
   ],
   "previousEvidence": {
-    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "contentSha256": "8542af6a2480582ec864bbf22558bb9c1ec9fa14b8bd17f800d7490226e1835a",
-    "verifiedAt": "2026-09-16T15:49:45Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
     "contentSha256": "d4632405a67d650492c323898ccb0762a957e4792570f21c0eb76496961efa72",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. Invitations, roles, sessions and archive do not involve the wizard Authentication step. Organization branding on sign-in pages is unchanged by this commit.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T18:24:39Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

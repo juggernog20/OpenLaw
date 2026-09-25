@@ -1,98 +1,96 @@
 {
   "articleId": "archive-and-delete-documents",
-  "contentSha256": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (documents)",
-  "technicalReviewer": "DOC-029 source-review author agent (documents)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (documents, round 1)",
+  "contentSha256": "5ddced602dd598518d23d7927a1204ef9fd2d3486697527b279ac9cfcebd7ece",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (contracts-c)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:44:43.092Z",
+  "technicalReviewer": "DOC-030 source-review author agent (contracts-c)",
+  "author": "DOC-030 source-review author agent (contracts-c)",
+  "verifiedAt": "2026-09-25T11:41:23.696Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/archive-and-delete-documents.md",
+    "docs/documentation/batches/DOC-030/contracts-c/technical-review.json",
+    "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/contracts-c/walkthrough.json",
+    "docs/documentation/batches/DOC-030/contracts-c/lib.mjs",
+    "docs/documentation/batches/DOC-030/contracts-c/documents.mjs",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/evidence/archive-and-delete-documents.json",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-010, DOC-015)",
+    "docs/user-guides/document-versions.md",
+    "messages/en-US.json",
     "apps/web/src/components/documents/documents-card.tsx",
     "apps/web/src/components/documents/bulk-document-actions.tsx",
     "apps/web/src/components/documents/document-filter-bar.tsx",
+    "apps/web/src/routes/documents.tsx",
     "apps/api/src/modules/documents/routes.ts",
-    "apps/api/src/lib/document-erasure.ts",
-    "docs/decision-records/DECISIONS-DOCUMENTS.md",
-    "docs/documentation/batches/DOC-029/documents/technical-review.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+    "apps/api/src/modules/documents/service.ts",
+    "apps/api/src/lib/document-erasure.ts"
   ],
   "scenarios": [
     {
       "id": "V-C54",
-      "coverage": ["C54"],
+      "coverage": [
+        "C54"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab; a second session of the same role for the stale-state check.",
-        "Walkthrough-created Contracts with a three-Version Primary Document pinned on v2 and further disposable Documents, and Knowledge Items with two Documents, all named with DOC-029 documents and a run stamp.",
-        "Record archive and restore, the second session's restore, and the rename during the delete dialog were API fixture actions."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 (app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e), Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context; staff use password sign-in, Business Users a fresh magic link read from the lab Mailpit.",
+        "Per role, a disposable DOC-030 NDA Contract created through the lab API with a primary Document of 3 Versions (executed designation on Version 2) and further single-Version Documents, and a DOC-030 Knowledge Item with two Documents. Fixture files come from docs/documentation/batches/DOC-029/documents/fixtures.",
+        "Nadia Haddad (Legal Team Member) and Daniel Okafor (Administrator) sign in with passwords; a second session of the same person makes the competing restore; Mei Tanaka (Business User) signs in with a fresh magic link."
       ],
-      "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
-      "actual": "7 recorded browser steps passed for this role. Archive from the Actions menu removed the Document; Show archived showed its Archived row, and the read-back kept three Versions, Primary, the Executed pin on v2 and downloadable files. Restore from the row menu brought it back with its designations. Checkboxes with Archive and then Restore in the selection bar archived and restored two Documents. While the Contract was archived there was no Show archived or Upload, only Compare in row menus, and restore was refused with 409 until the Contract was restored. After another session restored a Document, Restore on the stale row showed \"This document is not archived.\" and a reload showed it live. This role had no Delete in the row menu or selection bar and a direct deletion answered 403 with all three Versions kept. A Knowledge Item's Documents section archived and restored a Document, offered Set as primary and had no New folder.",
+      "expected": "Archive/restore preserves supported history (Versions, files, primary and executed designations); restore is refused while the owning record is archived and gives a stale-state message after a competing restore. Permanent deletion by an Administrator removes the Document, its Versions and files and the primary reference, keeps the activity record, and is refused after a rename. Other roles cannot perform Administrator deletion; Business Users have no archive, restore or delete controls; no single Version can be deleted.",
+      "actual": "9 recorded browser steps for this role passed on 067c1646 (sections documents of walkthrough.json). Includes the Business User negative check by Mei Tanaka (seeded Business User on the Contract team, fresh magic link). (1) Archive a Document steps 1-3: open the Documents tab, the Document's Actions menu, Archive; check it leaves the list; turn on Show archived: Row menu offered [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"]. Archive removed \"archive-main-legal-20260925114020.docx\" from the list; Show archived drew \"archive-main-legal-20260925114020.docx Primary Archived Draft · theirs v3 Sep 25 Uploaded by Nadia Haddad NH\". Read-back: 3 Versions, still primary, executed designation on Version 2, every Version download 200. The Documents repository search (200) did not list it. (2) Restore a Document steps 1-3 on the owning record: Show archived, the row's Actions menu, Restore: Restore in the archived row's Actions menu made it live. With Show archived off its row reads \"archive-main-legal-20260925114020.docx Primary No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DOC-03\"; read-back keeps 3 Versions, primary, executed designation on Version 2. (3) Archive several live Documents: select their checkboxes and Archive in the selection bar; then, with Show archived on, select both and Restore in the selection bar: Selection bar for two live Documents read \"2 selected Move Archive\"; Archive removed both rows. With Show archived on, selecting both and Restore made both live again. (4) Restore a Document step 1 and 2 in the Documents repository: Filter, Show archived, then the repository's Restore action: With the Record filter set to C-449, the repository listed its live Documents (3 rows) but not the archived one; Filter > Show archived added \"archive-repo-legal-20260925114020.txt Archived C-449 · DOC-030 contracts-c archive-and-delete Legal 20260925114020 Draft · ours TXT 46 byte\"; its Restore action made it live (read-back). (5) If restoration is refused because the owning record is archived: archive the Contract (setup), try to restore its archived Document, restore the Contract first, then restore the Document: Archived C-449: no Show archived switch, no Upload, row menus offered [\"Compare with previous\"]; restoring the Document answered 409 \"This contract is archived. Restore it before changing its paper.\". After the Contract was restored, Show archived > Restore made the Document live. (6) Restore a Document: a second session restores the same archived Document first; this page selects Restore on its stale row, reads the message and reloads: A second session restored the Document while this page still showed it archived. Restore on the stale row showed \"This document is not archived.\". After reload it was live. (7) Archive a Document step 1 in a Knowledge Item's Documents section: Archive from the row's Actions, Show archived, Restore: Knowledge Item \"DOC-030 contracts-c archive Knowledge Legal 20260925114020\": Archive removed \"knowledge-b-legal-20260925114020.txt\", Show archived showed it marked Archived, Restore made it live. (8) Before you start and Permanently delete: a Legal Team Member looks for Delete in the row menu and the selection bar, and tries a direct deletion: Row menu offered [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"] (no Delete). Selection bar offered [\"Move\",\"Archive\",\"\"] (no Delete). Direct deletion answered 403 \"You do not have permission to perform this action.\"; the Document kept its 3 Versions. (9) Before you start: a Business User on the Contract team reads its Documents in the Portal and tries archive, restore and delete: Team add answered 201; Mei Tanaka signed in with a fresh magic link. The Portal Contract page lists \"archive-main-legal-20260925114020.docx\" and shows no Archive, Restore, Delete or Show archived control. Archive answered 403, restore 403, delete 403; the archived Document stayed archived.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.json",
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/lib.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/documents.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/administrator-delete-dialog.png"
       ]
     },
     {
       "id": "V-C54",
-      "coverage": ["C54"],
+      "coverage": [
+        "C54"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab; a second session of the same role for the stale-state check.",
-        "Walkthrough-created Contracts with a three-Version Primary Document pinned on v2 and further disposable Documents, and Knowledge Items with two Documents, all named with DOC-029 documents and a run stamp.",
-        "Record archive and restore, the second session's restore, and the rename during the delete dialog were API fixture actions."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 (app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e), Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context; staff use password sign-in, Business Users a fresh magic link read from the lab Mailpit.",
+        "Per role, a disposable DOC-030 NDA Contract created through the lab API with a primary Document of 3 Versions (executed designation on Version 2) and further single-Version Documents, and a DOC-030 Knowledge Item with two Documents. Fixture files come from docs/documentation/batches/DOC-029/documents/fixtures.",
+        "Nadia Haddad (Legal Team Member) and Daniel Okafor (Administrator) sign in with passwords; a second session of the same person makes the competing restore; Mei Tanaka (Business User) signs in with a fresh magic link."
       ],
-      "expected": "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references. Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide.",
-      "actual": "11 recorded browser steps passed for this role. Archive from the Actions menu removed the Document; Show archived showed its Archived row, and the read-back kept three Versions, Primary, the Executed pin on v2 and downloadable files. Restore from the row menu brought it back with its designations. Checkboxes with Archive and then Restore in the selection bar archived and restored two Documents. While the Contract was archived there was no Show archived or Upload, only Compare in row menus, and restore was refused with 409 until the Contract was restored. After another session restored a Document, Restore on the stale row showed \"This document is not archived.\" and a reload showed it live. Delete opened \"Delete this document?\" naming the Document and its 3 versions; Delete stayed disabled until delete was typed and Cancel kept the Document. A rename while the dialog was open made the deletion refused. Typing delete removed the Document, its three Version downloads answered 404, no other Document became Primary, and the Contract activity still named it. Selection-bar Delete of two Documents also needed delete typed. An earlier Version's menu had no Delete and a single-Version delete answered 404. A Knowledge Item's Documents section archived and restored a Document, offered Set as primary and had no New folder.",
+      "expected": "Archive/restore preserves supported history (Versions, files, primary and executed designations); restore is refused while the owning record is archived and gives a stale-state message after a competing restore. Permanent deletion by an Administrator removes the Document, its Versions and files and the primary reference, keeps the activity record, and is refused after a rename. Other roles cannot perform Administrator deletion; Business Users have no archive, restore or delete controls; no single Version can be deleted.",
+      "actual": "13 recorded browser steps for this role passed on 067c1646 (sections documents of walkthrough.json). The final guide text check is counted here. (1) Archive a Document steps 1-3: open the Documents tab, the Document's Actions menu, Archive; check it leaves the list; turn on Show archived: Row menu offered [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\",\"Delete\"]. Archive removed \"archive-main-admin-20260925114020.docx\" from the list; Show archived drew \"archive-main-admin-20260925114020.docx Primary Archived Draft · theirs v3 Sep 25 Uploaded by Daniel Okafor DO\". Read-back: 3 Versions, still primary, executed designation on Version 2, every Version download 200. The Documents repository search (200) did not list it. (2) Restore a Document steps 1-3 on the owning record: Show archived, the row's Actions menu, Restore: Restore in the archived row's Actions menu made it live. With Show archived off its row reads \"archive-main-admin-20260925114020.docx Primary No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DOC-03\"; read-back keeps 3 Versions, primary, executed designation on Version 2. (3) Archive several live Documents: select their checkboxes and Archive in the selection bar; then, with Show archived on, select both and Restore in the selection bar: Selection bar for two live Documents read \"2 selected Move Archive Delete\"; Archive removed both rows. With Show archived on, selecting both and Restore made both live again. (4) Restore a Document step 1 and 2 in the Documents repository: Filter, Show archived, then the repository's Restore action: With the Record filter set to C-450, the repository listed its live Documents (3 rows) but not the archived one; Filter > Show archived added \"archive-repo-admin-20260925114020.txt Archived C-450 · DOC-030 contracts-c archive-and-delete Admin 20260925114020 Draft · ours TXT 46 byte\"; its Restore action made it live (read-back). (5) If restoration is refused because the owning record is archived: archive the Contract (setup), try to restore its archived Document, restore the Contract first, then restore the Document: Archived C-450: no Show archived switch, no Upload, row menus offered [\"Compare with previous\"]; restoring the Document answered 409 \"This contract is archived. Restore it before changing its paper.\". After the Contract was restored, Show archived > Restore made the Document live. (6) Restore a Document: a second session restores the same archived Document first; this page selects Restore on its stale row, reads the message and reloads: A second session restored the Document while this page still showed it archived. Restore on the stale row showed \"This document is not archived.\". After reload it was live. (7) Archive a Document step 1 in a Knowledge Item's Documents section: Archive from the row's Actions, Show archived, Restore: Knowledge Item \"DOC-030 contracts-c archive Knowledge Admin 20260925114020\": Archive removed \"knowledge-b-admin-20260925114020.txt\", Show archived showed it marked Archived, Restore made it live. (8) Permanently delete steps 1-4: Actions, Delete; read Delete this document?; try Delete with the field empty and with the Document name; Cancel: Delete opened \"Delete this document?\" reading \"Delete this document? archive-main-admin-20260925114020.docx and its 3 versions are removed, and the stored files with them. You cannot undo this. Type \\\"delete\\\" to confirm Cancel Delete\". Delete stayed disabled with the field empty and with the Document name typed. Cancel closed it; the Document kept 3 Versions. (9) If deletion fails: someone renames the Document while the Delete dialog is open; type delete and select Delete: With the dialog open, a second request renamed the Document. Delete was refused with \"Type the document's name exactly to delete it.\"; the Document remains as \"archive-bulk-2-admin-20260925114020.txt renamed\". (10) Permanently delete steps 3-4 on an archived Document: Show archived, archive the primary Document first, Actions > Delete, type delete, Delete; check the row, Version downloads, primary reference and activity: Archived first, then with Show archived on, Delete and typing delete removed \"archive-main-admin-20260925114020.docx\" (gone with archived rows included). The 3 Version downloads answered 404, 404, 404. No remaining Document is primary (contract primaryDocumentId null). The Contract activity read (200) still names the Document. (11) Permanently delete several Documents: select their checkboxes, Delete in the selection bar, type delete: The selection bar's Delete opened \"Delete 2 documents?\" reading \"Delete 2 documents? archive-del-2-admin-20260925114020.txt archive-del-1-admin-20260925114020.txt The selected documents and all their versions will be permanently deleted. This cannot be undone. Type\". Delete was disabled until delete was typed; then both Documents were removed. (12) You cannot delete just one Version: open an earlier Version's actions and the Version rows' Type column: The earlier Version's menu offered [\"Mark as executed copy\"] (no Delete). The Documents table has a Type column (1) with 2 Type controls on this Document's Version rows. A request to delete one Version answered 404; the Document kept both Versions. (13) Guide text check: the labels walked are in the reviewed content: All ten labels are in the reviewed guide text.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/documents/r1-admin-delete-dialog.png"
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.json",
+        "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/lib.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/documents.mjs",
+        "docs/documentation/batches/DOC-030/contracts-c/administrator-delete-dialog.png"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the article author and the source reviewer; not a human user study and not feature-owner approval.",
-    "Removal of stored originals, previews and extracted text was observed through 404 Version downloads, not by listing the storage volume. Audit log entries were not read; the Contract activity read was.",
-    "A storage failure during deletion was not produced, so the partial-failure paragraph was not exercised.",
-    "When a rename made the deletion refuse, the dialog's message read \"Type the document's name exactly to delete it.\" while the dialog asks for the word delete. The refusal matches the article; the message wording is reported separately as a possible product issue.",
-    "Removal from normal search after archive was not checked.",
-    "Business User limits (no archive, restore or delete controls, 403 for each) are a supplementary business_user step; V-C54 does not require that role."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "A storage failure during deletion (If deletion fails) cannot be induced on the shared lab and was not exercised; the renamed-Document refusal was.",
+    "Removal of derived previews and extracted text is not visible in the app beyond the Version downloads, which answered 404 after deletion. The Audit log was not read; the Contract activity read still named the deleted Document.",
+    "The Version Type column was checked for presence (a Type column and a Type control on each Version row); changing a Version's type belongs to document-versions and was not exercised, as the technical review allows.",
+    "work2 is shared with other DOC-030 agents. Only records named DOC-030 contracts-c were created. One development run before the recorded run timed out waiting for a Contract's Documents heading on the shared lab; the recorded run needed no reload. Development runs left more DOC-030 contracts-c Contracts and Knowledge Items; they are not credited."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "f00bcd882a961a9944be0aed0bc83a991a29870eb318dbdfe8ef66c52c2c4551",
-    "verifiedAt": "2026-09-07T21:30:10.766Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "5ddced602dd598518d23d7927a1204ef9fd2d3486697527b279ac9cfcebd7ece",
+    "verifiedAt": "2026-09-25T11:41:23.696Z"
   },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/documents.json",
-        "sha256": "3129c2786313b928fdd642e565cda91ea74a4bd3467b1839b0dfcec7d3ee8b7a"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

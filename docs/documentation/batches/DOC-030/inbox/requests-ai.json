@@ -1,0 +1,146 @@
+{
+  "requests": {
+    "administrator:ai-matter": {
+      "number": 37,
+      "reference": "R-37",
+      "id": "01a0d846-3d8f-7bb6-9aa5-65c377b66f67",
+      "title": "DOC-030 inbox Admin ai-matter 876878",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-matter-1.pdf",
+          "bytes": 942
+        },
+        {
+          "name": "doc030-inbox-admin-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.137Z"
+    },
+    "administrator:ai-matter-edit": {
+      "number": 38,
+      "reference": "R-38",
+      "id": "01a0d846-3ddf-774c-992d-d3d28a12a093",
+      "title": "DOC-030 inbox Admin ai-matter-edit 876878",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.166Z"
+    },
+    "administrator:ai-contract": {
+      "number": 39,
+      "reference": "R-39",
+      "id": "01a0d846-3dfa-7749-8b32-4e8efa135aed",
+      "title": "DOC-030 inbox Admin ai-contract 876878",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-contract-1.pdf",
+          "bytes": 946
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.206Z"
+    },
+    "administrator:ai-contract-fail": {
+      "number": 40,
+      "reference": "R-40",
+      "id": "01a0d846-3e1f-735e-aebb-5b8cfc807724",
+      "title": "DOC-030 inbox Admin ai-contract-fail 876878",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-contract-fail-1.pdf",
+          "bytes": 956
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.238Z"
+    },
+    "legal_team_member:ai-matter": {
+      "number": 41,
+      "reference": "R-41",
+      "id": "01a0d846-3e9e-7a5e-80b0-298fd1ec87df",
+      "title": "DOC-030 inbox Member ai-matter 876878",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-matter-1.pdf",
+          "bytes": 944
+        },
+        {
+          "name": "doc030-inbox-member-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.384Z"
+    },
+    "legal_team_member:ai-matter-edit": {
+      "number": 42,
+      "reference": "R-42",
+      "id": "01a0d846-3ed3-7173-8ee1-e3d608367a39",
+      "title": "DOC-030 inbox Member ai-matter-edit 876878",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.410Z"
+    },
+    "legal_team_member:ai-contract": {
+      "number": 43,
+      "reference": "R-43",
+      "id": "01a0d846-3eed-76d8-be83-b05b4c96ec74",
+      "title": "DOC-030 inbox Member ai-contract 876878",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-contract-1.pdf",
+          "bytes": 948
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.453Z"
+    },
+    "legal_team_member:ai-contract-fail": {
+      "number": 44,
+      "reference": "R-44",
+      "id": "01a0d846-3f1a-7ef1-b2cb-d9210bb911eb",
+      "title": "DOC-030 inbox Member ai-contract-fail 876878",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-contract-fail-1.pdf",
+          "bytes": 958
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.500Z"
+    }
+  }
+}

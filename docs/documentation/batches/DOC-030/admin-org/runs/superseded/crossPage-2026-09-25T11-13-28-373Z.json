@@ -1,0 +1,76 @@
+{
+  "section": "crossPage",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2",
+  "labProject": "openlaw-docs-80ceef9e-auth2",
+  "appUrl": "http://127.0.0.1:43310",
+  "mailUrl": "http://127.0.0.1:48435",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "base lab environment",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T11:13:28.374Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "OpenLaw checks the account's actual role, whichever sign-in page the person opened",
+      "expected": "With Legal password sign-in off, a Legal Team Member is refused on the Portal page too; a Business User with a password signs in on the staff page and lands in the Portal",
+      "startedAt": "2026-09-25T11:13:29.542Z",
+      "finishedAt": "2026-09-25T11:13:33.509Z",
+      "actual": "With Email and password off under Legal User Authentication, Nadia's password sign-in on the Business Portal page was refused (\"Password sign-in is disabled for this account.\"; me 401). A Business User's password sign-in on the staff page succeeded and landed on /portal/onboarding (business_user). Legal password sign-in was turned back on.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Business Users sign in only with the methods enabled under Business Portal Authentication",
+      "expected": "With Business Email and password off, a Business User with a password is refused on the Portal and staff pages; a sign-in link still works",
+      "startedAt": "2026-09-25T11:13:33.510Z",
+      "finishedAt": "2026-09-25T11:14:06.295Z",
+      "actual": "Check failed: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Email me a sign-in link' }).first()\u001b[22m ",
+      "result": "fail"
+    }
+  ],
+  "finishedAt": "2026-09-25T11:14:06.301Z",
+  "startPolicy": {
+    "legal": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    },
+    "business": {
+      "password": false,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    }
+  },
+  "resetPolicy": {
+    "legal": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    },
+    "business": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    }
+  }
+}

@@ -17,7 +17,7 @@
       "articleId": "search-and-views",
       "scenario": ["V-C04"],
       "contentSha256Before": "e4ba43ae7a2eb169648b165d054a048d9d1125c132aa89ab649733eeaa14633a",
-      "contentSha256": "f7331694a7dfe8eee145358839727704bc42a2ccefdacdeacfa89bd8224aa0ac",
+      "contentSha256": "e68143e10c8c688b6731c7eeaf369d2174cff91a9b6df81e795e0b4f3381bf1a",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -168,6 +168,12 @@
           "before": "Generic failure and duplicate-name guidance.",
           "after": "Named No records match this question., Search could not load (header), Search could not load. Try again. (page), The next results could not be read. Try again., This search could not open. Try again., the duplicate-name refusal You already have a view with that name on this list. (case-insensitive), and the 25-per-list limit.",
           "source": "search.tsx; search-input.tsx; saved-searches.tsx search.openError; list-views/routes.ts NAME_TAKEN, TOO_MANY; packages/db/src/schema/list-views.ts lower(name) unique index; MAX_LIST_VIEWS_PER_SURFACE = 25"
+        },
+        {
+          "claim": "Archived Field notice in the dialog (walkthrough finding)",
+          "before": "Only Unavailable Field conditions were removed. was named.",
+          "after": "The results page and a saved search run from the header say Unavailable Field conditions were removed. Selecting the saved search under Saved searches in the dialog says Unavailable search conditions were removed.",
+          "source": "messages/en-US.json search.fields.removed and search.saved.conditionsRemoved; apps/web/src/components/search/saved-searches.tsx select; apps/web/src/routes/search.tsx FIELD_NOTICES.removed"
         }
       ],
       "confirmed": [

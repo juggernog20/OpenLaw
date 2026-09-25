@@ -1,0 +1,419 @@
+{
+  "section": "org",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "work2",
+  "labProject": "openlaw-docs-80ceef9e-work2",
+  "appUrl": "http://127.0.0.1:43300",
+  "mailUrl": "http://127.0.0.1:48425",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "shared work2 lab as created (no phase change)",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:40:49.376Z",
+  "steps": [
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": null,
+      "action": "Unauthorized administration: a Legal Team Member opens Settings General and Settings Users",
+      "expected": "Lands on Profile; the users and invite APIs refuse",
+      "startedAt": "2026-09-25T10:40:50.550Z",
+      "finishedAt": "2026-09-25T10:40:53.959Z",
+      "actual": "Settings General and Settings Users both sent Nadia to /settings/profile (first heading \"Personal\"). GET /api/v1/users answered 403; POST /api/v1/auth/invites answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": null,
+      "action": "Unauthorized administration: a Business User opens Settings",
+      "expected": "Sent to the Portal",
+      "startedAt": "2026-09-25T10:40:53.962Z",
+      "finishedAt": "2026-09-25T10:40:58.293Z",
+      "actual": "doc030-org-bu0-mugtybq7@helix.example entered through a Portal sign-in link on an allowed domain ([\"helix.example\"]) and is a Business User. Opening /settings, /settings/general, /settings/users landed on {\"/settings\":\"/portal/onboarding\",\"/settings/general\":\"/portal/onboarding\",\"/settings/users\":\"/portal/onboarding\"}. GET /api/v1/users answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/general",
+      "action": "Update organization details step 2: Organization name saves on Enter, Escape restores before saving, reload keeps the saved value",
+      "expected": "Saved status; Escape restores the previous name; value survives reload",
+      "startedAt": "2026-09-25T10:40:58.309Z",
+      "finishedAt": "2026-09-25T10:40:59.823Z",
+      "actual": "Enter showed Saved and \"DOC-030 admin-org V-C36 Helix mugtybq7\" survived reload. Escape on an unsaved draft put \"DOC-030 admin-org V-C36 Helix mugtybq7\" back in the field, and after reload the saved name was still \"DOC-030 admin-org V-C36 Helix mugtybq7\".",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/general",
+      "action": "Update organization details step 3: Upload beside Logo; wrong type or over 5 MB shows the 5 MB message; unreadable or over 16 million pixels shows the readability message; a supported file saves",
+      "expected": "Four refusals with the quoted messages and no change; a PNG and an SVG save",
+      "startedAt": "2026-09-25T10:40:59.824Z",
+      "finishedAt": "2026-09-25T10:41:05.725Z",
+      "actual": "Refusals: {\"text file\":\"5 MB message\",\"PNG over 5 MB\":\"5 MB message\",\"unreadable .png\":\"readability message\",\"4001 x 4001 PNG (16,008,001 pixels)\":\"readability message\"}; the saved logo stayed unchanged after them. The 5 MB message read \"That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\". The readability message read \"The logo must be a readable PNG, JPEG, WebP or SVG with no more than 16 million pixels.\". A 64 x 64 PNG then showed Saved, and an SVG showed Saved and was displayed beside Logo after reload. The General pane had 0 remove, delete or clear buttons.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/",
+      "action": "The saved Organization name and logo appear on the staff and Business Portal sign-in pages without an account, and in the staff app and Portal headers after sign-in",
+      "expected": "Both sign-in pages show the name and an Organization logo image; both headers show them",
+      "startedAt": "2026-09-25T10:41:05.729Z",
+      "finishedAt": "2026-09-25T10:41:11.683Z",
+      "actual": "In a browser with no session, /auth/login began \"DOC-030 admin-org V-C36 Helix mugtybq7 Legal Portal Powered by OpenLaw Sign in Email Password Sign i\" with 1 image named Organization logo; /portal/login began \"DOC-030 admin-org V-C36 Helix mugtybq7 Legal Portal Powered by OpenLaw Business Portal sign-in Email\" with 1. Signed in, the staff app header read \"openlaw / DOC-030 admin-org V-C36 Helix mugtybq7 / Help 9+ DO\" with 1 SVG logo image, and the Business User's Portal header read \"openlaw / DOC-030 admin-org V-C36 Helix mugtybq7 Legal portal Sign out\" with 1.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Invite a colleague steps 1 to 3: Invite user, Display name, Email, Role Legal team member, Send invite",
+      "expected": "Role offers Legal team member and Administrator; new Invited row; a Set password email that expires in 1 hour, with the organization name and logo in its header",
+      "startedAt": "2026-09-25T10:41:11.683Z",
+      "finishedAt": "2026-09-25T10:41:13.757Z",
+      "actual": "Role radios were [\"Legal team member\",\"Administrator\"]. After Send invite the row read Invited with actions [\"Resend invite\",\"Revoke invite\"] and no role control. Mailpit received \"Set your OpenLaw password\" with a Set password button and the line \"The link expires in 1 hour\". Its header named \"DOC-030 admin-org V-C36 Helix mugtybq7\" and showed the inline image org-logo@openlaw (the uploaded logo, not the OpenLaw mark).",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/general",
+      "action": "Restore the organization name and logo; sign-in pages and email follow",
+      "expected": "Original name saved by leaving the field; original logo restored",
+      "startedAt": "2026-09-25T10:41:13.758Z",
+      "finishedAt": "2026-09-25T10:41:16.553Z",
+      "actual": "Typing \"Helix Software Group\" and leaving the field showed Saved and survived reload. The original logo (none) was restored through PATCH /api/v1/org/general (200) because the pane has no remove control. /auth/login then showed \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Email Password Sign\" with 0 logo images. The shared organization identity was changed for about a minute.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/general",
+      "action": "Update organization details steps 4 and 5: Default timezone saves; reload; Default locale offers English (United States) only",
+      "expected": "Timezone saved and restored; one locale option",
+      "startedAt": "2026-09-25T10:41:16.554Z",
+      "finishedAt": "2026-09-25T10:41:18.030Z",
+      "actual": "Default timezone saved America/Toronto and kept it after reload. Default locale offered only [\"English (United States)\"]. The timezone was restored to Europe/London.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "OpenLaw rejects an invalid address",
+      "expected": "No row is created",
+      "startedAt": "2026-09-25T10:41:18.031Z",
+      "finishedAt": "2026-09-25T10:41:20.427Z",
+      "actual": "The dialog stayed open with the browser message \"Please include an '@' in the email address. 'doc030-org-invalid-address' is missing an '@'.\" and no row was added (72 users before and after). The invite route refused a malformed address with 400.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Inviting an already pending address with the same role resends its invitation",
+      "expected": "A new email; still one row",
+      "startedAt": "2026-09-25T10:41:20.428Z",
+      "finishedAt": "2026-09-25T10:41:21.742Z",
+      "actual": "The dialog closed, a new \"Set your OpenLaw password\" email arrived, and the table still had exactly 1 row for the address.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "An invitation that names a different role for a pending address is refused",
+      "expected": "\"This user already exists with a different role.\"; no email",
+      "startedAt": "2026-09-25T10:41:21.742Z",
+      "finishedAt": "2026-09-25T10:41:25.052Z",
+      "actual": "The dialog showed \"This user already exists with a different role.\" and Mailpit received 0 messages.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "An invitation for an account that has already signed in is refused; a Business User's address gets the same refusal",
+      "expected": "\"This user has already activated their account.\" for Nadia and for Jonas",
+      "startedAt": "2026-09-25T10:41:25.053Z",
+      "finishedAt": "2026-09-25T10:41:27.238Z",
+      "actual": "Invite user answered {\"nadia.haddad@helix.example\":\"This user has already activated their account.\",\"jonas.weber@helix.example\":\"This user has already activated their account.\"}.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Resend invite on the pending row sends a replacement link",
+      "expected": "Row shows Saved; a new Set password email",
+      "startedAt": "2026-09-25T10:41:27.239Z",
+      "finishedAt": "2026-09-25T10:41:28.170Z",
+      "actual": "The row showed \"Saved\" and a new \"Set your OpenLaw password\" email arrived.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "invited colleague",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/",
+      "action": "Invite step 4: the first sign-in by a sign-in link (Legal User Authentication has Email magic link on) changes the row to Active",
+      "expected": "Colleague signs in from the staff sign-in page; row Active with a role control",
+      "startedAt": "2026-09-25T10:41:28.212Z",
+      "finishedAt": "2026-09-25T10:41:31.117Z",
+      "actual": "Legal User Authentication was {\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}. The staff page said \"Helix Software Group Legal Portal Powered by OpenLaw Check your email If doc030-org-a-mugtybq7@helix.example is eligible, a sign-in link is \". Opening \"Sign in to OpenLaw\" signed the colleague in (landed on /; role legal_team_member). Daniel's Users table then showed the row as Active with a role control and actions [\"Legal team member\",\"Archive\"].",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "invited colleague",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/",
+      "action": "Invite step 4: a colleague sets a password from the Set password email link; the row becomes Active",
+      "expected": "Password set; password sign-in works; row Active",
+      "startedAt": "2026-09-25T10:41:31.180Z",
+      "finishedAt": "2026-09-25T10:41:34.656Z",
+      "actual": "\"Set your OpenLaw password\" arrived; \"Password set\" appeared; the colleague signed in with the new password (me 200). The row read Active with a role control.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "invited colleague",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/profile",
+      "action": "The activated Legal Team Member checks their access",
+      "expected": "No administration: Users sends them to Profile",
+      "startedAt": "2026-09-25T10:41:34.658Z",
+      "finishedAt": "2026-09-25T10:41:35.644Z",
+      "actual": "Settings Users sent the colleague to /settings/profile; no Invite user control was offered.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Revoke invite withdraws an unused invitation and removes the row",
+      "expected": "The pending row is removed",
+      "startedAt": "2026-09-25T10:41:35.645Z",
+      "finishedAt": "2026-09-25T10:41:37.474Z",
+      "actual": "The Invited row for DOC-030 admin-org V-C36 Bryn mugtybq7 disappeared after Revoke invite, and GET /api/v1/users no longer listed the address.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Change a role: the role control on an Active row offers three roles; Administrator applies on the colleague's next action without signing in again",
+      "expected": "Administrator, Legal team member, Business user; colleague reaches Settings Users on next navigation",
+      "startedAt": "2026-09-25T10:41:37.475Z",
+      "finishedAt": "2026-09-25T10:41:39.607Z",
+      "actual": "The role menu offered [\"Administrator\",\"Legal team member\",\"Business user\"]. Choosing Administrator showed \"Saved\" and the reloaded row read Administrator. The colleague's existing session opened Settings Users on its next navigation without signing in again.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Change the role back to Legal team member",
+      "expected": "The colleague loses administration on the next request",
+      "startedAt": "2026-09-25T10:41:39.608Z",
+      "finishedAt": "2026-09-25T10:41:40.519Z",
+      "actual": "The row showed \"Saved\" for Legal team member. The colleague's same session got 403 from GET /api/v1/users on its next request.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Promote a Portal-created Business User to Legal team member: the row stays Active with its role control; return it to Business user",
+      "expected": "Active Business user row; after promotion still Active with role control; access follows the role",
+      "startedAt": "2026-09-25T10:41:40.571Z",
+      "finishedAt": "2026-09-25T10:41:44.294Z",
+      "actual": "A Portal sign-in link created an Active Business user row with a role control. Choosing Legal team member showed \"Saved\"; the row stayed Active with its role control and read Legal team member, and the person's own session reported role legal_team_member on its next request. Choosing Business user showed \"Saved\" and the row returned to Active Business user. The Invited branch did not occur, as the article says for a Business User who has signed in.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Your own row has no Archive action and no … button; Administrators cannot archive themselves",
+      "expected": "No row actions on Daniel's row; \"You cannot archive yourself.\"",
+      "startedAt": "2026-09-25T10:41:44.295Z",
+      "finishedAt": "2026-09-25T10:41:44.925Z",
+      "actual": "Daniel's own row had a role control, no Archive and no \"More actions for daniel.okafor@helix.example\" button (buttons: [\"Administrator\"]). A direct archive request for his own account was refused with 409: \"You cannot archive yourself.\".",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Sign out user from the row's … button (More actions for the email address); sessions stop; the account stays active and can sign in again",
+      "expected": "Menu offers Sign out user; colleague's next request needs sign-in; row Active; password sign-in works",
+      "startedAt": "2026-09-25T10:41:44.926Z",
+      "finishedAt": "2026-09-25T10:41:47.688Z",
+      "actual": "The \"More actions for doc030-org-c-mugtybq7@helix.example\" menu offered [\"Sign out user\"]; choosing it showed \"Saved\". The colleague's session went from 200 to 401 on /api/v1/me and the app sent it to /auth/login. The row stayed Active, and a password sign-in worked again (200).",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Reassign work before archiving: fixture Contract with the colleague as Legal Owner",
+      "expected": "Contract created (API fixture); checked after archive",
+      "startedAt": "2026-09-25T10:41:47.689Z",
+      "finishedAt": "2026-09-25T10:41:47.865Z",
+      "actual": "Created Contract 252 with the colleague as Legal Owner through the API (fixture setup; the check follows the archive).",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Archive and restore steps 1 and 2: Archive on the row; it leaves the ordinary list; sessions end; new sign-in blocked; nothing is reassigned",
+      "expected": "Row hidden; live session ends; password sign-in refused; no sign-in link; Legal Owner unchanged",
+      "startedAt": "2026-09-25T10:41:47.868Z",
+      "finishedAt": "2026-09-25T10:42:05.300Z",
+      "actual": "Check failed: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('heading', { name: 'Check your email' }) to be visible\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "work2",
+      "page": "http://127.0.0.1:43300/settings/users",
+      "action": "Archive and restore steps 3 and 4: Show archived, Restore, and ask the user to sign in again",
+      "expected": "Restored row Active; the revoked session stays revoked; a new sign-in works",
+      "startedAt": "2026-09-25T10:42:05.301Z",
+      "finishedAt": "2026-09-25T10:42:06.403Z",
+      "actual": "With Show archived on, the row read Archived with a Restore action. Restore showed \"Saved\" and the row read Active. The old browser session still got 401; a fresh password sign-in got 200.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:42:06.522Z",
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "Daniel Okafor (seeded)"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "Nadia Haddad (seeded), unauthorized-administration check"
+    },
+    {
+      "role": "business_user",
+      "account": "Portal-created doc030-org-bu0 address, unauthorized-administration check"
+    },
+    {
+      "role": "business_user",
+      "account": "Jonas Weber (seeded), refused-invitation check only"
+    },
+    {
+      "role": "invited colleague",
+      "account": "DOC-030 admin-org V-C36 Avery mugtybq7",
+      "note": "activated by a sign-in link"
+    },
+    {
+      "role": "withdrawn invitation",
+      "account": "DOC-030 admin-org V-C36 Bryn mugtybq7"
+    },
+    {
+      "role": "invited colleague",
+      "account": "DOC-030 admin-org V-C36 Casey mugtybq7",
+      "note": "activated by Set password"
+    },
+    {
+      "role": "business_user",
+      "account": "doc030-org-bu-mugtybq7@helix.example (Portal-created)"
+    }
+  ],
+  "labState": {
+    "allowedDomains": [
+      "helix.example"
+    ]
+  },
+  "restoreTargets": {
+    "organizationName": "Helix Software Group",
+    "logoWasNull": true,
+    "defaultTimezone": "Europe/London"
+  },
+  "records": [
+    "Contract 252 \"DOC-030 admin-org V-C36 offboarding contract mugtybq7\""
+  ]
+}

@@ -104,13 +104,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "contentSha256": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 compatibility reviewer (compat)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-25T11:14:39.367Z",
+    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of documents-section.tsx, portal-request.tsx, comment-attachments.tsx, comments/routes.ts, portal/documents.ts, documents/routes.ts and the new preview-rendition.ts. The reader components did not change; the Portal and comment changes touch upload and filing dialogs, not reading; a comment attachment preview is now converted once and stored, with the same Preview unavailable message. I replayed the DOC-029 V-C28 sections for Administrator, Legal Team Member and Business User on lab compatcmp built from 067c1646; all 21 V-C28 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/documents.json",
@@ -119,6 +119,34 @@
       {
         "path": "batches/DOC-029/compat-r3/review.json",
         "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      },
+      {
+        "path": "batches/DOC-030/compat/compat.json",
+        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
+      },
+      {
+        "path": "batches/DOC-030/compat/document-previews-replay.mjs",
+        "sha256": "042cf2795b2c1116c52179c30cf5fba1e5a0f7780856a8c583690555c07b52f5"
+      },
+      {
+        "path": "batches/DOC-030/compat/document-previews-replay/lib.mjs",
+        "sha256": "c3630290d2ccbfcbed0619f26b2449f800dbea278b5587fe46d658061a3fbbcd"
+      },
+      {
+        "path": "batches/DOC-030/compat/document-previews-replay.json",
+        "sha256": "073f8d17547ca83fd98b613b268bfbc9a9f9888d20e0a4f7d8faab8b6aafe9d7"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/document-previews-compatcmp.log",
+        "sha256": "769c9dbde0a7d3d2c31869199691f3bd23f2024deac328fb1d1509065d627c24"
+      },
+      {
+        "path": "batches/DOC-030/compat/document-previews-replay/doc030-legal-failed-preview.png",
+        "sha256": "9a603901676f1d2b0ac42f98eb73bd88754556a7513c33abaf7939ad42f0fb7e"
+      },
+      {
+        "path": "batches/DOC-030/compat/document-previews-replay/doc030-business-portal-preview-unavailable.png",
+        "sha256": "058a3d5a376385b30b8a27debe8b674d3b628c2fea3296204cf7e20bf8e9dc7f"
       }
     ]
   }

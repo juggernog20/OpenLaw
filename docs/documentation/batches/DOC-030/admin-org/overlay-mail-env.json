@@ -1,0 +1,16 @@
+{
+  "services": {
+    "app": {
+      "environment": {
+        "SMTP_URL": "smtp://mailpit:1025",
+        "SMTP_FROM": "DOC-030 Environment <env-relay@helix.example>"
+      }
+    },
+    "worker": {
+      "environment": {
+        "SMTP_URL": "smtp://mailpit:1025",
+        "SMTP_FROM": "DOC-030 Environment <env-relay@helix.example>"
+      }
+    }
+  }
+}

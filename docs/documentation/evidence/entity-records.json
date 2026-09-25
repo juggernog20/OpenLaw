@@ -1,105 +1,94 @@
 {
   "articleId": "entity-records",
-  "contentSha256": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-entities",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (entities)",
-  "technicalReviewer": "DOC-029 source-review author agent (entities)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (entities, round 1)",
+  "contentSha256": "c3209b12d7c67ec167125da9a559cefc5bbe6b07d1077e922bcecc8d1deb82ed",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (entities)",
+  "technicalReviewer": "DOC-030 source-review author agent (entities)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (entities)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:53:13.127Z",
+  "verifiedAt": "2026-09-25T11:38:23.867Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/entity-records.md",
+    "docs/documentation/batches/DOC-030/entities/technical-review.json",
+    "docs/documentation/batches/DOC-030/entities/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/entities/walkthrough.json",
     "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "docs/decision-records/DECISIONS-DESIGN.md",
+    "messages/en-US.json",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/components/entities/share-register-tab.tsx",
+    "apps/web/src/components/entities/ownership-card.tsx",
     "apps/web/src/components/entities/officers-card.tsx",
     "apps/web/src/components/entities/registrations-card.tsx",
-    "apps/web/src/components/entities/ownership-card.tsx",
-    "apps/web/src/routes/entity-record.tsx",
     "apps/web/src/routes/entities.tsx",
-    "apps/web/src/components/entities/entity-list-filter-bar.tsx",
-    "apps/api/src/modules/entities/record-routes.ts",
+    "apps/web/src/components/entities/entity-filter-definitions.ts",
     "apps/api/src/modules/entities/holding-routes.ts",
-    "messages/en-US.json",
-    "docs/decision-records/DECISIONS-ENTITIES.md",
-    "docs/documentation/batches/DOC-029/entities/technical-review.json",
-    "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
+    "apps/api/src/lib/holdings-projection.ts",
+    "apps/api/src/modules/entities/record-routes.ts"
   ],
   "scenarios": [
     {
       "id": "V-C32",
-      "coverage": ["C32"],
+      "coverage": [
+        "C32"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Four fictional Entities per role created as fixtures; a small fictional text certificate at docs/documentation/batches/DOC-029/entities/fixtures/doc029-entities-certificate.txt."
+        "Shared lab openlaw-docs-80ceef9e-work2 (lab work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Nadia Haddad (Legal Team Member) signs in with a password in an isolated headless Chromium context.",
+        "Two Entities, an Officer, a Registration, and fictional corporate Documents.",
+        "Fixtures named \"DOC-030 entities V-C32 0925-1129 ...\" created as listed in the log's fixtures array (walkthrough run tag 0925-1129)."
       ],
       "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
-      "actual": "Nadia Haddad used Directors & Officers: Add director or officer saved name, Role Director, Appointed on 2022-05-09 and Linked user Daniel Okafor, all present after a reload; a name edit saved on focus change and Role Secretary on selection. Resigned on 2021-01-01 showed \"The resignation date cannot be before the appointment date.\" and stored nothing. Resigned on 2024-08-31 removed the Officer from the current list, Show former showed it, and clearing the date returned it. The linked user held no Grant. \"Remove <name>\" deleted the Officer (absent with Show former). Add registration saved Jurisdiction, Registration number, Registered agent and Status Lapsed, and Formation jurisdiction stayed \"Republic of Aldoria\"; an agent edit saved on blur and Withdrawn on selection. \"Remove <jurisdiction> registration\" deleted the row and left its linked Obligation on the Entity with Registration \"None\". On Ownership, Add Holding with This Entity owns at 60% listed the Holding under Owned Entities and under Owners on the other record. A second owner through Owns this Entity at 60% showed \"Ownership totals 120% for <name>.\" and saved; correcting it to 40 on blur cleared the warning. 150 in a row was refused with \"One or more request fields are invalid.\" and both saved percentages stayed. The Holding picker did not offer the Entity itself or an Entity already in a Holding with it; a Holding that would close a loop was refused with a message naming the loop path. \"Remove <name>\" removed a Holding and both Entities still opened. The Documents tab showed \"No documents on this Entity yet.\" with no folders; Upload, Choose files, Kind Executed and Upload gave a v1 row that a sibling Entity did not list. Archive showed the Archived mark and \"This entity is archived. Restore it to edit.\", disabled Legal name and removed the add controls; the Entity left List search and the Add Holding picker. List with Show archived found it, Restore returned editing, and its formation jurisdiction, Holding, Document and Obligation remained.",
+      "actual": "20 recorded browser steps passed for this role. [Officers steps 1-3: Directors & Officers, Add director or officer, name, Role, Appointed on, Linked user, Add] After Add and a reload the row read {\"name\":\"Ines Castell L 0925-1129\",\"role\":\"Director\",\"appointed\":\"2022-05-09\",\"user\":\"Daniel Okafor\"}. [Officers step 4: correct text and move focus away; choosing another role saves] The name saved as \"Ines Castell L 0925-1129 Jr\" on blur and was set back; Role Secretary saved on selection and read Secretary after a reload. [Negative: a resignation date before the appointment date is refused] Resigned on 2021-01-01 showed \"The resignation date cannot be before the appointment date.\". After a reload Appointed on was 2022-05-09 and Resigned on was empty. [Officers step 5: Resigned on keeps a resignation; Show former reads former Officers; clearing the date returns the Officer] With Resigned on 2024-08-31 the Officer left the current list (0 rows). Show former showed it with 2024-08-31. Clearing the date and reloading returned it to the current list (1 row). [Officer note: linking a user does not grant that person Entity access] The Entity's access list named [\"Nadia Haddad\"]; the linked user Daniel Okafor held no Grant. (The effect on a Confidential Entity is checked in V-C53.) [Officer note: the remove control, labelled Remove <name>, deletes the Officer entry] After Remove Ines Castell L 0925-1129 and a reload, Show former listed no row for it. [Registrations steps 1-3: Add registration with Jurisdiction, Registration number, Registered agent, Status Lapsed; Formation jurisdiction unchanged] The Registration Nordvik L 0925-1129 saved {\"number\":\"NV-0925-1129\",\"agent\":\"Nordvik Agents AS\",\"status\":\"Lapsed\"}. Formation jurisdiction still read \"Republic of Aldoria\". [Registrations step 3: edit text and move focus away; a Status selection saves immediately] After a reload Registered agent read \"Nordvik Corporate Agents AS\" and Status read Withdrawn. [Registrations step 4 and note: Remove <jurisdiction> registration deletes it and detaches, but keeps, a linked Obligation] An Obligation \"DOC-030 entities V-C32 0925-1129 L licence renewal\" was linked to Nordvik L 0925-1129. Remove Nordvik L 0925-1129 registration deleted the row; the Obligation stayed on the Entity (\"Mar 31, 2027 DOC-030 entities V-C32 0925-1129 L licence renewal — — Unassigned — — Mark complete\") with no Registration link. [Holdings intro and step 1: the Ownership tab opens with the share register; Add Holding sits below Holdings in other Entities; Owner type Entity; Ownership percent starts at 100] The Ownership tab showed \"No share register yet\" and no Declared owners card. Add Holding sat below the Holdings in other Entities heading (y 566 > 470). The dialog opened with Owner type Entity selected, Individual offered, Relationship [\"Owns this Entity\",\"This Entity owns\"], and Ownership percent 100. [Holdings steps 2-3, 5: This Entity owns another Entity; it appears under Holdings in other Entities; the owned Entity lists the owner under Declared owners not in the register] DOC-030 entities V-C32 0925-1129 L main listed DOC-030 entities V-C32 0925-1129 L owned under Holdings in other Entities. DOC-030 entities V-C32 0925-1129 L owned showed the card \"Declared owners not in the register\" with DOC-030 entities V-C32 0925-1129 L main at 60%. [Holdings: Owns this Entity direction; a total over 100% warns but saves; correcting the row on blur clears the warning] Adding DOC-030 entities V-C32 0925-1129 L co-owner as owner at 60% showed \"Ownership totals 120% for DOC-030 entities V-C32 0925-1129 L owned.\" and saved (60 after reload). Changing that row to 30 and moving focus saved 30 and no total warning remained. [Holdings step 4: Owner type Individual, Full name, Ownership percent, Add; no Entity or account; percent correction saves] Choosing Individual hid Relationship; Full name \"Mara Quill L 0925-1129\" at 10% was added. Declared owners read \"Declared owners not in the register DOC-030 entities V-C32 0925-1129 L co-owner % DOC-030 entities V-C32 0925-1129 L main % Mara Quill L 0925-1129 Individual %\". Changing it to 12 saved on blur (12 after reload, with \"Ownership totals 102% for DOC-030 entities V-C32 0925-1129 L owned.\"); it was set back to 10. No Entity record was created for the person. [Negative: an out-of-range row percentage is refused without changing saved values] Entering 150 showed \"One or more request fields are invalid.\". After a reload the row still read 30 and the other Holding 60. [Holdings note: an Entity cannot own itself, duplicate a directional Holding, or create an ownership loop] On DOC-030 entities V-C32 0925-1129 L owned the picker for \"DOC-030 entities V-C32 0925-1129 L\" offered [\"DOC-030 entities V-C32 0925-1129 L third\"]: not itself and not DOC-030 entities V-C32 0925-1129 L main, which already holds it. Adding DOC-030 entities V-C32 0925-1129 L third as owner of DOC-030 entities V-C32 0925-1129 L main (closing a loop through DOC-030 entities V-C32 0925-1129 L owned) was refused with \"This holding would create a loop: DOC-030 entities V-C32 0925-1129 L third → DOC-030 entities V-C32 0925-1129 L main → DOC-030 entities V-C32 0925-1129 L owned → DOC-030 entities V-C32 0925-1129 L third.\" and no owner row was added. [Holdings step 6: the remove control, labelled Remove <other party>, removes the Holding; neither Entity is deleted] After Remove DOC-030 entities V-C32 0925-1129 L co-owner and Remove Mara Quill L 0925-1129, the Declared owners card on DOC-030 entities V-C32 0925-1129 L owned read \"Declared owners not in the register DOC-030 entities V-C32 0925-1129 L main %\"; DOC-030 entities V-C32 0925-1129 L co-owner still opened. [Documents: a new Entity has no pre-created folders; Upload lands a Document on this Entity only] The Documents tab first showed \"No documents on this Entity yet.\" and 0 folders. Upload produced the row \"doc030-entities-register-extract.pdf — v1 Sep 25 Uploaded by Nadia Haddad NH\". DOC-030 entities V-C32 0925-1129 L owned did not list it. [Archive step 1: Archive saves immediately; Archived mark; editable controls, including the share register and Add Holding, become unavailable] After Archive and a reload the record showed the Archived mark and \"This entity is archived. Restore it to edit.\". Legal name was disabled; Add director or officer, Add registration and Add obligation were absent. On Ownership, New share class and Add Holding were disabled, and a share-class write was refused 409 \"This entity is archived. Restore it before changing its register.\". [Archive: the archived Entity leaves ordinary registry and Holding picker results] The List search found 0 rows for the archived Entity, and Add Holding on DOC-030 entities V-C32 0925-1129 L co-owner offered [\"DOC-030 entities V-C32 0925-1129 L owned\",\"DOC-030 entities V-C32 0925-1129 L third\"], without it. [Archive steps 2-3: List, Filter, Show archived, open the Entity, Restore; facts, relationships, Documents and Obligation remain; editing returns] Filter, then Show archived, added the chip \"Show archived\" and the List showed 1 row for it. Restore returned an editable Legal name, Add director or officer and New share class. Formation jurisdiction \"Republic of Aldoria\", the Holding of DOC-030 entities V-C32 0925-1129 L owned, the uploaded Document, and the Obligation all remained.",
       "result": "pass",
-      "startedAt": "2026-09-16T15:45:34.148Z",
-      "completedAt": "2026-09-16T15:46:31.605Z",
-      "stepsSummarized": "18 recorded steps for this role, all pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/entities/walkthrough.json",
+        "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C32",
-      "coverage": ["C32"],
+      "coverage": [
+        "C32"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Four fictional Entities per role created as fixtures; a small fictional text certificate at docs/documentation/batches/DOC-029/entities/fixtures/doc029-entities-certificate.txt."
+        "Shared lab openlaw-docs-80ceef9e-work2 (lab work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Daniel Okafor (Administrator) signs in with a password in an isolated headless Chromium context.",
+        "Two Entities, an Officer, a Registration, and fictional corporate Documents.",
+        "Fixtures named \"DOC-030 entities V-C32 0925-1129 ...\" created as listed in the log's fixtures array (walkthrough run tag 0925-1129)."
       ],
       "expected": "The entered corporate facts and files persist with their supported dates and relationships. Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts.",
-      "actual": "Daniel Okafor used Directors & Officers: Add director or officer saved name, Role Director, Appointed on 2022-05-09 and Linked user Nadia Haddad, all present after a reload; a name edit saved on focus change and Role Secretary on selection. Resigned on 2021-01-01 showed \"The resignation date cannot be before the appointment date.\" and stored nothing. Resigned on 2024-08-31 removed the Officer from the current list, Show former showed it, and clearing the date returned it. The linked user held no Grant. \"Remove <name>\" deleted the Officer (absent with Show former). Add registration saved Jurisdiction, Registration number, Registered agent and Status Lapsed, and Formation jurisdiction stayed \"Republic of Aldoria\"; an agent edit saved on blur and Withdrawn on selection. \"Remove <jurisdiction> registration\" deleted the row and left its linked Obligation on the Entity with Registration \"None\". On Ownership, Add Holding with This Entity owns at 60% listed the Holding under Owned Entities and under Owners on the other record. A second owner through Owns this Entity at 60% showed \"Ownership totals 120% for <name>.\" and saved; correcting it to 40 on blur cleared the warning. 150 in a row was refused with \"One or more request fields are invalid.\" and both saved percentages stayed. The Holding picker did not offer the Entity itself or an Entity already in a Holding with it; a Holding that would close a loop was refused with a message naming the loop path. \"Remove <name>\" removed a Holding and both Entities still opened. The Documents tab showed \"No documents on this Entity yet.\" with no folders; Upload, Choose files, Kind Executed and Upload gave a v1 row that a sibling Entity did not list. Archive showed the Archived mark and \"This entity is archived. Restore it to edit.\", disabled Legal name and removed the add controls; the Entity left List search and the Add Holding picker. List with Show archived found it, Restore returned editing, and its formation jurisdiction, Holding, Document and Obligation remained.",
+      "actual": "20 recorded browser steps passed for this role. [Officers steps 1-3: Directors & Officers, Add director or officer, name, Role, Appointed on, Linked user, Add] After Add and a reload the row read {\"name\":\"Ines Castell A 0925-1129\",\"role\":\"Director\",\"appointed\":\"2022-05-09\",\"user\":\"Nadia Haddad\"}. [Officers step 4: correct text and move focus away; choosing another role saves] The name saved as \"Ines Castell A 0925-1129 Jr\" on blur and was set back; Role Secretary saved on selection and read Secretary after a reload. [Negative: a resignation date before the appointment date is refused] Resigned on 2021-01-01 showed \"The resignation date cannot be before the appointment date.\". After a reload Appointed on was 2022-05-09 and Resigned on was empty. [Officers step 5: Resigned on keeps a resignation; Show former reads former Officers; clearing the date returns the Officer] With Resigned on 2024-08-31 the Officer left the current list (0 rows). Show former showed it with 2024-08-31. Clearing the date and reloading returned it to the current list (1 row). [Officer note: linking a user does not grant that person Entity access] The Entity's access list named [\"Daniel Okafor\"]; the linked user Nadia Haddad held no Grant. (The effect on a Confidential Entity is checked in V-C53.) [Officer note: the remove control, labelled Remove <name>, deletes the Officer entry] After Remove Ines Castell A 0925-1129 and a reload, Show former listed no row for it. [Registrations steps 1-3: Add registration with Jurisdiction, Registration number, Registered agent, Status Lapsed; Formation jurisdiction unchanged] The Registration Nordvik A 0925-1129 saved {\"number\":\"NV-0925-1129\",\"agent\":\"Nordvik Agents AS\",\"status\":\"Lapsed\"}. Formation jurisdiction still read \"Republic of Aldoria\". [Registrations step 3: edit text and move focus away; a Status selection saves immediately] After a reload Registered agent read \"Nordvik Corporate Agents AS\" and Status read Withdrawn. [Registrations step 4 and note: Remove <jurisdiction> registration deletes it and detaches, but keeps, a linked Obligation] An Obligation \"DOC-030 entities V-C32 0925-1129 A licence renewal\" was linked to Nordvik A 0925-1129. Remove Nordvik A 0925-1129 registration deleted the row; the Obligation stayed on the Entity (\"Mar 31, 2027 DOC-030 entities V-C32 0925-1129 A licence renewal — — Unassigned — — Mark complete\") with no Registration link. [Holdings intro and step 1: the Ownership tab opens with the share register; Add Holding sits below Holdings in other Entities; Owner type Entity; Ownership percent starts at 100] The Ownership tab showed \"No share register yet\" and no Declared owners card. Add Holding sat below the Holdings in other Entities heading (y 566 > 470). The dialog opened with Owner type Entity selected, Individual offered, Relationship [\"Owns this Entity\",\"This Entity owns\"], and Ownership percent 100. [Holdings steps 2-3, 5: This Entity owns another Entity; it appears under Holdings in other Entities; the owned Entity lists the owner under Declared owners not in the register] DOC-030 entities V-C32 0925-1129 A main listed DOC-030 entities V-C32 0925-1129 A owned under Holdings in other Entities. DOC-030 entities V-C32 0925-1129 A owned showed the card \"Declared owners not in the register\" with DOC-030 entities V-C32 0925-1129 A main at 60%. [Holdings: Owns this Entity direction; a total over 100% warns but saves; correcting the row on blur clears the warning] Adding DOC-030 entities V-C32 0925-1129 A co-owner as owner at 60% showed \"Ownership totals 120% for DOC-030 entities V-C32 0925-1129 A owned.\" and saved (60 after reload). Changing that row to 30 and moving focus saved 30 and no total warning remained. [Holdings step 4: Owner type Individual, Full name, Ownership percent, Add; no Entity or account; percent correction saves] Choosing Individual hid Relationship; Full name \"Mara Quill A 0925-1129\" at 10% was added. Declared owners read \"Declared owners not in the register DOC-030 entities V-C32 0925-1129 A co-owner % DOC-030 entities V-C32 0925-1129 A main % Mara Quill A 0925-1129 Individual %\". Changing it to 12 saved on blur (12 after reload, with \"Ownership totals 102% for DOC-030 entities V-C32 0925-1129 A owned.\"); it was set back to 10. No Entity record was created for the person. [Negative: an out-of-range row percentage is refused without changing saved values] Entering 150 showed \"One or more request fields are invalid.\". After a reload the row still read 30 and the other Holding 60. [Holdings note: an Entity cannot own itself, duplicate a directional Holding, or create an ownership loop] On DOC-030 entities V-C32 0925-1129 A owned the picker for \"DOC-030 entities V-C32 0925-1129 A\" offered [\"DOC-030 entities V-C32 0925-1129 A third\"]: not itself and not DOC-030 entities V-C32 0925-1129 A main, which already holds it. Adding DOC-030 entities V-C32 0925-1129 A third as owner of DOC-030 entities V-C32 0925-1129 A main (closing a loop through DOC-030 entities V-C32 0925-1129 A owned) was refused with \"This holding would create a loop: DOC-030 entities V-C32 0925-1129 A third → DOC-030 entities V-C32 0925-1129 A main → DOC-030 entities V-C32 0925-1129 A owned → DOC-030 entities V-C32 0925-1129 A third.\" and no owner row was added. [Holdings step 6: the remove control, labelled Remove <other party>, removes the Holding; neither Entity is deleted] After Remove DOC-030 entities V-C32 0925-1129 A co-owner and Remove Mara Quill A 0925-1129, the Declared owners card on DOC-030 entities V-C32 0925-1129 A owned read \"Declared owners not in the register DOC-030 entities V-C32 0925-1129 A main %\"; DOC-030 entities V-C32 0925-1129 A co-owner still opened. [Documents: a new Entity has no pre-created folders; Upload lands a Document on this Entity only] The Documents tab first showed \"No documents on this Entity yet.\" and 0 folders. Upload produced the row \"doc030-entities-register-extract.pdf — v1 Sep 25 Uploaded by Daniel Okafor DO\". DOC-030 entities V-C32 0925-1129 A owned did not list it. [Archive step 1: Archive saves immediately; Archived mark; editable controls, including the share register and Add Holding, become unavailable] After Archive and a reload the record showed the Archived mark and \"This entity is archived. Restore it to edit.\". Legal name was disabled; Add director or officer, Add registration and Add obligation were absent. On Ownership, New share class and Add Holding were disabled, and a share-class write was refused 409 \"This entity is archived. Restore it before changing its register.\". [Archive: the archived Entity leaves ordinary registry and Holding picker results] The List search found 0 rows for the archived Entity, and Add Holding on DOC-030 entities V-C32 0925-1129 A co-owner offered [\"DOC-030 entities V-C32 0925-1129 A owned\",\"DOC-030 entities V-C32 0925-1129 A third\"], without it. [Archive steps 2-3: List, Filter, Show archived, open the Entity, Restore; facts, relationships, Documents and Obligation remain; editing returns] Filter, then Show archived, added the chip \"Show archived\" and the List showed 1 row for it. Restore returned an editable Legal name, Add director or officer and New share class. Formation jurisdiction \"Republic of Aldoria\", the Holding of DOC-030 entities V-C32 0925-1129 A owned, the uploaded Document, and the Obligation all remained.",
       "result": "pass",
-      "startedAt": "2026-09-16T15:46:31.641Z",
-      "completedAt": "2026-09-16T15:47:28.297Z",
-      "stepsSummarized": "18 recorded steps for this role, all pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/entities/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/entities/walkthrough.json",
+        "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough in headless Chromium by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
-    "The lab openlaw-docs-41255c61-entities is shared with other DOC-029 walkthrough agents. This run created only records named \"DOC-029 entities ...\" (run tag 9U3SZ) plus records from earlier development runs of the same script with other tags. It changed no organization settings.",
-    "Recorded against app source 3fa407e3a846559914aa1a63249741f30cfb4f69, which differs from edition.json's supportedAppCommit; the edition pin or a compatibility review is outside this walkthrough's file ownership.",
-    "API calls prepared fixtures (Entities, Holdings, Contracts, a Registration) or read back results the browser had already shown; every documented action was performed through the browser controls.",
-    "1 page load(s) showed the app's \"Something went wrong.\" screen because Chromium reported net::ERR_NETWORK_CHANGED while other labs changed the host's Docker networks. The script recorded each case in the log's errorScreens and reloaded once; the step then passed. This is an environment effect, not an app finding.",
-    "The out-of-range Holding percentage refusal shows the generic \"One or more request fields are invalid.\" message; the article does not quote a message.",
-    "Not exercised: adding an Officer role (Administrator settings), a concurrent archive/restore by another person, and Document Versions beyond v1, which the article delegates to the shared Document guides."
+    "The lab openlaw-docs-80ceef9e-work2 (work2) is shared with other DOC-030 walkthrough agents. This run created only records named \"DOC-030 entities ...\" (run tag 0925-1129), plus records from earlier development runs of the same script with other tags. API calls prepared fixtures or read back results the browser had already shown; every documented action ran through the browser controls.",
+    "Author limitation, checked on the lab: V-C32 asks to record a Holding. On an Entity that keeps a share register the owner Holdings come from Register entries; the walkthrough should record the Holding on an Entity without a register, or as an owned Entity, and use the share register (entity-structure-and-access) for register-backed owners.",
+    "Author limitation, checked on the lab: Hand-typed owners can still be added to an Entity that keeps a register (see productBugs). The guide describes that behaviour and recommends a register entry.",
+    "3 page loads showed the app's \"Something went wrong.\" screen with net::ERR_NETWORK_CHANGED while other labs changed the host's Docker networks; the script reloaded once and the step then passed. This is an environment effect, not an app finding.",
+    "The out-of-range Holding percentage refusal shows the generic \"One or more request fields are invalid.\"; the article quotes no message.",
+    "The paragraphs about register-derived rows (From register, a register entry replacing a hand-typed Entity owner, a hand-typed individual staying beside the register Holder, and a hand-typed owner still accepted on a register Entity) were walked on the lab in the V-C53 run of entity-structure-and-access (same log). They behaved as this article says. The acceptance of a hand-typed owner on a register Entity is recorded as a product bug in the log.",
+    "Not exercised: adding an Officer role (Administrator settings on a shared lab) and a concurrent archive or restore by another person."
   ],
   "previousEvidence": {
-    "appCommit": "8539f4ccb2cd435ab28d5b7402c7c0af141b70c9",
-    "contentSha256": "9d8b0ae49f2d38291393c876d0851ec3811a5d6dd3d24add2631615ade6db0bc",
-    "verifiedAt": "2026-09-08T01:14:28.623Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "e8bd443312eb75490ecd396313913b1a050ea9751aa63e03ca55d43e22c7e56d",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (entities)) found the article compatible: Inspected git diff 3fa407e3..57e77e38 (apps, packages, messages); it changes no Officer, Registration, Holding, Entity Document, or archive code or label. Replayed the round 1 V-C32 walkthrough on lab entities2 as Legal Team Member and Administrator: 36 of 36 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/entities.json",
-        "sha256": "82ac9e118330c7ab4b627e90dc772cd4a020d75a596f0ac9831876cb47c9d2ad"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:53:13.127Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

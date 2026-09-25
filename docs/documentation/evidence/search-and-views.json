@@ -1,94 +1,128 @@
 {
   "articleId": "search-and-views",
-  "contentSha256": "605b3ebe1621d9e7e4d4449c32f12e5e35302d6d22392e7860375e3f512ffa1f",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (access, round 1)",
+  "contentSha256": "e68143e10c8c688b6731c7eeaf369d2174cff91a9b6df81e795e0b4f3381bf1a",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (search)",
+  "technicalReviewer": "DOC-030 source-review author agent (search)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (search)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access)",
-  "technicalReviewer": "DOC-029 source-review author agent (access)",
-  "verifiedAt": "2026-09-16T16:23:21Z",
+  "verifiedAt": "2026-09-25T11:29:56.397Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/search-and-views.md",
+    "docs/documentation/batches/DOC-030/search/technical-review.json",
+    "docs/documentation/batches/DOC-030/search/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/search/rewalk-archived-field.mjs",
+    "docs/documentation/batches/DOC-030/search/walkthrough.json",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/evidence/search-and-views.json",
     "docs/documentation/batches/DOC-029/access/technical-review.json",
-    "docs/documentation/batches/DOC-029/access/walkthrough-r1.json"
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-009 addenda M44/1 and M44 close)",
+    "docs/decision-records/DECISIONS-DESIGN.md (DES-094, DES-046)",
+    "messages/en-US.json",
+    "packages/shared/src/search-question.ts",
+    "packages/shared/src/search-conditions.ts",
+    "packages/shared/src/search-fields.ts",
+    "packages/shared/src/index.ts (LIST_VIEW_SURFACES, MAX_LIST_VIEW_NAME_LENGTH, MAX_LIST_VIEWS_PER_SURFACE)",
+    "apps/web/src/components/shell/search-input.tsx",
+    "apps/web/src/routes/search.tsx",
+    "apps/web/src/components/search/search-result-row.tsx",
+    "apps/web/src/components/search/advanced-search.tsx",
+    "apps/web/src/components/search/advanced-search-dialog.tsx",
+    "apps/web/src/components/search/search-conditions.tsx",
+    "apps/web/src/components/search/condition-definitions.ts",
+    "apps/web/src/components/search/condition-chips.tsx",
+    "apps/web/src/components/search/field-definitions.ts",
+    "apps/web/src/components/search/saved-searches.tsx",
+    "apps/web/src/components/search/recent-search-list.tsx",
+    "apps/web/src/components/search/empty-search-entries.ts",
+    "apps/web/src/components/search/search-question.ts",
+    "apps/web/src/components/search/search-sort.tsx",
+    "apps/web/src/components/table/views-menu.tsx",
+    "apps/web/src/components/table/property-list.tsx",
+    "apps/web/src/components/table/record-filter-bar.tsx",
+    "apps/web/src/components/table/record-filter-definitions.ts",
+    "apps/web/src/routes/contracts.tsx",
+    "apps/web/src/lib/recent-searches.ts",
+    "apps/web/src/lib/search.ts",
+    "apps/web/src/lib/session.ts",
+    "apps/web/src/lib/format.ts",
+    "apps/web/src/lib/contracts.ts",
+    "apps/web/src/lib/list-views.ts",
+    "apps/web/src/lib/table-width-preferences.ts",
+    "apps/api/src/modules/search/service.ts",
+    "apps/api/src/modules/search/conditions.ts",
+    "apps/api/src/modules/search/field-conditions.ts",
+    "apps/api/src/modules/search/relative-dates.ts",
+    "apps/api/src/modules/search/sort.ts",
+    "apps/api/src/modules/list-views/routes.ts",
+    "apps/api/src/lib/record-filters.ts",
+    "packages/db/src/schema/list-views.ts"
   ],
   "scenarios": [
     {
       "id": "V-C04",
-      "coverage": ["C04"],
+      "coverage": [
+        "C04"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A fresh DOC-029 access account for this role, so seeded accounts keep their saved views.",
-        "Reviewer fixtures created by Daniel: a visible Contract whose PDF alone holds a unique word, a second visible Contract with that word in its title, and a Confidential Contract with that word in its title outside the fresh account's reach. The PDF text was searchable before the walkthrough started."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z). A fresh DOC-030 search account for this role, invited by Daniel Okafor, walks in its own browser context, so seeded accounts keep their saved searches and views.",
+        "Fixtures created by Daniel Okafor through the lab API: Contracts C-60 (Charlie, expiry +200 d), C-61 (Alpha, expiry +30 d), C-62 (Delta, no expiry), C-63 (Golf, exclusion word only), C-64 (Holder, owns the Document), Confidential C-65; Matter M-29 (Bravo); Document \"DOC-030 search V-C04 1790331205958 Echo.pdf\" v1 and v2 on C-64; contract Field \"DOC-030 search V-C04 1790331205958 reference\". The unique word sits in the titles of Alpha, Charlie, Delta, Bravo and the Confidential Contract, and only in the contents of the Echo Document on Holder. Version 1's own word was searchable before version 2 was uploaded ({\"v1\":true,\"v2\":true,\"v1GoneAfterV2\":true})."
       ],
       "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state.",
-      "actual": "9 recorded steps passed on 3fa407e3 for a fresh Administrator. / focused Search. The header list and See all results showed the second Contract (title match) and the Document result v1 of the PDF Owned by its C- Contract, although that Contract's title lacks the word. The Document kind left only Document rows. Opening the result went to the Contract's Documents with the find text filled and the reader showing the file. The Confidential Contract never appeared in the header list, the results page or the API answer, and its direct link said Contract not found. Show more added 25 rows. A blocked next page said The next results could not be read. Try again. and kept the 25 rows, and Show more then worked. A blocked search showed Search could not load in the header and Search could not load. Try again. on the results page; a retry after recovery worked; an unmatched word said No matches. On Contracts, Filter > Owner > Daniel Okafor > Apply showed the Owner: Daniel Okafor chip, the Matches any selected value hint and only Daniel-owned rows. A Status filter narrowed the list further. The Title heading cycled ascending and descending. Back and Forward restored the sort marker and the chips with the URL. Remove Status filter and Clear all cleared filters, and Owner Me showed No contracts match these filters. Save as… with a Name stored the Owner filter, Title sort and a Columns move (Move Counterparty later). A change marked Modified; Discard unsaved changes restored the view; Save replaced it; Default view showed the built-in layout; selecting the view restored filter, sort and column order. Set as default reopened Contracts with the view. Rename… changed its name. A duplicate name was refused with You already have a view with that name on this list. A second browser for the same account opened the view. Delete… said the records are not touched and removed the view, and the Contract count stayed the same.",
+      "actual": "42 recorded browser steps passed on 067c1646829df85e62b809ee9157921e867c84e7. / outside a text field focused the header Search box; one character opened no list; the unique word listed Contract Delta, Alpha, Charlie, Matter Bravo and Document Echo, whose row read \"Echo.pdf C-64 · … Holder\" although Holder's title lacks the word. See all results showed \"5 matches\" and 5 rows, Sort: Relevance. Document left 1 row and All returned 5. The Document result opened /contracts/64/documents on the latest Version with the word in the reader's find input; a word only in version 1 gave No matches and a word only in version 2 gave the one Document row. For \"helix\" the header groups held at most 10 rows (Document 10, Entity 10); the results page said 154 matches, showed 25 rows and Show more made 50. The Counterparty Northwind Traders Ltd opened the Contract results for that name. The sliders and Advanced search… opened Advanced search with the header word in All of these words; four Words rows, three Search in boxes, seven Kinds, Add condition disabled until a kind was chosen. 201 characters were refused; \"word -other\" and \"word or other\" in All of these words both found only Charlie, which holds both words. No Search in box named the problem and disabled Search; Document contents alone found only Echo. Add condition grouped properties under Contract and Matter, listed the live fixture Field under Fields, and Search properties \"Expiry\" left Expiry date. Date operators included before, after, on, between and the relative set; N=0 and N=3651 were named in the Preview; Contract Expiry date in the next 90 days kept Alpha (+30 d), dropped Charlie (+200 d) and Delta (none) and left the Matter Bravo alone. Search closed the dialog; the address, the chip \"Contract Expiry date in the next 90 days\", the words chip and the rows agreed. Advanced opened the whole question and a chip opened its row focused. The Contract kind link kept only the Contract condition; All cleared kinds and conditions. Removing the Expiry chip returned Delta, Alpha, Charlie; reload kept them and Back restored the chip. Deselecting Matter said Conditions for Matter were removed. Clear emptied the question; Contract alone previewed 10 rows with Showing the first 10 of N matches; a 21st condition was refused. Show flags matched the database at the same moment: Show ended Yes equalled the default, No left 11 ended Contracts out, Show archived Yes added the archived ones, Show closed No kept only open Matters, Status Draft + Show ended Yes gave only Draft under Match all and every non-archived Contract under Match any. A conditions-only empty answer said No records match this question. and an unmatched word said No matches. Sort: Newest Echo, Delta, Bravo, Alpha, Charlie; Oldest the reverse; Expiry soonest Alpha, Charlie, Delta, then Bravo and Echo; Title Alpha to Echo; reload kept Oldest. Save search opened Save this search; the same Name in other letter case was refused with You already have a view with that name on this list. The empty header box listed Saved and Recent with See all results disabled, and the Saved entry opened Charlie, Alpha, Delta in Oldest order at once. Selecting it under Saved searches loaded the question while the page stayed at /, and Search ran it. A change showed Modified; the menu offered Save, Save as…, Rename…, Delete…, Discard unsaved changes; Save search stored it and Discard restored it. After close and reopen, Save search asked for a new Name. Recent searches held 5 entries; one restored its question and Search ran it. A second browser listed the saved search and no Recent; a Recent header entry ran at once; /search opened the empty prompt; sign-out cleared Recent. The row menu offered Rename… and Delete…; Delete this saved search? said the records it finds are not touched and the Contracts stayed. With the Field catalog blocked, the dialog said This search could not open. Try again. and a retry loaded it. A blocked next page said The next results could not be read. Try again. and kept 25 rows; a blocked search said Search could not load (header) and Search could not load. Try again. (page); recovery worked. The Confidential Contract, reached by Daniel, never appeared in header search, questions or its direct link (Contract not found). Contracts: Owner Daniel Okafor with Apply showed its chip, Matches any selected value and only Daniel's rows; Status narrowed further; Title cycled ascending and descending; Back and Forward restored chips and sort; remove and Clear all cleared filters; Effective date said Includes both dates; Owner Me showed No contracts match these filters. Save as… stored the Owner filter, Title sort and Move Counterparty later; Modified, Discard unsaved changes, Save and Default view behaved as described and reselecting restored filter, sort and columns. Set as default reopened Contracts with the view and marked it Opens here; Rename… worked; a case-only duplicate was refused; a second browser opened the view; Delete… said the records in it are not touched. Re-walk on guide e68143e1 (2026-09-25T11:29:56.397Z), with a fresh fixture Field archived by Daniel Okafor: the results page and the saved search run from the header Saved group said Unavailable Field conditions were removed., selecting that saved search under Saved searches in the dialog said Unavailable search conditions were removed., and the Field condition was gone.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-search-and-views-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/r1-legal_team_member-saved-view.png"
+        "docs/documentation/batches/DOC-030/search/walkthrough.json",
+        "docs/documentation/batches/DOC-030/search/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/search/rewalk-archived-field.mjs",
+        "docs/documentation/batches/DOC-030/search/technical-review.json"
       ]
     },
     {
       "id": "V-C04",
-      "coverage": ["C04"],
+      "coverage": [
+        "C04"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A fresh DOC-029 access account for this role, so seeded accounts keep their saved views.",
-        "Reviewer fixtures created by Daniel: a visible Contract whose PDF alone holds a unique word, a second visible Contract with that word in its title, and a Confidential Contract with that word in its title outside the fresh account's reach. The PDF text was searchable before the walkthrough started."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z). A fresh DOC-030 search account for this role, invited by Daniel Okafor, walks in its own browser context, so seeded accounts keep their saved searches and views.",
+        "Fixtures created by Daniel Okafor through the lab API: Contracts C-60 (Charlie, expiry +200 d), C-61 (Alpha, expiry +30 d), C-62 (Delta, no expiry), C-63 (Golf, exclusion word only), C-64 (Holder, owns the Document), Confidential C-65; Matter M-29 (Bravo); Document \"DOC-030 search V-C04 1790331205958 Echo.pdf\" v1 and v2 on C-64; contract Field \"DOC-030 search V-C04 1790331205958 reference\". The unique word sits in the titles of Alpha, Charlie, Delta, Bravo and the Confidential Contract, and only in the contents of the Echo Document on Holder. Version 1's own word was searchable before version 2 was uploaded ({\"v1\":true,\"v2\":true,\"v1GoneAfterV2\":true})."
       ],
       "expected": "Results respect reach and the saved view restores its configuration; URL, chips, and rows agree. The hidden record never appears; no-match search and failed reads preserve understandable state.",
-      "actual": "8 recorded steps passed on 3fa407e3 for a fresh Legal Team Member, with the same observations as the Administrator: title and PDF-only matches, the Document result naming its owning Contract and Version, find text filled in the reader, the Confidential Contract absent from search and refused by direct link, Show more and failed-read recovery, No matches, Owner and Status filters with chips, the Title sort cycle, Back and Forward, remove and Clear all, the empty filter message, and Save as…, Modified, Discard unsaved changes, Save, Default view, Set as default, Rename…, the duplicate-name refusal, another browser and Delete….",
+      "actual": "42 recorded browser steps passed on 067c1646829df85e62b809ee9157921e867c84e7. The fresh Legal Team Member saw the same results as the Administrator for every step listed for that role: the same header groups and Document owner line, 5 matches with Relevance first, kind narrowing, the latest Version with find filled and no match for the version 1 word, at most ten header rows per kind with a 25-row page and Show more, the Counterparty route, the Advanced search entry points and carried words, words rows treating or and - as words, Search in, kinds and the property list with Fields, the relative date example and chip, per-kind conditions, chips agreeing with the address through reload and Back, the kind notice, Preview limits, Clear and the 20-condition limit, Show flag counts equal to the database at the same moment including Match any, both empty-answer messages, the five sort orders with reload, save, case-insensitive duplicate refusal, the Saved header entry running at once, loading without running, Modified, Save, Discard, a new search after reopening, Recent searches, another browser, no default, sign-out clearing Recent, Rename… and Delete…, the open error, failed-read messages, the hidden Confidential Contract, list filters with Back and Forward, Includes both dates, the empty filter message, the saved view cycle with Opens here. A screenshot of the restored saved view is kept. Re-walk on guide e68143e1 (2026-09-25T11:29:56.397Z), with a fresh fixture Field archived by Daniel Okafor: the results page and the saved search run from the header Saved group said Unavailable Field conditions were removed., selecting that saved search under Saved searches in the dialog said Unavailable search conditions were removed., and the Field condition was gone.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-search-and-views-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/r1-legal_team_member-saved-view.png"
+        "docs/documentation/batches/DOC-030/search/walkthrough.json",
+        "docs/documentation/batches/DOC-030/search/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/search/rewalk-archived-field.mjs",
+        "docs/documentation/batches/DOC-030/search/technical-review.json",
+        "docs/documentation/batches/DOC-030/search/legal_team_member-saved-view.png"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
-    "The work lab is shared with other DOC-029 agents. Seeded records and counts changed during the run. The walkthrough created only accounts and records named DOC-029 access and changed no organisation settings. Nothing was deleted. Two earlier full runs are kept as walkthrough-r1-attempt1.json and walkthrough-r1-attempt2.json; their dispositions (a reviewer script timing error and shared-lab data drift) are in walkthrough-r1.json.",
-    "The lab app container runs with AUTH_RATE_LIMIT=off (lab configuration).",
-    "Column widths in a saved view, date filters (Includes both dates) and the transient Updating… state were not checked.",
-    "In the Columns menu, Move Title earlier and Move Title later do not respond to a mouse click, because the Title item is disabled and its buttons inherit pointer-events none. The walkthrough moved Counterparty instead. The article does not name Title, so this is not an article failure; it is reported separately as a possible product issue.",
-    "Search failures were produced by blocking requests in the browser, not by a server fault."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer. It is not a human user study and not the feature owner's approval.",
+    "The work2 lab is shared with other DOC-030 walkthrough agents, and record counts moved during the run. Show-flag totals were compared with the lab database read just before and just after each Preview total. The walkthrough created only records named DOC-030 search V-C04 1790331205958 and two doc030.search.* accounts, changed no organization settings, and archived only its own fixture Field. It deleted only its own saved searches and views. walkthrough.json lists every fixture.",
+    "Fixtures were written through the lab API as Daniel Okafor. Every guide step ran in the browser as the named role. A Business User check (Lena Vogel, fresh magic link) confirmed that /search opens the Portal. The fixture Field was archived through the API, standing in for the Administrator action the guide mentions.",
+    "Failed reads were produced by aborting requests in the browser, not by a server fault. The saved-search open error was produced by blocking the Field catalog request while selecting a saved search with a Field condition.",
+    "Under Match any a Show condition set to Yes matched every non-archived reachable Contract. Archived Contracts stay out unless Show archived is Yes, which fits the guide's default-exclusion sentence.",
+    "Product bug, outside the guide's steps: the header list reads or and a leading - as operators, while See all results turns the same text into All of these words, where they are plain words. \"word -other\" listed Alpha, Bravo, Delta and Echo in the header but only Charlie on the results page; \"word or other\" listed six records in the header and only Charlie on the page. The guide does not tell readers to use these as operators.",
+    "Not checked: column widths in a saved view, the transient Updating… state, the 25 saved-search and 25 saved-view limits, and rapid-click issue #751 (tracked separately, as the registry says). An earlier full run (walkthrough-attempt1.json) had two failures from shared-lab count drift and a reviewer script race; both checks were made drift-safe and passed in the recorded run.",
+    "The author changed the archived-Field sentence after the full run (guide e68143e1). Only that step was walked again, for both roles, with rewalk-archived-field.mjs; the run is appended to walkthrough.json under reruns. Every other step comes from the full run of 2026-09-25T11:20:25.125Z to 2026-09-25T11:26:56.923Z on the earlier guide text, which the change did not touch."
   ],
   "previousEvidence": {
-    "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-    "contentSha256": "e303479e3b19bde3f34d5131d4f5c59de37b6feab2ef9b50bacdb97cb5478b23",
-    "verifiedAt": "2026-09-07T05:08:47.123Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "605b3ebe1621d9e7e4d4449c32f12e5e35302d6d22392e7860375e3f512ffa1f",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (access)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38, with messages/en-US.json; only the archived-owner text color in list columns and the Settings list panes changed, not search, filters, sort or saved views. I replayed the round 1 V-C04 walkthrough on the work2 lab for Administrator and Legal Team Member, and all 17 steps passed after one rerun for lab data volume. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/access.json",
-        "sha256": "0439676e5a91edbbfd06066c56706e08609c7e99c3e074f1e90ba7c538cc1e9a"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T16:23:21Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

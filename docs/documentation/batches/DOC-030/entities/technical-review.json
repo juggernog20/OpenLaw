@@ -291,7 +291,7 @@
       "articleId": "entity-structure-and-access",
       "scenario": ["V-C53"],
       "contentSha256Before": "8237898f36b21fcb873ac08a07fcf8ff7c1d476b1949a72c4c43f58903c0cb26",
-      "contentSha256": "d81e8cf14f7a9bbbb520d3823cac40df554d8353510279f6eaa01e89bd2ae810",
+      "contentSha256": "0a4b028bcaadc3fc71c1a3b820ad9e6fd5af217c3db2be999695c3beb4136c8f",
       "sources": [
         "CONTEXT.md (Share class, Register entry, Holder, Certificate)",
         "docs/documentation/EDITORIAL.md",
@@ -368,6 +368,12 @@
           "before": "Entity’s (curly); Its primary owner",
           "after": "straight apostrophes; An Entity's primary owner",
           "source": "EDITORIAL.md"
+        },
+        {
+          "claim": "Register entry row control labels (walkthrough round 1 failure)",
+          "before": "Edit entry 003 and Remove entry 003 as the row controls.",
+          "after": "Row controls use the unpadded entry number (Edit entry 3, Remove entry 3). Only the edit dialog title (Edit entry 003) and the confirmation (Remove entry 003 from the register?) pad it.",
+          "source": "share-register-tab.tsx EntriesTable passes entry.entryNo unpadded to entities.register.entry.edit and entities.register.entry.remove; RemoveEntryDialog and share-entry-dialog.tsx pad with padStart(3, \"0\"); messages/en-US.json"
         }
       ],
       "confirmed": [

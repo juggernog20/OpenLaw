@@ -1,0 +1,978 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-030",
+  "group": "signing-2",
+  "issue": 1157,
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (signing-2)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "lab": "work2",
+  "appUrl": "http://127.0.0.1:43300",
+  "mailUrl": "http://127.0.0.1:48425",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-25T09:59:53.804Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-25T10:00:16.340Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "manual-signing": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+    "terms-and-renewals": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec"
+  },
+  "selection": {
+    "articles": [
+      "manual-signing",
+      "terms-and-renewals"
+    ],
+    "roles": [
+      "legal_team_member",
+      "administrator"
+    ]
+  },
+  "stamp": 1790335883058,
+  "records": [
+    {
+      "article": "manual-signing",
+      "role": "legal_team_member",
+      "purpose": "manual signing",
+      "reference": "C-390",
+      "title": "DOC-030 signing-2 V-C17-manual legal_team_member 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "term and renewal",
+      "reference": "C-392",
+      "title": "DOC-030 signing-2 V-C18 legal_team_member 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "Create child contract",
+      "reference": "C-393",
+      "title": "DOC-030 signing-2 child legal_team_member 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "Create successor contract",
+      "reference": "C-394",
+      "title": "DOC-030 signing-2 successor legal_team_member 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "passed renewal date",
+      "reference": "C-395",
+      "title": "DOC-030 signing-2 lapsed legal_team_member 1790335883058"
+    },
+    {
+      "article": "manual-signing",
+      "role": "administrator",
+      "purpose": "manual signing",
+      "reference": "C-408",
+      "title": "DOC-030 signing-2 V-C17-manual administrator 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "term and renewal",
+      "reference": "C-409",
+      "title": "DOC-030 signing-2 V-C18 administrator 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "Create child contract",
+      "reference": "C-415",
+      "title": "DOC-030 signing-2 child administrator 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "Create successor contract",
+      "reference": "C-416",
+      "title": "DOC-030 signing-2 successor administrator 1790335883058"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "passed renewal date",
+      "reference": "C-417",
+      "title": "DOC-030 signing-2 lapsed administrator 1790335883058"
+    }
+  ],
+  "screenshots": [
+    "docs/documentation/batches/DOC-030/signing-2/c17-executed-designation.png",
+    "docs/documentation/batches/DOC-030/signing-2/legal_team_member-renewal-stale-refused.png",
+    "docs/documentation/batches/DOC-030/signing-2/administrator-renewal-stale-refused.png"
+  ],
+  "startedAt": "2026-09-25T11:31:23.059Z",
+  "finishedAt": "2026-09-25T11:35:10.020Z",
+  "steps": [
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector",
+      "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
+      "startedAt": "2026-09-25T11:31:24.116Z",
+      "finishedAt": "2026-09-25T11:31:24.187Z",
+      "actual": "C-390 \"DOC-030 signing-2 V-C17-manual legal_team_member 1790335883058\" (MSA) created by Nadia Haddad; Status Draft; Karim Aziz added to the team. lab.json seed.signing = \"unconfigured\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
+      "expected": "The Contract moves to Out for signature; with no Signing connector there is no Send for signature control and no Envelope",
+      "startedAt": "2026-09-25T11:31:24.187Z",
+      "finishedAt": "2026-09-25T11:31:25.896Z",
+      "actual": "The Stage control menu listed 10 Statuses: \"Draft Draft | Internal review Review | With counterparty Review | Awaiting approval Approval | Out for signature Signature | Active Active | Expired Ended | Terminated Ended | Signed, awaiting countersignature Signature | Superseded Ended\"; choosing Out for signature saved it with no gate. Approvals & signing had 0 Send for signature controls; read-back signingConfigured false, 0 Envelopes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Documents",
+      "action": "Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed",
+      "expected": "The first upload makes one Document; Add version adds v2 on the same chain with the Executed type",
+      "startedAt": "2026-09-25T11:31:25.896Z",
+      "finishedAt": "2026-09-25T11:31:27.156Z",
+      "actual": "Upload document: Type started on \"No type\"; the draft filed as Document \"doc030-signing2-legal_team_member-draft.pdf\" (1 Document). Actions -> Add version: Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012, DOC-030 support added type 09251129\"; chose Executed and uploaded doc030-signing2-legal_team_member-executed.pdf. Read-back: 2 Versions on the same Document; v2 type Executed (kind executed); the row's Type column reads \"Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Documents reader",
+      "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy",
+      "expected": "The reader opens the current Version and Download returns the exact uploaded bytes",
+      "startedAt": "2026-09-25T11:31:27.157Z",
+      "finishedAt": "2026-09-25T11:32:27.273Z",
+      "actual": "Selecting \"doc030-signing2-legal_team_member-draft.pdf\" opened the reader \"doc030-signing2-legal_team_member-draft.pdf, version 2\"; the executed text did not render within 60 s. Download saved doc030-signing2-legal_team_member-executed.pdf with SHA-256 equal to the uploaded executed file (82541cf5d8835590...).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Documents",
+      "action": "Negative: choosing the Executed type during upload does not set the executed designation",
+      "expected": "No Version carries the executed designation; the Version cell shows no Executed mark",
+      "startedAt": "2026-09-25T11:32:27.274Z",
+      "finishedAt": "2026-09-25T11:32:27.289Z",
+      "actual": "Read-back isExecuted for v1/v2: v1=false, v2=false. The Version cell reads \"v2\" with no Executed mark while the Type column reads Executed.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Documents",
+      "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document",
+      "expected": "v2 carries the executed designation; the Status does not change; after a second Document is uploaded the paper keeps Primary",
+      "startedAt": "2026-09-25T11:32:27.290Z",
+      "finishedAt": "2026-09-25T11:32:27.984Z",
+      "actual": "Actions for doc030-signing2-legal_team_member-draft.pdf offered \"Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive\"; Mark as executed copy set the designation on v2 (v1=false, v2=true); the Version cell reads \"v2 Executed\". After a second Document \"doc030-signing2-legal_team_member-schedule.pdf\" was uploaded, the rows read \"doc030-signing2-legal_team_member-draft.pdf Primary\" and \"doc030-signing2-legal_team_member-schedule.pdf\": the contract paper keeps Primary. Status still Out for signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Documents",
+      "action": "Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again",
+      "expected": "v3 becomes current while v2 stays designated; marking v3 moves the designation; v2's own actions offer Unmark as executed copy / Mark as executed copy",
+      "startedAt": "2026-09-25T11:32:27.985Z",
+      "finishedAt": "2026-09-25T11:32:30.694Z",
+      "actual": "Add version filed doc030-signing2-legal_team_member-later.pdf as v3 on the same Document: v3 current, v2 still designated. Mark as executed copy on the Document moved the designation to v3 (one designation per chain). \"Show the 2 earlier versions\" -> v2's actions offered \"Compare with previous, Mark as executed copy\"; Mark as executed copy moved it back to v2; then \"Compare with previous, Unmark as executed copy\" -> Unmark cleared it; then \"Compare with previous, Mark as executed copy\" -> Mark restored it. Version cells: head \"v3\", earlier v2 \"v2 Executed\". v2 still downloads the executed bytes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity",
+      "expected": "The Contract reaches Active without a connector; History records the executed designation and the Status change; no Envelope row exists",
+      "startedAt": "2026-09-25T11:32:30.694Z",
+      "finishedAt": "2026-09-25T11:32:33.400Z",
+      "actual": "Stage control moved C-390 to Active (no Soft gate opened (no approvals)). Stage control reads \"Active\"; read-back Active/active. History: \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad pinned version 2 of doc030-signing2-legal_team_member-draft.pdf as the executed copy this minute Nadia Haddad cleared the executed copy of doc030-signing2-legal_team_member-draft.pdf this minute Nadia Haddad pinned version 2 of doc030-signing2-legal_team_member-draft.pdf as the executed copy this minute Nadia Haddad pinned version 3 o\". Envelopes: 0.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad",
+        "Karim Aziz (Portal)"
+      ],
+      "page": "Portal and API",
+      "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged",
+      "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v2 stays designated",
+      "startedAt": "2026-09-25T11:32:33.400Z",
+      "finishedAt": "2026-09-25T11:32:39.529Z",
+      "actual": "Karim Aziz in the Portal saw \"Your Contracts DOC-030 signing-2 V-C17-manual legal_team_member 1790335883058 C-390 Overview Counterparty Not recorded Stage Active Business\" with 0 executed-copy controls; his direct designation of v3 answered 403. Archived C-390 showed 0 \"Actions for doc030-signing2-legal_team_member-draft.pdf\" menus; clearing the designation answered 409. Restore answered 200; v2 is still designated.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived NDA Contract with an Entity, a Counterparty, a value, High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
+      "expected": "The record exists for this role",
+      "startedAt": "2026-09-25T11:32:39.531Z",
+      "finishedAt": "2026-09-25T11:32:39.835Z",
+      "actual": "C-392 \"DOC-030 signing-2 V-C18 legal_team_member 1790335883058\" (NDA) by Nadia Haddad; entity DOC-030 access confidential entity Ltd 09251012; value GBP 9,900.00 annually; High priority and risk; Confidential; team adds Daniel Okafor and Karim Aziz.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Overview",
+      "action": "Record the term: on Overview use the Contract card; its Rows follow the Contract type's Form; choose Term type Fixed term, then Effective date, Expiry date and Notice period (days), one change at a time",
+      "expected": "The term controls sit in the Contract card in the NDA Form's order; Fixed term offers no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
+      "startedAt": "2026-09-25T11:32:39.836Z",
+      "finishedAt": "2026-09-25T11:32:42.538Z",
+      "actual": "Contract card labels in order: \"Title | Contract type | Our entity | Counterparties | Department | Region | Priority | Risk | Term type | Effective date | Expiry date | Notice period (days) | Value | Currency | Frequency | Needed by | Legal Owner | Business Owner\"; the five term Rows appear in the order Term type, Effective date, Expiry date, Renewal period (months), Notice period (days) (NDA Form rows: title, contract_type, description, entity, counterparties, owning_department, region, priority, risk, term_type, effective_date, expiry_date, renewal_period_months, notice_period_days, value, needed_by). Term type offered \"Fixed term, Auto-renewing, Evergreen\". Four separate saves answered 200. Renewal period (months) was shown read-only with no value on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; read-back notice deadline 2027-01-01 (Jan 31, 2027 minus 30 days).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Overview; Key dates",
+      "action": "Term timeline draws the recorded dates; Key dates shows Current term expires and Renewal notice deadline derived from the term",
+      "expected": "Derived rows match the term and carry no row actions",
+      "startedAt": "2026-09-25T11:32:42.538Z",
+      "finishedAt": "2026-09-25T11:32:44.394Z",
+      "actual": "Term timeline: \"Term timeline Initial term Feb 1 – Jan 31, 2027 Jan 1, 2027 Notice deadline Jan 1, 2027 Today Feb 1 Jan 31, 2027 Initial term Notice deadline\". Key dates rows: \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\", each with 0 row actions.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Overview",
+      "action": "Change Term type to Auto-renewing and enter Renewal period (months)",
+      "expected": "Auto-renewing accepts a renewal period in months",
+      "startedAt": "2026-09-25T11:32:44.394Z",
+      "finishedAt": "2026-09-25T11:32:45.807Z",
+      "actual": "Term type Auto-renewing (PATCH 200) and Renewal period 1 month (PATCH 200) saved; expiry still 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Overview; Key dates",
+      "action": "Change Term type to Evergreen and review the saved values",
+      "expected": "Evergreen has no expiry date; the change clears the expiry and the renewal period",
+      "startedAt": "2026-09-25T11:32:45.808Z",
+      "finishedAt": "2026-09-25T11:33:18.658Z",
+      "actual": "Evergreen saved (PATCH 200); read-back expiry null, renewal period null, effective date kept 2026-02-01; the card offers no Expiry date picker (0). Key dates now lists: \"no derived term rows\".",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Overview",
+      "action": "Back to Auto-renewing with expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
+      "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
+      "startedAt": "2026-09-25T11:33:18.659Z",
+      "finishedAt": "2026-09-25T11:33:21.856Z",
+      "actual": "Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. Restored: Auto-renewing, expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Key dates",
+      "action": "Negative: a Task due before the notice deadline does not feed the term-derived deadlines",
+      "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task is not a Key date row",
+      "startedAt": "2026-09-25T11:33:21.856Z",
+      "finishedAt": "2026-09-25T11:33:23.613Z",
+      "actual": "A Task due 2026-12-01 was added (fixture). Key dates still reads \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\" and lists no Task row; read-back notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Approvals",
+      "action": "Confirm a renewal steps 1-3: open Approvals and select Renew; Confirm the roll is the default; a New expiry date that is not after the current expiry is refused; Cancel changes nothing; Paper as amendment is absent without a primary Document",
+      "expected": "The dialog refuses the invalid date with its message; Cancel keeps the term; no Paper as amendment option",
+      "startedAt": "2026-09-25T11:33:23.614Z",
+      "finishedAt": "2026-09-25T11:33:25.299Z",
+      "actual": "Renew opened \"Confirm renewal\" with options \"Confirm the roll Same record — the expiry advances. / Create child contract New record parented to this one. / New successor contract Standalone record linked as the renewal.\"; Confirm the roll was checked; \"The term currently runs to Jan 31, 2027.\"; proposed New expiry date 2027-02-28; 0 Paper as amendment options (no primary Document). Entering 2027-01-31 then Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Approvals; Overview; Key dates",
+      "action": "Confirm a renewal step 4: Confirm renewal with the proposed date, then check the new expiry, notice deadline, Last renewal and the renewal row; Status and Stage unchanged",
+      "expected": "The term advances only through the confirmation; Status and Stage do not change",
+      "startedAt": "2026-09-25T11:33:25.300Z",
+      "finishedAt": "2026-09-25T11:33:29.431Z",
+      "actual": "Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027 Renewal notice deadline — 30 days before expiry Derived\"); Approvals & signing shows 1 renewal row \"Term advanced to Feb 28, 2027 From Jan 31, 2027 NH Nadia Haddad Sep 25\"; Overview \"Last renewal Sep 25\"; Status stays Draft (draft).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad",
+        "Daniel Okafor"
+      ],
+      "page": "Approvals",
+      "action": "Stale date: with Renew open, the other staff role changes the expiry; Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen Renew gives a fresh proposed date",
+      "expected": "A stale roll is refused and re-read; no second roll is recorded",
+      "startedAt": "2026-09-25T11:33:29.431Z",
+      "finishedAt": "2026-09-25T11:33:34.091Z",
+      "actual": "Dialog proposed 2027-03-28; Daniel Okafor moved expiry to 2027-04-30 (second actor's API write). Confirm renewal answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad",
+        "Daniel Okafor"
+      ],
+      "page": "Approvals (two browser contexts)",
+      "action": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
+      "expected": "Two competing confirmations do not record the same roll twice",
+      "startedAt": "2026-09-25T11:33:34.092Z",
+      "finishedAt": "2026-09-25T11:33:37.300Z",
+      "actual": "Both dialogs proposed 2027-05-30 / 2027-05-30. Nadia Haddad's Confirm renewal answered 200; Daniel Okafor's answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Documents; Approvals",
+      "action": "Paper as amendment: upload the first Document; reopen Renew without a reload, then reload the record and reopen Renew; File the amendment opens Add version with Type set to Amendment; the new Version is not executed until marked, and marking replaces the chain's designation",
+      "expected": "The option appears after a reload; Add version opens on the primary Document with Type Amendment; no new Contract; no expiry change",
+      "startedAt": "2026-09-25T11:33:37.301Z",
+      "finishedAt": "2026-09-25T11:33:41.464Z",
+      "actual": "Uploaded \"doc030-signing2-legal_team_member-agreement.pdf\" as the first (primary) Document and marked v1 executed. Reopening Renew without a reload (section navigation only) already offered Paper as amendment; after a reload it was offered. Its note read \"Opens this record's Documents section to file an amendment on its paper. No new record is made.\". File the amendment moved to /contracts/392/documents and opened \"Add version\" with Type \"Amendment\". After Upload: v1 no type executed=true; v2 Amendment executed=false. Mark as executed copy on the Document gave: v1 executed=false; v2 executed=true (replaced v1). Expiry still 2027-05-30; relations read-back holds 0 related records.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Approvals; create dialog",
+      "action": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
+      "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential need their own review",
+      "startedAt": "2026-09-25T11:33:41.465Z",
+      "finishedAt": "2026-09-25T11:33:44.353Z",
+      "actual": "Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-392 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-030 signing-2 V-C18 legal_team_member 1790335883058\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-393. Carried over: entity DOC-030 access confidential entity Ltd 09251012, counterparty DOC-030 signing-2 Counterparty legal_team_member 1790335883058, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Karim Aziz. Related contracts on C-393: \"Related contracts Add link PARENT C-392 DOC-030 signing-2 V-C18 legal_team_member 1790335883058 Draft Remove parent\". C-392 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Approvals; create dialog",
+      "action": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
+      "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
+      "startedAt": "2026-09-25T11:33:44.354Z",
+      "finishedAt": "2026-09-25T11:33:47.064Z",
+      "actual": "New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-392 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-030 signing-2 V-C18 legal_team_member 1790335883058\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-394. Carried over: entity DOC-030 access confidential entity Ltd 09251012, counterparty DOC-030 signing-2 Counterparty legal_team_member 1790335883058, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Karim Aziz. Related contracts on C-394: \"Related contracts Set parent Add link RENEWS C-392 DOC-030 signing-2 V-C18 legal_team_member 1790335883058 Draft Remove link\". C-392 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Approvals",
+      "action": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation; Review renewal opens the same dialog",
+      "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
+      "startedAt": "2026-09-25T11:33:47.065Z",
+      "finishedAt": "2026-09-25T11:33:48.230Z",
+      "actual": "C-395 (fixture) Auto-renewing, 12 months, expiry 2026-09-20: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-20; Cancel left expiry 2026-09-20 (no automatic advance).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Approvals",
+      "action": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
+      "expected": "Archived records are handled differently from an active renewal",
+      "startedAt": "2026-09-25T11:33:48.231Z",
+      "finishedAt": "2026-09-25T11:33:50.653Z",
+      "actual": "Archived C-392: Approvals showed 0 Renew buttons and a renewal write answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector",
+      "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
+      "startedAt": "2026-09-25T11:33:50.654Z",
+      "finishedAt": "2026-09-25T11:33:50.717Z",
+      "actual": "C-408 \"DOC-030 signing-2 V-C17-manual administrator 1790335883058\" (MSA) created by Daniel Okafor; Status Draft; Karim Aziz added to the team. lab.json seed.signing = \"unconfigured\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
+      "expected": "The Contract moves to Out for signature; with no Signing connector there is no Send for signature control and no Envelope",
+      "startedAt": "2026-09-25T11:33:50.718Z",
+      "finishedAt": "2026-09-25T11:33:52.488Z",
+      "actual": "The Stage control menu listed 10 Statuses: \"Draft Draft | Internal review Review | With counterparty Review | Awaiting approval Approval | Out for signature Signature | Active Active | Expired Ended | Terminated Ended | Signed, awaiting countersignature Signature | Superseded Ended\"; choosing Out for signature saved it with no gate. Approvals & signing had 0 Send for signature controls; read-back signingConfigured false, 0 Envelopes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Documents",
+      "action": "Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed",
+      "expected": "The first upload makes one Document; Add version adds v2 on the same chain with the Executed type",
+      "startedAt": "2026-09-25T11:33:52.489Z",
+      "finishedAt": "2026-09-25T11:33:53.185Z",
+      "actual": "Upload document: Type started on \"No type\"; the draft filed as Document \"doc030-signing2-administrator-draft.pdf\" (1 Document). Actions -> Add version: Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012\"; chose Executed and uploaded doc030-signing2-administrator-executed.pdf. Read-back: 2 Versions on the same Document; v2 type Executed (kind executed); the row's Type column reads \"Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Documents reader",
+      "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy",
+      "expected": "The reader opens the current Version and Download returns the exact uploaded bytes",
+      "startedAt": "2026-09-25T11:33:53.186Z",
+      "finishedAt": "2026-09-25T11:33:53.487Z",
+      "actual": "Selecting \"doc030-signing2-administrator-draft.pdf\" opened the reader \"doc030-signing2-administrator-draft.pdf, version 2\"; the executed text rendered. Download saved doc030-signing2-administrator-executed.pdf with SHA-256 equal to the uploaded executed file (f876fa6e8f41334b...).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Documents",
+      "action": "Negative: choosing the Executed type during upload does not set the executed designation",
+      "expected": "No Version carries the executed designation; the Version cell shows no Executed mark",
+      "startedAt": "2026-09-25T11:33:53.487Z",
+      "finishedAt": "2026-09-25T11:33:53.503Z",
+      "actual": "Read-back isExecuted for v1/v2: v1=false, v2=false. The Version cell reads \"v2\" with no Executed mark while the Type column reads Executed.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Documents",
+      "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document",
+      "expected": "v2 carries the executed designation; the Status does not change; after a second Document is uploaded the paper keeps Primary",
+      "startedAt": "2026-09-25T11:33:53.504Z",
+      "finishedAt": "2026-09-25T11:33:53.855Z",
+      "actual": "Actions for doc030-signing2-administrator-draft.pdf offered \"Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive, Delete\"; Mark as executed copy set the designation on v2 (v1=false, v2=true); the Version cell reads \"v2 Executed\". After a second Document \"doc030-signing2-administrator-schedule.pdf\" was uploaded, the rows read \"doc030-signing2-administrator-draft.pdf Primary\" and \"doc030-signing2-administrator-schedule.pdf\": the contract paper keeps Primary. Status still Out for signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Documents",
+      "action": "Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again",
+      "expected": "v3 becomes current while v2 stays designated; marking v3 moves the designation; v2's own actions offer Unmark as executed copy / Mark as executed copy",
+      "startedAt": "2026-09-25T11:33:53.856Z",
+      "finishedAt": "2026-09-25T11:33:56.299Z",
+      "actual": "Add version filed doc030-signing2-administrator-later.pdf as v3 on the same Document: v3 current, v2 still designated. Mark as executed copy on the Document moved the designation to v3 (one designation per chain). \"Show the 2 earlier versions\" -> v2's actions offered \"Compare with previous, Mark as executed copy\"; Mark as executed copy moved it back to v2; then \"Compare with previous, Unmark as executed copy\" -> Unmark cleared it; then \"Compare with previous, Mark as executed copy\" -> Mark restored it. Version cells: head \"v3\", earlier v2 \"v2 Executed\". v2 still downloads the executed bytes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity",
+      "expected": "The Contract reaches Active without a connector; History records the executed designation and the Status change; no Envelope row exists",
+      "startedAt": "2026-09-25T11:33:56.300Z",
+      "finishedAt": "2026-09-25T11:33:58.965Z",
+      "actual": "Stage control moved C-408 to Active (no Soft gate opened (no approvals)). Stage control reads \"Active\"; read-back Active/active. History: \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor pinned version 2 of doc030-signing2-administrator-draft.pdf as the executed copy this minute Daniel Okafor cleared the executed copy of doc030-signing2-administrator-draft.pdf this minute Daniel Okafor pinned version 2 of doc030-signing2-administrator-draft.pdf as the executed copy this minute Daniel Okafor pinned version 3 of doc03\". Envelopes: 0.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor",
+        "Karim Aziz (Portal)"
+      ],
+      "page": "Portal and API",
+      "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged",
+      "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v2 stays designated",
+      "startedAt": "2026-09-25T11:33:58.966Z",
+      "finishedAt": "2026-09-25T11:34:03.944Z",
+      "actual": "Karim Aziz in the Portal saw \"Your Contracts DOC-030 signing-2 V-C17-manual administrator 1790335883058 C-408 Overview Counterparty Not recorded Stage Active Business Own\" with 0 executed-copy controls; his direct designation of v3 answered 403. Archived C-408 showed 0 \"Actions for doc030-signing2-administrator-draft.pdf\" menus; clearing the designation answered 409. Restore answered 200; v2 is still designated.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived NDA Contract with an Entity, a Counterparty, a value, High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
+      "expected": "The record exists for this role",
+      "startedAt": "2026-09-25T11:34:03.945Z",
+      "finishedAt": "2026-09-25T11:34:04.177Z",
+      "actual": "C-409 \"DOC-030 signing-2 V-C18 administrator 1790335883058\" (NDA) by Daniel Okafor; entity DOC-030 documents-2 Admin folders Entity 09251124 Ltd; value GBP 9,900.00 annually; High priority and risk; Confidential; team adds Nadia Haddad and Karim Aziz.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Overview",
+      "action": "Record the term: on Overview use the Contract card; its Rows follow the Contract type's Form; choose Term type Fixed term, then Effective date, Expiry date and Notice period (days), one change at a time",
+      "expected": "The term controls sit in the Contract card in the NDA Form's order; Fixed term offers no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
+      "startedAt": "2026-09-25T11:34:04.178Z",
+      "finishedAt": "2026-09-25T11:34:06.749Z",
+      "actual": "Contract card labels in order: \"Title | Contract type | Our entity | Counterparties | Department | Region | Priority | Risk | Term type | Effective date | Expiry date | Notice period (days) | Value | Currency | Frequency | Needed by | Legal Owner | Business Owner\"; the five term Rows appear in the order Term type, Effective date, Expiry date, Renewal period (months), Notice period (days) (NDA Form rows: title, contract_type, description, entity, counterparties, owning_department, region, priority, risk, term_type, effective_date, expiry_date, renewal_period_months, notice_period_days, value, needed_by). Term type offered \"Fixed term, Auto-renewing, Evergreen\". Four separate saves answered 200. Renewal period (months) was shown read-only with no value on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; read-back notice deadline 2027-01-01 (Jan 31, 2027 minus 30 days).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Overview; Key dates",
+      "action": "Term timeline draws the recorded dates; Key dates shows Current term expires and Renewal notice deadline derived from the term",
+      "expected": "Derived rows match the term and carry no row actions",
+      "startedAt": "2026-09-25T11:34:06.750Z",
+      "finishedAt": "2026-09-25T11:34:08.698Z",
+      "actual": "Term timeline: \"Term timeline Initial term Feb 1 – Jan 31, 2027 Jan 1, 2027 Notice deadline Jan 1, 2027 Today Feb 1 Jan 31, 2027 Initial term Notice deadline\". Key dates rows: \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\", each with 0 row actions.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Overview",
+      "action": "Change Term type to Auto-renewing and enter Renewal period (months)",
+      "expected": "Auto-renewing accepts a renewal period in months",
+      "startedAt": "2026-09-25T11:34:08.699Z",
+      "finishedAt": "2026-09-25T11:34:10.141Z",
+      "actual": "Term type Auto-renewing (PATCH 200) and Renewal period 1 month (PATCH 200) saved; expiry still 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Overview; Key dates",
+      "action": "Change Term type to Evergreen and review the saved values",
+      "expected": "Evergreen has no expiry date; the change clears the expiry and the renewal period",
+      "startedAt": "2026-09-25T11:34:10.142Z",
+      "finishedAt": "2026-09-25T11:34:12.805Z",
+      "actual": "Evergreen saved (PATCH 200); read-back expiry null, renewal period null, effective date kept 2026-02-01; the card offers no Expiry date picker (0). Key dates now lists: \"no derived term rows\".",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Overview",
+      "action": "Back to Auto-renewing with expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
+      "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
+      "startedAt": "2026-09-25T11:34:12.806Z",
+      "finishedAt": "2026-09-25T11:34:15.830Z",
+      "actual": "Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. Restored: Auto-renewing, expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Key dates",
+      "action": "Negative: a Task due before the notice deadline does not feed the term-derived deadlines",
+      "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task is not a Key date row",
+      "startedAt": "2026-09-25T11:34:15.830Z",
+      "finishedAt": "2026-09-25T11:34:16.903Z",
+      "actual": "A Task due 2026-12-01 was added (fixture). Key dates still reads \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\" and lists no Task row; read-back notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Approvals",
+      "action": "Confirm a renewal steps 1-3: open Approvals and select Renew; Confirm the roll is the default; a New expiry date that is not after the current expiry is refused; Cancel changes nothing; Paper as amendment is absent without a primary Document",
+      "expected": "The dialog refuses the invalid date with its message; Cancel keeps the term; no Paper as amendment option",
+      "startedAt": "2026-09-25T11:34:16.904Z",
+      "finishedAt": "2026-09-25T11:34:18.014Z",
+      "actual": "Renew opened \"Confirm renewal\" with options \"Confirm the roll Same record — the expiry advances. / Create child contract New record parented to this one. / New successor contract Standalone record linked as the renewal.\"; Confirm the roll was checked; \"The term currently runs to Jan 31, 2027.\"; proposed New expiry date 2027-02-28; 0 Paper as amendment options (no primary Document). Entering 2027-01-31 then Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Approvals; Overview; Key dates",
+      "action": "Confirm a renewal step 4: Confirm renewal with the proposed date, then check the new expiry, notice deadline, Last renewal and the renewal row; Status and Stage unchanged",
+      "expected": "The term advances only through the confirmation; Status and Stage do not change",
+      "startedAt": "2026-09-25T11:34:18.015Z",
+      "finishedAt": "2026-09-25T11:34:21.958Z",
+      "actual": "Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027 Renewal notice deadline — 30 days before expiry Derived\"); Approvals & signing shows 1 renewal row \"Term advanced to Feb 28, 2027 From Jan 31, 2027 DO Daniel Okafor Sep 25\"; Overview \"Last renewal Sep 25\"; Status stays Draft (draft).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor",
+        "Nadia Haddad"
+      ],
+      "page": "Approvals",
+      "action": "Stale date: with Renew open, the other staff role changes the expiry; Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen Renew gives a fresh proposed date",
+      "expected": "A stale roll is refused and re-read; no second roll is recorded",
+      "startedAt": "2026-09-25T11:34:21.959Z",
+      "finishedAt": "2026-09-25T11:34:26.431Z",
+      "actual": "Dialog proposed 2027-03-28; Nadia Haddad moved expiry to 2027-04-30 (second actor's API write). Confirm renewal answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor",
+        "Nadia Haddad"
+      ],
+      "page": "Approvals (two browser contexts)",
+      "action": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
+      "expected": "Two competing confirmations do not record the same roll twice",
+      "startedAt": "2026-09-25T11:34:26.432Z",
+      "finishedAt": "2026-09-25T11:34:29.263Z",
+      "actual": "Both dialogs proposed 2027-05-30 / 2027-05-30. Daniel Okafor's Confirm renewal answered 200; Nadia Haddad's answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Documents; Approvals",
+      "action": "Paper as amendment: upload the first Document; reopen Renew without a reload, then reload the record and reopen Renew; File the amendment opens Add version with Type set to Amendment; the new Version is not executed until marked, and marking replaces the chain's designation",
+      "expected": "The option appears after a reload; Add version opens on the primary Document with Type Amendment; no new Contract; no expiry change",
+      "startedAt": "2026-09-25T11:34:29.264Z",
+      "finishedAt": "2026-09-25T11:35:01.270Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('region', { name: 'Approvals & signing' }) to be visible\u001b[22m ",
+      "result": "fail"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Approvals; create dialog",
+      "action": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
+      "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential need their own review",
+      "startedAt": "2026-09-25T11:35:01.271Z",
+      "finishedAt": "2026-09-25T11:35:04.683Z",
+      "actual": "Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-409 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-030 signing-2 V-C18 administrator 1790335883058\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-415. Carried over: entity DOC-030 documents-2 Admin folders Entity 09251124 Ltd, counterparty DOC-030 signing-2 Counterparty administrator 1790335883058, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Karim Aziz. Related contracts on C-415: \"Related contracts Add link PARENT C-409 DOC-030 signing-2 V-C18 administrator 1790335883058 Draft Remove parent\". C-409 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Approvals; create dialog",
+      "action": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
+      "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
+      "startedAt": "2026-09-25T11:35:04.683Z",
+      "finishedAt": "2026-09-25T11:35:07.216Z",
+      "actual": "New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-409 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-030 signing-2 V-C18 administrator 1790335883058\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-416. Carried over: entity DOC-030 documents-2 Admin folders Entity 09251124 Ltd, counterparty DOC-030 signing-2 Counterparty administrator 1790335883058, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Karim Aziz. Related contracts on C-416: \"Related contracts Set parent Add link RENEWS C-409 DOC-030 signing-2 V-C18 administrator 1790335883058 Draft Remove link\". C-409 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Approvals",
+      "action": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation; Review renewal opens the same dialog",
+      "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
+      "startedAt": "2026-09-25T11:35:07.217Z",
+      "finishedAt": "2026-09-25T11:35:08.243Z",
+      "actual": "C-417 (fixture) Auto-renewing, 12 months, expiry 2026-09-20: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-20; Cancel left expiry 2026-09-20 (no automatic advance).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor"
+      ],
+      "page": "Approvals",
+      "action": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
+      "expected": "Archived records are handled differently from an active renewal",
+      "startedAt": "2026-09-25T11:35:08.244Z",
+      "finishedAt": "2026-09-25T11:35:10.019Z",
+      "actual": "Archived C-409: Approvals showed 0 Renew buttons and a renewal write answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "result": "pass"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user (negative check only)",
+      "person": "Karim Aziz",
+      "entry": "new magic link from the work2 Mailpit, Portal sign-in"
+    }
+  ],
+  "retries": [
+    {
+      "at": "2026-09-25T11:33:17.609Z",
+      "page": "/contracts/392/key-dates",
+      "waitedFor": "Key dates region",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    }
+  ],
+  "summary": {
+    "total": 50,
+    "pass": 49,
+    "fail": 1
+  }
+}

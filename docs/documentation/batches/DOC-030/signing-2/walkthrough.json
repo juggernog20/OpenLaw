@@ -1,0 +1,152 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-030",
+  "group": "signing-2",
+  "issue": 1157,
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (signing-2)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "lab": "work2",
+  "appUrl": "http://127.0.0.1:43300",
+  "mailUrl": "http://127.0.0.1:48425",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-25T09:59:53.804Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-25T10:00:16.340Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "manual-signing": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+    "terms-and-renewals": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec"
+  },
+  "selection": {
+    "articles": [
+      "manual-signing",
+      "terms-and-renewals"
+    ],
+    "roles": [
+      "legal_team_member",
+      "administrator"
+    ]
+  },
+  "stamp": 1790336750726,
+  "records": [
+    {
+      "article": "manual-signing",
+      "role": "legal_team_member",
+      "purpose": "manual signing",
+      "reference": "C-467",
+      "title": "DOC-030 signing-2 V-C17-manual legal_team_member 1790336750726"
+    }
+  ],
+  "screenshots": [],
+  "startedAt": "2026-09-25T11:45:50.727Z",
+  "finishedAt": "2026-09-25T11:46:28.121Z",
+  "steps": [
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector",
+      "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
+      "startedAt": "2026-09-25T11:45:52.846Z",
+      "finishedAt": "2026-09-25T11:45:53.014Z",
+      "actual": "C-467 \"DOC-030 signing-2 V-C17-manual legal_team_member 1790336750726\" (MSA) created by Nadia Haddad; Status Draft; Karim Aziz added to the team. lab.json seed.signing = \"unconfigured\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
+      "expected": "The Contract moves to Out for signature; with no Signing connector there is no Send for signature control and no Envelope",
+      "startedAt": "2026-09-25T11:45:53.014Z",
+      "finishedAt": "2026-09-25T11:45:56.000Z",
+      "actual": "The Stage control menu listed 10 Statuses: \"Draft Draft | Internal review Review | With counterparty Review | Awaiting approval Approval | Out for signature Signature | Active Active | Expired Ended | Terminated Ended | Signed, awaiting countersignature Signature | Superseded Ended\"; choosing Out for signature saved it with no gate. Approvals & signing had 0 Send for signature controls; read-back signingConfigured false, 0 Envelopes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad"
+      ],
+      "page": "Documents",
+      "action": "Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed",
+      "expected": "The first upload makes one Document; Add version adds v2 on the same chain with the Executed type",
+      "startedAt": "2026-09-25T11:45:56.001Z",
+      "finishedAt": "2026-09-25T11:46:28.121Z",
+      "actual": "Upload document: Type started on \"No type\"; the draft filed as Document \"doc030-signing2-legal_team_member-draft.pdf\" (1 Document). Actions -> Add version: Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012, DOC-030 support added type 09251133\"; chose Executed and uploaded doc030-signing2-legal_team_member-executed.pdf. Read-back: 2 Versions on the same Document; v2 type Executed (kind executed); the row's Type column reads \"Executed\".",
+      "result": "pass"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user (negative check only)",
+      "person": "Karim Aziz",
+      "entry": "new magic link from the work2 Mailpit, Portal sign-in"
+    }
+  ],
+  "retries": [
+    {
+      "at": "2026-09-25T11:46:26.045Z",
+      "page": "/contracts/467/documents",
+      "waitedFor": "Documents card",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home",
+      "abortedRequests": [
+        "GET /api/v1/entities net::ERR_NETWORK_CHANGED",
+        "GET /api/events net::ERR_ABORTED"
+      ]
+    }
+  ]
+}

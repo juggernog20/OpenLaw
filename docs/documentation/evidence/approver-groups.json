@@ -1,72 +1,79 @@
 {
   "articleId": "approver-groups",
-  "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (admin-org, round 1)",
+  "contentSha256": "c0f132517840b0fd75f56250e1ed446326f13fd62027aef4577305ae37d4d88d",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "Codex documentation author; corrections by DOC-030 source-review author agent (contracts-a)",
+  "technicalReviewer": "DOC-030 source-review author agent (contracts-a)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (contracts-a)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org)",
-  "technicalReviewer": "DOC-029 source-review author agent (admin-org)",
-  "verifiedAt": "2026-09-16T15:49:45Z",
+  "verifiedAt": "2026-09-25T10:37:26.860Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/approver-groups.md",
-    "docs/documentation/batches/DOC-029/admin-org/technical-review.json",
-    "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.json"
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-012; 2026-09-17 default groups and business approvers; 2026-09-18 security review H6)",
+    "messages/en-US.json",
+    "apps/web/src/routes/settings-approver-groups.tsx",
+    "apps/web/src/components/approval-default-settings.tsx",
+    "apps/web/src/routes/settings-contract-type-editor.tsx",
+    "apps/web/src/components/type-editor-sections.tsx",
+    "apps/web/src/components/type-form/messages.ts",
+    "apps/web/src/components/contracts-settings-tabs.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/api/src/modules/approver-groups/routes.ts",
+    "apps/api/src/modules/contract-approvals/routes.ts",
+    "apps/api/src/modules/contract-types/approval-defaults.ts",
+    "apps/api/src/modules/contracts/create.ts",
+    "apps/api/src/lib/approvers.ts",
+    "apps/web/src/components/portal/portal-nav.tsx",
+    "docs/documentation/batches/DOC-030/contracts-a/technical-review.json",
+    "docs/documentation/batches/DOC-030/contracts-a/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/contracts-a/api.mjs",
+    "docs/documentation/batches/DOC-030/contracts-a/walkthrough.json"
   ],
   "scenarios": [
     {
       "id": "V-C55",
-      "coverage": ["C55"],
+      "coverage": [
+        "C55"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded Administrator Daniel Okafor and Legal Team Member Nadia Haddad on the shared admin documentation lab.",
-        "Two Legal Team Members invited and activated by the walkthrough, and Contracts titled DOC-029 admin-org *, one of them Confidential."
+        "Administrator, two Member+ approvers, and a Contract with an applied group.",
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646. Daniel Okafor (Administrator) configures groups, type defaults and the override setting in his browser context; Nadia Haddad (Legal Team Member) is the unauthorized reader and the restricted Legal applier.",
+        "Members Priya Raman (Legal Team Member), Lena Vogel (Business User) and an invited fixture Legal Team Member 'DOC-030 contracts-a Approver <stamp>' who is archived during the walk. Fixture type 'DOC-030 contracts-a Approval defaults type <stamp>'."
       ],
       "expected": "Applying a group snapshots members into Approval requests; later group edits do not rewrite those requests. Non-Member+ selections and unauthorized configuration are refused; existing requests retain their recorded identities.",
-      "actual": "13 recorded steps passed on 3fa407e3. Nadia Haddad was redirected from Approver groups and the group API answered 403. The profile menu, Settings, Contracts, Approver groups path opened the pane. Add group offered 13 people and none of the 16 Business Users; after Add group and reload, Edit showed both chosen members. Adding a Business User through the member-list save was refused with 422 naming the person, and the group kept 2 members. On a Contract, Approvals then Approvals & signing offered Apply group; the dialog named both people and warned that later group edits leave the requests as they are, and applying created 2 Pending requests stamped with the group. Applying again showed \"Everybody in this group already has a request open.\" and was refused. With one member already asked, the dialog said \"Skips 1 person who already has a request open.\" and only the other request was added. With a member changed to Business user, the whole apply was refused by name and created nothing, and the editor marked that member \"Can no longer approve\"; after the role was restored the apply created both requests. On a Confidential Contract a member outside the audience refused the whole apply by name with no requests. A group with no members was refused with \"... has no members to ask.\" Editing the members, Archive group (whose confirmation asked for no replacement), hiding from the apply picker while archived, and Show archived then Restore all left the first Contract's two requests and named people unchanged. Nadia Haddad applied the group on a Contract she could open and got 2 Pending requests.",
+      "actual": "9 recorded browser steps passed for this role in the final run (2026-09-25T10:37:03.405Z to 2026-09-25T10:37:26.860Z). [Profile menu > Settings > Contracts > Approver groups > Add group] Create a group, steps 1-4: Name, Description, Members including a Business User; Add group; reopen Edit to confirm the saved members; groups appear by name: The profile menu path reached /settings/contracts/approver-groups. Add approver group offered 66 people under Members, including Business Users Lena Vogel and Jonas Weber and the invited fixture user, and not archived Gabriel Santos. After Add group and a reload, Edit showed all three chosen members checked. Page list order [\"DOC-030 contracts-a default group 1790332469976\",\"DOC-030 contracts-a Legal and business 1790332469976\",\"DOC-030 contracts-a sign-off 1790332469976\",\"Executive committee\",\"Finance sign-off\",\"Privacy review\",\"Security review\"] is name order (7 live groups). [/contracts/:number/approvals > Apply group] Apply and check the group, steps 1-3: Approvals, Approvals & signing, Apply group, choose the Approver group, review the named people and the skipped pending request, Apply group; one request per person asked; Business approvers are not added to the team: On C-202, after one manual request for Priya Raman, Apply group with \"DOC-030 contracts-a Legal and business 1790332469976\" read \"Asks DOC-030 contracts-a Approver 1790332469976 and Lena Vogel. Skips 1 person who already has a request open. Applying a group asks the people it names now. A later edit to the group leaves these requests as they are. Cancel Apply group\". Requests afterwards: [\"Priya Raman:pending:manual\",\"DOC-030 contracts-a Approver 1790332469976:pending:group\",\"Lena Vogel:pending:group\"]. Contract team: [\"Daniel Okafor\"] (no Lena Vogel). [/contracts/:number/approvals > Apply group (refusals)] A group with everyone already pending is refused; a group with no active members is refused; on a Confidential Contract a staff member without access refuses the whole action and no request is created; a Confidential primary Document also needs staff approvers in its audience: All pending on C-202: the dialog said \"Everybody in this group already has a request open.\" and Apply group was refused with \"Everybody in DOC-030 contracts-a Legal and business 1790332469976 already has a pending approval request on this contract.\"; still 3 requests. Empty group on C-203: \"This group has nobody to ask.\", refused with \"DOC-030 contracts-a Empty group 1790332469976 has no members to ask.\", 0 requests. Confidential C-204: refused with \"DOC-030 contracts-a Approver 1790332469976 can't see this contract, so they can't be asked to approve it.\", 0 requests. Open C-205 with a Confidential primary Document: refused with \"DOC-030 contracts-a Approver 1790332469976 can't see this contract, so they can't be asked to approve it.\", 0 requests. [/settings/contracts/approver-groups > Edit] A member who has been archived is left out of an apply and shows as Can no longer approve in the editor; remove that selection before saving; the API refuses an archived member; existing requests keep their named people: After the fixture user was archived (200), Apply group on C-206 read \"Asks Lena Vogel and Priya Raman. Applying a group asks the people it names now. A later edit to the group leaves these requests as they are. Cancel Apply group\" and asked [\"Lena Vogel\",\"Priya Raman\"]. Edit flagged the archived member \"Can no longer approve\" (1); adding Tom Iwu and selecting Save with that member still ticked showed \"DOC-030 contracts-a Approver 1790332469976 is archived and can't be a group member.\", the dialog stayed open and the saved list kept 3 members. After unticking the archived member, Save closed the dialog; the group has 3 members including Tom Iwu. A member-list write naming the archived user answered 422 (\"DOC-030 contracts-a Approver 1790332469976 is archived and can't be a group member.\"). C-202's requests are unchanged: [\"Priya Raman:pending:manual\",\"DOC-030 contracts-a Approver 1790332469976:pending:group\",\"Lena Vogel:pending:group\"]. [/settings/contracts/approver-groups > Edit, Archive, Show archived, Restore] Edit, archive, or restore a group: change the name, description and Members and Save; a member-list failure after the name saved is visible; Archive group needs no replacement; Show archived then Restore; existing requests keep their named people: Save changed the description and removed Tom Iwu (2 members). With the member-list write answered 503, the editor said \"The member list could not be saved.\"; the new description had saved and Marcus Oyelaran was not added, so the rename or description alone is not proof. The archive confirmation read \"Archive DOC-030 contracts-a Legal and business 1790332469976 DOC-030 contracts-a Legal and business 1790332469976 leaves the apply picker. Its 2 members are kept, and approvals already requested from the group are untouched. The change applies immediately and is recorded in the audit log. Cancel Archive group\". While archived, C-202's Apply group offered [\"Pick a group\",\"DOC-030 contracts-a default group 1790332469976\",\"DOC-030 contracts-a Empty group 1790332469976\",\"DOC-030 contracts-a sign-off 1790332469976\",\"Executive committee\",\"Finance sign-off\",\"Privacy review\",\"Security review\"]. Show archived then Restore returned it. C-202's requests stayed [\"Priya Raman:pending:manual\",\"DOC-030 contracts-a Approver 1790332469976:pending:group\",\"Lena Vogel:pending:group\"] through edit, archive and restore. [Settings > Contracts > Types > Edit type > Approval defaults] Defaults: open a type, select its Approval defaults tab, choose the Approver group in the Default approver group card; the choice saves on select; new Contracts inherit it and no approval starts; clearing or changing affects future Contracts only; re-typed Contracts keep their default: Types > Edit DOC-030 contracts-a Approval defaults type 1790332469976 > Approval defaults showed the Default approver group card. Choosing \"DOC-030 contracts-a Legal and business 1790332469976\" saved on select. New C-208 of that type had 0 approval requests and its Apply group started on \"DOC-030 contracts-a Legal and business 1790332469976\". C-209 re-typed into the type (200) started on \"Pick a group\". After No default group saved, C-208 still started on \"DOC-030 contracts-a Legal and business 1790332469976\" and new C-210 on \"Pick a group\". The default was then set back to the group. [/settings/contracts/approver-groups > Approval permissions] Override permissions: the card asks Who can override a default approver group?, starts on Legal team members and administrators, and saves on select; Administrators only restricts applying a different group on a Contract with a default, including for pages opened before the change; Contracts without a default still allow Legal to choose; the setting is put back: The Approval permissions card asked \"Who can override a default approver group?\" and started on \"Legal team members and administrators\". Administrators only saved on select (stored false). Nadia Haddad's dialog, opened before the change with \"DOC-030 contracts-a sign-off 1790332469976\" chosen, was refused on Apply group: \"Only an administrator can override this contract's default approver group.\"; C-208 has 0 requests. Reopened, her select was disabled and the dialog said \"Only an administrator can choose a different group.\" On a Contract without a default her select was enabled. Daniel Okafor's select stayed enabled. The setting was put back to Legal team members and administrators. [Types > Approval defaults and /contracts/:number/approvals with an archived default] If a type's default group is archived, the type card shows it with (archived); on a Contract that inherited it, Apply group shows Default group unavailable — contact an administrator; anyone who may override can choose another group: With the group archived (200), the type's Default approver group card showed \"DOC-030 contracts-a Legal and business 1790332469976 (archived)\". C-208's Apply group started on \"Default group unavailable — contact an administrator\" and the select was enabled for the Administrator. The group was restored. [/settings/contracts/approver-groups] Create a group, step 1: only an Administrator can open the page; anyone else who opens its address goes to their profile settings: Nadia Haddad opened the address and landed on /settings/profile. A group create through the API answered 403.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/admin-org/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/admin-org/runs/groups-2026-09-16T15-23-31-280Z.json",
-        "docs/documentation/batches/DOC-029/admin-org/groups-list.png"
+        "docs/documentation/batches/DOC-030/contracts-a/walkthrough.json",
+        "docs/documentation/batches/DOC-030/contracts-a/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/contracts-a/api.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
-    "The picker offers no Business User, so the non-Member+ refusal was checked on the member-list save that the editor uses, not through a picker click.",
-    "Decisions, cancellation and the Approval Stage belong to contract-approvals and were not replayed.",
-    "The audit log entry for configuration changes was not opened.",
-    "The admin lab is shared with other DOC-029 agents. This walkthrough created only records named DOC-029 admin-org * or doc029-grp-*, archived every group it created at the end, and changed no organisation settings. Two earlier groups runs are kept in runs/superseded with their reviewer script faults (see walkthrough-r1.json)."
+    "Independent agent walkthrough by an agent that did not write or source-review the guide; not a human user study and not the feature owner's approval.",
+    "Run on the shared work2 lab (openlaw-docs-80ceef9e-work2), which other DOC-030 agents used at the same time. Only records named DOC-030 contracts-a were created. The fixture Fields, Contract types and Approver groups were archived after the run; the Contracts stay as named records. Pickers therefore also listed people other DOC-030 agents created.",
+    "API sessions created prerequisites (fixture types, Fields, groups, setup Contracts, a primary PDF), played the second actor's writes, and read back saved state and refusals. Every guide step ran in the browser as the named role. See walkthrough.json.",
+    "The Business User was Lena Vogel rather than Jonas Weber: the sign-in link budget is 3 per address in 15 minutes and other agents were spending Jonas Weber's links. She signed in to the Portal with a fresh magic link from the lab Mailpit.",
+    "Confirms the author's limitation on the V-C55 negative check: members may be any active user, and Business Users were offered and saved. The refusals checked instead were the archived member (editor error and API 422) and the Administrator-only page gate (Nadia Haddad sent to /settings/profile, API 403).",
+    "The archived member was a fixture Legal Team Member who was invited but never activated, then archived by the Administrator. No seeded account was archived.",
+    "Saving the editor with an archived member still ticked and no member change closes without error, because no member-list write is sent. The refusal appears on a member change; the guide's 'Remove that selection before saving a valid member list' holds.",
+    "The member-list failure after the description saved was induced with a routed 503 answer to the member-list write.",
+    "The organization override setting was changed in the browser for about three seconds and put back through the same card.",
+    "The Audit log entry for these configuration changes was not opened. The Members help text in the app still says 'Legal portal'; the guide says Approvals in the Portal navigation bar, which is what the Portal shows."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "baffd87c46ad0bfa7d084348f14bf7334da24590d99ca4c50a04cb870b7bdbb9",
-    "verifiedAt": "2026-09-08T06:32:12Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "9e7982d2e20398a735bc96de3513f7672beb378932df5d25b1fbf9d17e29188c",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (admin-org)) found the article compatible: The app diff from 3fa407e3 to 57e77e38 changes no Approver group or Contract approval code; the shared ListEditor change adds optional props and an inline add-row guard that the Approver groups dialog does not use. The round 1 V-C55 groups walkthrough replayed on the admin2 lab built from 57e77e38 and passed all 14 steps. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/admin-org.json",
-        "sha256": "9d597cfeabe6c3c938ea48ef4534be4b69d2c47cd399cfdbabd3fb8d03d28489"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:49:45Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }
