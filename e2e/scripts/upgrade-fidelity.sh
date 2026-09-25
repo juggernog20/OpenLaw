@@ -30,8 +30,13 @@ BASELINE="$(node e2e/scripts/upgrade-baseline.mjs "${BASELINE:-}")"
 APP_PORT="${APP_PORT:-3200}"
 MAILPIT_HOST_PORT="${MAILPIT_PORT:-8225}"
 SIGNING_STUB_PORT="${SIGNING_STUB_PORT:-8229}"
-PROJECT=openlaw-upgrade
+PROJECT="${UPGRADE_COMPOSE_PROJECT:-openlaw-upgrade}"
+export UPGRADE_COMPOSE_PROJECT="$PROJECT"
 COMPOSE=(docker compose -p "$PROJECT" -f compose.yml -f compose.dev.yml)
+# An absolute overlay path can assign subnets when the local engine has no default pools left.
+if [[ -n "${UPGRADE_COMPOSE_OVERRIDE:-}" ]]; then
+  COMPOSE+=(-f "$UPGRADE_COMPOSE_OVERRIDE")
+fi
 
 WORKTREE="$(mktemp -d)/baseline"
 FINGERPRINT="$(mktemp -d)/fingerprint.json"

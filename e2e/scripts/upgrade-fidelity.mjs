@@ -64,11 +64,14 @@
  * Contracts, Fields, teams, Documents, external deflection links,
  * Activity, and lifecycle timestamps all ride the fingerprint. The
  * baseline API creates every row; the script never writes the database
- * directly.
+ * directly. M42 also reads stored MCP rows through Compose's psql to compare
+ * credentials byte for byte, allowing only Team and Administration to leave
+ * the Organization ceiling. CI carries upgrade-mcp.mjs beside this script.
  */
 
 import { createHash, randomUUID } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
+import { assertMcpRows, snapshotMcpRows } from "./upgrade-mcp.mjs";
 
 const BASE_URL = process.env.UPGRADE_BASE_URL ?? "http://localhost:3000";
 
@@ -312,18 +315,33 @@ async function seed() {
   // Older releases have no MCP routes. The M40 CI baseline always takes this path.
   let mcp = null;
   if (baselineApi.paths["/api/v1/mcp-settings"]) {
+    const removesToolsets = (await get("/api/v1/mcp-settings")).toolsetCeiling.includes("team");
     const policy = {
       enabled: true,
       legalApiKeysEnabled: true,
       businessApiKeysEnabled: true,
-      toolsetCeiling: ["matters", "contracts"],
+      toolsetCeiling: [
+        "workspace",
+        "contracts",
+        "matters",
+        "tasks",
+        "requests",
+        "comments",
+        "documents",
+        "auto-docs",
+        "entities",
+        "knowledge",
+        "people",
+        "team",
+        "administration",
+      ],
       readOnly: false,
       apiKeyLifetimeDays: 37,
     };
     await patch("/api/v1/mcp-settings", policy);
     const active = await post("/api/v1/api-key-requests", {
       clientName: "Upgrade active Client",
-      toolsets: ["matters"],
+      toolsets: ["matters", "team", "administration"],
       scope: "write",
       note: "Keep this key and its request.",
     });
@@ -341,7 +359,73 @@ async function seed() {
       [active.id, revoked.id].sort(),
       "M40 seeded requests",
     );
+    const hasOAuth = Boolean(baselineApi.paths["/api/v1/mcp-settings/allowed-clients"]);
+    if (hasOAuth) {
+      await patch("/api/v1/mcp-settings", { legalOAuthClientsEnabled: true });
+      const client = await post("/api/v1/mcp-settings/allowed-clients", {
+        name: "Upgrade Allowed Client",
+        callbackUrls: ["http://127.0.0.1:9876/callback"],
+      });
+      const { secret } = await post(`/api/v1/mcp-settings/allowed-clients/${client.id}/secret`);
+      const verifier = "upgrade-fidelity-pkce-verifier-".repeat(3);
+      const params = new URLSearchParams({
+        client_id: client.clientId,
+        redirect_uri: "http://127.0.0.1:9876/callback",
+        response_type: "code",
+        scope: "toolset:matters toolset:contracts write offline_access",
+        code_challenge: createHash("sha256").update(verifier).digest("base64url"),
+        code_challenge_method: "S256",
+        state: randomUUID(),
+      });
+      const authorization = await fetch(new URL(`/api/auth/oauth2/authorize?${params}`, BASE_URL), {
+        headers: { accept: "text/html", cookie: cookieHeader() },
+        redirect: "manual",
+      });
+      keepCookies(authorization);
+      check(
+        [200, 302].includes(authorization.status),
+        `M41 authorization answered ${authorization.status}`,
+      );
+      const destination =
+        authorization.status === 302
+          ? authorization.headers.get("location")
+          : (await authorization.json()).url;
+      check(typeof destination === "string", "M41 authorization has no consent URL");
+      const consentUrl = new URL(destination, BASE_URL);
+      check(
+        consentUrl.pathname === "/auth/consent",
+        `M41 authorization reached ${consentUrl.pathname}`,
+      );
+      const oauth_query = consentUrl.search.slice(1);
+      if (authorization.status === 302) await authorization.body?.cancel();
+      const consent = await post("/api/v1/oauth-grants/consent", {
+        oauth_query,
+        accept: true,
+        toolsets: ["matters", "contracts"],
+        scope: "write",
+      });
+      const token = await fetch(new URL("/api/auth/oauth2/token", BASE_URL), {
+        method: "POST",
+        headers: { origin: ORIGIN, "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          client_id: client.clientId,
+          client_secret: secret,
+          code: new URL(consent.url).searchParams.get("code"),
+          redirect_uri: "http://127.0.0.1:9876/callback",
+          code_verifier: verifier,
+          resource: new URL("/mcp", BASE_URL).href,
+        }),
+      });
+      check(token.status === 200, "M41 consent did not issue tokens");
+      const tokens = await token.json();
+      check(Boolean(tokens.access_token && tokens.refresh_token), "M41 grant has no token pair");
+      await patch("/api/v1/mcp-settings", { legalOAuthClientsEnabled: false });
+    }
     mcp = {
+      hasOAuth,
+      // A fresh pre-M42 install includes Team and Administration in its default ceiling.
+      removesToolsets,
       policy,
       requests: requests.map(apiKeyRequestFacts),
       activeKey: active.key,
@@ -813,6 +897,19 @@ async function seed() {
     `/api/v1/activity?entityType=contract&entityId=${encodeURIComponent(approvalHostId)}`,
   );
 
+  if (mcp?.hasOAuth) {
+    mcp.rows = snapshotMcpRows();
+    for (const table of [
+      "api_keys",
+      "api_key_requests",
+      "oauth_grants",
+      "allowed_clients",
+      "oauth_consents",
+      "oauth_refresh_tokens",
+    ]) {
+      check(JSON.parse(mcp.rows[table]).length > 0, `M41 seed left ${table} empty`);
+    }
+  }
   return {
     mcp,
     aiConnector: {
@@ -995,6 +1092,8 @@ async function seed() {
 // -------------------------------------------------------------- verify
 
 async function verify(fingerprint) {
+  if (fingerprint.mcp?.rows)
+    assertMcpRows(fingerprint.mcp.rows, snapshotMcpRows(), fingerprint.mcp.removesToolsets);
   // The session is the first thing checked, because it is the first
   // thing a self-hoster notices: sessions and password hashes are rows
   // like any other, and a migration can break them.
@@ -1026,7 +1125,11 @@ async function verify(fingerprint) {
   );
   if (fingerprint.mcp) {
     for (const [field, value] of Object.entries(fingerprint.mcp.policy)) {
-      same(mcpPolicy[field], value, `M40 setting ${field}`);
+      const expected =
+        field === "toolsetCeiling" && fingerprint.mcp.removesToolsets
+          ? value.filter((toolset) => toolset !== "team" && toolset !== "administration")
+          : value;
+      same(mcpPolicy[field], expected, `MCP setting ${field}`);
     }
     const requests = await get("/api/v1/mcp-settings/api-keys");
     same(
@@ -1455,7 +1558,7 @@ const command = process.argv[2];
 if (command === "seed") {
   const out = argument("--out") ?? "upgrade-fingerprint.json";
   const fingerprint = await seed();
-  await writeFile(out, `${JSON.stringify(fingerprint, null, 2)}\n`);
+  await writeFile(out, `${JSON.stringify(fingerprint, null, 2)}\n`, { mode: 0o600 });
   console.log(
     `seeded ${fingerprint.contracts.length} Contracts, ${fingerprint.matters.length} Matters, ` +
       `${fingerprint.documents.list.length + 1} Documents, ` +
