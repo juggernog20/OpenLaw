@@ -69,7 +69,14 @@ test("selects an exact Version and Signers in Signatures and retains an unsent d
     await dialog.getByLabel("Signer 1 name").fill("Dana Signer");
     await dialog.getByLabel("Signer 1 email").fill("dana@example.test");
     await dialog.getByLabel("Subject", { exact: true }).fill("Review this agreement");
+    const preparation = page.waitForResponse(
+      (response) =>
+        response.url().endsWith(`/contracts/${contract.number}/envelopes/prepare`) &&
+        response.request().method() === "POST",
+    );
     await dialog.getByRole("button", { name: "Create draft", exact: true }).click();
+    const prepared = await preparation;
+    expect(prepared.status(), await prepared.text()).toBe(201);
     await expect(page.getByText("Draft — not sent", { exact: true })).toBeVisible();
     await expect(page.getByText("Not sent", { exact: true })).toBeVisible();
     await page.reload();

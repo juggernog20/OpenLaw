@@ -324,6 +324,7 @@ export class SigningStub {
     const base = `/restapi/v2.1/accounts/${STUB_ACCOUNT_ID}/envelopes`;
     if (path === base && request.method === "POST") {
       const definition = JSON.parse((await readBody(request)).toString("utf8")) as {
+        status?: string;
         emailSubject?: string;
         documents?: { documentBase64?: string }[];
         recipients?: { signers?: { name?: string; email?: string }[] };
@@ -336,12 +337,12 @@ export class SigningStub {
       this.minted += 1;
       const id = `${this.idPrefix}-${String(this.minted).padStart(4, "0")}`;
       this.envelopes.set(id, {
-        status: (definition as { status?: string }).status === "created" ? "created" : "sent",
+        status: definition.status === "created" ? "created" : "sent",
         signers: signers.map((signer) => ({ name: signer.name ?? "", email: signer.email ?? "" })),
         emailSubject: definition.emailSubject ?? "",
         document: Buffer.from(definition.documents?.[0]?.documentBase64 ?? "", "base64"),
       });
-      sendJson(response, 201, { envelopeId: id, status: "sent" });
+      sendJson(response, 201, { envelopeId: id, status: this.require(id).status });
       return;
     }
 
