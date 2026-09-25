@@ -217,8 +217,15 @@ jobs:
   # `pnpm upgrade-fidelity` runs the same rehearsal locally, on its own
   # compose project and ports. Keep the two in step.
   upgrade:
-    name: An existing install survives an upgrade
+    name: An existing install survives an upgrade (${{ matrix.baseline || 'event base' }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Keep a populated M40 install in the gate so M41 migrations run over API keys.
+        baseline: ["", "b1437fa8"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Two image builds, not one. The second reuses most of the first's
     # layers, but the bound has to clear both.
     timeout-minutes: 45
@@ -268,11 +275,13 @@ jobs:
 
       - name: Pick the baseline and check it out
         id: baseline
+        env:
+          BASELINE_REF: ${{ matrix.baseline }}
         run: |
           # Explicit, so the selector does not depend on what the checkout
           # action happened to fetch for this event type.
           git fetch --force origin --tags "+refs/heads/dev:refs/remotes/origin/dev"
-          ref=$(node e2e/scripts/upgrade-baseline.mjs)
+          ref=$(node e2e/scripts/upgrade-baseline.mjs "$BASELINE_REF")
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
           echo "Upgrading $ref to $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           git checkout --detach "$ref"
@@ -291,10 +300,10 @@ jobs:
           set: |
             app.args.OPENLAW_BUILD_COMMIT=${{ steps.baseline.outputs.commit }}
             app.args.OPENLAW_BUILD_DIRTY=false
-            app.cache-from=type=gha,scope=ci-baseline-app-v1
-            app.cache-to=type=gha,scope=ci-baseline-app-v1,mode=max
-            doc-engine.cache-from=type=gha,scope=ci-baseline-doc-engine-v1
-            doc-engine.cache-to=type=gha,scope=ci-baseline-doc-engine-v1,mode=max
+            app.cache-from=type=gha,scope=ci-baseline-app-v1-${{ matrix.baseline || 'event' }}
+            app.cache-to=type=gha,scope=ci-baseline-app-v1-${{ matrix.baseline || 'event' }},mode=max
+            doc-engine.cache-from=type=gha,scope=ci-baseline-doc-engine-v1-${{ matrix.baseline || 'event' }}
+            doc-engine.cache-to=type=gha,scope=ci-baseline-doc-engine-v1-${{ matrix.baseline || 'event' }},mode=max
 
       - name: Start the baseline stack
         run: docker compose -f compose.yml -f compose.dev.yml up -d --no-build
@@ -340,9 +349,9 @@ jobs:
             app.args.OPENLAW_BUILD_COMMIT=${{ github.sha }}
             app.args.OPENLAW_BUILD_DIRTY=false
             app.cache-from=type=gha,scope=ci-app-v1
-            app.cache-from+=type=gha,scope=ci-baseline-app-v1
+            app.cache-from+=type=gha,scope=ci-baseline-app-v1-${{ matrix.baseline || 'event' }}
             doc-engine.cache-from=type=gha,scope=ci-doc-engine-v1
-            doc-engine.cache-from+=type=gha,scope=ci-baseline-doc-engine-v1
+            doc-engine.cache-from+=type=gha,scope=ci-baseline-doc-engine-v1-${{ matrix.baseline || 'event' }}
 
       - name: Start this commit against the baseline's data
         run: docker compose -f compose.yml -f compose.dev.yml up -d --no-build
