@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-029 T33 and T34 reuse team services and inherit the calling Client attribution. */
 import { z } from "zod";
 import { addToContractTeam, removeContractTeamMember } from "../lib/contract-team.js";
 import { addToMatterTeam, removeMatterTeamMember } from "../lib/matter-team.js";

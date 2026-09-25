@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-029 Tool references use live people; HTTP removal keeps DD-023 roster semantics. */
 import { eq, sql, users, USER_ROLES, type Transaction } from "@openlaw/db";
 import { lockedUser } from "../modules/contracts/record.js";
 import { httpError } from "./problem.js";

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-023 team writes share guard order and DD-017 activity with the Matter routes. */
 import { and, eq, matterTeam, users, type Transaction } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/guards.js";
 import {
