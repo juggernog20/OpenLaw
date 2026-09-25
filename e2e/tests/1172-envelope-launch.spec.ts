@@ -12,6 +12,9 @@ test("sends in DocuSign and confirms through sign-in; forged returns reveal no C
     process.env.SIGNING_PREPARATION_ENABLED !== "true",
     "Preparation is off until final cutover.",
   );
+  const returnPage = await page.request.get("/signing/return");
+  expect(returnPage.headers()["cache-control"]).toBe("no-store");
+  expect(returnPage.headers()["referrer-policy"]).toBe("no-referrer");
   await ensureAdminExists(page.request);
   await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
   const integrationKey = "preparation-e2e-integration";

@@ -458,6 +458,13 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     });
   }
 
+  app.addHook("onSend", async (request, reply, payload) => {
+    if (request.url.split("?", 1)[0] === "/signing/return") {
+      reply.header("cache-control", "no-store").header("referrer-policy", "no-referrer");
+    }
+    return payload;
+  });
+
   // Error/404 handlers are installed before route plugins register:
   // encapsulated contexts snapshot their parent, so handlers added
   // afterwards would never apply inside the modules.
@@ -485,8 +492,6 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
       (request.method === "GET" || request.method === "HEAD") &&
       !(pathname === "/api" || pathname.startsWith("/api/"))
     ) {
-      if (pathname === "/signing/return")
-        reply.header("cache-control", "no-store").header("referrer-policy", "no-referrer");
       void reply.sendFile("index.html");
       return;
     }
