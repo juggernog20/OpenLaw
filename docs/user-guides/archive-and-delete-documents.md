@@ -37,7 +37,7 @@ This action cannot be undone in the app. It removes every Version, the stored or
 
 To delete several Documents, select their checkboxes and select **Delete** in the selection bar. That dialog also asks you to type `delete`.
 
-You cannot delete just one Version. Correct an ordinary Version kind or append a corrected file through [Version management](document-versions.md) when those actions fit the intended change.
+You cannot delete just one Version. If one Version carries the wrong Document type, correct it in that Version's **Type** column, or append a corrected file as a new Version. [Version management](document-versions.md) explains both actions.
 
 ## If deletion fails
 

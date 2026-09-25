@@ -21,7 +21,7 @@ A folder stays inside its owning record. Sibling names must be distinct without 
 
 1. Select **Upload**, then **Choose files** and choose several files. You can also drop files on the Documents section or a folder.
 2. Review the **Import … files** dialog. Check the displayed **Destination**: a picker imports at **Record root**; a drop uses the place where you dropped the files. The destination cannot be changed inside this dialog.
-3. Select **Version kind**. It applies to every file in this import; bulk import does not collect individual Notes. A Matter import has no **Version kind** control.
+3. Choose a **Type**, or leave **No type**. It starts on **No type**, or on the type you already chose in the upload dialog. The type applies to every file in this import; bulk import does not collect individual Notes. A Contract import always shows **Type**. A Matter or Entity import shows it only when an Administrator has added a type to that module's list in **Settings → Documents**.
 4. Select **Import … files**. Keep the dialog open while the import runs.
 5. If every file uploads, the dialog closes after the Documents list refreshes. If a file fails, the dialog stays open; read the final uploaded and failed counts, then select **Done**. Each successful file is a new Document at Version 1, not another round on an existing Document.
 

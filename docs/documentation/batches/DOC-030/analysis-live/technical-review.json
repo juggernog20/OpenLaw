@@ -1,0 +1,265 @@
+{
+  "batch": "DOC-030",
+  "group": "analysis-live",
+  "reviewer": "DOC-030 source-review author agent (analysis-live)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:24:00Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "previousCompatibilityTarget": "432dba3a835863091791fbac429a6a66777bdc40",
+    "lastArticleEdit": "4c898971"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "configure-analysis",
+      "scenario": "V-C43",
+      "contentSha256Before": "a9a49e1ccbeb63fe31ed4ca675e6e424aea7a27b7a929fe86423061e1fe18499",
+      "contentSha256": "11da3997cee465846ff1408833dfcd140ecba07fac5ae17e0e4067495758d408",
+      "sources": [
+        "CONTEXT.md (AI connector, Saved key, Answer style, Analysis run, Unverified value, Conversion draft, Row, Field)",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/configure-analysis.json",
+        "docs/documentation/batches/DOC-029/live-provider/technical-review.json",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-008 addendum 2026-09-20 and M37/6 implementation note)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-013)",
+        "messages/en-US.json",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/components/settings-card.tsx",
+        "apps/web/src/components/ai-model-selector.tsx",
+        "apps/web/src/components/ai-saved-key-control.tsx",
+        "apps/web/src/components/ai-key-status.tsx",
+        "apps/web/src/components/ai-answer-style-card.tsx",
+        "apps/web/src/components/ai-prompt-cards.tsx",
+        "apps/web/src/components/field-editor-dialog.tsx",
+        "apps/web/src/components/field-answer-style-select.tsx",
+        "apps/web/src/lib/ai-answer-style.ts",
+        "apps/web/src/lib/ai-connector-config.ts",
+        "apps/web/src/lib/ai-presets.ts",
+        "apps/web/src/lib/core-analysis-labels.ts",
+        "apps/web/src/lib/field-commit.ts",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/modules/ai-field-prompts/routes.ts",
+        "apps/api/src/modules/contract-analysis/routes.ts",
+        "apps/api/src/modules/contract-analysis/service.ts",
+        "apps/api/src/modules/fields/routes.ts",
+        "apps/api/src/lib/ai/presets.ts",
+        "apps/api/src/lib/ai/saved-keys.ts",
+        "apps/api/src/lib/ai/resolver.ts",
+        "apps/api/src/lib/ai/models.ts",
+        "apps/api/src/lib/ai/http.ts",
+        "apps/api/src/lib/ai/openai-compatible.ts",
+        "apps/api/src/lib/ai/anthropic.ts",
+        "apps/api/src/lib/ai/gemini.ts",
+        "apps/api/src/lib/ai/structured-extraction.ts",
+        "apps/api/src/lib/ai/complete-sources.ts",
+        "apps/api/src/lib/ai-prompts.ts",
+        "apps/api/src/lib/analysis-targets.ts",
+        "apps/api/src/lib/analysis-key-dates.ts",
+        "apps/api/src/lib/conversion-draft.ts",
+        "apps/api/src/lib/custom-fields.ts",
+        "apps/api/src/pipeline/contract-analysis.ts",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts",
+        "packages/shared/src/analysis.ts",
+        "packages/shared/src/ai-destination.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Before you start, where the pane lives",
+          "before": "This is its own Organization destination.",
+          "after": "It has its own entry in the Organization group. The word destination now means a Saved key destination in this guide, so the old wording was ambiguous.",
+          "source": "apps/web/src/routes/settings.tsx ORGANIZATION_GROUP entry ai-analysis; CONTEXT.md Saved key"
+        },
+        {
+          "claim": "Before you start, when a key is not needed",
+          "before": "unless a Saved key is already on file for that provider",
+          "after": "unless a Saved key is already on file for that destination. A Saved key is reused only for the same preset, protocol and normalized base URL.",
+          "source": "apps/web/src/lib/ai-connector-config.ts findSavedAiKey; apps/api/src/lib/ai/saved-keys.ts"
+        },
+        {
+          "claim": "Opening the Provider card",
+          "before": "Expand Provider if collapsed.",
+          "after": "Select the Provider card title to open it. It starts closed on every visit. Its header shows Connected, Turned off or Not connected.",
+          "source": "apps/web/src/routes/settings-ai-analysis.tsx SettingsCard collapsible defaultOpen={false}, ConnectionChip; apps/web/src/components/settings-card.tsx useState(defaultOpen)"
+        },
+        {
+          "claim": "Model combobox typing",
+          "before": "No statement about text typed into Model.",
+          "after": "Typing only narrows the list. Leaving the box without choosing a listed model restores the model chosen before. Choose from list turns the list back on after manual entry.",
+          "source": "apps/web/src/components/ai-model-selector.tsx onChange sets only the query, onBlur setEditing(null), commit only on option or Enter; settings.aiAnalysis.models.useList"
+        },
+        {
+          "claim": "What Load models lists",
+          "before": "The list can include models that do not support Contract analysis.",
+          "after": "OpenLaw drops Gemini models without generateContent, OpenRouter models without text input and output, and inactive, speech and safety models from Groq. The list can still include unsuitable models.",
+          "source": "apps/api/src/lib/ai/models.ts listAiModels filters (d84f0d15 for Groq)"
+        },
+        {
+          "claim": "Answer style scope and availability",
+          "before": "After saving a connector, choose ... Short text Fields use that summary when the Organization default is Full clause text.",
+          "after": "Answer style is the Organization default for Contract Text and Long text Fields only; the seven built-in values have no text type. The radios are disabled until a connector is saved and the card shows 'Connect an AI provider to choose an answer style.' A Field can override it. Conversion drafts use the same style for their text Fields. A new style applies to the next run; written values keep their form.",
+          "source": "apps/api/src/lib/ai/http.ts extractionPrompt (style only for text and long_text, text + full_clause falls back to sentence); packages/shared/src/analysis.ts CORE_ANALYSIS_TARGETS types; apps/web/src/components/ai-answer-style-card.tsx; apps/api/src/lib/conversion-draft.ts answerStyle; CTR-008 addendum 2026-09-20"
+        },
+        {
+          "claim": "Per-Field answer style in the Field editor",
+          "before": "Step 2 said only to enter the AI prompt and save.",
+          "after": "For a Text or Long text Field, Answer style appears below the prompt. Keep Organisation default (it shows the current default in parentheses) or choose a style. Full clause text cannot be chosen for a Text Field.",
+          "source": "apps/web/src/components/field-editor-dialog.tsx styleable; apps/web/src/components/field-answer-style-select.tsx; apps/api/src/modules/fields/routes.ts checkAnswerStyle"
+        },
+        {
+          "claim": "Attaching the Field to the Contract Type",
+          "before": "Attach the active Field to the Contract Type used by your test Contract. Only ... Fields attached to that Contract Type ...",
+          "after": "Open the Type's Form tab, select Attach Field and choose the Field so the Form has a Row for it. Only Fields with a Row on that Type's Form and an AI prompt are included.",
+          "source": "messages/en-US.json typeForm.attach-field; CONTEXT.md Row (avoid 'attachment'); apps/api/src/lib/analysis-targets.ts contractTypeFields join"
+        },
+        {
+          "claim": "Data sent in an Analysis run",
+          "before": "It sends extracted text from that target, plus the requested Field identifiers and their prompts.",
+          "after": "Adds that the run also asks for Key dates, and that this request carries the Contract's existing Key dates, effective and expiry dates, notice deadline and date values saved in its Fields as comparison data. This existed at 3fa407e3 too; the DOC-029 review did not record it.",
+          "source": "apps/api/src/lib/analysis-key-dates.ts keyDatesExtractionTarget; apps/api/src/pipeline/contract-analysis.ts provider.extract([...targets, milestoneTarget])"
+        },
+        {
+          "claim": "A value that still fails validation",
+          "before": "Unsupported answers stay empty. (A malformed reply after the corrective attempt was implied to fail the batch.)",
+          "after": "If a value still has the wrong type after the corrective attempt, the run writes nothing for that value and saves the other values.",
+          "source": "apps/api/src/lib/ai/structured-extraction.ts validateReply(allowInvalidValues on attempt 1); 49e8449a (#958); CTR-008 addendum 'One bad answer no longer sinks the run'"
+        },
+        {
+          "claim": "What Remove connector resets",
+          "before": "The Disable, rotate, or remove section named only Saved keys; the switch reset was in the last section only.",
+          "after": "Removal also turns off the three Request conversion switches and sets Answer style back to 1-2 sentence summary.",
+          "source": "apps/api/src/modules/ai-connector/routes.ts DELETE /ai-connector deletes the row; readConnector(undefined) answers answerStyle 'sentence' and all switches false"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "The pane is Administrator only; others are sent to /settings/profile and the Organization group is hidden",
+          "source": "apps/web/src/routes/settings-ai-analysis.tsx loader; apps/web/src/routes/settings.tsx; requireRole('administrator') on every ai-connector and ai-field-prompts route"
+        },
+        {
+          "claim": "A new connector is enabled when saved; saving a disabled connector leaves it disabled",
+          "source": "apps/api/src/modules/ai-connector/routes.ts PUT insert without disabledAt, update does not touch disabledAt"
+        },
+        {
+          "claim": "Provider list shows '(key saved)' when any Saved key exists for that preset",
+          "source": "apps/web/src/lib/ai-presets.ts aiProviderOptionLabel; messages settings.aiAnalysis.provider.keySaved"
+        },
+        {
+          "claim": "Key saved and Key in use pills belong to the destination in the form; Key in use means the connector references the key, also while turned off",
+          "source": "apps/web/src/components/ai-key-status.tsx; ai-connector/routes.ts readConnector inUse = savedKeyId"
+        },
+        {
+          "claim": "Blank API key uses the destination's Saved key; save refuses without a key except for Ollama",
+          "source": "ai-connector/routes.ts PUT pasted(), 'Paste the API key for this provider.'"
+        },
+        {
+          "claim": "Destination matching ignores fragment, one trailing slash and query order",
+          "source": "packages/shared/src/ai-destination.ts normalizeAiBaseUrl"
+        },
+        {
+          "claim": "Load models, Refresh models, keep-missing-model note, Enter model ID manually, partial and empty list notes, Azure manual only",
+          "source": "apps/web/src/components/ai-model-selector.tsx; messages settings.aiAnalysis.models.*"
+        },
+        {
+          "claim": "Loading models does not save, run inference or send Contract text; it runs in the app",
+          "source": "ai-connector/routes.ts POST /ai-connector/models; apps/api/src/lib/ai/models.ts listAiModels"
+        },
+        {
+          "claim": "Loading with a pasted key does not store it",
+          "source": "ai-connector/routes.ts POST /ai-connector/models writes nothing"
+        },
+        {
+          "claim": "Provider table labels: Deployment endpoint, Base URL, Protocol choices, Ollama preset URL http://localhost:11434/v1 with no Base URL control and no key; Custom endpoint requires a key and an HTTP or HTTPS URL without credentials",
+          "source": "apps/api/src/lib/ai/presets.ts; ai-connector/routes.ts checkedBaseUrl; settings-ai-analysis.tsx"
+        },
+        {
+          "claim": "Save connector, Test connection, 'Connection successful.', test disabled while turned off, test sends a small fixed prompt with a 1,024-token allowance",
+          "source": "settings-ai-analysis.tsx; apps/api/src/lib/ai/http.ts PROBE_BOUND; POST /ai-connector/test"
+        },
+        {
+          "claim": "Connected badge means configured and enabled, not a passed test",
+          "source": "settings-ai-analysis.tsx ConnectionChip"
+        },
+        {
+          "claim": "Three closed cards below Provider and Request conversion: Answer style, Matter and Contract conversion prompts, Contract analysis prompts; each opens on its own",
+          "source": "ai-answer-style-card.tsx and ai-prompt-cards.tsx SettingsCard collapsible defaultOpen={false}; CTR-008 M37/6 note"
+        },
+        {
+          "claim": "Answer style labels, 80 and 200 character limits, verbatim full clause, default 1-2 sentence summary, save on choice, Text values stop at 500 characters, conversion Title and Description keep their wording",
+          "source": "apps/web/src/lib/ai-answer-style.ts; apps/api/src/lib/ai/http.ts ANSWER_STYLE_SENTENCES; apps/api/src/lib/custom-fields.ts text max 500; conversion-draft.ts omitAnswerStyle"
+        },
+        {
+          "claim": "Conversion prompts are Title, Description, Priority, Needed by, Counterparty with {module}; analysis card holds the seven built-in values",
+          "source": "packages/shared/src/analysis.ts CONVERSION_PROMPTS, CORE_ANALYSIS_TARGETS; core-analysis-labels.ts"
+        },
+        {
+          "claim": "Prompt row saves on Enter or blur, Shift+Enter adds a line break, Escape restores the saved text, required, 2,000 characters, cleared prompt reverts, Reset to default for an overridden prompt",
+          "source": "ai-prompt-cards.tsx; apps/web/src/lib/field-commit.ts revertText/reverted guard (fixes #887)"
+        },
+        {
+          "claim": "Shared rules and output-format instructions are code-owned; 'The citations carry the wording unless the answer style asks for the full clause.'",
+          "source": "apps/api/src/lib/ai/http.ts DEFAULT_EXTRACTION_RULES, extractionPrompt; CTR-008 addendum"
+        },
+        {
+          "claim": "Contracts → Fields link from the Contract analysis prompts card",
+          "source": "ai-prompt-cards.tsx CatalogPointer to /settings/contracts/fields"
+        },
+        {
+          "claim": "User and Entity Fields have no AI prompt box and are skipped even with an old prompt; archived Fields and Fields without a prompt are skipped",
+          "source": "field-editor-dialog.tsx promptable; analysis-targets.ts filters"
+        },
+        {
+          "claim": "Target is the executed pin, else the current Version; text limited to 200,000 characters",
+          "source": "apps/api/src/pipeline/contract-analysis.ts analysisTargetText; packages/shared/src/analysis.ts AI_ANALYSIS_CHARACTER_BUDGET"
+        },
+        {
+          "claim": "Automatic runs start when target text becomes ready or a ready Version becomes the executed copy",
+          "source": "apps/api/src/pipeline/automatic-contract-analysis.ts (unchanged since 3fa407e3)"
+        },
+        {
+          "claim": "Turning Use AI analysis off keeps the connector and key; a run request answers 'No enabled AI connector is configured.'",
+          "source": "ai-connector/routes.ts disable; contract-analysis/service.ts"
+        },
+        {
+          "claim": "Forget key is absent beside Key in use and refused with 409 while referenced; confirm dialog 'Forget the Saved key'; Remove connector dialog keeps Saved keys",
+          "source": "ai-saved-key-control.tsx; ai-connector/routes.ts DELETE saved-keys and DELETE ai-connector; messages settings.aiAnalysis.removeBody"
+        },
+        {
+          "claim": "Output token limit slider and exact input, default 32,768, range 1,024 to 262,144, warning below 32,768, applied through the resolver",
+          "source": "packages/shared/src/analysis.ts; settings-ai-analysis.tsx; apps/api/src/lib/ai/resolver.ts maxOutputTokens"
+        },
+        {
+          "claim": "Structured output per protocol with fallback on a named unsupported field; batches of at most 12 targets, two at a time, one corrective attempt, five-minute batch window, at most fifteen minutes; json_validate_failed gets the corrective attempt; refusals and configuration errors do not",
+          "source": "apps/api/src/lib/ai/structured-extraction.ts; openai-compatible.ts; anthropic.ts; gemini.ts; http.ts EXTRACTION_BOUND"
+        },
+        {
+          "claim": "Request conversion card appears after a connector is saved; three switches start off, are disabled while turned off, and are removed with the connector",
+          "source": "settings-ai-analysis.tsx; ai-connector/routes.ts readConnector"
+        },
+        {
+          "claim": "A Legal Team Member can run Analysis but not configure it",
+          "source": "apps/api/src/modules/contract-analysis/routes.ts requireRole('administrator','legal_team_member')"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. No lab, browser or provider call was run by this seat.",
+        "Provider-account facts in the provider table (Anthropic workspace-scoped keys, OpenAI application keys, Groq plan limits and its model list, Groq's 16,384-token limit for qwen/qwen3.8-27b) are external. The code cannot confirm them. They were kept as written by the feature PRs.",
+        "The registry negative checks for an invalid key, an invalid model and a provider refusal need a live provider. The guide names the visible results: the test shows 'The connection test failed.' followed by the provider message, and Load models shows the refusal (for example 'The provider refused model discovery with HTTP 404.'). The walkthrough agent must produce these live.",
+        "The app does not show a per-value Invalid outcome on the Contract any more. A value that fails validation after repair writes nothing, so the walkthrough can observe it only as an unchanged value.",
+        "The Answer style card stays usable while Use AI analysis is off; only a saved connector is required. No decision record says otherwise, so this is not recorded as a defect."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/components/field-answer-style-select.tsx and messages/en-US.json (settings.contractFields.organisationDefault, organisationDefaultStyle, styleDefaultLoadError): the Field editor says 'Organisation default' with British spelling, while the Settings group, CONTEXT.md and the rest of the app say Organization. DES-013 makes en-US the only v1 locale. The guide quotes the built label."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/types-statuses-fields.md (Create a Field): mention that a Contract Text or Long text Field shows Answer style below AI prompt, and link to configure-analysis.md#add-a-catalog-field-to-analysis."
+  ],
+  "statusChange": null
+}

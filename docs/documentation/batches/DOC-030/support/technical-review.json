@@ -1,0 +1,342 @@
+{
+  "batch": "DOC-030",
+  "group": "support",
+  "reviewer": "DOC-030 source-review author agent (support)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:26:33Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "applicationDigest": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+  "comparedFrom": {
+    "priorAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdit": {
+      "troubleshooting": "8fffa64e",
+      "reference": "7cf31ddd"
+    },
+    "changeRange": "git log 3fa407e3..067c1646 -- apps packages (337 non-merge commits)"
+  },
+  "method": "source-inspection",
+  "note": "Source inspection only. No walkthrough was run and no catalog status was changed. The documents group's shared-file request (Version kind to Document type, DOC-015) is folded in as a reference correction.",
+  "articles": [
+    {
+      "articleId": "troubleshooting",
+      "scenario": ["V-C49"],
+      "contentSha256Before": "57c59aba8967f902c780b66318411f117480d545e88466773c43e4f836ebcb88",
+      "contentSha256": "7bdfd9be072d31a28150ff9843949782d325ca9605e129a463cc515d0cdf4678",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (2026-09-17 amendment: default groups and business approvers)",
+        "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-001 M38 addendum, NOT-004 2026-09-24 addendum)",
+        "docs/decision-records/DECISIONS.md (DD-029)",
+        "apps/web/src/routes/error-page.tsx",
+        "apps/web/src/routes/not-found.tsx",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/api/src/modules/requests/read.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/custom-fields.ts",
+        "apps/web/src/components/portal/notification-preferences.ts",
+        "apps/web/src/components/notification-preferences.tsx",
+        "apps/web/src/routes/settings-notifications.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/components/my-reminder-lead-times.tsx",
+        "apps/api/src/lib/notifications/notifier.ts",
+        "apps/api/src/lib/notifications/catalog.ts",
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/api/src/modules/portal/approvals.ts",
+        "apps/web/src/components/contracts/analysis.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/web/src/components/intake/prepared-convert-dialog.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/routes/settings-api-keys.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/lib/uploads.ts",
+        "docs/user-guides/contributor-guide.md",
+        "docs/user-guides/contract-approvals.md",
+        "docs/user-guides/configure-analysis.md",
+        "docs/user-guides/connect-headless-client.md",
+        "docs/user-guides/connect-claude.md"
+      ],
+      "corrections": [
+        {
+          "claim": "What a Business User can do on shared work",
+          "before": "A Business User can read business Fields ... cannot ... give Approval.",
+          "after": "A Business User reads Fields whose Rows have Visible on Portal on, and can answer an Approval Request that names them under Approvals in the Portal.",
+          "source": "CONTEXT.md Field (avoid 'business field'; say Visible on Portal); DECISIONS-CONTRACTS.md 2026-09-17 amendment; apps/api/src/modules/portal/approvals.ts; portal.navigation.approvals (commit 588dc3f0)"
+        },
+        {
+          "claim": "Notification channels and Portal groups",
+          "before": "Staff check In-app and Email; Business Users check Request updates, Assigned to you, Activity on your records. In-app off stops email.",
+          "after": "Staff also check Push. Business Users also check Dates approaching. In-app off stops email and Push. Push needs a browser under Devices turned on with Turn on for this browser.",
+          "source": "settings.notifications.channel.push; settings.devices.*; PORTAL_GROUPS now includes dates_approaching; notifier.ts drops the whole row when inApp is off"
+        },
+        {
+          "claim": "Reminder timing",
+          "before": "(no mention of personal lead times)",
+          "after": "Reminders follow the organization's default lead times unless a staff user turned off Use the organization's default lead times under Reminder lead times in Personal → Notifications. Business Users use the organization's list.",
+          "source": "my-reminder-lead-times.tsx; NOT-004 2026-09-24 addendum (commit 1f7cca32)"
+        },
+        {
+          "claim": "Where approvers find open Approval Requests",
+          "before": "Ask Legal to check access and whether the Contract is archived.",
+          "after": "Staff use Your approvals in the bell. A Business User approver opens Approvals in the Portal and sees the Contract title and primary Document only. Withdrawal or archiving removes the review page. Link to contract-approvals.md#approve-from-the-business-portal.",
+          "source": "notifications.yourApprovals (commit 7dd7e7fa); DECISIONS-CONTRACTS.md 2026-09-17 amendment"
+        },
+        {
+          "claim": "Conversion draft preparation",
+          "before": "Wait for its completion or use manual conversion. Retry a failed preparation.",
+          "after": "Close the dialog and keep working; a bell item reports ready or could not finish. Quote 'Preparation could not finish. Retry or continue manually.' and the Retry button. Name the Prepare Matter/Contract conversions with AI switches; link configure-analysis.md#request-conversion-switches.",
+          "source": "conversion.preparingLeave, conversion.failed, action.retry, notifications.request.conversionDraftFinished; CONTEXT.md Conversion draft (commit 188e8a34)"
+        },
+        {
+          "claim": "Analysis progress and failure in the Fields header",
+          "before": "The Fields section header says when a run is under way, and reports a failure.",
+          "after": "Run analysis reads Running… while a run is under way; the failure sentence 'Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.' shows below the header.",
+          "source": "apps/web/src/components/contracts/analysis.tsx (AnalysisRunActions, AnalysisRunNote)"
+        },
+        {
+          "claim": "New symptom section for API keys and connected Clients",
+          "before": "(absent)",
+          "after": "Added 'An API key or connected Client stops working': Status values, once-shown key, Request a key absent (Enable MCP, group API keys switch), Read-only and Read scope, Connected Clients Disconnect then Revoke, links to the headless and Claude fix sections.",
+          "source": "api-keys.tsx, connected-clients.tsx, settings-mcp.tsx, api-keys/routes.ts; apiKeys.revokeGrantWarning"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "App not-found copy 'Contract not found' / 'Back to Contracts'; Portal 'This Contract does not exist, or you cannot open it.'; 'Something went wrong.' with 'Reload'.",
+          "source": "notFound.contract.*, portal.contract.unreachable, error.title, action.reload; not-found.tsx, portal-contract.tsx"
+        },
+        {
+          "claim": "Business User record reach needs a team row on a non-archived record; a converted Request redirects to its record while in scope.",
+          "source": "contract-access.ts business_user case; requests/read.ts redirectTo"
+        },
+        {
+          "claim": "Business Users cannot change record Fields.",
+          "source": "CONTEXT.md Business User (DD-026); no caller of assertBusinessCustomFieldWrite; staff PATCH routes Member+"
+        },
+        {
+          "claim": "Portal Add version works on a Contract's primary Document; Portal uploads cannot go into folders.",
+          "source": "contributor-guide.md Work with Documents; CONTEXT.md Business User"
+        },
+        {
+          "claim": "Preview labels 'Preparing this document for reading…', 'This file could not be prepared for reading here. Download it to read it.', 'Download'.",
+          "source": "docPanel.converting, docPanel.conversionFailed, docPanel.download"
+        },
+        {
+          "claim": "Upload limit and filename rules unchanged since 3fa407e3.",
+          "source": "apps/api/src/lib/uploads.ts (DEFAULT_MAX_UPLOAD_MB 100, MAX_FILENAME_LENGTH 255; no commits in range)"
+        },
+        {
+          "claim": "Staff In-app, Email, Briefing labels; Portal Notification settings, Request updates, Assigned to you, Activity on your records.",
+          "source": "messages/en-US.json settings.notifications.*, portal.settings.*"
+        },
+        {
+          "claim": "Approval labels Pending, Rejected, soft-gate 'Move past approval'; only the named approver answers; decisions are final.",
+          "source": "approvals.status.*, contracts.softGate.title; CONTEXT.md Approval request"
+        },
+        {
+          "claim": "Signing labels 'Signed', 'Executed copy'.",
+          "source": "signing.status.signed, signing.executedFile"
+        },
+        {
+          "claim": "Run analysis is unavailable on an ended Contract and while a run is pending; 'Unverified' and 'Retry Request-context Analysis' labels.",
+          "source": "contract-record.tsx analysisRunnable/canRunAnalysis; contracts.analysis.*"
+        },
+        {
+          "claim": "Every link and heading anchor in the article resolves; structural build prints ok.",
+          "source": "scripts/documentation/build.mjs compileWorkspace({development:true})"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. The independent browser walkthrough for V-C49 is still required.",
+        "The V-C49 fixture list does not include an MCP or API key symptom. The new section can be walked with an API key fixture; a live OAuth Client is outside a local lab.",
+        "Push delivery depends on browser permission and VAPID keys; the article states the settings to check, not delivery proof."
+      ]
+    },
+    {
+      "articleId": "reference",
+      "scenario": ["V-C50"],
+      "contentSha256Before": "da8efaf1853911f318a63b3aa9ff024b3183d1218694b9a1e72e2e44e555a778",
+      "contentSha256": "1319240ad60cfe2077499ef55943bce00c40e6146b26a3f1b37bf77a3be412bb",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 2026-09-10 amendment, ENT-011 and its 2026-09-18 amendments)",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (2026-09-17 amendment)",
+        "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-004 2026-09-24 addendum)",
+        "docs/decision-records/DECISIONS.md (DD-029)",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/web/src/components/entities/ownership-card.tsx",
+        "apps/web/src/components/entities/share-register-tab.tsx",
+        "packages/db/migrations/0160_document_types.sql",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/my-reminder-lead-times.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/routes/settings-api-keys.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/mcp/auth.ts",
+        "docs/user-guides/connect-headless-client.md",
+        "docs/user-guides/configure-mcp.md",
+        "docs/user-guides/connect-claude.md",
+        "docs/user-guides/contract-approvals.md"
+      ],
+      "corrections": [
+        {
+          "claim": "Holding row",
+          "before": "A directional ownership percentage between two Entities; it does not grant access.",
+          "after": "Owner can be another Entity or a named Individual. Where the Entity keeps a share register, owner Holdings come from the register, show From register, and cannot be edited.",
+          "source": "ENT-011 and 2026-09-18 amendments; entities.ownership.individual, entities.ownership.fromRegister (commits a582e892, 95813b98)"
+        },
+        {
+          "claim": "Key date row",
+          "before": "It can add its own reminder lead times ...",
+          "after": "It can add its own reminder lead times to each recipient's list ...",
+          "source": "CONTEXT.md Key date; NOT-004 2026-09-24 addendum"
+        },
+        {
+          "claim": "Approval Request row",
+          "before": "A named colleague's internal decision on a Contract.",
+          "after": "A named person's decision; the named person can be a Business User who answers under Approvals in the Portal.",
+          "source": "DECISIONS-CONTRACTS.md 2026-09-17 amendment; portal.navigation.approvals"
+        },
+        {
+          "claim": "Business User permissions row",
+          "before": "(no approval access)",
+          "after": "An Approval Request that names them opens a review page with the Contract title and primary Document only; it does not add them to the team.",
+          "source": "DECISIONS-CONTRACTS.md 2026-09-17 amendment; apps/api/src/modules/portal/approvals.ts"
+        },
+        {
+          "claim": "Version kind row (documents group shared-file request)",
+          "before": "Version kind: the classification of a Version, such as Draft · ours or Executed.",
+          "after": "Document type: chosen with Type at upload or corrected from the Type column; No type is the default; per-module lists under Settings → Organization → Documents; six fixed Contract types; Matter and Entity lists start empty; Knowledge files show the Knowledge type; Portal still shows fixed kinds under Kind, so added or no type reads General.",
+          "source": "DOC-015 and addendum; CONTEXT.md Document type; 0160_document_types.sql; documents.type.none, documents.column.type, documents.composer.type, settings.section.documents; portal documents-section.tsx documentKindLabel"
+        },
+        {
+          "claim": "Generated redline row",
+          "before": "Its generated kind cannot be assigned to an ordinary upload.",
+          "after": "It has no Document type, and its generated kind cannot be assigned to an ordinary upload.",
+          "source": "DOC-015 ('A generated redline has no type')"
+        },
+        {
+          "claim": "What your organization can configure",
+          "before": "types, Status labels, Fields, Matter Templates, Approver groups, request forms, reminder lead times ... A type's required answers and available Fields can differ.",
+          "after": "types and their Forms, Status labels, Fields, Document types, Matter Templates, Approver groups, request types, the organization's default reminder lead times, MCP ... Each type's Form decides which Fields it collects, which are required for creation, and which are Visible on Portal.",
+          "source": "DD-028 (CONTEXT.md Form, Row); DOC-015; NOT-004 2026-09-24 addendum; DD-029"
+        },
+        {
+          "claim": "Personal preferences",
+          "before": "Personal preferences belong to the signed-in person",
+          "after": "... including a staff user's own reminder lead times and API keys",
+          "source": "settings.tsx Personal group (api-keys); my-reminder-lead-times.tsx"
+        },
+        {
+          "claim": "Connect a headless Client section form",
+          "before": "A six-step procedure copying connect-headless-client.md.",
+          "after": "A facts table with a link to the canonical procedure (EDITORIAL: write procedural steps once; reference template keeps long procedures out). H2 kept.",
+          "source": "docs/documentation/EDITORIAL.md; docs/documentation/templates/reference.md"
+        },
+        {
+          "claim": "API key cancel label",
+          "before": "Cancel withdraws a pending request.",
+          "after": "Cancel request withdraws a pending request.",
+          "source": "apiKeys.cancelRequest"
+        },
+        {
+          "claim": "Where an Administrator approves",
+          "before": "An Administrator answers pending requests in Organization → MCP.",
+          "after": "Approve or Deny from Your approvals in the bell or API key requests in Organization → MCP.",
+          "source": "notification-bell.tsx approve/deny for approvalKind api_key; apiKeys.pendingTitle"
+        },
+        {
+          "claim": "Missing API key facts",
+          "before": "(absent)",
+          "after": "Added the lifetime range (1 to 365 days, organization-set), the Status values, the exact switch names (Enable MCP, group API keys), and Connected Clients for OAuth Clients.",
+          "source": "settings.mcp.invalidLifetime, apiKeys.expiryFact, apiKeys statuses, settings.mcp.enable, settings.mcp.legalKeys/businessKeys, connectedClients.*"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Request, Contract, Matter, Entity, Counterparty, Registration, Officer, Knowledge Item, Requester and Signer rows match CONTEXT.md.",
+          "source": "CONTEXT.md"
+        },
+        {
+          "claim": "Legal Owner is the Contract label for the accountable person; Matter Manager for Matters.",
+          "source": "CONTEXT.md Matter Manager"
+        },
+        {
+          "claim": "Stage backbone, Status mapping, Category Open/Closed, Task, Obligation, Envelope, Analysis run and Unverified value rows match CONTEXT.md.",
+          "source": "CONTEXT.md"
+        },
+        {
+          "claim": "Administrators need a Grant for a Confidential Entity.",
+          "source": "entity-access.ts entityReachScope (administrator and legal_team_member share the Grant rule); ENT-004 2026-09-10 amendment"
+        },
+        {
+          "claim": "Document, Document Version, Primary Document, Executed pin, Comparison, Preview and Comment attachment rows match CONTEXT.md.",
+          "source": "CONTEXT.md"
+        },
+        {
+          "claim": "Upload limit, filename bound and preview families unchanged since 3fa407e3.",
+          "source": "uploads.ts, render-family.ts (no commits in range)"
+        },
+        {
+          "claim": "API key is separate from the Saved key; x-api-key is read only by the MCP authenticator; Write is hidden while Read-only; Nothing is selected for you; an Administrator's own request approves itself; Your key is ready shows the key once.",
+          "source": "CONTEXT.md API key; apps/api/src/mcp/auth.ts; api-keys.tsx; api-keys/routes.ts (selfApproved)"
+        },
+        {
+          "claim": "Staff reach API keys at Settings → Personal → API keys; Business Users via Notification settings then API keys.",
+          "source": "settings.tsx PERSONAL_GROUP; portal-settings.tsx link; settings-api-keys.tsx"
+        },
+        {
+          "claim": "Every link and heading anchor in the article resolves; structural build prints ok.",
+          "source": "scripts/documentation/build.mjs compileWorkspace({development:true})"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. The independent browser walkthrough for V-C50 is still required.",
+        "The reference names the share register only through the Holding row; no guide in this batch yet documents register entries (see sharedFileRequests)."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [
+    {
+      "file": "docs/user-guides/notifications.md",
+      "request": "Describe the Push channel and the Devices card (Turn on for this browser, Revoke), and the staff Reminder lead times card with 'Use the organization's default lead times'. Line 69 still says only Administrators configure lead times.",
+      "source": "NOT-001 M38 addendum; NOT-004 2026-09-24 addendum; my-reminder-lead-times.tsx"
+    },
+    {
+      "file": "docs/user-guides/reminders-and-audit.md",
+      "request": "Say the organization list is the default and a staff user can replace it for their own reminders; Business Users use the organization list.",
+      "source": "NOT-004 2026-09-24 addendum"
+    },
+    {
+      "file": "docs/user-guides/entity-structure-and-access.md",
+      "request": "At the time of reading, 'Maintain share capital' said the card has no share classes or shareholder register. ENT-011 shipped the share register and register-projected Holdings. The entities group may already be fixing this.",
+      "source": "ENT-011; share-register-tab.tsx"
+    },
+    {
+      "file": "docs/user-guides/contributor-guide.md",
+      "request": "'Work with Documents' says 'Choose its Kind'. The Portal composer still labels it Kind and offers only the fixed kinds plus General; confirm the wording against DOC-015 so it does not imply Document types exist in the Portal.",
+      "source": "DOC-015 consequences; portal/documents-section.tsx"
+    },
+    {
+      "file": "CONTEXT.md",
+      "request": "Glossary drift for the batch owner, not a guide: Grant still says Administrators need no Grant (ENT-004 2026-09-10 amendment says they do); Approver group still says members must be Member+ (2026-09-17 amendment allows any active user); Holding still says between two Entities (ENT-011 amendments add Individual owners and register projection); Business User still says 'read business Fields' while Field says to avoid that term.",
+      "source": "DECISIONS-ENTITIES.md, DECISIONS-CONTRACTS.md, entity-access.ts"
+    }
+  ],
+  "statusChange": null
+}

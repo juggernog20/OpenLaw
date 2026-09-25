@@ -1,0 +1,246 @@
+{
+  "batch": "DOC-030",
+  "group": "inbox",
+  "reviewer": "DOC-030 source-review author agent (inbox)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:40:00Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdit": {
+      "triage-requests": "cdcff1e1",
+      "convert-request": "8fffa64e"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "triage-requests",
+      "scenario": "V-C12",
+      "contentSha256Before": "c535e0d1e011b5caf999deb02dd4ee6de4de491b48aa212265565e037e440ad7",
+      "contentSha256": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-003, INT-006, INT-007, INT-008 2026-09-19 addendum, DD-028 amendment)",
+        "docs/decision-records/DECISIONS.md (DD-028)",
+        "messages/en-US.json",
+        "packages/shared/src/index.ts (isOpenRequestStatus)",
+        "apps/web/src/routes/inbox.tsx",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/inbox/inbox-columns.tsx",
+        "apps/web/src/components/inbox/inbox-filter-definitions.ts",
+        "apps/web/src/components/inbox/request-assignment.tsx",
+        "apps/web/src/components/intake/resolve-dialog.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/lib/roles.ts",
+        "apps/web/src/lib/requests.ts",
+        "apps/web/src/lib/requester-status.ts",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/api/src/modules/requests/assignment.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/requests/disposition.ts",
+        "apps/api/src/modules/requests/list.ts",
+        "apps/api/src/modules/requests/read.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/requests/resolve.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Before you start, which Requests are undecided",
+          "before": "Use an undecided Request.",
+          "after": "Adds that an undecided Request has the status New or Read.",
+          "source": "packages/shared/src/index.ts isOpenRequestStatus (new, read); inbox-request.tsx shows Triage only for open statuses"
+        },
+        {
+          "claim": "Step 2, Description card",
+          "before": "Always read Description.",
+          "after": "When the destination Type's Form collects Description as a Row, the answer appears under Form responses and there is no separate Description card.",
+          "source": "inbox-request.tsx draws the Description card only when customFields has no description key (DD-028, M39)"
+        },
+        {
+          "claim": "Step 4, where to choose the assignee",
+          "before": "Choose the person under Triage assignee.",
+          "after": "Choose the person in the list. Triage assignee is a screen-reader-only legend, not a visible heading.",
+          "source": "request-assignment.tsx legend className sr-only"
+        },
+        {
+          "claim": "Portal label for the triage assignee",
+          "before": "The Requester sees the saved triage assignee as Owner in the Portal.",
+          "after": "The Portal labels the triage assignee Legal Owner (Legal Owner card and Legal Owner: {name}).",
+          "source": "apps/web/src/components/portal/request-owner.tsx (adc4f954); messages portal.request.legalOwner, portal.request.owner"
+        },
+        {
+          "claim": "New and Read requests section, placement and what does not mark Read",
+          "before": "Section sat after Related guides and said previewing an attachment does not mark a Request Read.",
+          "after": "Section moved after Review and assign. Attachment preview removed from the list, because attachments preview only on the Request page, which marks it Read on open. Browsing the Inbox list and the Portal view still do not mark it Read.",
+          "source": "inbox-request.tsx posts /requests/{number}/read on open while status is new; request-detail.ts markRequestRead updates only new rows"
+        }
+      ],
+      "confirmed": [
+        "Only Administrators and Legal Team Members open the Inbox and Request page; loaders redirect other roles and REQUIRE_TRIAGER guards list, assign, resolve and convert (inbox.tsx, inbox-request.tsx, disposition.ts, list.ts).",
+        "Inbox has Requests and Unassigned contracts tabs; Requests opens first (inbox.tsx).",
+        "Built-in view filters status new,read; Status choices New, Read, Converted, Resolved, Declined; Type, Urgency, Requester, Received date filters (inbox-columns.tsx, inbox-filter-definitions.ts).",
+        "Removing the status filter with includeTriaged shows every outcome (inbox.tsx loader).",
+        "Hero shows Requester, Type, Converts to, Department (or No Department), Urgency, Submitted (inbox-request.tsx Hero).",
+        "Attachment filename opens AttachmentPreview; a separate Download control remains (inbox-request.tsx Attachments).",
+        "Assign button on list row (Triager column) and Request page; dialog Search people, Unassigned, Save assignment, Cancel, Retry on load failure, unavailable-person note (request-assignment.tsx).",
+        "Assignees are live Administrators and Legal Team Members; assignment refuses others and changes no status; decided Requests show a read-only assignee (assignment.ts, service.ts assignRequest).",
+        "Request composer offers Legal Only and Shared with requester and starts on Legal Only (comments.ts composerTiers, tierLabel; comment-applet.tsx default tier).",
+        "Opening a New Request marks it Read for everyone; the Portal pill and banner show Read (request-detail.ts, requester-status.ts, portal-request.tsx bannerRead).",
+        "Triage menu offers Convert to contract, Convert to matter and Resolve request without converting; no Decline (inbox-request.tsx).",
+        "Resolve dialog: Resolution note (required), blank refused, note posted at the full_thread tier, email hint, Resolve request and Cancel (resolve-dialog.tsx, resolve.ts).",
+        "Lost race in Resolve and Convert dialogs states the other outcome and offers Close (resolve-dialog.tsx, convert-dialog.tsx disposition.alreadyDecided).",
+        "Status card with conversion reference and Converted by {person} on {date}; declined reason shown (inbox-request.tsx Outcome, read.ts conversion).",
+        "Converted Request hides the Attachments card and Comments applet; staff and Portal attachment reads return none (inbox-request.tsx, read.ts).",
+        "Portal shows Not assigned yet when no assignee (request-owner.tsx)."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough that V-C12 requires against 067c1646.",
+        "The Portal calls the triage assignee Legal Owner, which CONTEXT.md uses for the Contract's accountable person. The guide quotes the label and states the difference; see productBugs.",
+        "The structural check could not pass in the shared worktree because another group's in-progress edit (entity-records linking entity-structure-and-access.md#keep-the-share-register) throws. The check printed ok on a clean HEAD export with only this group's two guides applied."
+      ]
+    },
+    {
+      "articleId": "convert-request",
+      "scenario": "V-C13",
+      "contentSha256Before": "c83f3a57f149c06710ff4b82a23059e5a34a8af5432b3e3c0f2404e30cda6d70",
+      "contentSha256": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS.md (DD-028 and its 2026-09-22 built addendum)",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-002, INT-007, INT-008 2026-09-19 background addendum, DD-028 amendment)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-059, DES-060)",
+        "messages/en-US.json",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/intake/prepared-convert-dialog.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/web/src/components/intake/conversion-evidence.tsx",
+        "apps/web/src/components/intake/description-source-toggle.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/type-form/creation-rows.tsx",
+        "apps/web/src/components/type-form/messages.ts",
+        "apps/web/src/components/contracts/analysis.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/notifications.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/requests/convert-form.ts",
+        "apps/api/src/modules/requests/read.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/lib/counterparty-link.ts",
+        "apps/api/src/lib/conversion-draft.ts",
+        "apps/api/src/lib/intake-form.ts",
+        "apps/api/src/pipeline/conversion-analysis.ts",
+        "apps/api/src/pipeline/contract-analysis.ts",
+        "apps/api/src/pipeline/matter-record-preparation.ts",
+        "apps/api/src/lib/analysis-targets.ts",
+        "packages/shared/src/analysis.ts",
+        "apps/api/src/modules/contract-analysis/request-evidence.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Step 1, re-target inside the dialog",
+          "before": "Only the Triage menu items were named.",
+          "after": "Names the dialog's Convert to matter instead / Convert to contract instead button.",
+          "source": "convert-dialog.tsx convert.otherModule"
+        },
+        {
+          "claim": "Step 2, conversation sources and unread attachments",
+          "before": "Check current Full thread messages; account for gaps from restricted or unreadable sources.",
+          "after": "Check messages shared with the requester (the Request label for that tier). Open Attachment reading details to see files not fully read. Conflicts are listed under Conflicting sources need your review:.",
+          "source": "comments.ts tierLabel for request full_thread; convert-dialog.tsx conversion.attachmentReads, conversion.conflicts; restricted-sources banner removed 7e92a3f3 (INT-008 2026-09-21 amendment)"
+        },
+        {
+          "claim": "Step 5, carry and stay-behind lists",
+          "before": "Review answers that carry into the record and those that stay only on the Request.",
+          "after": "The dialog shows only the destination Form's Rows. An answer with no matching Row stays on the Request and the dialog does not list it.",
+          "source": "a0682c5d removed the Carries into / Does not carry into blocks from convert-dialog.tsx"
+        },
+        {
+          "claim": "New step 6 and step 7, Documents in the Convert dialog",
+          "before": "Not described.",
+          "after": "Documents lists the Request's files that conversion copies. Attach documents (or drop) adds files with an optional Document type; staged files have a remove control. Added files upload after the record exists; on failure the record stays and Retry failed uploads or Continue appear.",
+          "source": "convert-dialog.tsx CreateAttachments existing={submitted}; create-attachments.tsx (3a7bf354, DES-091)"
+        },
+        {
+          "claim": "Description switch condition",
+          "before": "Use the switch beside Description (unconditional).",
+          "after": "When a prepared Conversion draft offers Description, use the switch.",
+          "source": "convert-dialog.tsx renders DescriptionSourceToggle only when initialDraft is present and not dropped"
+        },
+        {
+          "claim": "Where Matter Fields appear on the record",
+          "before": "Check Custom fields on a Matter.",
+          "after": "Check the Matter section on a Matter's Overview tab.",
+          "source": "matter-record.tsx renders RecordRows inside the Matter section of the Overview tab; no Custom fields heading"
+        },
+        {
+          "claim": "Fill Contract Fields after conversion, scope and progress",
+          "before": "Uses the confirmed Type's current core and prompted catalog Fields; the Fields header says when the run is under way.",
+          "after": "Fills the confirmed Type's Record Rows only (neither on intake nor required for creation): built-in Rows such as Risk, Region, Department and Needed by, and attached Fields, which need no saved AI prompt. Fills only empty values; Needed by lands as a Key date; it can add Unverified Key dates. While running, the Run analysis control in the Fields header reads Running…; a failure appears under the header.",
+          "source": "analysis-targets.ts buildAnalysisTargets(recordOnly=true) drops the aiPrompt filter and keeps only Record Row targets; conversion-analysis.ts requestAnalysisTargets adds risk, region, owning_department, needed_by; contract-analysis.ts record-Row pass; DD-028 item 9 and built addendum; analysis.tsx. Raised by the contracts-b group."
+        },
+        {
+          "claim": "New section, Prepare Matter Rows after conversion",
+          "before": "Not described.",
+          "after": "With Prepare Matter conversions with AI on, a Matter conversion starts a background run that fills empty Record Rows with Unverified values, writes nothing if the Matter was edited meanwhile, and has no progress or retry control on the Matter page.",
+          "source": "convert.ts reserveMatterRecordPreparation; matter-record-preparation.ts; DD-028 item 9 and built addendum"
+        },
+        {
+          "claim": "Lost race, where to read the outcome",
+          "before": "Read the recorded Outcome; check its Outcome before retrying.",
+          "after": "The dialog names the winner's record (It became C-12.). Read the Request's Status card.",
+          "source": "convert-dialog.tsx convert.alreadyConvertedRecord; inbox-request.tsx card heading inbox.request.outcome = Status"
+        },
+        {
+          "claim": "If conversion is refused and Built-in Row answers, listed stay-behind answers",
+          "before": "An answer listed as not carrying stays on the Request; re-targeting lists answers without a matching Row.",
+          "after": "An answer with no matching Row stays on the Request; the dialog does not list it. Check the destination Type's Form.",
+          "source": "a0682c5d; convert-form.ts carries only keys the target Form has a Row for"
+        }
+      ],
+      "confirmed": [
+        "Triage menu opens PreparedConvertDialog; with the module switch on and live types it shows Conversion draft, Getting contract/matter ready, elapsed time, the leave hint, Close, Continue manually, and Retry plus Cancel after failure (prepared-convert-dialog.tsx).",
+        "Leaving a pending draft requests a completion notice; the bell item reads ready or could not finish and links back with ?convert= to reopen the dialog (prepared-convert-dialog.tsx noticeWhenFinished, inbox-request.tsx, messages notifications.request.conversionDraftFinished).",
+        "Three independent switches under Request conversion: Prepare Matter conversions with AI, Prepare Contract conversions with AI, Fill Contract Fields after conversion; the last also works with manual conversion (settings-ai-analysis.tsx).",
+        "Dialog order: Title, Contract/Matter type, Description (with a draft), warnings, Matter template with No template, Priority, visible Intake and Creation Rows in Form order, Documents, Convert to ... instead, Cancel, Convert to contract/matter (convert-dialog.tsx, creation-rows.tsx).",
+        "Only visible Rows under true Branches are collected and required (creation-rows.tsx evaluateForm, formRowsForTouchpoint).",
+        "Built-in Row labels Counterparties and Needed by (type-form/messages.ts).",
+        "AI values use AiField, Unverified marker and evidence; unchanged carried values are not marked; human edits and confirmations survive Type changes and re-preparation; Discard AI suggestions keeps edits (convert-dialog.tsx, conversion-evidence.tsx).",
+        "Archived carried user/entity Field shows the archived note and requires a live value or an explicit clear (convert-dialog.tsx archivedCarrySlugs, convert.archivedReferenceNote).",
+        "Server refuses missing title, dead type, required Rows, Rows the target Form lacks, archived Our entity and archived Counterparties by name; the lost race returns the winner's record (convert.ts, convert-form.ts, contracts/create.ts, counterparty-link.ts).",
+        "Department carries from the Request into owning_department or department; Description, Priority from Request unless reviewed (convert-form.ts defaults).",
+        "Converting person is Legal Owner or Matter Manager; Requester is Business Owner on both; Contract Type default people join; no Confidential flag; Risk only from its Row (convert.ts, contracts/create.ts, matters/create.ts).",
+        "Template defaults sit under carried and dialog values; title prefix, default Priority and default Risk are not applied in conversion; Matter Manager Tasks go to the converting person; offsets from creation date (matters/create.ts).",
+        "Needed by creates one Key date on either record (contracts/create.ts, matters/create.ts).",
+        "Each Request attachment becomes a root Document at version 1; the thread moves with tiers intact; converted Request attachments no longer download (convert.ts, read.ts).",
+        "Portal Request address redirects to the record the Requester can read; converted Requests leave Your requests; archived records leave Original request (read.ts readMyRequest, service.ts list filter, messages portal.record.originalRequest).",
+        "Retry Request-context Analysis appears on a failed conversion run; the failure text says the Contract was created (analysis.tsx).",
+        "Current / Requester description switch on Contract and Matter records (contract-record.tsx, matter-record.tsx DescriptionSourceToggle)."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough that V-C13 requires against 067c1646.",
+        "V-C13's concurrent-conversion, archived-reference and missing-required-value checks are supported by refusal paths and the lost-race dialog. The dialog no longer lists answers that stay behind, so a walkthrough can confirm a stay-behind answer only on the Request page, not in the dialog.",
+        "The Matter record-Row preparation has no UI; a walkthrough can only observe its Unverified values after it finishes, or their absence on failure.",
+        "The structural check could not pass in the shared worktree because another group's in-progress edit (entity-records linking entity-structure-and-access.md#keep-the-share-register) throws. The check printed ok on a clean HEAD export with only this group's two guides applied."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/components/intake/convert-dialog.tsx: a0682c5d removed the Carries into / Does not carry into blocks, so the Convert dialog no longer names answers that stay on the Request. DES-059 clause 5 and DES-060 clause 4 (still Accepted) and the INT-002 M19/7 addendum require the dialog to name them before the press. Either restore the block or record a decision that supersedes those clauses.",
+    "apps/web/src/components/portal/request-owner.tsx: the Portal labels the triage assignee Legal Owner. CONTEXT.md reserves Legal Owner for the Contract's accountable person, INT-003 calls this fact the owner, and after conversion the converting person, not the triage assignee, becomes the Legal Owner. A Requester can read two different people under the same label.",
+    "apps/api/src/modules/requests/convert.ts: the file comment still says the dialog names the values that will not carry, and the convertRequest summary says Contract Owner where the UI and CONTEXT.md say Legal Owner."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/request-forms.md line 86: remove the instruction to look under Does not carry into the contract / matter during conversion. The dialog no longer shows that block (a0682c5d). Say instead that an answer with no Row on the destination Type stays on the Request.",
+    "docs/documentation/edition.json: the publication content hashes for triage-requests and convert-request must change to the new article hashes (5d7bff6a..., e19199c4...).",
+    "docs/documentation/scenarios.json: V-C12 and V-C13 acceptance still points at evidence for older content hashes. It needs updating after the independent walkthrough at 067c1646 records its result."
+  ],
+  "statusChange": null
+}

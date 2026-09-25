@@ -16,16 +16,16 @@ An Obligation belongs to an Entity and may link to one of its Registrations, an 
 4. Select **Add obligation**. Check the row's due date, recurrence, and links.
 5. To correct an open Obligation, open the menu beside **Mark complete** and choose **Edit**. Make your changes, then select **Save changes**, or **Cancel** to discard them.
 
-Drag a column heading’s edge to resize it. You can also focus the edge and use the left and right arrow keys. The completion button and row menu stay at the right of the table. Column widths are remembered for your account in this browser across Entity obligation tables.
+Drag a column heading's edge to resize it. You can also focus the edge and use the left and right arrow keys. The completion button and row menu stay at the right of the table. Column widths are remembered for your account in this browser across Entity obligation tables.
 
-Recurrence accepts 1 to 1,200 months. A blank recurrence makes the item one-off. Linking a Matter records existing work; adding an Obligation does not create a Matter. Removing a linked Registration leaves the Obligation in place with no Registration link.
+Recurrence accepts 1 to 1,200 months. A blank recurrence makes the item one-off. Linking a Matter records existing work; adding an Obligation does not create a Matter. If you cannot reach the linked Matter, its cell shows **Restricted matter** without the Matter's number or title. Editing the Obligation keeps that link unless you choose another Matter. Removing a linked Registration leaves the Obligation in place with no Registration link.
 
 ## Read the calendar and Home
 
 1. Open **Entities** and choose **Calendar**. **Due-date list** puts overdue open Obligations first, then orders by due date.
-2. Set **Entity**, **Assignee**, **From**, or **To**, then select **Apply**. Turn on **Include completed** to include filed one-offs.
+2. To narrow the results, select **Filter** and choose **Entity**, **Assignee**, or **Due date**. Pick one value, or enter **From** and **To** dates for **Due date**, then select **Apply**. The date range includes both dates. To include filed one-offs, select **Filter**, then **Show completed**.
 3. Select **Month** for a month grid. Use **Previous month**, **Next month**, or **Today**. Switching between the list and month keeps your filters.
-4. Open an Obligation from the results to work on its Entity. If no results match, use **Clear all** and check whether the Entity is archived or outside your access.
+4. Open an Obligation from the results to work on its Entity. If no results match, use **Clear all** and check whether the Entity is archived or outside your access. A filed one-off shows **Filed** beside its label.
 
 Home shows open Obligations assigned to you, subject to Entity access. On the Entities they can reach, Administrators also see unassigned Obligations and those whose named assignee cannot reach the Entity. The section shows a limited set of rows; use the Entity calendar for the wider list. Past-due items remain open until someone files them.
 
@@ -39,10 +39,10 @@ Approaching-date reminders and the daily briefing also depend on organization sc
 
 A recurring Obligation advances from its held due date by the recurrence at least once, then repeats that advance until the next due date is after the filing date. For example, an annual Obligation due September 30, 2025 and filed October 5, 2026 advances to September 30, 2027. One late filing does not invent separate filings for missed cycles.
 
-A one-off keeps its due date and shows **Completed**. It no longer appears among open Obligations and cannot be filed again. Use **Include completed** in the calendar to find it. Its row becomes read-only; check the date before confirming.
+A one-off keeps its due date and shows **Completed** with the filing date. It no longer appears among open Obligations and cannot be filed again. Use the **Show completed** filter in the calendar to find it. Its row becomes read-only; check the date before confirming.
 
 ## Recover from a mistake or refusal
 
-Read the message and correct invalid dates or recurrence values before retrying. If the Entity was archived or your Grant was removed, restore the Entity or ask a person with a Grant on that Entity to review access. Another person's filing can make a one-off unavailable for filing; reload to see the saved result.
+Read the message and correct invalid dates or recurrence values before retrying. In the calendar's **Due date** filter, an end date before the start date shows **End date must be on or after start date.** and **Apply** stays unavailable. If the Entity was archived or your Grant was removed, restore the Entity or ask a person with a Grant on that Entity to review access. Another person's filing can make a one-off unavailable for filing; reload to see the saved result.
 
-**Delete** in the row menu removes the Obligation and its future schedule. It does not file the Obligation or undo a recorded filing. Do not delete an item merely to clear an overdue result. For an incorrect recurring next date, correct the open row and retain the History of what was recorded.
+**Delete** in the row menu removes the Obligation and its future schedule at once, without a confirmation step. It does not file the Obligation or undo a recorded filing. Do not delete an item merely to clear an overdue result. For an incorrect recurring next date, correct the open row and retain the History of what was recorded.

@@ -4,42 +4,62 @@ Set the origin, services, storage, and secrets used by an OpenLaw installation. 
 
 ## Know where a setting belongs
 
-| Deployment configuration                                                                                                                                             | Administrator configuration in OpenLaw                                                                                                                                                            |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Database, listening ports, volume mounts, local storage path, sidecar resources, authentication signing key and credential encryption keys. SMTP can be pinned here. | Organization identity, users, authentication, module definitions, Signing and AI connectors, outbound email, instance address, upload limit, object storage and document-service client settings. |
+| Deployment configuration                                                                                                                                                                                                                                                                           | Administrator configuration in OpenLaw                                                                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Database, published host address and port, trusted proxies, setup token, volume mounts, local storage path, container resource limits, authentication signing key, credential encryption keys and an optional Web Push key pair. SMTP can be pinned here. Any Advanced setting set here is pinned. | Organization identity, users, authentication, module definitions, Signing and AI connectors, MCP, outbound email. Also the Advanced instance address, upload limit, object storage, document-service client and MCP limit settings that the deployment leaves empty. |
 
 ### Advanced settings
 
-Administrators open **Settings → Advanced** at the bottom of the navigation. It contains **Outbound email**, **Authentication**, **Audit log**, and these additional pages:
+Administrators open **Settings → Advanced** at the bottom of the navigation. It contains **Outbound email**, **Authentication** and **Audit log**, and these pages:
 
-- **Instance address** sets the origin used in emailed links and authentication. Use the HTTPS hostname employees can reach over the office network or VPN; a public endpoint is not required. Changing this does not configure DNS, TLS, firewall rules or the identity provider's callback registration.
-- **File uploads** sets the per-file limit in MiB, from 1 to 10,240. Coordinate it with reverse-proxy limits and available resources.
-- **Document storage** selects local, S3-compatible or Azure Blob storage for new documents. Enter the object-store settings, select **Test connection**, then **Save**. The test writes, reads and deletes a temporary object in every configured store, including retained readers. It runs from the API; verify worker access separately after restarting. Credentials are encrypted and write-only. Blank credential fields preserve configured credentials; an initially unconfigured store can use the deployment credential chain. Existing locations cannot be renamed or removed here because that would strand old documents. A location migration and its reader configuration remain an operator task. The local path is read-only and managed by the deployment.
-- **Document processing** sets the document-service address and API/worker client timeouts. **Test connection** checks its health endpoint from the API. This does not alter sidecar timeouts or resources; coordinate those separately when raising a client timeout.
-- **System status** shows database availability, active storage and document-service addresses, and recent API/worker heartbeats. A heartbeat older than one minute is shown as stale. Configuration differences are flagged as requiring a restart. Use the connection tests and a real document-processing check to verify the dependent services; a running process alone does not prove them healthy.
+- **Instance address** has one field, **Application address**. It sets the origin used in emailed links and authentication. Use the HTTPS hostname employees reach over the office network or VPN. A public endpoint is not required. Changing it does not configure DNS, TLS, firewall rules or the identity provider's callback registration.
+- **File uploads** has **Maximum file size (MiB)**, a whole number from 1 to 10,240. Coordinate it with reverse-proxy limits and available resources.
+- **Document storage** chooses local, S3-compatible or Azure Blob storage for new documents in **Store new documents in**. Enter the object-store settings, select **Test connection**, then **Save**. **Save** stays unavailable until a test of the current values passes, and the API refuses a save more than 10 minutes after that test. The test writes, reads and deletes a temporary object in local storage and in every configured object store, including retained readers. It runs from the API only, so check worker access separately after the restart. Credentials are encrypted and write-only. A blank credential field keeps the configured credential. A store configured with blank credentials uses the deployment's credential chain. After a bucket or container is configured, its location fields are read only, because a change would strand old documents. A location migration and its reader configuration remain an operator task. **Local storage path** is always read only.
+- **Document processing** has **Document service address**, **Processing timeout (milliseconds)** and **Comparison timeout (milliseconds)**. The timeouts apply to the API and worker clients. **Test connection** calls the service's health endpoint from the API. It does not change the document engine's own timeouts or resources; coordinate those separately when you raise a client timeout. The standard Compose file always sets `DOC_ENGINE_URL`, so **Document service address** is read only there. Change it in `.env`.
+- **MCP** has **Calls per hour per credential**, default 600, and **OAuth grant lifetime (days)**, from 1 to 365, default 90.
+- **System status** shows database availability, the active storage driver, the active document-service address, and one row for each API and worker process. A process with no heartbeat in the last minute shows **No recent heartbeat**, and the page warns that a heartbeat is missing. A process that started with a different configuration from the saved one shows **Restart required** under **Configuration**. Use the connection tests and a real document-processing check to verify the dependent services. A running process alone does not prove them healthy.
 
-The four editable Advanced pages save settings in the database. Saved values override the corresponding deployment defaults. The pages show each value's source, and show the API's active value separately while a change is pending. Saves do not reconfigure a running process. Coordinate a maintenance window and restart **both** app and worker, for example `docker compose restart app worker` when only app-saved settings changed. Afterward, refresh **System status** and check that both processes have current configuration. Old process rows can remain stale for up to a day.
+Each field shows its source under the value: **Saved in OpenLaw**, **Deployment configuration** or **Default**. The deployment environment always wins. When `.env` or the shell sets a key to a non-empty value, the field shows **Deployment configuration · Read only**, and the API refuses a different value. A value saved in OpenLaw earlier for that key is ignored. A page on which every field is pinned has no **Save** button. A saved value replaces OpenLaw's default only for a key the deployment leaves empty.
 
-Keep the same encryption key on both processes. An unreadable saved Advanced configuration stops startup rather than silently switching document storage. Restore the key before restarting. Database/bootstrap secrets and volume mounts remain deployment-managed. SMTP retains its separate rule: a deployment SMTP configuration takes precedence over an app-saved relay, and saving an app relay otherwise takes effect on the next send.
+A saved **Application address**, **Document service address** or object-store endpoint must use `https`. The API accepts plain `http` only for `localhost`, a private IP address, or a host named in `OPENLAW_PLAIN_HTTP_HOSTS`, a comma-separated list in `.env`. An internal DNS name is not a private IP address for this check. Values from the environment are not checked.
 
-If a saved address prevents sign-in, an operator can remove that section's overrides from the installation directory:
+A save does not reconfigure a running process. The page shows **Settings saved. Restart the API and worker to apply changes.**, and each changed value shows **Active:** with the value still in use. Coordinate a maintenance window and restart both app and worker, for example `docker compose restart app worker` when only app-saved settings changed. Then select **Refresh** on **System status** and check that both processes show **Running** and **Current**.
+
+Each save writes an Audit log entry. A save that moves an endpoint to another host also writes an entry and a process log line with the old and new host names. Neither contains a credential.
+
+The API refuses a save and shows the reason when:
+
+- another session saved the page since it loaded: "These settings changed in another session. Reload the page before saving."
+- a value is out of range or malformed, such as an **Application address** with a path.
+- the save would change or remove a configured bucket or container location.
+- a pinned value is itself invalid, such as `MAX_UPLOAD_MB=ten`. Every Advanced save then fails with that setting's message until you correct `.env` and recreate the containers.
+
+Only an Administrator can open these pages. The navigation does not show them to other roles, opening their address leads elsewhere, and the API refuses their requests with 403.
+
+Keep the same encryption key on both processes. An unreadable saved Advanced configuration stops startup rather than silently switching document storage. Restore the key before restarting. Database/bootstrap secrets and volume mounts remain deployment-managed. SMTP has its own rule: a deployment SMTP configuration takes precedence over an app-saved relay, and saving an app relay otherwise takes effect on the next send.
+
+If a saved address prevents sign-in, set `BASE_URL` in `.env` and recreate app and worker; the environment value pins the address. Or remove that section's saved overrides from the installation directory:
 
 ```bash
-docker compose exec app node apps/api/dist/reset-advanced-settings.js instance
+docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance
 docker compose restart app worker
 ```
 
-The recovery command also accepts `uploads`, `storage` or `processing`. It removes only that section's app-saved overrides and never prints their values. For a storage migration, stop document writes, migrate and verify the files, configure the intended locations and credentials in the deployment, then remove the saved storage overrides and recreate both services. Removing overrides alone does not move files. Keep backups and the previous stores until verification is complete.
+The recovery command also accepts `uploads`, `storage`, `processing` or `mcp`. It removes only that section's app-saved overrides, never prints their values, and writes an Audit log entry. `run` starts a one-off container, so the command works while the app keeps restarting. It needs the correct `OPENLAW_SECRET_KEY`. With a key that cannot open the saved settings, it stops with the same message as startup. For a storage migration, stop document writes, migrate and verify the files, configure the intended locations and credentials in the deployment, then remove the saved storage overrides and recreate both services. Removing overrides alone does not move files. Keep backups and the previous stores until verification is complete.
 
 Apply deployment changes with `docker compose up -d --no-build --pull never`. `docker compose restart` restarts the existing containers with their existing environment; it does not apply a changed `.env`. Check the effective behavior after recreation. Avoid printing `docker compose config` into a shared log: the expanded configuration can contain secrets. Use `docker compose config --quiet` for validation.
 
-The app and worker must use the same database, file configuration, browser-facing origin, and credential encryption key. They run the same app image with different commands. The document engine receives files from them and has no database or credential-store access.
+`SETUP_TOKEN` is optional. While the installation has no users, the app prints a new setup token to its log at each start. Set `SETUP_TOKEN` to choose the token, for example with more than one API replica. The app ignores it once a user exists.
+
+The app and worker must use the same database, file configuration, browser-facing origin, credential encryption key and Web Push key pair. They run the same app image with different commands. The document engine receives files from them and has no database or credential-store access.
 
 ## Serve the intended origin
 
-Set **Settings → Advanced → Instance address**, or set `BASE_URL` before first startup, to the browser-facing origin, such as `https://legal.example.com`, with no application subpath. This address can be reachable only on the company network or VPN; it does not need public internet access. It determines emailed links, authentication callbacks, signing callbacks, and accepted request origins. `PORT` changes the published host port; the app container still listens on port 3000.
+Set `BASE_URL` in `.env` to the browser-facing origin, such as `https://legal.example.com`, with no application subpath. When `BASE_URL` is set, it pins **Instance address**. Leave it empty only if an Administrator will set **Application address** in **Settings → Advanced → Instance address** instead. This address can be reachable only on the company network or VPN; it does not need public internet access. It determines emailed links, authentication callbacks, signing callbacks, and accepted request origins. `PORT` changes the published host port. `APP_BIND` changes the host address the port is published on, default `127.0.0.1`. The app container still listens on port 3000.
 
 The reverse proxy must terminate TLS, preserve the incoming `Origin` and `Host`, forward paths without rewriting them, and allow uploads at least as large as the app limit. Disable response buffering for `/api/events` so live updates can arrive. Keep the database and document-engine ports unpublished.
+
+The proxy must also set `X-Forwarded-For` to the client's address, replacing any value the client sent, and set `X-Forwarded-Proto`. Caddy's `reverse_proxy` does both by default. Then set `TRUSTED_PROXIES` in `.env` to the proxy's own address, for example `127.0.0.1,::1` for a proxy on the same host. The app reads the client address from `X-Forwarded-For` only when the request comes from a listed address. Without the list, everyone behind the proxy shares one sign-in rate-limit bucket, and the app logs a warning at start. Never list a range that also contains clients.
 
 For example, a Caddy instance on the app host can forward a public hostname to the local port:
 
@@ -49,7 +69,9 @@ legal.example.com {
 }
 ```
 
-This example assumes a hostname eligible for automatic certificate issuance. For a private installation, use the certificate and port-binding example below. Use [Caddy's HTTPS instructions](https://caddyserver.com/docs/quick-starts/https) for DNS, public ports, and certificate prerequisites. A proxy in a container needs a reachable upstream address; its own `127.0.0.1` is not the app container. Restrict direct access to the app port through your host/network rules when the proxy is the intended entry point.
+This example assumes a hostname eligible for automatic certificate issuance. For a private installation, use the certificate example below. Use [Caddy's HTTPS instructions](https://caddyserver.com/docs/quick-starts/https) for DNS, public ports, and certificate prerequisites.
+
+The standard Compose file publishes the app only on the host's `127.0.0.1`, so a proxy running directly on the host can reach it. A proxy in a container has its own `127.0.0.1`, and a proxy on another host cannot reach the host's loopback address. For those, set `APP_BIND` to a host address the proxy can reach, such as `0.0.0.0`. Add a network rule that admits only the proxy to the port, and set `TRUSTED_PROXIES` to the address the proxy connects from.
 
 Check sign-in, an invitation link, an upload, a download, and a live update through that origin. A responding home page alone does not prove the proxy preserves authentication or event delivery. Configure origin-wide response headers and traffic limits at the proxy according to your deployment policy; the app's sign-in rate limiter remains enabled in a normal installation.
 
@@ -67,28 +89,19 @@ At the network firewall or cloud security group, allow TCP 443 to the VM only fr
 
 ### 2. Keep the app port behind the proxy
 
-Run the HTTPS reverse proxy on the VM host. Before starting the stack, create `compose.private.yml` beside `compose.yml`:
-
-```yaml
-services:
-  app:
-    ports: !override
-      - "127.0.0.1:3000:3000"
-```
-
-This requires Docker Compose 2.24.4 or later. The `!override` tag replaces the base file's port list. Adding a loopback mapping without it can retain the original mapping on all interfaces because of [Compose's port merge rules](https://docs.docker.com/reference/compose-file/merge/).
-
-When following the installation guide, update these entries in `.env`:
+Run the HTTPS reverse proxy on the VM host. The standard Compose file publishes the app on `127.0.0.1` only, so no override file is needed. Leave `APP_BIND` unset. When following the installation guide, add these entries to `.env`:
 
 ```dotenv
-COMPOSE_FILE=compose.yml:compose.operator.yml:compose.private.yml
 BASE_URL=https://openlaw.company.example
 PORT=3000
+TRUSTED_PROXIES=127.0.0.1,::1
 ```
 
-For an existing installation with other operator overlays, append `compose.private.yml` to its existing file list. Keep the project name, image selection, volumes, and secrets unchanged. The private overlay deliberately fixes the host port at 3000; if you need another port, change that mapping and the proxy upstream together.
+For an existing installation, keep the project name, image selection, file list, volumes, and secrets unchanged. If you need another port, change `PORT` and the proxy upstream together. After startup, `docker compose port app 3000` must print `127.0.0.1:3000`. If it prints `0.0.0.0:3000`, remove `APP_BIND` from `.env` and from the shell, then recreate the app.
 
-Keep Postgres and the document engine unpublished. Do not use the development overlays. Docker publishes ports on all host addresses by default, and its rules can bypass some host firewall configurations; use the explicit loopback binding and network access controls together. See [Docker port publishing](https://docs.docker.com/engine/network/port-publishing/) and [Docker firewall behavior](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+An earlier edition of this guide added a `compose.private.yml` overlay with `ports: !override`. It gives the same loopback mapping, so you can keep it in `COMPOSE_FILE` or remove it. While it stays in the list, it fixes the host port at 3000 and ignores `PORT` and `APP_BIND`.
+
+Keep Postgres and the document engine unpublished. Do not use the development overlays. Docker's port rules can bypass some host firewall configurations, so use the loopback binding and network access controls together. See [Docker port publishing](https://docs.docker.com/engine/network/port-publishing/) and [Docker firewall behavior](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
 
 ### 3. Serve HTTPS with a trusted certificate
 
@@ -126,7 +139,7 @@ docker compose config --quiet
 docker compose up -d --no-build --pull never
 ```
 
-The standard Compose configuration passes `BASE_URL` to both app and worker. An address saved in **Advanced → Instance address** overrides it; update that saved value if one exists. Recreate both processes when changing it; a container restart alone does not update their environment. The production app serves both the web interface and API behind this one HTTPS origin. Port 5173 belongs to local frontend development and is not needed on the VM.
+The standard Compose configuration passes `BASE_URL` to both app and worker. When it is set, it pins **Advanced → Instance address**, and an address saved there earlier is ignored. Recreate both processes when changing it; a container restart alone does not update their environment. The production app serves both the web interface and API behind this one HTTPS origin. Port 5173 belongs to local frontend development and is not needed on the VM.
 
 For OIDC SSO, register `https://openlaw.company.example/api/auth/sso/callback` with the identity provider, replacing the hostname with the real one. Employees' browsers must reach both the identity provider and the private OpenLaw callback, and the app must reach the provider's required endpoints. Match the callback to the configured origin.
 
@@ -169,7 +182,7 @@ For [Claude Code with OAuth](connect-claude.md#connect-claude-code), also forwar
 
 Use this profile for claude.ai, Claude Desktop and Cowork custom connectors, ChatGPT, and Microsoft-hosted Copilot connections. Their servers must reach OpenLaw. A VPN on the person's device is not enough.
 
-1. Give the instance a public DNS hostname with a public IPv4 address. Terminate TLS there with a publicly trusted certificate. Use that HTTPS origin as `BASE_URL` or the saved **Instance address**, without an application subpath. Recreate app and worker after environment changes; restart both after app-saved changes.
+1. Give the instance a public DNS hostname with a public IPv4 address. Terminate TLS there with a publicly trusted certificate. Set that HTTPS origin as `BASE_URL`, without an application subpath. Use the saved **Application address** only when `BASE_URL` is empty. Recreate app and worker after environment changes; restart both after app-saved changes.
 2. Keep the app port behind the reverse proxy and the database and document engine unpublished. Forward the paths below unchanged on the same host. Do not redirect a Client to another hostname, rewrite paths, or put an interactive proxy sign-in in front of the protocol endpoints.
 3. Preserve `Authorization`, MCP protocol headers, `Accept` and `Content-Type`, and preserve `x-api-key` if keys are enabled. Preserve browser cookies, `Origin`, `Host` and query strings for sign-in and consent. Keep Streamable HTTP responses unbuffered. Allow signed uploads within the app's upload limit.
 4. Apply the vendor source allowlists below if the firewall limits incoming connections. Also allow the people's browsers to reach sign-in and consent. Allow the API outbound HTTPS and DNS access to the published identity metadata and signing-key URLs. Keep the existing outbound identity-provider access for SSO.
@@ -191,7 +204,7 @@ The reachability warning checks the HTTPS scheme, an IPv4 record and public IPv4
 
 OAuth requires an HTTPS `BASE_URL`, or HTTP on a loopback host for development. Loopback development is not a publicly reachable deployment. A plain-HTTP LAN address boots without the authorization server: API keys work, OAuth Clients toggles refuse with failed checks named, and the well-known documents return 404. Putting TLS on a proxy without updating the effective Instance address does not enable OAuth.
 
-The OAuth grant lifetime is in **Settings → Advanced → MCP → OAuth grant lifetime (days)**. It defaults to 90 days, with a range of 1 to 365. `MCP_OAUTH_GRANT_LIFETIME_DAYS` pins the value when set in the deployment. Restart app and worker after app-saved changes.
+The OAuth grant lifetime is in **Settings → Advanced → MCP → OAuth grant lifetime (days)**. It defaults to 90 days, with a range of 1 to 365. `MCP_OAUTH_GRANT_LIFETIME_DAYS` pins the value when set in the deployment. A pinned value outside that range stops the app at startup. **Calls per hour per credential** on the same page defaults to 600, and `MCP_RATE_LIMIT_PER_HOUR` pins it. A pinned rate limit that is not a positive whole number falls back to 600. Restart app and worker after app-saved changes.
 
 ### Allow vendor egress addresses
 
@@ -215,7 +228,7 @@ Keep the database version and credentials with your operational configuration. C
 
 ## Select and retain storage
 
-`STORAGE_DRIVER` chooses where new files are written. Existing files remember their own storage driver, so changing the setting does not move earlier files. Keep every old store and its reader configuration available for as long as a stored file refers to it.
+`STORAGE_DRIVER` chooses where new files are written. A storage variable set in `.env` pins the matching field in **Settings → Advanced → Document storage**. Existing files remember their own storage driver, so changing the setting does not move earlier files. Keep every old store and its reader configuration available for as long as a stored file refers to it.
 
 | Driver       | Required setup                                                                                                                                                                                                                                                         |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -229,13 +242,19 @@ After a storage change, upload and download a new Document, compare its bytes, a
 
 ## Set file and processing limits
 
-| Setting                         | Meaning in this build                                                                                                                                                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MAX_UPLOAD_MB`                 | Maximum size of one upload, default 100 MB. Match the proxy's body limit to the intended ceiling. An unreadable value falls back to the default instead of stopping startup, so check the ceiling an upload actually meets. |
-| `DOC_ENGINE_URL`                | Defaults to the bundled `http://doc-engine:8080`. Keep the engine on its private service network.                                                                                                                           |
-| `DOC_ENGINE_TIMEOUT_MS`         | Per-call processing bound, default 300000 milliseconds, maximum 420000. A larger value stops app and worker startup.                                                                                                        |
-| `DOC_ENGINE_COMPARE_TIMEOUT_MS` | Word Comparison bound, default 600000 milliseconds, maximum 840000. A larger value stops startup as well. The app, worker, and engine must agree.                                                                           |
-| `DOC_ENGINE_TMPFS_SIZE`         | Engine scratch-space limit, default `2g`. Scratch space consumes memory and is discarded with the container.                                                                                                                |
+| Setting                                                            | Meaning in this build                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `MAX_UPLOAD_MB`                                                    | Maximum size of one upload in MiB, default 100. Match the proxy's body limit to the intended ceiling. An unreadable value falls back to the default instead of stopping startup, so check the ceiling an upload actually meets. A set value pins **File uploads**. |
+| `DOC_ENGINE_URL`                                                   | Defaults to the bundled `http://doc-engine:8080`, which pins **Document service address** under Compose. Keep the engine on its private service network.                                                                                                           |
+| `DOC_ENGINE_TIMEOUT_MS`                                            | Per-call processing bound, default 300000 milliseconds, maximum 420000. A larger value stops app and worker startup.                                                                                                                                               |
+| `DOC_ENGINE_COMPARE_TIMEOUT_MS`                                    | Word Comparison bound, default 600000 milliseconds, maximum 840000. A larger value stops startup as well. The app, worker, and engine must agree.                                                                                                                  |
+| `DOC_ENGINE_TMPFS_SIZE`                                            | Engine scratch-space limit, default `2g`. Scratch space consumes memory and is discarded with the container.                                                                                                                                                       |
+| `DOC_ENGINE_MAX_CONCURRENT`, `DOC_ENGINE_MAX_QUEUED`               | How many engine tools run at once, default 2, and how many requests wait for a slot, default 8. Past both, the engine answers 503 with `Retry-After` and the caller retries.                                                                                       |
+| `APP_CPUS`, `APP_MEM_LIMIT`, `APP_PIDS_LIMIT`                      | App container limits, default `2` CPUs, `1g` memory and 256 processes.                                                                                                                                                                                             |
+| `WORKER_CPUS`, `WORKER_MEM_LIMIT`, `WORKER_PIDS_LIMIT`             | Worker container limits, with the app's defaults.                                                                                                                                                                                                                  |
+| `DOC_ENGINE_CPUS`, `DOC_ENGINE_MEM_LIMIT`, `DOC_ENGINE_PIDS_LIMIT` | Engine container limits, default `2` CPUs, `4g` memory and 512 processes. Keep the memory limit above `DOC_ENGINE_TMPFS_SIZE`, because scratch space counts against it.                                                                                            |
+
+The resource limits are ceilings, not reservations. The defaults fit a 4 CPU, 8 GB host with room for Postgres. Raise them in `.env` for a larger team and recreate the containers.
 
 An unavailable engine can leave the app ready while processing fails or retries. Check the Document's actual processing state and a worker completion, not just container readiness. See [Document processing](document-previews.md) and [operator troubleshooting](operator-troubleshooting.md).
 
@@ -251,12 +270,14 @@ Configure [Signing](configure-signing.md) and [AI analysis](configure-analysis.m
 
 `AUTH_SECRET` protects session signing and authentication material, including enrolled two-factor authentication. Changing it can invalidate sessions and make that material unreadable. Preserve it for a restore; do not use an ad hoc change as an account-recovery procedure.
 
-`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, Saved keys for AI provider destinations, and the saved Advanced configuration, including object-store credentials. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
+`OPENLAW_SECRET_KEY` encrypts the Signing connector's RSA key and HMAC secret, the saved SMTP server address and credentials, the SSO client secret, Saved keys for AI provider destinations, the saved Advanced configuration including object-store credentials, the generated Web Push private key, and an approved API key until its owner reads it once. It does not encrypt the database's Contract text or ordinary records. Store its recovery copy separately from database archives. Both processes require it at startup.
 
 To rotate this credential key:
 
 1. Preserve the current value in your secret store. Set `OPENLAW_SECRET_KEY_PREVIOUS` to that value and replace `OPENLAW_SECRET_KEY` with a newly generated key.
 2. Recreate the app and worker with `docker compose up -d --no-build --pull never`. Check the app's re-encryption result and verify the saved configuration actually works, such as sending through the stored SMTP relay.
 3. Remove `OPENLAW_SECRET_KEY_PREVIOUS` from `.env` and recreate the containers again. Verify the saved configuration once more, then retain the new key under your recovery policy.
+
+Device notifications use a VAPID key pair. With `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` unset, OpenLaw generates a pair on first use and stores it. Set both to pin a pair of your own; setting only one stops startup. Use the same pair for app and worker, and keep it stable while browsers are subscribed. A new pair means people must enable device notifications again.
 
 The previous key is accepted for reads during rotation. Keeping it configured indefinitely does not finish retiring it. If the wrong key was supplied, restore the correct key and recreate the app and worker before replacing saved provider credentials. Unreadable saved secrets are retained for recovery; replacing them intentionally writes new values.

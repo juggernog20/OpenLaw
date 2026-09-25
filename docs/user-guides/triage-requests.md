@@ -4,18 +4,24 @@ Review a Request, assign triage responsibility, and either convert it into work 
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator. Business Users [follow their own Requests in the Portal](follow-request.md); Business Users cannot triage the Inbox. Use an undecided Request for assignment, conversion, or resolution.
+Sign in as a Legal Team Member or Administrator. Business Users [follow their own Requests in the Portal](follow-request.md); Business Users cannot triage the Inbox. Use an undecided Request for assignment, conversion, or resolution. An undecided Request has the status **New** or **Read**.
 
 ## Review and assign a Request
 
 1. Open **Inbox**. The **Requests** tab opens first. Its built-in view starts with **Status: New, Read**, ordered by urgency and then age. Check your filters if a saved view opens instead.
-2. Open the Request and read **Description**, **Form responses**, **Attachments**, and **Converts to**. Check the Requester, **Department** and Urgency. Select an attachment's filename to open the document viewer. PDFs and images display directly; Word and PowerPoint files are prepared for reading. Use **Download** to save the original file, including when a preview is unavailable.
+2. Open the Request and read **Description**, **Form responses**, **Attachments**, and **Converts to**. When the destination Type's Form collects Description as a Row, the answer appears under **Form responses** and there is no separate **Description** card. Check the Requester, **Department** and Urgency. Select an attachment's filename to open the document viewer. PDFs and images display directly; Word and PowerPoint files are prepared for reading. Use **Download** to save the original file, including when a preview is unavailable.
 3. Select **Assign** on the list row or Request page.
-4. In **Search people**, find an active Legal Team Member or Administrator. Choose the person under **Triage assignee**, then select **Save assignment**.
+4. In **Search people**, find an active Legal Team Member or Administrator. Choose the person in the list, then select **Save assignment**.
 5. Check the saved assignee. Select their avatar or assignment control to reassign, or choose **Unassigned** and save to clear it. **Cancel** leaves the saved assignment unchanged.
 6. If you need clarification, open **Comments**, choose **Shared with requester**, enter your message, and select **Comment**. The audience starts on **Legal Only**, which the Requester cannot read. See [Choose who can read a comment](comments-and-activity.md) for audiences, mentions, and attached paper.
 
-Assignment records responsibility without reserving the Request. Another Legal Team Member or Administrator can still decide it. Assignment and replies leave it undecided, and the person assigned during triage does not automatically become the Contract Legal Owner or Matter Manager. The Requester sees the saved triage assignee as **Owner** in the Portal. When you clear the assignment, the Portal shows **Not assigned yet**.
+Assignment records responsibility without reserving the Request. Another Legal Team Member or Administrator can still decide it. Assignment and replies leave it undecided, and the person assigned during triage does not automatically become the Contract Legal Owner or Matter Manager. The Requester sees the saved triage assignee as **Legal Owner** in the Portal. When you clear the assignment, the Portal shows **Not assigned yet**.
+
+## New and Read requests
+
+A Request starts as **New**. When an Administrator or Legal Team Member opens its full record from the Inbox, it becomes **Read** for the whole legal team. Browsing the Inbox list or viewing the Request in the Business Portal does not mark it Read.
+
+New and Read Requests both remain in the default Inbox and can be assigned, prepared with AI, converted, or resolved. Use the **Status** filter to see only New or only Read Requests. Reading a Request does not assign it or send a status email. The Business Portal shows **Read** once Legal has opened the record. Converted, resolved, and declined statuses are preserved when the record is reopened.
 
 ## Convert to a Contract or Matter
 
@@ -52,9 +58,3 @@ Before replying, check the audience. Business Users cannot read **Legal Only** o
 - [Follow a Request and reply to Legal](follow-request.md).
 - [Configure request types and forms](request-forms.md).
 - [Manage notifications and reminders](notifications.md).
-
-## New and Read requests
-
-A request starts as **New**. When an Administrator or Legal Team Member opens its full record from the Inbox, it becomes **Read** for the whole legal team. Browsing the Inbox, previewing an attachment, or viewing the request in the Business Portal does not mark it Read.
-
-New and Read requests both remain in the default Inbox and can be assigned, prepared with AI, converted, or resolved. Use the Status filter to see only New or only Read requests. Reading a request does not assign it or send a status email. The Business Portal shows Read once Legal has opened the record. Converted, resolved, and declined statuses are preserved when the record is reopened.

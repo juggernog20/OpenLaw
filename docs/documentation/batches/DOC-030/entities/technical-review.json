@@ -1,0 +1,397 @@
+{
+  "batch": "DOC-030",
+  "group": "entities",
+  "reviewer": "DOC-030 source-review author agent (entities)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:27:00+00:00",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdits": {
+      "entities-and-counterparties": "dc8565d1 (Portal-listed on the create form)",
+      "entity-records": "a582e892 (individual owners)",
+      "entity-obligations": "e4b355cc (row menu, Edit dialog, Mark complete)",
+      "entity-structure-and-access": "a582e892 (individual owners on the chart)"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "entities-and-counterparties",
+      "scenario": ["V-C31"],
+      "contentSha256Before": "95b0de1c7db9b60b65bd90a8dd9b9ade42fa146a9d4e0bbffbe645bf39d9a9c3",
+      "contentSha256": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS.md (DD-028 clauses 3, 10 and consequences)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-046 addendum 2026-09-18, M36/1)",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-001 DD-028 amendment)",
+        "messages/en-US.json",
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/components/entities/entity-filter-definitions.ts",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/type-form/creation-rows.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/type-form/record-rows.tsx",
+        "packages/shared/src/form-evaluator.ts",
+        "packages/shared/src/form-builtins.ts",
+        "apps/api/src/lib/type-form-routes.ts",
+        "apps/web/src/components/counterparty-picker.tsx",
+        "apps/web/src/lib/contracts.ts",
+        "apps/api/src/modules/entities/routes.ts",
+        "apps/api/src/lib/counterparty-link.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Step 2, list filters",
+          "before": "Use Type, Status, Jurisdiction, or Majority owner to narrow the list; use Clear all to remove filters.",
+          "after": "Select Filter, choose Type, Status, Jurisdiction, or Majority owner, pick one value, and select Apply. Active filters show as chips; Clear all removes them.",
+          "source": "entities.tsx mounts RecordFilterBar with useEntityFilterDefinitions (e67fe85e, DES-046 addendum M36/1); single-value choices"
+        },
+        {
+          "claim": "Add entity dialog, required type Fields",
+          "before": "Not described.",
+          "after": "New step 5: when the Entity type's Form marks Fields required for creation, the dialog shows them after the identity details; the rest go on the record.",
+          "source": "entities.tsx RegisterEntityDialog creationRows/CreationRows and fieldMissing check; routes.ts assertCreationForm (DD-028 clause 10)"
+        },
+        {
+          "claim": "Where Portal-listed is changed later",
+          "before": "under Overview → Portal",
+          "after": "in the Portal card on Overview",
+          "source": "entity-record.tsx entities.record.portal.title = Portal"
+        },
+        {
+          "claim": "Attachments at registration",
+          "before": "Not described.",
+          "after": "New optional step 7: Attach documents, with one Document type for the attached files when Entity Document types exist.",
+          "source": "create-attachments.tsx (module entity, single Document type select shown only when type options exist)"
+        },
+        {
+          "claim": "Invalid create input outcome (V-C31 negative check)",
+          "before": "Not described.",
+          "after": "Names the refusals Name the entity — its registered legal name., Pick an entity type., and Fill {Field}.",
+          "source": "entities.tsx entities.form.nameMissing, typeMissing, fieldMissing"
+        },
+        {
+          "claim": "Business User reaching Entities",
+          "before": "Business Users do not have access to the Entities destination.",
+          "after": "Adds: opening an Entities address returns them to their home page.",
+          "source": "entities.tsx entitiesLoader and entity-record.tsx loader redirect non-Member+ to /"
+        },
+        {
+          "claim": "Clearing Our entity",
+          "before": "Not described.",
+          "after": "Choose Not known yet to clear it.",
+          "source": "contract-record.tsx contracts.entityUnknown option"
+        },
+        {
+          "claim": "Create and remove control labels",
+          "before": "Create \"name\"; Take name off the contract",
+          "after": "Create \"Cedar Supply Ltd\" (shows the typed name); Take Cedar Supply Ltd off the contract",
+          "source": "counterparty-picker.tsx counterparty.picker.create; contract-record.tsx contracts.counterparty.remove"
+        },
+        {
+          "claim": "Hidden Our entity or Counterparties Rows",
+          "before": "Not described.",
+          "after": "Recovery note: a Contract type Form Row under a false Branch stays hidden on Overview until it has a value.",
+          "source": "contract-record.tsx RecordRows over recordFormRows; form-evaluator.ts recordFormRows; type-form-routes.ts keeps every built-in Row"
+        }
+      ],
+      "confirmed": [
+        "Entities opens on Calendar; List and Chart are the other views (entities.tsx ViewSwitch and loader).",
+        "Search entities by name, Add entity, Legal name, Entity type, Status (default Active), Formation jurisdiction, Formed on, Registration no., Tax ID, Registered agent, Registered address, Register (entities.tsx, messages/en-US.json).",
+        "Portal-listed is offered on the create form only to Administrators and is off by default; the API refuses it from others (entities.tsx canListInPortal; routes.ts 403).",
+        "The creator receives a Grant and an entity_grant.added Activity entry (routes.ts POST /entities).",
+        "Legal names are not unique; no uniqueness check exists on create (routes.ts).",
+        "Status values Active, Dormant, Dissolved, Divested (entities.statusLabel).",
+        "Our entity selector, Counterparties picker, Primary mark, Make primary, the no-duplicate and case-insensitive create rule, and exclusion of Counterparties already on the Contract (contract-record.tsx CounterpartiesField; counterparty-picker.tsx canCreate/exclude).",
+        "Archived Entities are not offered in the signing-Entity list; a saved reference is kept (contracts.ts signingEntityOptions)."
+      ],
+      "limitations": [
+        "The V-C31 duplicate-input check has no refusal to show for Entities: a repeated legal name creates a second Entity by design. The guide says so. For Counterparties the picker withholds a second creation of an exact existing name.",
+        "Counterparty rename, merge, archive and restore have no staff page in this build; the guide states this rather than inventing a control."
+      ]
+    },
+    {
+      "articleId": "entity-records",
+      "scenario": ["V-C32"],
+      "contentSha256Before": "dcfef78c8c0da3788b6dbac0d5d3f82085ac6146bb935a3c29330c34934fe60d",
+      "contentSha256": "c3209b12d7c67ec167125da9a559cefc5bbe6b07d1077e922bcecc8d1deb82ed",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-003 individual owner addendum and ENT-011 amendment, ENT-011 and Built addendum)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-088 and Built addendum)",
+        "messages/en-US.json",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/components/entities/share-register-tab.tsx",
+        "apps/web/src/components/entities/ownership-card.tsx",
+        "apps/web/src/components/entities/officers-card.tsx",
+        "apps/web/src/components/entities/registrations-card.tsx",
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/components/entities/entity-filter-definitions.ts",
+        "apps/api/src/modules/entities/holding-routes.ts",
+        "apps/api/src/lib/holdings-projection.ts",
+        "apps/api/src/modules/entities/record-routes.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Section intro, what a Holding connects",
+          "before": "Holdings connect your Entities.",
+          "after": "Holdings connect an Entity to its owners (Entities or named individuals) and to the Entities it owns.",
+          "source": "holding-routes.ts individual Holdings (a582e892); CONTEXT.md Holding"
+        },
+        {
+          "claim": "Holdings on an Entity with a share register",
+          "before": "Not described; Add Holding presented as the only way to record owners.",
+          "after": "New intro: owner Holdings of an Entity with a share register come from the register; record those owners there. Add Holding is for Entities without a register and for owned Entities.",
+          "source": "ENT-011 and ENT-003 ENT-011 amendment; holdings-projection.ts"
+        },
+        {
+          "claim": "Where the Add Holding button is",
+          "before": "Open the Ownership tab and select Add Holding.",
+          "after": "Add Holding sits below Holdings in other Entities on the Ownership tab, which now opens with the share register.",
+          "source": "share-register-tab.tsx renders OwnershipCard last with showOwners=false; ownership-card.tsx"
+        },
+        {
+          "claim": "Where saved Holdings appear",
+          "before": "Check Owners (and Owned Entities for company holdings).",
+          "after": "Owned Entities appear under Holdings in other Entities; hand-typed owners appear under Declared owners not in the register, which shows only when such an owner exists.",
+          "source": "share-register-tab.tsx ownersTitle/ownedTitle and declaredHoldings filter; ownership-card.tsx"
+        },
+        {
+          "claim": "Ownership percent default",
+          "before": "Not stated.",
+          "after": "Ownership percent starts at 100.",
+          "source": "ownership-card.tsx AddHoldingDialog useState(\"100\")"
+        },
+        {
+          "claim": "Remove control labels",
+          "before": "Remove name; Remove jurisdiction registration",
+          "after": "Labels name the party: Remove Helix Holdings Ltd, Remove Ravi Menon (Officer), Remove Delaware registration.",
+          "source": "entities.ownership.remove, officers-card Remove {officer}, registrations-card Remove {jurisdiction} registration"
+        },
+        {
+          "claim": "Register-derived Holding rows",
+          "before": "Not described.",
+          "after": "Rows marked From register have disabled controls and link to the register; a register entry replaces a hand-typed Entity owner; a hand-typed individual stays beside the projected one even with the same name.",
+          "source": "ownership-card.tsx DerivedPill/locked; holding-routes.ts 409 DERIVED_HOLDING; holdings-projection.ts matches individuals by shareholderId only"
+        },
+        {
+          "claim": "Over-100% warning text",
+          "before": "A total over 100% produces a warning.",
+          "after": "Quotes the warning, for example Ownership totals 120% for Helix Research Ltd.",
+          "source": "entities.ownership.overTotal"
+        },
+        {
+          "claim": "Finding an archived Entity",
+          "before": "Choose List and turn on Show archived.",
+          "after": "Choose List, select Filter, then Show archived.",
+          "source": "entity-filter-definitions.ts includeArchived flag; record-filter-bar.tsx flag applies on select"
+        },
+        {
+          "claim": "What archiving freezes",
+          "before": "Officers, Registrations, Holdings, Obligations, Documents, or Grants.",
+          "after": "Adds the share register.",
+          "source": "share-register-routes.ts assertEditable 409 This entity is archived. Restore it before changing its register.; share-register-tab.tsx frozen"
+        }
+      ],
+      "confirmed": [
+        "Directors & Officers, Add director or officer, Director or officer name, Role, Appointed on, Linked user, Add, Resigned on, Show former; resignation cannot precede appointment; linking a user grants nothing (officers-card.tsx, record-routes.ts; unchanged since 3fa407e3).",
+        "Registrations, Add registration, Jurisdiction, Registration number, Registered agent, Status Active/Lapsed/Withdrawn; removal detaches linked Obligations (registrations-card.tsx, record-routes.ts; unchanged since 3fa407e3).",
+        "Add Holding offers Owner type Entity or Individual; Relationship Owns this Entity / This Entity owns; Full name for an individual; individual percent only is editable (ownership-card.tsx, holding-routes.ts PATCH).",
+        "0 to 100 percent, self-ownership refused, duplicate directional Holding refused, loop refused, over-100% warns and saves (holding-routes.ts PercentSchema, httpError 400/409, warningsFor).",
+        "Archive and Restore on the record header; Archived pill; This entity is archived. Restore it to edit. (entity-record.tsx).",
+        "New Entities have no pre-created folders (ENT-005)."
+      ],
+      "limitations": [
+        "V-C32 asks to record a Holding. On an Entity that keeps a share register the owner Holdings come from Register entries; the walkthrough should record the Holding on an Entity without a register, or as an owned Entity, and use the share register (entity-structure-and-access) for register-backed owners.",
+        "Hand-typed owners can still be added to an Entity that keeps a register (see productBugs). The guide describes that behaviour and recommends a register entry."
+      ]
+    },
+    {
+      "articleId": "entity-obligations",
+      "scenario": ["V-C52"],
+      "contentSha256Before": "f9dd3b65c573dc3274da2b7ca2ff55b247d0024e56eee19ed5812b377797c30c",
+      "contentSha256": "17405bc7b31003e70206b88d8f85d80e430810a7dfc7463ec25e8152f43c5665",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-046 addendum 2026-09-18, M36/1)",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-006)",
+        "messages/en-US.json",
+        "apps/web/src/components/entities/obligations-panel.tsx",
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/components/entities/entity-filter-definitions.ts",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/api/src/modules/entities/obligation-routes.ts",
+        "apps/api/src/modules/home/sections/obligations.ts",
+        "apps/web/src/lib/activity.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Calendar filters",
+          "before": "Set Entity, Assignee, From, or To, then select Apply. Turn on Include completed.",
+          "after": "Select Filter, choose Entity, Assignee, or Due date (From and To, both dates included), select Apply; choose Show completed from Filter to include filed one-offs.",
+          "source": "entities.tsx ComplianceCalendar RecordFilterBar; useCalendarFilterDefinitions (Show completed); record-filter-bar.tsx Includes both dates"
+        },
+        {
+          "claim": "Completed one-off in the calendar and on the tab",
+          "before": "Shows Completed; use Include completed.",
+          "after": "The calendar row shows Filed; the Obligations tab row shows Completed with the date; use the Show completed filter.",
+          "source": "entities.calendar.filed; entities.record.obligations.completedOn Completed {date}"
+        },
+        {
+          "claim": "Restricted linked Matter",
+          "before": "Not described.",
+          "after": "A linked Matter outside your reach shows Restricted matter; editing keeps the link unless another Matter is chosen.",
+          "source": "obligation-routes.ts LinkedMatter restricted projection; obligations-panel.tsx RestrictedRecordCell and dialog body omits an unchanged matterId"
+        },
+        {
+          "claim": "Invalid calendar date range",
+          "before": "Not described.",
+          "after": "An end date before the start date shows End date must be on or after start date. and Apply stays unavailable.",
+          "source": "record-filter-bar.tsx recordFilters.invalidDates and disabled submit"
+        },
+        {
+          "claim": "Delete confirmation",
+          "before": "Delete removes the Obligation and its future schedule.",
+          "after": "Adds that Delete acts at once with no confirmation step.",
+          "source": "obligations-panel.tsx ObligationActions onRemove calls remove(row.id) directly"
+        },
+        {
+          "claim": "Apostrophe",
+          "before": "curly apostrophe in heading's",
+          "after": "straight apostrophe",
+          "source": "EDITORIAL.md, en-US punctuation"
+        }
+      ],
+      "confirmed": [
+        "Add obligation, Label, Due date, Repeat every (months), Registration, Assignee, Matter, Note; recurrence 1 to 1,200 months; registration must belong to the Entity; assignee must be a live Legal Team Member or Administrator; Matter must be live and reachable (obligations-panel.tsx, obligation-routes.ts).",
+        "Row menu Edit opens Edit obligation with Save changes and Cancel; Mark complete dialog with Completed on starting at the local date (obligations-panel.tsx).",
+        "Recurring roll-forward past the filing date and one-off refusal This one-off obligation is already filed. (obligation-routes.ts file route).",
+        "Due-date list orders overdue open rows first (obligation-routes.ts overdueRank).",
+        "Month view, Previous month, Next month, Today; switching keeps filters and, since 1fe92426, the opened month (entities.tsx).",
+        "Home shows the viewer's open assigned Obligations; Administrators also see unassigned rows and rows whose assignee cannot reach the Entity. The DOC-029 bug about Administrator assignees on Confidential Entities is fixed at c6e64518 (home/sections/obligations.ts).",
+        "Filing writes an entity_obligation.filed History entry (activity.ts).",
+        "Column widths persist per account in this browser (obligations-panel.tsx readTableWidths/writeTableWidths)."
+      ],
+      "limitations": [
+        "Reminder and daily-briefing delivery depend on the worker schedule and were not re-read in this pass beyond the unchanged sources; the guide makes no new claim about them."
+      ]
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "scenario": ["V-C53"],
+      "contentSha256Before": "8237898f36b21fcb873ac08a07fcf8ff7c1d476b1949a72c4c43f58903c0cb26",
+      "contentSha256": "d81e8cf14f7a9bbbb520d3823cac40df554d8353510279f6eaa01e89bd2ae810",
+      "sources": [
+        "CONTEXT.md (Share class, Register entry, Holder, Certificate)",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-003 individual owner addendum and ENT-011 amendment, ENT-011 and Built addendum)",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-001 ENT-011 amendment and Built addendum)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-088 and Built addendum)",
+        "messages/en-US.json",
+        "apps/web/src/components/entities/share-capital-card.tsx",
+        "apps/web/src/components/entities/share-register-tab.tsx",
+        "apps/web/src/components/entities/share-classes-dialog.tsx",
+        "apps/web/src/components/entities/share-entry-dialog.tsx",
+        "apps/web/src/lib/share-register.ts",
+        "apps/web/src/components/entities/ownership-card.tsx",
+        "apps/web/src/components/entities/entity-chart.tsx",
+        "apps/web/src/components/entities/entity-chart-export-model.ts",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/api/src/modules/entities/share-register-routes.ts",
+        "apps/api/src/lib/share-register.ts",
+        "apps/api/src/lib/holdings-projection.ts",
+        "apps/api/src/modules/entities/holding-routes.ts",
+        "apps/api/src/modules/entities/grant-routes.ts",
+        "apps/api/src/modules/entities/routes.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/modules/entities/linked-records.ts",
+        "apps/web/src/components/entities/entity-grants-dialog.tsx",
+        "apps/web/src/components/confidential-toggle.tsx"
+      ],
+      "corrections": [
+        {
+          "claim": "Share capital card scope",
+          "before": "The card has no share classes, shareholder register, or full capitalization table. Do not treat these values as a complete register.",
+          "after": "The three values are declared totals; share classes, Holders and certificates live in the share register on the Ownership tab, which compares Issued shares with the register.",
+          "source": "ENT-011 (supersedes ENT-001's FUTURE-FEATURES clause); share-register-tab.tsx ReconciliationNote"
+        },
+        {
+          "claim": "Legacy par value without a currency",
+          "before": "Not described (DOC-029 limitation).",
+          "after": "Stored minor units show with a note; choosing a Currency opens Confirm par value currency; select Confirm amount and currency only if correct.",
+          "source": "share-capital-card.tsx pendingCurrency dialog (ae281ead)"
+        },
+        {
+          "claim": "Share register",
+          "before": "Not described.",
+          "after": "New section Keep the share register: share classes, Record entry by kind, Holder choices, certificates, Enter in register, edit and remove with confirmation, replay refusals, over-authorized warning, as-of reading, filters, CSV exports, reconciliation line, and projected Holdings.",
+          "source": "share-register-tab.tsx, share-classes-dialog.tsx, share-entry-dialog.tsx, share-register-routes.ts, holdings-projection.ts; ENT-011, DES-088"
+        },
+        {
+          "claim": "What does not grant access",
+          "before": "A Holding, Officer user link, or linked Contract.",
+          "after": "Adds a share register entry.",
+          "source": "share-register-routes.ts reachedEntity on every route; register names grant nothing (ENT-004)"
+        },
+        {
+          "claim": "Chart contents",
+          "before": "Recorded Holdings between registered Entities and their individual owners.",
+          "after": "Adds Holdings written from a share register; chart step 1 links the share register as a second way to change Holdings.",
+          "source": "holdings-projection.ts writes entity_holdings and individual_holdings read by the chart"
+        },
+        {
+          "claim": "Restricted Entity in retained relationships",
+          "before": "Holding or Contract signing-Entity reference.",
+          "after": "Adds share register Holders, and the refusal when an editor tries to replace a Holder they cannot see.",
+          "source": "share-register-tab.tsx HolderCell RestrictedRecordCell; share-register-routes.ts assertRestrictedHoldersKept"
+        },
+        {
+          "claim": "Archived Entity",
+          "before": "Restore before changing its facts or Grants.",
+          "after": "Adds the share register.",
+          "source": "share-register-routes.ts assertEditable"
+        },
+        {
+          "claim": "Apostrophes and pronoun",
+          "before": "Entity’s (curly); Its primary owner",
+          "after": "straight apostrophes; An Entity's primary owner",
+          "source": "EDITORIAL.md"
+        }
+      ],
+      "confirmed": [
+        "Share capital: Authorized shares, Issued shares, Par value, Currency; Par value disabled until a Currency exists; whole numbers of zero or more; decimal places limited by the currency; Enter and blur save; Escape abandons (share-capital-card.tsx).",
+        "Chart controls Fit to window, Clear highlight, keyboard pan/zoom, Confidential Entity boxes, individual nodes labelled Individual that open the owned Entity's Ownership tab (entity-chart.tsx).",
+        "The chart description now says the largest Holding forms the solid tree, fixing the DOC-029 majority-wording bug (1759580b).",
+        "Linked Contracts and Matters tabs and counts follow the viewer's reach (linked-records.ts; unchanged since 3fa407e3).",
+        "Confidentiality card, Manage access, Confidential access dialog, Person, Grant access, removal control named Remove {name}, Confidential — restrict to the access list, last-live-grantee refusal, Administrators need a Grant (entity-grants-dialog.tsx, confidential-toggle.tsx, grant-routes.ts; unchanged since 3fa407e3).",
+        "Register routes require Legal Team Member or Administrator and Entity reach; share class names are unique per Entity; a class with entries cannot be archived (share-register-routes.ts)."
+      ],
+      "limitations": [
+        "The Record entry dialog has many kind-dependent controls; the guide describes the Holder rules per kind and the certificate controls in summary. The walkthrough needs at least one Share class and an Allotment to exercise V-C53's capital facts on the register.",
+        "When Issued shares is blank the reconciliation line reports agreement (see productBugs); the guide tells readers to enter the declared value first."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/api/src/modules/entities/holding-routes.ts POST /entities/:id/holdings (and the Add Holding button in apps/web/src/components/entities/ownership-card.tsx, still shown by share-register-tab.tsx) accepts a new hand-typed owner Holding, Entity or Individual, on an Entity that keeps a share register. The row lists under 'Declared owners not in the register' and counts toward the ownership total. ENT-011 and its ENT-003 amendment say owner Holdings of an Entity with a register are a projection of the register and manual Holdings remain for Entities without one; DES-088 says holders come only from entries.",
+    "apps/web/src/components/entities/share-register-tab.tsx ReconciliationNote treats a blank Issued shares (declaredIssued null) as agreement and prints 'Today the register agrees with Share capital: N issued.' DES-088 and the ENT-001 ENT-011 amendment define success as the register total equalling the declared shares_issued.",
+    "apps/web/src/components/entities/share-register-tab.tsx EntriesTable draws Edit and Remove as two icon buttons per row. DES-088 says the entries' row actions are Edit and Delete in the shared row menu."
+  ],
+  "sharedFileRequests": [
+    "docs/documentation/edition.json: the publication content hashes for entities-and-counterparties, entity-records, entity-obligations and entity-structure-and-access must change to the new article hashes in this record.",
+    "docs/documentation/scenarios.json: V-C31, V-C32, V-C52 and V-C53 acceptance points at DOC-029 evidence for older content hashes; update after the DOC-030 walkthrough at 067c1646 records its result. V-C53's prerequisites could add 'an Entity with a share class and register entries' now that capital facts include the share register."
+  ],
+  "statusChange": null
+}

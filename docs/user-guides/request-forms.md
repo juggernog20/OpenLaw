@@ -81,9 +81,9 @@ The Intake Rows already belong to the destination type's Form. If Legal changes 
 
 ## If it does not work
 
-If the form is missing from the Portal, check that its request type is active. If a save reports an error, correct it and check the saved value before sharing the form.
+If the form is missing from the Portal, check that its request type is active. If a Business User opens the form and sees an error instead of the questions, check that the destination type is live. OpenLaw does not send the form to another type or module. If a save reports an error, correct it and check the saved value before sharing the form.
 
-If an answer appears under **Does not carry into the contract**, or **Does not carry into the matter**, during conversion, check whether the Field is attached to the selected destination type. That answer remains on the Request. Review any missing required destination Fields before confirming conversion.
+If an answer is missing from the new record after conversion, check whether the selected destination type's Form has a Row for that Field. An answer without a matching Row stays on the Request. The Convert dialog does not list it, so read it on the Request page. Review any missing required destination Fields before confirming conversion.
 
 If the Intake form card cannot be read, use **Retry**. If the destination type is archived or unavailable, choose a live destination in the Request type editor. Guidance that disappears may have an unpublished, archived, or unavailable Knowledge Item, or a placement on a different form. Test the Business User view after correcting it.
 

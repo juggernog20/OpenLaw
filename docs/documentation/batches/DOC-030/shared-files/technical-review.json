@@ -1,0 +1,511 @@
+{
+  "batch": "DOC-030",
+  "group": "shared-files",
+  "reviewer": "DOC-030 source-review author agent (shared-files)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:41:07Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "note": "Shared-file requests from other DOC-030 groups, not plan.json articles. Prior evidence commits: contributor-guide, create-knowledge, document-folders, manual-signing, terms-and-renewals, document-repository 3fa407e3; first-run 432dba3a; install 57e77e38. Last committed guide edits: contributor-guide 3cccc022, first-run a4e0f117, install bf4ab492, others 0e860c81."
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "contributor-guide",
+      "scenario": ["V-C25"],
+      "contentSha256Before": "9bdee91665ad125eb9fd2510acdf534d0734ecfcfe097e762cbd188eeb506edc",
+      "contentSha256": "e11d9743d2fbf74a314460577b9c3661c00553c2c530f4e6caf9280d47c67921",
+      "sources": [
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/lib/documents.ts",
+        "packages/db/src/schema/documents.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+        "docs/user-guides/document-versions.md",
+        "CONTEXT.md"
+      ],
+      "corrections": [
+        {
+          "claim": "Portal Document rows show the kind",
+          "before": "Each row shows the current Version, kind, uploader and date.",
+          "after": "Each row shows the current Version, its kind, uploader and date. The Portal shows the kind, not the Document type Legal sees, so a Version of a type that an Administrator added reads **General**.",
+          "source": "documents-section.tsx VersionLine draws documentKindLabel(version.kind); DOC-015 consequences: 'The portal still shows the kind label, so a Contract Version of an added type reads General there'"
+        },
+        {
+          "claim": "Contract upload Kind control and how it maps to the Document type",
+          "before": "On a Contract, choose its **Kind**. Matter uploads have no Kind control.",
+          "after": "On a Contract, choose its **Kind**. It starts on **General** and also offers the six fixed Contract types, such as **Draft · theirs** and **Executed**. Legal sees your choice as the Version's Document type, and **General** leaves it with no type. Matter uploads have no Kind control.",
+          "source": "documents-section.tsx (label documents.kindLabel 'Kind', options general + DOCUMENT_VERSION_KINDS, module === 'contract' only); routes.ts upload: a kind maps to the owner list's fixed type, a kind with no row stores general with no type; DOC-015 consequences"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "The Portal upload control is still labelled Kind, not Type",
+          "source": "documents-section.tsx line 654 documents.kindLabel; messages/en-US.json documents.kindLabel = 'Kind'"
+        },
+        {
+          "claim": "Matter uploads have no Kind control",
+          "source": "documents-section.tsx renders the Kind select only when module === 'contract'"
+        },
+        {
+          "claim": "For multiple new Documents the Kind and Note apply to every file",
+          "source": "documents-section.tsx one kind/note state per dialog submit"
+        }
+      ],
+      "limitations": [
+        "Requested change refused in part: the request said the Portal upload uses the Type control with a No type default. At 067c1646 the Portal composer still shows Kind with General and the six fixed kinds (DOC-015 consequences say the Portal has not learned types). The guide keeps the Kind label and explains the mapping instead of naming a Type control that does not exist.",
+        "contentSha256Before is the file after the access group's uncommitted DOC-030 edits, not the committed bytes."
+      ]
+    },
+    {
+      "articleId": "first-run",
+      "scenario": ["V-C35"],
+      "contentSha256Before": "3811a3457a036c364c43f7791060ac5b99b07473471533c47f1237325472c1ac",
+      "contentSha256": "175f145dbb885d6dcc6751427bfbe772157ff2419453f384620c8d8f9ac8e86e",
+      "sources": [
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "docs/user-guides/authentication-and-email.md",
+        "git show 8fd2ca38"
+      ],
+      "corrections": [
+        {
+          "claim": "Allowed email domains reach",
+          "before": "An empty list prevents new email-based access. The list also governs each new sign-in link, so narrowing it later affects people who signed in before.",
+          "after": "The list controls only who can create a new Portal account. An empty list prevents new Business User accounts. A sign-in link goes to any account that is not archived, including a pending invitation, even when its domain is not on the list. Narrowing the list later does not stop existing Business Users signing in.",
+          "source": "instance.ts magicLinkDenied: user ? !!user.archivedAt : !isEmailDomainAllowed(...); routes.ts /auth/magic-link same rule (commit 8fd2ca38); authentication-and-email.md line 15"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Domains are entered with Add, without a username",
+          "source": "docs/user-guides/authentication-and-email.md (admin-org group, DOC-030) and routes.ts AllowedDomainSchema"
+        }
+      ],
+      "limitations": [
+        "contentSha256Before is the file after the first-run group's uncommitted DOC-030 edits."
+      ]
+    },
+    {
+      "articleId": "install",
+      "scenario": ["V-C44"],
+      "contentSha256Before": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
+      "contentSha256": "e3721923de08056ce6be7fa71ed7f05068a4778df8c04b745c794bb27636d0e6",
+      "sources": [
+        "compose.yml",
+        ".env.example",
+        "apps/api/src/index.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "docs/user-guides/deployment-configuration.md",
+        "docs/user-guides/first-run.md",
+        "docs/DEPLOYMENT.md",
+        "git show 97ea65bc",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-031, TECH-032, TECH-033)"
+      ],
+      "corrections": [
+        {
+          "claim": "Documented source revision",
+          "before": "57e77e386be31b2a319f7143dd54d00123e65efe (three places)",
+          "after": "067c1646829df85e62b809ee9157921e867c84e7",
+          "source": "97ea65bc (loopback APP_BIND default, setup token, TRUSTED_PROXIES) is not an ancestor of 57e77e38, so the requested text would be false for the old revision. 067c1646 is the DOC-030 pinned commit."
+        },
+        {
+          "claim": "Private VM paragraph and port binding",
+          "before": "For a private VM, add the private Compose overlay ... The base Compose file otherwise publishes the app port on all host interfaces.",
+          "after": "For a private VM, set the internal HTTPS origin and TRUSTED_PROXIES ... The base Compose file publishes the app port only on the host's 127.0.0.1 ... A proxy in a container or on another host needs APP_BIND.",
+          "source": "compose.yml ports \"${APP_BIND:-127.0.0.1}:${PORT:-3000}:3000\"; deployment-configuration.md Deploy on a private VM step 2 (no overlay needed)"
+        },
+        {
+          "claim": "Step 3 .env adds TRUSTED_PROXIES and explains SETUP_TOKEN",
+          "before": "BASE_URL and PORT only; no proxy list or setup token",
+          "after": "TRUSTED_PROXIES=127.0.0.1,::1 in the block, with what it does, and optional SETUP_TOKEN",
+          "source": "compose.yml app environment TRUSTED_PROXIES/SETUP_TOKEN; index.ts trustedProxies warning and readSetupToken"
+        },
+        {
+          "claim": "Operator reads and hands over the setup token",
+          "before": "Step 4 opened Set up OpenLaw with no token step; intro said hand over the address",
+          "after": "New step 4: token is SETUP_TOKEN or the value printed after 'First-run setup is open. Paste this setup token into the setup screen:' in docker compose logs app; a restart replaces it; none once a user exists. Intro now says address and setup token.",
+          "source": "apps/api/src/index.ts readSetupToken"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Readiness check on http://127.0.0.1:3000/readyz still works with the loopback bind",
+          "source": "compose.yml ports and healthcheck"
+        },
+        {
+          "claim": "Base services are app, worker, postgres, doc-engine",
+          "source": "compose.yml"
+        }
+      ],
+      "limitations": [
+        "docs/user-guides/upgrade.md still names 57e77e38 as the edition candidate; it now differs from install.md (see sharedFileRequests).",
+        "A walkthrough must build 067c1646 for the documented bind and token behavior."
+      ]
+    },
+    {
+      "articleId": "create-knowledge",
+      "scenario": ["V-C33"],
+      "contentSha256Before": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c",
+      "contentSha256": "31863d786a429f225bfe0df5d4c70cc005efd11ffc006abdfd7d65d8e3900c3a",
+      "sources": [
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/routes/knowledge.tsx",
+        "apps/web/src/lib/documents.ts",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+        "docs/decision-records/DECISIONS-KNOWLEDGE.md (KNW-004 built addendum 2026-09-18)",
+        "docs/user-guides/publish-knowledge.md",
+        "git show 7f1573c5"
+      ],
+      "corrections": [
+        {
+          "claim": "Knowledge creation has no Document kind choice",
+          "before": "select **Attach documents** and choose a **Document kind**.",
+          "after": "select **Attach documents**. There is no type choice for the files; they show the item's Knowledge type.",
+          "source": "knowledge.tsx renders CreateAttachments module={null}; useDocumentTypeOptions(null) returns no options so the Document type select is not drawn; DOC-015 Knowledge addendum"
+        },
+        {
+          "claim": "Portal readers do not get Confidential Documents",
+          "before": "readers can download the current Version of every available Document on it.",
+          "after": "readers can download the current Version of every Document on it, except a Document marked Confidential. A Confidential Document stays off the Portal, and on the staff record only Administrators can open it. ... see who can read a Confidential file (publish-knowledge.md#before-you-start).",
+          "source": "KNW-004 built addendum 2026-09-18; commit 7f1573c5; publish-knowledge.md line 18"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "The attach button label is Attach documents",
+          "source": "create-attachments.tsx createAttachments.choose"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "articleId": "document-folders",
+      "scenario": ["V-C27"],
+      "contentSha256Before": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
+      "contentSha256": "827703e03b632fcbcf3286aaf0f1d36b6470986afc290fd84e17767ac5eb81c3",
+      "sources": [
+        "apps/web/src/components/documents/batch-dialog.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Bulk import control",
+          "before": "3. Select **Version kind**. ... A Matter import has no **Version kind** control.",
+          "after": "3. Choose a **Type**, or leave **No type**. It starts on **No type**, or on the type you already chose in the upload dialog. ... A Contract import always shows **Type**. A Matter or Entity import shows it only when an Administrator has added a type to that module's list in **Settings → Documents**.",
+          "source": "batch-dialog.tsx label documents.batch.type 'Type', option documents.type.none 'No type', shown when typeOptions.length > 0; initialDocumentTypeId from documents-card.tsx picker path; DOC-015 (Contract list seeded with six fixed types, others empty)"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Notes are not collected in bulk",
+          "source": "batch-dialog.tsx documents.batch.typeHelp"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "articleId": "manual-signing",
+      "scenario": ["V-C17-manual"],
+      "contentSha256Before": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
+      "contentSha256": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+      "sources": [
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+        "docs/user-guides/document-versions.md",
+        "CONTEXT.md"
+      ],
+      "corrections": [
+        {
+          "claim": "Executed is a Document type",
+          "before": "A Document Version's kind and its executed designation are separate. Choosing an Executed kind during upload ...",
+          "after": "A Document Version's Document type and its executed designation are separate. Choosing the **Executed** type during upload ...",
+          "source": "DOC-015 (the kind follows the type; the executed pin keeps reading the kind and is separate); document-versions.md line 38"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Choosing Executed does not set the pin",
+          "source": "DOC-015; document-versions.md"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "scenario": ["V-C18"],
+      "contentSha256Before": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085",
+      "contentSha256": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec",
+      "sources": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)"
+      ],
+      "corrections": [
+        {
+          "claim": "Paper as amendment seeds the Amendment type",
+          "before": "opens the existing primary Document's **Add version** flow with an Amendment kind. ... Amendment is a kind, not an executed designation.",
+          "after": "opens the existing primary Document's **Add version** flow with **Type** set to **Amendment**. ... Amendment is a Document type, not an executed designation.",
+          "source": "documents-card.tsx composer seedKind selects the type whose systemKind matches (line 3778), and falls back to sending kind which the API maps to the fixed Amendment type"
+        }
+      ],
+      "confirmed": [],
+      "limitations": []
+    },
+    {
+      "articleId": "document-repository",
+      "scenario": ["V-C30"],
+      "contentSha256Before": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
+      "contentSha256": "136781c9af2801bb4a743ffa84972fea28040ca2e7e535cee124a7c80524e13e",
+      "sources": [
+        "apps/api/src/modules/search/service.ts",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-009, DOC-015)"
+      ],
+      "corrections": [
+        {
+          "claim": "Search reads only the latest Version",
+          "before": "For words inside an earlier Version or an OCR'd scan, use global search; repository filters are not a complete search of every historical Version's contents.",
+          "after": "For words inside a Document's latest Version, including an OCR'd scan, use global search. Search reads only the latest Version of each Document, and repository filters do not search file contents. To read an earlier Version, open the owning record's Documents tab and expand the Document's chain.",
+          "source": "service.ts document_version_candidates joins documentVersions on version_number = max(version_number) per document"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "The repository filter is still named Kind",
+          "source": "DOC-015: 'The repository's column shows the type name. Its filter stays on the fixed kinds.'"
+        }
+      ],
+      "limitations": [
+        "DOC-009 does not state the latest-Version rule; the source is the search query."
+      ]
+    },
+    {
+      "articleId": "deployment-configuration",
+      "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+      "reviewedAt": "2026-09-25T09:53:48Z",
+      "scenario": ["V-C45", "V-C45-advanced-settings", "V-M40-LAN", "V-M41-PUBLIC"],
+      "contentSha256Before": "3f8cb58bd4dd3ab55bab00834a7523d022ca3967c12d70de3c3f14228664ecb6",
+      "contentSha256": "af0ef822f497f373442f33696ced87f33aa23f340d0d97fe3662fc9f9ff307f9",
+      "sources": [
+        "apps/api/src/reset-advanced-settings.ts",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "Dockerfile",
+        "compose.yml",
+        "docs/user-guides/operator-troubleshooting.md (Remove saved Advanced settings)",
+        "docs/documentation/batches/DOC-030/operator-2/technical-review.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Advanced settings recovery command form",
+          "before": "docker compose exec app node apps/api/dist/reset-advanced-settings.js instance",
+          "after": "docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance, with: `run` starts a one-off container, so the command works while the app keeps restarting",
+          "source": "exec needs a running container, and a saved value that stops startup leaves the app restarting; Dockerfile copies apps/api/dist into the image; operator-troubleshooting.md uses the same command"
+        },
+        {
+          "claim": "What the recovery command does and needs",
+          "before": "It removes only that section's app-saved overrides and never prints their values.",
+          "after": "... never prints their values, and writes an Audit log entry. ... It needs the correct OPENLAW_SECRET_KEY. With a key that cannot open the saved settings, it stops with the same message as startup.",
+          "source": "reset-advanced-settings.ts calls parseSettings before deleting (throws 'Advanced settings cannot be decrypted...') and records org_settings.updated with visibility admin_only"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Section arguments are instance, uploads, storage, processing, mcp",
+          "source": "config.ts sectionIds"
+        },
+        {
+          "claim": "Removing overrides needs a restart of app and worker",
+          "source": "reset-advanced-settings.ts closing message"
+        }
+      ],
+      "limitations": [
+        "The script's own usage line omits mcp although it accepts it; cosmetic, not recorded as a product bug.",
+        "A lost key with saved Advanced settings has no supported recovery; operator-2 already recorded that product bug against reset-advanced-settings.ts."
+      ]
+    }
+  ],
+  "repositoryDocs": [
+    {
+      "file": "CONTEXT.md",
+      "contentSha256Before": "e76e31106596482052f9350c097fba9173e75bd259180bc852d20a246df03f24",
+      "contentSha256": "4dcddfd36f073b388c0831d5c9af1339e7cb49e9cdfe1a8090aea2a80d35170c",
+      "sources": [
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 amendment 2026-09-10, Individual owner addendum 2026-09-18, ENT-011)",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/modules/entities/routes.ts",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-012 2026-09-17 amendment)",
+        "apps/api/src/modules/approver-groups/routes.ts",
+        "apps/api/src/modules/contract-approvals/routes.ts",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-088)",
+        "docs/decision-records/DECISIONS.md (DD-026, DD-028)",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "apps/web/src/routes/settings.tsx",
+        "packages/shared/src/start-blank.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Grant",
+          "before": "lets one Legal Team Member reach one Confidential Entity. Administrators need no Grant",
+          "after": "lets one Legal Team Member or Administrator reach one Confidential Entity. Administrators need a Grant too. The person who creates an Entity receives one, and grantees manage the list.",
+          "source": "ENT-004 amendment 10 Sep 2026; entity-access.ts entityReachScope treats administrator like legal_team_member; entities/routes.ts inserts the creator's grant"
+        },
+        {
+          "claim": "Approver group members",
+          "before": "Members must be Member+ users.",
+          "after": "Members may be any active user, including Business Users.",
+          "source": "CTR-012 2026-09-17 amendment; approver-groups/routes.ts header"
+        },
+        {
+          "claim": "Approval request approver and canceller",
+          "before": "the named approver alone answers ... The requester, the Contract's Owner, or an Administrator cancels",
+          "after": "the named approver, who may be any active user, alone answers ... The requester, the Contract's Legal Owner, or an Administrator cancels",
+          "source": "CTR-012 2026-09-17 amendment; contract-approvals/routes.ts mayCancel uses contractManagerId (the Legal Owner)"
+        },
+        {
+          "claim": "Holding",
+          "before": "A directional ownership fact between two Entities ...",
+          "after": "owner is another Entity or an individual (name only); Holdings projected from a share register are marked From register and read-only",
+          "source": "ENT-004/ENT-003 Individual owner addendum 2026-09-18; ENT-011 and its migration 0151 note; DES-088"
+        },
+        {
+          "claim": "Business User reads",
+          "before": "They read business Fields",
+          "after": "They read Fields whose Rows have Visible on Portal on",
+          "source": "DD-028 (Visible on Portal Row switch) and the DD-026 2026-09-21 amendment retiring the business/legal tag"
+        },
+        {
+          "claim": "Setup checklist Email row",
+          "before": "except Email, which has no pane and is plain text",
+          "after": "with Email opening Settings → Advanced → Outbound email",
+          "source": "onboarding/routes.ts SETTINGS_PATHS email '/settings/email'; settings.tsx places /settings/email under Advanced as Outbound email; settings-general.tsx links every row with a settingsPath"
+        },
+        {
+          "claim": "Start blank keeps the Default type",
+          "before": "keeps ... the `other` type rows and the protected statuses",
+          "after": "keeps ... the `other` type rows, the Default type for Matters and Contracts, and the protected statuses",
+          "source": "packages/shared/src/start-blank.ts START_BLANK_LISTS matter_type/contract_type ['other','default']; DD-028 clause 7 and consequences"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Every entry keeps its term, heading position and Avoid line",
+          "source": "diff of CONTEXT.md"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "file": "docs/DEPLOYMENT.md",
+      "contentSha256Before": "6af56cf8e9a1d978caa36ef815025244fc14b285f56fe71d0c700713c4b6a9a4",
+      "contentSha256": "cdd2ca141a23d3392a4de440e7091aa27062433e1187f821bc1e038421645e0d",
+      "sources": [
+        "compose.yml",
+        ".env.example",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/app.ts",
+        "services/doc-engine/src/index.ts",
+        "services/doc-engine/src/server.ts",
+        "packages/db/src/secrets.ts",
+        "packages/db/src/rewrap.ts",
+        "packages/db/src/schema/org.ts",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "docs/decision-records/SCHEMA.md (sealed_key, vapid_private_key)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-022, TECH-034, TECH-035)",
+        "packages/db/src/index.ts",
+        "packages/db/src/migration-journal.ts",
+        "packages/db/migrations/0060_account_issuer.sql",
+        "packages/db/migrations/0066_envelope_signer_email_unique.sql",
+        "packages/db/migrations/0157_type-forms.sql",
+        "docs/user-guides/upgrade.md",
+        "docs/user-guides/operator-troubleshooting.md",
+        "docs/user-guides/backup-and-restore.md",
+        "apps/api/src/reset-advanced-settings.ts",
+        "apps/api/src/index.ts",
+        "apps/worker/src/index.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Configuration table omits variables compose.yml reads",
+          "before": "No rows for MCP_OAUTH_GRANT_LIFETIME_DAYS, VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY, DOC_ENGINE_MAX_CONCURRENT/MAX_QUEUED, APP_/WORKER_/DOC_ENGINE_ CPUS, MEM_LIMIT, PIDS_LIMIT",
+          "after": "Rows added in the table's format with defaults: grant lifetime 1 to 365 days default 90 (refresh-token lifetime, pins Advanced, out-of-range stops start); VAPID pair both-or-neither; engine 2 running and 8 queued then 503 with Retry-After; app and worker 2/1g/256; doc engine 2/4g/512",
+          "source": "compose.yml; config.ts oauthGrantLifetimeDays; oauth.ts refreshTokenExpiresIn; doc-engine server.ts defaults; DEPLOYMENT.md Device notification keys"
+        },
+        {
+          "claim": "OPENLAW_SECRET_KEY covers more than five credentials",
+          "before": "Encrypts the credentials saved in Settings ... five credentials",
+          "after": "Also seals the saved Advanced configuration, the generated Web Push private key, and an approved API key until its owner's one-time read; rotation re-encrypts all eight; key loss paragraph names the Advanced startup refusal and the API key 503 message",
+          "source": "schema/org.ts encryptedText vapid_private_key and advanced_settings; api-keys/routes.ts sealSecret(key.key,'sealed_key') unless self-approved, cleared on first read, 503 'The API key cannot be opened. Contact an Administrator.'; rewrap.ts column list; config.ts parseSettings error text"
+        },
+        {
+          "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+          "claim": "0049 repair log line",
+          "before": "logs `migrations: corrected the recorded stamp for 0049_contract_tasks`",
+          "after": "logs `migrations: reconciled 0049_contract_tasks; continuing with pending migrations`",
+          "source": "migration-journal.ts KNOWN_BAD_STAMPS pushes the tag to repaired; index.ts runMigrations console.warn"
+        },
+        {
+          "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+          "claim": "0060 is the only refusing migration; skipped releases only add things and the old image runs on them",
+          "before": "It is the only one that can ... they only add things, and the old image runs on them unchanged. ... Start the old image again ...",
+          "after": "Not the only migration that refuses (link to new 0157 subsection). Earlier migrations stay applied and some rewrite or remove data, so do not start the old image; correct and re-run, or recover the pre-upgrade backup in a separate target (upgrade.md#if-the-upgrade-cannot-be-accepted)",
+          "source": "0157_type-forms.sql RAISE EXCEPTION in its own COMMIT/BEGIN transaction; 0066 also refuses; upgrade.md 'If the upgrade cannot be accepted'"
+        },
+        {
+          "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+          "claim": "New subsection for the 0157 refusal",
+          "before": "(none)",
+          "after": "### An upgrade that stops on a Request type's intake form: message, causes, no half-apply, earlier migrations stay applied, recover backup in a separate target, re-target or remove Fields, repeat",
+          "source": "0157_type-forms.sql lines 1-2 and 114-130; operator-troubleshooting.md Migration failures"
+        },
+        {
+          "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+          "claim": "Backups: what the dump carries",
+          "before": "Backups named the database and files only",
+          "after": "The dump holds the saved Settings → Advanced values (with object-store credentials) and the VAPID pair; Advanced values and the VAPID private key are sealed with OPENLAW_SECRET_KEY, the public key is clear; what happens under another key; saved address or storage applies on the restore unless .env sets it; link to backup-and-restore.md",
+          "source": "schema/org.ts encryptedText advanced_settings and vapid_private_key; backup-and-restore.md Before you start and failure table"
+        },
+        {
+          "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+          "claim": "If you lose it: saved Advanced settings block startup with no recovery",
+          "before": "Before starting with a new OPENLAW_SECRET_KEY, recover or override the VAPID pair ... The five credentials then read as unset",
+          "after": "With saved Advanced values a new key starts neither app nor worker; the recovery command cannot remove them and .env pins do not help; keep the key or escalate with the backup. Without saved Advanced settings the existing VAPID and credential text applies",
+          "source": "config.ts resolveAdvancedSettings always calls readSettings, parseSettings throws; reset-advanced-settings.ts parses before deleting; operator-troubleshooting.md Email and stored credentials"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "TRUSTED_PROXIES, SETUP_TOKEN, MCP_RATE_LIMIT_PER_HOUR and APP_BIND already had rows",
+          "source": "docs/DEPLOYMENT.md Configuration table; compose.yml"
+        },
+        {
+          "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+          "claim": "If you lose it already names the Advanced startup refusal message",
+          "source": "config.ts parseSettings error text"
+        }
+      ],
+      "limitations": [
+        "The request listed TRUSTED_PROXIES and SETUP_TOKEN as missing; both rows were already present, so nothing was added for them.",
+        "shared-files-2: 0066_envelope_signer_email_unique can also refuse (duplicate signer email on one envelope); the guide says 0060 is not the only refusing migration but documents only 0157 in detail, matching upgrade.md."
+      ],
+      "revisions": [
+        {
+          "reviewer": "DOC-030 source-review author agent (shared-files-2)",
+          "reviewedAt": "2026-09-25T09:53:48Z",
+          "contentSha256Before": "9ac2efb8c468289f29ab37a6f42b7975cbb1e3ce57e160f3249f875e52162f6a"
+        }
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [
+    "docs/user-guides/upgrade.md: it names 57e77e38 as the edition candidate and checks it out. install.md now builds 067c1646 because the loopback bind, setup token and TRUSTED_PROXIES arrived in 97ea65bc. Align upgrade.md's target revision.",
+    "docs/documentation/edition.json: the publication content hashes for the eight guides in this record must change to their contentSha256 values when the batch owner publishes them."
+  ],
+  "statusChange": "none; catalog status left for the batch owner"
+}

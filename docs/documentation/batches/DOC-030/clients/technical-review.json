@@ -1,0 +1,461 @@
+{
+  "batch": "DOC-030",
+  "group": "clients",
+  "reviewer": "DOC-030 source-review author agent (clients)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:26:11Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": null,
+    "previousEvidence": null,
+    "guideWrittenAt": "46afcb40faad58455e332dbdd77fc1285b0b899a",
+    "lastArticleEdit": "4a4b164d099a117c4c05a6d6049a87495bc2e59a"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "connect-claude",
+      "scenario": ["V-M41-C59"],
+      "contentSha256Before": "b8107eb019f47db7d03e9dd2b0cfa1e7153c0433d6485c26909fccbcfdd217a9",
+      "contentSha256": "cd63acafb142c8420b8023911175e4e6ee51e762bd01837ae806ad6e84c395d2",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "apps/web/src/routes/consent.tsx",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/auth/oauth-grants.ts",
+        "apps/api/src/auth/allowed-clients.ts",
+        "apps/api/src/auth/discovery.ts",
+        "apps/api/src/auth/handler.ts",
+        "apps/api/src/mcp/auth.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/guide.ts",
+        "packages/shared/src/mcp.ts",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/components/mcp-scope.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/routes/settings-api-keys.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/lib/oauth-return.ts",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/mcp-settings/routes.ts",
+        "packages/db/migrations/0171_m41-oauth-clients.sql",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-092)",
+        "docs/user-guides/deployment-configuration.md (LAN only, Publicly reachable)",
+        "docs/user-guides/configure-mcp.md (Enable OAuth Clients)",
+        "e2e/tests/63-m41-oauth.spec.ts",
+        "apps/api/src/auth/oauth.test.ts",
+        "node_modules/@better-auth/oauth-provider 1.7.5 dist (signed consent query expiry, client auth method check)"
+      ],
+      "corrections": [
+        {
+          "claim": "Business User path to Connected Clients",
+          "before": "Business Users open API keys → Connected Clients in Portal Settings.",
+          "after": "Business Users select Notification settings in the Portal header, then API keys.",
+          "source": "apps/web/src/components/portal/portal-shell.tsx (header link aria-label portal.settings.link 'Notification settings'); apps/web/src/routes/portal-settings.tsx (title 'Notification settings', link 'API keys' to /portal/settings/api-keys)"
+        },
+        {
+          "claim": "Business User sign-in on the way to consent",
+          "before": "A Business User signs in through the Portal / uses Portal sign-in.",
+          "after": "If you use the Portal, select Business Portal sign-in on the sign-in page.",
+          "source": "apps/web/src/routes/consent.tsx (401 redirects to /auth/login with the signed query); apps/web/src/routes/login.tsx (oauthReturn shows the 'Business Portal sign-in' link carrying the same query)"
+        },
+        {
+          "claim": "Disconnect result",
+          "before": "The next call is refused.",
+          "after": "The row leaves the list. The next call is refused.",
+          "source": "apps/web/src/components/api-keys.tsx (grant removed from state after revoke); apps/api/src/modules/oauth-grants/routes.ts (revoke)"
+        },
+        {
+          "claim": "Re-consent",
+          "before": "(not stated)",
+          "after": "Connecting the same Client again replaces the earlier Toolsets and scope.",
+          "source": "apps/api/src/modules/oauth-grants/routes.ts (onConflictDoUpdate on person and Allowed Client; revokeOAuthRefreshTokens before the new grant)"
+        },
+        {
+          "claim": "Guide Tools on the consent page",
+          "before": "Guide Tools remain available.",
+          "after": "Guide Tools remain available and have no checkbox.",
+          "source": "packages/shared/src/mcp.ts (MCP_TOOLSETS has no guide); apps/api/src/mcp/auth.ts (oauthContext always adds guide)"
+        },
+        {
+          "claim": "Prerequisites",
+          "before": "Ask the Administrator to enable OAuth Clients for your account group.",
+          "after": "Ask the Administrator to turn on MCP and enable OAuth Clients; the Administrator copies Server address from Settings → Organization → MCP.",
+          "source": "apps/api/src/modules/oauth-grants/routes.ts (mcp_disabled refusal); apps/web/src/routes/settings-mcp.tsx (Server address, Copy address)"
+        },
+        {
+          "claim": "Claude Code on a LAN only deployment",
+          "before": "Claude Code can also use a LAN only deployment from the office network or VPN.",
+          "after": "Claude Code can use a LAN only deployment if OpenLaw has a trusted private HTTPS address. A plain-HTTP LAN address has no OAuth.",
+          "source": "apps/api/src/auth/oauth.ts authorizationServerAvailable; DD-029 #1138 addendum"
+        },
+        {
+          "claim": "Claude Code loopback callback",
+          "before": "The browser returns to a loopback callback on your device.",
+          "after": "Adds the accepted forms http://localhost:<port>/callback and http://127.0.0.1:<port>/callback, and points to the LAN only profile for CA trust.",
+          "source": "apps/api/src/auth/allowed-clients.ts allowedRedirect"
+        },
+        {
+          "claim": "Identity line on the consent page",
+          "before": "Check the Client's identity.",
+          "after": "Published identity and the identity address name the Client.",
+          "source": "apps/web/src/routes/consent.tsx; oauth-grants/routes.ts identityCaption"
+        },
+        {
+          "claim": "Refusal table",
+          "before": "Client unlisted and Client off rows told the reader to check the identity or enablement, as if seen at consent.",
+          "after": "Those two consent messages appear only after the Client changed mid-flow; the usual case is 'Client is not on the enabled Allowed Clients list.' before any sign-in page. Switching off MCP, the group or the Client also refuses the next call.",
+          "source": "apps/api/src/auth/allowed-clients.ts allowedClientsPlugin before hook; apps/api/src/auth/oauth.test.ts; apps/api/src/auth/oauth-grants.ts liveOAuthGrantFor"
+        }
+      ],
+      "confirmed": [
+        "Consent heading '{client} wants to work in OpenLaw as you', legends 'What {client} may use' and 'How far {client} may go', 'Nothing is selected for you.', 'Read only', 'Read and write', 'This Client can never see or change what you cannot.', 'Allow', 'Deny' and the 'Allowed Client' pill (apps/web/src/routes/consent.tsx; messages/en-US.json).",
+        "Allow is disabled until at least one Toolset and a scope are chosen; the API also refuses an empty Toolset list (consent.tsx; oauth-grants/routes.ts Choice schema).",
+        "Offered Toolsets are those the Client requested as toolset:<id>, inside the organization ceiling, with Tools for the person's account type; Administration only for Administrators (oauth-grants/routes.ts facts()).",
+        "Read and write is offered only when the request includes write and the organization is not read-only (oauth-grants/routes.ts writeOffered).",
+        "The signed consent query lasts 600 seconds, so ten minutes (apps/api/src/auth/oauth.ts codeExpiresIn 600; oauth-provider signParams exp; TECH-035 #1135 addendum).",
+        "Consent-page refusal messages for expired_query, mcp_disabled, group_disabled, client_unlisted and client_disabled; a refused page offers Deny alone and an expired page offers no actions (consent.tsx).",
+        "Connected Clients rows show Client name, Toolsets, a Read or Write pill, 'Granted {date}' and 'Last used {date}' with Disconnect; confirmation dialog 'Revoke OAuth grant' with 'Revoke' (connected-clients.tsx; mcp-scope.tsx; api-keys.tsx).",
+        "Settings → Personal → API keys is the staff path; Business Users are redirected to /portal/settings/api-keys (settings.tsx; settings-api-keys.tsx).",
+        "A revoked, expired or switched-off grant is refused with 401 on the next MCP call; an expired grant clears remembered consent and needs new consent (oauth-grants.ts liveOAuthGrantFor and authorize hook; mcp/auth.ts; e2e/tests/63-m41-oauth.spec.ts final 401).",
+        "Guide Tools openlaw_whoami, openlaw_docs_search and openlaw_docs_read are always in an OAuth grant (mcp/register.ts; mcp/guide.ts; mcp/auth.ts).",
+        "The four seeded Allowed Clients start enabled (packages/db/migrations/0171_m41-oauth-clients.sql; enabled default true).",
+        "Claude's published identity is https://claude.ai/oauth/mcp-oauth-client-metadata with callback https://claude.ai/api/mcp/auth_callback; Claude Code's is https://claude.ai/oauth/claude-code-client-metadata (migration 0171; allowed-clients.ts).",
+        "Published identities have no Client secret; the secret route refuses them (modules/mcp-settings/allowed-clients.ts).",
+        "No dynamic client registration is needed; it is off by default and CIMD admits enabled published identities (oauth.ts cimd isMetadataDocumentUrlAllowed; migration 0171 default false).",
+        "The OpenLaw API fetches the published identity document (oauth.ts fetchClientMetadataResource).",
+        "The linked anchors connect-headless-client.md#connect-claude-cowork-or-claude-desktop, configure-mcp.md#enable-oauth-clients and both deployment profiles exist (structural build passes)."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the browser walkthrough and live-provider check the scenario requires against 067c1646.",
+        "A disabled or unlisted Client is refused at /api/auth/oauth2/authorize with HTTP 400 and the text 'Client is not on the enabled Allowed Clients list.' before sign-in. The browser shows the raw error body, not the consent page. The consent-page messages for an unlisted or disabled Client appear only when the Administrator changes the Client after the flow started. The guides describe both.",
+        "The negative check 'account groups are refused' is met on the consent page by 'OAuth Clients are off for your account type.' and on existing grants by a 401 on the next call.",
+        "Claude steps: Customize → Connectors, + then Add custom connector, Advanced settings for OAuth Client ID and secret, Add, Connect, + → Connectors in a conversation, the Team and Enterprise Owner path Organization settings → Connectors → Add → Custom → Web, and Desktop and Cowork sharing the account's remote connector: vendor instruction, checked against the linked vendor page on 2026-09-25 (support.claude.com article 11175166).",
+        "Claude Code steps: claude mcp add --transport http with --scope user, /mcp browser sign-in, and automatic CIMD discovery: vendor instruction, checked against the linked vendor page on 2026-09-25 (code.claude.com/docs/en/mcp).",
+        "Whether claude.ai completes CIMD with DCR off, and the protocol revision it negotiates, are listed as unverified in DD-029 and need the live-provider check."
+      ]
+    },
+    {
+      "articleId": "connect-chatgpt",
+      "scenario": ["V-M41-C60"],
+      "contentSha256Before": "820aa935bccc8bebaa55b244714a841e3b0fd8a7c986b397572630566cd7a34a",
+      "contentSha256": "c1579bcfeb277aca236b850cc26f9d0c3a35e0376820be6066bdf74b1beee665",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "apps/web/src/routes/consent.tsx",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/auth/oauth-grants.ts",
+        "apps/api/src/auth/allowed-clients.ts",
+        "apps/api/src/auth/discovery.ts",
+        "apps/api/src/auth/handler.ts",
+        "apps/api/src/mcp/auth.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/guide.ts",
+        "packages/shared/src/mcp.ts",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/components/mcp-scope.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/routes/settings-api-keys.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/lib/oauth-return.ts",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/mcp-settings/routes.ts",
+        "packages/db/migrations/0171_m41-oauth-clients.sql",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-092)",
+        "docs/user-guides/deployment-configuration.md (LAN only, Publicly reachable)",
+        "docs/user-guides/configure-mcp.md (Enable OAuth Clients)",
+        "e2e/tests/63-m41-oauth.spec.ts",
+        "apps/api/src/auth/oauth.test.ts",
+        "node_modules/@better-auth/oauth-provider 1.7.5 dist (signed consent query expiry, client auth method check)"
+      ],
+      "corrections": [
+        {
+          "claim": "Business User path to Connected Clients",
+          "before": "Business Users open API keys → Connected Clients in Portal Settings.",
+          "after": "Business Users select Notification settings in the Portal header, then API keys.",
+          "source": "apps/web/src/components/portal/portal-shell.tsx (header link aria-label portal.settings.link 'Notification settings'); apps/web/src/routes/portal-settings.tsx (title 'Notification settings', link 'API keys' to /portal/settings/api-keys)"
+        },
+        {
+          "claim": "Business User sign-in on the way to consent",
+          "before": "A Business User signs in through the Portal / uses Portal sign-in.",
+          "after": "If you use the Portal, select Business Portal sign-in on the sign-in page.",
+          "source": "apps/web/src/routes/consent.tsx (401 redirects to /auth/login with the signed query); apps/web/src/routes/login.tsx (oauthReturn shows the 'Business Portal sign-in' link carrying the same query)"
+        },
+        {
+          "claim": "Disconnect result",
+          "before": "The next call is refused.",
+          "after": "The row leaves the list. The next call is refused.",
+          "source": "apps/web/src/components/api-keys.tsx (grant removed from state after revoke); apps/api/src/modules/oauth-grants/routes.ts (revoke)"
+        },
+        {
+          "claim": "Re-consent",
+          "before": "(not stated)",
+          "after": "Connecting the same Client again replaces the earlier Toolsets and scope.",
+          "source": "apps/api/src/modules/oauth-grants/routes.ts (onConflictDoUpdate on person and Allowed Client; revokeOAuthRefreshTokens before the new grant)"
+        },
+        {
+          "claim": "Guide Tools on the consent page",
+          "before": "Guide Tools remain available.",
+          "after": "Guide Tools remain available and have no checkbox.",
+          "source": "packages/shared/src/mcp.ts (MCP_TOOLSETS has no guide); apps/api/src/mcp/auth.ts (oauthContext always adds guide)"
+        },
+        {
+          "claim": "Developer mode eligibility",
+          "before": "a ChatGPT account with Developer mode available on the web",
+          "after": "Names the account types OpenAI lists: Pro, Plus, Business, Enterprise and Education, on the web.",
+          "source": "developers.openai.com/api/docs/guides/developer-mode (fetched 2026-09-25)"
+        },
+        {
+          "claim": "Published identity",
+          "before": "OpenLaw recognizes ChatGPT's published identity, https://chatgpt.com/oauth/client.json.",
+          "after": "Also recognizes the per-connection identities ChatGPT derives from it.",
+          "source": "apps/api/src/auth/allowed-clients.ts findAllowedClient chatgptConnection pattern"
+        },
+        {
+          "claim": "Drafts",
+          "before": "The app may appear under Drafts until your workspace publishes it.",
+          "after": "The app shows under Drafts in ChatGPT's app settings.",
+          "source": "developers.openai.com/api/docs/guides/developer-mode (fetched 2026-09-25)"
+        },
+        {
+          "claim": "Write actions in ChatGPT",
+          "before": "Review the Tools ChatGPT offers before using a write action.",
+          "after": "ChatGPT asks you to confirm write actions by default. Check the Tool input before you confirm.",
+          "source": "developers.openai.com/api/docs/guides/developer-mode (fetched 2026-09-25)"
+        },
+        {
+          "claim": "Consent Toolsets and write",
+          "before": "The organization can hide that choice with Read-only.",
+          "after": "Offered only when ChatGPT requests write access and the organization is not read-only; only requested and permitted Toolsets are offered.",
+          "source": "apps/api/src/modules/oauth-grants/routes.ts facts()"
+        },
+        {
+          "claim": "Switches on an existing connection",
+          "before": "(not stated)",
+          "after": "The same switches refuse the next call from an existing connection.",
+          "source": "apps/api/src/auth/oauth-grants.ts liveOAuthGrantFor"
+        }
+      ],
+      "confirmed": [
+        "Consent heading '{client} wants to work in OpenLaw as you', legends 'What {client} may use' and 'How far {client} may go', 'Nothing is selected for you.', 'Read only', 'Read and write', 'This Client can never see or change what you cannot.', 'Allow', 'Deny' and the 'Allowed Client' pill (apps/web/src/routes/consent.tsx; messages/en-US.json).",
+        "Allow is disabled until at least one Toolset and a scope are chosen; the API also refuses an empty Toolset list (consent.tsx; oauth-grants/routes.ts Choice schema).",
+        "Offered Toolsets are those the Client requested as toolset:<id>, inside the organization ceiling, with Tools for the person's account type; Administration only for Administrators (oauth-grants/routes.ts facts()).",
+        "Read and write is offered only when the request includes write and the organization is not read-only (oauth-grants/routes.ts writeOffered).",
+        "The signed consent query lasts 600 seconds, so ten minutes (apps/api/src/auth/oauth.ts codeExpiresIn 600; oauth-provider signParams exp; TECH-035 #1135 addendum).",
+        "Consent-page refusal messages for expired_query, mcp_disabled, group_disabled, client_unlisted and client_disabled; a refused page offers Deny alone and an expired page offers no actions (consent.tsx).",
+        "Connected Clients rows show Client name, Toolsets, a Read or Write pill, 'Granted {date}' and 'Last used {date}' with Disconnect; confirmation dialog 'Revoke OAuth grant' with 'Revoke' (connected-clients.tsx; mcp-scope.tsx; api-keys.tsx).",
+        "Settings → Personal → API keys is the staff path; Business Users are redirected to /portal/settings/api-keys (settings.tsx; settings-api-keys.tsx).",
+        "A revoked, expired or switched-off grant is refused with 401 on the next MCP call; an expired grant clears remembered consent and needs new consent (oauth-grants.ts liveOAuthGrantFor and authorize hook; mcp/auth.ts; e2e/tests/63-m41-oauth.spec.ts final 401).",
+        "Guide Tools openlaw_whoami, openlaw_docs_search and openlaw_docs_read are always in an OAuth grant (mcp/register.ts; mcp/guide.ts; mcp/auth.ts).",
+        "The four seeded Allowed Clients start enabled (packages/db/migrations/0171_m41-oauth-clients.sql; enabled default true).",
+        "ChatGPT's callbacks are https://chatgpt.com/connector_platform_oauth_redirect and https://chatgpt.com/connector/oauth/<id> (allowed-clients.ts allowedRedirect).",
+        "DD-029 records that ChatGPT has no API key path; OAuth is the only path for it.",
+        "tools/list follows the grant's Toolsets and scope, and each call checks record access (DD-029 section 6; mcp/auth.ts)."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the browser walkthrough and live-provider check the scenario requires against 067c1646.",
+        "A disabled or unlisted Client is refused at /api/auth/oauth2/authorize with HTTP 400 and the text 'Client is not on the enabled Allowed Clients list.' before sign-in. The browser shows the raw error body, not the consent page. The consent-page messages for an unlisted or disabled Client appear only when the Administrator changes the Client after the flow started. The guides describe both.",
+        "The negative check 'account groups are refused' is met on the consent page by 'OAuth Clients are off for your account type.' and on existing grants by a 401 on the next call.",
+        "ChatGPT steps: Settings → Security and login → Developer mode, ChatGPT Plugins with the plus button, OAuth with CIMD or static credentials, refresh in the app details page, Developer mode from the plus menu, Drafts, and write confirmations: vendor instruction, checked against the linked vendor page on 2026-09-25 (developers.openai.com/api/docs/guides/developer-mode).",
+        "The exact label of the CIMD option in ChatGPT's create form was not visible on the vendor page: vendor instruction, not source-checked.",
+        "ChatGPT authenticates with private_key_jwt per the TECH-035 #1134 addendum tests; a live ChatGPT sign-in has not been observed from source."
+      ]
+    },
+    {
+      "articleId": "connect-microsoft-365-copilot",
+      "scenario": ["V-M41-C61"],
+      "contentSha256Before": "fed549ce6da9b12fc2831f425ee038a186050d234bbf0b17510490dc14f58476",
+      "contentSha256": "2922e0142463b08a8d5948d316b7a4e79296468427dd8fd84f1b682c0161c738",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "apps/web/src/routes/consent.tsx",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/auth/oauth-grants.ts",
+        "apps/api/src/auth/allowed-clients.ts",
+        "apps/api/src/auth/discovery.ts",
+        "apps/api/src/auth/handler.ts",
+        "apps/api/src/mcp/auth.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/guide.ts",
+        "packages/shared/src/mcp.ts",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/components/mcp-scope.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/routes/settings-api-keys.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/lib/oauth-return.ts",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/mcp-settings/routes.ts",
+        "packages/db/migrations/0171_m41-oauth-clients.sql",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-092)",
+        "docs/user-guides/deployment-configuration.md (LAN only, Publicly reachable)",
+        "docs/user-guides/configure-mcp.md (Enable OAuth Clients)",
+        "e2e/tests/63-m41-oauth.spec.ts",
+        "apps/api/src/auth/oauth.test.ts",
+        "node_modules/@better-auth/oauth-provider 1.7.5 dist (signed consent query expiry, client auth method check)",
+        "apps/web/src/components/allowed-clients.tsx",
+        "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+        "apps/api/src/modules/mcp-settings/allowed-clients.test.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Business User path to Connected Clients",
+          "before": "Business Users open API keys → Connected Clients in Portal Settings.",
+          "after": "Business Users select Notification settings in the Portal header, then API keys.",
+          "source": "apps/web/src/components/portal/portal-shell.tsx (header link aria-label portal.settings.link 'Notification settings'); apps/web/src/routes/portal-settings.tsx (title 'Notification settings', link 'API keys' to /portal/settings/api-keys)"
+        },
+        {
+          "claim": "Business User sign-in on the way to consent",
+          "before": "A Business User signs in through the Portal / uses Portal sign-in.",
+          "after": "If you use the Portal, select Business Portal sign-in on the sign-in page.",
+          "source": "apps/web/src/routes/consent.tsx (401 redirects to /auth/login with the signed query); apps/web/src/routes/login.tsx (oauthReturn shows the 'Business Portal sign-in' link carrying the same query)"
+        },
+        {
+          "claim": "Disconnect result",
+          "before": "The next call is refused.",
+          "after": "The row leaves the list. The next call is refused.",
+          "source": "apps/web/src/components/api-keys.tsx (grant removed from state after revoke); apps/api/src/modules/oauth-grants/routes.ts (revoke)"
+        },
+        {
+          "claim": "Re-consent",
+          "before": "(not stated)",
+          "after": "Connecting the same Client again replaces the earlier Toolsets and scope.",
+          "source": "apps/api/src/modules/oauth-grants/routes.ts (onConflictDoUpdate on person and Allowed Client; revokeOAuthRefreshTokens before the new grant)"
+        },
+        {
+          "claim": "Guide Tools on the consent page",
+          "before": "Guide Tools remain available.",
+          "after": "Guide Tools remain available and have no checkbox.",
+          "source": "packages/shared/src/mcp.ts (MCP_TOOLSETS has no guide); apps/api/src/mcp/auth.ts (oauthContext always adds guide)"
+        },
+        {
+          "claim": "Prerequisites",
+          "before": "An OpenLaw Administrator must enable OAuth Clients for your account group.",
+          "after": "Must turn on MCP and enable OAuth Clients.",
+          "source": "apps/api/src/modules/oauth-grants/routes.ts (mcp_disabled refusal)"
+        },
+        {
+          "claim": "Where Allowed Clients lives",
+          "before": "open Settings → Organization → MCP → Allowed Clients",
+          "after": "open Settings → Organization → MCP and expand Allowed Clients; copy Server address there.",
+          "source": "apps/web/src/routes/settings-mcp.tsx; apps/web/src/components/allowed-clients.tsx (collapsible SettingsCard)"
+        },
+        {
+          "claim": "Client id before a secret exists",
+          "before": "(not stated)",
+          "after": "Client id reads 'Generate a secret to create the client id.' until a secret exists; Generate secret closes the editor.",
+          "source": "apps/web/src/components/allowed-clients.tsx (allowedClients.notGenerated; setEditing(undefined) after generation)"
+        },
+        {
+          "claim": "Existing secret",
+          "before": "If the row already has a secret, use the stored value.",
+          "after": "If the row caption reads Secret generated with a date, a secret already exists.",
+          "source": "apps/web/src/components/allowed-clients.tsx caption (allowedClients.secretDate)"
+        },
+        {
+          "claim": "Token request authentication",
+          "before": "(not stated)",
+          "after": "The token endpoint expects the Client id and secret in the request body, not an HTTP Basic header.",
+          "source": "apps/api/src/modules/mcp-settings/allowed-clients.ts (token_endpoint_auth_method client_secret_post); @better-auth/oauth-provider 1.7.5 validateClientCredentials refuses a different method"
+        },
+        {
+          "claim": "Third callback slot",
+          "before": "paste that exact URL into the empty third slot. Leave the two fixed URLs unchanged.",
+          "after": "paste it into the empty Callback URL 3 field; the first two fixed URLs are read-only. OpenLaw accepts HTTPS, or HTTP on loopback, without credentials or a fragment.",
+          "source": "apps/web/src/components/allowed-clients.tsx (aria-label 'Callback URL {number}', readOnly index < 2); modules/mcp-settings/allowed-clients.ts callback schema and fixed-callback check"
+        },
+        {
+          "claim": "Test prompt",
+          "before": "Test by asking the agent to use OpenLaw to identify you and find this guide.",
+          "after": "Gives the exact prompt that reads Connect Microsoft 365 Copilot through Guide.",
+          "source": "apps/api/src/mcp/guide.ts"
+        },
+        {
+          "claim": "Teams developer portal restriction",
+          "before": "(not stated)",
+          "after": "If you manage the configuration in the Teams developer portal, keep Any Teams app as its app restriction.",
+          "source": "learn.microsoft.com plugin-authentication-oauth (fetched 2026-09-25)"
+        },
+        {
+          "claim": "Consent identity caption",
+          "before": "the identity caption",
+          "after": "the Registered client caption with its client id",
+          "source": "apps/web/src/routes/consent.tsx; oauth-grants/routes.ts identityCaption uses clientId for a registered client"
+        },
+        {
+          "claim": "Troubleshooting before consent",
+          "before": "If sign-in fails before consent, compare the wizard's redirect with the saved callback.",
+          "after": "Names the refusal texts 'Callback URL is not allowed for this Client.' and 'Client is not on the enabled Allowed Clients list.', a token failure after consent, and the switches that refuse the next call.",
+          "source": "apps/api/src/auth/allowed-clients.ts allowedClientsPlugin before hook; apps/api/src/auth/oauth-grants.ts"
+        }
+      ],
+      "confirmed": [
+        "Consent heading '{client} wants to work in OpenLaw as you', legends 'What {client} may use' and 'How far {client} may go', 'Nothing is selected for you.', 'Read only', 'Read and write', 'This Client can never see or change what you cannot.', 'Allow', 'Deny' and the 'Allowed Client' pill (apps/web/src/routes/consent.tsx; messages/en-US.json).",
+        "Allow is disabled until at least one Toolset and a scope are chosen; the API also refuses an empty Toolset list (consent.tsx; oauth-grants/routes.ts Choice schema).",
+        "Offered Toolsets are those the Client requested as toolset:<id>, inside the organization ceiling, with Tools for the person's account type; Administration only for Administrators (oauth-grants/routes.ts facts()).",
+        "Read and write is offered only when the request includes write and the organization is not read-only (oauth-grants/routes.ts writeOffered).",
+        "The signed consent query lasts 600 seconds, so ten minutes (apps/api/src/auth/oauth.ts codeExpiresIn 600; oauth-provider signParams exp; TECH-035 #1135 addendum).",
+        "Consent-page refusal messages for expired_query, mcp_disabled, group_disabled, client_unlisted and client_disabled; a refused page offers Deny alone and an expired page offers no actions (consent.tsx).",
+        "Connected Clients rows show Client name, Toolsets, a Read or Write pill, 'Granted {date}' and 'Last used {date}' with Disconnect; confirmation dialog 'Revoke OAuth grant' with 'Revoke' (connected-clients.tsx; mcp-scope.tsx; api-keys.tsx).",
+        "Settings → Personal → API keys is the staff path; Business Users are redirected to /portal/settings/api-keys (settings.tsx; settings-api-keys.tsx).",
+        "A revoked, expired or switched-off grant is refused with 401 on the next MCP call; an expired grant clears remembered consent and needs new consent (oauth-grants.ts liveOAuthGrantFor and authorize hook; mcp/auth.ts; e2e/tests/63-m41-oauth.spec.ts final 401).",
+        "Guide Tools openlaw_whoami, openlaw_docs_search and openlaw_docs_read are always in an OAuth grant (mcp/register.ts; mcp/guide.ts; mcp/auth.ts).",
+        "The four seeded Allowed Clients start enabled (packages/db/migrations/0171_m41-oauth-clients.sql; enabled default true).",
+        "Microsoft 365 Copilot is a seeded registered client with callbacks https://teams.microsoft.com/api/platform/v1.0/oAuthRedirect, https://vscode.dev/redirect and one empty slot (migration 0171).",
+        "Edit appears only on registered clients; the pill reads Registered client (allowed-clients.tsx).",
+        "Generate secret shows 'Your Client secret is ready' with Copy, Client name, Client id and Done, and the secret is not shown again (allowed-clients.tsx; modules/mcp-settings/allowed-clients.ts).",
+        "Rotate secret invalidates the old secret at once and leaves grants in place (allowedClients.once; allowed-clients.test.ts rotated secret; TECH-035 #1134 'Rotation preserves consent rows').",
+        "The seeded row refuses a save that drops either fixed Microsoft callback (modules/mcp-settings/allowed-clients.ts).",
+        "Authorization URL /api/auth/oauth2/authorize and token URL /api/auth/oauth2/token; refresh uses the token URL (e2e/tests/63-m41-oauth.spec.ts; oauth.ts grantTypes).",
+        "Discovery at /.well-known/oauth-authorization-server lists endpoints and the scope vocabulary toolset:<id>, write and offline_access; no openid, profile or email scopes (discovery.ts; oauth.ts MCP_SCOPES; registered client scope list).",
+        "offline_access is kept only when requested, and refresh tokens keep the grant's absolute expiry (oauth-grants/routes.ts; oauth-grants.ts token hook)."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the browser walkthrough and live-provider check the scenario requires against 067c1646.",
+        "A disabled or unlisted Client is refused at /api/auth/oauth2/authorize with HTTP 400 and the text 'Client is not on the enabled Allowed Clients list.' before sign-in. The browser shows the raw error body, not the consent page. The consent-page messages for an unlisted or disabled Client appear only when the Administrator changes the Client after the flow started. The guides describe both.",
+        "The negative check 'account groups are refused' is met on the consent page by 'OAuth Clients are off for your account type.' and on existing grants by a 401 on the next call.",
+        "Copilot Studio wizard labels (Tools, Add a tool, New tool, Model Context Protocol, Server name, Server description, Server URL, OAuth 2.0, Manual, the Manual fields, the callback URL shown after Create, Next, Add tool, Create a new connection, Add to agent): vendor instruction, checked against the linked vendor page on 2026-09-25 (learn.microsoft.com mcp-add-existing-server-to-agent).",
+        "Declarative agent path (Agents Toolkit prompts for client ID, secret and scopes, reads well-known endpoints, stores the auth config in the Enterprise token store, OAuthPluginVault with the auth config ID, the fixed Teams redirect, PKCE on by default, Any Teams app): vendor instruction, checked against the linked vendor page on 2026-09-25 (learn.microsoft.com plugin-authentication-oauth).",
+        "https://vscode.dev/redirect for Toolkit's Tool discovery: the OpenLaw seed includes it, but the fetched Microsoft page does not mention it: vendor instruction, not source-checked.",
+        "Whether Copilot Studio and the Teams token store send the secret in the body (client_secret_post) rather than a Basic header is not established; OpenLaw's registered client accepts only the body form. DD-029 lists Copilot Studio's PKCE, resource and callback handling as unverified. The live-provider check must confirm the token exchange.",
+        "'Microsoft 365 MCP plugins do not accept an OpenLaw API key' rests on the Microsoft page's statement that None and ApiKeyPluginVault do not apply to an MCP server that requires authorization: vendor instruction, checked against the linked vendor page on 2026-09-25."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/routes/consent.tsx (consent.disconnectPortal): the Business User caption says 'You can disconnect {client} later from Portal settings → API keys.', but the Portal page and its header control are labelled 'Notification settings' (apps/web/src/routes/portal-settings.tsx, portal-shell.tsx). DES-092 asks the caption to say where to disconnect later; the named place does not exist as a visible label. Low severity copy defect."
+  ],
+  "sharedFileRequests": [],
+  "statusChange": null
+}

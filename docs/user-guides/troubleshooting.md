@@ -18,7 +18,7 @@ Business Users should reopen their own Request in the Portal. After conversion, 
 
 ## An edit or action is unavailable
 
-Check whether the owning record is archived and whether your role permits the action. On shared work, a Business User can read business Fields, add Documents and Versions, reply in the conversation, and add existing people to a non-Confidential team. A Business User cannot change record Fields or other legal-managed details, complete Tasks, give Approval, or send for signature. Follow [Portal record work](contributor-guide.md) and ask Legal to perform the required legal action.
+Check whether the owning record is archived and whether your role permits the action. On shared work, a Business User can read Fields whose Rows have **Visible on Portal** on, add Documents and Versions, reply in the conversation, and add existing people to a non-Confidential team. A Business User cannot change record Fields or other legal-managed details, complete Tasks, or send for signature. A Business User can answer an Approval Request only when it names them, under **Approvals** in the Portal. Follow [Portal record work](contributor-guide.md) and ask Legal to perform the required legal action.
 
 If a save reports an error, keep your intended value, follow the displayed correction, and reload to confirm what actually saved. Do not assume an unchanged page means the save succeeded. Administrators can investigate configured Fields and required answers through [types, Statuses, and Fields](types-statuses-fields.md).
 
@@ -40,13 +40,13 @@ An original download failure needs a separate check of current access, archive/d
 
 ## A notification or email is missing
 
-Check that the event addressed you, that you still have access, and that the relevant notification group is enabled. Your own edit normally does not notify you. For staff, check the group's **In-app** and **Email** choices and any **Briefing** section. Business Users check **Request updates**, **Assigned to you**, and **Activity on your records** in **Notification settings**. Turning In-app off also stops that group's new email.
+Check that the event addressed you, that you still have access, and that the relevant notification group is enabled. Your own edit normally does not notify you. For staff, check the group's **In-app**, **Email**, and **Push** choices and any **Briefing** section. Business Users check **Request updates**, **Assigned to you**, **Activity on your records**, and **Dates approaching** in **Notification settings**. Turning In-app off also stops that group's new email and Push notifications. Push reaches only a browser listed under **Devices** after **Turn on for this browser**.
 
-For morning updates, check the saved profile timezone and relevant tracked date. Delivery is not promised at exactly 8:00 a.m. Follow [notifications and reminders](notifications.md). If a bell item exists but mail does not arrive, check spam and filters, then ask your Administrator to check delivery. A bell item does not prove email receipt. For an urgent reply, open the record or Portal Request directly.
+For morning updates, check the saved profile timezone and relevant tracked date. Delivery is not promised at exactly 8:00 a.m. Reminders follow the organization's default lead times unless a staff user turned off **Use the organization's default lead times** under **Reminder lead times** in **Personal → Notifications** and set their own list. Business Users always use the organization's list. Follow [notifications and reminders](notifications.md). If a bell item exists but mail does not arrive, check spam and filters, then ask your Administrator to check delivery. A bell item does not prove email receipt. For an urgent reply, open the record or Portal Request directly.
 
 ## I cannot approve, or an Approval warning appears
 
-Check the named person and whether the Approval Request is still Pending. Only that person can answer it, and decided requests cannot be edited into another decision. A new decision requires a new request. Ask Legal to check access and whether the Contract is archived.
+Check the named person and whether the Approval Request is still Pending. Only that person can answer it, and decided requests cannot be edited into another decision. A new decision requires a new request. Staff find their open requests under **Your approvals** in the bell. A Business User named as approver opens **Approvals** in the Portal. The review page shows the Contract title and its primary Document, not the rest of the Contract. Withdrawing the request or archiving the Contract removes that review page. Ask Legal to check access and whether the Contract is archived. See [approve from the business portal](contract-approvals.md#approve-from-the-business-portal).
 
 **Move past approval** warns about unresolved Pending or Rejected requests. Follow [Approval decisions and the warning](contract-approvals.md); cancel if you are not ready to proceed. An internal Approval does not sign the Document, and moving Status does not resolve the outstanding decisions.
 
@@ -66,11 +66,17 @@ If a run failed, resolve the reported processing or provider problem before runn
 
 ## AI conversion or source evidence is unavailable
 
-If a Convert dialog is preparing a Conversion draft, wait for its completion or use manual conversion. Retry a failed preparation after checking the Type and sources. The Matter and Contract preparation switches are independent. An Administrator can check them in [AI analysis settings](configure-analysis.md).
+If a Convert dialog is preparing a Conversion draft, wait for it, or close the dialog and keep working. Preparation continues, and a bell item says when the draft is ready or could not finish. For **Preparation could not finish. Retry or continue manually.**, check the Type and sources, then select **Retry** or convert manually. **Prepare Matter conversions with AI** and **Prepare Contract conversions with AI** are independent switches. An Administrator can check them in [AI analysis settings](configure-analysis.md#request-conversion-switches).
 
-A Contract can finish conversion before its background field-filling Analysis run finishes. The **Fields** section header says when a run is under way, and reports a failure. A failure does not undo creation. Select **Retry Request-context Analysis** after checking the Type, sources and enabled filling switch. A late reply cannot replace human edits or explicit clears.
+A Contract can finish conversion before its background field-filling Analysis run finishes. While a run is under way, the **Fields** section header shows **Running…** in place of **Run analysis**. A failure shows below that header as **Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.** A failure does not undo creation. Select **Retry Request-context Analysis** after checking the Type, sources and enabled filling switch. A late reply cannot replace human edits or explicit clears.
 
 Purple borders and **Unverified** identify AI-written values. A sparkle opens saved source evidence without another AI call or leaving the record. Document citations open the original Version in the doc panel and locate its quote when possible. Removed Documents, changed or deleted messages and lost access can make evidence unavailable. Use the original source or ask an authorized colleague to check it before confirming. Disabling a workflow leaves existing evidence and individual confirm/edit usable.
+
+## An API key or connected Client stops working
+
+Open **API keys** from **Personal** in staff Settings, or from **Notification settings** in the Portal. Read the key's **Status**. An **Expired** or **Revoked** key no longer works. A **Denied** or **Cancelled** request issued no key. In each case, request a new key. A key you did not copy before closing **Your key is ready** cannot be shown again; revoke it and request another. If **Request a key** is absent, ask an Administrator to check **Enable MCP** and your group's **API keys** switch. A refused write can mean the organization is **Read-only** or the key has Read scope.
+
+An OAuth Client appears under **Connected Clients** on the same page. **Disconnect** and then **Revoke** end its access at once. The Client needs a new consent to connect again. Follow [fix a connection or stop access](connect-headless-client.md#fix-a-connection-or-stop-access) or [Connect Claude](connect-claude.md#disconnect-or-fix-a-connection). Never paste a key into a report.
 
 ## If the problem continues
 

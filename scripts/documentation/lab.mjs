@@ -198,7 +198,8 @@ async function main() {
         [
           `AUTH_SECRET=${randomBytes(32).toString("base64")}`,
           `OPENLAW_SECRET_KEY=${randomBytes(32).toString("base64")}`,
-          `PORT=127.0.0.1:${appPort}`,
+          // compose.yml publishes on ${APP_BIND:-127.0.0.1}; PORT is the bare host port.
+          `PORT=${appPort}`,
           `BASE_URL=http://127.0.0.1:${appPort}`,
           "",
         ].join("\n"),

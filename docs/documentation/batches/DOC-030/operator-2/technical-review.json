@@ -1,0 +1,410 @@
+{
+  "batch": "DOC-030",
+  "group": "operator-2",
+  "reviewer": "DOC-030 source-review author agent (operator-2)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:48:39Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "upgrade": {
+      "previousWalkthroughBuild": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "lastArticleEdit": "bf4ab492"
+    },
+    "backup-and-restore": {
+      "previousWalkthroughBuild": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "0e860c81"
+    },
+    "operator-troubleshooting": {
+      "previousWalkthroughBuild": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "0e860c81"
+    }
+  },
+  "method": "source-inspection",
+  "scopeNote": "Source reading only. No lab, container, build or test was run. The group also lists install; the shared-files author owns install.md in this batch, and this agent only read its final text. No feature PR edited these three guides since their DOC-029 evidence; the app diff 57e77e38..067c1646 (and 3fa407e3..067c1646) changed compose.yml, the startup code, the migrations 0138 to 0171, the Advanced settings module, the event hub and the doc engine.",
+  "articles": [
+    {
+      "articleId": "upgrade",
+      "scenario": ["V-C46"],
+      "contentSha256Before": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc",
+      "contentSha256": "f9819188ddbacb1c9a7f200f26fe18685da3c9b6cb8e3fc7c8701ef4a347fb36",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "compose.yml",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "docs/user-guides/install.md (read only, final shared-files text)",
+        "docs/user-guides/deployment-configuration.md",
+        "docs/documentation/batches/DOC-030/operator/technical-review.json",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/upgrade.json",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review-r2.json",
+        "git show d1d098ba:compose.yml and 57e77e38:compose.yml (ports and limits)",
+        "packages/db/src/index.ts (runMigrations)",
+        "packages/db/src/migration-journal.ts (unchanged since 57e77e38)",
+        "node_modules drizzle-orm pg-core/dialect.js migrate (one outer transaction)",
+        "packages/db/migrations/0138_business-owner-membership.sql",
+        "packages/db/migrations/0139_advanced-settings.sql",
+        "packages/db/migrations/0140_remove-global-fields.sql",
+        "packages/db/migrations/0155_saved-ai-keys.sql",
+        "packages/db/migrations/0157_type-forms.sql",
+        "packages/db/migrations/0159_retire-legacy-fields.sql",
+        "packages/db/migrations/0160_document_types.sql",
+        "packages/db/migrations/0161_document_types_without_knowledge.sql",
+        "apps/api/src/index.ts",
+        "apps/worker/src/index.ts",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "apps/api/src/lib/notifications/vapid.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/matter-access.ts",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Candidate revision",
+          "before": "Candidate and checkout target 57e77e386be31b2a319f7143dd54d00123e65efe.",
+          "after": "Candidate and checkout target 067c1646829df85e62b809ee9157921e867c84e7, matching install.md. Starting build stays d1d098ba.",
+          "source": "Batch pin (plan.json pinned.appCommit); shared-files note that install.md now documents 067c1646"
+        },
+        {
+          "claim": "What to record before the upgrade",
+          "before": "Source revision, images, project, file list and storage configuration.",
+          "after": "Also every Settings → Advanced field that shows Saved in OpenLaw.",
+          "source": "apps/api/src/modules/advanced-settings/config.ts (org_settings.advanced_settings, effectiveEnvironment); messages settings.advanced.sourceApp"
+        },
+        {
+          "claim": "Data the migrations rewrite",
+          "before": "Not stated.",
+          "after": "Lists the data rewrites of 0138 to 0171: Business Owner team backfill, Global Field split into one Field per module (Contract keeps the original), Request type questions moved onto destination type Forms with protected intake Fields retired after their answers move, Contract Versions typed from their kind, AI connector key moved to a Saved key.",
+          "source": "migrations 0138, 0140, 0155, 0157, 0159, 0160, 0161"
+        },
+        {
+          "claim": "A migration that can refuse",
+          "before": "Not stated.",
+          "after": "0157 refuses a Request type whose intake questions have no Row on the destination type; links to Migration failures.",
+          "source": "packages/db/migrations/0157_type-forms.sql RAISE EXCEPTION 'Cannot migrate the intake form of Request types: ...'"
+        },
+        {
+          "claim": "Deployment decisions the target's compose.yml forces",
+          "before": "Keep COMPOSE_PROJECT_NAME, keys and storage/database settings unchanged.",
+          "after": "New step 3: the port moves from every host address to 127.0.0.1 unless APP_BIND is set (proxy in a container or on another host needs APP_BIND and a network rule); set TRUSTED_PROXIES; new CPU and memory ceilings (app and worker 2 CPUs and 1g, engine 2 CPUs and 4g) and their variables; leave VAPID keys unset unless pinning, since the app generates and seals a pair on first start; an existing compose.private.yml can stay and fixes the port at 3000. The backup step becomes step 4.",
+          "source": "compose.yml ports ${APP_BIND:-127.0.0.1}, cpus/mem_limit/pids_limit; d1d098ba and 57e77e38 compose.yml published ${PORT:-3000}:3000 with no limits; apps/api/src/index.ts trustedProxies warning and resolveVapid at boot; deployment-configuration.md private VM section"
+        },
+        {
+          "claim": "Start commands and expected worker behavior",
+          "before": "ps and logs only.",
+          "after": "Adds docker compose port app 3000 (127.0.0.1:3000 by default). While the app migrates, the worker can stop on a missing column or table such as advanced_settings or runtime_status and Compose restarts it; check it stays running after the app is healthy.",
+          "source": "apps/worker/src/index.ts resolveAdvancedSettings and startRuntimeHeartbeat run before any wait, with no catch; compose.yml worker depends_on app condition service_started and restart unless-stopped; 0139 adds both"
+        },
+        {
+          "claim": "Confidential negative check",
+          "before": "Confirm the lower-access account still cannot reach a Confidential record outside its audience.",
+          "after": "Choose a record on which that account is not a team member, the Owner or the Business Owner, because the upgrade makes each Business Owner a team member and team members reach Confidential records.",
+          "source": "0138_business-owner-membership.sql; contract-access.ts contractTeamScope; matter-access.ts matterTeamScope"
+        },
+        {
+          "claim": "Field checks after the split",
+          "before": "Check configured Fields and saved values.",
+          "after": "A Field several modules shared appears once in each module with the same name and saved values.",
+          "source": "0140_remove-global-fields.sql"
+        },
+        {
+          "claim": "Checks of encrypted configuration and processes",
+          "before": "Test email through the saved relay.",
+          "after": "Adds Test connection on a configured AI connector, Settings → Advanced → System status with API and Worker rows Running and Current after Refresh, and the recorded Saved in OpenLaw fields.",
+          "source": "routes.ts /system-status; messages settings.advanced.online/current/refresh/role.*; settings.aiAnalysis.test"
+        },
+        {
+          "claim": "Reopening",
+          "before": "Reopen when checks pass.",
+          "after": "Also ask people to reload tabs opened before the upgrade; an old tab can show This part of OpenLaw was updated. Reload to continue.",
+          "source": "docs/DEPLOYMENT.md Upgrades; messages/en-US.json"
+        },
+        {
+          "claim": "Partial migration after a refusal",
+          "before": "Not stated.",
+          "after": "A migration that stops the start can leave the pending migrations before it applied.",
+          "source": "drizzle migrate wraps pending files in one transaction, but 0093, 0156, 0157, 0158, 0159 and others open with COMMIT; BEGIN;, so earlier files commit"
+        }
+      ],
+      "confirmed": [
+        "From d1d098ba the first app line is still 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations': migration-journal.ts is unchanged and still lists 0090_onboarding_reviewed_types as repairable.",
+        "The app is still the only process that migrates, at startup (apps/api/src/index.ts runMigrations); the worker runs none.",
+        "compose.operator.yml per-revision tags from install.md still build without recreating running containers; the worker still uses the app image; Postgres stays postgres:16.",
+        "docker compose down -v still deletes the openlaw-pgdata and openlaw-files named volumes.",
+        "Recovery is still a restore into a separate empty target with the old image; DEPLOYMENT.md documents no downgrade.",
+        "compose.yml still sets env_file .env for app and worker, so the new keys in .env reach both processes."
+      ],
+      "limitations": [
+        "Source inspection only; V-C46 still needs a container-operation walkthrough from d1d098ba to 067c1646.",
+        "Whether the d1d098ba fixture's Request types pass the 0157 guard was not checked; if the walkthrough hits the refusal, it is a fixture fact to record, and troubleshooting has the recovery.",
+        "The worker's restart while the app migrates is read from the code order, not observed. With a short migration the worker may simply wait on the ALTER TABLE lock and never restart.",
+        "The starting build stays d1d098ba as the triage asked. The previous supported edition (432dba3a) is not the upgrade baseline."
+      ]
+    },
+    {
+      "articleId": "backup-and-restore",
+      "scenario": ["V-C47"],
+      "contentSha256Before": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
+      "contentSha256": "bd04a2a60c52fa1d44e89ddf4cedca11a25367e5c2efcae581121fe5168b6a00",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "compose.yml",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "docs/user-guides/install.md (read only, final shared-files text)",
+        "docs/user-guides/deployment-configuration.md",
+        "docs/documentation/batches/DOC-030/operator/technical-review.json",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/backup-and-restore.json",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
+        "packages/db/src/rewrap.ts (SEALED_COLUMNS)",
+        "packages/db/src/schema/org.ts",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "apps/api/src/index.ts",
+        "apps/worker/src/index.ts",
+        "apps/api/src/lib/notifications/vapid.ts",
+        "packages/db/migrations/0139_advanced-settings.sql",
+        "packages/db/migrations/0154_device-notifications.sql",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Keys to keep",
+          "before": "AUTH_SECRET, OPENLAW_SECRET_KEY and storage or database credentials.",
+          "after": "Also any VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY set in .env.",
+          "source": "compose.yml x-openlaw-environment VAPID_*; vapid.ts env pair wins"
+        },
+        {
+          "claim": "What the dump holds sealed",
+          "before": "Not stated beyond 'credential encryption does not encrypt the entire backup'.",
+          "after": "Names the sealed contents: SMTP relay, Signing connector keys, SSO client secret, AI Saved keys, generated Web Push private key, and the Settings → Advanced settings with object-store credentials; a restore needs the same key.",
+          "source": "packages/db/src/rewrap.ts SEALED_COLUMNS (smtp_url, vapid_private_key, advanced_settings, api_key, private_key, webhook_secret, oidc_config, sealed_key)"
+        },
+        {
+          "claim": "Record saved Advanced values",
+          "before": "Record storage configuration.",
+          "after": "Record every Settings → Advanced field showing Saved in OpenLaw; a saved Application address or Document storage value travels in the dump and applies on a target whose .env leaves that key empty.",
+          "source": "config.ts effectiveEnvironment and pinnedKeys"
+        },
+        {
+          "claim": "Restored external destinations",
+          "before": "Relay, object store, identity provider, signing account, AI provider.",
+          "after": "Adds that the restored Web Push pair and browser subscriptions let the target's worker send device notifications to the source's users.",
+          "source": "0154_device-notifications.sql; vapid.ts; compose.yml worker environment"
+        },
+        {
+          "claim": "Target origin and storage",
+          "before": "Supply the target's origin and port; configure access to every restored file store.",
+          "after": "Set BASE_URL in the target .env, or the source's saved Application address applies. Configure restored stores in the target .env; an empty storage key takes the source's saved value, which can be the source's live bucket or container.",
+          "source": "config.ts effectiveEnvironment (saved value used only when the env key is empty); apps/api/src/index.ts runtimeEnv.BASE_URL"
+        },
+        {
+          "claim": "Verify Advanced state on the target",
+          "before": "Not stated.",
+          "after": "Instance address shows the target origin, Document storage names the restored store, env-set fields show Deployment configuration · Read only; System status after Refresh shows API and Worker Running and Current and the intended Active storage.",
+          "source": "settings-advanced labels in messages/en-US.json; routes.ts /system-status"
+        },
+        {
+          "claim": "Wrong-key detection rows",
+          "before": "One row: records work but saved credentials are unavailable.",
+          "after": "Adds a row for the start log line 'No configured key opens these stored credentials' (names columns such as vapid_private_key) with 'Device notifications are off until the VAPID pair can be read' when no VAPID pair is in .env; and a row for app and worker restarting with 'Advanced settings cannot be decrypted'. Keeps the existing row for the case with nothing saved in Advanced.",
+          "source": "apps/api/src/index.ts rewrap warning and resolveVapid catch; vapid.ts 'The stored VAPID pair is incomplete or unreadable. Check OPENLAW_SECRET_KEY.'; config.ts parseSettings throw, called without a catch in both startups"
+        },
+        {
+          "claim": "Links pointing at the source",
+          "before": "Not stated.",
+          "after": "New row: emailed links or sign-in go to the source's address when a saved Application address applies; set BASE_URL and recreate.",
+          "source": "config.ts; index.ts baseUrl from runtimeEnv"
+        }
+      ],
+      "confirmed": [
+        "The backup commands are unchanged: docker compose stop app worker, pg_dump custom format through the postgres service, tar through a one-off app container on the mounted volume at /var/lib/openlaw/files (compose.yml STORAGE_PATH default and volume).",
+        "Stopping app and worker cleanly deletes their runtime_status rows (startRuntimeHeartbeat stop), so the dump carries no live process rows; stale rows older than a day are purged at the next start.",
+        "The first API start generates and seals a VAPID pair when none is stored or pinned, so every dump from this build carries a sealed vapid_private_key unless the pair is pinned in .env (index.ts resolveVapid at boot).",
+        "The restore commands (pg_restore --exit-on-error --no-owner --no-privileges, tar -xzf through the target app service) are unchanged; the doc engine still holds nothing to back up.",
+        "Existing anchors #take-a-coherent-backup and #verify-the-restored-instance are unchanged; upgrade.md and operator-troubleshooting.md link to them."
+      ],
+      "limitations": [
+        "Source inspection only; V-C47 still needs a container-operation walkthrough at 067c1646.",
+        "To exercise the new rows the walkthrough fixture should save at least one Settings → Advanced value (for example Maximum file size (MiB)) on the source before the backup. Without it a wrong key does not stop startup.",
+        "Object-store snapshot tooling and a saved S3 or Azure configuration pointing at a live store were not exercised; the text relies on effectiveEnvironment."
+      ]
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "scenario": ["V-C48"],
+      "contentSha256Before": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
+      "contentSha256": "d8171252164c77698e0f311e03df15879d6fd22c5dc4365a67168e9815fab470",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "compose.yml",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "docs/user-guides/install.md (read only, final shared-files text)",
+        "docs/user-guides/deployment-configuration.md",
+        "docs/documentation/batches/DOC-030/operator/technical-review.json",
+        "docs/documentation/templates/troubleshooting.md",
+        "docs/documentation/evidence/operator-troubleshooting.json",
+        "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
+        "apps/api/src/index.ts",
+        "apps/worker/src/index.ts",
+        "apps/api/src/app.ts (healthz, readyz, trustProxy)",
+        "apps/api/src/logging.ts",
+        "apps/api/src/reset-advanced-settings.ts",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "apps/api/src/modules/events/routes.ts",
+        "apps/api/src/lib/event-hub.ts",
+        "services/doc-engine/src/server.ts",
+        "apps/api/src/lib/doc-engine/http.ts",
+        "apps/api/src/lib/uploads.ts",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/lib/ai/http.ts",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "packages/db/src/index.ts",
+        "packages/db/src/migration-journal.ts",
+        "packages/db/src/secrets.ts",
+        "packages/db/migrations/0157_type-forms.sql",
+        "Dockerfile (reset script and lint-migration-journal.mjs in the image)",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "What logs carry",
+          "before": "Activity and provider errors may contain record titles or recipient details.",
+          "after": "Adds TECH-029 rules: request lines carry the path without query string and no headers; error lines omit SQL parameters and mask URL passwords, credential-named query values and bearer tokens (a fixed list); activity lines copy the stored entry in full.",
+          "source": "apps/api/src/logging.ts header; docs/DEPLOYMENT.md Audit log section"
+        },
+        {
+          "claim": "Port row",
+          "before": "Check the chosen host PORT and existing listeners.",
+          "after": "Also APP_BIND; the app is published on APP_BIND:PORT, 127.0.0.1:3000 by default.",
+          "source": "compose.yml ports"
+        },
+        {
+          "claim": "Proxy cannot reach the app",
+          "before": "No row.",
+          "after": "New row: docker compose port app 3000 prints 127.0.0.1:3000 by default; a container or remote proxy needs APP_BIND, a network rule and TRUSTED_PROXIES.",
+          "source": "compose.yml ports comment; DEPLOYMENT.md The app port and APP_BIND"
+        },
+        {
+          "claim": "App keeps restarting",
+          "before": "First startup error; correct and recreate.",
+          "after": "Adds the OOMKilled check against the new memory ceilings, the 'Advanced settings cannot be decrypted. Restore the instance encryption key before restarting.' cause, and saved storage or document-service values as a cause with a link to the new recovery section.",
+          "source": "compose.yml mem_limit; config.ts parseSettings; index.ts createStorageFromEnv(runtimeEnv) and createDocEngineFromEnv exit on error"
+        },
+        {
+          "claim": "Sign-in behind the proxy",
+          "before": "BASE_URL, forwarded Origin/Host, hostname, port and TLS.",
+          "after": "Adds the saved Application address and its source label on Settings → Advanced → Instance address, BASE_URL pinning over a saved value, and the recovery command.",
+          "source": "config.ts pinnedKeys; routes.ts; SET-013"
+        },
+        {
+          "claim": "Shared sign-in bucket",
+          "before": "No row.",
+          "after": "New row: the TRUSTED_PROXIES is not set warning; set it to the proxy address, proxy overwrites X-Forwarded-For and sets X-Forwarded-Proto.",
+          "source": "apps/api/src/index.ts warning text; app.ts trustProxy; DEPLOYMENT.md Trusted proxies"
+        },
+        {
+          "claim": "Live update caps",
+          "before": "Proxy buffering only.",
+          "after": "Five streams per person (a sixth closes the oldest) and 500 per API process (503, Retry-After, 'Too many live event streams are open. Try again shortly.').",
+          "source": "apps/api/src/lib/event-hub.ts DEFAULT_MAX_SUBSCRIPTIONS_PER_USER = 5, DEFAULT_MAX_SUBSCRIPTIONS = 500; events/routes.ts"
+        },
+        {
+          "claim": "Recovery for saved Advanced settings",
+          "before": "Not in this guide.",
+          "after": "New H3 Remove saved Advanced settings: pin in .env first, else docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js <instance|uploads|storage|processing|mcp> then restart app and worker. States what it removes, the Audit log entry, that run works while the app restarts, that storage files do not move, and that it needs the correct key.",
+          "source": "apps/api/src/reset-advanced-settings.ts (sectionIds validation, recordActivity admin_only, parseSettings before delete); Dockerfile copies apps/api/dist"
+        },
+        {
+          "claim": "New migration refusal",
+          "before": "Only the journal guard and accounts.issuer refusals.",
+          "after": "Adds 'Cannot migrate the intake form of Request types:' with its three causes, that earlier pending migrations stay applied, and recovery from the pre-upgrade backup where the named Request types are corrected on the starting build before a new backup and upgrade.",
+          "source": "0157_type-forms.sql; 0157 opens with COMMIT; BEGIN;"
+        },
+        {
+          "claim": "Wrong key signals",
+          "before": "A wrong key does not announce itself as a key problem.",
+          "after": "The start log line 'No configured key opens these stored credentials' names the columns; with saved Advanced settings a wrong key stops startup with 'Advanced settings cannot be decrypted'; otherwise the in-app behavior is as before. A lost key with saved Advanced settings has no in-app or command recovery; escalate.",
+          "source": "apps/api/src/index.ts rewrap warning; config.ts; reset-advanced-settings.ts"
+        },
+        {
+          "claim": "Storage checks",
+          "before": "Check the configured write driver.",
+          "after": "Storage settings come from .env or Settings → Advanced → Document storage (each field names its source); System status shows Active storage; Test connection runs from the API only.",
+          "source": "settings-advanced labels; routes.ts"
+        },
+        {
+          "claim": "Upload refusal",
+          "before": "Compare MAX_UPLOAD_MB with the proxy body limit.",
+          "after": "Quotes 'That file is over the 100 MB upload limit.' and names File uploads in Settings → Advanced as the other source of the limit.",
+          "source": "apps/api/src/lib/uploads.ts refuseOversize"
+        },
+        {
+          "claim": "Process status",
+          "before": "Not stated.",
+          "after": "System status rows per API and worker process, No recent heartbeat (none in the last minute), Restart required, Running does not prove processing.",
+          "source": "routes.ts /system-status; messages settings.advanced.*"
+        },
+        {
+          "claim": "Engine busy",
+          "before": "Engine failure checks: container, endpoint, timeouts, scratch space.",
+          "after": "Adds memory limit and that scratch space counts against it; 2 running and 8 waiting by default; 503 with Retry-After past both; the API and worker treat it as transient and retry.",
+          "source": "services/doc-engine/src/server.ts DEFAULT_MAX_CONCURRENT, DEFAULT_MAX_QUEUED, engineBusy; apps/api/src/lib/doc-engine/http.ts refusal maps 503 to DocEngineUnavailableError; compose.yml tmpfs note"
+        },
+        {
+          "claim": "AI connector test errors",
+          "before": "Test from Settings, then inspect a run.",
+          "after": "The test shows only the status ('The connection test failed. The provider refused the request with HTTP 401.'); the app log line 'The AI provider refused the connection test.' carries the status and a short redacted reply.",
+          "source": "ai-connector/routes.ts logUpstreamRefusal; lib/ai/http.ts message; settings-ai-analysis.tsx shows the problem detail"
+        }
+      ],
+      "confirmed": [
+        "Compose still refuses a missing AUTH_SECRET or OPENLAW_SECRET_KEY; readSecretKeys still refuses an OPENLAW_SECRET_KEY under 32 characters; better-auth stays 1.7.5, so the short AUTH_SECRET warning is unchanged.",
+        "/healthz and /readyz are unchanged (app.ts); /readyz tests only the database.",
+        "The journal guard message 'This database cannot apply the migrations it is missing', the automatic 0049 and 0090 repairs, and the 'migrations: reconciled <migration>; continuing with pending migrations' line are unchanged (migration-journal.ts, index.ts runMigrations). The image still carries scripts/lint-migration-journal.mjs with --hashes.",
+        "The two accounts.issuer refusal messages are unchanged in 0060_account_issuer.sql, which runs in its own transaction.",
+        "SMTP_URL still pins email; the test send without a relay still fails with 'The test email could not be sent. SMTP is not configured — save a relay first.' (email-settings/routes.ts).",
+        "The worker still has no port or healthcheck and uses the app image with the worker command (compose.yml).",
+        "Signing checks and the Signing updates label are unchanged (messages settings.eSignature.updateMode).",
+        "The heading 'Migration failures' is unchanged, so upgrade.md's new link to #migration-failures resolves; no heading was renamed, so no redirects.json alias was needed."
+      ],
+      "limitations": [
+        "Source inspection only; V-C48 still needs a fault-injection container-operation walkthrough at 067c1646.",
+        "The OOMKilled check uses docker inspect, which is Docker behavior and not OpenLaw code.",
+        "The per-person stream cap closes the oldest stream and the browser's EventSource reconnects; how a tab behaves while six are open was not observed.",
+        "The 0157 recovery asks the operator to correct Request types on the starting build's own settings pages, whose labels this review did not check at d1d098ba.",
+        "Real provider checks (Signing, AI) remain blocked under C42/C43."
+      ]
+    }
+  ],
+  "productBugs": [
+    {
+      "file": "apps/api/src/reset-advanced-settings.ts",
+      "symptom": "The operator recovery command calls parseSettings before deleting a section, so it throws 'Advanced settings cannot be decrypted...' when OPENLAW_SECRET_KEY cannot open org_settings.advanced_settings. Once any Advanced value was saved, the column stays non-null even after a reset, and API and worker startup (resolveAdvancedSettings, no catch) refuses on every boot. A lost key therefore leaves no supported way to start the instance.",
+      "contradicts": "TECH-022 (a lost key costs only the sealed credentials; recovery is to paste them again, and a read that threw would fail the pane the recovery happens in) and docs/DEPLOYMENT.md 'If you lose it'"
+    },
+    {
+      "file": "apps/worker/src/index.ts",
+      "symptom": "resolveAdvancedSettings and startRuntimeHeartbeat run with no catch before the worker waits for the schema, so a worker that starts while the app migrates from a pre-0139 build can crash on the missing advanced_settings column or runtime_status table and rely on Compose's restart. The file header still says such a worker 'finds no work and waits'. Low impact; the guide now says the restart is expected.",
+      "contradicts": "TECH-005 note in the worker header and compose.yml worker depends_on comment"
+    }
+  ],
+  "sharedFileRequests": [
+    "docs/DEPLOYMENT.md, 'A stranded migration journal': says the 0049 repair logs 'migrations: corrected the recorded stamp for 0049_contract_tasks'. packages/db/src/index.ts logs 'migrations: reconciled 0049_contract_tasks; continuing with pending migrations' for every repair.",
+    "docs/DEPLOYMENT.md, 'An upgrade that stops on accounts.issuer': says 0060 'is the only one that can' refuse and that skipped releases' migrations 'only add things, and the old image runs on them unchanged'. 0157_type-forms.sql also refuses, and 0140, 0155, 0159 and 0161 rewrite or drop data. The section should name the 0157 refusal and drop the old-image claim.",
+    "docs/DEPLOYMENT.md, 'Backups': the file-archive and dump commands do not mention that saved Settings → Advanced values and the sealed VAPID key travel in the dump, and 'If you lose it' does not say that a saved Advanced configuration stops startup under a new key.",
+    "docs/user-guides/deployment-configuration.md (operator group): the recovery command uses 'docker compose exec app', which fails while the app is restarting. operator-troubleshooting.md now uses 'docker compose run -T --rm --no-deps app'. Consider the same form there.",
+    "docs/documentation/edition.json, scenarios.json and evidence/{upgrade,backup-and-restore,operator-troubleshooting}.json: the content hashes change to f9819188..., bd04a2a6... and d8171252...; acceptance needs new V-C46, V-C47 and V-C48 walkthroughs at 067c1646."
+  ],
+  "statusChange": null
+}

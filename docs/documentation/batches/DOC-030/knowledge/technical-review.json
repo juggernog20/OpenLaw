@@ -1,0 +1,115 @@
+{
+  "batch": "DOC-030",
+  "group": "knowledge",
+  "reviewer": "DOC-030 source-review author agent (knowledge)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:22:00Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdit": "dd961fee"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "publish-knowledge",
+      "scenario": "V-C34",
+      "contentSha256Before": "7d16836eb7a907081c691335c660bf497ba5346eb60347289ad536f92b05e269",
+      "contentSha256": "36def04a8dc161e960fc437bfda658a7358fe7c0949edb93ecd24c621dfbccd1",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/publish-knowledge.json",
+        "docs/documentation/batches/DOC-029/knowledge/technical-review.json",
+        "docs/decision-records/DECISIONS-KNOWLEDGE.md (KNW-002, KNW-004 and its 2026-09-18 Confidential addendum)",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-022)",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (Confidential actor set)",
+        "messages/en-US.json",
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/routes/settings-intake-links.tsx",
+        "apps/web/src/components/intake-settings-tabs.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/confidential-marker.tsx",
+        "apps/api/src/modules/knowledge/routes.ts",
+        "apps/api/src/modules/knowledge/service.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/portal/knowledge.test.ts",
+        "apps/api/src/modules/intake-links/routes.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/document-access.ts",
+        "apps/api/src/mcp/knowledge.ts",
+        "apps/api/src/mcp/documents.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Access table, Published Everyone row, Business Portal access",
+          "before": "Signed-in Portal readers can read guidance and download current Document Versions.",
+          "after": "The same, except Confidential Documents.",
+          "source": "apps/api/src/modules/portal/routes.ts getPortalKnowledge and download route apply documentAudienceScope (7f1573c5); KNW-004 addendum 2026-09-18"
+        },
+        {
+          "claim": "Before you start, Confidential Documents on a Knowledge Item (new paragraph)",
+          "before": "No statement. The guide implied every Document on a published Everyone item reaches the Portal.",
+          "after": "A Document marked Confidential stays off the Portal and its download answers as if the item were unavailable. On the staff record only Administrators open it; a Legal Team Member cannot, even the uploader. An Administrator uses the Document's Actions menu, Mark confidential; the row shows the CONFI marker; Clear confidential mark returns it.",
+          "source": "apps/api/src/lib/contract-access.ts documentAudienceScope (Knowledge arm is Administrator only); apps/api/src/lib/document-access.ts; documents-card.tsx canFlag and Mark confidential / Clear confidential mark; confidential-marker.tsx CONFI; portal/knowledge.test.ts"
+        },
+        {
+          "claim": "Publish step 3, Knowledge item picker in the deflection link dialog",
+          "before": "The link needs Target Knowledge item and this item chosen.",
+          "after": "Adds that the Knowledge item list offers only live items published for Everyone, so publish first.",
+          "source": "apps/api/src/modules/intake-links/routes.ts /intake-links/knowledge-options (published, everyone, archivedAt null)"
+        },
+        {
+          "claim": "Publish step 4, what the Portal check shows",
+          "before": "Check the title, guidance, and current downloads for both primary and supporting Documents.",
+          "after": "Adds: A Confidential Document is not listed.",
+          "source": "apps/api/src/modules/portal/routes.ts getPortalKnowledge"
+        },
+        {
+          "claim": "Check a missing item or file, one missing file and MCP reads",
+          "before": "No check for a single missing file; no statement about MCP.",
+          "after": "If one file is missing, ask an Administrator to check for the CONFI marker; a Legal Team Member does not see a Confidential Knowledge Document at all. An MCP Client working for a Business User reads Knowledge through the same checks.",
+          "source": "apps/api/src/lib/contract-access.ts; apps/api/src/mcp/knowledge.ts and apps/api/src/mcp/documents.ts (business_user path calls getPortalKnowledge / portalKnowledgeScope / readPortalKnowledgeVersionText)"
+        }
+      ],
+      "confirmed": [
+        "Only Administrators and Legal Team Members open the staff Knowledge record: the loader redirects other roles to /, and publish, unpublish, archive and restore use requireMember. There is no approval step. (knowledge-record.tsx knowledgeRecordLoader; knowledge/routes.ts)",
+        "Knowledge Item actions offers Publish on a draft, Unpublish on a published item, Archive on a live item and Restore on an archived item. (knowledge-record.tsx; messages knowledge.actions and knowledge.action.*)",
+        "Draft marker shows for a draft; On the portal shows only for published, Everyone, not archived; Archived shows for an archived item. (knowledge-record.tsx subbar)",
+        "Audience select offers Legal Only and Everyone. Changing to Legal Only, or Unpublish, opens Remove this from the portal? with the deflection link count, Cancel and Continue, only when deflectionLinkCount > 0. (knowledge-record.tsx requestAudience, requestUnpublish, reach dialog)",
+        "Settings, Intake, Deflection links (/settings/intake/links) has Add link with Target (External address / Knowledge item), Label and Placement (Portal home or a request type). Administrator only. (settings-intake-links.tsx; intake-settings-tabs.tsx; intake-links/routes.ts)",
+        "Portal home and request forms draw the Before you submit panel; a Knowledge link opens /portal/knowledge/:id in the same tab. (deflection-panel.tsx; portal.tsx; portal-request-form.tsx)",
+        "The Portal article and each download apply one gate: published, Everyone, not archived (portalKnowledgeScope). Anything else answers 404 and the page redirects to /portal; no session redirects to /portal/login. Deflection links to an unreachable item drop out of the panel but stay in Settings. (portal/routes.ts reachableLink; portal-knowledge.tsx loader)",
+        "The Portal article lists Documents (primary first) before Guidance, current Versions only, with Download buttons and no staff or Version controls. (portal-knowledge.tsx; portal/routes.ts getPortalKnowledge)",
+        "Archive dialog: Archive Knowledge Item, Replaced by, No replacement, Cancel and Archive. Choices reload every time the dialog opens (dd961fee). The API refuses an archived replacement with 'The replacement must be a live Knowledge Item.', and the dialog shows that detail in an alert. (knowledge-record.tsx setArchiveOpen and runAction; knowledge/routes.ts replacementForArchive)",
+        "Archive disables Title, Type, Folder, Audience and guidance editing; Restore clears archivedAt only, so publication state and audience return unchanged. (knowledge-record.tsx; knowledge/routes.ts restore)",
+        "The staff Knowledge list excludes archived items and its query has no archived filter; an archived record still opens by its address. (knowledge/service.ts listScope; KnowledgeListQuery)",
+        "A failed lifecycle action now shows the API's own detail, falling back to 'The Knowledge Item could not be changed.' (knowledge-record.tsx runAction)",
+        "Portal routes require a session and serve every signed-in role in a reader capacity; Everyone is not an anonymous page. (portal/routes.ts requireAuth; KNW-004 addendum)"
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough V-C34 needs at 067c1646.",
+        "The registry asks for an out-of-audience comparison reader. OpenLaw has no per-person Knowledge audience: Everyone means every signed-in Portal session. The walkthrough can compare a Portal reader against an item in Draft, Legal Only or Archived state, and against a browser with no session (/portal/login, 401 on the API). A Confidential supporting Document is now a second file-level negative check.",
+        "Marking a Knowledge Document Confidential needs an Administrator seat. A Legal Team Member walkthrough must hand that step to Daniel Okafor, or it loses sight of the file (see productBugs).",
+        "MCP Knowledge reads for a Business User were checked from source only; MCP and API keys start off and need configure-mcp setup, so the walkthrough need not exercise them.",
+        "Only Placement Portal home was exercised in DOC-029; a request-type placement is still source-read only.",
+        "The prose adds a Confidential rule and changes the content hash, so the DOC-029 walkthrough cannot be kept as a copy-only review."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/components/documents/documents-card.tsx canFlag and apps/api/src/modules/documents/routes.ts assertMayFlagConfidential let the uploader set Mark confidential on a Knowledge Document, but apps/api/src/lib/contract-access.ts documentAudienceScope lets only Administrators reach a Confidential Knowledge Document. A Legal Team Member who marks their own Knowledge file loses it at once and cannot clear the mark. This contradicts the CTR-022 rationale (an actor who cannot see their own flagged record is a data-loss bug) and the DECISIONS-DOCUMENTS actor set read against the KNW-004 2026-09-18 addendum; either the Knowledge actor set should be Administrator only or the uploader should keep reach."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/create-knowledge.md, 'The primary choice changes presentation...' paragraph: it says Portal readers download every available Document. Since 7f1573c5 a Document marked Confidential is left out of the Portal and only Administrators reach it on the staff record. Add that exception and link to publish-knowledge.md#before-you-start.",
+    "docs/documentation/edition.json: the publication content hash for publish-knowledge must change to 36def04a8dc161e960fc437bfda658a7358fe7c0949edb93ecd24c621dfbccd1.",
+    "docs/documentation/scenarios.json: V-C34 acceptance points at evidence for an older content hash; update it after the independent walkthrough at 067c1646 records its result."
+  ],
+  "statusChange": null
+}
