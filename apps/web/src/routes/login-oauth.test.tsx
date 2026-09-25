@@ -258,3 +258,19 @@ it.each([
     `/api/auth/oauth2/authorize?${signedQuery}`,
   );
 });
+
+it("drops the prompts that would send a session back to sign-in from the return", async () => {
+  stubApi({ signedIn: person });
+  const signed = `${query}&prompt=login+consent&max_age=0&ba_param=max_age&ba_param=prompt`;
+  const url = new URL(`http://localhost/auth/login?${signed}`);
+  const result = await loginLoader({
+    request: new Request(url),
+    url,
+    pattern: "/auth/login",
+    params: {},
+    context: new RouterContextProvider(),
+  });
+  expect((result as Response).headers.get("Location")).toBe(
+    `/api/auth/oauth2/authorize?${query}&prompt=consent&ba_param=max_age&ba_param=prompt`,
+  );
+});

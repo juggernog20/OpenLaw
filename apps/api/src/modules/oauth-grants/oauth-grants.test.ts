@@ -84,8 +84,8 @@ beforeEach(async () => {
   });
   await h.db.update(allowedClients).set({ enabled: true }).where(eq(allowedClients.id, allowedId));
 });
-async function query(session = cookies, forceConsent = true) {
-  const params = new URLSearchParams({
+function authorizeParams(forceConsent = true) {
+  return new URLSearchParams({
     client_id: clientId,
     redirect_uri: "https://client.example/callback",
     response_type: "code",
@@ -95,7 +95,12 @@ async function query(session = cookies, forceConsent = true) {
     code_challenge_method: "S256",
     state: "test",
   });
-  const res = await h.app.inject({ url: `/api/auth/oauth2/authorize?${params}`, cookies: session });
+}
+async function query(session = cookies, forceConsent = true) {
+  const res = await h.app.inject({
+    url: `/api/auth/oauth2/authorize?${authorizeParams(forceConsent)}`,
+    cookies: session,
+  });
   expect(res.statusCode, res.body).toBe(302);
   return new URL(res.headers.location!, h.app.baseUrl).search.slice(1);
 }
@@ -567,6 +572,27 @@ it("uploads under a grant, attributes activity and calls, and shares the grant r
   );
   const limited = await call(issued.access_token);
   expect(limited.json().result.content[0].text).toContain("rate_limited:");
+});
+
+it("resumes the authorize from the signed login query once a session exists (#1136)", async () => {
+  const anonymous = await h.app.inject({
+    url: `/api/auth/oauth2/authorize?${authorizeParams()}`,
+  });
+  expect(anonymous.statusCode, anonymous.body).toBe(302);
+  const login = new URL(anonymous.headers.location!, h.app.baseUrl);
+  expect(login.pathname).toBe("/auth/login");
+  expect(login.searchParams.has("sig")).toBe(true);
+  const resumed = await h.app.inject({
+    url: `/api/auth/oauth2/authorize${login.search}`,
+    cookies,
+  });
+  expect(resumed.statusCode, resumed.body).toBe(302);
+  const consent = new URL(resumed.headers.location!, h.app.baseUrl);
+  expect(consent.pathname).toBe("/auth/consent");
+  expect(consent.searchParams.get("sig")).not.toBe(login.searchParams.get("sig"));
+  const shown = await facts(consent.search.slice(1));
+  expect(shown.statusCode, shown.body).toBe(200);
+  expect(shown.json()).toMatchObject({ client: { name: "Test Client" }, refusalReason: null });
 });
 
 it("recovers remembered consent without a grant and leaves other people's consent alone", async () => {

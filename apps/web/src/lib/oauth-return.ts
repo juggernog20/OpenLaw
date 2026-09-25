@@ -16,8 +16,28 @@ export function oauthLoginSearch(search: string): string {
   return `?${parts.join("&")}`;
 }
 
+/**
+ * The address that resumes the authorize under the session.
+ *
+ * A GET on the authorize endpoint does not check the signature; it reads
+ * the parameters and signs a fresh query for the consent page. Two of them
+ * would send a signed-in person straight back to the login page, forever:
+ * `prompt=login` (and `create`) and `max_age`. The return drops them. The
+ * app does not honour a forced re-authentication yet.
+ */
 export function oauthAuthorizeReturn(search: string): string | undefined {
-  return new URLSearchParams(search).has("sig")
-    ? `/api/auth/oauth2/authorize${search.startsWith("?") ? search : `?${search}`}`
-    : undefined;
+  if (!new URLSearchParams(search).has("sig")) return undefined;
+  const parts = search
+    .replace(/^\?/, "")
+    .split("&")
+    .flatMap((part) => {
+      const name = new URLSearchParams(part).keys().next().value;
+      if (name === "max_age") return [];
+      if (name !== "prompt") return [part];
+      const kept = (new URLSearchParams(part).get("prompt") ?? "")
+        .split(" ")
+        .filter((prompt) => prompt && prompt !== "login" && prompt !== "create");
+      return kept.length ? [`prompt=${encodeURIComponent(kept.join(" "))}`] : [];
+    });
+  return `/api/auth/oauth2/authorize?${parts.join("&")}`;
 }
