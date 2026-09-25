@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-013 and DD-029: sessions, API keys and OAuth grants read the current account and refuse archived people. */
+
 import { eq, users, type Executor } from "@openlaw/db";
 import type { AuthenticatedUser } from "./user.js";
 import { httpError } from "../lib/problem.js";
 
-/** Sessions, API keys and OAuth grants use the same live account check. */
 export async function readLiveUser(db: Executor, id: string): Promise<AuthenticatedUser> {
   const [user] = await db
     .select({

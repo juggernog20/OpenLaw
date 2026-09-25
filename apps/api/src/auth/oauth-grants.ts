@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-029 and TECH-035: resolve live grants, end refresh access, and require a current grant when the provider issues tokens. */
+
 import {
   allowedClientLinks,
   oauthGrants,
@@ -11,12 +14,17 @@ import {
   gt,
   type Executor,
 } from "@openlaw/db";
-import { APIError, createAuthEndpoint, createAuthMiddleware } from "better-auth/api";
+import {
+  APIError,
+  createAuthEndpoint,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from "better-auth/api";
 import { decodeJwt } from "jose";
 import { z } from "zod";
 import { findAllowedClient } from "./allowed-clients.js";
 import { readLiveUser } from "./live-user.js";
-import { httpError } from "../lib/problem.js";
+import { HttpError, httpError } from "../lib/problem.js";
 
 export async function liveOAuthGrant(db: Executor, personId: string, clientId: string) {
   const client = await findAllowedClient(db, clientId);
@@ -95,22 +103,28 @@ export function oauthGrantsPlugin(db: Executor, resource: string) {
             if (typeof clientId !== "string") return;
             const client = await findAllowedClient(db, clientId);
             if (!client) return;
-            // Expiry requires consent even when the provider remembers an earlier answer.
-            const rows = await db
+            const session = await getSessionFromCtx(ctx);
+            if (!session) return;
+            const [grant] = await db
               .select()
               .from(oauthGrants)
-              .where(eq(oauthGrants.allowedClientId, client.id));
-            for (const row of rows)
-              if (row.revokedAt || row.expiresAt <= new Date()) {
-                await db
-                  .delete(oauthConsents)
-                  .where(
-                    and(
-                      eq(oauthConsents.clientId, clientId),
-                      eq(oauthConsents.userId, row.personId),
-                    ),
-                  );
-              }
+              .where(
+                and(
+                  eq(oauthGrants.allowedClientId, client.id),
+                  eq(oauthGrants.personId, session.user.id),
+                ),
+              );
+            // A remembered consent cannot replace a missing or ended grant.
+            if (!grant || grant.revokedAt || grant.expiresAt <= new Date()) {
+              await db
+                .delete(oauthConsents)
+                .where(
+                  and(
+                    eq(oauthConsents.clientId, clientId),
+                    eq(oauthConsents.userId, session.user.id),
+                  ),
+                );
+            }
           }),
         },
       ],
@@ -120,28 +134,31 @@ export function oauthGrantsPlugin(db: Executor, resource: string) {
           handler: createAuthMiddleware(async (ctx) => {
             const result = ctx.context.returned as { access_token?: string } | undefined;
             if (!result?.access_token) return;
-            try {
-              const claims = decodeJwt(result.access_token);
-              if (typeof claims.sub !== "string" || typeof claims.client_id !== "string")
-                throw new Error("Missing person or Client.");
-              const { grant } = await liveOAuthGrant(db, claims.sub, claims.client_id);
-              // Rotation retains the consent's absolute end date.
-              await db
-                .update(oauthRefreshTokens)
-                .set({ expiresAt: grant.expiresAt })
-                .where(
-                  and(
-                    eq(oauthRefreshTokens.userId, claims.sub),
-                    eq(oauthRefreshTokens.clientId, claims.client_id),
-                    gt(oauthRefreshTokens.expiresAt, grant.expiresAt),
-                  ),
-                );
-            } catch {
-              throw new APIError("BAD_REQUEST", {
+            const invalidGrant = () =>
+              new APIError("BAD_REQUEST", {
                 error: "invalid_grant",
                 error_description: "A new consent is required.",
               });
-            }
+            const claims = decodeJwt(result.access_token);
+            if (typeof claims.sub !== "string" || typeof claims.client_id !== "string")
+              throw invalidGrant();
+            const { grant } = await liveOAuthGrant(db, claims.sub, claims.client_id).catch(
+              (error: unknown) => {
+                if (error instanceof HttpError && error.statusCode === 401) throw invalidGrant();
+                throw error;
+              },
+            );
+            // Rotation retains the consent's absolute end date.
+            await db
+              .update(oauthRefreshTokens)
+              .set({ expiresAt: grant.expiresAt })
+              .where(
+                and(
+                  eq(oauthRefreshTokens.userId, claims.sub),
+                  eq(oauthRefreshTokens.clientId, claims.client_id),
+                  gt(oauthRefreshTokens.expiresAt, grant.expiresAt),
+                ),
+              );
           }),
         },
       ],

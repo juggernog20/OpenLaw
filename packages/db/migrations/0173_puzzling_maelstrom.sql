@@ -1,3 +1,5 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
+
 CREATE TABLE "oauth_grants" (
 	"id" text PRIMARY KEY NOT NULL,
 	"person_id" text NOT NULL,

@@ -547,3 +547,52 @@ it("uploads under a grant, attributes activity and calls, and shares the grant r
   const limited = await call(issued.access_token);
   expect(limited.json().result.content[0].text).toContain("rate_limited:");
 });
+
+it("recovers remembered consent without a grant and leaves other people's consent alone", async () => {
+  await issue(["contracts"], "read", business);
+  await h.db
+    .update(oauthGrants)
+    .set({ expiresAt: new Date(Date.now() - 1000) })
+    .where(eq(oauthGrants.personId, businessId));
+  const [businessConsent] = await h.db
+    .select()
+    .from(oauthConsents)
+    .where(and(eq(oauthConsents.userId, businessId), eq(oauthConsents.clientId, clientId)));
+  const signed = await query();
+  const anonymous = await h.app.inject({ url: `/api/auth/oauth2/authorize?${signed}` });
+  expect(anonymous.statusCode, anonymous.body).toBe(302);
+  expect(
+    await h.db.select().from(oauthConsents).where(eq(oauthConsents.id, businessConsent!.id)),
+  ).toHaveLength(1);
+  await issue(["contracts"]);
+  await h.db.delete(oauthGrants).where(eq(oauthGrants.personId, personId));
+  const resumed = new URLSearchParams(await query(cookies, false));
+  expect(resumed.has("sig")).toBe(true);
+  expect(
+    await h.db.select().from(oauthConsents).where(eq(oauthConsents.id, businessConsent!.id)),
+  ).toHaveLength(1);
+});
+
+it("reports a refresh storage failure as a server error rather than invalid consent", async () => {
+  const issued = await issue();
+  await h.db
+    .update(oauthGrants)
+    .set({ expiresAt: new Date(Date.now() + 60000) })
+    .where(eq(oauthGrants.personId, personId));
+  await h.db.$client.query(`
+    CREATE FUNCTION refuse_test_expiry_update() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'Test storage failure'; END $$;
+    CREATE TRIGGER refuse_test_expiry_update BEFORE UPDATE ON oauth_refresh_tokens
+    FOR EACH ROW WHEN (NEW.expires_at IS DISTINCT FROM OLD.expires_at)
+    EXECUTE FUNCTION refuse_test_expiry_update();
+  `);
+  try {
+    const res = await token({ grant_type: "refresh_token", refresh_token: issued.refresh_token });
+    expect(res.statusCode, res.body).toBe(500);
+    expect(res.body).not.toContain("invalid_grant");
+  } finally {
+    await h.db.$client.query(
+      "DROP TRIGGER refuse_test_expiry_update ON oauth_refresh_tokens; DROP FUNCTION refuse_test_expiry_update();",
+    );
+  }
+});

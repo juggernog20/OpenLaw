@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-029 and SET-014: signed-in people answer consent and revoke their own grants; Administrators list and revoke every grant. */
+
 import {
   allowedClients,
   oauthGrants,
@@ -79,6 +82,7 @@ const Row = z.object({
   toolsets: z.array(z.enum(MCP_TOOLSETS)),
   scope: z.enum(["read", "write"]),
   grantedAt: z.string(),
+  expiresAt: z.string(),
   lastUsedAt: z.string().nullable(),
 });
 async function validQuery(
@@ -311,6 +315,7 @@ export function oauthGrantRoutes(lifetimeDays: number): FastifyPluginAsyncZod {
           owner,
           clientName,
           grantedAt: grant.grantedAt.toISOString(),
+          expiresAt: grant.expiresAt.toISOString(),
           lastUsedAt: grant.lastUsedAt?.toISOString() ?? null,
         }));
       },

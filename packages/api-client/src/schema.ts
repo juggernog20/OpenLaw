@@ -808,6 +808,7 @@ export interface paths {
               /** @enum {string} */
               scope: "read" | "write";
               grantedAt: string;
+              expiresAt: string;
               lastUsedAt: string | null;
             }[];
           };

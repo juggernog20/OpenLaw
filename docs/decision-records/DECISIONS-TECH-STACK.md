@@ -1849,7 +1849,7 @@ until M41/4 can resolve its grant. API keys retain their M40 verifier and guards
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 upload URL shape recorded by the 2026-09-24 addendum              |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1134, #1135                                      |
 
 ### Addendum (2026-09-25, #1134): Allowed Clients and registration
 
@@ -1913,3 +1913,12 @@ A missing token-request `resource` defaults to the instance's `/mcp` resource.
 This keeps the parameter optional while issuing an audience-bound JWT. Refresh
 tokens retain the grant's absolute expiry through rotation. An expired grant
 requires new consent even when better-auth remembers the previous consent.
+
+Each authenticated MCP request reads the Allowed Client, grant, person and policy
+and writes `last_used_at`. These database calls make revocation and switch changes
+immediate; token-lifetime caching would break that guarantee. Defaulting an omitted
+resource supports Clients that omit RFC 8707's parameter and assigns them to the
+instance's sole MCP resource. It does not permit an arbitrary token audience.
+Clearing remembered consent when the person's grant is missing, revoked or expired
+forces an interactive consent instead of silently renewing access. This cleanup is
+limited to the signed-in person and their Client.

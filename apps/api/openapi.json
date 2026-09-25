@@ -4110,6 +4110,9 @@
                       "grantedAt": {
                         "type": "string"
                       },
+                      "expiresAt": {
+                        "type": "string"
+                      },
                       "lastUsedAt": {
                         "type": ["string", "null"]
                       }
@@ -4122,6 +4125,7 @@
                       "toolsets",
                       "scope",
                       "grantedAt",
+                      "expiresAt",
                       "lastUsedAt"
                     ],
                     "additionalProperties": false

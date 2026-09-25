@@ -247,6 +247,7 @@ it("lists grants beside keys, counts each kind, and revokes a grant", async () =
       toolsets: ["contracts", "documents"],
       scope: "read",
       grantedAt: "2026-09-01T00:00:00.000Z",
+      expiresAt: "2026-12-01T00:00:00.000Z",
       lastUsedAt: "2026-09-02T00:00:00.000Z",
     },
   ];
@@ -273,6 +274,7 @@ it("lists grants beside keys, counts each kind, and revokes a grant", async () =
   expect(within(row).getByText("Legal Member")).toBeInTheDocument();
   expect(within(row).getByText("Contracts, Documents")).toBeInTheDocument();
   expect(within(row).getByText("Read")).toBeInTheDocument();
+  expect(within(row).getByText(/Dec 1, 2026/)).toBeInTheDocument();
   expect(
     within(row.closest("table")!).getByRole("columnheader", { name: "Granted" }),
   ).toBeInTheDocument();

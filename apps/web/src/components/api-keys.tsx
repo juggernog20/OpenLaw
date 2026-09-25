@@ -33,7 +33,7 @@ function asCredential(row: OAuthGrantRow): KeyRow {
     decidedAt: row.grantedAt,
     approvedBy: null,
     createdAt: row.grantedAt,
-    expiresAt: null,
+    expiresAt: row.expiresAt,
     lastUsedAt: row.lastUsedAt,
     keyAvailable: false,
   };
