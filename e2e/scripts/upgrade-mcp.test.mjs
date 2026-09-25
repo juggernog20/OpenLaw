@@ -57,15 +57,42 @@ for (const field of ["api_keys", "api_key_requests", "oauth_grants", "allowed_cl
   });
 }
 test("other settings, ceiling order, extra removals and a skipped migration fail", () => {
-  for (const patch of [
-    { name: "Changed" },
-    { updated_at: "2026-09-26" },
-    { mcp_toolset_ceiling: ["matters", "contracts"] },
-    { mcp_toolset_ceiling: ["contracts"] },
-    { mcp_toolset_ceiling: before.org_settings[0].mcp_toolset_ceiling },
+  for (const [patch, column] of [
+    [{ name: "Changed" }, "name"],
+    [{ updated_at: "2026-09-26" }, "updated_at"],
+    [{ mcp_toolset_ceiling: ["matters", "contracts"] }, "mcp_toolset_ceiling"],
+    [{ mcp_toolset_ceiling: ["contracts"] }, "mcp_toolset_ceiling"],
+    [{ mcp_toolset_ceiling: before.org_settings[0].mcp_toolset_ceiling }, "mcp_toolset_ceiling"],
   ]) {
     const after = upgraded();
     Object.assign(after.org_settings[0], patch);
-    assert.throws(() => assertMcpRows(before, after, true), /org_settings/);
+    assert.throws(
+      () => assertMcpRows(before, after, true),
+      new RegExp(`org_settings.*row org column ${column}$`),
+    );
   }
+});
+
+test("the failure names the row and column, never the stored value", () => {
+  const changed = '[{"id":"key","key":"other-hash","metadata":"{\\"toolsets\\":[\\"team\\"]}"}]';
+  assert.throws(
+    () => assertMcpRows(before, { ...upgraded(), api_keys: changed }, true),
+    (error) =>
+      /api_keys.*row key column key$/.test(error.message) && !error.message.includes("hash"),
+  );
+  const added = '[{"id":"grant","toolsets":["team","administration"],"note":null}]';
+  assert.throws(
+    () => assertMcpRows(before, { ...upgraded(), oauth_grants: added }, true),
+    /oauth_grants.*row grant column note \(added\)$/,
+  );
+  assert.throws(
+    () => assertMcpRows(before, { ...upgraded(), allowed_clients: "[]" }, true),
+    /allowed_clients.*1 rows before the upgrade, 0 after$/,
+  );
+  const dropped = upgraded();
+  delete dropped.api_key_requests;
+  assert.throws(
+    () => assertMcpRows(before, dropped, true),
+    /api_key_requests.*the table is missing after the upgrade$/,
+  );
 });
