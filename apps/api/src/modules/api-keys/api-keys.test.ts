@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { provisionUser } from "../../auth/instance.js";
-import { users, eq, orgSettings, apikeys } from "@openlaw/db";
+import { users, eq, orgSettings } from "@openlaw/db";
 import { sweepApiKeyExpiry } from "../../pipeline/api-key-expiry.js";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
@@ -557,7 +557,6 @@ it("refuses audience-ineligible and empty Toolsets and rechecks the audience at 
     });
     expect(pending.statusCode, pending.body).toBe(201);
     await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, owner!.id));
-    const keys = await h.db.select().from(apikeys);
     const approved = await h.app.inject({
       method: "POST",
       url: `${url}/${pending.json().id}/approve`,
@@ -566,7 +565,14 @@ it("refuses audience-ineligible and empty Toolsets and rechecks the audience at 
     });
     expect(approved.statusCode, approved.body).toBe(403);
     expect(approved.json().type).toBe("urn:openlaw:problem:toolset-outside-ceiling");
-    expect(await h.db.select().from(apikeys)).toEqual(keys);
+    const current = await h.app.inject({
+      method: "GET",
+      url: `${url}/${pending.json().id}`,
+      cookies: member,
+    });
+    expect(current.statusCode, current.body).toBe(200);
+    expect(current.json()).toMatchObject({ status: "pending", keyAvailable: false });
+    expect(current.json()).not.toHaveProperty("key");
   } finally {
     await h.db.update(users).set({ role: owner!.role }).where(eq(users.id, owner!.id));
     await h.db.update(orgSettings).set({

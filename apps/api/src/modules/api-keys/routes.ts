@@ -65,6 +65,7 @@ const Row = z.object({
 const Policy = z.object({
   enabled: z.boolean(),
   groupEnabled: z.boolean(),
+  toolsetCeiling: z.array(z.enum(MCP_TOOLSETS)),
   toolsets: z.array(z.enum(MCP_TOOLSETS)),
   readOnly: z.boolean(),
   apiKeyLifetimeDays: z.number(),
@@ -78,6 +79,7 @@ async function readPolicy(tx: Transaction, role: UserRole) {
   return {
     enabled: p.mcpEnabled,
     groupEnabled: role === "business_user" ? p.mcpBusinessApiKeysEnabled : p.mcpLegalApiKeysEnabled,
+    toolsetCeiling: p.mcpToolsetCeiling,
     toolsets: selectableToolsets(p.mcpToolsetCeiling, role),
     readOnly: p.mcpReadOnly,
     apiKeyLifetimeDays: p.mcpApiKeyLifetimeDays,

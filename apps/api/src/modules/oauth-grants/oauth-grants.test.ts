@@ -771,6 +771,12 @@ it("offers the same audience-filtered Toolsets for consent and API key requests"
       expect(keys.statusCode, keys.body).toBe(200);
       expect(consent.json().toolsets).toEqual(expected);
       expect(keys.json().policy.toolsets).toEqual(expected);
+      expect(keys.json().policy.toolsetCeiling).toEqual([
+        "contracts",
+        "tasks",
+        "team",
+        "administration",
+      ]);
       for (const toolset of ["contracts", "tasks", "team", "administration"] as const) {
         const response = await h.app.inject({
           method: "POST",

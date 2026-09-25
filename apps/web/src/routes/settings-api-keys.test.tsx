@@ -77,6 +77,23 @@ for (const [path, role] of [
       }),
     );
   });
+  it(`explains an empty Toolset choice on ${path}`, async () => {
+    stubApi({
+      signedIn: { id: "person", email: "person@example.com", displayName: "Person", role },
+      extra: (call) =>
+        call.url.pathname === "/api/v1/api-key-requests"
+          ? json(200, { policy: { ...policy, toolsets: [] }, requests: [] })
+          : undefined,
+    });
+    renderAt(path);
+    expect(
+      await screen.findByText(
+        "No Toolsets are available for your account. Ask an Administrator to enable a Toolset you can use.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Request a key" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Request an API key" })).not.toBeInTheDocument();
+  });
   it(`hides the request action when the group is off on ${path}`, async () => {
     stubApi({
       signedIn: { id: "person", email: "person@example.com", displayName: "Person", role },

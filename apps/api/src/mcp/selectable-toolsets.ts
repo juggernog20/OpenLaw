@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DD-029 Toolset choices shared by OAuth consent and API key requests. */
 import { MCP_TOOLSETS, type McpToolset } from "@openlaw/shared";
 import type { UserRole } from "@openlaw/db";
 import { toolRefusal, toolRegister } from "./register.js";

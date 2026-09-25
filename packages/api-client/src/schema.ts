@@ -10086,6 +10086,21 @@ export interface operations {
             policy: {
               enabled: boolean;
               groupEnabled: boolean;
+              toolsetCeiling: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
               toolsets: (
                 | "workspace"
                 | "contracts"

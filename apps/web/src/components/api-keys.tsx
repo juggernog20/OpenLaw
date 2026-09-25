@@ -321,8 +321,9 @@ export function ApiKeys({
       </div>
     );
   }
+  const requestsEnabled = !organization && state.policy.groupEnabled && state.policy.enabled;
   const requestAction =
-    !organization && state.policy.groupEnabled && state.policy.enabled ? (
+    requestsEnabled && state.policy.toolsets.length > 0 ? (
       <Button
         onClick={() => {
           setName("");
@@ -390,6 +391,14 @@ export function ApiKeys({
           className="max-w-none"
           flush
         >
+          {requestsEnabled && state.policy.toolsets.length === 0 && (
+            <p className="p-4 text-sm text-muted">
+              <FormattedMessage
+                id="apiKeys.noToolsets"
+                defaultMessage="No Toolsets are available for your account. Ask an Administrator to enable a Toolset you can use."
+              />
+            </p>
+          )}
           {table(state.requests)}
           <p className="border-t border-border-default p-4 text-sm text-muted">
             <FormattedMessage

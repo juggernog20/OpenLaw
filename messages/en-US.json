@@ -1025,6 +1025,9 @@
   "apiKeys.newTab": {
     "defaultMessage": "(opens in a new tab)"
   },
+  "apiKeys.noToolsets": {
+    "defaultMessage": "No Toolsets are available for your account. Ask an Administrator to enable a Toolset you can use."
+  },
   "apiKeys.note": {
     "defaultMessage": "Note (Optional)"
   },

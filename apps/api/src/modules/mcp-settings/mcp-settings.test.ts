@@ -243,14 +243,8 @@ it("publishes one MCP event for access changes, none for other fields, no-ops or
       await patch({ [field]: !current[field] }, 1);
       await patch({ [field]: !current[field] }, 0);
     }
-    await patch(
-      {
-        toolsetCeiling: ["team", "administration"],
-        enabled: current.enabled,
-        readOnly: current.readOnly,
-      },
-      1,
-    );
+    await patch({ enabled: current.enabled, readOnly: current.readOnly }, 1);
+    await patch({ toolsetCeiling: ["team", "administration"] }, 1);
     await patch({ toolsetCeiling: ["team", "administration"] }, 0);
     await patch({ apiKeyLifetimeDays: 42 }, 0);
     await patch({ dynamicClientRegistrationEnabled: !current.dynamicClientRegistrationEnabled }, 0);

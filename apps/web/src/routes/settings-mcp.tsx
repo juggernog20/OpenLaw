@@ -490,6 +490,7 @@ export function SettingsMcpPage() {
           policy: {
             enabled: policy.enabled,
             groupEnabled: policy.legalApiKeysEnabled,
+            toolsetCeiling: policy.toolsetCeiling,
             toolsets: [],
             readOnly: policy.readOnly,
             apiKeyLifetimeDays: policy.apiKeyLifetimeDays,
