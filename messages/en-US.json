@@ -458,6 +458,9 @@
   "activity.envelope.declined": {
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
   },
+  "activity.envelope.discarded": {
+    "defaultMessage": "{hasActor, select, yes {{actor} discarded this contract's envelope} other {This contract's envelope was discarded}}{hasReason, select, yes { — {reason}} other {}}"
+  },
   "activity.envelope.sent": {
     "defaultMessage": "{hasActor, select, yes {{actor} sent this contract for signature} other {This contract was sent for signature}}"
   },
@@ -12447,7 +12450,7 @@
     "defaultMessage": "Not sent"
   },
   "signing.openDraft": {
-    "defaultMessage": "Open in DocuSign"
+    "defaultMessage": "Resume in DocuSign"
   },
   "signing.peopleMatches": {
     "defaultMessage": "People in OpenLaw"
@@ -12481,6 +12484,9 @@
   },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
+  },
+  "signing.resumeHelp": {
+    "defaultMessage": "Save and Close keeps your fields in DocuSign. If a link expires or you close the browser, return here and Resume. A fresh link does not close an earlier editing session."
   },
   "signing.returnHelp": {
     "defaultMessage": "Open the Contract from Signatures to see its confirmed status."
@@ -12529,6 +12535,9 @@
   },
   "signing.status.declined": {
     "defaultMessage": "Declined"
+  },
+  "signing.status.discarded": {
+    "defaultMessage": "Discarded"
   },
   "signing.status.draft": {
     "defaultMessage": "Draft — not sent"

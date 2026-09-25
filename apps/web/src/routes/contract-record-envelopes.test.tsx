@@ -994,6 +994,40 @@ describe("preparing an unsent Envelope", () => {
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 
+  it("retains discarded preparation history without Resume or Void", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "discarded", preparationState: "created", sentAt: null })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Discarded")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+  });
+
+  it("offers Resume while confirmation is pending and never offers Send or Void for the draft", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({
+          status: "draft",
+          preparationState: "created",
+          sentAt: null,
+          confirmationPending: true,
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Waiting for confirmation")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resume in DocuSign" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+  });
+
   it("shows the localized launch fallback when reopening a draft fails without problem detail", async () => {
     const user = userEvent.setup();
     const api = recordApi({
@@ -1008,11 +1042,11 @@ describe("preparing an unsent Envelope", () => {
           : api.handler(call),
     });
     renderAt("/contracts/42/signatures");
-    await user.click(await screen.findByRole("button", { name: "Open in DocuSign" }));
+    await user.click(await screen.findByRole("button", { name: "Resume in DocuSign" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "DocuSign could not open this draft. Try again from Signatures.",
     );
-    expect(screen.getByRole("button", { name: "Open in DocuSign" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Resume in DocuSign" })).toBeEnabled();
   });
 
   it("selects the exact Version, Signers and Subject and displays the unsent draft", async () => {

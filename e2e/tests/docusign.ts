@@ -72,6 +72,9 @@ interface StubEnvelope {
   /** The bytes that were sent, so the demo can prove the round it
    * picked is the round that went out. */
   document: Buffer;
+  fields?: string;
+  discarded?: boolean;
+  locked?: boolean;
   voidedReason?: string;
   declinedReason?: string;
   completedDateTime?: string;
@@ -135,6 +138,16 @@ export class SigningStub {
     [];
   private readonly envelopes = new Map<string, StubEnvelope>();
   private minted = 0;
+  private readonly expiredLinks = new Set<number>();
+  expireLatestLink() {
+    this.expiredLinks.add(this.launches.length - 1);
+  }
+  lockEnvelope(id: string, locked: boolean) {
+    this.require(id).locked = locked;
+  }
+  fieldsOf(id: string) {
+    return this.require(id).fields ?? "";
+  }
   /** What this instance's envelope ids start with. Stamped per run,
    * because a provider envelope id is unique for good: the record holds
    * one row per id whatever became of the contract it was sent from,
@@ -291,17 +304,33 @@ export class SigningStub {
         response.writeHead(404).end();
         return;
       }
-      const action = new URL(request.url ?? "/", "http://stub.invalid").searchParams.get("action");
-      if (action === "send" || action === "save") {
-        if (action === "send") this.require(launch.envelopeId).status = "sent";
+      const envelope = this.require(launch.envelopeId);
+      if (this.expiredLinks.has(index)) {
+        response.writeHead(200, { "content-type": "text/html" });
+        response.end(
+          `<h1>Launch link expired</h1><a href="${launch.returnUrl}&event=sessionEnd">Back to Signatures and Resume</a>`,
+        );
+        return;
+      }
+      const query = new URL(request.url ?? "/", "http://stub.invalid").searchParams;
+      const action = query.get("action");
+      if (action && ["send", "save", "cancel", "discard", "sessionEnd"].includes(action)) {
+        if (action === "save") envelope.fields = query.get("fields") ?? envelope.fields ?? "";
+        if (action === "send") envelope.status = "sent";
+        if (action === "discard" && envelope.status === "created") envelope.discarded = true;
         const destination = new URL(launch.returnUrl);
-        destination.searchParams.set("event", action === "send" ? "Send" : "Save");
+        destination.searchParams.set("event", action === "discard" ? "cancel" : action);
         response.writeHead(302, { location: destination.href, "cache-control": "no-store" }).end();
       } else {
         response.writeHead(200, { "content-type": "text/html", "cache-control": "no-store" });
-        response.end(
-          '<!doctype html><title>DocuSign stand-in</title><h1>Place fields</h1><a href="?action=send">Send</a><a href="?action=save">Save and close</a>',
-        );
+        const value = (envelope.fields ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("<", "&lt;");
+        response.end(`<!doctype html><title>DocuSign stand-in</title><h1>Place fields</h1>
+          <form><label>Saved text field<input name="fields" value="${value}"></label><button name="action" value="save">Save fields and close</button></form>
+          <a href="?action=send">Send</a><a href="?action=save">Save and close</a>
+          <a href="?action=cancel">Cancel</a><a href="?action=discard">Discard</a>`);
       }
       return;
     }
@@ -377,7 +406,11 @@ export class SigningStub {
         return;
       }
       if (tail.join("/") === "views/sender" && request.method === "POST") {
-        if (envelope.status !== "created") {
+        if (envelope.locked) {
+          sendJson(response, 400, { errorCode: "EDIT_LOCK_ENVELOPE_LOCKED" });
+          return;
+        }
+        if (envelope.status !== "created" || envelope.discarded) {
           sendJson(response, 400, { errorCode: "ENVELOPE_INVALID_STATUS" });
           return;
         }
@@ -410,6 +443,7 @@ export class SigningStub {
         sendJson(response, 200, {
           envelopeId: id,
           status: envelope.status,
+          folders: envelope.discarded ? [{ type: "recyclebin" }] : [{ type: "draft" }],
           ...(envelope.voidedReason === undefined ? {} : { voidedReason: envelope.voidedReason }),
           ...(envelope.declinedReason === undefined
             ? {}
@@ -423,6 +457,9 @@ export class SigningStub {
       if (tail.length === 0 && request.method === "PUT") {
         const update = JSON.parse((await readBody(request)).toString("utf8")) as {
           status?: string;
+          fields?: string;
+          discarded?: boolean;
+          locked?: boolean;
           voidedReason?: string;
         };
         if (update.status !== "voided" || envelope.status !== "sent") {

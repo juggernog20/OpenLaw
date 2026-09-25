@@ -56,6 +56,9 @@ import { provisionUser } from "../../auth/instance.js";
 import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
 import {
   SigningRefusedError,
+  EnvelopeNotFoundError,
+  EnvelopeAccessError,
+  EnvelopeEditConflictError,
   SigningTimeoutError,
   SigningUnavailableError,
 } from "../../lib/signing/provider.js";
@@ -1501,6 +1504,167 @@ describe("authenticated Sender View launch and return", () => {
   const confirm = (cookies: Record<string, string>) =>
     harness.app.inject({ method: "POST", url: "/api/v1/signing/return", cookies });
 
+  it("resumes saved fields on the same Envelope with a fresh URL and no upload", async () => {
+    const { envelope, contract } = await draft();
+    const first = await launch(envelope.id);
+    const provider = harness.signing!;
+    provider.saveFields(envelope.providerEnvelopeId!, [{ signer: 1, page: 2, value: "Approved" }]);
+    await confirm({ ...as(MEMBER), ...(await returned("save")) });
+    const second = await launch(envelope.id);
+    expect(second.statusCode, second.body).toBe(200);
+    expect(second.json().url).not.toBe(first.json().url);
+    expect(provider.fieldsOf(envelope.providerEnvelopeId!)).toEqual([
+      { signer: 1, page: 2, value: "Approved" },
+    ]);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toHaveLength(1);
+    expect(provider.launches.slice(-2).map((item) => item.providerEnvelopeId)).toEqual([
+      envelope.providerEnvelopeId,
+      envelope.providerEnvelopeId,
+    ]);
+  });
+
+  it("coordinates concurrent launch requests but does not revoke an earlier browser session", async () => {
+    const { envelope } = await draft();
+    let release!: () => void;
+    let entered!: () => void;
+    const started = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const original = harness.signing!.launchEnvelope.bind(harness.signing!);
+    const opening = vi
+      .spyOn(harness.signing!, "launchEnvelope")
+      .mockImplementationOnce(async (...args) => {
+        entered();
+        await gate;
+        return original(...args);
+      });
+    const first = launch(envelope.id);
+    await started;
+    const second = await launch(envelope.id);
+    release();
+    expect((await first).statusCode).toBe(200);
+    expect(second.statusCode, second.body).toBe(409);
+    opening.mockRestore();
+    expect((await launch(envelope.id)).statusCode).toBe(200);
+  });
+
+  it("retains cancel and missing outcomes, and records only confirmed native discard", async () => {
+    const { envelope, contract } = await draft();
+    await launch(envelope.id);
+    await confirm({ ...as(MEMBER), ...(await returned("cancel")) });
+    expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("draft");
+    harness.signing!.discardDraft(envelope.providerEnvelopeId!);
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ nextReconcileAt: null })
+      .where(eq(contractEnvelopes.id, envelope.id));
+    await launch(envelope.id);
+    const history = (await signingState(as(MEMBER), contract.number)).envelopes;
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({
+      status: "discarded",
+      sentAt: null,
+      confirmationPending: false,
+    });
+    const activity = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.entityId, contract.id));
+    expect(activity.filter((row) => row.action === "envelope.discarded")).toHaveLength(1);
+    expect(activity.filter((row) => row.action === "envelope.sent")).toHaveLength(0);
+  });
+
+  it("keeps a send that wins the native discard race on its existing history", async () => {
+    const { envelope, contract } = await draft();
+    await launch(envelope.id);
+    harness.signing!.sendDraft(envelope.providerEnvelopeId!);
+    expect(() => harness.signing!.discardDraft(envelope.providerEnvelopeId!)).toThrow();
+    await confirm({ ...as(MEMBER), ...(await returned("cancel")) });
+    expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("sent");
+    expect((await launch(envelope.id)).statusCode).toBe(409);
+  });
+
+  it("enforces role, eligibility and Confidential reach on Resume", async () => {
+    const { envelope, contract } = await draft();
+    const openAs = (who: typeof MEMBER | typeof OUTSIDER | typeof ADMIN | typeof CONTRIBUTOR) =>
+      harness.app.inject({
+        method: "POST",
+        url: `/api/v1/envelopes/${envelope.id}/launch`,
+        cookies: as(who),
+      });
+    expect((await openAs(CONTRIBUTOR)).statusCode).toBe(403);
+    expect((await openAs(OUTSIDER)).statusCode).toBe(403);
+    expect((await openAs(ADMIN)).statusCode).toBe(200);
+    await harness.db
+      .update(contracts)
+      .set({ isConfidential: true })
+      .where(eq(contracts.id, contract.id));
+    expect((await openAs(ADMIN)).statusCode).toBe(404);
+    expect((await openAs(MEMBER)).statusCode).toBe(200);
+  });
+
+  it.each([
+    [new EnvelopeNotFoundError("missing"), 409, "could not find"],
+    [
+      new EnvelopeAccessError("The Signing user cannot access this Envelope."),
+      403,
+      "cannot access",
+    ],
+    [new EnvelopeEditConflictError("locked"), 409, "another editing session"],
+    [new EnvelopeEditConflictError("not_draft"), 409, "no longer editable"],
+    [new SigningUnavailableError("offline"), 502, "temporarily unavailable"],
+  ])("retains the same reservation after %s", async (error, status, detail) => {
+    const { envelope, contract } = await draft();
+    const opening = vi.spyOn(harness.signing!, "launchEnvelope").mockRejectedValueOnce(error);
+    try {
+      const response = await launch(envelope.id);
+      expect(response.statusCode).toBe(status);
+      expect(response.json().detail).toContain(detail);
+      const state = await signingState(as(MEMBER), contract.number);
+      expect(state.envelopes).toHaveLength(1);
+      expect(state.envelopes[0]).toMatchObject({ status: "draft", sentAt: null });
+    } finally {
+      opening.mockRestore();
+    }
+    expect((await launch(envelope.id)).statusCode).toBe(200);
+  });
+
+  it("recovers an abandoned launch claim and lets the current Legal Owner resume", async () => {
+    const { envelope, contract } = await draft();
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ launchClaimExpiresAt: new Date(0) })
+      .where(eq(contractEnvelopes.id, envelope.id));
+    await harness.db
+      .update(contracts)
+      .set({ managerId: idOf(OUTSIDER) })
+      .where(eq(contracts.id, contract.id));
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${envelope.id}/launch`,
+      cookies: as(OUTSIDER),
+    });
+    expect(response.statusCode, response.body).toBe(200);
+  });
+
+  it("does not regress a sent Envelope when a delayed discard observation arrives", async () => {
+    const { envelope, contract } = await draft();
+    await applyEnvelopeStatus(harness.app.notifier, {
+      provider: "docusign",
+      providerEnvelopeId: envelope.providerEnvelopeId!,
+      status: "sent",
+    });
+    await applyEnvelopeStatus(harness.app.notifier, {
+      provider: "docusign",
+      providerEnvelopeId: envelope.providerEnvelopeId!,
+      status: "discarded",
+    });
+    expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("sent");
+  });
+
   it("launches only after durable creation, preserves the read allowance, and confirms one send without changing Stage", async () => {
     const { envelope, contract } = await draft();
     const [initialContract] = await harness.db
@@ -1655,7 +1819,8 @@ describe("authenticated Sender View launch and return", () => {
       .set({ expiresAt: new Date(0) })
       .where(eq(envelopeLaunches.envelopeId, envelope.id));
     const expired = await confirm({ ...as(MEMBER), ...(await returned("send")) });
-    expect(expired.statusCode).toBe(404);
+    expect(expired.statusCode).toBe(200);
+    expect(expired.json().destination).toBe(`/contracts/${contract.number}/signatures`);
     expect(expired.body).not.toContain(contract.title);
     expect(await entriesOn(contract.id)).toHaveLength(0);
   });

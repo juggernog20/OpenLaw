@@ -71,6 +71,30 @@ export class SigningRefusedError extends SigningError {
   }
 }
 
+export class EnvelopeEditConflictError extends SigningRefusedError {
+  constructor(readonly conflict: "locked" | "not_draft") {
+    super(
+      conflict === "locked"
+        ? "The Envelope is being edited in another session."
+        : "The Envelope is no longer editable as a draft.",
+    );
+    this.name = "EnvelopeEditConflictError";
+  }
+}
+
+/**
+ * The provider holds the envelope but the connector's user may not act
+ * on it — a 403 on an envelope path, or a permission error code. Not a
+ * credentials fault: the token works, and the fix is a permission on
+ * the account, not a repaired connector. Terminal for this envelope.
+ */
+export class EnvelopeAccessError extends SigningError {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "EnvelopeAccessError";
+  }
+}
+
 /** No envelope with that provider id. Terminal — a webhook for an
  * envelope we do not know is ignored, not retried. */
 export class EnvelopeNotFoundError extends SigningError {
@@ -128,6 +152,7 @@ export function isTerminalSigningError(error: unknown): boolean {
     error instanceof SigningConfigError ||
     error instanceof SigningRefusedError ||
     error instanceof EnvelopeNotFoundError ||
+    error instanceof EnvelopeAccessError ||
     error instanceof WebhookSignatureError
   );
 }

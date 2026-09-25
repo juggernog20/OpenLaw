@@ -2070,6 +2070,17 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (_intl, payload) => reasonValues(payload),
   },
+  "envelope.discarded": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.discarded",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} discarded this contract's envelope} " +
+        "other {This contract's envelope was discarded}}" +
+        "{hasReason, select, yes { — {reason}} other {}}",
+    }),
+    values: (_intl, payload) => reasonValues(payload),
+  },
   /**
    * A lawful erasure for somebody who only ever appears as a signer
    * (#280). The sentence names nobody, because the payload names
