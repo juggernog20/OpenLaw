@@ -279,6 +279,46 @@ it("ends the named key stream on revoke and leaves another key open", async () =
   expect(revoked.statusCode, revoked.body).toBe(200);
   await expect.poll(() => stream.ended).toBe(true);
   expect(other.ended).toBe(false);
+  // Events arrive in order, so the policy change proves the revocation reached `other` first.
+  await h.db.transaction((tx) => publishLiveEvent(tx, { kind: "mcp", change: "policy" }));
+  await expect
+    .poll(() => other.messages.filter((m) => m.method?.endsWith("list_changed")).length)
+    .toBe(3);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  expect(other.messages.filter((m) => m.method?.endsWith("list_changed"))).toHaveLength(3);
+});
+it("stops record updates for a Toolset that leaves the ceiling while the stream stays open", async () => {
+  const policy = (await h.db.select().from(orgSettings))[0]!;
+  const uri = `openlaw://contracts/${contract.number}`;
+  const stream = await listen((await key()).secret, [uri, "openlaw://inbox"]);
+  try {
+    const patch = await h.app.inject({
+      method: "PATCH",
+      url: "/api/v1/mcp-settings",
+      cookies: admin,
+      payload: { toolsetCeiling: policy.mcpToolsetCeiling.filter((t) => t !== "contracts") },
+    });
+    expect(patch.statusCode, patch.body).toBe(200);
+    await expect
+      .poll(() => stream.messages.filter((m) => m.method?.endsWith("list_changed")).length)
+      .toBe(3);
+    await activity(contract, "legal_only");
+    await h.db.transaction((tx) => publishLiveEvent(tx, { kind: "inbox", total: 1 }));
+    await expect.poll(() => updates(stream)).toEqual(["openlaw://inbox"]);
+    expect(stream.ended).toBe(false);
+  } finally {
+    await h.db.update(orgSettings).set({ mcpToolsetCeiling: policy.mcpToolsetCeiling });
+  }
+});
+it("closes the stream on the heartbeat after the person's role changes", async () => {
+  const [person] = await h.db.select().from(users).where(eq(users.email, "listen@example.com"));
+  const stream = await listen((await key(business, ["contracts"])).secret);
+  try {
+    await h.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, person!.id));
+    await expect.poll(() => stream.ended, { timeout: 1000 }).toBe(true);
+  } finally {
+    await h.db.update(users).set({ role: "business_user" }).where(eq(users.id, person!.id));
+  }
 });
 it("re-reads the credential on the heartbeat even without a live notification", async () => {
   const credential = await key();

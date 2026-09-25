@@ -72,19 +72,21 @@ export function createMcpChangeFeed(hub: EventHub) {
       addresses: readonly string[],
       end: () => void,
     ): Promise<ChangeFeedView> {
-      const records: (RecordScope & { uri: string })[] = [];
-      let inbox = false;
+      const records: (RecordScope & { uri: string; tool: ToolDefinition })[] = [];
+      let inbox: ToolDefinition | undefined;
       for (const uri of new Set(addresses)) {
         const resource = resolveResource(tools, uri);
         if (!resource || toolRefusal(resource.tool, context.grant)) continue;
         if (uri === "openlaw://inbox") {
-          inbox =
-            context.user.role === "administrator" || context.user.role === "legal_team_member";
+          if (context.user.role === "administrator" || context.user.role === "legal_team_member")
+            inbox = resource.tool;
           continue;
         }
         const record = await subscribedRecord(request, context, resource);
-        if (record) records.push({ ...record, uri });
+        if (record) records.push({ ...record, uri, tool: resource.tool });
       }
+      // A policy change can narrow the grant while the stream stays open. The latest re-read wins.
+      let grant = context.grant;
       const bus = new InMemoryServerEventBus();
       let closed = false;
       let unsubscribe = () => {};
@@ -103,11 +105,14 @@ export function createMcpChangeFeed(hub: EventHub) {
         if (closed) return Promise.resolve();
         checking ??= authenticateMcp(request)
           .then((current) => {
+            // A role change moves the Inbox and record tiers, so the Client must open a new stream.
             if (
               current.credentialId !== context.credentialId ||
-              current.user.id !== context.user.id
+              current.user.id !== context.user.id ||
+              current.user.role !== context.user.role
             )
               close();
+            else grant = current.grant;
           })
           .catch(() => close())
           .finally(() => {
@@ -122,20 +127,23 @@ export function createMcpChangeFeed(hub: EventHub) {
             close();
             return;
           }
+          // Another credential's revocation changes nothing this stream can see.
+          if (event.change === "revocation") return;
           void revalidate().then(() => {
             if (closed) return;
             bus.publish({ kind: "tools_list_changed" });
             bus.publish({ kind: "prompts_list_changed" });
             bus.publish({ kind: "resources_list_changed" });
           });
-        } else if (event.kind === "inbox" && inbox) {
+        } else if (event.kind === "inbox" && inbox && !toolRefusal(inbox, grant)) {
           bus.publish({ kind: "resource_updated", uri: "openlaw://inbox" });
         } else if (event.kind === "record") {
           for (const record of records)
             if (
               record.entityType === event.entityType &&
               record.entityId === event.entityId &&
-              record.tiers.includes(event.visibility)
+              record.tiers.includes(event.visibility) &&
+              !toolRefusal(record.tool, grant)
             )
               bus.publish({ kind: "resource_updated", uri: record.uri });
         }

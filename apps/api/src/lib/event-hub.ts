@@ -27,7 +27,10 @@ export const DEFAULT_MAX_SUBSCRIPTIONS_PER_USER = 5;
  */
 export const DEFAULT_MAX_SUBSCRIPTIONS = 500;
 
-/** The process cap is reached. The route answers 503 with Retry-After. */
+/**
+ * The process cap is reached. The SPA route answers 503 with Retry-After.
+ * The MCP route answers the SDK's JSON-RPC -32603 "Subscription limit reached".
+ */
 export class EventHubFullError extends Error {
   constructor() {
     super("This process has no room for another live event stream.");
