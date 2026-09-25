@@ -29,7 +29,9 @@ export async function settingsMcpLoader() {
   if (!data) throw new Error("MCP settings could not be read.");
   const { data: keys } = await api.GET("/api/v1/mcp-settings/api-keys");
   if (!keys) throw new Error("API key requests could not be read.");
-  return { ...data, keys };
+  const { data: grants } = await api.GET("/api/v1/mcp-settings/oauth-grants");
+  if (!grants) throw new Error("OAuth grants could not be read.");
+  return { ...data, keys, grants };
 }
 type Change = NonNullable<
   paths["/api/v1/mcp-settings"]["patch"]["requestBody"]
@@ -137,7 +139,7 @@ export function SettingsMcpPage() {
         return;
       }
       setRefusedChecks(null);
-      setPolicy({ ...result.data, keys: loaded.keys });
+      setPolicy({ ...result.data, keys: loaded.keys, grants: loaded.grants });
       setSaved(true);
     } catch {
       setError(intl.formatMessage(errorMessages.saveFailed));
@@ -462,6 +464,7 @@ export function SettingsMcpPage() {
         </RouterLink>
       </Button>
       <ApiKeys
+        initialGrants={loaded.grants}
         organization
         initial={{
           requests: loaded.keys,

@@ -123,6 +123,7 @@ import { onboardingRoutes } from "./modules/onboarding/routes.js";
 import { currencyRoutes } from "./modules/org/currencies.js";
 import { orgRoutes } from "./modules/org/routes.js";
 import { usersRoutes } from "./modules/users/routes.js";
+import { oauthGrantRoutes } from "./modules/oauth-grants/routes.js";
 import { apiKeyRoutes } from "./modules/api-keys/routes.js";
 import type { ToolDefinition } from "./mcp/register.js";
 import { mcpRoutes } from "./mcp/routes.js";
@@ -610,6 +611,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     ),
     { prefix: "/api/v1" },
   );
+  await app.register(oauthGrantRoutes(grantLifetimeDays), { prefix: "/api/v1" });
   await app.register(apiKeyRoutes, { prefix: "/api/v1" });
   await app.register(allowedClientRoutes, { prefix: "/api/v1" });
   await app.register(mcpSettingsRoutes(deps.mcpResolveIpv4), { prefix: "/api/v1" });

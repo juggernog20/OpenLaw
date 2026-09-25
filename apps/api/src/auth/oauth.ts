@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { oauthGrantsPlugin } from "./oauth-grants.js";
 import type { Executor } from "@openlaw/db";
 import {
   allowedClientsPlugin,
@@ -46,6 +47,7 @@ export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90, db?: Execu
   if (!authorizationServerAvailable(baseUrl)) return [];
   const provider = mcp({
     resource: mcpResource(baseUrl),
+    codeExpiresIn: 600,
     refreshTokenExpiresIn: grantLifetimeDays * 86_400,
     loginPage: "/auth/login",
     consentPage: "/auth/consent",
@@ -94,7 +96,7 @@ export function oauthPlugins(baseUrl: string, grantLifetimeDays = 90, db?: Execu
     // The adapter pluralizes model names; the physical key table is jwks.
     jwt({ schema: { jwks: { modelName: "jwk" } } }),
     provider,
-    ...(db ? [allowedClientsPlugin(db)] : []),
+    ...(db ? [allowedClientsPlugin(db), oauthGrantsPlugin(db, mcpResource(baseUrl))] : []),
     cimd({
       fetchClientMetadataResource,
       metadataProfile: "mcp-2026-07-28",

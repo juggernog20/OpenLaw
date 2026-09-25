@@ -1413,7 +1413,20 @@ type AllowedClientPayloads = Record<
   }
 >;
 
-export type ActivityPayloadMap = AllowedClientPayloads &
+type OAuthGrantPayloads = Record<
+  "oauth_grant.granted" | "oauth_grant.revoked",
+  {
+    oauthGrantId: string;
+    clientName: string;
+    personId: string;
+    allowedClientId: string;
+    toolsets?: string[];
+    scope?: "read" | "write";
+  }
+>;
+
+export type ActivityPayloadMap = OAuthGrantPayloads &
+  AllowedClientPayloads &
   ApiKeyPayloads &
   AutoDocPayloads &
   UserPayloads &

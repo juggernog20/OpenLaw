@@ -42,6 +42,8 @@ export const authHandler: FastifyPluginAsync = async (app) => {
       const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
       const path = normalizedAuthPath(url.pathname);
       const endpoint = path.replace(/\/$/, "");
+      if (endpoint === "/api/auth/oauth2/consent")
+        throw httpError(403, "Complete consent through the OpenLaw consent page.");
       if (endpoint === "/api/auth/oauth2/create-client")
         throw httpError(403, "Client registration requires the Allowed Clients list.");
       if (

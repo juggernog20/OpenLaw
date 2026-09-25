@@ -1849,7 +1849,7 @@ until M41/4 can resolve its grant. API keys retain their M40 verifier and guards
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 upload URL shape recorded by the 2026-09-24 addendum              |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1134, #1135                                      |
 
 ### Addendum (2026-09-25, #1134): Allowed Clients and registration
 
@@ -1884,3 +1884,41 @@ stable identity with `private_key_jwt` and a validated RSA JWKS document. The
 server advertises `private_key_jwt` through the provider's built-in discovery.
 These tests verify protocol behavior, not a live vendor sign-in. Live Claude
 Code and Copilot Studio journeys remain part of the milestone runtime handoff.
+
+### Addendum (2026-09-25, #1135): consent and live OAuth grants
+
+The consent page reads `GET /api/v1/oauth-grants/consent?oauth_query=...` and
+answers through `POST /api/v1/oauth-grants/consent`. The query is the page's own
+signed query string. A server-only endpoint lets the provider's query hook verify
+its signature and its 600-second expiry without recording consent. Invalid or
+expired queries return `expired_query` with no choices. The other refusal codes
+are `mcp_disabled`, `group_disabled`, `client_unlisted` and `client_disabled`.
+Facts include the organization, Allowed Client, person, usable requested Toolsets
+within the ceiling, and whether write is offered.
+
+Allow takes `accept: true`, a nonempty `toolsets` array and `scope`. The grant,
+provider consent and audit commit together. The provider server API receives the
+person's session headers, the accepted OAuth scope subset, `oauth_query`, and a
+Request so it can resume authorization. Deny takes `accept: false` and returns
+the provider's `access_denied` redirect. Both answers return `url`. The raw plugin
+consent route is blocked so it cannot bypass these checks.
+
+Tokens resolve to `OAuthGrant` by subject and Allowed Client on every request.
+The token's scopes also bound access, so re-consent cannot widen an older token.
+The same live-person read, current switches, ceiling and read-only switch apply
+to MCP calls and signed uploads. A refused Tool call records the M40 error and
+returns HTTP 403 with the required OAuth scopes in `WWW-Authenticate`.
+
+A missing token-request `resource` defaults to the instance's `/mcp` resource.
+This keeps the parameter optional while issuing an audience-bound JWT. Refresh
+tokens retain the grant's absolute expiry through rotation. An expired grant
+requires new consent even when better-auth remembers the previous consent.
+
+Each authenticated MCP request reads the Allowed Client, grant, person and policy
+and writes `last_used_at`. These database calls make revocation and switch changes
+immediate; token-lifetime caching would break that guarantee. Defaulting an omitted
+resource supports Clients that omit RFC 8707's parameter and assigns them to the
+instance's sole MCP resource. It does not permit an arbitrary token audience.
+Clearing remembered consent when the person's grant is missing, revoked or expired
+forces an interactive consent instead of silently renewing access. This cleanup is
+limited to the signed-in person and their Client.

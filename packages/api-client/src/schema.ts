@@ -614,6 +614,273 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/oauth-grants/consent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query: {
+          oauth_query: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              organizationName: string;
+              client: {
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "published" | "registered";
+                identityCaption: string;
+              } | null;
+              person: {
+                id: string;
+                displayName: string;
+                email: string;
+                /** @enum {string} */
+                role: "administrator" | "legal_team_member" | "business_user";
+                image: string | null;
+              };
+              toolsets: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
+              writeOffered: boolean;
+              refusalReason:
+                | (
+                    | "expired_query"
+                    | "mcp_disabled"
+                    | "group_disabled"
+                    | "client_unlisted"
+                    | "client_disabled"
+                  )
+                | null;
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json":
+            | {
+                /** @enum {boolean} */
+                accept: true;
+                toolsets: (
+                  | "workspace"
+                  | "contracts"
+                  | "matters"
+                  | "tasks"
+                  | "requests"
+                  | "comments"
+                  | "documents"
+                  | "auto-docs"
+                  | "entities"
+                  | "knowledge"
+                  | "people"
+                  | "team"
+                  | "administration"
+                )[];
+                /** @enum {string} */
+                scope: "read" | "write";
+                oauth_query: string;
+              }
+            | {
+                /** @enum {boolean} */
+                accept: false;
+                oauth_query: string;
+              };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              url: string;
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/oauth-grants": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: string;
+              personId: string;
+              owner: string;
+              clientName: string;
+              toolsets: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
+              /** @enum {string} */
+              scope: "read" | "write";
+              grantedAt: string;
+              expiresAt: string;
+              lastUsedAt: string | null;
+            }[];
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/oauth-grants/{id}/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @enum {boolean} */
+              revoked: true;
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/api-key-requests": {
     parameters: {
       query?: never;

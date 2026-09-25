@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { createHash } from "node:crypto";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { oauthRefreshTokens, eq } from "@openlaw/db";
+import { oauthRefreshTokens, oauthGrants, orgSettings, eq } from "@openlaw/db";
 import { buildApp } from "../app.js";
 import { testDeps } from "../testing/deps.js";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
@@ -10,6 +10,7 @@ let h: TestHarness;
 beforeAll(async () => {
   h = await startHarness();
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
+  await h.db.update(orgSettings).set({ mcpEnabled: true, mcpLegalOAuthClientsEnabled: true });
 });
 afterAll(async () => {
   await h?.stop();
@@ -55,9 +56,14 @@ it.each([90, 1, 365])(
       const consentQuery = new URL(authorized.headers.location!, app.baseUrl).search.slice(1);
       const consent = await app.inject({
         method: "POST",
-        url: "/api/auth/oauth2/consent",
+        url: "/api/v1/oauth-grants/consent",
         cookies,
-        payload: { accept: true, oauth_query: consentQuery },
+        payload: {
+          accept: true,
+          toolsets: ["contracts"],
+          scope: "read",
+          oauth_query: consentQuery,
+        },
       });
       expect(consent.statusCode, consent.body).toBe(200);
       const code = new URL(consent.json().url).searchParams.get("code");
@@ -82,10 +88,13 @@ it.each([90, 1, 365])(
         .from(oauthRefreshTokens)
         .where(eq(oauthRefreshTokens.clientId, client.client_id));
       expect(stored).toBeDefined();
-      expect(stored!.expiresAt.getTime() - stored!.createdAt.getTime()).toBeCloseTo(
-        days * 86_400_000,
-        -3,
-      );
+      const [grant] = await h.db
+        .select()
+        .from(oauthGrants)
+        .where(eq(oauthGrants.allowedClientId, created.json().id));
+      expect(grant!.expiresAt.getTime() - grant!.grantedAt.getTime()).toBe(days * 86_400_000);
+      expect(stored!.expiresAt.getTime()).toBeLessThanOrEqual(grant!.expiresAt.getTime());
+      expect(stored!.expiresAt.getTime()).toBeGreaterThan(grant!.expiresAt.getTime() - 1000);
     } finally {
       await app.close();
     }

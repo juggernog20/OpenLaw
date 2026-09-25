@@ -236,3 +236,51 @@ it("keeps refused OAuth toggles off and shows the scheme failure beside the addr
   expect(control).not.toBeChecked();
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
+
+it("lists grants beside keys, counts each kind, and revokes a grant", async () => {
+  let grants = [
+    {
+      id: "grant-1",
+      personId: "owner-1",
+      owner: "Legal Member",
+      clientName: "Connected Client",
+      toolsets: ["contracts", "documents"],
+      scope: "read",
+      grantedAt: "2026-09-01T00:00:00.000Z",
+      expiresAt: "2026-12-01T00:00:00.000Z",
+      lastUsedAt: "2026-09-02T00:00:00.000Z",
+    },
+  ];
+  const writes: string[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/mcp-settings") return json(200, initial);
+      if (call.url.pathname === "/api/v1/mcp-settings/oauth-grants") return json(200, grants);
+      if (call.url.pathname === "/api/v1/oauth-grants/grant-1/revoke" && call.method === "POST") {
+        writes.push(call.url.pathname);
+        grants = [];
+        return json(200, { revoked: true });
+      }
+    },
+  });
+  const user = userEvent.setup();
+  renderAt("/settings/mcp");
+  const header = await screen.findByRole("button", { name: "Active keys and grants" });
+  expect(header).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByText("0 keys · 1 grant")).toBeInTheDocument();
+  await user.click(header);
+  const row = screen.getByText("Connected Client").closest("tr")!;
+  expect(within(row).getByText("Legal Member")).toBeInTheDocument();
+  expect(within(row).getByText("Contracts, Documents")).toBeInTheDocument();
+  expect(within(row).getByText("Read")).toBeInTheDocument();
+  expect(within(row).getByText(/Dec 1, 2026/)).toBeInTheDocument();
+  expect(
+    within(row.closest("table")!).getByRole("columnheader", { name: "Granted" }),
+  ).toBeInTheDocument();
+  await user.click(within(row).getByRole("button", { name: "Revoke" }));
+  await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Revoke" }));
+  await waitFor(() => expect(writes).toHaveLength(1));
+  await waitFor(() => expect(screen.queryByText("Connected Client")).not.toBeInTheDocument());
+  expect(screen.getByText("0 keys · 0 grants")).toBeInTheDocument();
+});

@@ -109,6 +109,26 @@ All lifecycle audit rows are `admin_only` system events. The notification record
 
 ---
 
+### `oauth_grants`
+
+Source: **DD-029**, **TECH-035**, **SET-014**. Added by M41/4, #1135.
+
+One `OAuthGrant` per `person_id` and `allowed_client_id`, enforced by a unique
+index. `toolsets` is a nonempty text array; `scope` is `read` or `write` under a
+CHECK. `consent_id` references the better-auth consent that completed the choice.
+`granted_at` and `expires_at` define its absolute lifetime. Re-consent replaces
+the choice and these dates, revokes earlier refresh tokens, and links the new
+consent. `last_used_at` records token use. `revoked_at` and `revoked_by` record
+revocation by the owner or an Administrator.
+
+Deleting a registered Allowed Client cascades to its grants. Grant ids remain in
+the Tool calls ledger and activity rows. Deleting a plugin consent clears its
+reference without deleting the grant. Grant and revocation audit actions are
+`oauth_grant.granted` and `oauth_grant.revoked`, both `admin_only`, with no bell
+item. This table is separate from ENT-004's Confidential Entity grants.
+
+---
+
 ### `accounts`
 
 Source: **TECH-008**
