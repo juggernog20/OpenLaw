@@ -431,6 +431,16 @@ The "version pin" line above stopped being true at [#340](https://github.com/jug
 
 **The rule for the routine dependency sweep from here:** `@better-auth/*` is never a drop-in bump at any semver level. 1.7.0 broke as a minor and 1.7.3 broke as a patch. A sweep that finds the three packages outdated diffs the published tarballs' `dist/db/` and `dist/api/` — and runs the adapter's own schema check against `packages/db` — before classifying, as `docs/upgrades/2026-09-06-better-auth-1.7.3.md` did.
 
+### Addendum (2026-09-25) — routine sweep: 1.7.5 → 1.7.6, and `@better-auth/api-key` joins the pin
+
+The scheduled dependency sweep found `better-auth`, `@better-auth/drizzle-adapter`, `@better-auth/sso` and `@better-auth/api-key` (added with M41, TECH-035) all one patch behind. Applying the sweep rule above — diffing the published `1.7.5`/`1.7.6` tarballs' `dist/` trees for the four packages plus the transitive `@better-auth/core` — found:
+
+- `@better-auth/api-key` and `@better-auth/sso` changed by nothing but the embedded package version string. No code or schema surface moved.
+- `better-auth`'s account-linking route (`api/routes/callback.mjs`) was refactored into a shared `linkOAuthAccount` helper (`oauth2/link-account.mjs`); a side-by-side read of the old inline block and the new helper shows the same checks in the same order — untrusted-provider, email match, existing-account merge, create — with no behaviour change. The password-length checks scattered across sign-up, sign-in, password reset, update-user and the admin plugin were pulled into two shared assertions (`assertPasswordNotTooShort` / `assertPasswordNotTooLong`); sign-in and the admin `createUser` route gained a max-length check they lacked before (rejects an oversized password before hashing rather than after), which is strictly narrower than before, not broader. The React client's query and session atoms gained a request-id guard so a stale response can no longer clobber a newer one — a bug fix in our favour.
+- `@better-auth/core`'s schema-check registration changed shape: `registerSchemaCheck` now always registers a check and takes a separate `runtimeEnabled` flag, and `ctx.checkSchema` (what `apps/api/src/index.ts` awaits once at boot per the 1.7.3 addendum above) now resolves through the new `runtimeSchemaCheckFor`, gated on that flag, instead of the old always-present `schemaCheckFor`. Read against what the Drizzle adapter passes — `runtimeEnabled: checksSchema(options)`, the same `advanced.database.validateSchema` read the old gate used — this is a rename, not a behaviour change: `checkSchema` still resolves to the same check, gated the same way, as long as `validateSchema` is left at its default. Worth the sweep rule's diff specifically because the surrounding boot-time contract is exactly what #340/1.7.3 taught this rule to watch for, even though this time it held.
+
+Classified **Patch**, landed with the rest of the routine sweep's Patch/Minor group on one PR, no code changes required. `@better-auth/api-key` is added to this addendum's scope for future sweeps — it is a fourth `@better-auth/*` package now, not a one-off.
+
 ## TECH-009: Real-time — SSE on live surfaces
 
 - **Status:** Accepted
