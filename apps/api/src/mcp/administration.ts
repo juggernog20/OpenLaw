@@ -30,7 +30,7 @@ export const administrationTools: readonly ToolDefinition[] = [
     name: "openlaw_audit_log_query",
     title: "Query the audit log",
     description:
-      "Administrator only. Read view entries (default) with actorId, action, entityType, from, to and q filters, or tool_calls with from and to. entityType is contract, matter, entity, document, request, user, system, knowledge_item or auto_doc. Dates are inclusive ISO timestamps. Entries retain record reach and reference redaction. Payloads over 8 KiB are omitted with payloadTruncated true. Page with cursor and limit; pass nextCursor with the same filters. This read writes no audit entry.",
+      "Administrator only. view entries (the default) reads the audit log and accepts actorId, action, entityType, from, to and q. view tool_calls reads the Tool call ledger and accepts only from and to. entityType is contract, matter, entity, document, request, user, system, knowledge_item or auto_doc. Dates are inclusive ISO timestamps. Entries retain record reach and reference redaction. Payloads over 8 KiB are omitted with payloadTruncated true. Page with cursor and limit; pass nextCursor with the same filters. This read writes no audit entry.",
     inputSchema: auditInput,
     outputSchema: z.object({
       entries: z.array(z.union([entrySchema, ToolCallEntrySchema])),
