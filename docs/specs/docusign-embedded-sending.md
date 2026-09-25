@@ -1,6 +1,6 @@
 # Prepare and send an Envelope in DocuSign from the Signatures tab
 
-Draft for the `to-spec` testing-seam check. Intended GitHub triage label after that check: `ready-for-agent`.
+Published as [GitHub issue #1170](https://github.com/juggernog20/OpenLaw/issues/1170), labelled `ready-for-agent`. The testing boundaries were confirmed by the user before publication.
 
 ## Problem Statement
 
