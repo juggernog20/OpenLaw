@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The results page URL as a question (DOC-009, M44 close addendum
+ * clause 5). `aq` carries the whole encoded question and wins over the
+ * legacy `q` and `kind`; a bare `q` becomes the all-words row. Also the
+ * words-row and scope labels and the chip classes the dialog and the
+ * results page share.
+ */
+
 import {
   decodeSearchQuestion,
   encodeSearchQuestion,

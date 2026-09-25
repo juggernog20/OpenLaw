@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The version 1 search question (DOC-009, M44 close addendum clause 1)
+ * and its `aq` codec (clause 5). One schema validates the endpoint body,
+ * the URL and a saved search's config. `resolveSearchQuestion` reads a
+ * stored question past a property this build no longer has (DD-019
+ * clause 7). The codec is base64url JSON, so a question travels in a
+ * link.
+ */
+
 import { z } from "zod";
 import { conditionProblem, searchProperty } from "./search-conditions.js";
 

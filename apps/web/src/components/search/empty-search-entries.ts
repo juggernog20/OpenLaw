@@ -23,7 +23,7 @@ export function useEmptySearchEntries(open: boolean) {
   useEffect(() => {
     if (!open) return;
     let live = true;
-    void readViews<SearchQuestion>("search").then((views) => {
+    void readViews("search").then((views) => {
       if (live) setSaved(views);
     });
     return () => {

@@ -1,4 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The property catalogue behind search conditions (DOC-009, M44 close
+ * addendum): every standard property per kind with its value type, the
+ * operator set per value type and per Field type (CTR-016), and
+ * `conditionProblem`, the one validator the endpoint, the URL codec and
+ * the dialog all run. A live Field joins the catalogue through
+ * `fieldProperty`, keyed `field:<slug>` under its module's kind.
+ */
+
 import { z } from "zod";
 import {
   SEARCH_FIELD_KINDS,

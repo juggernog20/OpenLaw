@@ -26,8 +26,22 @@ type View = {
   config: SearchQuestion;
   isDefault: boolean;
 };
+/**
+ * The key order Postgres gives a jsonb object: shorter keys first, then
+ * bytewise. A config the API answers has been through that column, so
+ * the stub answers it the same way and a comparison that depends on the
+ * order the question was written in fails here as it would in the app.
+ */
+function jsonbOrder<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(jsonbOrder) as T;
+  if (value === null || typeof value !== "object") return value;
+  const entries = Object.entries(value).sort(
+    ([a], [b]) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0),
+  );
+  return Object.fromEntries(entries.map(([key, item]) => [key, jsonbOrder(item)])) as T;
+}
 function stub(initial: View[] = [], refusal?: string) {
-  let views = structuredClone(initial);
+  let views = jsonbOrder(structuredClone(initial));
   const calls: StubCall[] = [];
   stubApi({
     signedIn: MEMBER,
@@ -42,10 +56,13 @@ function stub(initial: View[] = [], refusal?: string) {
       if (refusal) return problem(409, refusal);
       const body = call.body as Partial<View>;
       if (call.method === "POST")
-        views = [...views, { ...body, id: `view-${views.length}`, isDefault: false } as View];
+        views = [
+          ...views,
+          jsonbOrder({ ...body, id: `view-${views.length}`, isDefault: false } as View),
+        ];
       if (call.method === "PATCH")
         views = views.map((view) =>
-          call.url.pathname.endsWith(view.id) ? { ...view, ...body } : view,
+          call.url.pathname.endsWith(view.id) ? jsonbOrder({ ...view, ...body }) : view,
         );
       if (call.method === "DELETE")
         views = views.filter((view) => !call.url.pathname.endsWith(view.id));
@@ -70,7 +87,7 @@ async function nameAndSave(user: ReturnType<typeof userEvent.setup>, name: strin
   await user.clear(input);
   await user.type(input, name);
   await user.click(
-    within(input.closest('[role="dialog"]') as HTMLElement).getByRole("button", {
+    within(screen.getByRole("dialog", { name: "Save this search" })).getByRole("button", {
       name: "Save",
     }),
   );
@@ -132,7 +149,7 @@ describe("saved searches in the dialog", () => {
     await user.click(within(dialog).getByRole("button", { name: "Save search" }));
     await waitFor(() => expect(api.views()[0]!.config.words.all).toBe("changed"));
     expect(within(dialog).queryByText("Modified")).not.toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Saved search actions" }));
+    await user.click(within(dialog).getByRole("button", { name: "Renewals actions" }));
     expect(screen.queryByRole("menuitem", { name: "Set as default" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("menuitem", { name: "Save as…" }));
     await nameAndSave(user, "Renewals copy");

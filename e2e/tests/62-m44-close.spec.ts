@@ -33,7 +33,10 @@ test("M44: build Renewals, save, reload, reopen from the header, and land on the
     const dialog = await buildRenewalsQuestion(page, fixture.marker);
     await dialog.getByRole("button", { name: "Save search", exact: true }).click();
     const naming = page.getByRole("dialog", { name: "Save this search" });
-    await naming.getByLabel("Name", { exact: true }).fill("Renewals");
+    // Per-run name: a killed run leaves its row behind, and a repeated
+    // name would be refused with 409 on the next run.
+    const savedName = `Renewals ${fixture.marker}`;
+    await naming.getByLabel("Name", { exact: true }).fill(savedName);
     const saved = page.waitForResponse(
       (response) =>
         response.url().endsWith("/api/v1/list-views") && response.request().method() === "POST",
@@ -44,7 +47,7 @@ test("M44: build Renewals, save, reload, reopen from the header, and land on the
     savedId = z
       .object({ views: z.array(z.object({ id: z.string(), name: z.string() })) })
       .parse(await response.json())
-      .views.find((view) => view.name === "Renewals")!.id;
+      .views.find((view) => view.name === savedName)!.id;
     await expect(naming).not.toBeVisible();
     await dialog.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/\/search\?aq=/);
@@ -67,7 +70,7 @@ test("M44: build Renewals, save, reload, reopen from the header, and land on the
     await expect(entries.getByRole("group", { name: "Recent" })).toBeVisible();
     await entries
       .getByRole("group", { name: "Saved" })
-      .getByRole("option", { name: "Renewals", exact: true })
+      .getByRole("option", { name: savedName, exact: true })
       .click();
     await expect(page).toHaveURL(questionUrl);
     await expect(page.getByRole("main").getByText("1 match", { exact: true })).toBeVisible();

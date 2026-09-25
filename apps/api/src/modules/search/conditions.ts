@@ -1,4 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Compiles a question's conditions into the SQL each kind's candidate
+ * read ANDs with reach (DOC-009, M44 close addendum clause 3). Match any
+ * ORs the conditions of one kind; conditions on different kinds never
+ * meet. A Show flag widens rather than narrows: set to Yes it admits
+ * archived, ended or closed rows, and left out it keeps the archive rule
+ * in force. Conditions on live Fields hand off to `field-conditions.ts`.
+ */
+
 import {
   and,
   inArray,

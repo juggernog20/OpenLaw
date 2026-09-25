@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The shape of a live catalog Field as search reads it (CTR-016): what
+ * `GET /api/v1/search/fields` answers, and what the shared condition
+ * validator and the web Field picker consume. The Field type decides
+ * which operator set a Field condition takes.
+ */
+
 import { z } from "zod";
 
 /** One live catalog Field as the search surfaces read it: the slug that

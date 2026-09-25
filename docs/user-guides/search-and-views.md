@@ -16,9 +16,15 @@ Search covers reachable Contracts, Matters, Documents, Entities, Counterparties,
 
 ## Combine words and conditions
 
-Open **Advanced search** from the sliders beside the header search box, or select **Advanced** on the results page. Select **Contract** or **Matter**, then **Add condition**. Search the property list by label, choose a property, and set its operator and value.
+Open **Advanced search** from the sliders beside the header search box, from **Advanced search…** at the foot of the header list, or from **Advanced** on the results page. Words already typed in the header box carry into the dialog.
 
-**Match all** requires every condition for that kind. **Match any** requires at least one. Values within **is any of** always match any selected value. Contract conditions apply only to Contracts; Matter conditions apply only to Matters. You can add up to 20 conditions.
+The **Words** rows are **All of these words**, **This exact phrase**, **Any of these words**, and **None of these words**. Each row holds up to 200 characters. Words are matched as words; `or` and a leading `-` inside a row are not operators. **Search in** chooses where words are matched: **Titles and numbers**, **Record text**, or **Document contents**. Document contents apply to Documents only. Keep at least one checked when the question has words.
+
+**Kinds** lists **Contract**, **Matter**, **Document**, **Entity**, **Counterparty**, **Request**, and **Knowledge Item**. Select one or more kinds to search only those; select none to search every kind. Selecting a kind adds its properties to **Add condition**. Removing a kind removes its conditions, and the dialog says so.
+
+Under **Properties**, select **Add condition**. Search the list by label or open a kind's group, choose a property, then set its operator and value. Contract, Matter, and Entity groups also list the live **Fields** of that module, so a custom Field is a condition like any standard property. A Field that an Administrator later archives is removed from the question with a notice when you next open it.
+
+**Match all** requires every condition for a kind. **Match any** requires at least one. Values within **is any of** always match any selected value. A condition applies only to records of its own kind; a Contract condition never limits Matters. You can add up to 20 conditions.
 
 Dates offer **before**, **after**, **on**, and **between**. Between includes both endpoints. Every date property also offers **in the last N days**, **in the next N days**, **today**, **this week**, **this month**, **this quarter**, and **this year**. Enter a whole number from 1 to 3650 for N. The preview names an invalid or missing N and waits for you to correct it.
 
@@ -26,7 +32,19 @@ For example, select **Expiry date**, choose **in the next N days**, and enter **
 
 **Show ended**, **Show closed**, and **Show archived** set to Yes include those records; they do not limit the answer to those records. Search includes ended Contracts and closed Matters by default, and excludes archived records until a condition includes them. Record access always applies, including to the match total.
 
-Select **Search** to open the results. Select a condition chip to edit its row, or its remove control to run the question without that condition. The address keeps the question through reload and browser Back.
+The **Preview** beside the question shows the exact match total and up to ten matching rows, and updates as you change the question. **Clear** empties the question. Select **Search** to open the results. Select a condition chip to edit its row, or its remove control to run the question without that condition. The address keeps the question through reload and browser Back.
+
+## Save and reopen a search
+
+1. Build the question in **Advanced search**.
+2. Select **Save search**, enter a distinct **Name**, such as `Renewals due`, then select **Save**.
+3. Reopen it later from **Saved searches** in the dialog, or focus the empty header search box and select it in the **Saved** group.
+
+A saved search keeps the words, scope, kinds, conditions, match rule, and sort. It belongs to you and follows your account to other devices. It does not store a snapshot of the records or grant access to them. A saved search has no default; the results page never opens one on its own.
+
+Changing an open saved search marks it **Modified**. Select **Save search** to replace what it stores, or open the menu beside it and select **Save as…** to keep a separate search. The same menu offers **Rename…**, **Delete…**, and **Discard unsaved changes**. A row's menu in **Saved searches** offers **Rename…** and **Delete…** too. Delete removes the saved search after confirmation; it does not delete records. If a name is already in use, choose a different name and save again.
+
+**Recent searches** lists the last five distinct questions you ran from the results page. Recent lives in this browser only, for your signed-in account, and signing out clears it. Select a recent question in the dialog to restore it, then select **Search** to run it. The empty header box also shows Recent, and selecting an entry there runs it at once. **See all results** is unavailable while the box is empty.
 
 ## Filter and sort a list
 

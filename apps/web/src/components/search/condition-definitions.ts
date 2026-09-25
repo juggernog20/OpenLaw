@@ -1,4 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The words a condition is read with (DOC-009, CTR-016): operator and
+ * property labels as ICU messages, the choice lists for Contract and
+ * Matter properties, and `conditionLabel`, the sentence a chip or a
+ * recent-search summary shows for one condition. Live Fields come from
+ * `field-definitions.ts`; the other kinds' choices come from
+ * `other-condition-definitions.ts`.
+ */
+
 import { useEffect, useState } from "react";
 import {
   isValuelessOperator,

@@ -1,4 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Compiles a condition on a live catalog Field (CTR-016) against the
+ * record's stored custom Fields. An absent key reads as empty, so
+ * "is empty" matches a record the Field was never written on, and a
+ * negative operator (does not contain, is none of, includes none)
+ * matches that record too rather than skipping it. Dates are ISO
+ * strings and compare as text; relative dates resolve through
+ * `relative-dates.ts`.
+ */
+
 import { contracts, matters, entities, sql, type SQL } from "@openlaw/db";
 import type { SearchField, SearchQuestion } from "@openlaw/shared";
 import type { AuthenticatedUser } from "../../auth/guards.js";

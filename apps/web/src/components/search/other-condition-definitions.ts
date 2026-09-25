@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Condition choices for the kinds other than Contract and Matter
+ * (DOC-009). Document, Entity, Request and Knowledge Item properties
+ * read their options from each module's own filter endpoints, so a
+ * search condition offers the same choices as that module's list
+ * filter.
+ */
+
 import { useEffect, useState } from "react";
 import { defineMessages, useIntl } from "react-intl";
 import type { SearchQuestion } from "@openlaw/shared";

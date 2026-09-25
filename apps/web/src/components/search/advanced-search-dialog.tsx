@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The Advanced search dialog (DES-094 clauses 2 and 3): words rows,
+ * scope, kind chips, conditions, saved and recent searches in the
+ * leading column, and a live Preview in the trailing one. The preview
+ * runs the question with limit 10 after 300 ms and ignores older
+ * answers. Search runs the whole question and closes the dialog.
+ */
+
 import {
   conditionProblem,
   SearchQuestionSchema,
@@ -162,7 +170,7 @@ function Preview({
             <p className="mt-4 text-sm text-muted">
               <FormattedMessage
                 id="search.preview.limit"
-                defaultMessage="Showing the first {count} of {total} matches"
+                defaultMessage="Showing the first {count} of {total, plural, one {# match} other {# matches}}"
                 values={{ count: Math.min(outcome.results.length, 10), total: outcome.total }}
               />
             </p>

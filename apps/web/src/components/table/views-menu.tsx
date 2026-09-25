@@ -160,10 +160,12 @@ export function ViewsMenu<View extends MenuView>({
                       { name: label },
                     )
                   : searchControl === "save"
-                    ? intl.formatMessage({
-                        id: "search.saved.actions",
-                        defaultMessage: "Saved search actions",
-                      })
+                    ? // The visible text is the search's name, so the accessible
+                      // name carries it too (WCAG 2.5.3 Label in Name, DES-011).
+                      intl.formatMessage(
+                        { id: "search.saved.actions", defaultMessage: "{name} actions" },
+                        { name: label },
+                      )
                     : undefined
               }
             >

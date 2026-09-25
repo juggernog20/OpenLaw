@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The condition editor inside the dialog (DES-094 clause 2, DOC-009):
+ * the Match all / Match any switch, one row per condition with its
+ * operator and value control, and the Add condition picker, which lists
+ * the selected kinds' properties with live Fields under each kind's
+ * Fields subgroup. A question stops at 20 conditions.
+ */
+
 import {
   SEARCH_PROPERTIES,
   SEARCH_OPERATORS,
@@ -89,7 +98,7 @@ function ConditionRow({
             { kind, property: label },
           )}
         >
-          <X size={14} aria-hidden="true" />
+          <X size={16} aria-hidden="true" />
         </Button>
       </div>
       <div className="grid grid-cols-1 gap-2 @xl/dialog:grid-cols-2">
@@ -381,7 +390,7 @@ export function SearchConditions({
       >
         <PopoverTrigger asChild>
           <Button variant="secondary" size="sm" disabled={!properties.length}>
-            <Plus size={14} aria-hidden="true" />
+            <Plus size={16} aria-hidden="true" />
             <FormattedMessage id="search.condition.add" defaultMessage="Add condition" />
           </Button>
         </PopoverTrigger>

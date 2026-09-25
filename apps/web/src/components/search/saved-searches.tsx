@@ -1,4 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * Saved searches on the `search` surface (DD-019 addendum, M44/9).
+ *
+ * The hook owns this person's saved questions and the active one. Save
+ * overwrites the active search, Save as forks it, and edits stay unsaved
+ * until one of those acts. Opening a saved question reads past removed
+ * properties and archived Fields, drops only their conditions, and says
+ * so. The list rows and the footer control both reuse the views menu,
+ * which offers no Set as default here because a search has none.
+ */
+
 import { useEffect, useRef, useState } from "react";
 import { Bookmark } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -21,6 +33,23 @@ import { dropUnavailableFields, readSearchFields } from "./field-definitions";
 
 type SearchView = SavedView<SearchQuestion>;
 
+/**
+ * Whether the question on screen is the one the active search stores.
+ *
+ * This is what the Save control's "Modified" marker reads. A stored
+ * question comes back from `list_views.config`, a jsonb column, with its
+ * keys in Postgres's own order, so a plain serialization of the two
+ * never matches after a round trip. Both sides go through the schema
+ * first: it writes keys in one fixed order, and it trims each words row.
+ */
+function sameQuestion(a: SearchQuestion, b: SearchQuestion): boolean {
+  const canonical = (question: SearchQuestion) => {
+    const parsed = SearchQuestionSchema.safeParse(question);
+    return JSON.stringify(parsed.success ? parsed.data : question);
+  };
+  return canonical(a) === canonical(b);
+}
+
 export function useSavedSearches(
   question: SearchQuestion,
   onChange: (question: SearchQuestion) => void,
@@ -34,7 +63,7 @@ export function useSavedSearches(
   const selection = useRef(0);
   useEffect(() => {
     let live = true;
-    void readViews<SearchQuestion>("search").then((rows) => {
+    void readViews("search").then((rows) => {
       if (live) setViews(rows);
     });
     return () => {
@@ -96,11 +125,7 @@ export function useSavedSearches(
       setBusy(false);
     }
   }
-  const normalized = SearchQuestionSchema.safeParse(question);
-  const modified =
-    !!activeView &&
-    JSON.stringify(normalized.success ? normalized.data : question) !==
-      JSON.stringify(activeView.layout);
+  const modified = !!activeView && !sameQuestion(question, activeView.layout);
   return {
     views,
     activeView,
@@ -122,7 +147,7 @@ export function useSavedSearches(
     save: async () => {
       if (!activeView) return;
       const rows = await mutate(() =>
-        updateView<SearchQuestion>(activeView.id, { config: SearchQuestionSchema.parse(question) }),
+        updateView("search", activeView.id, { config: SearchQuestionSchema.parse(question) }),
       );
       setActiveView(rows.find((row) => row.id === activeView.id) ?? null);
     },
@@ -133,11 +158,11 @@ export function useSavedSearches(
       setActiveView(rows.find((row) => row.name === name) ?? null);
     },
     rename: async (view: SearchView, name: string) => {
-      await mutate(() => updateView<SearchQuestion>(view.id, { name }));
+      await mutate(() => updateView("search", view.id, { name }));
       setActiveView((active) => (active?.id === view.id ? { ...active, name } : active));
     },
     remove: async (view: SearchView) => {
-      await mutate(() => deleteView<SearchQuestion>(view.id));
+      await mutate(() => deleteView("search", view.id));
       setActiveView((active) => (active?.id === view.id ? null : active));
     },
     reset: () => {

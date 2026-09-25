@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The shell-owned dialog session (DES-094 clause 1). One provider under
+ * the app shell holds the open question, the control that opened it and
+ * this browser's recent searches, so the header box, the results page
+ * and the chips all open the same dialog, and close returns focus to
+ * whichever control asked for it.
+ */
+
 import type { SearchQuestion } from "@openlaw/shared";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { SlidersHorizontal } from "lucide-react";

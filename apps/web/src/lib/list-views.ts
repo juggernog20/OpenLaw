@@ -20,8 +20,20 @@
 
 import type { ReactNode } from "react";
 import type { IntlShape } from "react-intl";
-import type { ListViewSurface, SortDirection, SearchQuestion } from "@openlaw/shared";
+import {
+  SORT_DIRECTIONS,
+  StoredSearchQuestionSchema,
+  type ListViewSurface,
+  type SortDirection,
+  type SearchQuestion,
+} from "@openlaw/shared";
+import { z } from "zod";
 import { api } from "./api";
+
+/** The surfaces that draw a managed table. `search` is the one surface
+ * whose views hold a question rather than a layout (DD-019 addendum,
+ * M44/9), so a column catalogue can never be its. */
+export type TableSurface = Exclude<ListViewSurface, "search">;
 
 /** One column a surface can draw. */
 export interface ColumnDef<Row> {
@@ -85,7 +97,7 @@ export interface TableCatalogue<Row> {
 
 /** A table whose layouts can be saved for a server-backed surface. */
 export interface ColumnCatalogue<Row> extends TableCatalogue<Row> {
-  surface: ListViewSurface;
+  surface: TableSurface;
 }
 
 /** One column as a layout holds it. */
@@ -264,67 +276,112 @@ export function tableMinWidth<Row>(catalogue: TableCatalogue<Row>, layout: Layou
   );
 }
 
-/** One view as the seam answers it. */
+/** What a view's config is on one surface: a version 1 question on
+ * `search`, a stored layout everywhere else (DD-019 clause 4 and its M44
+ * addendum). The surface names the shape, so a caller cannot read a
+ * contracts layout as a question by asking for one. */
+export type ViewConfig<Surface extends ListViewSurface> = Surface extends "search"
+  ? SearchQuestion
+  : StoredLayout;
+
+/** One view as the seam answers it. `config` is whatever the server
+ * holds; `fitsSurface` is what turns it into a layout or a question. */
 interface ViewResponse {
   id: string;
   name: string;
   isDefault: boolean;
-  config: StoredLayout | SearchQuestion;
+  config: unknown;
 }
 
-const toView = <Config extends StoredLayout | SearchQuestion>(
-  row: ViewResponse,
-): SavedView<Config> => ({
-  id: row.id,
-  name: row.name,
-  isDefault: row.isDefault,
-  layout: row.config as Config,
+/** The API's own envelope for a layout, read loosely: this is a read
+ * seam, and the server refused anything shaped wrongly when it was
+ * written. Column and sort keys are not checked against a catalogue
+ * here, because `resolveLayout` is where a stale key is read past. */
+const StoredLayoutSchema = z.object({
+  columns: z.array(z.object({ key: z.string(), width: z.number().nullable() })),
+  flexKey: z.string().nullable().optional(),
+  sort: z.object({ key: z.string(), dir: z.enum(SORT_DIRECTIONS) }).nullable(),
+  filters: z.record(z.string(), z.union([z.boolean(), z.string()])),
 });
+
+/**
+ * Whether a config the server answered has the shape this surface reads.
+ *
+ * The server validates a config against its surface on every write, so
+ * this is the seam's own check rather than a second opinion, and a row
+ * that fails it is left out of the answer the way a failed read answers
+ * an empty list. Passing it does not make a stored value runnable: a
+ * question may still name a property this build lacks, which
+ * `resolveSearchQuestion` reads past, as `resolveLayout` does for a
+ * column the catalogue no longer has (DD-019 clause 7).
+ */
+function fitsSurface<Surface extends ListViewSurface>(
+  surface: Surface,
+  config: unknown,
+): config is ViewConfig<Surface> {
+  const schema = surface === "search" ? StoredSearchQuestionSchema : StoredLayoutSchema;
+  return schema.safeParse(config).success;
+}
+
+function toViews<Surface extends ListViewSurface>(
+  surface: Surface,
+  rows: readonly ViewResponse[],
+): SavedView<ViewConfig<Surface>>[] {
+  return rows.flatMap((row) =>
+    fitsSurface(surface, row.config)
+      ? [{ id: row.id, name: row.name, isDefault: row.isDefault, layout: row.config }]
+      : [],
+  );
+}
 
 /** This person's views of one surface. A failed read answers an empty
  * list rather than throwing: views are a convenience, and a list that
  * would not render because a preference read failed is worse than a list
  * with no saved views in its menu. */
-export async function readViews<Config extends StoredLayout | SearchQuestion = StoredLayout>(
-  surface: ListViewSurface,
-): Promise<SavedView<Config>[]> {
+export async function readViews<Surface extends ListViewSurface>(
+  surface: Surface,
+): Promise<SavedView<ViewConfig<Surface>>[]> {
   const { data } = await api
     .GET("/api/v1/list-views", { params: { query: { surface } } })
     .catch(() => ({ data: undefined }));
-  return (data?.views ?? []).map((row) => toView<Config>(row));
+  return toViews(surface, data?.views ?? []);
 }
 
-export async function createView<Config extends StoredLayout | SearchQuestion = Layout>(
-  surface: ListViewSurface,
+export async function createView<Surface extends ListViewSurface>(
+  surface: Surface,
   name: string,
-  layout: Config,
+  layout: ViewConfig<Surface>,
   isDefault = false,
-): Promise<SavedView<Config>[]> {
+): Promise<SavedView<ViewConfig<Surface>>[]> {
   const result = await api.POST("/api/v1/list-views", {
     body: { surface, name, config: layout, isDefault },
   });
   if (!result.data) throw result;
-  return result.data.views.map((row) => toView<Config>(row));
+  return toViews(surface, result.data.views);
 }
 
-export async function updateView<Config extends StoredLayout | SearchQuestion = Layout>(
+/** The API answers the view's whole surface, so the caller names that
+ * surface to say what shape the answer's configs have. */
+export async function updateView<Surface extends ListViewSurface>(
+  surface: Surface,
   viewId: string,
-  changes: { name?: string; config?: Config; isDefault?: boolean },
-): Promise<SavedView<Config>[]> {
+  changes: { name?: string; config?: ViewConfig<Surface>; isDefault?: boolean },
+): Promise<SavedView<ViewConfig<Surface>>[]> {
   const result = await api.PATCH("/api/v1/list-views/{viewId}", {
     params: { path: { viewId } },
     body: changes,
   });
   if (!result.data) throw result;
-  return result.data.views.map((row) => toView<Config>(row));
+  return toViews(surface, result.data.views);
 }
 
-export async function deleteView<Config extends StoredLayout | SearchQuestion = StoredLayout>(
+export async function deleteView<Surface extends ListViewSurface>(
+  surface: Surface,
   viewId: string,
-): Promise<SavedView<Config>[]> {
+): Promise<SavedView<ViewConfig<Surface>>[]> {
   const result = await api.DELETE("/api/v1/list-views/{viewId}", {
     params: { path: { viewId } },
   });
   if (!result.data) throw result;
-  return result.data.views.map((row) => toView<Config>(row));
+  return toViews(surface, result.data.views);
 }

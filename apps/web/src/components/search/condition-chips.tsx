@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The results page condition chips (DES-094 clause 4). Each chip shows
+ * its kind, property, operator and value; its edit control reopens the
+ * dialog on that row, and its remove control runs the question without
+ * that condition.
+ */
+
 import { type SearchQuestion } from "@openlaw/shared";
 import { Link } from "react-router";
 import { X } from "lucide-react";
@@ -40,7 +48,7 @@ export function ConditionChips({ question }: Readonly<{ question: SearchQuestion
             { label },
           )}
         >
-          <X size={14} aria-hidden="true" />
+          <X size={16} aria-hidden="true" />
         </Link>
       </span>
     );

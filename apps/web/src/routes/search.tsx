@@ -146,7 +146,7 @@ function QuestionFilters({ question }: Readonly<{ question: SearchQuestion }>) {
           )}
         >
           {chip.label}
-          <X size={14} aria-hidden="true" />
+          <X size={16} aria-hidden="true" />
         </Link>
       ))}
       <ConditionChips question={question} />

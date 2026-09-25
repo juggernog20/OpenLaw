@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The live Field catalogue for search conditions (CTR-016), read from
+ * `GET /api/v1/search/fields` once a kind that carries Fields is
+ * selected. `dropUnavailableFields` is the drop rule: a condition on a
+ * Field the catalogue no longer lists is removed and announced, and the
+ * rest of the question stands (DD-019 clause 7).
+ */
+
 import { useEffect, useEffectEvent, useState } from "react";
 import { fieldProperty, type SearchField, type SearchQuestion } from "@openlaw/shared";
 import { defineMessages, useIntl } from "react-intl";

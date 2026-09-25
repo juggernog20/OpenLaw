@@ -717,6 +717,9 @@ describe("the versioned question endpoint", () => {
       { any: "missingword aurora" },
       { all: "aurora", none: "missingword" },
       { all: "aurora", any: "missingword clause" },
+      // A leading dash is not an operator: `--missingword` would require the word.
+      { all: "aurora", none: "-missingword" },
+      { all: "-aurora" },
     ])
       expect(
         (await run({ ...question(words), kinds: ["contract"] })).results.map((r) => r.id),
@@ -726,6 +729,9 @@ describe("the versioned question endpoint", () => {
       { phrase: "clause warranty" },
       { all: "aurora", none: "clause" },
       { all: "missingword", any: "aurora clause" },
+      // `or` typed into a row is a word, not websearch's OR operator.
+      { all: "aurora or missingword" },
+      { all: "aurora or missingword", any: "clause warranty" },
       { all: "...!!!" },
       { all: "the and or" },
       { all: "aurora", phrase: "the and" },

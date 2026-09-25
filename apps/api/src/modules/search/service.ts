@@ -683,20 +683,34 @@ export async function search(db: Db, user: AuthenticatedUser, input: z.input<typ
     : groupedSearch(db, user, q);
 }
 
-function compileWords(words: SearchQuestion["words"]): string {
-  const phrase = words.phrase ? `"${words.phrase.replaceAll('"', " ")}"` : "";
-  const none = words.none
+/**
+ * Each words row is a list of words, not websearch syntax. A word is
+ * quoted so that `or` and a leading `-` typed into a row stay words:
+ * unquoted, "terms or conditions" in the all row becomes an OR, "-draft"
+ * becomes an exclusion, and "-draft" in the none row becomes `--draft`,
+ * which websearch reads as a double negation that requires the word.
+ * A record number such as C-123 stays bare so the exact-number arm still
+ * reads it; websearch parses it the same way either way.
+ */
+function terms(row: string): string[] {
+  return row
     .split(/\s+/)
+    .map((word) => word.replaceAll('"', "").replace(/^-+/, ""))
     .filter(Boolean)
-    .map((word) => `-${word.replaceAll('"', "")}`)
+    .map((word) => (exactNumber(word) ? word : `"${word}"`));
+}
+
+function compileWords(words: SearchQuestion["words"]): string {
+  const all = terms(words.all).join(" ");
+  const phrase = words.phrase ? `"${words.phrase.replaceAll('"', " ")}"` : "";
+  const none = terms(words.none)
+    .map((word) => `-${word}`)
     .join(" ");
-  const required = [words.all, phrase, none].filter(Boolean).join(" ");
-  const any = words.any.split(/\s+/).filter(Boolean);
+  const required = [all, phrase, none].filter(Boolean).join(" ");
+  const any = terms(words.any);
   // websearch does not group parentheses. Repeat the required rows in each OR arm.
   return any.length
-    ? any
-        .map((word) => [required, `"${word.replaceAll('"', "")}"`].filter(Boolean).join(" "))
-        .join(" OR ")
+    ? any.map((word) => [required, word].filter(Boolean).join(" ")).join(" OR ")
     : required;
 }
 
