@@ -1238,9 +1238,6 @@
   "approvals.requestedBy": {
     "defaultMessage": "Requested by {name}"
   },
-  "approvals.sectionSigning": {
-    "defaultMessage": "Approvals & signing"
-  },
   "approvals.source.manual": {
     "defaultMessage": "Added manually"
   },
@@ -3179,18 +3176,6 @@
   "contracts.record.documents.searchLanding": {
     "defaultMessage": "Document search landing"
   },
-  "contracts.record.envelope.declined": {
-    "defaultMessage": "Envelope declined"
-  },
-  "contracts.record.envelope.sent": {
-    "defaultMessage": "Envelope sent"
-  },
-  "contracts.record.envelope.signed": {
-    "defaultMessage": "Envelope signed"
-  },
-  "contracts.record.envelope.voided": {
-    "defaultMessage": "Envelope voided"
-  },
   "contracts.record.notRecorded": {
     "defaultMessage": "—"
   },
@@ -3232,6 +3217,9 @@
   },
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
+  },
+  "contracts.record.tab.signatures": {
+    "defaultMessage": "Signatures"
   },
   "contracts.record.tab.tasks": {
     "defaultMessage": "Tasks"
@@ -8621,6 +8609,9 @@
   "records.department": {
     "defaultMessage": "Department"
   },
+  "records.people.section": {
+    "defaultMessage": "Owners"
+  },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
   },
@@ -11565,7 +11556,7 @@
     "defaultMessage": "Business Users"
   },
   "settings.mcp.businessHelp": {
-    "defaultMessage": "Their own Requests, Auto-Docs, portal Knowledge and the records they are on."
+    "defaultMessage": "They can see only their own Requests and Auto-Docs, portal Knowledge, and records they are on."
   },
   "settings.mcp.businessKeys": {
     "defaultMessage": "Business Users API keys"
@@ -11610,7 +11601,7 @@
     "defaultMessage": "Legal Users"
   },
   "settings.mcp.legalHelp": {
-    "defaultMessage": "Administrators and Legal Team Members. Every Toolset in the ceiling."
+    "defaultMessage": "Administrators and Legal Team Members. They can use every Toolset you allow below."
   },
   "settings.mcp.legalKeys": {
     "defaultMessage": "Legal Users API keys"
@@ -11640,7 +11631,7 @@
     "defaultMessage": "OAuth Clients"
   },
   "settings.mcp.oauthHelp": {
-    "defaultMessage": "OAuth Clients expose /mcp, /.well-known/oauth-*, /.well-known/openid-configuration, /api/auth/oauth2/*, /api/auth/jwks and /auth/consent. See the <note>publicly reachable</note> deployment note."
+    "defaultMessage": "OAuth Clients work only if this server is reachable from the internet. <note>How to set this up</note>"
   },
   "settings.mcp.reachable": {
     "defaultMessage": "Reachable"
@@ -12416,9 +12407,6 @@
   "signing.addSigner": {
     "defaultMessage": "Add signer"
   },
-  "signing.block": {
-    "defaultMessage": "Signing"
-  },
   "signing.column.actions": {
     "defaultMessage": "Actions"
   },
@@ -12437,6 +12425,12 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.emailPlaceholder": {
+    "defaultMessage": "Email address"
+  },
+  "signing.empty": {
+    "defaultMessage": "No signature requests on this contract yet."
+  },
   "signing.executedFailed": {
     "defaultMessage": "The executed copy could not be filed. Upload it to the record instead."
   },
@@ -12446,11 +12440,17 @@
   "signing.executedFiling": {
     "defaultMessage": "Filing the executed copy…"
   },
+  "signing.namePlaceholder": {
+    "defaultMessage": "Search people or type a name"
+  },
   "signing.needReason": {
     "defaultMessage": "Say why this envelope is being voided."
   },
   "signing.needSigners": {
     "defaultMessage": "Give every signer a name and an email address."
+  },
+  "signing.peopleMatches": {
+    "defaultMessage": "People in OpenLaw"
   },
   "signing.reason": {
     "defaultMessage": "Reason"
@@ -12460,6 +12460,9 @@
   },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
+  },
+  "signing.section": {
+    "defaultMessage": "Signatures"
   },
   "signing.send": {
     "defaultMessage": "Send for signature"
@@ -12491,6 +12494,9 @@
   "signing.signersHelp": {
     "defaultMessage": "Everyone you name is asked at once. They sign in any order."
   },
+  "signing.signersNote": {
+    "defaultMessage": "Pick someone in OpenLaw, and their email fills in for you. For someone outside OpenLaw, type their name and email address."
+  },
   "signing.status.declined": {
     "defaultMessage": "Declined"
   },
@@ -12503,14 +12509,14 @@
   "signing.status.voided": {
     "defaultMessage": "Voided"
   },
-  "signing.statusArrives": {
-    "defaultMessage": "{mode, select, polling {Signed, declined, and voided status is checked by polling, about every 15–20 minutes.} webhook {Signed, declined, and voided status arrives by webhook.} other {Automatic status updates are unavailable while the connector is disabled.}} The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage."
-  },
   "signing.subject": {
     "defaultMessage": "Subject"
   },
   "signing.subjectHelp": {
     "defaultMessage": "Signers see this on the invitation. Left blank, it names this contract."
+  },
+  "signing.usesAccountEmail": {
+    "defaultMessage": "Uses their OpenLaw email"
   },
   "signing.version": {
     "defaultMessage": "Version {number}"

@@ -55,12 +55,12 @@ const checkNames = defineMessages({
   ipv4: { id: "settings.mcp.checkIpv4", defaultMessage: "IPv4 record" },
   public_ipv4: { id: "settings.mcp.checkPublicIpv4", defaultMessage: "Public IPv4 address" },
 });
-function OAuthCaption() {
+function OAuthNote() {
   return (
-    <div>
+    <p className="py-3 text-sm text-muted">
       <FormattedMessage
         id="settings.mcp.oauthHelp"
-        defaultMessage="OAuth Clients expose /mcp, /.well-known/oauth-*, /.well-known/openid-configuration, /api/auth/oauth2/*, /api/auth/jwks and /auth/consent. See the <note>publicly reachable</note> deployment note."
+        defaultMessage="OAuth Clients work only if this server is reachable from the internet. <note>How to set this up</note>"
         values={{
           note: (text) => (
             <RouterLink
@@ -72,7 +72,7 @@ function OAuthCaption() {
           ),
         }}
       />
-    </div>
+    </p>
   );
 }
 function PolicyRow({
@@ -261,13 +261,10 @@ export function SettingsMcpPage() {
             icon={Users}
             title={<FormattedMessage id="settings.mcp.legal" defaultMessage="Legal Users" />}
             caption={
-              <>
-                <FormattedMessage
-                  id="settings.mcp.legalHelp"
-                  defaultMessage="Administrators and Legal Team Members. Every Toolset in the ceiling."
-                />
-                <OAuthCaption />
-              </>
+              <FormattedMessage
+                id="settings.mcp.legalHelp"
+                defaultMessage="Administrators and Legal Team Members. They can use every Toolset you allow below."
+              />
             }
           >
             <label htmlFor="mcp-legal-oauth-clients">
@@ -303,13 +300,10 @@ export function SettingsMcpPage() {
             icon={Users}
             title={<FormattedMessage id="settings.mcp.business" defaultMessage="Business Users" />}
             caption={
-              <>
-                <FormattedMessage
-                  id="settings.mcp.businessHelp"
-                  defaultMessage="Their own Requests, Auto-Docs, portal Knowledge and the records they are on."
-                />
-                <OAuthCaption />
-              </>
+              <FormattedMessage
+                id="settings.mcp.businessHelp"
+                defaultMessage="They can see only their own Requests and Auto-Docs, portal Knowledge, and records they are on."
+              />
             }
           >
             <label htmlFor="mcp-business-oauth-clients">
@@ -341,6 +335,7 @@ export function SettingsMcpPage() {
               onCheckedChange={(businessApiKeysEnabled) => void save({ businessApiKeysEnabled })}
             />
           </PolicyRow>
+          <OAuthNote />
         </div>
       </SettingsCard>
       <AllowedClients

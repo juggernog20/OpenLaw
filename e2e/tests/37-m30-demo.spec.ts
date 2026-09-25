@@ -254,7 +254,7 @@ async function saveConnector(
 }
 
 function signingCard(page: Page): Locator {
-  return page.getByRole("region", { name: "Approvals & signing" });
+  return page.getByRole("region", { name: "Signatures" });
 }
 
 async function sendEnvelope(page: Page, number: number): Promise<void> {
@@ -372,10 +372,10 @@ test.describe("M30 demo path", () => {
       await uploadPrimaryDocument(page, stamp);
       await page.goto(`/contracts/${number}`);
       await moveToStatus(page, number, statusAt(options, "signature"));
-      await page.goto(`/contracts/${number}/approvals`);
+      await page.goto(`/contracts/${number}/signatures`);
       await sendEnvelope(page, number);
 
-      await observer.page.goto(`/contracts/${number}/approvals`);
+      await observer.page.goto(`/contracts/${number}/signatures`);
       const sentRow = signingCard(observer.page).getByRole("row").filter({
         hasText: "Out for signature",
       });

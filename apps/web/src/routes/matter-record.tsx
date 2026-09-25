@@ -1273,6 +1273,46 @@ function MatterRecord() {
             }
           >
             <div className="flex min-w-0 flex-col gap-4">
+              <section
+                aria-label={intl.formatMessage({
+                  id: "records.people.section",
+                  defaultMessage: "Owners",
+                })}
+                className="grid w-full grid-cols-1 gap-4 rounded-card border border-border-default bg-raised p-4 @2xl/page:grid-cols-2"
+              >
+                <RecordPersonField
+                  id="matter-manager"
+                  label={intl.formatMessage({
+                    id: "matters.field.manager",
+                    defaultMessage: "Matter Manager",
+                  })}
+                  frozen={frozen}
+                  value={saved.manager}
+                  people={[...heldManager, ...managerOptions]}
+                  status={fieldStatus.managerId ?? "idle"}
+                  error={fieldError.managerId}
+                  onChange={(managerId) => commit("managerId", { managerId })}
+                />
+                <RecordPersonField
+                  id="matter-business-owner"
+                  label={intl.formatMessage({
+                    id: "contracts.form.businessOwner",
+                    defaultMessage: "Business Owner",
+                  })}
+                  frozen={frozen}
+                  value={saved.businessOwner ?? null}
+                  people={[
+                    ...(saved.businessOwner &&
+                    !users.some((person) => person.id === saved.businessOwner!.id)
+                      ? [saved.businessOwner]
+                      : []),
+                    ...users,
+                  ]}
+                  status={fieldStatus.businessOwnerId ?? "idle"}
+                  error={fieldError.businessOwnerId}
+                  onChange={(businessOwnerId) => commit("businessOwnerId", { businessOwnerId })}
+                />
+              </section>
               <section className="w-full overflow-hidden rounded-card border border-border-default bg-raised">
                 <header className="flex h-section-header items-center rounded-t-card border-b border-border-default bg-section-header px-4">
                   <h2 className="text-base font-semibold">
@@ -1318,38 +1358,6 @@ function MatterRecord() {
                   </MatterConversionValue>{" "}
                   <dl className="grid grid-cols-1 items-start gap-x-6 gap-y-4 @2xl/page:grid-cols-2">
                     {orderedRows}
-                    <RecordPersonField
-                      id="matter-manager"
-                      label={intl.formatMessage({
-                        id: "matters.field.manager",
-                        defaultMessage: "Matter Manager",
-                      })}
-                      frozen={frozen}
-                      value={saved.manager}
-                      people={[...heldManager, ...managerOptions]}
-                      status={fieldStatus.managerId ?? "idle"}
-                      error={fieldError.managerId}
-                      onChange={(managerId) => commit("managerId", { managerId })}
-                    />
-                    <RecordPersonField
-                      id="matter-business-owner"
-                      label={intl.formatMessage({
-                        id: "contracts.form.businessOwner",
-                        defaultMessage: "Business Owner",
-                      })}
-                      frozen={frozen}
-                      value={saved.businessOwner ?? null}
-                      people={[
-                        ...(saved.businessOwner &&
-                        !users.some((person) => person.id === saved.businessOwner!.id)
-                          ? [saved.businessOwner]
-                          : []),
-                        ...users,
-                      ]}
-                      status={fieldStatus.businessOwnerId ?? "idle"}
-                      error={fieldError.businessOwnerId}
-                      onChange={(businessOwnerId) => commit("businessOwnerId", { businessOwnerId })}
-                    />
                   </dl>
                   <dl className="grid grid-cols-1 gap-x-8 gap-y-4 @2xl/page:grid-cols-[max-content_max-content]">
                     <Fact

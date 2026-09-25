@@ -41,6 +41,10 @@ export interface EnvelopeSigner {
   name: string;
   email: string;
 }
+/** One signer as a send names them: a user of this install by id, whose
+ * name and address the seam reads, or somebody outside it by name and
+ * address. */
+export type SendSigner = EnvelopeSigner | { personId: string };
 
 /** The record's whole signing state, as both calls answer it. */
 export type SigningState = ListResponse;
@@ -108,14 +112,18 @@ export async function readContractSigning(contractNumber: number): Promise<Signi
  */
 export async function sendContractEnvelope(
   contractNumber: number,
-  input: { documentVersionId: string; signers: readonly EnvelopeSigner[]; subject?: string },
+  input: { documentVersionId: string; signers: readonly SendSigner[]; subject?: string },
 ): Promise<SigningOutcome> {
   const result = await api
     .POST("/api/v1/contracts/{number}/envelopes", {
       params: { path: { number: contractNumber } },
       body: {
         documentVersionId: input.documentVersionId,
-        signers: input.signers.map((signer) => ({ name: signer.name, email: signer.email })),
+        signers: input.signers.map((signer) =>
+          "personId" in signer
+            ? { personId: signer.personId }
+            : { name: signer.name, email: signer.email },
+        ),
         ...(input.subject ? { subject: input.subject } : {}),
       },
     })

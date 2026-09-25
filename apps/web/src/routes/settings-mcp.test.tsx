@@ -203,7 +203,7 @@ it.each([true, false])(
     expect(legal).not.toBeChecked();
     expect(business).not.toBeChecked();
     expect(screen.queryByText(/Reachable|Not reachable/)).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "publicly reachable" })[0]).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "How to set this up" })).toHaveAttribute(
       "href",
       "/help/deployment-configuration#publicly-reachable",
     );

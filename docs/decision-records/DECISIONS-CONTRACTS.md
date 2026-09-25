@@ -237,6 +237,28 @@ The reconciliation sweep runs in both modes, as the status feed in Polling mode 
 as recovery in Webhook mode. Mode changes keep outstanding Envelopes and stored
 credentials. Disable and removal retain their existing behavior.
 
+### Addendum, 2026-09-25: pick signers from OpenLaw
+
+The M15/2 addendum said a signer has no account here, so the send dialog had
+only a name box and an email box. That is wrong for in-house signers, such as a
+director who signs for the company. The send now takes two kinds of signer:
+
+- **A user of this install**, sent as `{ personId }`. The API reads the name
+  and the address from `users`. The sender does not type a colleague's email.
+  An archived user is refused with 422, because an invitation to sign must not
+  go to someone who has left.
+- **Someone outside OpenLaw**, sent as `{ name, email }`, as before.
+
+In the dialog, the name box suggests users as the sender types. A picked user
+shows as a chip with no email box. Text that matches nobody stays a typed name,
+and the email box stays beside it. Both kinds go into one list in row order.
+
+The stored signer is the same for both kinds: a name and an address on
+`contract_envelope_signers` and on the `envelope.sent` entry. No user id is
+kept on the row. The one-address rule and the signer-erasure path therefore
+work as before. The erasure path still refuses a user's address, which now
+also covers a user who signed.
+
 ## CTR-014 — Documents: primary version chain, executed pin, generate-redline capability
 
 - **Status** — Accepted

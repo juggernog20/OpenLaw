@@ -8,11 +8,11 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 
 Mark each signature place in the paper before you upload the Document Version you will send. Type `/sig/` where each signature goes. You can make the text white so that it does not show. DocuSign puts a Sign Here field for each Signer at every `/sig/` it finds. In this version, all Signers share the same marks, so you cannot give one Signer a different place. If the paper has no `/sig/`, DocuSign puts no Sign Here field, and each Signer chooses where to sign.
 
-Move the Contract to the intended Signature Status before sending if completion should advance it to Active. The send action itself does not move its Status. [Manual hand-off](manual-signing.md) remains available without a connector.
+A successful send moves the Contract to its first configured live Signature Status, normally **Out for signature**. If sending fails, its Status stays unchanged. [Manual hand-off](manual-signing.md) remains available without a connector.
 
 ## Send the Envelope
 
-1. Open **Approvals**, then select **Send for signature** on **Approvals & signing**.
+1. Open **Signatures**, then select **Send for signature**.
 2. Choose **Version**. Check the filename and Document Version number, including whether it is current. Only the primary Document goes out; supporting Documents and attachments are not included.
 3. Enter every Signer's name and email. Use **Add signer** for another person or remove an unwanted row. Each Signer needs a distinct address.
 4. Enter **Subject** if needed. A blank subject uses the C- reference and title.
@@ -22,7 +22,7 @@ Everyone is asked at once and can sign in any order. Signers do not need OpenLaw
 
 ## Follow completion
 
-OpenLaw gets status updates from the provider. With **Polling**, which is the default, an update can take about 15 to 20 minutes while the worker runs. With **Webhook**, updates arrive when the provider delivers them. The note under a live row still says that status arrives by webhook in both modes. Watch the Envelope row and the header's signing status. **Signed** means the provider reported completion; the executed file can still be filing. Wait for **Executed copy**, open it, and check the returned paper on the original Document chain and its executed designation.
+OpenLaw gets status updates from the provider. With **Polling**, which is the default, an update can take about 15 to 20 minutes while the worker runs. With **Webhook**, updates arrive when the provider delivers them. Watch the Envelope row in **Signatures** for signing progress. The header shows the Contract Status once. **Signed** means the provider reported completion; the executed file can still be filing. Wait for **Executed copy**, open it, and check the returned paper on the original Document chain and its executed designation.
 
 Successful filing creates and pins the executed Document Version. If the Contract is still in the Signature Stage, filing moves it to the first configured live Active Status. If someone has moved it to another Stage, completion does not overwrite that Stage. Check both the Envelope and Contract Status instead of treating them as the same fact.
 

@@ -58530,21 +58530,36 @@
                     "maxItems": 10,
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 200
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "personId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64
+                            }
+                          },
+                          "required": ["personId"]
                         },
-                        "email": {
-                          "type": "string",
-                          "maxLength": 320,
-                          "format": "email",
-                          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "email": {
+                              "type": "string",
+                              "maxLength": 320,
+                              "format": "email",
+                              "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                            }
+                          },
+                          "required": ["name", "email"]
                         }
-                      },
-                      "required": ["name", "email"]
+                      ]
                     }
                   },
                   "subject": {

@@ -207,7 +207,7 @@ One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration f
 - `packages/db/migrations/0054_reminder_dedup_entity_type.sql` opens with one, because its `CREATE INDEX CONCURRENTLY` statements cannot run inside a transaction block at all — Postgres refuses the statement rather than the transaction, so the file has to end the transaction first.
 - `packages/db/migrations/0060_account_issuer.sql` ends with the one that closes its own `BEGIN` (below).
 
-Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`.
+Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`. _(2026-09-25, [#1119](https://github.com/juggernog20/OpenLaw/issues/1119): **the trailing `COMMIT` is superseded** by the #1119 addendum below. A file on the pattern leaves its own `BEGIN` open, and the runner's `COMMIT` at the end of the batch closes it.)_
 
 After any of these files, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
 
@@ -240,6 +240,27 @@ transaction as its schema change. Unknown histories still refuse to start.
 The upgrade rehearsal covers current dev, the known Home branch history, repeat
 startup, and refusal of an unknown history. No existing database is changed as
 part of preparing this integration.
+
+### Addendum (2026-09-25, [#1119](https://github.com/juggernog20/OpenLaw/issues/1119)): a migration never ends outside a transaction
+
+**A file that opens its own transaction leaves it open. The runner's `COMMIT` at the end of the batch closes it.**
+
+drizzle-orm's `migrate()` sends `BEGIN` once before the batch and `COMMIT` or `ROLLBACK` once after it, on one connection. It never checks whether a file closed that transaction. The #390 addendum told each file on the preamble to end with a `COMMIT` of its own. That `COMMIT` is the trap the same addendum describes. After it, no transaction is open, so the file's own journal row and every later file in the batch run in autocommit. A file that leaves its `BEGIN` open keeps its statements, its journal row and every later file in one transaction, and a later failure rolls them all back.
+
+The M40 dev merge found it. The rehearsal in `apps/api/src/mcp-settings-migration.test.ts` makes the MCP settings migration fail on purpose and expects the batch to roll back. With `0160` and `0161` in front of it, the six `mcp_*` columns survived the failure. `0163_mcp-settings.sql` carries the preamble for this reason.
+
+24 applied files end in autocommit, in two shapes:
+
+- A trailing `COMMIT` after the file's own `BEGIN`: `0060`, `0064`–`0066`, `0068`, `0077`, `0079`, `0084`, `0132`, `0134`, `0148`, `0155`, `0160`, `0161`.
+- A `COMMIT` followed by statements that must run outside a transaction, with no `BEGIN` after them: `0054`'s `CREATE INDEX CONCURRENTLY`, and the `VALIDATE CONSTRAINT` that runs after the locks are released in `0055`, `0069`, `0070`, `0088`, `0093`, `0135`–`0137` and `0158`.
+
+The boot guard matches applied files by hash, so none of them can change. The rule from now on:
+
+- A file that opens its own transaction does not close it.
+- A file that must run statements outside a transaction ends with `BEGIN;`. Those statements commit as they run. A later failure rolls back their journal row but not their effect, so the next start runs them again, and they must be safe to repeat.
+- `pnpm lint:migrations` enforces both. `scripts/lint-migration-journal.mjs` refuses a file whose last transaction statement is `COMMIT`, `END`, `ROLLBACK` or `ABORT`, and lists the 24 files above as the only exceptions.
+
+**The #390 preamble is no longer needed after `0163`.** An install below `0163` crosses it on the way up, and its `BEGIN` reopens the transaction. An install at `0163` or later starts its batch inside the runner's transaction. The lint keeps every later file from closing it. So from `0164` on, a file starts inside the batch transaction on every upgrade path. A new file that must be atomic can leave the preamble out, and it should, because the preamble's leading `COMMIT` makes the earlier pending files durable before the new file runs. A failure in the new file then rolls back less of the upgrade.
 
 ## TECH-007: Background jobs — pg-boss on Postgres
 

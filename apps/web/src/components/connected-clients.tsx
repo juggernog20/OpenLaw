@@ -33,6 +33,7 @@ export function ConnectedClients({
       title={<FormattedMessage id="connectedClients.title" defaultMessage="Connected Clients" />}
       region
       collapsible
+      className="max-w-none"
     >
       {grants.length ? (
         <ul className="divide-y divide-border-default">
