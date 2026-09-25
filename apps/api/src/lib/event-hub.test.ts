@@ -120,3 +120,42 @@ describe("event hub subscriber caps", () => {
     expect(hub.size).toBe(1);
   });
 });
+
+it("keeps several record addresses in one slot and leaves MCP events out of SPA streams", () => {
+  const hub = createTestingEventHub();
+  const received: LiveEvent[] = [];
+  const spa: LiveEvent[] = [];
+  hub.subscribe(
+    {
+      ...scope("alice"),
+      mcp: true,
+      record: [
+        { entityType: "contract", entityId: "one", tiers: ["working_team"] },
+        { entityType: "matter", entityId: "two", tiers: ["legal_only"] },
+        { entityType: "entity", entityId: "three", tiers: ["legal_only"] },
+      ],
+    },
+    (event) => received.push(event),
+  );
+  hub.subscribe(scope("bob"), (event) => spa.push(event));
+  const event: LiveEvent = {
+    kind: "record",
+    entityType: "contract",
+    entityId: "one",
+    visibility: "working_team",
+    action: "comment.posted",
+    entryId: "entry",
+  };
+  hub.fanOut(event);
+  hub.fanOut({ ...event, visibility: "legal_only" });
+  hub.fanOut({ ...event, entityType: "matter", entityId: "two", visibility: "legal_only" });
+  hub.fanOut({ ...event, entityId: "outside" });
+  hub.fanOut({ kind: "mcp", change: "policy" });
+  expect(received).toEqual([
+    event,
+    { ...event, entityType: "matter", entityId: "two", visibility: "legal_only" },
+    { kind: "mcp", change: "policy" },
+  ]);
+  expect(spa).toEqual([]);
+  expect(hub.size).toBe(2);
+});

@@ -43,11 +43,13 @@ export interface EventHubLimits {
 export interface EventConnectionScope {
   userId: string;
   role: UserRole;
-  record?: {
+  /** MCP policy events are internal to MCP streams. */
+  mcp?: boolean;
+  record?: readonly {
     entityType: LiveRecordEntityType;
     entityId: string;
     tiers: readonly LiveEventVisibility[];
-  };
+  }[];
 }
 
 export interface EventHub {
@@ -83,17 +85,20 @@ function isMemberPlus(role: UserRole): boolean {
 function addressedTo(event: LiveEvent, scope: EventConnectionScope): boolean {
   switch (event.kind) {
     case "mcp":
-      return false;
+      return scope.mcp === true;
     case "bell":
       return event.userId === scope.userId;
     case "inbox":
       return isMemberPlus(scope.role);
     case "record":
-      return scope.record
-        ? scope.record.entityType === event.entityType &&
-            scope.record.entityId === event.entityId &&
-            scope.record.tiers.includes(event.visibility)
-        : false;
+      return (
+        scope.record?.some(
+          (record) =>
+            record.entityType === event.entityType &&
+            record.entityId === event.entityId &&
+            record.tiers.includes(event.visibility),
+        ) ?? false
+      );
   }
 }
 

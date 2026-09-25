@@ -26,6 +26,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { requireAuth, requireRole } from "../../auth/guards.js";
 import { mintApiKey } from "../../auth/api-keys.js";
 import { selectableToolsets } from "../../mcp/selectable-toolsets.js";
+import { publishLiveEvent } from "../../lib/live-events.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import type { NotifyingTransaction } from "../../lib/notifications/notifier.js";
@@ -363,6 +364,11 @@ export const apiKeyRoutes: FastifyPluginAsyncZod = async (app) => {
               .where(eq(apiKeyRequests.id, row.id))
               .returning();
             await audit(tx, changed!, "revoked", req.user.id);
+            await publishLiveEvent(tx, {
+              kind: "mcp",
+              change: "revocation",
+              credentialIds: [row.keyId!],
+            });
             return present(tx, changed!);
           }
           if (row.status !== "pending")
