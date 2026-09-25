@@ -11,5 +11,22 @@
     "reviewer": "DOC-030 independent walkthrough and compatibility reviewer agents (one seat per article group, independent of the source-review authors)",
     "reviewedAt": "2026-09-25T21:10:28.264Z",
     "summary": "DOC-030 (#1157) re-verified the suite against labs built from 067c1646. Each guide whose text or underlying behavior changed received a source review and an independent agent walkthrough for every required role and method on that build. Seven guides the app-diff triage left unchanged carry a compatibility review with replayed DOC-029 scripts. configure-analysis used a live OpenRouter key, and connect-claude and the public deployment profile used a live claude.ai session with the owner. 60 of 62 guides pass. connect-chatgpt and connect-microsoft-365-copilot await live vendor sessions under DOC-031 and receive no credit."
+  },
+  "publication": {
+    "status": "validation-pending",
+    "approvedBy": "Blair Wentworth",
+    "approvedAt": "2026-09-25T21:31:25.738Z",
+    "sourceCommit": "1009e1311a2d2964be47a529cc86e362484a7dd1",
+    "reason": "User decision in DOC-030 (#1157), 2026-09-26: \"Keep them, open DOC-031\", on the option that connect-chatgpt and connect-microsoft-365-copilot stay in Help with an unverified badge until live ChatGPT and Copilot sessions under DOC-031 (#1187). This authorizes availability with validation in progress, not a claim that verification has passed.",
+    "articles": [
+      {
+        "id": "connect-chatgpt",
+        "contentSha256": "c1579bcfeb277aca236b850cc26f9d0c3a35e0376820be6066bdf74b1beee665"
+      },
+      {
+        "id": "connect-microsoft-365-copilot",
+        "contentSha256": "2922e0142463b08a8d5948d316b7a4e79296468427dd8fd84f1b682c0161c738"
+      }
+    ]
   }
 }

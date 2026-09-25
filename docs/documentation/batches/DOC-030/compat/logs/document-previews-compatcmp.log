@@ -1,0 +1,27 @@
+[administrator] PASS document-previews: Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document
+[administrator] PASS document-previews: Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version
+[administrator] PASS document-previews: Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it
+[administrator] PASS document-previews: Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads
+[administrator] PASS document-previews: Supported reading surfaces: other formats download from the name; a reader link shows the download-only card
+[administrator] PASS document-previews: Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable
+[administrator] PASS document-previews: Failed previews: the failure message, Download of the original, and recovery by adding a readable Version
+[legal_team_member] PASS document-previews: Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document
+[legal_team_member] PASS document-previews: Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version
+[legal_team_member] PASS document-previews: Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it
+[legal_team_member] PASS document-previews: Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads
+[legal_team_member] PASS document-previews: Supported reading surfaces: other formats download from the name; a reader link shows the download-only card
+[legal_team_member] PASS document-previews: Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable
+[legal_team_member] PASS document-previews: Failed previews: the failure message, Download of the original, and recovery by adding a readable Version
+[business_user] PASS document-previews: Read files in the Business Portal: Documents section, select a name to read the current Version, download beside it
+[business_user] PASS document-previews: Read files in the Business Portal: … earlier versions lists earlier Versions; a filename reads that Version
+[business_user] PASS document-previews: Read files in the Business Portal: archived Documents and records outside your audience are not listed
+[business_user] PASS document-previews: Read files in the Business Portal: on your own Request, select a file under Attachments to download it
+[business_user] PASS document-previews: Read files in the Business Portal: a comment attachment name opens its preview with Download; Preview unavailable appears for a file with no preview
+[business_user] PASS document-previews: Read files in the Business Portal: Knowledge lists the primary Document first with Download beside each file and no preview or Version picker; an archived item is no longer available
+[business_user] PASS document-previews: Before you start: the Portal does not grant access to the staff Documents repository
+[business_user] PASS document-versions: Before you start: Business Users on the team upload Documents and add Versions in the Portal, including a new Version of the primary Document
+[business_user] PASS document-versions: Before you start and Recover: Business Users cannot change designations, kinds or folders, archive or delete, and get no filing action
+[business_user] PASS document-folders: Before you start: Business Users upload several files at the record root but cannot create folders, move Documents or import a folder structure
+[business_user] PASS archive-and-delete-documents: Before you start: Business Users cannot archive, restore or delete; they have no managed-Document deletion controls
+
+25/25 steps passed
