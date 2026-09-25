@@ -115,7 +115,8 @@ async function connect(toolsets: string[], scope: "read" | "write", modern = tru
   return client;
 }
 async function names(client: Client) {
-  return (await client.listTools()).tools.map((t) => t.name);
+  // These assertions read server policy after a change, rather than the Client's five-minute cache.
+  return (await client.listTools(undefined, { cacheMode: "refresh" })).tools.map((t) => t.name);
 }
 async function refusal(client: Client, name: string, code: string) {
   const result = await client.callTool({ name });
@@ -149,8 +150,8 @@ it.each([false, true])(
       .from(orgSettings);
     try {
       await h.db.update(orgSettings).set({ mcpReadOnly: true });
-      expect(await names(writer)).not.toContain(write.name);
       await refusal(writer, write.name, "mcp_read_only");
+      expect(await names(writer)).not.toContain(write.name);
       await h.db.update(orgSettings).set({ mcpReadOnly: false, mcpToolsetCeiling: ["matters"] });
       expect(await names(writer)).toEqual(guideNames);
       await refusal(writer, read.name, "tool_outside_grant");

@@ -1428,6 +1428,12 @@ The row stores `id`, `person_id`, `credential_id`, `client_name`, `tool`, `outco
 `person_id` references `users`. `credential_id` identifies the API key and is reserved for
 OAuth credentials too. The Client name comes from the approved API key request.
 
+A resource read gets a row too, and counts against the same limit. Its `tool` is `resource:` and
+the template or view name, for example `resource:contracts`. The row never holds the address.
+An address that matches no template gets `resource:unknown`. The reservation stores a name of up
+to 64 letters, digits, `_` or `-`, with at most one `resource:` or `prompt:` prefix. It stores
+any other name as `unknown_tool`.
+
 A call reserves a `pending` row before running and updates its outcome and duration on completion.
 A per-credential database lock serializes reservations. The hourly limit counts reserved calls
 in the current database clock hour, excluding `rate_limited` refusals. Refusals still get a row.
