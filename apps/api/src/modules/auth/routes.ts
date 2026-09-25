@@ -1167,7 +1167,15 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           "Request a portal magic link (DD-010); the response is identical " +
           "whether or not the address is eligible",
         tags: ["auth"],
-        body: z.object({ email: z.email(), group: z.enum(["legal", "business"]).optional() }),
+        body: z.object({
+          email: z.email(),
+          group: z.enum(["legal", "business"]).optional(),
+          callbackURL: z
+            .string()
+            .max(16032)
+            .regex(/^\/(?:auth|portal)\/login\?[^#\r\n]+$/)
+            .optional(),
+        }),
         response: {
           202: z.object({ message: z.string() }),
           default: problemResponse,
@@ -1206,12 +1214,16 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         try {
           const portal =
             !user || user.role === "business_user" || request.body.group === "business";
+          // Better Auth 1.7.5 decodes callback URLs again after parsing the query.
+          // Protect percent escapes so the signed OAuth query survives redemption.
+          const callbackURL = request.body.callbackURL?.replaceAll("%", "%25");
           await app.auth.api.signInMagicLink({
             body: {
               email,
-              callbackURL: portal ? "/portal" : "/",
-              errorCallbackURL:
-                request.body.group === "business"
+              callbackURL: callbackURL ?? (portal ? "/portal" : "/"),
+              errorCallbackURL: callbackURL
+                ? `${callbackURL}&error=link&method=magic-link`
+                : request.body.group === "business"
                   ? "/portal/login?error=link&method=magic-link"
                   : "/auth/login?error=link&method=magic-link",
             },

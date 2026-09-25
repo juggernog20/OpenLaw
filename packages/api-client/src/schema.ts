@@ -8867,6 +8867,7 @@ export interface operations {
           email: string;
           /** @enum {string} */
           group?: "legal" | "business";
+          callbackURL?: string;
         };
       };
     };
