@@ -1828,18 +1828,79 @@ describe("shared browser and worker status allowance", () => {
     read.mockRestore();
   });
 
-  it("recovers provider sends for drafts with no browser launch or pending confirmation", async () => {
-    const { contract, id, providerEnvelopeId } = await launchedDraft(
-      "Sent outside the launch flow",
+  it("does not read a draft before its first launch, and does after one", async () => {
+    const { id, providerEnvelopeId } = await launchedDraft(
+      "Created, never opened",
       "unlaunched",
       false,
     );
     expect(await openCorrelations(id)).toHaveLength(0);
-    expect(await held(id)).toMatchObject({ status: "draft", confirmationPending: false });
+    const read = vi.spyOn(harness.signing!, "readEnvelope");
+    const readsOfDraft = () => read.mock.calls.filter(([asked]) => asked === providerEnvelopeId);
+    // Its creation response is the evidence that it is a draft (#1170 §7).
+    await sweep();
+    expect(readsOfDraft()).toHaveLength(0);
+    expect(await held(id)).toMatchObject({
+      status: "draft",
+      confirmationPending: false,
+      nextReconcileAt: null,
+    });
+    // Launched, then sent and abandoned: polled once the grace has passed.
+    const launched = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${id}/launch`,
+      cookies: as(MEMBER),
+    });
+    expect(launched.statusCode, launched.body).toBe(200);
     harness.signing!.sendDraft(providerEnvelopeId);
+    await ageLaunch(id, 16);
+    await sweep();
+    expect(readsOfDraft()).toHaveLength(1);
+    expect(await held(id)).toMatchObject({ status: "sent", confirmationPending: false });
+    read.mockRestore();
+  });
+
+  it("keeps a saved draft pollable after a later launch fails", async () => {
+    const { id, providerEnvelopeId } = await launchedDraft("Saved, then reopen fails", "reopen");
+    // Returned with Save: the correlation is consumed, the draft is saved.
+    const returnUrl = new URL(harness.signing!.launches.at(-1)!.returnUrl);
+    returnUrl.searchParams.set("event", "Save");
+    const navigated = await harness.app.inject({
+      method: "GET",
+      url: returnUrl.pathname + returnUrl.search,
+    });
+    const cookie = navigated.cookies.find((item) => item.name === "openlaw-signing-return")!;
+    const confirmed = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/signing/return",
+      cookies: { ...as(MEMBER), "openlaw-signing-return": cookie.value },
+    });
+    expect(confirmed.statusCode, confirmed.body).toBe(200);
+    // A reopen the provider refuses must not erase the launch history.
+    const failure = vi
+      .spyOn(harness.signing!, "launchEnvelope")
+      .mockRejectedValueOnce(new Error("session refused"));
+    expect(
+      (
+        await harness.app.inject({
+          method: "POST",
+          url: `/api/v1/envelopes/${id}/launch`,
+          cookies: as(MEMBER),
+        })
+      ).statusCode,
+    ).toBe(502);
+    failure.mockRestore();
+    expect(
+      await harness.db.select().from(envelopeLaunches).where(eq(envelopeLaunches.envelopeId, id)),
+    ).toHaveLength(1);
+    // Sent from the provider's own console later: the sweep still learns it.
+    harness.signing!.sendDraft(providerEnvelopeId);
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ nextReconcileAt: new Date(0) })
+      .where(eq(contractEnvelopes.id, id));
     await sweep();
     expect(await held(id)).toMatchObject({ status: "sent", confirmationPending: false });
-    expect(await entriesOn(contract.id)).toHaveLength(1);
   });
 
   it("confirms a draft sent without a return once the grace has passed", async () => {

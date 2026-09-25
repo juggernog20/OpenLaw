@@ -102,16 +102,6 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
         account.accountId !== envelope.providerAccountId
       )
         throw httpError(409, "The original Signing account is unavailable.");
-      // Spent correlations for this Envelope have nothing left to grant.
-      // Pruned here so the table holds only launches that can still return.
-      await app.db
-        .delete(envelopeLaunches)
-        .where(
-          and(
-            eq(envelopeLaunches.envelopeId, envelope.id),
-            or(isNotNull(envelopeLaunches.consumedAt), lte(envelopeLaunches.expiresAt, new Date())),
-          ),
-        );
       const state = randomBytes(32).toString("base64url");
       await app.db.insert(envelopeLaunches).values({
         stateHash: hash(state),
@@ -129,6 +119,20 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
           .update(contractEnvelopes)
           .set({ confirmationPending: true })
           .where(eq(contractEnvelopes.id, envelope.id));
+        // Spent correlations have nothing left to grant. Pruned only once
+        // the new one stands, so a launched Envelope always keeps at least
+        // one row: the sweep reads "has been launched" from it.
+        await app.db
+          .delete(envelopeLaunches)
+          .where(
+            and(
+              eq(envelopeLaunches.envelopeId, envelope.id),
+              or(
+                isNotNull(envelopeLaunches.consumedAt),
+                lte(envelopeLaunches.expiresAt, new Date()),
+              ),
+            ),
+          );
         return { url };
       } catch {
         await app.db.delete(envelopeLaunches).where(eq(envelopeLaunches.stateHash, hash(state)));

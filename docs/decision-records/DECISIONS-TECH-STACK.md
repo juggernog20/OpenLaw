@@ -2005,7 +2005,9 @@ The worker leaves a draft alone for fifteen minutes after a launch, so a return
 inside that window keeps the first eligible read. That is a grace, not a lock: an
 open correlation is no proof the editor is still open, so after the grace the worker
 polls the draft on its ordinary cadence and confirms a send whose return was lost. A
-sent Envelope is never deferred, whatever correlations it still holds.
+sent Envelope is never deferred, whatever correlations it still holds. A draft that
+has never been launched is not polled at all: its creation response is its evidence,
+and a read before the first launch would only spend the allowance the return needs.
 The driver returns a fresh Sender View URL unchanged and never sends OAuth credentials
 to the browser. Launch/return responses use no-store and no-referrer; ordinary request
 logging already excludes query strings, cookies and response bodies. No launch URL or

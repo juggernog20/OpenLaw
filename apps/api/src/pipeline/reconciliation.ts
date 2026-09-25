@@ -127,30 +127,44 @@ export const RECONCILIATION_REFUSAL_LIMIT = 5;
 export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
 
 /**
- * A draft launched into the provider's own screen less than one read
- * interval ago (#1172). The sweep leaves it to the browser return for
- * that long: the return usually arrives inside the interval and spends
- * the first eligible read itself, and a sweep read in the meantime would
- * only learn "still a draft" while taking that read away.
+ * Which drafts the sweep asks about (#1170 §7, #1172).
  *
- * It is a grace of `LAUNCH_RETURN_GRACE_MINUTES`, never a lock. An
- * unconsumed correlation is not proof that the editor is open — a sender
- * can send and close the browser, or the return can be lost — so once the
- * grace passes the draft is polled on the ordinary cadence however long
- * the correlation stays valid. A `sent` row is never deferred: a verified
- * notification may have moved it while a correlation was still open, and
- * its completion polling must carry on.
+ * Never one that has not been launched: its creation response is the
+ * evidence that it is a draft, and a read before its first launch would
+ * learn nothing while spending the allowance the first return needs.
+ * A verified notification still moves such a draft; only polling waits.
+ *
+ * Not one launched less than one read interval ago either. The return
+ * usually arrives inside the interval and spends the first eligible read
+ * itself, and a sweep read in the meantime would only learn "still a
+ * draft" while taking that read away. That is a grace of
+ * `LAUNCH_RETURN_GRACE_MINUTES`, never a lock: an unconsumed correlation
+ * is not proof that the editor is open — a sender can send and close the
+ * browser, or the return can be lost — so once the grace passes the draft
+ * is polled on the ordinary cadence however long the correlation stays
+ * valid. A launch leaves at least one correlation row behind for as long
+ * as the Envelope lives, which is what "has been launched" reads from.
+ *
+ * A `sent` row is never deferred: a verified notification may have moved
+ * it while a correlation was still open, and its completion polling must
+ * carry on.
  */
-const outsideReturnGrace = () =>
+const pollableDraft = () =>
   or(
     ne(contractEnvelopes.status, "draft"),
-    sql`not exists (
-      select 1 from ${envelopeLaunches}
-      where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
-        and ${envelopeLaunches.consumedAt} is null
-        and ${envelopeLaunches.expiresAt} - make_interval(mins => ${LAUNCH_LIFETIME_MINUTES})
-            > clock_timestamp() - make_interval(mins => ${LAUNCH_RETURN_GRACE_MINUTES})
-    )`,
+    and(
+      sql`exists (
+        select 1 from ${envelopeLaunches}
+        where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
+      )`,
+      sql`not exists (
+        select 1 from ${envelopeLaunches}
+        where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
+          and ${envelopeLaunches.consumedAt} is null
+          and ${envelopeLaunches.expiresAt} - make_interval(mins => ${LAUNCH_LIFETIME_MINUTES})
+              > clock_timestamp() - make_interval(mins => ${LAUNCH_RETURN_GRACE_MINUTES})
+      )`,
+    ),
   );
 
 /** What the sweep is built from: the rows, the connector, somewhere to
@@ -272,7 +286,7 @@ export async function runReconciliationSweep(
           // nothing left for this sweep to learn.
           inArray(contractEnvelopes.status, ["draft", "sent"]),
           reconciliationDue(),
-          outsideReturnGrace(),
+          pollableDraft(),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
         ),
       )

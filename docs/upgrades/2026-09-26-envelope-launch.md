@@ -22,8 +22,9 @@ webhook address. Polling retains its fifteen-minute per-Envelope read allowance.
 leaves a draft alone for at most fifteen minutes after a launch, reserving the next
 eligible read for a prompt return. A prior poll can still hold that read allowance.
 A send whose return was lost is confirmed on the next ordinary poll after the grace.
-Saved and unlaunched drafts remain eligible for polling: sends outside the browser
-return flow must also recover.
+A draft is not polled before its first launch: its creation is the evidence that it is
+a draft. Once launched, a saved draft stays eligible for polling, so a send made later
+outside the browser return flow still recovers.
 
 Protocol tests and a scripted browser stand-in establish application behavior only.
 Before rollout, #1178 must record real DocuSign checks for recipient and message locks,
