@@ -5,7 +5,7 @@
  * Each changed field writes an org_settings.updated row at admin_only in
  * the same transaction as the policy update (DD-017).
  */
-import { orgSettings, eq } from "@openlaw/db";
+import { allowedClients, orgSettings, eq } from "@openlaw/db";
 import { MCP_TOOLSETS, MCP_OAUTH_UNAVAILABLE_PROBLEM } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -16,9 +16,12 @@ import { httpError, problemResponse, problemTypeResponse } from "../../lib/probl
 
 import { createReachabilityCheck, Reachability, type ResolveIpv4 } from "./reachability.js";
 
+import { AllowedClient, serializeAllowedClient } from "./allowed-clients.js";
+
 const lifetimeError = "API key lifetime must be a whole number from 1 to 365 days.";
 const Policy = z.object({
   enabled: z.boolean(),
+  dynamicClientRegistrationEnabled: z.boolean(),
   legalApiKeysEnabled: z.boolean(),
   businessApiKeysEnabled: z.boolean(),
   legalOAuthClientsEnabled: z.boolean(),
@@ -39,11 +42,13 @@ const Policy = z.object({
 });
 const State = Policy.extend({
   reachability: Reachability.nullable(),
+  allowedClients: z.array(AllowedClient),
   serverAddress: z.string(),
   authorizationServerAvailable: z.boolean(),
 });
 const columns = {
   enabled: orgSettings.mcpEnabled,
+  dynamicClientRegistrationEnabled: orgSettings.mcpDynamicClientRegistrationEnabled,
   legalApiKeysEnabled: orgSettings.mcpLegalApiKeysEnabled,
   businessApiKeysEnabled: orgSettings.mcpBusinessApiKeysEnabled,
   legalOAuthClientsEnabled: orgSettings.mcpLegalOAuthClientsEnabled,
@@ -54,6 +59,7 @@ const columns = {
 };
 const fieldColumns = {
   enabled: "mcpEnabled",
+  dynamicClientRegistrationEnabled: "mcpDynamicClientRegistrationEnabled",
   legalApiKeysEnabled: "mcpLegalApiKeysEnabled",
   businessApiKeysEnabled: "mcpBusinessApiKeysEnabled",
   legalOAuthClientsEnabled: "mcpLegalOAuthClientsEnabled",
@@ -85,6 +91,7 @@ export function mcpSettingsRoutes(resolveIpv4?: ResolveIpv4): FastifyPluginAsync
         if (!row) throw httpError(500, "Organization settings are unavailable.");
         return {
           ...row,
+          allowedClients: (await app.db.select().from(allowedClients)).map(serializeAllowedClient),
           serverAddress,
           authorizationServerAvailable: available,
           reachability: await reachability(row),
@@ -156,7 +163,11 @@ export function mcpSettingsRoutes(resolveIpv4?: ResolveIpv4): FastifyPluginAsync
             authorizationServerAvailable: available,
           };
         });
-        return { ...result, reachability: await reachability(result) };
+        return {
+          ...result,
+          allowedClients: (await app.db.select().from(allowedClients)).map(serializeAllowedClient),
+          reachability: await reachability(result),
+        };
       },
     );
   };

@@ -140,6 +140,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "user.sessions_revoked": { email: "sam@example.com", sessions: 2 },
 
   // Organization settings
+  "allowed_client.created": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.updated": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.toggled": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.secret_generated": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.deleted": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.linked": { allowedClientId: "c1", clientName: "Test Client" },
   "org_settings.updated": { field: "defaultTimezone", old: "UTC", new: "Asia/Dubai" },
   "settings.catalog_cleared": { list: "matter_type", removed: 8 },
 

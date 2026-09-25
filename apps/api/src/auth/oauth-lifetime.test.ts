@@ -26,20 +26,20 @@ it.each([90, 1, 365])(
     );
     try {
       const cookies = await signInCookies(app, TEST_ADMIN.email, TEST_ADMIN.password);
-      const client = await app.auth.api.adminCreateOAuthClient({
-        headers: new Headers({
-          cookie: Object.entries(cookies)
-            .map(([k, v]) => `${k}=${v}`)
-            .join("; "),
-        }),
-        body: {
-          client_name: `Lifetime ${days}`,
-          redirect_uris: ["https://client.example/callback"],
-          token_endpoint_auth_method: "none",
-          grant_types: ["authorization_code", "refresh_token"],
-          scope: "toolset:contracts offline_access",
-        },
+      const created = await app.inject({
+        method: "POST",
+        url: "/api/v1/mcp-settings/allowed-clients",
+        cookies,
+        payload: { name: `Lifetime ${days}`, callbackUrls: ["https://client.example/callback"] },
       });
+      expect(created.statusCode, created.body).toBe(201);
+      const secret = await app.inject({
+        method: "POST",
+        url: `/api/v1/mcp-settings/allowed-clients/${created.json().id}/secret`,
+        cookies,
+      });
+      expect(secret.statusCode, secret.body).toBe(200);
+      const client = { client_id: created.json().clientId, client_secret: secret.json().secret };
       const verifier = "openlaw-lifetime-verifier-".repeat(3);
       const query = new URLSearchParams({
         client_id: client.client_id,
@@ -68,6 +68,7 @@ it.each([90, 1, 365])(
         payload: new URLSearchParams({
           grant_type: "authorization_code",
           client_id: client.client_id,
+          client_secret: client.client_secret,
           code: code!,
           redirect_uri: "https://client.example/callback",
           code_verifier: verifier,

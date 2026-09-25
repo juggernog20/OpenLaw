@@ -1205,6 +1205,13 @@
       "when": 1790292480513,
       "tag": "0171_mcp-oauth-settings",
       "breakpoints": true
+    },
+    {
+      "idx": 172,
+      "version": "7",
+      "when": 1790295867816,
+      "tag": "0172_hard_bucky",
+      "breakpoints": true
     }
   ]
 }

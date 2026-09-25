@@ -1396,7 +1396,25 @@ type ApiKeyPayloads = Record<
   }
 >;
 
-export type ActivityPayloadMap = ApiKeyPayloads &
+type AllowedClientPayloads = Record<
+  | "allowed_client.created"
+  | "allowed_client.updated"
+  | "allowed_client.toggled"
+  | "allowed_client.secret_generated"
+  | "allowed_client.deleted"
+  | "allowed_client.linked",
+  {
+    allowedClientId: string;
+    clientName: string;
+    clientId?: string;
+    registeredByClient?: boolean;
+    enabled?: boolean;
+    callbackUrls?: string[];
+  }
+>;
+
+export type ActivityPayloadMap = AllowedClientPayloads &
+  ApiKeyPayloads &
   AutoDocPayloads &
   UserPayloads &
   OrgSettingsPayloads &

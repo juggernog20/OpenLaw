@@ -173,20 +173,14 @@ function authorizationQuery(clientId: string) {
 }
 
 it("opens a server-created Client's consent page with a signed query", async () => {
-  const client = await h.app.auth.api.adminCreateOAuthClient({
-    headers: new Headers({
-      cookie: Object.entries(cookies)
-        .map(([key, value]) => `${key}=${value}`)
-        .join("; "),
-    }),
-    body: {
-      client_name: "Registered Client",
-      redirect_uris: ["https://client.example/callback"],
-      token_endpoint_auth_method: "none",
-      grant_types: ["authorization_code", "refresh_token"],
-      scope: "toolset:contracts offline_access",
-    },
+  const created = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/mcp-settings/allowed-clients",
+    cookies,
+    payload: { name: "Registered Client", callbackUrls: ["https://client.example/callback"] },
   });
+  expect(created.statusCode, created.body).toBe(201);
+  const client = { client_id: created.json().clientId };
   const query = authorizationQuery(client.client_id);
   const res = await h.app.inject({ url: `/api/auth/oauth2/authorize?${query}`, cookies });
   expect(res.statusCode, res.body).toBe(302);
@@ -200,30 +194,28 @@ it("opens a server-created Client's consent page with a signed query", async () 
   expect(new URL(login.headers.location!, h.app.baseUrl).pathname).toBe("/auth/login");
 });
 
-it.each([
-  "https://claude.ai/oauth/mcp-oauth-client-metadata",
-  "https://claude.ai/oauth/claude-code-client-metadata",
-  "https://chatgpt.com/oauth/client.json",
-  "https://unlisted.example/client.json",
-])("refuses CIMD %s before a metadata request", async (clientId) => {
-  const requests: unknown[] = [];
-  const observe = (message: unknown) => {
-    requests.push(message);
-  };
-  const channels = ["http.client.request.start", "undici:request:create"];
-  channels.forEach((name) => subscribe(name, observe));
-  try {
-    const res = await h.app.inject({
-      url: `/api/auth/oauth2/authorize?${authorizationQuery(clientId)}`,
-      cookies,
-    });
-    expect(res.statusCode, res.body).toBe(400);
-    expect(res.body).toContain("client_id URL is not permitted by the server's fetch policy");
-    expect(requests).toEqual([]);
-  } finally {
-    channels.forEach((name) => unsubscribe(name, observe));
-  }
-});
+it.each(["https://unlisted.example/client.json"])(
+  "refuses CIMD %s before a metadata request",
+  async (clientId) => {
+    const requests: unknown[] = [];
+    const observe = (message: unknown) => {
+      requests.push(message);
+    };
+    const channels = ["http.client.request.start", "undici:request:create"];
+    channels.forEach((name) => subscribe(name, observe));
+    try {
+      const res = await h.app.inject({
+        url: `/api/auth/oauth2/authorize?${authorizationQuery(clientId)}`,
+        cookies,
+      });
+      expect(res.statusCode, res.body).toBe(400);
+      expect(res.body).toContain("Client is not on the enabled Allowed Clients list.");
+      expect(requests).toEqual([]);
+    } finally {
+      channels.forEach((name) => unsubscribe(name, observe));
+    }
+  },
+);
 
 it("verifies a JWT, but refuses it until a grant can be resolved", async () => {
   const { token } = await h.app.auth.api.signJWT({

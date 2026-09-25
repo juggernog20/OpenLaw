@@ -353,7 +353,7 @@ export function createAuth(
     },
     plugins: [
       apiKeyPlugin(),
-      ...oauthPlugins(config.baseUrl, config.mcpOAuthGrantLifetimeDays),
+      ...oauthPlugins(config.baseUrl, config.mcpOAuthGrantLifetimeDays, db),
       // Owns the users.role column plus ban/impersonation columns. Bans
       // carry no product semantics yet; adminRoles shields administrators
       // from ban/impersonation targeting. The roles map exists to teach

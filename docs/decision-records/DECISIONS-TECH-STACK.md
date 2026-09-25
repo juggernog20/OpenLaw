@@ -1850,3 +1850,37 @@ until M41/4 can resolve its grant. API keys retain their M40 verifier and guards
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
 | TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 upload URL shape recorded by the 2026-09-24 addendum              |
+
+### Addendum (2026-09-25, #1134): Allowed Clients and registration
+
+The CIMD metadata gate admits only enabled published identities. The ChatGPT
+connection URL maps to its seeded identity. Authorization also reads the list
+before using a cached client and checks the code-owned published callbacks or
+the registered Client's exact pasted callbacks. `allowed_client_links` maps
+each plugin client id to its Allowed Client, including multiple ChatGPT
+connections.
+
+Registered Clients use the plugin's server APIs for creation, callback edits
+and secret rotation. Management and dynamic registration run on a transaction
+local adapter, so the protocol row, Allowed Client and audit commit together.
+All registered Clients belong to the organization so any Administrator can
+manage them. The 1.7.5 provider exposes no client-disable endpoint. A server-only
+plugin extension writes its `disabled` flag through the better-auth adapter.
+Deleting a non-seeded Allowed Client disables and retains the protocol row for
+existing token and consent references. It removes the row from the Allowed
+Clients list. Secrets appear only in the generation or registration response;
+OpenLaw never stores a recoverable copy. Rotation preserves consent rows.
+
+The registration switch is read at request time, including for the root and
+auth-prefixed discovery documents. A disabled switch refuses registration and
+omits `registration_endpoint`. A confidential dynamic registration returns a
+secret and creates an enabled registered Allowed Client with the caption
+"Registered by the Client". Direct HTTP client-management endpoints are closed;
+the Administrator uses the audited OpenLaw routes.
+
+The API tests run the pinned plugins against throwaway Postgres. Stubbed metadata
+admits Claude Code with loopback callbacks on different ports, and ChatGPT's
+stable identity with `private_key_jwt` and a validated RSA JWKS document. The
+server advertises `private_key_jwt` through the provider's built-in discovery.
+These tests verify protocol behavior, not a live vendor sign-in. Live Claude
+Code and Copilot Studio journeys remain part of the milestone runtime handoff.

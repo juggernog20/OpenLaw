@@ -402,7 +402,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} " +
         "requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} " +
         "mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} " +
-        "mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} " +
+        "mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} " +
         "mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} " +
         "other {{key}}}",
     },
@@ -2805,6 +2805,54 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     message: defineMessage({
       id: "activity.apiKey.expired",
       defaultMessage: "{actor} recorded expiry of the API key for {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "allowed_client.created": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.allowedClient.created",
+      defaultMessage: "{actor} added Allowed Client {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "allowed_client.updated": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.allowedClient.updated",
+      defaultMessage: "{actor} edited Allowed Client {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "allowed_client.toggled": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.allowedClient.toggled",
+      defaultMessage: "{actor} changed access for Allowed Client {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "allowed_client.secret_generated": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.allowedClient.secret_generated",
+      defaultMessage: "{actor} generated a secret for Allowed Client {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "allowed_client.deleted": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.allowedClient.deleted",
+      defaultMessage: "{actor} deleted Allowed Client {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "allowed_client.linked": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.allowedClient.linked",
+      defaultMessage: "{actor} linked a published identity for Allowed Client {client}",
     }),
     values: apiKeyValues,
   },

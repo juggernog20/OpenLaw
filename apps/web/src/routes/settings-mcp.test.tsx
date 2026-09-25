@@ -10,6 +10,8 @@ const ADMIN = {
   role: "administrator" as const,
 };
 const initial = {
+  allowedClients: [],
+  dynamicClientRegistrationEnabled: false,
   enabled: false,
   legalOAuthClientsEnabled: false,
   businessOAuthClientsEnabled: false,

@@ -14,6 +14,7 @@ import { api } from "../lib/api";
 import { requireUser } from "../lib/session";
 import { TOOLSET_MESSAGES } from "../lib/mcp";
 import { PageTitle } from "../components/page-title";
+import { AllowedClients } from "../components/allowed-clients";
 import { ApiKeys } from "../components/api-keys";
 import { SettingsCard } from "../components/settings-card";
 import { Button } from "../components/ui/button";
@@ -340,6 +341,14 @@ export function SettingsMcpPage() {
           </PolicyRow>
         </div>
       </SettingsCard>
+      <AllowedClients
+        initial={loaded.allowedClients}
+        dynamicEnabled={policy.dynamicClientRegistrationEnabled}
+        policyBusy={busy}
+        onDynamicChange={(dynamicClientRegistrationEnabled) =>
+          void save({ dynamicClientRegistrationEnabled })
+        }
+      />
       <SettingsCard
         title={<FormattedMessage id="settings.mcp.ceiling" defaultMessage="Toolset ceiling" />}
         collapsible

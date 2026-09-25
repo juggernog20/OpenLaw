@@ -450,7 +450,7 @@ One connected program acting for one person through MCP, such as Claude, ChatGPT
 _Avoid_: agent client, bot, integration, connector (that is a Signing or AI connector)
 
 **Allowed Client**:
-A Client the Administrator has listed as permitted to ask for an OAuth grant. One of two kinds: a published identity, which holds the vendor's Client ID Metadata Document URL and is seeded, not editable; or a registered client, which OpenLaw generates as a client id and a one-time secret with the vendor's pasted callback URLs. Seeded with Claude, ChatGPT and Microsoft 365 Copilot [DD-029].
+A Client the Administrator has listed as permitted to ask for an OAuth grant. One of two kinds: a published identity, which holds the vendor's Client ID Metadata Document URL and is seeded, not editable; or a registered client, which OpenLaw generates as a client id and a one-time secret with the vendor's pasted callback URLs. Seeded with Claude, Claude Code, ChatGPT and Microsoft 365 Copilot [DD-029].
 _Avoid_: trusted client, registered app, OAuth app, connector
 
 **API key**:
