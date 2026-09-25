@@ -20,6 +20,7 @@ import { documentTools } from "./documents.js";
 import { entityTools } from "./entities.js";
 import { knowledgeTools } from "./knowledge.js";
 import { autoDocTools } from "./auto-docs.js";
+import { teamTools } from "./team.js";
 import { guideTools } from "./guide.js";
 
 export const instructions =
@@ -135,4 +136,5 @@ export const toolRegister: readonly ToolDefinition[] = [
   ...entityTools,
   ...knowledgeTools,
   ...autoDocTools,
+  ...teamTools,
 ];
