@@ -1115,6 +1115,8 @@ describe("preparation refusals and reservations", () => {
   });
 
   it("reserves before creation, against concurrent preparations and direct send", async () => {
+    // Isolate the removal check from sent rounds left by earlier cases.
+    await harness.db.delete(contractEnvelopes);
     const { contract, payload, prepare } = await ready();
     let release!: () => void;
     let entered!: () => void;
@@ -1163,6 +1165,12 @@ describe("preparation refusals and reservations", () => {
     }
     expect((await pending).statusCode).toBe(201);
     expect((await signingState(as(MEMBER), contract.number)).envelopes).toHaveLength(1);
+    const draftRemoval = await harness.app.inject({
+      method: "DELETE",
+      url: "/api/v1/signing-connectors/docusign",
+      cookies: as(ADMIN),
+    });
+    expect(draftRemoval.statusCode).toBe(409);
   });
 
   it("keeps an uncertain creation reserved and never creates again for a matching retry", async () => {
