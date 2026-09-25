@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * DD-029 triage and summary prompts embed resources under the person's grant.
+ * TECH-035 accounts for each get once, including its embedded read.
+ */
 import { z } from "zod";
 import type { Prompt, PromptMessage } from "@modelcontextprotocol/server";
 import type { Environment } from "../modules/advanced-settings/config.js";
