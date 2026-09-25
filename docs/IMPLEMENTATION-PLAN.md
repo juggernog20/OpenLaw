@@ -41,6 +41,8 @@ document is the map, not the territory.
 
 ## Where we are
 
+**M44 Advanced search is built on `feat/m44-advanced-search`, with its close in [#1100](https://github.com/juggernog20/OpenLaw/issues/1100), omnibus [#1068](https://github.com/juggernog20/OpenLaw/issues/1068).** The dialog combines words, kind, scope, standard properties and Fields, with relative dates and a live exact total. Questions travel in URLs, private saved searches and browser-local Recent. The close adds the records and browser proof. M43 is landing in parallel; M34 Release follows M44.
+
 **M39 is shipped, omnibus [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).** Each Contract, Matter and Entity type owns a Form of Rows and Branches. Contract and Matter Rows carry On intake form, Required for creation and Visible on Portal; Entity Rows omit On intake form. The switches decide the touchpoint and what a Business User reads. Request types read their destination Form; conversion and direct creation use the same conditions. The legacy intake catalog and Field tag are retired. **M40 to M42, MCP, are grilled and next.** DD-029 and its sibling records are written, and the three milestones go before M34 Release.
 
 **M37 Answer style is built.** Administrators choose the organization Answer style and override it on Contract text Fields. Prompt cards separate editable extraction instructions from fixed format sentences.
@@ -48,7 +50,7 @@ document is the map, not the territory.
 **M38 adds device notifications on the staff app and the Portal.** Push joins In-app and Email,
 with browser enrolment, a Devices list, revocation, and a choice to hide record names. The push
 service carries only a notification ID and its bell surface; the service worker reads the item
-through the signed-in API. M36 added the share register and cap table. **M43 moves every email onto one HTML layout** after the MCP milestones. M34 Release follows M43.
+through the signed-in API. M36 added the share register and cap table. **M43 moves every email onto one HTML layout** after the MCP milestones. M44 follows M43 before M34 Release.
 
 **M35 delivered Auto-Docs.** Legal publishes a Word template and form as one Live pair, and selected Business Users generate documents through the Portal. Generations deliver Word and PDF, create draft Contracts with their default people and assigned Legal Owner, and can be Filed to reached records. Departments and the Portal first run complete SET-011's pre-launch obligation. M33 closed the app first run. Then, for the record: **M32 added Redline compare to the Document chain.** A reader opens a stored Comparison of two Versions, reads its change model in the compare screen, and moves through the change pane. Word pairs run through the existing doc-engine sidecar and export once per pair as a Generated redline with both operands on the chain. Other pairs use extracted text and state that formatting and export are unavailable. **M31 ships AI Contract analysis.** One runtime BYO-key connector supports Anthropic Messages, OpenAI-compatible chat completions, and Gemini through presets or a custom endpoint. An executed primary Document automatically queues extraction against the seven core targets plus prompted catalog Fields; the evidence-checked writer preserves human values, marks every AI write unverified, and carries that marker onto derived deadline surfaces until a person confirms. The Contract record revalidates from the completion frame, so another open browser sees the run and its writes land without a refresh. **M30 makes the open record live.** One `GET /api/events` connection per signed-in tab carries prompts, never payloads, and Postgres `LISTEN`/`NOTIFY` fans them out across the API and the worker. The bell, an open comment thread, an open Activity feed, the Approvals & signing card, the Envelope row, and the Home Inbox count re-read their existing routes when a frame names them, so a live update passes the same reach and tier gates as a page load. The 60-second bell poll is gone. **M29 makes Home the personal state summary and completes the daily briefing.** A Member+ user lands on pending Approvals, assigned Tasks, approaching Dates, Entity Obligations, the Inbox, managed Contracts, and managed Matters. The morning email carries its six cross-module sections, and one daily bell summary opens Home. Reporting remains deferred as a destination.
 
@@ -795,6 +797,24 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - Every Contract, Matter, Request, briefing, Auto-Doc, account and SMTP test email on the layout
   - Comment words in mention, comment and reply emails, read at send time, with an Administrator switch
   - _Decisions:_ DES-093 (new), DES-051, NOT-002 and CMT-006 addenda of 2026-09-24, a TECH-011 addendum
+
+- [ ] **M44 — Advanced search**
+      _Demo:_ Open Advanced search, ask for Contracts that expire in the next 90 days, whose Governing law
+      Field contains "Delaware", and that mention "change of control"; save it as Renewals; open it again
+      tomorrow from the search box.
+  - One versioned question, shared validation and URL codec; words and scope over the existing search vectors
+  - Standard properties and live Contract, Matter and Entity Fields as conditions; Match all / Match any,
+    exact totals, stable paging and five sorts behind the existing reach gates
+  - Relative dates resolve at request time in the display timezone, with Monday-start weeks and inclusive ranges
+  - Wide dialog with live preview; results-page chips; private saved searches on `search` with no default;
+    the last five distinct recent questions in this browser, and both lists under the empty header box
+  - Currency Fields use choice operators over ISO codes. Show flags remain OR arms under Match any;
+    ANDing them regardless of the switch is a possible follow-up. DES-094 records the mock departures
+  - Browser close journey and dialog/results axe scans against the Compose build; unchanged upgrade gate,
+    because no migration or index is added
+  - _Decisions:_ DES-094 (new); DOC-009, DD-019, CTR-016 and DES-010 addenda of 2026-09-25; DES-046,
+    DD-014 and ENT-004 apply unchanged
+  - _Issues:_ #1081–#1100, eleven sub-tasks under [#1068](https://github.com/juggernog20/OpenLaw/issues/1068)
 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.

@@ -968,7 +968,7 @@ Nothing in the decision records covered this at decision time. The MTR grill par
 
 **5. Saving is an act.** Dragging a column wider or hiding one changes the list in front of the reader and nothing on the server. The views control marks the view modified and offers Save, which overwrites, and Save as, which forks. This keeps a curated view safe from a fiddle, which auto-save cannot.
 
-**6. One default per person per surface.** The default is the view the list opens on. A person with no views, or none marked default, opens on the built-in layout.
+**6. One default per person per surface.** _Amended for `search` by the M44 addendum below._ The default is the view the list opens on. A person with no views, or none marked default, opens on the built-in layout.
 
 **7. The built-in layout is code, not a seeded row.** No install migration writes views, and no user starts with rows to delete. It follows that a stored config naming a column the build no longer has is **read past, not rejected**: unknown keys are dropped, the rest of the view stands, and the reader sees a view missing one column rather than an error page.
 
@@ -1008,9 +1008,11 @@ The Documents destination adopts `list_views` under the `documents` surface slug
 
 The Entity registry adopts `list_views` under the `entities` surface slug. Its chosen columns, Type, Status, Jurisdiction, Majority owner, and archived filters, and sort are one whole config under clauses 2 and 4. The fourth adopter adds no schema, sharing, or default-view exception; unknown catalogue keys remain a read-past.
 
-### Addendum (2026-09-25, M44/9, [#1096](https://github.com/juggernog20/OpenLaw/issues/1096)): saved searches
+### Addendum (2026-09-25, M44/9 and M44 close, [#1096](https://github.com/juggernog20/OpenLaw/issues/1096), [#1100](https://github.com/juggernog20/OpenLaw/issues/1100)): saved searches
 
 Saved searches use the `search` surface in `list_views`. The config is the whole version 1 question, including sort. They remain private, with the same case-insensitive name rule and per-surface ceiling. Save overwrites the open search, Save as forks it, and edits remain unsaved until that act. The dialog reads past removed properties and archived Fields, drops only their conditions, and shows a notice. Search has no default: the menu omits Set as default, and the API refuses `isDefault: true`. Opening the dialog does not run a saved question until the reader chooses it. No table or migration is added.
+
+The `search` surface joins Inbox, Contracts, Matters, Documents, Entities and Knowledge. For `search`, the question replaces the list layout in clauses 2 and 4, and the no-default rule supersedes clause 6 only on this surface. Opening the dialog does not select a saved question by default. The config carries words, scope, kinds, conditions, match and sort as DOC-009 defines them. The active saved-search identity lasts for the open dialog; closing and reopening it retains the question but Save search starts Save as again.
 
 ## DD-020: Product documentation is public, versioned, and separate from Knowledge
 
