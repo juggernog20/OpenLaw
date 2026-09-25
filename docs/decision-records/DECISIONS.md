@@ -1442,7 +1442,12 @@ The codebase makes one answer cheap. Every access helper takes the database and 
 
 Toolset labels, as shown on the request form and the consent page: Guide, which is hidden because no grant can drop it, Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge, People, Team, Administration.
 
-The register as settled on 2026-09-23. The Legal User and Business User columns give each Toolset's default for that audience. The Legal User column covers Administrators and Legal Team Members alike. An Administrator differs in one way: the Administration Toolset, T35 and T40, is theirs alone, off by default, and lands in M42, so an Administrator's default count is the Legal User count. "always" is the `guide` Toolset. Kind `destr` is a destructive write.
+The register below includes M42. The Legal User and Business User columns answer
+"may this account type run it". They do not set the organization ceiling.
+The Legal User column covers Administrators and Legal Team Members.
+Administration adds an Administrator-only check. Team and Administration are off
+by default in the ceiling. "always" is the `guide` Toolset.
+Kind `destr` is a destructive write.
 
 | Id  | Toolset     | Tool                          | Kind  | Legal User | Business User | What it does                                                                                                                                                                |
 | --- | ----------- | ----------------------------- | ----- | ---------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1478,14 +1483,14 @@ The register as settled on 2026-09-23. The Legal User and Business User columns 
 | T30 | `knowledge` | `openlaw_knowledge_search`    | read  | on         | on            | Published Knowledge Items; portal-readable only for Business Users.                                                                                                         |
 | T31 | `knowledge` | `openlaw_knowledge_get`       | read  | on         | on            | One Knowledge Item and its Documents.                                                                                                                                       |
 | T32 | `people`    | `openlaw_people_list`         | read  | on         | off           | Users and Departments, for assignment by name.                                                                                                                              |
-| T33 | `team`      | `openlaw_team_add`            | write | off        | off           | Add a person to a record's roster under DD-023.                                                                                                                             |
-| T34 | `team`      | `openlaw_team_remove`         | destr | off        | off           | Remove a person from a roster.                                                                                                                                              |
-| T35 | `admin`     | `openlaw_audit_log_query`     | read  | off        | off           | Administrator only; lands in M42.                                                                                                                                           |
+| T33 | `team`           | `openlaw_team_add`            | write | on         | off           | Add a person to a record's roster under DD-023.                                                                                                                             |
+| T34 | `team`           | `openlaw_team_remove`         | destr | on         | off           | Remove a person from a roster.                                                                                                                                              |
+| T35 | `administration` | `openlaw_audit_log_query`     | read  | on         | off           | Administrator only. Reads the Audit log or Tool calls.                                                                                                                                           |
 | T36 | `tasks`     | `openlaw_tasks_list`          | read  | on         | off           | Tasks assigned to me (or a named person) across reachable Contracts and Matters; filters: due within N days, overdue, include completed. Mirrors Home's list.               |
 | T37 | `auto-docs` | `openlaw_auto_docs_list`      | read  | on         | on            | Auto-Docs within my reach (ADO-009).                                                                                                                                        |
 | T38 | `auto-docs` | `openlaw_auto_doc_generate`   | write | on         | on            | Submit an answer set against the form T5 returns; creates a Generation. ADO-013 caps apply; an owed ADO-008 acknowledgement returns a named refusal pointing at the Portal. |
 | T39 | `auto-docs` | `openlaw_generations_list`    | read  | on         | on            | My Generations with state and download links. The Tool never carries the file.                                                                                              |
-| T40 | `admin`     | `openlaw_settings_get`        | read  | off        | off           | Administrator only; reads Organization settings. No settings writes in v1 (SET-002).                                                                                        |
+| T40 | `administration` | `openlaw_settings_get`        | read  | on         | off           | Administrator only; reads Organization settings. No settings writes in v1 (SET-002).                                                                                        |
 | T41 | `contracts` | `openlaw_contract_set_status` | write | on         | off           | Move a Contract's status (the CTR soft gate applies). Separate from T11 so the annotations stay honest.                                                                     |
 | T42 | `matters`   | `openlaw_matter_set_status`   | write | on         | off           | Move a Matter's status. Separate from T16.                                                                                                                                  |
 
@@ -1498,7 +1503,7 @@ Rules that shaped the register:
 - **Upload is a URL, never bytes in an argument.** T27 returns a short-lived upload URL and a pending Version id, and the Client sends the file there. The upload completes the Version under the bounded-blob limit and DOC-012's never-overwrite key. Research section 11 found no chat client that puts an attached file's bytes into a tool argument. Which chat clients complete the send is on the unverified list.
 - **Business User search stays on.** The header search endpoint applies audience predicates per kind, but its Requests and Knowledge arms are Member+ only. MCP reuses those predicates and adds two Business User arms: their own non-archived Requests and Knowledge Items that satisfy the `/portal/knowledge/:id` predicate, published, audience Everyone, not archived. A Business User also gets the Contracts, Matters and Documents they can reach. Entities, Counterparties and other people's Requests stay out. The header search endpoint is unchanged. The Portal has no search box or Knowledge list route.
 - **Auto-Docs Tools respect the Portal rules.** T38 creates a Generation under the ADO-013 caps. An owed ADO-008 acknowledgement returns a named refusal that points at the Portal: a once or once-per-Auto-Doc acknowledgement given there stands for later Tool calls, while the every-use schedule sends the whole Generation to the Portal, because that acknowledgement is consumed by the Portal Generation it precedes and no Tool call can hold one. T39 returns download links and never carries the file.
-- **The Administration Toolset waits until M42.** The audit log routes already apply the record-level reach filter `auditReachScope` to reads and exports. There is no missing audience filter blocking T35. T35 and T40 remain in M42 as the separately scoped Administration Toolset, off by default and restricted to Administrators; the M40 Tool calls tab does not expose them as Tools.
+- **The Administration Toolset is built in M42.** T35 shares the Audit log page and export query. It retains record reach and redaction. T40 reads Organization settings with the same secret masking as the panes. Neither Tool changes settings.
 
 **7. Not in v1, and why.** Request conversion: a multi-step workflow with a Conversion draft, better as a prompt than a Tool. Signing: side effects in another company's system. Hard deletes and settings writes: SET-002 keeps them interactive. A Portal-shaped activity Tool for Business Users: nothing in v1, because a later briefing Tool would be "my unread notifications", which the Portal already shows. Cursor and VS Code as Allowed Clients: not seeded. Resources, prompts and change subscriptions are M42.
 
@@ -1600,6 +1605,37 @@ status until the independent walkthroughs and live vendor checks pass. Automated
 Guide tests establish that search finds each title and reads the same text as Help;
 they do not establish live vendor interoperability.
 
+### Addendum, 2026-09-25, #1166: M42 resources, prompts and Toolsets as built
+
+M42 adds record resources, the `triage_inbox` and `summarize_record` prompts,
+and change notifications. TECH-035 records their addresses and transport.
+Each resource uses the matching Tool's grant and record access checks.
+The triage prompt embeds the Inbox and proposes a Disposition, type, urgency
+and assignee. It asks for confirmation before assignments and comments.
+It links to the Convert dialog for the person to complete conversion.
+The summary prompt embeds one reached record and requests no changes.
+Business Users cannot use the triage prompt. Their summaries retain Portal access.
+
+T33 and T34 are in the `team` Toolset. They add and remove people on Contract
+and Matter teams through the app's shared services. T35 and T40 are in
+`administration` and require an Administrator. All four have Legal User `on`
+and Business User `off`. These audience values do not enable a Toolset.
+Both Toolsets start off in new and upgraded ceilings. The upgrade removes only
+these two ids from each ceiling. Existing keys, requests and grants remain.
+The captions are "Starts off." for Team and "Starts off. Administrators only."
+for Administration.
+
+API key requests and OAuth consent share one rule. A Toolset must be in the
+ceiling and contain a Tool the person's account type may run. OAuth consent also
+limits choices to the Client's requested Toolsets. Nothing is pre-selected.
+Team writes require Write scope and an organization that permits writes.
+Administration reads retain the Audit log's record reach and settings secret masking.
+
+A modern Client can open a listen stream for list changes and reached record
+updates. Legacy Clients reload their lists by hand. Each call checks current
+access even if the Client has a cached list. The DD-020 article registry includes
+all five MCP guides. T3 and T4 search and read their compiled content.
+
 ## Index of decisions
 
 | #      | Decision                                                                                  | Status                                                                      |
@@ -1632,4 +1668,4 @@ they do not establish live vendor interoperability.
 | DD-026 | Portal contributions are Documents, comments and team additions                           | Accepted                                                                    |
 | DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |
 | DD-028 | The type Form — one tree per type decides intake, creation, record and Portal             | Accepted                                                                    |
-| DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted; addenda #1134, #1138                                              |
+| DD-029 | MCP: a person's agent works in OpenLaw as that person                                    | Accepted; addenda #1134, #1138, #1166                                              |

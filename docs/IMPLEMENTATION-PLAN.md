@@ -779,13 +779,14 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - _Tickets:_ [#1132](https://github.com/juggernog20/OpenLaw/issues/1132), [#1133](https://github.com/juggernog20/OpenLaw/issues/1133), [#1134](https://github.com/juggernog20/OpenLaw/issues/1134), [#1135](https://github.com/juggernog20/OpenLaw/issues/1135), [#1136](https://github.com/juggernog20/OpenLaw/issues/1136), [#1137](https://github.com/juggernog20/OpenLaw/issues/1137), [#1138](https://github.com/juggernog20/OpenLaw/issues/1138), [#1139](https://github.com/juggernog20/OpenLaw/issues/1139)
   - _Decisions:_ DD-029, TECH-035, SET-014, DES-092
 
-- [ ] **M42 — MCP: resources, prompts, subscriptions**
+- [x] **M42: MCP resources, prompts and subscriptions**, omnibus [#1159](https://github.com/juggernog20/OpenLaw/issues/1159)
       _Demo:_ In Claude Code, attach a Contract as a resource, run the triage prompt on the Inbox, and see
       the tool list refresh when an Administrator turns a Toolset on; an Administrator asks the audit log
       a question from the chat.
   - Record resources and the triage and summary prompts
   - The listen stream on the event hub for change notifications
-  - The `team` and `admin` Toolsets, T33 to T35 and T40; audit-log routes already enforce record-level reach
+  - The `team` and `administration` Toolsets, T33 to T35 and T40; audit-log routes already enforce record-level reach
+  - _Tickets:_ [#1160](https://github.com/juggernog20/OpenLaw/issues/1160), [#1161](https://github.com/juggernog20/OpenLaw/issues/1161), [#1162](https://github.com/juggernog20/OpenLaw/issues/1162), [#1163](https://github.com/juggernog20/OpenLaw/issues/1163), [#1164](https://github.com/juggernog20/OpenLaw/issues/1164), [#1165](https://github.com/juggernog20/OpenLaw/issues/1165), [#1166](https://github.com/juggernog20/OpenLaw/issues/1166), [#1167](https://github.com/juggernog20/OpenLaw/issues/1167)
   - _Decisions:_ DD-029, TECH-035
 
 - [ ] **M43 — Email: one HTML layout for every email**
