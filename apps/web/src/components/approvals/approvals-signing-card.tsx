@@ -1716,7 +1716,11 @@ function SendEnvelopeDialog({
   // The current round is the first one the seam answers, and it is the
   // default for the reason the mock's own dialog implies: the version
   // being negotiated is the version being sent, nearly every time.
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  // One idempotency key per request, not per dialog. A retry of the same
+  // request keeps its key, so a lost answer is not a second draft. A
+  // corrected retry gets a new key, because the seam refuses a reused
+  // key with changed inputs as a conflict.
+  const lastRequest = useRef<{ intent: string; key: string } | null>(null);
   const [versionId, setVersionId] = useState(document.versions[0]?.id ?? "");
   // Each row carries a key of its own. A signer being typed into has
   // no identity yet — two empty rows are indistinguishable — so keying
@@ -1766,14 +1770,18 @@ function SendEnvelopeDialog({
       );
       return;
     }
+    const request = {
+      documentVersionId: versionId,
+      signers: named,
+      ...(subject.trim() ? { subject: subject.trim() } : {}),
+    };
+    const intent = JSON.stringify(request);
+    const idempotencyKey =
+      lastRequest.current?.intent === intent ? lastRequest.current.key : crypto.randomUUID();
+    lastRequest.current = { intent, key: idempotencyKey };
     inFlight.current = true;
     setError(
-      await onConfirm({
-        idempotencyKey,
-        documentVersionId: versionId,
-        signers: named,
-        ...(subject.trim() ? { subject: subject.trim() } : {}),
-      }).finally(() => {
+      await onConfirm({ ...request, idempotencyKey }).finally(() => {
         inFlight.current = false;
       }),
     );

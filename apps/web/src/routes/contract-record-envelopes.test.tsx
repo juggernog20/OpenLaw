@@ -238,6 +238,11 @@ function recordApi(
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes/prepare" && call.method === "POST") {
       writes.push({ path: call.url.pathname, body: call.body });
+      if (refuse) {
+        const refusal = refuse;
+        refuse = null;
+        return problem(refusal.status, refusal.detail, refusal.type);
+      }
       const body = call.body as { documentVersionId: string; signers: typeof SIGNERS };
       state = {
         ...state,
@@ -1010,6 +1015,34 @@ describe("preparing an unsent Envelope", () => {
         idempotencyKey: expect.any(String),
       },
     });
+  });
+
+  it("keeps the idempotency key for a repeated request and replaces it for a corrected one", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    await user.click(await screen.findByRole("button", { name: "Prepare Envelope" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+    await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    const refused = "The provider would not take the envelope.";
+    api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    expect(await within(dialog).findByText(refused)).toBeInTheDocument();
+    api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    await user.type(within(dialog).getByLabelText("Subject"), "Corrected");
+    await user.click(within(dialog).getByRole("button", { name: "Create draft" }));
+    await waitFor(() => expect(api.writes).toHaveLength(3));
+    const keys = api.writes.map(
+      (write) => (write.body as { idempotencyKey: string }).idempotencyKey,
+    );
+    // A seam that saw the first key again with a new subject would refuse
+    // it as a conflict, so the corrected request needs its own.
+    expect(keys[1]).toBe(keys[0]);
+    expect(keys[2]).not.toBe(keys[0]);
   });
 
   it("shows an uncertain creation without offering a second preparation", async () => {
