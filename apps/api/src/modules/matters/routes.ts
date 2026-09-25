@@ -123,7 +123,13 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
         [...new Map(values.map((value) => [value.id, value])).values()].sort((a, b) =>
           a.displayName.localeCompare(b.displayName),
         );
+      const businessOwners = await app.db
+        .selectDistinct({ id: users.id, displayName: users.displayName })
+        .from(matters)
+        .innerJoin(users, eq(users.id, matters.businessOwnerId))
+        .where(scope(app.db, request.user));
       return {
+        businessOwners: unique(businessOwners),
         types: unique(rows.map((row) => ({ id: row.typeId, displayName: row.typeName }))),
         statuses: unique(rows.map((row) => ({ id: row.statusId, displayName: row.statusName }))),
         people: unique(

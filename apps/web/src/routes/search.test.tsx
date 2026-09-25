@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** M25's two web search surfaces at the routed API seam. */
+import {
+  decodeSearchQuestion,
+  encodeSearchQuestion,
+  simpleSearchQuestion,
+  SearchQuestionSchema,
+  type SearchQuestion,
+} from "@openlaw/shared";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 import { searchResultPath } from "../components/search/search-result-row";
 
@@ -74,11 +82,15 @@ const KNOWLEDGE_DOCUMENT = {
 } as const;
 
 function searchAnswer(results: readonly object[], nextCursor: string | null = null) {
-  return json(200, { results, nextCursor });
+  return json(200, { results, total: results.length, nextCursor });
 }
 
 function searchCall(call: StubCall): boolean {
   return call.method === "GET" && call.url.pathname === "/api/v1/search";
+}
+
+function questionCall(call: StubCall): boolean {
+  return call.method === "POST" && call.url.pathname === "/api/v1/search/query";
 }
 
 async function headerSearch() {
@@ -251,7 +263,7 @@ describe("the header search box", () => {
     );
   });
 
-  it("ends with a See all results option that carries the query", async () => {
+  it("offers a See all results option that carries the query", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call) => (searchCall(call) ? searchAnswer([CONTRACT]) : undefined),
@@ -297,7 +309,7 @@ describe("the results page", () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call) =>
-        searchCall(call) ? problem(500, "Search index is unavailable.") : undefined,
+        questionCall(call) ? problem(500, "Search index is unavailable.") : undefined,
     });
     renderAt("/search?q=termination");
 
@@ -305,13 +317,15 @@ describe("the results page", () => {
   });
 
   it("renders the shared rows, kind chips, Document landing link, and URL-backed filter", async () => {
-    const reads: URLSearchParams[] = [];
+    const reads: (SearchQuestion & { limit?: number; cursor?: string })[] = [];
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
-        if (!searchCall(call)) return undefined;
-        reads.push(new URLSearchParams(call.url.searchParams));
-        return searchAnswer(call.url.searchParams.get("kind") === "matter" ? [MATTER] : [DOCUMENT]);
+        if (!questionCall(call)) return undefined;
+        reads.push(call.body as SearchQuestion);
+        return searchAnswer(
+          (call.body as SearchQuestion).kinds.includes("matter") ? [MATTER] : [DOCUMENT],
+        );
       },
     });
     const { router } = renderAt("/search?q=termination&kind=document");
@@ -333,23 +347,25 @@ describe("the results page", () => {
     expect(documentRow).toHaveTextContent("C-58 · Orion Cloud master services agreement");
     expect(within(documentRow).queryByText("v4")).not.toBeInTheDocument();
     expect(screen.getByText("terminate for convenience").tagName).toBe("MARK");
-    expect(reads[0]?.get("limit")).toBe("25");
-    expect(reads[0]?.get("kind")).toBe("document");
+    expect(reads[0]?.limit).toBe(25);
+    expect(reads[0]?.kinds[0]).toBe("document");
 
     await userEvent.setup().click(within(filters).getByRole("link", { name: "Matter" }));
     expect(await screen.findByRole("link", { name: /M-51.*renewal negotiation/i })).toBeVisible();
-    expect(router.state.location.search).toBe("?q=termination&kind=matter");
-    expect(reads.at(-1)?.get("kind")).toBe("matter");
+    expect(
+      decodeSearchQuestion(new URLSearchParams(router.state.location.search).get("aq")!)?.kinds,
+    ).toEqual(["matter"]);
+    expect(reads.at(-1)?.kinds[0]).toBe("matter");
   });
 
   it("pages by nextCursor without changing the query URL", async () => {
-    const reads: URLSearchParams[] = [];
+    const reads: (SearchQuestion & { limit?: number; cursor?: string })[] = [];
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
-        if (!searchCall(call)) return undefined;
-        reads.push(new URLSearchParams(call.url.searchParams));
-        return call.url.searchParams.get("cursor") === "page-2"
+        if (!questionCall(call)) return undefined;
+        reads.push(call.body as SearchQuestion);
+        return (call.body as { cursor?: string }).cursor === "page-2"
           ? searchAnswer([MATTER])
           : searchAnswer([CONTRACT], "page-2");
       },
@@ -359,8 +375,8 @@ describe("the results page", () => {
     expect(await screen.findByRole("link", { name: /C-58/i })).toBeVisible();
     await userEvent.setup().click(screen.getByRole("button", { name: "Show more" }));
     expect(await screen.findByRole("link", { name: /M-51/i })).toBeVisible();
-    expect(reads.at(-1)?.get("cursor")).toBe("page-2");
-    expect(reads.at(-1)?.get("q")).toBe("termination");
+    expect(reads.at(-1)?.cursor).toBe("page-2");
+    expect(reads.at(-1)?.words.all).toBe("termination");
     expect(router.state.location.search).toBe("?q=termination");
   });
 });
@@ -370,4 +386,133 @@ it("renders no global search box in the portal", async () => {
   renderAt("/portal");
   await screen.findByRole("heading", { name: "What do you need from Legal?" });
   expect(screen.queryByRole("combobox", { name: "Search" })).not.toBeInTheDocument();
+});
+
+it("restores encoded words and scope, removes chips, and reproduces the question on Back and reload", async () => {
+  const original = {
+    ...simpleSearchQuestion("termination", ["document"]),
+    words: { all: "termination", phrase: "change of control", any: "renew extend", none: "draft" },
+    scope: { titles: false, text: false, contents: true },
+  };
+  const reads: (SearchQuestion & { timeZone: string })[] = [];
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (!questionCall(call)) return undefined;
+      reads.push(call.body as SearchQuestion & { timeZone: string });
+      return json(200, { results: [DOCUMENT], total: 42, nextCursor: null });
+    },
+  });
+  const { router } = renderAt(`/search?aq=${encodeSearchQuestion(original)}&q=ignored`);
+  expect(await screen.findByText("42 matches")).toBeVisible();
+  expect(reads[0]).toMatchObject(original);
+  expect(reads[0]?.timeZone).toBeTruthy();
+  expect(screen.getByRole("combobox", { name: "Search" })).toHaveValue("termination");
+  for (const label of [
+    "All of these words: termination",
+    "This exact phrase: change of control",
+    "Any of these words: renew extend",
+    "None of these words: draft",
+    "Search in: Document contents",
+  ]) {
+    expect(screen.getByRole("link", { name: `Remove ${label}` })).toBeVisible();
+  }
+  await userEvent
+    .setup()
+    .click(screen.getByRole("link", { name: "Remove This exact phrase: change of control" }));
+  await waitFor(() => expect(reads.at(-1)?.words.phrase).toBe(""));
+  await act(() => router.navigate(-1));
+  await waitFor(() => expect(reads.at(-1)?.words.phrase).toBe("change of control"));
+  await act(() => router.revalidate());
+  await waitFor(() => expect(reads.at(-1)).toMatchObject(original));
+  await userEvent
+    .setup()
+    .click(screen.getByRole("link", { name: "Remove Search in: Document contents" }));
+  await waitFor(() =>
+    expect(reads.at(-1)?.scope).toEqual({ titles: true, text: true, contents: true }),
+  );
+});
+
+it("returns to the prompt when the last words chip is removed", async () => {
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => (questionCall(call) ? searchAnswer([CONTRACT]) : undefined),
+  });
+  const { router } = renderAt("/search?q=termination");
+  await userEvent
+    .setup()
+    .click(await screen.findByRole("link", { name: "Remove All of these words: termination" }));
+  await waitFor(() => expect(router.state.location.search).toBe(""));
+  expect(await screen.findByRole("heading", { name: /Search contracts, matters/ })).toBeVisible();
+});
+
+it("shows the refusal for an oversized legacy query without breaking the filters", async () => {
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      questionCall(call)
+        ? problem(400, "Search words rows must be 200 characters or fewer.")
+        : undefined,
+  });
+  renderAt(`/search?q=${"x".repeat(201)}`);
+  expect(await screen.findByRole("alert")).toHaveTextContent("200 characters or fewer");
+});
+
+it("writes each sort to the question, pages it, and restores it on reload and Back", async () => {
+  const reads: (SearchQuestion & { cursor?: string })[] = [];
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) => {
+      if (!questionCall(call)) return undefined;
+      const body = SearchQuestionSchema.safeExtend({ cursor: z.string().optional() }).parse(
+        call.body,
+      );
+      reads.push(body);
+      return body.cursor ? searchAnswer([MATTER]) : searchAnswer([CONTRACT], "next-page");
+    },
+  });
+  const initial = {
+    ...simpleSearchQuestion("Orion", ["contract", "matter"]),
+    scope: { titles: true, text: false, contents: false },
+  };
+  const { router, view } = renderAt(`/search?aq=${encodeSearchQuestion(initial)}`);
+  const user = userEvent.setup();
+  for (const [sort, label] of [
+    ["newest", "Newest"],
+    ["oldest", "Oldest"],
+    ["title", "Title"],
+    ["relevance", "Relevance"],
+    ["expiry", "Expiry soonest"],
+  ] as const) {
+    await user.click(await screen.findByRole("button", { name: /^Sort:/ }));
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(5);
+    await user.click(screen.getByRole("menuitemradio", { name: label }));
+    await waitFor(() => expect(reads.at(-1)).toMatchObject({ ...initial, sort }));
+    const encoded = new URLSearchParams(router.state.location.search).get("aq")!;
+    expect(decodeSearchQuestion(encoded)).toEqual({ ...initial, sort });
+    expect(await screen.findByRole("button", { name: `Sort: ${label}` })).toBeVisible();
+  }
+  await user.click(screen.getByRole("button", { name: "Show more" }));
+  await waitFor(() => expect(reads.at(-1)).toMatchObject({ sort: "expiry", cursor: "next-page" }));
+  expect(await screen.findByRole("link", { name: /M-51/ })).toBeVisible();
+  await act(() => router.navigate(-1));
+  await waitFor(() => expect(reads.at(-1)).toMatchObject({ sort: "relevance" }));
+  expect(reads.at(-1)?.cursor).toBeUndefined();
+  await waitFor(() => expect(screen.queryByRole("link", { name: /M-51/ })).not.toBeInTheDocument());
+  await act(() => router.navigate(1));
+  await waitFor(() => expect(reads.at(-1)?.sort).toBe("expiry"));
+  const url = `/search${router.state.location.search}`;
+  view.unmount();
+  renderAt(url);
+  const trigger = await screen.findByRole("button", { name: "Sort: Expiry soonest" });
+  expect(trigger).toBeVisible();
+  expect(reads.at(-1)).toMatchObject({ ...initial, sort: "expiry" });
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("menuitemradio", { name: "Expiry soonest" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await user.keyboard("{Home}{Enter}");
+  expect(await screen.findByRole("button", { name: "Sort: Relevance" })).toBeVisible();
 });

@@ -337,7 +337,8 @@ export function KnowledgePage() {
             )
           }
           onSave={async () => {
-            if (activeView) setViews(await updateView(activeView.id, { config: layout }));
+            if (activeView)
+              setViews(await updateView(CATALOGUE.surface, activeView.id, { config: layout }));
           }}
           onSaveAs={async (name) => {
             const next = await createView(CATALOGUE.surface, name, layout);
@@ -345,13 +346,14 @@ export function KnowledgePage() {
             setActiveViewId(next.find((view) => view.name === name)?.id ?? null);
           }}
           onRename={async (name) => {
-            if (activeView) setViews(await updateView(activeView.id, { name }));
+            if (activeView) setViews(await updateView(CATALOGUE.surface, activeView.id, { name }));
           }}
           onSetDefault={async () => {
-            if (activeView) setViews(await updateView(activeView.id, { isDefault: true }));
+            if (activeView)
+              setViews(await updateView(CATALOGUE.surface, activeView.id, { isDefault: true }));
           }}
           onDelete={async (view) => {
-            setViews(await deleteView(view.id));
+            setViews(await deleteView(CATALOGUE.surface, view.id));
             await commit(builtInLayout(CATALOGUE), null);
           }}
           onReset={() => void commit(stored)}

@@ -3,9 +3,10 @@
 /** DES-046 edits list filters through one menu and removable chips. */
 
 import { useState } from "react";
-import { ArrowLeft, CalendarDays, ChevronDown, ListFilter, Search, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronDown, ListFilter, X } from "lucide-react";
 import { useIntl } from "react-intl";
 import type { Layout } from "../../lib/list-views";
+import { PropertyList } from "./property-list";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
@@ -47,7 +48,6 @@ export function RecordFilterBar({
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
   const active = definitions.filter((filter) => selected(filter, values));
   const filter = definitions.find((item) => item.key === editing);
   const filterLabel = intl.formatMessage({ id: "recordFilters.filter", defaultMessage: "Filter" });
@@ -70,7 +70,6 @@ export function RecordFilterBar({
         onOpenChange={(next) => {
           setOpen(next);
           if (!next) setEditing(null);
-          setSearch("");
         }}
       >
         <PopoverTrigger asChild>
@@ -97,62 +96,28 @@ export function RecordFilterBar({
               onBack={() => setEditing(null)}
             />
           ) : (
-            <>
-              <div className="flex items-center gap-2 border-b border-border-default p-3">
-                <Search size={16} className="text-muted" aria-hidden="true" />
-                <Input
-                  autoFocus
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  aria-label={intl.formatMessage({
-                    id: "recordFilters.searchProperties",
-                    defaultMessage: "Search filters",
-                  })}
-                  placeholder={intl.formatMessage({
-                    id: "recordFilters.searchProperties",
-                    defaultMessage: "Search filters",
-                  })}
-                />
-              </div>
-              <div className="max-h-80 overflow-y-auto p-1.5">
-                {definitions
-                  .filter((item) =>
-                    item.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
-                  )
-                  .map((item) => (
-                    <button
-                      type="button"
-                      key={item.key}
-                      disabled={busy}
-                      onClick={() =>
-                        item.kind === "flag"
-                          ? apply({ ...values, [item.key]: true })
-                          : setEditing(item.key)
-                      }
-                      className="flex w-full items-center justify-between gap-3 rounded-button px-3 py-2 text-start text-sm hover:bg-control focus-visible:outline-2 focus-visible:outline-link"
-                    >
-                      <span>{item.label}</span>
-                      {selected(item, values) ? (
-                        <span className="text-muted">✓</span>
-                      ) : item.kind === "date" ? (
-                        <CalendarDays size={16} aria-hidden="true" />
-                      ) : (
-                        <ChevronDown size={14} aria-hidden="true" />
-                      )}
-                    </button>
-                  ))}
-                {!definitions.some((item) =>
-                  item.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
-                ) && (
-                  <p className="p-3 text-sm text-muted">
-                    {intl.formatMessage({
-                      id: "recordFilters.noFilters",
-                      defaultMessage: "No filters found",
-                    })}
-                  </p>
-                )}
-              </div>
-            </>
+            <PropertyList
+              searchLabel={intl.formatMessage({
+                id: "recordFilters.searchProperties",
+                defaultMessage: "Search filters",
+              })}
+              busy={busy}
+              items={definitions.map((item) => ({
+                ...item,
+                trailing: selected(item, values) ? (
+                  <span className="text-muted">✓</span>
+                ) : item.kind === "date" ? (
+                  <CalendarDays size={16} aria-hidden="true" />
+                ) : (
+                  <ChevronDown size={14} aria-hidden="true" />
+                ),
+              }))}
+              onSelect={(key) => {
+                const item = definitions.find((item) => item.key === key)!;
+                if (item.kind === "flag") apply({ ...values, [item.key]: true });
+                else setEditing(item.key);
+              }}
+            />
           )}
         </PopoverContent>
       </Popover>
@@ -272,7 +237,7 @@ function FilterChip({
   );
 }
 
-function FilterEditor({
+export function FilterEditor({
   filter,
   values,
   onApply,

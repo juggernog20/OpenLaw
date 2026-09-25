@@ -10,12 +10,10 @@ import {
   and,
   asc,
   eq,
-  fields,
   MATTER_PROGRESSION_GROUPS,
   matters,
   matterStatuses,
   matterTeam,
-  matterTypeFields,
   matterTypes,
   SEVERITY_LEVELS,
   sql,
@@ -367,19 +365,6 @@ export function furtherDownThan(
     end`;
 }
 
-export const incomplete = sql`exists (
-    select 1 from ${matterTypeFields}
-    inner join ${fields} on ${fields.id} = ${matterTypeFields.fieldId}
-    where ${matterTypeFields.typeId} = ${matters.matterTypeId}
-      and ${matterTypeFields.isRequired} = true
-      and ${fields.archivedAt} is null
-      and (
-        not jsonb_exists(${matters.customFields}, ${fields.slug})
-        or ${matters.customFields} -> ${fields.slug} = 'null'::jsonb
-        or ${matters.customFields} -> ${fields.slug} = '[]'::jsonb
-        or ${matters.customFields} ->> ${fields.slug} = ''
-      )
-  )`;
 export const MatterListQuery = z
   .object({
     includeClosed: z.enum(["true", "false"]).optional(),

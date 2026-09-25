@@ -14,5 +14,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
   }
 }

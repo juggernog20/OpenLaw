@@ -398,6 +398,7 @@ export const LIST_VIEW_SURFACES = [
   "documents",
   "entities",
   "knowledge",
+  "search",
 ] as const;
 export type ListViewSurface = (typeof LIST_VIEW_SURFACES)[number];
 
@@ -669,5 +670,32 @@ export {
   pinnedFormRows,
   type FormModule,
 } from "./form-builtins.js";
+
+export {
+  SEARCH_KINDS,
+  DEFAULT_SEARCH_SCOPE,
+  SearchQuestionSchema,
+  StoredSearchQuestionSchema,
+  resolveSearchQuestion,
+  simpleSearchQuestion,
+  encodeSearchQuestion,
+  decodeSearchQuestion,
+  type SearchQuestion,
+} from "./search-question.js";
+
+export {
+  SEARCH_PROPERTIES,
+  SEARCH_OPERATORS,
+  RELATIVE_DATE_OPERATORS,
+  isRelativeDateOperator,
+  needsRelativeDayCount,
+  searchProperty,
+  conditionProblem,
+  FIELD_OPERATORS,
+  fieldProperty,
+  type SearchProperty,
+} from "./search-conditions.js";
+
+export * from "./search-fields.js";
 
 export { API_KEY_PROBLEMS, MCP_TOOLSETS, type McpToolset } from "./mcp.js";

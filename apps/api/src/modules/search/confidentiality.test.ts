@@ -267,3 +267,47 @@ describe("the DD-014 gate in search", () => {
     expect(await search(PEOPLE.business.email)).toEqual({ results: [], nextCursor: null });
   });
 });
+
+it("applies the same reach before the question total and cursor page", async () => {
+  const payload = {
+    version: 1,
+    words: { all: "sealedsearch", phrase: "", any: "", none: "" },
+    scope: { titles: true, text: true, contents: true },
+    kinds: [],
+    conditions: [],
+    match: "all",
+    sort: "relevance",
+    limit: 1,
+  };
+  const anonymous = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/search/query",
+    payload,
+  });
+  expect(anonymous.statusCode).toBe(401);
+  for (const viewer of [
+    "administrator",
+    PEOPLE.onTeam.email,
+    PEOPLE.offTeam.email,
+    PEOPLE.business.email,
+  ]) {
+    const expected = (await search(viewer, "&limit=100")).results;
+    const ids: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/search/query",
+        cookies: cookies.get(viewer),
+        payload: { ...payload, ...(cursor ? { cursor } : {}) },
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      const answer: { results: { id: string }[]; total: number; nextCursor: string | null } =
+        response.json();
+      expect(answer.total).toBe(expected.length);
+      ids.push(...answer.results.map((row: { id: string }) => row.id));
+      cursor = answer.nextCursor;
+    } while (cursor);
+    expect(ids).toEqual(expected.map((row) => row.id));
+  }
+});

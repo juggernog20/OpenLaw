@@ -25384,6 +25384,54 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "counterparties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "businessOwners": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
                     "types": {
                       "type": "array",
                       "items": {
@@ -48424,6 +48472,54 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "counterparties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "businessOwners": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
                     "types": {
                       "type": "array",
                       "items": {
@@ -92640,6 +92736,465 @@
         }
       }
     },
+    "/api/v1/search/fields": {
+      "get": {
+        "operationId": "searchFields",
+        "summary": "Live Fields and reachable reference choices for search conditions.",
+        "tags": ["search"],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "slug": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          },
+                          "moduleScope": {
+                            "type": "string",
+                            "enum": ["contract", "matter", "entity"]
+                          },
+                          "fieldType": {
+                            "type": "string",
+                            "enum": [
+                              "text",
+                              "long_text",
+                              "number",
+                              "currency",
+                              "date",
+                              "boolean",
+                              "single_select",
+                              "multi_select",
+                              "user",
+                              "entity"
+                            ]
+                          },
+                          "options": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": ["slug", "displayName", "moduleScope", "fieldType", "options"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "people": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "entities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "displayName": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "displayName"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["fields", "people", "entities"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search/query": {
+      "post": {
+        "operationId": "querySearch",
+        "summary": "Run a versioned search question with an exact reachable match total.",
+        "tags": ["search"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "number",
+                    "enum": [1]
+                  },
+                  "words": {
+                    "type": "object",
+                    "properties": {
+                      "all": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "phrase": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "any": {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      "none": {
+                        "type": "string",
+                        "maxLength": 200
+                      }
+                    },
+                    "required": ["all", "phrase", "any", "none"]
+                  },
+                  "scope": {
+                    "type": "object",
+                    "properties": {
+                      "titles": {
+                        "type": "boolean"
+                      },
+                      "text": {
+                        "type": "boolean"
+                      },
+                      "contents": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["titles", "text", "contents"]
+                  },
+                  "kinds": {
+                    "maxItems": 7,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "contract",
+                        "matter",
+                        "document",
+                        "entity",
+                        "counterparty",
+                        "request",
+                        "knowledge_item"
+                      ]
+                    }
+                  },
+                  "conditions": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "contract",
+                            "matter",
+                            "document",
+                            "entity",
+                            "counterparty",
+                            "request",
+                            "knowledge_item"
+                          ]
+                        },
+                        "property": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "operator": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "value": {}
+                      },
+                      "required": ["kind", "property", "operator"]
+                    }
+                  },
+                  "match": {
+                    "type": "string",
+                    "enum": ["all", "any"]
+                  },
+                  "sort": {
+                    "type": "string",
+                    "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                  },
+                  "timeZone": {
+                    "type": "string"
+                  },
+                  "cursor": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 16384
+                  },
+                  "limit": {
+                    "default": 25,
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  }
+                },
+                "required": ["version", "words", "scope", "kinds", "conditions", "match", "sort"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["contract", "matter", "entity", "counterparty", "request"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              }
+                            },
+                            "required": ["kind", "id", "number", "title", "isConfidential", "rank"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["knowledge_item"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": ["draft", "published"]
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "number",
+                              "title",
+                              "isConfidential",
+                              "rank",
+                              "state"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["document"]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "rank": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "ownerKind": {
+                                "type": "string",
+                                "enum": [
+                                  "contract",
+                                  "matter",
+                                  "entity",
+                                  "knowledge_item",
+                                  "auto_doc"
+                                ]
+                              },
+                              "ownerId": {
+                                "type": "string"
+                              },
+                              "ownerNumber": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "ownerTitle": {
+                                "type": "string"
+                              },
+                              "versionId": {
+                                "type": "string"
+                              },
+                              "versionNumber": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "snippet": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "number",
+                              "title",
+                              "isConfidential",
+                              "rank",
+                              "ownerKind",
+                              "ownerId",
+                              "ownerNumber",
+                              "ownerTitle",
+                              "versionId",
+                              "versionNumber",
+                              "snippet"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "nextCursor": {
+                      "type": ["string", "null"]
+                    }
+                  },
+                  "required": ["results", "total", "nextCursor"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/search": {
       "get": {
         "operationId": "search",
@@ -94666,13 +95221,21 @@
     "/api/v1/list-views": {
       "get": {
         "operationId": "listSavedViews",
-        "summary": "Your saved views of one list (DD-019), ordered by name. A view is private: this answers only your own, and never reveals that anybody else has one. At most one carries isDefault, which is the view the list opens on; none doing so means the list opens on its built-in layout",
+        "summary": "Your saved views of one list (DD-019), ordered by name. A view is private: this answers only your own, and never reveals that anybody else has one. At most one carries isDefault, which is the view the list opens on; none doing so means the list opens on its built-in layout. The search surface holds question configs and has no default",
         "tags": ["list-views"],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "enum": ["inbox", "contracts", "matters", "documents", "entities", "knowledge"]
+              "enum": [
+                "inbox",
+                "contracts",
+                "matters",
+                "documents",
+                "entities",
+                "knowledge",
+                "search"
+              ]
             },
             "in": "query",
             "name": "surface",
@@ -94703,101 +95266,222 @@
                               "matters",
                               "documents",
                               "entities",
-                              "knowledge"
+                              "knowledge",
+                              "search"
                             ]
                           },
                           "name": {
                             "type": "string"
                           },
                           "config": {
-                            "type": "object",
-                            "properties": {
-                              "columns": {
-                                "minItems": 1,
-                                "maxItems": 64,
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "key": {
-                                      "type": "string",
-                                      "minLength": 1,
-                                      "maxLength": 64
-                                    },
-                                    "width": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": 48,
-                                          "maximum": 1200
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columns": {
+                                    "minItems": 1,
+                                    "maxItems": 64,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 64
                                         },
-                                        {
-                                          "type": "null"
+                                        "width": {
+                                          "anyOf": [
+                                            {
+                                              "type": "integer",
+                                              "minimum": 48,
+                                              "maximum": 1200
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
-                                      ]
+                                      },
+                                      "required": ["key", "width"],
+                                      "additionalProperties": false
                                     }
                                   },
-                                  "required": ["key", "width"],
-                                  "additionalProperties": false
-                                }
-                              },
-                              "flexKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 64
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "sort": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "key": {
+                                  "flexKey": {
+                                    "anyOf": [
+                                      {
                                         "type": "string",
                                         "minLength": 1,
                                         "maxLength": 64
                                       },
-                                      "dir": {
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "sort": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "key": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 64
+                                          },
+                                          "dir": {
+                                            "type": "string",
+                                            "enum": ["asc", "desc"]
+                                          }
+                                        },
+                                        "required": ["key", "dir"],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "filters": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 64
+                                    },
+                                    "additionalProperties": {
+                                      "anyOf": [
+                                        {
+                                          "type": "boolean"
+                                        },
+                                        {
+                                          "type": "string",
+                                          "maxLength": 2000
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": ["columns", "sort", "filters"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "version": {
+                                    "type": "number",
+                                    "enum": [1]
+                                  },
+                                  "words": {
+                                    "type": "object",
+                                    "properties": {
+                                      "all": {
                                         "type": "string",
-                                        "enum": ["asc", "desc"]
+                                        "maxLength": 200
+                                      },
+                                      "phrase": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "any": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "none": {
+                                        "type": "string",
+                                        "maxLength": 200
                                       }
                                     },
-                                    "required": ["key", "dir"],
+                                    "required": ["all", "phrase", "any", "none"],
                                     "additionalProperties": false
                                   },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "filters": {
-                                "type": "object",
-                                "propertyNames": {
-                                  "type": "string",
-                                  "minLength": 1,
-                                  "maxLength": 64
-                                },
-                                "additionalProperties": {
-                                  "anyOf": [
-                                    {
-                                      "type": "boolean"
+                                  "scope": {
+                                    "type": "object",
+                                    "properties": {
+                                      "titles": {
+                                        "type": "boolean"
+                                      },
+                                      "text": {
+                                        "type": "boolean"
+                                      },
+                                      "contents": {
+                                        "type": "boolean"
+                                      }
                                     },
-                                    {
+                                    "required": ["titles", "text", "contents"],
+                                    "additionalProperties": false
+                                  },
+                                  "kinds": {
+                                    "maxItems": 7,
+                                    "type": "array",
+                                    "items": {
                                       "type": "string",
-                                      "maxLength": 2000
+                                      "enum": [
+                                        "contract",
+                                        "matter",
+                                        "document",
+                                        "entity",
+                                        "counterparty",
+                                        "request",
+                                        "knowledge_item"
+                                      ]
                                     }
-                                  ]
-                                }
+                                  },
+                                  "conditions": {
+                                    "maxItems": 20,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "contract",
+                                            "matter",
+                                            "document",
+                                            "entity",
+                                            "counterparty",
+                                            "request",
+                                            "knowledge_item"
+                                          ]
+                                        },
+                                        "property": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "operator": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 100
+                                        },
+                                        "value": {}
+                                      },
+                                      "required": ["kind", "property", "operator"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "match": {
+                                    "type": "string",
+                                    "enum": ["all", "any"]
+                                  },
+                                  "sort": {
+                                    "type": "string",
+                                    "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                                  }
+                                },
+                                "required": [
+                                  "version",
+                                  "words",
+                                  "scope",
+                                  "kinds",
+                                  "conditions",
+                                  "match",
+                                  "sort"
+                                ],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["columns", "sort", "filters"],
-                            "additionalProperties": false
+                            ]
                           },
                           "isDefault": {
                             "type": "boolean"
@@ -94828,7 +95512,7 @@
       },
       "post": {
         "operationId": "createSavedView",
-        "summary": "Save the list you are looking at as a named view (DD-019). The name must be one you are not already using on this list, compared case-insensitively — 409 if it is. Pass isDefault to make this the view the list opens on, which clears whichever view held that. Answers your whole view list, so the menu needs no second read",
+        "summary": "Save the list you are looking at as a named view (DD-019). The name must be one you are not already using on this list, compared case-insensitively — 409 if it is. Pass isDefault to make this the view the list opens on, which clears whichever view held that. Answers your whole view list, so the menu needs no second read. Search accepts a question config and refuses isDefault true with 400",
         "tags": ["list-views"],
         "requestBody": {
           "required": true,
@@ -94839,7 +95523,15 @@
                 "properties": {
                   "surface": {
                     "type": "string",
-                    "enum": ["inbox", "contracts", "matters", "documents", "entities", "knowledge"]
+                    "enum": [
+                      "inbox",
+                      "contracts",
+                      "matters",
+                      "documents",
+                      "entities",
+                      "knowledge",
+                      "search"
+                    ]
                   },
                   "name": {
                     "type": "string",
@@ -94847,94 +95539,210 @@
                     "maxLength": 60
                   },
                   "config": {
-                    "type": "object",
-                    "properties": {
-                      "columns": {
-                        "minItems": 1,
-                        "maxItems": 64,
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "key": {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 64
-                            },
-                            "width": {
-                              "anyOf": [
-                                {
-                                  "type": "integer",
-                                  "minimum": 48,
-                                  "maximum": 1200
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "columns": {
+                            "minItems": 1,
+                            "maxItems": 64,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "key": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 64
                                 },
-                                {
-                                  "type": "null"
+                                "width": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 48,
+                                      "maximum": 1200
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
-                              ]
+                              },
+                              "required": ["key", "width"],
+                              "additionalProperties": false
                             }
                           },
-                          "required": ["key", "width"],
-                          "additionalProperties": false
-                        }
-                      },
-                      "flexKey": {
-                        "anyOf": [
-                          {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 64
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "sort": {
-                        "anyOf": [
-                          {
-                            "type": "object",
-                            "properties": {
-                              "key": {
+                          "flexKey": {
+                            "anyOf": [
+                              {
                                 "type": "string",
                                 "minLength": 1,
                                 "maxLength": 64
                               },
-                              "dir": {
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "sort": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64
+                                  },
+                                  "dir": {
+                                    "type": "string",
+                                    "enum": ["asc", "desc"]
+                                  }
+                                },
+                                "required": ["key", "dir"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "filters": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64
+                            },
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "required": ["columns", "sort", "filters"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "version": {
+                            "type": "number",
+                            "enum": [1]
+                          },
+                          "words": {
+                            "type": "object",
+                            "properties": {
+                              "all": {
                                 "type": "string",
-                                "enum": ["asc", "desc"]
+                                "maxLength": 200
+                              },
+                              "phrase": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "any": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "none": {
+                                "type": "string",
+                                "maxLength": 200
                               }
                             },
-                            "required": ["key", "dir"],
-                            "additionalProperties": false
+                            "required": ["all", "phrase", "any", "none"]
                           },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "filters": {
-                        "type": "object",
-                        "propertyNames": {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 64
-                        },
-                        "additionalProperties": {
-                          "anyOf": [
-                            {
-                              "type": "boolean"
+                          "scope": {
+                            "type": "object",
+                            "properties": {
+                              "titles": {
+                                "type": "boolean"
+                              },
+                              "text": {
+                                "type": "boolean"
+                              },
+                              "contents": {
+                                "type": "boolean"
+                              }
                             },
-                            {
+                            "required": ["titles", "text", "contents"]
+                          },
+                          "kinds": {
+                            "maxItems": 7,
+                            "type": "array",
+                            "items": {
                               "type": "string",
-                              "maxLength": 2000
+                              "enum": [
+                                "contract",
+                                "matter",
+                                "document",
+                                "entity",
+                                "counterparty",
+                                "request",
+                                "knowledge_item"
+                              ]
                             }
-                          ]
-                        }
+                          },
+                          "conditions": {
+                            "maxItems": 20,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "contract",
+                                    "matter",
+                                    "document",
+                                    "entity",
+                                    "counterparty",
+                                    "request",
+                                    "knowledge_item"
+                                  ]
+                                },
+                                "property": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "operator": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                "value": {}
+                              },
+                              "required": ["kind", "property", "operator"]
+                            }
+                          },
+                          "match": {
+                            "type": "string",
+                            "enum": ["all", "any"]
+                          },
+                          "sort": {
+                            "type": "string",
+                            "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                          }
+                        },
+                        "required": [
+                          "version",
+                          "words",
+                          "scope",
+                          "kinds",
+                          "conditions",
+                          "match",
+                          "sort"
+                        ]
                       }
-                    },
-                    "required": ["columns", "sort", "filters"],
-                    "additionalProperties": false
+                    ]
                   },
                   "isDefault": {
                     "type": "boolean"
@@ -94970,101 +95778,222 @@
                               "matters",
                               "documents",
                               "entities",
-                              "knowledge"
+                              "knowledge",
+                              "search"
                             ]
                           },
                           "name": {
                             "type": "string"
                           },
                           "config": {
-                            "type": "object",
-                            "properties": {
-                              "columns": {
-                                "minItems": 1,
-                                "maxItems": 64,
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "key": {
-                                      "type": "string",
-                                      "minLength": 1,
-                                      "maxLength": 64
-                                    },
-                                    "width": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": 48,
-                                          "maximum": 1200
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columns": {
+                                    "minItems": 1,
+                                    "maxItems": 64,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 64
                                         },
-                                        {
-                                          "type": "null"
+                                        "width": {
+                                          "anyOf": [
+                                            {
+                                              "type": "integer",
+                                              "minimum": 48,
+                                              "maximum": 1200
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
-                                      ]
+                                      },
+                                      "required": ["key", "width"],
+                                      "additionalProperties": false
                                     }
                                   },
-                                  "required": ["key", "width"],
-                                  "additionalProperties": false
-                                }
-                              },
-                              "flexKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 64
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "sort": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "key": {
+                                  "flexKey": {
+                                    "anyOf": [
+                                      {
                                         "type": "string",
                                         "minLength": 1,
                                         "maxLength": 64
                                       },
-                                      "dir": {
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "sort": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "key": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 64
+                                          },
+                                          "dir": {
+                                            "type": "string",
+                                            "enum": ["asc", "desc"]
+                                          }
+                                        },
+                                        "required": ["key", "dir"],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "filters": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 64
+                                    },
+                                    "additionalProperties": {
+                                      "anyOf": [
+                                        {
+                                          "type": "boolean"
+                                        },
+                                        {
+                                          "type": "string",
+                                          "maxLength": 2000
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": ["columns", "sort", "filters"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "version": {
+                                    "type": "number",
+                                    "enum": [1]
+                                  },
+                                  "words": {
+                                    "type": "object",
+                                    "properties": {
+                                      "all": {
                                         "type": "string",
-                                        "enum": ["asc", "desc"]
+                                        "maxLength": 200
+                                      },
+                                      "phrase": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "any": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "none": {
+                                        "type": "string",
+                                        "maxLength": 200
                                       }
                                     },
-                                    "required": ["key", "dir"],
+                                    "required": ["all", "phrase", "any", "none"],
                                     "additionalProperties": false
                                   },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "filters": {
-                                "type": "object",
-                                "propertyNames": {
-                                  "type": "string",
-                                  "minLength": 1,
-                                  "maxLength": 64
-                                },
-                                "additionalProperties": {
-                                  "anyOf": [
-                                    {
-                                      "type": "boolean"
+                                  "scope": {
+                                    "type": "object",
+                                    "properties": {
+                                      "titles": {
+                                        "type": "boolean"
+                                      },
+                                      "text": {
+                                        "type": "boolean"
+                                      },
+                                      "contents": {
+                                        "type": "boolean"
+                                      }
                                     },
-                                    {
+                                    "required": ["titles", "text", "contents"],
+                                    "additionalProperties": false
+                                  },
+                                  "kinds": {
+                                    "maxItems": 7,
+                                    "type": "array",
+                                    "items": {
                                       "type": "string",
-                                      "maxLength": 2000
+                                      "enum": [
+                                        "contract",
+                                        "matter",
+                                        "document",
+                                        "entity",
+                                        "counterparty",
+                                        "request",
+                                        "knowledge_item"
+                                      ]
                                     }
-                                  ]
-                                }
+                                  },
+                                  "conditions": {
+                                    "maxItems": 20,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "contract",
+                                            "matter",
+                                            "document",
+                                            "entity",
+                                            "counterparty",
+                                            "request",
+                                            "knowledge_item"
+                                          ]
+                                        },
+                                        "property": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "operator": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 100
+                                        },
+                                        "value": {}
+                                      },
+                                      "required": ["kind", "property", "operator"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "match": {
+                                    "type": "string",
+                                    "enum": ["all", "any"]
+                                  },
+                                  "sort": {
+                                    "type": "string",
+                                    "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                                  }
+                                },
+                                "required": [
+                                  "version",
+                                  "words",
+                                  "scope",
+                                  "kinds",
+                                  "conditions",
+                                  "match",
+                                  "sort"
+                                ],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["columns", "sort", "filters"],
-                            "additionalProperties": false
+                            ]
                           },
                           "isDefault": {
                             "type": "boolean"
@@ -95097,7 +96026,7 @@
     "/api/v1/list-views/{viewId}": {
       "patch": {
         "operationId": "updateSavedView",
-        "summary": "Change one of your saved views (DD-019): overwrite its config with the list you are looking at, rename it, or make it the view the list opens on. Every field is optional and an omitted one is left alone. Somebody else's view id answers 404, the same as an id that was never issued — a view is private, and access is not advertised. isDefault false on the view that holds it leaves the surface with no default, which opens the built-in layout",
+        "summary": "Change one of your saved views (DD-019): overwrite its config with the list you are looking at, rename it, or make it the view the list opens on. Every field is optional and an omitted one is left alone. Somebody else's view id answers 404, the same as an id that was never issued — a view is private, and access is not advertised. isDefault false on the view that holds it leaves the surface with no default, which opens the built-in layout. Search refuses isDefault true with 400",
         "tags": ["list-views"],
         "requestBody": {
           "required": true,
@@ -95112,94 +96041,210 @@
                     "maxLength": 60
                   },
                   "config": {
-                    "type": "object",
-                    "properties": {
-                      "columns": {
-                        "minItems": 1,
-                        "maxItems": 64,
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "key": {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 64
-                            },
-                            "width": {
-                              "anyOf": [
-                                {
-                                  "type": "integer",
-                                  "minimum": 48,
-                                  "maximum": 1200
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "columns": {
+                            "minItems": 1,
+                            "maxItems": 64,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "key": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 64
                                 },
-                                {
-                                  "type": "null"
+                                "width": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 48,
+                                      "maximum": 1200
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
-                              ]
+                              },
+                              "required": ["key", "width"],
+                              "additionalProperties": false
                             }
                           },
-                          "required": ["key", "width"],
-                          "additionalProperties": false
-                        }
-                      },
-                      "flexKey": {
-                        "anyOf": [
-                          {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 64
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "sort": {
-                        "anyOf": [
-                          {
-                            "type": "object",
-                            "properties": {
-                              "key": {
+                          "flexKey": {
+                            "anyOf": [
+                              {
                                 "type": "string",
                                 "minLength": 1,
                                 "maxLength": 64
                               },
-                              "dir": {
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "sort": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64
+                                  },
+                                  "dir": {
+                                    "type": "string",
+                                    "enum": ["asc", "desc"]
+                                  }
+                                },
+                                "required": ["key", "dir"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "filters": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64
+                            },
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "required": ["columns", "sort", "filters"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "version": {
+                            "type": "number",
+                            "enum": [1]
+                          },
+                          "words": {
+                            "type": "object",
+                            "properties": {
+                              "all": {
                                 "type": "string",
-                                "enum": ["asc", "desc"]
+                                "maxLength": 200
+                              },
+                              "phrase": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "any": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "none": {
+                                "type": "string",
+                                "maxLength": 200
                               }
                             },
-                            "required": ["key", "dir"],
-                            "additionalProperties": false
+                            "required": ["all", "phrase", "any", "none"]
                           },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "filters": {
-                        "type": "object",
-                        "propertyNames": {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 64
-                        },
-                        "additionalProperties": {
-                          "anyOf": [
-                            {
-                              "type": "boolean"
+                          "scope": {
+                            "type": "object",
+                            "properties": {
+                              "titles": {
+                                "type": "boolean"
+                              },
+                              "text": {
+                                "type": "boolean"
+                              },
+                              "contents": {
+                                "type": "boolean"
+                              }
                             },
-                            {
+                            "required": ["titles", "text", "contents"]
+                          },
+                          "kinds": {
+                            "maxItems": 7,
+                            "type": "array",
+                            "items": {
                               "type": "string",
-                              "maxLength": 2000
+                              "enum": [
+                                "contract",
+                                "matter",
+                                "document",
+                                "entity",
+                                "counterparty",
+                                "request",
+                                "knowledge_item"
+                              ]
                             }
-                          ]
-                        }
+                          },
+                          "conditions": {
+                            "maxItems": 20,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "contract",
+                                    "matter",
+                                    "document",
+                                    "entity",
+                                    "counterparty",
+                                    "request",
+                                    "knowledge_item"
+                                  ]
+                                },
+                                "property": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 200
+                                },
+                                "operator": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                "value": {}
+                              },
+                              "required": ["kind", "property", "operator"]
+                            }
+                          },
+                          "match": {
+                            "type": "string",
+                            "enum": ["all", "any"]
+                          },
+                          "sort": {
+                            "type": "string",
+                            "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                          }
+                        },
+                        "required": [
+                          "version",
+                          "words",
+                          "scope",
+                          "kinds",
+                          "conditions",
+                          "match",
+                          "sort"
+                        ]
                       }
-                    },
-                    "required": ["columns", "sort", "filters"],
-                    "additionalProperties": false
+                    ]
                   },
                   "isDefault": {
                     "type": "boolean"
@@ -95246,101 +96291,222 @@
                               "matters",
                               "documents",
                               "entities",
-                              "knowledge"
+                              "knowledge",
+                              "search"
                             ]
                           },
                           "name": {
                             "type": "string"
                           },
                           "config": {
-                            "type": "object",
-                            "properties": {
-                              "columns": {
-                                "minItems": 1,
-                                "maxItems": 64,
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "key": {
-                                      "type": "string",
-                                      "minLength": 1,
-                                      "maxLength": 64
-                                    },
-                                    "width": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": 48,
-                                          "maximum": 1200
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columns": {
+                                    "minItems": 1,
+                                    "maxItems": 64,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 64
                                         },
-                                        {
-                                          "type": "null"
+                                        "width": {
+                                          "anyOf": [
+                                            {
+                                              "type": "integer",
+                                              "minimum": 48,
+                                              "maximum": 1200
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
-                                      ]
+                                      },
+                                      "required": ["key", "width"],
+                                      "additionalProperties": false
                                     }
                                   },
-                                  "required": ["key", "width"],
-                                  "additionalProperties": false
-                                }
-                              },
-                              "flexKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 64
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "sort": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "key": {
+                                  "flexKey": {
+                                    "anyOf": [
+                                      {
                                         "type": "string",
                                         "minLength": 1,
                                         "maxLength": 64
                                       },
-                                      "dir": {
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "sort": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "key": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 64
+                                          },
+                                          "dir": {
+                                            "type": "string",
+                                            "enum": ["asc", "desc"]
+                                          }
+                                        },
+                                        "required": ["key", "dir"],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "filters": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 64
+                                    },
+                                    "additionalProperties": {
+                                      "anyOf": [
+                                        {
+                                          "type": "boolean"
+                                        },
+                                        {
+                                          "type": "string",
+                                          "maxLength": 2000
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": ["columns", "sort", "filters"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "version": {
+                                    "type": "number",
+                                    "enum": [1]
+                                  },
+                                  "words": {
+                                    "type": "object",
+                                    "properties": {
+                                      "all": {
                                         "type": "string",
-                                        "enum": ["asc", "desc"]
+                                        "maxLength": 200
+                                      },
+                                      "phrase": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "any": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "none": {
+                                        "type": "string",
+                                        "maxLength": 200
                                       }
                                     },
-                                    "required": ["key", "dir"],
+                                    "required": ["all", "phrase", "any", "none"],
                                     "additionalProperties": false
                                   },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "filters": {
-                                "type": "object",
-                                "propertyNames": {
-                                  "type": "string",
-                                  "minLength": 1,
-                                  "maxLength": 64
-                                },
-                                "additionalProperties": {
-                                  "anyOf": [
-                                    {
-                                      "type": "boolean"
+                                  "scope": {
+                                    "type": "object",
+                                    "properties": {
+                                      "titles": {
+                                        "type": "boolean"
+                                      },
+                                      "text": {
+                                        "type": "boolean"
+                                      },
+                                      "contents": {
+                                        "type": "boolean"
+                                      }
                                     },
-                                    {
+                                    "required": ["titles", "text", "contents"],
+                                    "additionalProperties": false
+                                  },
+                                  "kinds": {
+                                    "maxItems": 7,
+                                    "type": "array",
+                                    "items": {
                                       "type": "string",
-                                      "maxLength": 2000
+                                      "enum": [
+                                        "contract",
+                                        "matter",
+                                        "document",
+                                        "entity",
+                                        "counterparty",
+                                        "request",
+                                        "knowledge_item"
+                                      ]
                                     }
-                                  ]
-                                }
+                                  },
+                                  "conditions": {
+                                    "maxItems": 20,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "contract",
+                                            "matter",
+                                            "document",
+                                            "entity",
+                                            "counterparty",
+                                            "request",
+                                            "knowledge_item"
+                                          ]
+                                        },
+                                        "property": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "operator": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 100
+                                        },
+                                        "value": {}
+                                      },
+                                      "required": ["kind", "property", "operator"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "match": {
+                                    "type": "string",
+                                    "enum": ["all", "any"]
+                                  },
+                                  "sort": {
+                                    "type": "string",
+                                    "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                                  }
+                                },
+                                "required": [
+                                  "version",
+                                  "words",
+                                  "scope",
+                                  "kinds",
+                                  "conditions",
+                                  "match",
+                                  "sort"
+                                ],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["columns", "sort", "filters"],
-                            "additionalProperties": false
+                            ]
                           },
                           "isDefault": {
                             "type": "boolean"
@@ -95409,101 +96575,222 @@
                               "matters",
                               "documents",
                               "entities",
-                              "knowledge"
+                              "knowledge",
+                              "search"
                             ]
                           },
                           "name": {
                             "type": "string"
                           },
                           "config": {
-                            "type": "object",
-                            "properties": {
-                              "columns": {
-                                "minItems": 1,
-                                "maxItems": 64,
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "key": {
-                                      "type": "string",
-                                      "minLength": 1,
-                                      "maxLength": 64
-                                    },
-                                    "width": {
-                                      "anyOf": [
-                                        {
-                                          "type": "integer",
-                                          "minimum": 48,
-                                          "maximum": 1200
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "columns": {
+                                    "minItems": 1,
+                                    "maxItems": 64,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "key": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 64
                                         },
-                                        {
-                                          "type": "null"
+                                        "width": {
+                                          "anyOf": [
+                                            {
+                                              "type": "integer",
+                                              "minimum": 48,
+                                              "maximum": 1200
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
-                                      ]
+                                      },
+                                      "required": ["key", "width"],
+                                      "additionalProperties": false
                                     }
                                   },
-                                  "required": ["key", "width"],
-                                  "additionalProperties": false
-                                }
-                              },
-                              "flexKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string",
-                                    "minLength": 1,
-                                    "maxLength": 64
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "sort": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "key": {
+                                  "flexKey": {
+                                    "anyOf": [
+                                      {
                                         "type": "string",
                                         "minLength": 1,
                                         "maxLength": 64
                                       },
-                                      "dir": {
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "sort": {
+                                    "anyOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "key": {
+                                            "type": "string",
+                                            "minLength": 1,
+                                            "maxLength": 64
+                                          },
+                                          "dir": {
+                                            "type": "string",
+                                            "enum": ["asc", "desc"]
+                                          }
+                                        },
+                                        "required": ["key", "dir"],
+                                        "additionalProperties": false
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "filters": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 64
+                                    },
+                                    "additionalProperties": {
+                                      "anyOf": [
+                                        {
+                                          "type": "boolean"
+                                        },
+                                        {
+                                          "type": "string",
+                                          "maxLength": 2000
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": ["columns", "sort", "filters"],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "version": {
+                                    "type": "number",
+                                    "enum": [1]
+                                  },
+                                  "words": {
+                                    "type": "object",
+                                    "properties": {
+                                      "all": {
                                         "type": "string",
-                                        "enum": ["asc", "desc"]
+                                        "maxLength": 200
+                                      },
+                                      "phrase": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "any": {
+                                        "type": "string",
+                                        "maxLength": 200
+                                      },
+                                      "none": {
+                                        "type": "string",
+                                        "maxLength": 200
                                       }
                                     },
-                                    "required": ["key", "dir"],
+                                    "required": ["all", "phrase", "any", "none"],
                                     "additionalProperties": false
                                   },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "filters": {
-                                "type": "object",
-                                "propertyNames": {
-                                  "type": "string",
-                                  "minLength": 1,
-                                  "maxLength": 64
-                                },
-                                "additionalProperties": {
-                                  "anyOf": [
-                                    {
-                                      "type": "boolean"
+                                  "scope": {
+                                    "type": "object",
+                                    "properties": {
+                                      "titles": {
+                                        "type": "boolean"
+                                      },
+                                      "text": {
+                                        "type": "boolean"
+                                      },
+                                      "contents": {
+                                        "type": "boolean"
+                                      }
                                     },
-                                    {
+                                    "required": ["titles", "text", "contents"],
+                                    "additionalProperties": false
+                                  },
+                                  "kinds": {
+                                    "maxItems": 7,
+                                    "type": "array",
+                                    "items": {
                                       "type": "string",
-                                      "maxLength": 2000
+                                      "enum": [
+                                        "contract",
+                                        "matter",
+                                        "document",
+                                        "entity",
+                                        "counterparty",
+                                        "request",
+                                        "knowledge_item"
+                                      ]
                                     }
-                                  ]
-                                }
+                                  },
+                                  "conditions": {
+                                    "maxItems": 20,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "contract",
+                                            "matter",
+                                            "document",
+                                            "entity",
+                                            "counterparty",
+                                            "request",
+                                            "knowledge_item"
+                                          ]
+                                        },
+                                        "property": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 200
+                                        },
+                                        "operator": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 100
+                                        },
+                                        "value": {}
+                                      },
+                                      "required": ["kind", "property", "operator"],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "match": {
+                                    "type": "string",
+                                    "enum": ["all", "any"]
+                                  },
+                                  "sort": {
+                                    "type": "string",
+                                    "enum": ["relevance", "newest", "oldest", "expiry", "title"]
+                                  }
+                                },
+                                "required": [
+                                  "version",
+                                  "words",
+                                  "scope",
+                                  "kinds",
+                                  "conditions",
+                                  "match",
+                                  "sort"
+                                ],
+                                "additionalProperties": false
                               }
-                            },
-                            "required": ["columns", "sort", "filters"],
-                            "additionalProperties": false
+                            ]
                           },
                           "isDefault": {
                             "type": "boolean"

@@ -30,6 +30,7 @@ import {
   projectCustomFields,
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
+import { incompleteMatter } from "../../lib/incomplete-matter.js";
 import { matterTeamScope, NO_MATTER } from "../../lib/matter-access.js";
 import { nextDeadline } from "../../lib/next-deadline.js";
 import { httpError } from "../../lib/problem.js";
@@ -44,7 +45,6 @@ import {
   assertAudienceActor,
   assertEditable,
   furtherDownThan,
-  incomplete,
   listOrder,
   lockedLiveUser,
   lockedMatter,
@@ -93,7 +93,7 @@ export async function listMatters(
       query.deadlineFrom,
       query.deadlineTo,
     ),
-    query.incomplete === "true" ? incomplete : undefined,
+    query.incomplete === "true" ? incompleteMatter : undefined,
     scope(db, user),
   );
   const rows = await selectMatters(db, today)

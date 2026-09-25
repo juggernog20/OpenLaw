@@ -15,7 +15,7 @@ import { pathOf, readRecordFolders, type ContractFolder } from "../../lib/folder
 import type { Layout } from "../../lib/list-views";
 import { RecordFilterBar, type RecordFilter } from "../table/record-filter-bar";
 
-const FORMAT_MESSAGES = defineMessages({
+export const FORMAT_MESSAGES = defineMessages({
   pdf: { id: "documents.format.pdf", defaultMessage: "PDF" },
   word: { id: "documents.format.word", defaultMessage: "Word" },
   powerpoint: { id: "documents.format.powerpoint", defaultMessage: "PowerPoint" },

@@ -1,12 +1,63 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { SearchFieldSchema } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { requireAuth } from "../../auth/guards.js";
+import { requireAuth, requireRole } from "../../auth/guards.js";
 import { problemResponse } from "../../lib/problem.js";
-import { QuerySchema, SearchRowSchema, search } from "./service.js";
+import {
+  QuerySchema,
+  QuestionQuerySchema,
+  SearchRowSchema,
+  querySearch,
+  search,
+  searchFields,
+} from "./service.js";
 
 export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.get(
+    "/search/fields",
+    {
+      preHandler: requireRole("administrator", "legal_team_member"),
+      schema: {
+        operationId: "searchFields",
+        tags: ["search"],
+        summary: "Live Fields and reachable reference choices for search conditions.",
+        response: {
+          200: z.object({
+            fields: z.array(SearchFieldSchema),
+            people: z.array(z.object({ id: z.string(), displayName: z.string() })),
+            entities: z.array(z.object({ id: z.string(), displayName: z.string() })),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => searchFields(app.db, request.user),
+  );
+
+  app.post(
+    "/search/query",
+    {
+      preHandler: requireAuth,
+      schema: {
+        operationId: "querySearch",
+        tags: ["search"],
+        summary: "Run a versioned search question with an exact reachable match total.",
+        body: QuestionQuerySchema,
+        response: {
+          200: z.object({
+            results: z.array(SearchRowSchema),
+            total: z.number().int().nonnegative(),
+            nextCursor: z.string().nullable(),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => querySearch(app.db, request.user, request.body),
+  );
+
   app.get(
     "/search",
     {

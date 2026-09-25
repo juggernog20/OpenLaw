@@ -644,3 +644,23 @@ Administrators may add protected native Contract questions to Contract-targeting
 Naming the Legal Owner of a Confidential Contract is an audience change. The Owner reaches the record by the seat alone (CTR-022) and may clear the flag, so `PATCH /contracts/:number` with `managerId` on a Confidential Contract takes the CTR-023 actor set: an Administrator, the creator, or the current Owner. A team Member who is none of the three is refused with the roster's own 403. An open Contract keeps CTR-004's rule, and any Member+ names the Owner. The Owner change stays narrated inside `contract.updated`; it gets no audit verb of its own.
 
 An approval request grants the current primary Document only as far as that Document's own audience (DOC-008). When the primary Document is flagged confidential, a staff approver outside its audience is refused at the ask with the existing 422, whoever asks, including the requester naming themselves. A Business User approver is never asked about the flag; their packet answers `document: null`, and the packet's download and preview answer 404 until a team row puts them inside the Document's audience. Self-approval is unchanged: a requester may still name themselves.
+
+### CTR-016 addendum (2026-09-25, M44 close, [#1100](https://github.com/juggernog20/OpenLaw/issues/1100)): Fields as search conditions
+
+1. A live Contract, Matter or Entity Field is searchable by condition, whether or not a type currently attaches it. The property is `field:<slug>`; the server resolves its live module catalog on every request and refuses unknown, archived or wrong-module Fields. Links and saved searches drop unavailable Field conditions on read. Words do not search Field values. Full clause text with contains is clause search over the stored answer.
+2. Operators follow the stored Field type:
+
+   | Field type      | Operators                                                                                                                                         |
+   | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | Text, long text | contains, does not contain, is empty, is not empty                                                                                                |
+   | Number          | equals, greater than, less than, between, is empty, is not empty                                                                                  |
+   | Currency        | is any of, is none of, is empty, is not empty                                                                                                     |
+   | Date            | before, after, on, between, in the last N days, in the next N days, today, this week, this month, this quarter, this year, is empty, is not empty |
+   | Boolean         | is yes, is no, is empty                                                                                                                           |
+   | Single select   | is any of, is none of, is empty, is not empty                                                                                                     |
+   | Multi select    | includes any, includes all, includes none, is empty                                                                                               |
+   | User            | is any of, is none of, is empty                                                                                                                   |
+   | Entity          | is any of, is none of, is empty                                                                                                                   |
+
+3. A currency Field stores an ISO currency code, so it uses choice operators. This supersedes #1068's proposed numeric operators for currency; numeric comparisons apply only to number Fields. Select values compare option labels, user and Entity values compare stored IDs, and Me resolves to the viewer. Text uses escaped case-insensitive matching. Date Fields compare ISO calendar dates under DOC-009's relative-date rule.
+4. Search reads each module's `custom_fields` by slug. An absent key is the only empty value, including when the type never attached the Field. Stored false and zero are present. Negative contains and exclusion operators also match absent keys. Record reach is the only Field read gate; no Field-level visibility rule is introduced into staff search. The existing Contracts GIN index remains, Matters and Entities scan reached rows, and M44 adds no index or migration.

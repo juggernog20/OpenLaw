@@ -673,6 +673,8 @@ A small, fixed global key map ships in v1; `Cmd-K` command palette is **deferred
 
 Two-key navigation sequences (e.g. Gmail-style `g + d`) were considered and **rejected for v1** — they add cognitive load without a corresponding payoff at this stage; the top-nav is one click away on every screen.
 
+M44 addendum, 2026-09-25, #1100: Advanced search adds no global key; `/`, `Esc` and `?` keep their meanings.
+
 #### Component keyboard contract (Radix defaults, written down)
 
 - Tab order follows DOM order; no `tabindex > 0` anywhere.
@@ -5419,6 +5421,38 @@ A record card lets the reader see the record and act on it in one place. Count t
 
 M43's build tickets implement this record. This decision does not ship a renderer. The gallery remains outside the repo, and this record carries the anatomy so a builder can work without it. DES-051's register stays in force. NOT-006 records the briefing's HTML changes. Subjects, recipients, timing, preferences, the bell and Push do not change.
 
+## DES-094: Advanced search dialog, question chips, and saved and recent searches
+
+- **Status:** Accepted
+- **Date:** 2026-09-25
+- **Context:** M44, omnibus [#1068](https://github.com/juggernog20/OpenLaw/issues/1068), close [#1100](https://github.com/juggernog20/OpenLaw/issues/1100). `designs/search.pen` S1 to S6 draw the blank and populated dialog, property picker, results page, empty header list and 390 px dialog. The closing reviews on #1082, #1084, #1086, #1090, #1092 and #1096 qualify the mock. DES-093 is reserved for M43's email layout.
+
+### Decision
+
+1. Advanced search opens from the sliders button inside the staff header box, the dropdown's Advanced search row, or Advanced on the results page. Header words travel into All of these words; a results-page entry carries the whole question. The Portal has no search. DES-010 adds no keyboard chord.
+2. The wide Task dialog shell carries Words, Search in, Kinds, Properties, Saved searches and Recent searches in the leading column, with a live Preview in the trailing column. It stacks on narrow screens. Four words rows and three checked scopes begin the question. The seven kind chips are multi-select; no selected kind means every kind. Selecting kinds enables their property groups, with live Fields under each kind's Fields subgroup. Removing a kind removes its conditions with a notice. One Match all / Match any switch governs the rows under DOC-009, including the recorded Show-flag behavior.
+3. Preview announces the exact total and shows at most ten existing result rows. It refreshes after 300 ms and ignores older answers. Blank, Searching, No matches, missing scope, validation and server-refusal states remain inside the dialog. Clear empties the question. Save search uses DD-019; Search runs the whole question and closes the dialog. Focus is trapped, Escape closes without running, and close restores the initiating control.
+4. The results sub-bar holds words chips, a non-default scope chip and one chip per condition. Condition chips show the display name, operator and value, with separate edit and remove controls; edit opens the dialog on that row. Words and scope chips remove their part. The existing All plus one-of-seven kind links remain, while a multi-kind question from the dialog can mark several kinds active. The sort control offers Relevance, Newest, Oldest, Expiry soonest and Title. Rows, Show more, prompt, empty and refusal states use the existing results page.
+5. Focusing an empty header box shows Saved and Recent groups when entries exist. Saved rows open private server-stored questions. Recent holds this browser's last five distinct questions, under the signed-in user's ID, with a compiled summary; sign-out removes them. Typing replaces those groups with the existing two-character search rule. Saved and Recent are also available inside the dialog. Recent does not write to the server.
+
+### Mock departures and component conventions
+
+- S4's multi-select kind chips with no All chip are superseded on the results page by the existing All plus one-of-seven links. Multi-select remains in the dialog. S4's heading-row views control is not built; saved-search controls live in the dialog. S4's "10 of 42 matches" paging foot is not built; the page shows the exact total above its rows and Show more below them.
+- ~~S5's faded See all results row is not built for the empty header box. It shows the Saved and Recent groups and Advanced search.~~ Corrected at the M44 close review (PR [#1145](https://github.com/juggernog20/OpenLaw/pull/1145)): the empty header box shows the Saved and Recent groups, then S5's faded See all results row as a disabled option that arrow keys skip and a pointer cannot open, then Advanced search. A typed search retains See all results above Advanced search.
+- S1 and S2's leading Clear button is adopted, with Save search and Search trailing. This is a deliberate departure from the Task dialog's end-aligned footer. The trailing buttons keep the shared 12 px gap.
+- Radix places initial focus on Close. The shared icon button is 24 px, rather than S1's 32 px. Both component conventions stand. The sort trigger has a trailing chevron and the menu a leading check mark, as DES-046 clause 6 requires. The Fields subgroup heading is one text step smaller than S3 to retain its hierarchy under the kind heading.
+- S2's operator "in the next" with input "90 days" is superseded by "in the next N days" in the operator menu and a plain numeric input. DOC-009 records Monday-start weeks and inclusive ranges.
+
+### Rationale
+
+The dialog, URL and saved search carry the same question, so refining and reopening preserve its meaning. Shared controls keep the keyboard and visual conventions of the rest of the app. Typed query syntax and CSV export remain deferred; natural language was considered and is not planned, as FUTURE-FEATURES records.
+
+### Consequences and open points
+
+The close journey builds the renewals question with a Governing law condition and a relative expiry, watches the total narrow, saves Renewals, reloads, reopens it from the header box and lands on the Contract. The axe sweep covers the dialog states in both themes and the results page including its chips. No migration is needed.
+
+The build reviews left these follow-ups open: entering a leading minus clears a number input; a results-page notice covers dropped Fields but not removed standard properties; the active saved-search identity ends when the dialog closes, so reopening then choosing Save search starts Save as. The possible alternative of ANDing Show flags regardless of Match any is a product call under DOC-009. This record describes the current behavior and does not adopt those changes.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                                                             |
@@ -5516,3 +5550,4 @@ M43's build tickets implement this record. This decision does not ship a rendere
 | DES-091 | One file tile wherever a file is picked, staged or carried in                                                                                                        | Accepted                                                                                                                                           |
 | DES-092 | The MCP screens, the consent page, and the pinned "Your approvals" group                                                                                             | Accepted; drawn as `designs/mcp.pen` MC1 to MC6 before the record                                                                                  |
 | DES-093 | A2 · Console+ is the shared HTML email layout                                                                                                                        | Accepted; amends DES-051; briefing anatomy recorded in NOT-006                                                                                     |
+| DES-094 | Advanced search dialog, question chips, and saved and recent searches                                                                                                | Accepted                                                                                                                                           |
