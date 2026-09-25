@@ -4,10 +4,10 @@
 
 import { and, eq, contractTeam, matterTeam, users } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/guards.js";
-import { recordActivity, RECORD_ACTIVITY_TIER } from "./activity.js";
 import { confidentialityWrite } from "./contract-access.js";
 import { matterConfidentialityWrite } from "./matter-access.js";
 import { addContractTeamMember } from "./contract-team.js";
+import { addMatterTeamMember } from "./matter-team.js";
 import type { Notifier, NotifyingTransaction } from "./notifications/notifier.js";
 import { httpError } from "./problem.js";
 
@@ -56,19 +56,8 @@ export async function prepareTaskAssignee(
       throw httpError(403, "You cannot add people to this confidential record's team.");
   }
   // A Contract team row narrates and notifies through one write
-  // (CTR-026); a Matter has no team event of its own yet, so it still
-  // writes its own activity entry.
-  if (kind === "contract") {
-    await addContractTeamMember(tx, notifier, record, actor, person);
-    return;
-  }
-  await tx.insert(matterTeam).values({ matterId: record.id, userId: assigneeId });
-  await recordActivity(tx, {
-    entityType: "matter",
-    entityId: record.id,
-    actorId: actor.id,
-    action: "matter.team_added",
-    visibility: RECORD_ACTIVITY_TIER,
-    payload: { number: record.number, title: record.title, member: person.displayName },
-  });
+  // (CTR-026). A Matter has no team notification yet, so its write only
+  // narrates.
+  if (kind === "contract") await addContractTeamMember(tx, notifier, record, actor, person);
+  else await addMatterTeamMember(tx, record, actor, person);
 }
