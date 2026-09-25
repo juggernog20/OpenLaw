@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { decodeJwt } from "jose";
 import { MCP_TOOLSETS, type McpToolset } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -388,6 +389,26 @@ it("narrows Toolsets and scope live, and a token never widens after re-consent",
   const narrow = await issue(["contracts"]);
   await issue(["contracts", "documents"], "write");
   expect((await call(narrow.access_token, "openlaw_documents_list")).statusCode).toBe(403);
+});
+it("binds a token request that omits resource to the /mcp audience", async () => {
+  const consent = await answer(await query());
+  expect(consent.statusCode, consent.body).toBe(200);
+  const res = await h.app.inject({
+    method: "POST",
+    url: "/api/auth/oauth2/token",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    payload: new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: new URL(consent.json().url).searchParams.get("code")!,
+      redirect_uri: "https://client.example/callback",
+      code_verifier: verifier,
+    }).toString(),
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  expect(decodeJwt(res.json().access_token).aud).toBe("http://localhost/mcp");
+  expect((await call(res.json().access_token)).statusCode).toBe(200);
 });
 it("refreshes within the absolute grant lifetime and requires consent past it", async () => {
   const issued = await issue();

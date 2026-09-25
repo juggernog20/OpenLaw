@@ -14,13 +14,13 @@ import {
   isNull,
   orgSettings,
   oauthGrants,
-  allowedClientLinks,
+  allowedClients,
 } from "@openlaw/db";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { createLocalJWKSet, jwtVerify } from "jose";
 import { MCP_TOOLSETS } from "@openlaw/shared";
 import { authorizationServerAvailable, mcpResource } from "../auth/oauth.js";
-import { liveOAuthGrant } from "../auth/oauth-grants.js";
+import { liveOAuthGrant, liveOAuthGrantFor } from "../auth/oauth-grants.js";
 import { API_KEY_PREFIX } from "../auth/api-keys.js";
 import { readLiveUser } from "../auth/guards.js";
 import { httpError } from "../lib/problem.js";
@@ -104,13 +104,11 @@ export async function readCredentialContext(
   const db = server.db;
   const [oauthGrant] = await db.select().from(oauthGrants).where(eq(oauthGrants.id, credentialId));
   if (oauthGrant) {
-    const [link] = await db
+    const [client] = await db
       .select()
-      .from(allowedClientLinks)
-      .where(eq(allowedClientLinks.allowedClientId, oauthGrant.allowedClientId))
-      .limit(1);
-    if (!link) throw httpError(401, "Authentication required.");
-    return readOAuthContext(server, oauthGrant.personId, link.clientId);
+      .from(allowedClients)
+      .where(eq(allowedClients.id, oauthGrant.allowedClientId));
+    return oauthContext(server, await liveOAuthGrantFor(db, oauthGrant.personId, client));
   }
   const [approved] = await db
     .select({ request: apiKeyRequests, credential: apikeys })
@@ -169,7 +167,13 @@ async function readOAuthContext(
   personId: string,
   clientId: string,
 ): Promise<ToolContext> {
-  const { grant, user, client, policy } = await liveOAuthGrant(server.db, personId, clientId);
+  return oauthContext(server, await liveOAuthGrant(server.db, personId, clientId));
+}
+
+function oauthContext(
+  server: FastifyInstance,
+  { grant, user, client, policy }: Awaited<ReturnType<typeof liveOAuthGrant>>,
+): ToolContext {
   return {
     db: server.db,
     notifier: server.notifier,

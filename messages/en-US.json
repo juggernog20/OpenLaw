@@ -983,6 +983,9 @@
   "apiKeys.empty": {
     "defaultMessage": "No API keys to show."
   },
+  "apiKeys.emptyCredentials": {
+    "defaultMessage": "No API keys or grants to show."
+  },
   "apiKeys.expired": {
     "defaultMessage": "Expired"
   },

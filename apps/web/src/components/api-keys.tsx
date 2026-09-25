@@ -202,7 +202,7 @@ export function ApiKeys({
       </Button>
     );
   }
-  function table(rows: KeyRow[]) {
+  function table(rows: KeyRow[], withGrants = false) {
     return (
       <div className="overflow-x-auto">
         <table className="w-full text-start text-base">
@@ -296,7 +296,14 @@ export function ApiKeys({
         </table>
         {!rows.length && (
           <p className="p-4 text-muted">
-            <FormattedMessage id="apiKeys.empty" defaultMessage="No API keys to show." />
+            {withGrants ? (
+              <FormattedMessage
+                id="apiKeys.emptyCredentials"
+                defaultMessage="No API keys or grants to show."
+              />
+            ) : (
+              <FormattedMessage id="apiKeys.empty" defaultMessage="No API keys to show." />
+            )}
           </p>
         )}
       </div>
@@ -358,10 +365,10 @@ export function ApiKeys({
             collapsible
             defaultOpen={false}
           >
-            {table([
-              ...state.requests.filter((r) => r.status === "active"),
-              ...grants.map(asCredential),
-            ])}
+            {table(
+              [...state.requests.filter((r) => r.status === "active"), ...grants.map(asCredential)],
+              true,
+            )}
           </SettingsCard>
         </>
       ) : (

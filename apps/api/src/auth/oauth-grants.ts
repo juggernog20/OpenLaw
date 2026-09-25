@@ -4,6 +4,7 @@
 
 import {
   allowedClientLinks,
+  allowedClients,
   oauthGrants,
   oauthConsents,
   oauthRefreshTokens,
@@ -14,6 +15,8 @@ import {
   gt,
   type Executor,
 } from "@openlaw/db";
+
+type AllowedClient = typeof allowedClients.$inferSelect;
 import {
   APIError,
   createAuthEndpoint,
@@ -27,7 +30,15 @@ import { readLiveUser } from "./live-user.js";
 import { HttpError, httpError } from "../lib/problem.js";
 
 export async function liveOAuthGrant(db: Executor, personId: string, clientId: string) {
-  const client = await findAllowedClient(db, clientId);
+  return liveOAuthGrantFor(db, personId, await findAllowedClient(db, clientId));
+}
+
+/** The same checks for a grant whose Allowed Client row is already known, as on a signed upload. */
+export async function liveOAuthGrantFor(
+  db: Executor,
+  personId: string,
+  client: AllowedClient | undefined,
+) {
   if (!client?.enabled) throw httpError(401, "Authentication required.");
   const [grant] = await db
     .select()
