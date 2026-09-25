@@ -1,0 +1,244 @@
+{
+  "kind": "publication-offline",
+  "scenario": "V-OFFLINE",
+  "phase": "instance stopped, retained standalone copies read from disk",
+  "task": "DOC-030",
+  "independentReview": true,
+  "method": "browser-walkthrough",
+  "edition": {
+    "id": "documentation-development",
+    "channel": "development",
+    "supportedAppVersion": "0.0.1",
+    "supportedAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "distributionCommit": "3ba23d39bdd52894baff7319762ee4a073b1b8be",
+    "workingChanges": true,
+    "publicationTarget": "development-app",
+    "contentDigest": "07a63d01fd23da5b5ca1171eb316e2215e1bc3bab02d7269d731c56091a636ef"
+  },
+  "retainedRoot": "outside the worktree and the lab (path withheld; see checksums file)",
+  "reviewer": "DOC-030 independent publication reviewer agent",
+  "reviewerKind": "agent",
+  "steps": [
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "The owned lab no longer answers",
+      "startedAt": "2026-09-25T21:36:17.079Z",
+      "at": "2026-09-25T21:36:17.079Z",
+      "result": "pass",
+      "actual": {
+        "probe": "refused: ECONNREFUSED"
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Complete retained copy: every guide opens from disk with JavaScript",
+      "startedAt": "2026-09-25T21:36:17.155Z",
+      "at": "2026-09-25T21:36:23.155Z",
+      "result": "pass",
+      "actual": {
+        "indexGuides": 62,
+        "sections": 12,
+        "linked": 62,
+        "opened": 62,
+        "missing": [],
+        "fileExists": []
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Complete retained copy: local search, theme and edition details from disk",
+      "startedAt": "2026-09-25T21:36:23.156Z",
+      "at": "2026-09-25T21:36:23.404Z",
+      "result": "pass",
+      "actual": {
+        "query": "restore",
+        "results": [
+          "Back up and restore OpenLaw",
+          "Archive, restore, or permanently delete Documents",
+          "Relate, end, and archive Contracts",
+          "Change a Matter Status or archive it",
+          "Manage Holdings, Officers, and Registrations",
+          "Publish Knowledge for the right audience",
+          "Manage your organization and users",
+          "Configure reusable Approver groups",
+          "Search, filter, and save views",
+          "Understand roles and record access",
+          "Manage notifications and reminders",
+          "Create and maintain a Contract",
+          "Change a Contract Status",
+          "Record a Contract signed outside OpenLaw",
+          "Manage Contract Tasks and Key dates",
+          "Review Contract analysis and verify values",
+          "Manage Matter Tasks, Key dates, and relationships",
+          "Upload Documents and add Document Versions",
+          "Read and download Documents",
+          "Compare Document Versions and export a Generated redline",
+          "Find Documents in the repository",
+          "Maintain Entities and Counterparties",
+          "Create and organize Knowledge Items",
+          "Set up a new OpenLaw instance",
+          "Configure sign-in, portal access, and email",
+          "Configure types, Statuses, and Fields",
+          "Configure Matter templates",
+          "Configure request types and forms",
+          "Configure the AI connector and Field prompts",
+          "Install OpenLaw",
+          "Configure a deployment",
+          "Upgrade a populated instance",
+          "Troubleshoot a deployment",
+          "Resolve common problems",
+          "Track and file Entity obligations",
+          "Manage Entity structure and access"
+        ],
+        "theme": "dark",
+        "themeKeptOnNextPage": "dark",
+        "contentDigest": "07a63d01fd23da5b5ca1171eb316e2215e1bc3bab02d7269d731c56091a636ef",
+        "missingAnchorNotice": "The requested section is unavailable. Use the page outline or the documentation index.",
+        "httpRequests": 0
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Complete retained copy with JavaScript disabled: index and every guide's prose",
+      "startedAt": "2026-09-25T21:36:23.425Z",
+      "at": "2026-09-25T21:36:28.760Z",
+      "result": "pass",
+      "actual": {
+        "javascript": false,
+        "indexVisible": true,
+        "indexGuides": 62,
+        "sections": 12,
+        "linked": 62,
+        "opened": 62,
+        "missing": [],
+        "fileExists": [],
+        "httpRequests": 0
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Complete retained copy with JavaScript disabled: index and every guide's prose",
+      "startedAt": "2026-09-25T21:36:28.785Z",
+      "at": "2026-09-25T21:36:34.216Z",
+      "result": "pass",
+      "actual": {
+        "javascript": false,
+        "indexVisible": true,
+        "indexGuides": 62,
+        "sections": 12,
+        "linked": 62,
+        "opened": 62,
+        "missing": [],
+        "fileExists": [],
+        "httpRequests": 0
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Copy without search.js and inter.woff2 (JavaScript on): index and prose remain usable",
+      "startedAt": "2026-09-25T21:36:34.237Z",
+      "at": "2026-09-25T21:36:40.944Z",
+      "result": "pass",
+      "actual": {
+        "removed": [
+          "search.js",
+          "inter.woff2"
+        ],
+        "indexGuides": 62,
+        "sections": 12,
+        "linked": 62,
+        "opened": 62,
+        "missing": [],
+        "fileExists": [],
+        "searchSubmitted": "restore",
+        "searchResults": 0,
+        "indexStillVisible": true,
+        "pageErrors": []
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Copy without search.js and inter.woff2 (JavaScript off): index and prose remain usable",
+      "startedAt": "2026-09-25T21:36:40.969Z",
+      "at": "2026-09-25T21:36:47.407Z",
+      "result": "pass",
+      "actual": {
+        "removed": [
+          "search.js",
+          "inter.woff2"
+        ],
+        "indexGuides": 62,
+        "sections": 12,
+        "linked": 62,
+        "opened": 62,
+        "missing": [],
+        "fileExists": [],
+        "searchSubmitted": "restore",
+        "searchResults": 0,
+        "indexStillVisible": true,
+        "pageErrors": []
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Copy with backup-and-restore.html removed fails the completeness check",
+      "startedAt": "2026-09-25T21:36:47.429Z",
+      "at": "2026-09-25T21:36:53.142Z",
+      "result": "pass",
+      "actual": {
+        "checksumCheck": {
+          "command": "sha256sum --check --quiet ../SHA256SUMS",
+          "exitCode": 1,
+          "output": "sha256sum: backup-and-restore.html: No such file or directory\nbackup-and-restore.html: FAILED open or read\nsha256sum: WARNING: 1 listed file could not be read"
+        },
+        "browser": {
+          "indexGuides": 62,
+          "sections": 12,
+          "linked": 62,
+          "opened": 61,
+          "missing": [
+            "backup-and-restore"
+          ],
+          "fileExists": [
+            false
+          ]
+        }
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "After restoring the file from the complete retained copy, the copy passes and reads",
+      "startedAt": "2026-09-25T21:36:53.833Z",
+      "at": "2026-09-25T21:36:59.727Z",
+      "result": "pass",
+      "actual": {
+        "checksumCheck": {
+          "command": "sha256sum --check --quiet ../SHA256SUMS",
+          "exitCode": 0,
+          "output": ""
+        },
+        "browser": {
+          "indexGuides": 62,
+          "sections": 12,
+          "linked": 62,
+          "opened": 62,
+          "missing": [],
+          "fileExists": []
+        }
+      }
+    }
+  ],
+  "startedAt": "2026-09-25T21:36:17.073Z",
+  "labProbe": "refused: ECONNREFUSED",
+  "completedAt": "2026-09-25T21:36:59.741Z",
+  "passed": true
+}

@@ -1,0 +1,207 @@
+{
+  "kind": "publication-offline",
+  "scenario": "V-OFFLINE",
+  "phase": "reachable instance, internet blocked",
+  "task": "DOC-030",
+  "independentReview": true,
+  "method": "browser-walkthrough",
+  "appUrl": "http://127.0.0.1:43310",
+  "edition": {
+    "id": "documentation-development",
+    "channel": "development",
+    "supportedAppVersion": "0.0.1",
+    "supportedAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "distributionCommit": "3ba23d39bdd52894baff7319762ee4a073b1b8be",
+    "workingChanges": true,
+    "publicationTarget": "development-app",
+    "contentDigest": "07a63d01fd23da5b5ca1171eb316e2215e1bc3bab02d7269d731c56091a636ef"
+  },
+  "browserBlocks": [
+    "request guard allows only the loopback lab",
+    "--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"
+  ],
+  "reviewer": "DOC-030 independent publication reviewer agent",
+  "reviewerKind": "agent",
+  "steps": [
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Browser cannot reach the internet",
+      "startedAt": "2026-09-25T21:35:34.129Z",
+      "at": "2026-09-25T21:35:34.129Z",
+      "result": "pass",
+      "actual": {
+        "probe": "refused: Failed to fetch"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Read the bundled /documentation index, a guide and local search",
+      "startedAt": "2026-09-25T21:35:34.129Z",
+      "at": "2026-09-25T21:35:34.568Z",
+      "result": "pass",
+      "actual": {
+        "indexGuides": 62,
+        "query": "restore",
+        "results": [
+          "Back up and restore OpenLaw",
+          "Archive, restore, or permanently delete Documents",
+          "Relate, end, and archive Contracts",
+          "Change a Matter Status or archive it",
+          "Manage Holdings, Officers, and Registrations",
+          "Publish Knowledge for the right audience",
+          "Manage your organization and users",
+          "Configure reusable Approver groups",
+          "Search, filter, and save views",
+          "Understand roles and record access",
+          "Manage notifications and reminders",
+          "Create and maintain a Contract",
+          "Change a Contract Status",
+          "Record a Contract signed outside OpenLaw",
+          "Manage Contract Tasks and Key dates",
+          "Review Contract analysis and verify values",
+          "Manage Matter Tasks, Key dates, and relationships",
+          "Upload Documents and add Document Versions",
+          "Read and download Documents",
+          "Compare Document Versions and export a Generated redline",
+          "Find Documents in the repository",
+          "Maintain Entities and Counterparties",
+          "Create and organize Knowledge Items",
+          "Set up a new OpenLaw instance",
+          "Configure sign-in, portal access, and email",
+          "Configure types, Statuses, and Fields",
+          "Configure Matter templates",
+          "Configure request types and forms",
+          "Configure the AI connector and Field prompts",
+          "Install OpenLaw",
+          "Configure a deployment",
+          "Upgrade a populated instance",
+          "Troubleshoot a deployment",
+          "Resolve common problems",
+          "Track and file Entity obligations",
+          "Manage Entity structure and access"
+        ],
+        "paragraphs": 29,
+        "externalRequests": 0,
+        "apiCalls": 0
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "No external request was attempted while reading (after the deliberate probe)",
+      "startedAt": "2026-09-25T21:35:34.568Z",
+      "at": "2026-09-25T21:35:34.568Z",
+      "result": "pass",
+      "actual": {
+        "probeBlocked": 1,
+        "readingBlocked": 0,
+        "apiCalls": [],
+        "requests": 10
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Browser cannot reach the internet",
+      "startedAt": "2026-09-25T21:35:34.600Z",
+      "at": "2026-09-25T21:35:34.600Z",
+      "result": "pass",
+      "actual": {
+        "probe": "refused: Failed to fetch"
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Read operator guides and search in the bundled reader",
+      "startedAt": "2026-09-25T21:35:34.600Z",
+      "at": "2026-09-25T21:35:35.526Z",
+      "result": "pass",
+      "actual": {
+        "operatorGuides": 11,
+        "read": [
+          "install",
+          "backup-and-restore",
+          "upgrade",
+          "operator-troubleshooting"
+        ],
+        "query": "upgrade backup",
+        "results": [
+          "Upgrade a populated instance",
+          "Back up and restore OpenLaw",
+          "Install OpenLaw",
+          "Troubleshoot a deployment"
+        ]
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Open the app-served standalone edition and download its archive with no internet",
+      "startedAt": "2026-09-25T21:35:35.526Z",
+      "at": "2026-09-25T21:35:35.971Z",
+      "result": "pass",
+      "actual": {
+        "standaloneResults": [
+          "Back up and restore OpenLaw",
+          "Archive, restore, or permanently delete Documents",
+          "Relate, end, and archive Contracts",
+          "Change a Matter Status or archive it",
+          "Manage Holdings, Officers, and Registrations",
+          "Publish Knowledge for the right audience",
+          "Manage your organization and users",
+          "Configure reusable Approver groups",
+          "Search, filter, and save views",
+          "Understand roles and record access",
+          "Manage notifications and reminders",
+          "Create and maintain a Contract",
+          "Change a Contract Status",
+          "Record a Contract signed outside OpenLaw",
+          "Manage Contract Tasks and Key dates",
+          "Review Contract analysis and verify values",
+          "Manage Matter Tasks, Key dates, and relationships",
+          "Upload Documents and add Document Versions",
+          "Read and download Documents",
+          "Compare Document Versions and export a Generated redline",
+          "Find Documents in the repository",
+          "Maintain Entities and Counterparties",
+          "Create and organize Knowledge Items",
+          "Set up a new OpenLaw instance",
+          "Configure sign-in, portal access, and email",
+          "Configure types, Statuses, and Fields",
+          "Configure Matter templates",
+          "Configure request types and forms",
+          "Configure the AI connector and Field prompts",
+          "Install OpenLaw",
+          "Configure a deployment",
+          "Upgrade a populated instance",
+          "Troubleshoot a deployment",
+          "Resolve common problems",
+          "Track and file Entity obligations",
+          "Manage Entity structure and access"
+        ],
+        "servedArchiveSha256": "405e48a22f58d2e1297449d8532bf0ab532af352ffe44d83314a722d4ac1270e"
+      }
+    },
+    {
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "No external request was attempted while reading (after the deliberate probe)",
+      "startedAt": "2026-09-25T21:35:35.971Z",
+      "at": "2026-09-25T21:35:35.971Z",
+      "result": "pass",
+      "actual": {
+        "probeBlocked": 1,
+        "readingBlocked": 0,
+        "apiCalls": [],
+        "requests": 78
+      }
+    }
+  ],
+  "startedAt": "2026-09-25T21:35:33.964Z",
+  "hostInternet": "reachable from the host (HTTP 200); blocked only inside the browser",
+  "completedAt": "2026-09-25T21:35:35.992Z",
+  "passed": true
+}

@@ -98,7 +98,8 @@ place to report it.
 
 ChatGPT and Microsoft 365 Copilot were not tested. The owner chose to verify
 Claude only in this batch. connect-chatgpt and connect-microsoft-365-copilot stay
-in **review** under DOC-031, with V-M41-C60 and V-M41-C61 pending. They keep the
+in **review** under DOC-031
+([#1187](https://github.com/juggernog20/OpenLaw/issues/1187)), with V-M41-C60 and V-M41-C61 pending. They keep the
 development warning "Documentation review is pending" until DOC-031 lands.
 
 ## Scenario registry
@@ -109,7 +110,29 @@ pass. V-M41-C60 and V-M41-C61 wait for DOC-031.
 
 ## Publication checks
 
-<!-- TODO: V-HELP and V-OFFLINE on the distribution commit. -->
+An independent agent ran V-HELP and V-OFFLINE on a lab built from `3ba23d39`,
+with content digest `07a63d01…`. All six role and method pairs passed. A clean
+archive of that commit compiles 60 verified guides. The two DOC-031 guides show
+"Validation in progress" and read correctly at 1280px and 320px. The scripts and
+logs are in [publication](publication/), and the record is
+[publication.json](../../evidence/publication.json).
+
+The first run failed on two batch defects, both fixed before the rerun:
+
+- `.gitignore` excludes `*.log`, so nine compat logs that the evidence binds by
+  hash were never committed. A clean checkout showed six verified guides as
+  unverified. The logs are now force-added.
+- `docs:export` failed on the links from configure-mcp to connect-chatgpt,
+  because an export leaves out guides in review. The owner chose to keep both
+  vendor guides published, and `edition.json` now records that under TECH-027.
+
+It noted three things that do not block:
+
+- Commit `adc4f954` removed "Help with this page" from the Portal Request page.
+  `help-contexts.json` still marks that page as a pilot entry.
+- The header now reads `GET /api/v1/org/branding` on every navigation.
+- As in DOC-029, only `redirect.js` and `search.js` differ between the served
+  archive and the export.
 
 ## Owner rulings wanted
 
