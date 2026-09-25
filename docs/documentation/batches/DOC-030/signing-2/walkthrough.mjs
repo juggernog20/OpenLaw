@@ -38,35 +38,36 @@ const stamp = Date.now();
 const G = "DOC-030 signing-2";
 const REL = "docs/documentation/batches/DOC-030/signing-2";
 
-const { results, step: rawStep, save } = recorder(
-  process.env.OUT ?? path.join(here, "walkthrough.json"),
-  {
-    kind: "independent-article-walkthrough-log",
-    task: "DOC-030",
-    group: "signing-2",
-    issue: 1157,
-    walkthroughReviewer: "DOC-030 independent walkthrough agent (signing-2)",
-    reviewerKind: "agent",
-    appCommit: lab.sourceCommit,
-    environment: lab.project,
-    lab: lab.name,
-    appUrl: BASE,
-    mailUrl: lab.mailUrl,
-    buildId: `app ${lab.appImageId}; engine ${lab.engineImageId}`,
-    containerImages: lab.containerImages,
-    seed: lab.seed,
-    browser:
-      "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
-    articleHashes: {
-      "manual-signing": articleHash("manual-signing"),
-      "terms-and-renewals": articleHash("terms-and-renewals"),
-    },
-    selection: { articles: ONLY, roles: ROLES },
-    stamp,
-    records: [],
-    screenshots: [],
+const {
+  results,
+  step: rawStep,
+  save,
+} = recorder(process.env.OUT ?? path.join(here, "walkthrough.json"), {
+  kind: "independent-article-walkthrough-log",
+  task: "DOC-030",
+  group: "signing-2",
+  issue: 1157,
+  walkthroughReviewer: "DOC-030 independent walkthrough agent (signing-2)",
+  reviewerKind: "agent",
+  appCommit: lab.sourceCommit,
+  environment: lab.project,
+  lab: lab.name,
+  appUrl: BASE,
+  mailUrl: lab.mailUrl,
+  buildId: `app ${lab.appImageId}; engine ${lab.engineImageId}`,
+  containerImages: lab.containerImages,
+  seed: lab.seed,
+  browser:
+    "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
+  articleHashes: {
+    "manual-signing": articleHash("manual-signing"),
+    "terms-and-renewals": articleHash("terms-and-renewals"),
   },
-);
+  selection: { articles: ONLY, roles: ROLES },
+  stamp,
+  records: [],
+  screenshots: [],
+});
 const step = (article, scenario, role, actors, pageName, action, expected, fn) =>
   rawStep(article, scenario, role, actors, pageName, action, expected, fn);
 
@@ -115,7 +116,12 @@ const aborted = new WeakMap();
 function watch(page) {
   aborted.set(page, []);
   page.on("requestfailed", (r) =>
-    aborted.get(page).push({ t: Date.now(), what: `${r.method()} ${new URL(r.url()).pathname} ${r.failure()?.errorText ?? ""}` }),
+    aborted
+      .get(page)
+      .push({
+        t: Date.now(),
+        what: `${r.method()} ${new URL(r.url()).pathname} ${r.failure()?.errorText ?? ""}`,
+      }),
   );
 }
 async function settle(page, locator, label, timeout = 30000) {
@@ -123,11 +129,25 @@ async function settle(page, locator, label, timeout = 30000) {
     await locator.waitFor({ timeout });
     return;
   } catch {
-    const shown = tidy(await page.locator("body").innerText().catch(() => "")).slice(0, 240);
+    const shown = tidy(
+      await page
+        .locator("body")
+        .innerText()
+        .catch(() => ""),
+    ).slice(0, 240);
     const dbg = process.env.DEBUG_SHOTS;
-    if (dbg) await page.screenshot({ path: path.join(dbg, `retry-${Date.now()}.png`) }).catch(() => {});
-    const cause = (aborted.get(page) ?? []).filter((x) => Date.now() - x.t < timeout + 15000).map((x) => x.what);
-    results.retries.push({ at: new Date().toISOString(), page: new URL(page.url()).pathname, waitedFor: label, shown, abortedRequests: cause.slice(0, 8) });
+    if (dbg)
+      await page.screenshot({ path: path.join(dbg, `retry-${Date.now()}.png`) }).catch(() => {});
+    const cause = (aborted.get(page) ?? [])
+      .filter((x) => Date.now() - x.t < timeout + 15000)
+      .map((x) => x.what);
+    results.retries.push({
+      at: new Date().toISOString(),
+      page: new URL(page.url()).pathname,
+      waitedFor: label,
+      shown,
+      abortedRequests: cause.slice(0, 8),
+    });
     await page.reload();
     await locator.waitFor({ timeout });
   }
@@ -147,13 +167,10 @@ async function stageMove(s, n, statusName) {
   await menu.getByRole("menuitemradio").filter({ hasText: statusName }).first().click();
   const gate = page.getByRole("dialog", { name: "Move past approval" });
   let gated = false;
-  await until(
-    async () => {
-      if (await gate.isVisible().catch(() => false)) return (gated = true);
-      return (await getContract(s, n)).statusName === statusName;
-    },
-    `status ${statusName}`,
-  );
+  await until(async () => {
+    if (await gate.isVisible().catch(() => false)) return (gated = true);
+    return (await getContract(s, n)).statusName === statusName;
+  }, `status ${statusName}`);
   return { items, gated, gate };
 }
 async function history(page) {
@@ -176,13 +193,7 @@ const versionRowOf = (page, n, title) =>
     has: page.getByRole("button", { name: `Actions for version ${n} of ${title}`, exact: true }),
   });
 async function versionCell(row) {
-  return tidy(
-    await row
-      .locator("td")
-      .filter({ hasText: /^v\d+/ })
-      .first()
-      .innerText(),
-  );
+  return tidy(await row.locator("td").filter({ hasText: /^v\d+/ }).first().innerText());
 }
 async function selectedText(select) {
   return (await select.locator("option:checked").innerText()).trim();
@@ -224,7 +235,10 @@ const isPatchOf = (n) => (r) =>
 const isRenewal = (n) => (r) =>
   r.request().method() === "POST" && r.url().endsWith(`/contracts/${n}/renewal`);
 
-const MONTHS = "January February March April May June July August September October November December".split(" ");
+const MONTHS =
+  "January February March April May June July August September October November December".split(
+    " ",
+  );
 const ordinal = (d) => {
   const s = ["th", "st", "nd", "rd"];
   const v = d % 100;
@@ -291,7 +305,13 @@ async function manualSigning(role, A) {
       number = r.json.contract.number;
       const t = await A.api("POST", `/contracts/${number}/team`, { userId: uid(BU.name) });
       must(t.status < 300, `team ${t.status}`);
-      results.records.push({ article: art, role, purpose: "manual signing", reference: `C-${number}`, title });
+      results.records.push({
+        article: art,
+        role,
+        purpose: "manual signing",
+        reference: `C-${number}`,
+        title,
+      });
       const c = await getContract(A, number);
       return `C-${number} "${title}" (MSA) created by ${A.displayName}; Status ${c.statusName}; Karim Aziz added to the team. lab.json seed.signing = "${lab.seed.signing}".`;
     },
@@ -314,7 +334,11 @@ async function manualSigning(role, A) {
         .getByRole("navigation", { name: "Contract sections" })
         .getByRole("link", { name: "Approvals" })
         .click();
-      await settle(page, page.getByRole("region", { name: "Approvals & signing" }), "Approvals & signing region");
+      await settle(
+        page,
+        page.getByRole("region", { name: "Approvals & signing" }),
+        "Approvals & signing region",
+      );
       await sleep(600);
       const send = await page.getByRole("button", { name: /Send for signature/ }).count();
       const env = (await A.api("GET", `/contracts/${number}/envelopes`)).json;
@@ -339,7 +363,11 @@ async function manualSigning(role, A) {
         .getByRole("navigation", { name: "Contract sections" })
         .getByRole("link", { name: "Documents" })
         .click();
-      await settle(page, docsCard(page).getByRole("heading", { name: "Documents" }), "Documents card");
+      await settle(
+        page,
+        docsCard(page).getByRole("heading", { name: "Documents" }),
+        "Documents card",
+      );
       await docsCard(page).getByRole("button", { name: "Upload", exact: true }).click();
       const u = page.getByRole("dialog", { name: "Upload document" });
       await u.waitFor();
@@ -365,8 +393,13 @@ async function manualSigning(role, A) {
         return d && d.versions.length === 2 ? d : null;
       }, "version 2");
       const v2 = doc.versions.find((x) => x.versionNumber === 2);
-      const shown = await selectedText(page.getByLabel(`Type of version 2 of ${docTitle}`, { exact: true }));
-      must(v2.documentType?.displayName === "Executed" && shown === "Executed", `v2 type ${v2.documentType?.displayName} shown ${shown}`);
+      const shown = await selectedText(
+        page.getByLabel(`Type of version 2 of ${docTitle}`, { exact: true }),
+      );
+      must(
+        v2.documentType?.displayName === "Executed" && shown === "Executed",
+        `v2 type ${v2.documentType?.displayName} shown ${shown}`,
+      );
       return `Upload document: Type started on "${upStart}"; the draft filed as Document "${docTitle}" (1 Document). Actions -> Add version: Type offered ${q(vOptions.join(", "))}; chose Executed and uploaded ${execName}. Read-back: ${doc.versions.length} Versions on the same Document; v2 type ${v2.documentType?.displayName} (kind ${v2.kind}); the row's Type column reads "${shown}".`;
     },
   );
@@ -398,7 +431,10 @@ async function manualSigning(role, A) {
           reader.getByRole("link", { name: "Download" }).click(),
         ]);
       } finally {
-        await reader.getByRole("button", { name: "Close the document" }).click().catch(() => {});
+        await reader
+          .getByRole("button", { name: "Close the document" })
+          .click()
+          .catch(() => {});
         await reader.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
       }
       const body = readFileSync(await download.path());
@@ -418,7 +454,10 @@ async function manualSigning(role, A) {
     async () => {
       const d = (await docs()).find((x) => x.id === doc.id);
       const cell = await versionCell(rowOf(page, docTitle));
-      must(d.versions.every((v) => !v.isExecuted) && cell === "v2", `executed ${q(d.versions.map((v) => v.isExecuted))} cell "${cell}"`);
+      must(
+        d.versions.every((v) => !v.isExecuted) && cell === "v2",
+        `executed ${q(d.versions.map((v) => v.isExecuted))} cell "${cell}"`,
+      );
       return `Read-back isExecuted for v1/v2: ${d.versions.map((v) => `v${v.versionNumber}=${v.isExecuted}`).join(", ")}. The Version cell reads "${cell}" with no Executed mark while the Type column reads Executed.`;
     },
   );
@@ -438,7 +477,11 @@ async function manualSigning(role, A) {
         return x.versions.find((v) => v.versionNumber === 2).isExecuted ? x : null;
       }, "v2 executed");
       const row = rowOf(page, docTitle);
-      await until(async () => /Executed/.test(await versionCell(row)), "Version cell shows Executed", 10000);
+      await until(
+        async () => /Executed/.test(await versionCell(row)),
+        "Version cell shows Executed",
+        10000,
+      );
       const cell = await versionCell(row);
       if (role === "legal_team_member") await shot(page, "c17-executed-designation.png");
       // A second Document on the same Contract.
@@ -459,7 +502,11 @@ async function manualSigning(role, A) {
       const otherName = tidy(await rowOf(page, other.title).locator("td").first().innerText());
       const status = (await getContract(A, number)).statusName;
       must(
-        cell === "v2 Executed" && paper.isPrimary && !other.isPrimary && /Primary/.test(paperName) && !/Primary/.test(otherName),
+        cell === "v2 Executed" &&
+          paper.isPrimary &&
+          !other.isPrimary &&
+          /Primary/.test(paperName) &&
+          !/Primary/.test(otherName),
         `cell "${cell}" primary ${paper.isPrimary}/${other.isPrimary} names "${paperName}" "${otherName}"`,
       );
       must(status === "Out for signature", `status ${status}`);
@@ -497,26 +544,56 @@ async function manualSigning(role, A) {
         return e.length === 1 && e[0] === 3 ? e : null;
       }, "designation on v3");
       // The earlier Version's own actions.
-      await docsCard(page).getByRole("button", { name: new RegExp(`^Show the 2 earlier versions of `) }).click();
+      await docsCard(page)
+        .getByRole("button", { name: new RegExp(`^Show the 2 earlier versions of `) })
+        .click();
       await versionRowOf(page, 2, docTitle).waitFor();
-      const v2Items1 = await menuPick(page, `Actions for version 2 of ${docTitle}`, "Mark as executed copy");
+      const v2Items1 = await menuPick(
+        page,
+        `Actions for version 2 of ${docTitle}`,
+        "Mark as executed copy",
+      );
       await until(async () => {
         const x = (await docs()).find((y) => y.id === doc.id);
         const e = x.versions.filter((y) => y.isExecuted).map((y) => y.versionNumber);
         return e.length === 1 && e[0] === 2;
       }, "designation back on v2");
       await sleep(800);
-      const v2Items2 = await menuPick(page, `Actions for version 2 of ${docTitle}`, "Unmark as executed copy");
-      await until(async () => (await docs()).find((y) => y.id === doc.id).versions.every((x) => !x.isExecuted), "unmarked");
+      const v2Items2 = await menuPick(
+        page,
+        `Actions for version 2 of ${docTitle}`,
+        "Unmark as executed copy",
+      );
+      await until(
+        async () =>
+          (await docs()).find((y) => y.id === doc.id).versions.every((x) => !x.isExecuted),
+        "unmarked",
+      );
       await sleep(800);
-      const v2Items3 = await menuPick(page, `Actions for version 2 of ${docTitle}`, "Mark as executed copy");
-      await until(async () => (await docs()).find((y) => y.id === doc.id).versions.find((x) => x.versionNumber === 2).isExecuted, "remarked");
+      const v2Items3 = await menuPick(
+        page,
+        `Actions for version 2 of ${docTitle}`,
+        "Mark as executed copy",
+      );
+      await until(
+        async () =>
+          (await docs()).find((y) => y.id === doc.id).versions.find((x) => x.versionNumber === 2)
+            .isExecuted,
+        "remarked",
+      );
       const earlierCell = await versionCell(versionRowOf(page, 2, docTitle));
       const headCell = await versionCell(rowOf(page, docTitle));
-      const v2 = (await docs()).find((y) => y.id === doc.id).versions.find((x) => x.versionNumber === 2);
-      const r = await page.request.get(`${BASE}/api/v1/documents/${doc.id}/versions/${v2.id}/download`);
+      const v2 = (await docs())
+        .find((y) => y.id === doc.id)
+        .versions.find((x) => x.versionNumber === 2);
+      const r = await page.request.get(
+        `${BASE}/api/v1/documents/${doc.id}/versions/${v2.id}/download`,
+      );
       must(sha(await r.body()) === sha(execBytes), "executed bytes changed");
-      must(v2Items1.includes("Mark as executed copy") && v2Items2.includes("Unmark as executed copy"), `items ${q(v2Items1)} ${q(v2Items2)}`);
+      must(
+        v2Items1.includes("Mark as executed copy") && v2Items2.includes("Unmark as executed copy"),
+        `items ${q(v2Items1)} ${q(v2Items2)}`,
+      );
       return `Add version filed ${laterName} as v3 on the same Document: v3 current, v2 still designated. Mark as executed copy on the Document moved the designation to v${moved[0]} (one designation per chain). "Show the 2 earlier versions" -> v2's actions offered ${q(v2Items1.join(", "))}; Mark as executed copy moved it back to v2; then ${q(v2Items2.join(", "))} -> Unmark cleared it; then ${q(v2Items3.join(", "))} -> Mark restored it. Version cells: head "${headCell}", earlier v2 "${earlierCell}". v2 still downloads the executed bytes.`;
     },
   );
@@ -536,7 +613,10 @@ async function manualSigning(role, A) {
       if (gated) {
         gateNote = `a Soft gate opened: ${q(await gate.innerText())}; Move anyway confirmed`;
         await gate.getByRole("button", { name: "Move anyway" }).click();
-        await until(async () => (await getContract(A, number)).statusName === "Active", "Active after gate");
+        await until(
+          async () => (await getContract(A, number)).statusName === "Active",
+          "Active after gate",
+        );
       }
       await sleep(800);
       const pill = tidy(await page.getByRole("button", { name: /— move contract$/ }).innerText());
@@ -544,7 +624,10 @@ async function manualSigning(role, A) {
       const env = (await A.api("GET", `/contracts/${number}/envelopes`)).json.envelopes.length;
       const c = await getContract(A, number);
       must(c.statusName === "Active" && c.stage === "active", `status ${c.statusName} ${c.stage}`);
-      must(/executed/i.test(hist) && /Active/.test(hist) && env === 0, `hist ${hist.slice(0, 400)} env ${env}`);
+      must(
+        /executed/i.test(hist) && /Active/.test(hist) && env === 0,
+        `hist ${hist.slice(0, 400)} env ${env}`,
+      );
       return `Stage control moved C-${number} to Active (${gateNote}). Stage control reads "${pill}"; read-back ${c.statusName}/${c.stage}. History: ${q(hist.slice(0, 420))}. Envelopes: ${env}.`;
     },
   );
@@ -566,18 +649,31 @@ async function manualSigning(role, A) {
       const buControls =
         (await bu.page.getByRole("menuitem", { name: /executed copy/ }).count()) +
         (await bu.page.getByRole("button", { name: /executed copy/ }).count());
-      const v3 = (await docs()).find((y) => y.id === doc.id).versions.find((x) => x.versionNumber === 3);
-      const buApi = await bu.api("POST", `/documents/${doc.id}/executed-version`, { versionId: v3.id });
+      const v3 = (await docs())
+        .find((y) => y.id === doc.id)
+        .versions.find((x) => x.versionNumber === 3);
+      const buApi = await bu.api("POST", `/documents/${doc.id}/executed-version`, {
+        versionId: v3.id,
+      });
       const a = await A.api("POST", `/contracts/${number}/archive`, {});
       must(a.status === 200, `archive ${a.status}`);
       await openContract(A, number, "documents");
       await sleep(1500);
-      const actions = await page.getByRole("button", { name: `Actions for ${docTitle}`, exact: true }).count();
+      const actions = await page
+        .getByRole("button", { name: `Actions for ${docTitle}`, exact: true })
+        .count();
       const archApi = await A.api("DELETE", `/documents/${doc.id}/executed-version`);
       const rs = await A.api("POST", `/contracts/${number}/restore`, {});
-      const still = (await docs()).find((y) => y.id === doc.id).versions.find((x) => x.isExecuted)?.versionNumber;
+      const still = (await docs())
+        .find((y) => y.id === doc.id)
+        .versions.find((x) => x.isExecuted)?.versionNumber;
       must(
-        buControls === 0 && buApi.status >= 400 && actions === 0 && archApi.status >= 400 && rs.status === 200 && still === 2,
+        buControls === 0 &&
+          buApi.status >= 400 &&
+          actions === 0 &&
+          archApi.status >= 400 &&
+          rs.status === 200 &&
+          still === 2,
         `bu ${buControls}/${buApi.status} archived ${actions}/${archApi.status} restore ${rs.status} still ${still}`,
       );
       return `Karim Aziz in the Portal saw ${q(buText.slice(0, 140))} with ${buControls} executed-copy controls; his direct designation of v3 answered ${buApi.status}. Archived C-${number} showed ${actions} "Actions for ${docTitle}" menus; clearing the designation answered ${archApi.status}. Restore answered ${rs.status}; v${still} is still designated.`;
@@ -599,11 +695,18 @@ async function termsAndRenewals(role, A, O) {
   const read = async (n = num, s = A) => getContract(s, n);
   const overview = async (n = num) => {
     await p.goto(`${BASE}/contracts/${n}`);
-    await settle(p, p.getByRole("heading", { name: "Contract", exact: true, level: 2 }), "Contract card heading");
+    await settle(
+      p,
+      p.getByRole("heading", { name: "Contract", exact: true, level: 2 }),
+      "Contract card heading",
+    );
     await p.waitForLoadState("networkidle").catch(() => {});
   };
   const contractCard = () =>
-    p.locator("section").filter({ has: p.getByRole("heading", { name: "Contract", exact: true, level: 2 }) }).last();
+    p
+      .locator("section")
+      .filter({ has: p.getByRole("heading", { name: "Contract", exact: true, level: 2 }) })
+      .last();
   const keyDateRows = async () => {
     await p.goto(`${BASE}/contracts/${num}/key-dates`);
     const region = p.getByRole("region", { name: "Key dates" });
@@ -614,17 +717,27 @@ async function termsAndRenewals(role, A, O) {
     const out = [];
     for (let i = 1; i < count; i++) {
       const row = rows.nth(i);
-      out.push({ text: tidy(await row.innerText()), actions: await row.getByRole("button").count() });
+      out.push({
+        text: tidy(await row.innerText()),
+        actions: await row.getByRole("button").count(),
+      });
     }
     return out;
   };
   const approvals = async (page = p, n = num) => {
     await page.goto(`${BASE}/contracts/${n}/approvals`);
-    await settle(page, page.getByRole("region", { name: "Approvals & signing" }), "Approvals & signing region");
+    await settle(
+      page,
+      page.getByRole("region", { name: "Approvals & signing" }),
+      "Approvals & signing region",
+    );
     await sleep(600);
   };
   const renewRows = async () =>
-    p.getByRole("region", { name: "Approvals & signing" }).getByText(/Term advanced to/).count();
+    p
+      .getByRole("region", { name: "Approvals & signing" })
+      .getByText(/Term advanced to/)
+      .count();
 
   const ok = await step(
     art,
@@ -663,9 +776,17 @@ async function termsAndRenewals(role, A, O) {
         const r = await A.api("PATCH", `/contracts/${num}`, body);
         must(r.status === 200, `PATCH ${Object.keys(body)[0]} ${r.status}`);
       }
-      const cp = await A.api("POST", `/contracts/${num}/counterparties`, { name: `${G} Counterparty ${tag}` });
+      const cp = await A.api("POST", `/contracts/${num}/counterparties`, {
+        name: `${G} Counterparty ${tag}`,
+      });
       must(cp.status < 300, `counterparty ${cp.status}`);
-      results.records.push({ article: art, role, purpose: "term and renewal", reference: `C-${num}`, title: parentTitle });
+      results.records.push({
+        article: art,
+        role,
+        purpose: "term and renewal",
+        reference: `C-${num}`,
+        title: parentTitle,
+      });
       return `C-${num} "${parentTitle}" (NDA) by ${A.displayName}; entity ${entity.legalName}; value GBP 9,900.00 annually; High priority and risk; Confidential; team adds ${O.displayName} and ${BU.name}.`;
     },
   );
@@ -683,35 +804,63 @@ async function termsAndRenewals(role, A, O) {
       await overview();
       const card = contractCard();
       const labels = tidy(await card.locator("label").allInnerTexts()).filter(Boolean);
-      const form = options.contractTypes.find((t) => t.displayName === "NDA").form.map((r) => r.rowRef);
+      const form = options.contractTypes
+        .find((t) => t.displayName === "NDA")
+        .form.map((r) => r.rowRef);
       // Renewal period (months) is a read-only Row (no <label>) until the type is Auto-renewing,
       // so the order check reads the card's text for all five names.
       const cardText = tidy(await card.innerText());
-      const want = ["Term type", "Effective date", "Expiry date", "Renewal period (months)", "Notice period (days)"];
+      const want = [
+        "Term type",
+        "Effective date",
+        "Expiry date",
+        "Renewal period (months)",
+        "Notice period (days)",
+      ];
       const idx = want.map((w) => cardText.indexOf(w));
-      must(idx.every((i) => i >= 0) && idx.every((i, k) => k === 0 || i > idx[k - 1]), `card text ${cardText.slice(0, 600)}`);
+      must(
+        idx.every((i) => i >= 0) && idx.every((i, k) => k === 0 || i > idx[k - 1]),
+        `card text ${cardText.slice(0, 600)}`,
+      );
       const termType = card.getByRole("combobox", { name: "Term type" });
       const typeOptions = await optionTexts(termType);
-      const s1 = await withResponse(p, isPatchOf(num), () => termType.selectOption({ label: "Fixed term" }));
+      const s1 = await withResponse(p, isPatchOf(num), () =>
+        termType.selectOption({ label: "Fixed term" }),
+      );
       await sleep(500);
       const renewal = p.getByRole("spinbutton", { name: "Renewal period (months)" });
-      const renewalEditable = (await renewal.count()) > 0 && (await renewal.isEditable().catch(() => false));
-      const s2 = await withResponse(p, isPatchOf(num), () => pickDate(p, "Effective date", "2026-02-01"));
-      const s3 = await withResponse(p, isPatchOf(num), () => pickDate(p, "Expiry date", "2027-01-31"));
+      const renewalEditable =
+        (await renewal.count()) > 0 && (await renewal.isEditable().catch(() => false));
+      const s2 = await withResponse(p, isPatchOf(num), () =>
+        pickDate(p, "Effective date", "2026-02-01"),
+      );
+      const s3 = await withResponse(p, isPatchOf(num), () =>
+        pickDate(p, "Expiry date", "2027-01-31"),
+      );
       const notice = p.getByRole("spinbutton", { name: "Notice period (days)" });
       await notice.fill("30");
       const s4 = await withResponse(p, isPatchOf(num), () => notice.press("Tab"));
-      must([s1, s2, s3, s4].every((s) => s === 200), `PATCH ${s1} ${s2} ${s3} ${s4}`);
+      must(
+        [s1, s2, s3, s4].every((s) => s === 200),
+        `PATCH ${s1} ${s2} ${s3} ${s4}`,
+      );
       const c = await read();
       must(
-        c.termType === "fixed" && c.effectiveDate === "2026-02-01" && c.expiryDate === "2027-01-31" && c.noticePeriodDays === 30,
+        c.termType === "fixed" &&
+          c.effectiveDate === "2026-02-01" &&
+          c.expiryDate === "2027-01-31" &&
+          c.noticePeriodDays === 30,
         `saved ${q([c.termType, c.effectiveDate, c.expiryDate, c.noticePeriodDays])}`,
       );
       must(!renewalEditable, "Renewal period editable on Fixed term");
       must(c.noticeDeadline === "2027-01-01", `notice deadline ${c.noticeDeadline}`);
       await overview();
-      const eff = tidy(await p.getByRole("button", { name: "Effective date", exact: true }).innerText());
-      const exp = tidy(await p.getByRole("button", { name: "Expiry date", exact: true }).innerText());
+      const eff = tidy(
+        await p.getByRole("button", { name: "Effective date", exact: true }).innerText(),
+      );
+      const exp = tidy(
+        await p.getByRole("button", { name: "Expiry date", exact: true }).innerText(),
+      );
       return `Contract card labels in order: ${q(labels.join(" | "))}; the five term Rows appear in the order ${want.join(", ")} (NDA Form rows: ${form.join(", ")}). Term type offered ${q(typeOptions.join(", "))}. Four separate saves answered 200. Renewal period (months) was ${renewalEditable ? "editable" : (await renewal.count()) ? "shown but not editable" : "shown read-only with no value"} on Fixed term. After reload the pickers read "${eff}" and "${exp}", notice 30 days; read-back notice deadline ${c.noticeDeadline} (Jan 31, 2027 minus 30 days).`;
     },
   );
@@ -727,12 +876,27 @@ async function termsAndRenewals(role, A, O) {
     async () => {
       await overview();
       const timeline = tidy(await p.getByRole("region", { name: "Term timeline" }).innerText());
-      must(!/No term dates|No effective date|No expiry date/.test(timeline), `timeline ${timeline}`);
+      must(
+        !/No term dates|No effective date|No expiry date/.test(timeline),
+        `timeline ${timeline}`,
+      );
       const rows = await keyDateRows();
       const exp = rows.find((r) => r.text.includes("Current term expires"));
       const nd = rows.find((r) => r.text.includes("Renewal notice deadline"));
-      must(exp && exp.text.startsWith("Jan 31, 2027") && exp.text.includes("Derived") && exp.actions === 0, `expiry row ${q(exp)}`);
-      must(nd && nd.text.startsWith("Jan 1, 2027") && nd.text.includes("30 days before expiry") && nd.actions === 0, `notice row ${q(nd)}`);
+      must(
+        exp &&
+          exp.text.startsWith("Jan 31, 2027") &&
+          exp.text.includes("Derived") &&
+          exp.actions === 0,
+        `expiry row ${q(exp)}`,
+      );
+      must(
+        nd &&
+          nd.text.startsWith("Jan 1, 2027") &&
+          nd.text.includes("30 days before expiry") &&
+          nd.actions === 0,
+        `notice row ${q(nd)}`,
+      );
       return `Term timeline: ${q(timeline.slice(0, 180))}. Key dates rows: "${exp.text}" and "${nd.text}", each with 0 row actions.`;
     },
   );
@@ -755,7 +919,10 @@ async function termsAndRenewals(role, A, O) {
       await renewal.fill("1");
       const s2 = await withResponse(p, isPatchOf(num), () => renewal.press("Tab"));
       const c = await read();
-      must(s1 === 200 && s2 === 200 && c.termType === "auto_renew" && c.renewalPeriodMonths === 1, `saved ${c.termType} ${c.renewalPeriodMonths}`);
+      must(
+        s1 === 200 && s2 === 200 && c.termType === "auto_renew" && c.renewalPeriodMonths === 1,
+        `saved ${c.termType} ${c.renewalPeriodMonths}`,
+      );
       return `Term type Auto-renewing (PATCH ${s1}) and Renewal period 1 month (PATCH ${s2}) saved; expiry still ${c.expiryDate}.`;
     },
   );
@@ -775,8 +942,16 @@ async function termsAndRenewals(role, A, O) {
       );
       await overview();
       const c = await read();
-      const expiryPicker = await p.getByRole("button", { name: "Expiry date", exact: true }).count();
-      must(s === 200 && c.termType === "evergreen" && c.expiryDate === null && c.renewalPeriodMonths === null, `saved ${q([c.termType, c.expiryDate, c.renewalPeriodMonths])}`);
+      const expiryPicker = await p
+        .getByRole("button", { name: "Expiry date", exact: true })
+        .count();
+      must(
+        s === 200 &&
+          c.termType === "evergreen" &&
+          c.expiryDate === null &&
+          c.renewalPeriodMonths === null,
+        `saved ${q([c.termType, c.expiryDate, c.renewalPeriodMonths])}`,
+      );
       must(expiryPicker === 0, "Expiry date picker still offered on Evergreen");
       const rows = await keyDateRows();
       return `Evergreen saved (PATCH ${s}); read-back expiry ${c.expiryDate}, renewal period ${c.renewalPeriodMonths}, effective date kept ${c.effectiveDate}; the card offers no Expiry date picker (${expiryPicker}). Key dates now lists: ${q(rows.map((r) => r.text).join(" | ") || "no derived term rows")}.`;
@@ -805,7 +980,12 @@ async function termsAndRenewals(role, A, O) {
         p.getByRole("combobox", { name: "Term type" }).selectOption({ label: "Fixed term" }),
       );
       const fixed = await read();
-      must(fixed.termType === "fixed" && fixed.renewalPeriodMonths === null && fixed.expiryDate === "2027-01-31", `after Fixed ${q([fixed.termType, fixed.renewalPeriodMonths, fixed.expiryDate])}`);
+      must(
+        fixed.termType === "fixed" &&
+          fixed.renewalPeriodMonths === null &&
+          fixed.expiryDate === "2027-01-31",
+        `after Fixed ${q([fixed.termType, fixed.renewalPeriodMonths, fixed.expiryDate])}`,
+      );
       await overview();
       await withResponse(p, isPatchOf(num), () =>
         p.getByRole("combobox", { name: "Term type" }).selectOption({ label: "Auto-renewing" }),
@@ -815,7 +995,13 @@ async function termsAndRenewals(role, A, O) {
       await renewal2.fill("1");
       await withResponse(p, isPatchOf(num), () => renewal2.press("Tab"));
       const c = await read();
-      must(c.termType === "auto_renew" && c.renewalPeriodMonths === 1 && c.expiryDate === "2027-01-31" && c.noticeDeadline === "2027-01-01", `final ${q([c.termType, c.renewalPeriodMonths, c.expiryDate, c.noticeDeadline])}`);
+      must(
+        c.termType === "auto_renew" &&
+          c.renewalPeriodMonths === 1 &&
+          c.expiryDate === "2027-01-31" &&
+          c.noticeDeadline === "2027-01-01",
+        `final ${q([c.termType, c.renewalPeriodMonths, c.expiryDate, c.noticeDeadline])}`,
+      );
       return `Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. Restored: Auto-renewing, expiry ${c.expiryDate}, renewal 1 month, notice 30 days, notice deadline ${c.noticeDeadline}.`;
     },
   );
@@ -829,15 +1015,24 @@ async function termsAndRenewals(role, A, O) {
     "Negative: a Task due before the notice deadline does not feed the term-derived deadlines",
     "Current term expires and Renewal notice deadline stay derived from the term; the Task is not a Key date row",
     async () => {
-      const t = await A.api("POST", `/contracts/${num}/tasks`, { title: `${G} early task ${tag}`, dueDate: "2026-12-01" });
+      const t = await A.api("POST", `/contracts/${num}/tasks`, {
+        title: `${G} early task ${tag}`,
+        dueDate: "2026-12-01",
+      });
       must(t.status === 201, `task ${t.status}`);
       const rows = await keyDateRows();
       const nd = rows.find((r) => r.text.includes("Renewal notice deadline"));
       const exp = rows.find((r) => r.text.includes("Current term expires"));
-      must(nd?.text.startsWith("Jan 1, 2027") && exp?.text.startsWith("Jan 31, 2027"), `rows ${rows.map((r) => r.text).join(" | ")}`);
+      must(
+        nd?.text.startsWith("Jan 1, 2027") && exp?.text.startsWith("Jan 31, 2027"),
+        `rows ${rows.map((r) => r.text).join(" | ")}`,
+      );
       must(!rows.some((r) => r.text.includes("early task")), "Task appears in Key dates");
       const c = await read();
-      must(c.noticeDeadline === "2027-01-01" && c.expiryDate === "2027-01-31", "term deadlines changed");
+      must(
+        c.noticeDeadline === "2027-01-01" && c.expiryDate === "2027-01-31",
+        "term deadlines changed",
+      );
       return `A Task due 2026-12-01 was added (fixture). Key dates still reads "${exp.text}" and "${nd.text}" and lists no Task row; read-back notice deadline ${c.noticeDeadline}.`;
     },
   );
@@ -855,7 +1050,13 @@ async function termsAndRenewals(role, A, O) {
       await p.getByRole("button", { name: "Renew", exact: true }).click();
       const dialog = p.getByRole("dialog", { name: "Confirm renewal" });
       await dialog.waitFor();
-      const vehicles = tidy(await dialog.getByRole("radio").evaluateAll((els) => els.map((e) => e.closest("label")?.innerText ?? e.getAttribute("aria-label") ?? "")));
+      const vehicles = tidy(
+        await dialog
+          .getByRole("radio")
+          .evaluateAll((els) =>
+            els.map((e) => e.closest("label")?.innerText ?? e.getAttribute("aria-label") ?? ""),
+          ),
+      );
       const roll = dialog.getByRole("radio", { name: /Confirm the roll/ });
       must(await roll.isChecked(), "Confirm the roll not default");
       const amendment = await dialog.getByRole("radio", { name: /Paper as amendment/ }).count();
@@ -864,7 +1065,9 @@ async function termsAndRenewals(role, A, O) {
       const current = tidy(await dialog.getByText(/The term currently runs to/).innerText());
       await input.fill("2027-01-31");
       await dialog.getByRole("button", { name: "Confirm renewal" }).click();
-      const alert = dialog.getByText("A roll moves the term forward. Pick a date after the current expiry.");
+      const alert = dialog.getByText(
+        "A roll moves the term forward. Pick a date after the current expiry.",
+      );
       await alert.waitFor({ timeout: 5000 });
       await dialog.getByRole("button", { name: "Cancel" }).click();
       await dialog.waitFor({ state: "hidden" });
@@ -890,7 +1093,9 @@ async function termsAndRenewals(role, A, O) {
       await p.getByRole("button", { name: "Renew", exact: true }).click();
       const dialog = p.getByRole("dialog", { name: "Confirm renewal" });
       const proposed = await dialog.getByRole("textbox", { name: "New expiry date" }).inputValue();
-      const status = await withResponse(p, isRenewal(num), () => dialog.getByRole("button", { name: "Confirm renewal" }).click());
+      const status = await withResponse(p, isRenewal(num), () =>
+        dialog.getByRole("button", { name: "Confirm renewal" }).click(),
+      );
       await dialog.waitFor({ state: "hidden" });
       const c = await read();
       await approvals();
@@ -904,13 +1109,24 @@ async function termsAndRenewals(role, A, O) {
           .innerText(),
       );
       await overview();
-      const lastRenewal = tidy(await p.getByText("Last renewal", { exact: true }).locator("xpath=..").innerText());
+      const lastRenewal = tidy(
+        await p.getByText("Last renewal", { exact: true }).locator("xpath=..").innerText(),
+      );
       const kd = await keyDateRows();
       const nd = kd.find((r) => r.text.includes("Renewal notice deadline"));
-      must(status === 200 && proposed === "2027-02-28" && c.expiryDate === "2027-02-28", `status ${status} proposal ${proposed} expiry ${c.expiryDate}`);
-      must(c.noticeDeadline === "2027-01-29" && nd?.text.startsWith("Jan 29, 2027"), `notice ${c.noticeDeadline} ${nd?.text}`);
+      must(
+        status === 200 && proposed === "2027-02-28" && c.expiryDate === "2027-02-28",
+        `status ${status} proposal ${proposed} expiry ${c.expiryDate}`,
+      );
+      must(
+        c.noticeDeadline === "2027-01-29" && nd?.text.startsWith("Jan 29, 2027"),
+        `notice ${c.noticeDeadline} ${nd?.text}`,
+      );
       must(rows === 1 && !/—$/.test(lastRenewal), `rows ${rows} last renewal "${lastRenewal}"`);
-      must(c.statusName === before.statusName && c.stage === before.stage, `status moved ${before.statusName} -> ${c.statusName}`);
+      must(
+        c.statusName === before.statusName && c.stage === before.stage,
+        `status moved ${before.statusName} -> ${c.statusName}`,
+      );
       return `Confirm renewal (POST ${status}) moved expiry 2027-01-31 -> ${c.expiryDate}; notice deadline ${c.noticeDeadline} ("${nd.text}"); Approvals & signing shows ${rows} renewal row "${rowText}"; Overview "${lastRenewal}"; Status stays ${c.statusName} (${c.stage}).`;
     },
   );
@@ -932,7 +1148,9 @@ async function termsAndRenewals(role, A, O) {
       const moved = await O.api("PATCH", `/contracts/${num}`, { expiryDate: "2027-04-30" });
       must(moved.status === 200, `other PATCH ${moved.status}`);
       await sleep(1500);
-      const status = await withResponse(p, isRenewal(num), () => dialog.getByRole("button", { name: "Confirm renewal" }).click());
+      const status = await withResponse(p, isRenewal(num), () =>
+        dialog.getByRole("button", { name: "Confirm renewal" }).click(),
+      );
       const refusal = tidy(await dialog.getByRole("alert").first().innerText());
       await sleep(1000);
       const current = tidy(await dialog.getByText(/The term currently runs to/).innerText());
@@ -948,7 +1166,13 @@ async function termsAndRenewals(role, A, O) {
       await approvals();
       const rows = await renewRows();
       must(status === 409 && refusal.length > 0, `status ${status} refusal "${refusal}"`);
-      must(/Apr 30, 2027/.test(current) && fresh === "2027-05-30" && c.expiryDate === "2027-04-30" && rows === 1, `current "${current}" fresh ${fresh} expiry ${c.expiryDate} rows ${rows}`);
+      must(
+        /Apr 30, 2027/.test(current) &&
+          fresh === "2027-05-30" &&
+          c.expiryDate === "2027-04-30" &&
+          rows === 1,
+        `current "${current}" fresh ${fresh} expiry ${c.expiryDate} rows ${rows}`,
+      );
       return `Dialog proposed ${proposal}; ${O.displayName} moved expiry to 2027-04-30 (second actor's API write). Confirm renewal answered ${status}: "${refusal}". The dialog then said "${current}" and kept the entered ${kept}. Cancel and reopen proposed ${fresh}. Expiry ${c.expiryDate}; renewal rows still ${rows}.`;
     },
   );
@@ -971,14 +1195,21 @@ async function termsAndRenewals(role, A, O) {
       const d2 = q2.getByRole("dialog", { name: "Confirm renewal" });
       const v1 = await d1.getByRole("textbox", { name: "New expiry date" }).inputValue();
       const v2 = await d2.getByRole("textbox", { name: "New expiry date" }).inputValue();
-      const s1 = await withResponse(p, isRenewal(num), () => d1.getByRole("button", { name: "Confirm renewal" }).click());
-      const s2 = await withResponse(q2, isRenewal(num), () => d2.getByRole("button", { name: "Confirm renewal" }).click());
+      const s1 = await withResponse(p, isRenewal(num), () =>
+        d1.getByRole("button", { name: "Confirm renewal" }).click(),
+      );
+      const s2 = await withResponse(q2, isRenewal(num), () =>
+        d2.getByRole("button", { name: "Confirm renewal" }).click(),
+      );
       const refusal = tidy(await d2.getByRole("alert").first().innerText());
       await d2.getByRole("button", { name: "Cancel" }).click();
       const c = await read();
       await approvals();
       const rows = await renewRows();
-      must(s1 === 200 && s2 === 409 && rows === 2 && c.expiryDate === "2027-05-30", `s1 ${s1} s2 ${s2} rows ${rows} expiry ${c.expiryDate}`);
+      must(
+        s1 === 200 && s2 === 409 && rows === 2 && c.expiryDate === "2027-05-30",
+        `s1 ${s1} s2 ${s2} rows ${rows} expiry ${c.expiryDate}`,
+      );
       return `Both dialogs proposed ${v1} / ${v2}. ${A.displayName}'s Confirm renewal answered ${s1}; ${O.displayName}'s answered ${s2}: "${refusal}". Expiry ${c.expiryDate}; renewal rows ${rows} (one per distinct roll).`;
     },
   );
@@ -998,17 +1229,29 @@ async function termsAndRenewals(role, A, O) {
       await docsCard(p).getByRole("button", { name: "Upload", exact: true }).click();
       const up = p.getByRole("dialog", { name: "Upload document" });
       await up.waitFor();
-      await chooseFile(p, up, { name: `doc030-signing2-${role}-agreement.pdf`, mimeType: "application/pdf", buffer: pdf(`${G} ${tag} agreement`) });
+      await chooseFile(p, up, {
+        name: `doc030-signing2-${role}-agreement.pdf`,
+        mimeType: "application/pdf",
+        buffer: pdf(`${G} ${tag} agreement`),
+      });
       await up.getByRole("button", { name: "Upload", exact: true }).click();
       await up.waitFor({ state: "hidden", timeout: 30000 });
-      const docList = async () => (await A.api("GET", `/contracts/${num}/documents`)).json.documents;
+      const docList = async () =>
+        (await A.api("GET", `/contracts/${num}/documents`)).json.documents;
       const d0 = await until(async () => (await docList())[0], "first Document");
       const title = d0.title;
       await menuPick(p, `Actions for ${title}`, "Mark as executed copy");
       await until(async () => (await docList())[0].versions[0].isExecuted, "v1 executed");
       // Without a reload: open Approvals in the same page through the section navigation.
-      await p.getByRole("navigation", { name: "Contract sections" }).getByRole("link", { name: "Approvals" }).click();
-      await settle(p, p.getByRole("region", { name: "Approvals & signing" }), "Approvals & signing region after section navigation");
+      await p
+        .getByRole("navigation", { name: "Contract sections" })
+        .getByRole("link", { name: "Approvals" })
+        .click();
+      await settle(
+        p,
+        p.getByRole("region", { name: "Approvals & signing" }),
+        "Approvals & signing region after section navigation",
+      );
       await sleep(800);
       await p.getByRole("button", { name: "Renew", exact: true }).click();
       let dialog = p.getByRole("dialog", { name: "Confirm renewal" });
@@ -1016,31 +1259,50 @@ async function termsAndRenewals(role, A, O) {
       const beforeReload = await dialog.getByRole("radio", { name: /Paper as amendment/ }).count();
       await dialog.getByRole("button", { name: "Cancel" }).click();
       await p.reload();
-      await settle(p, p.getByRole("region", { name: "Approvals & signing" }), "Approvals & signing region after reload");
+      await settle(
+        p,
+        p.getByRole("region", { name: "Approvals & signing" }),
+        "Approvals & signing region after reload",
+      );
       await sleep(800);
       await p.getByRole("button", { name: "Renew", exact: true }).click();
       dialog = p.getByRole("dialog", { name: "Confirm renewal" });
       await dialog.waitFor();
       await dialog.getByText("Paper as amendment", { exact: true }).click();
-      const note = tidy(await dialog.innerText()).match(/Opens this record's Documents section[^.]*\.[^.]*\./)?.[0] ?? "";
+      const note =
+        tidy(await dialog.innerText()).match(
+          /Opens this record's Documents section[^.]*\.[^.]*\./,
+        )?.[0] ?? "";
       await dialog.getByRole("button", { name: "File the amendment" }).click();
       const add = p.getByRole("dialog", { name: "Add version" });
       await add.waitFor({ timeout: 15000 });
       const typeSel = add.getByLabel("Type", { exact: true });
       const seeded = await selectedText(typeSel);
       const url = new URL(p.url()).pathname;
-      await chooseFile(p, add, { name: `doc030-signing2-${role}-renewal-amendment.pdf`, mimeType: "application/pdf", buffer: pdf(`${G} ${tag} renewal amendment`) });
+      await chooseFile(p, add, {
+        name: `doc030-signing2-${role}-renewal-amendment.pdf`,
+        mimeType: "application/pdf",
+        buffer: pdf(`${G} ${tag} renewal amendment`),
+      });
       await add.getByRole("button", { name: "Upload", exact: true }).click();
       await add.waitFor({ state: "hidden", timeout: 30000 });
       const vs = await until(async () => {
         const d = (await docList()).find((x) => x.id === d0.id);
         return d.versions.length === 2 ? d.versions : null;
       }, "amendment version");
-      const sum1 = vs.map((v) => `v${v.versionNumber} ${v.documentType?.displayName ?? "no type"} executed=${v.isExecuted}`).join("; ");
+      const sum1 = vs
+        .map(
+          (v) =>
+            `v${v.versionNumber} ${v.documentType?.displayName ?? "no type"} executed=${v.isExecuted}`,
+        )
+        .join("; ");
       const v1 = vs.find((v) => v.versionNumber === 1);
       const v2 = vs.find((v) => v.versionNumber === 2);
       must(seeded === "Amendment" && url.endsWith("/documents"), `type "${seeded}" url ${url}`);
-      must(v2.documentType?.displayName === "Amendment" && !v2.isExecuted && v1.isExecuted, `versions ${sum1}`);
+      must(
+        v2.documentType?.displayName === "Amendment" && !v2.isExecuted && v1.isExecuted,
+        `versions ${sum1}`,
+      );
       await p.reload();
       await settle(p, docsCard(p).getByRole("heading", { name: "Documents" }), "Documents card");
       await menuPick(p, `Actions for ${title}`, "Mark as executed copy");
@@ -1071,9 +1333,13 @@ async function termsAndRenewals(role, A, O) {
     const prefilledTitle = await titleBox.inputValue();
     const typeLabel = await selectedText(create.getByRole("combobox", { name: "Contract type" }));
     const ownerBox = create.getByRole("combobox", { name: "Legal Owner" });
-    const ownerLabel = (await ownerBox.count()) ? await selectedText(ownerBox) : "(no Legal Owner control)";
+    const ownerLabel = (await ownerBox.count())
+      ? await selectedText(ownerBox)
+      : "(no Legal Owner control)";
     await titleBox.fill(newTitle);
-    const created = p.waitForResponse((r) => r.request().method() === "POST" && new URL(r.url()).pathname === "/api/v1/contracts");
+    const created = p.waitForResponse(
+      (r) => r.request().method() === "POST" && new URL(r.url()).pathname === "/api/v1/contracts",
+    );
     await create.getByRole("button", { name: "Create", exact: true }).click();
     const res = await created;
     const body = await res.json();
@@ -1087,7 +1353,13 @@ async function termsAndRenewals(role, A, O) {
     await sleep(1000);
     const relText = tidy(await relRegion.innerText());
     const parent = await read();
-    results.records.push({ article: art, role, purpose: label, reference: `C-${childNum}`, title: newTitle });
+    results.records.push({
+      article: art,
+      role,
+      purpose: label,
+      reference: `C-${childNum}`,
+      title: newTitle,
+    });
     const f = {
       entity: child.entity?.legalName ?? child.entity?.name ?? null,
       counterparty: child.primaryCounterparty?.name ?? null,
@@ -1102,9 +1374,22 @@ async function termsAndRenewals(role, A, O) {
       risk: child.risk,
       confidential: child.isConfidential,
     };
-    must(res.status() === 201 && prefilledTitle === parentTitle && typeLabel === "NDA", `create ${res.status()} title "${prefilledTitle}" type ${typeLabel}`);
-    must(f.counterparty && f.entity && f.value?.amount === 990000 && f.termType === "auto_renew" && f.expiry === parent.expiryDate, `carried ${q(f)}`);
-    must(f.status === "Draft" && f.confidential === false && f.risk === null && f.priority !== "high", `not carried ${q(f)}`);
+    must(
+      res.status() === 201 && prefilledTitle === parentTitle && typeLabel === "NDA",
+      `create ${res.status()} title "${prefilledTitle}" type ${typeLabel}`,
+    );
+    must(
+      f.counterparty &&
+        f.entity &&
+        f.value?.amount === 990000 &&
+        f.termType === "auto_renew" &&
+        f.expiry === parent.expiryDate,
+      `carried ${q(f)}`,
+    );
+    must(
+      f.status === "Draft" && f.confidential === false && f.risk === null && f.priority !== "high",
+      `not carried ${q(f)}`,
+    );
     must(!team.includes(BU.name) && !team.includes(O.displayName), `team ${team.slice(0, 300)}`);
     must(relationCheck(relText, `C-${num}`), `relation "${relText}"`);
     return `${radio} -> ${button} opened "${label}": "${intro}". Prefilled Title "${prefilledTitle}", Contract type ${typeLabel}, Legal Owner ${ownerLabel}; Title edited; Create answered ${res.status()} for C-${childNum}. Carried over: entity ${f.entity}, counterparty ${f.counterparty}, value ${q(f.value)}, ${f.termType} to ${f.expiry} (renewal ${f.renewal}, notice ${f.notice}). Not carried: Legal Owner ${f.manager}, Status ${f.status}, Priority ${f.priority}, Risk ${f.risk}, Confidential ${f.confidential}; team has neither ${O.displayName} nor ${BU.name}. Related contracts on C-${childNum}: "${relText}". C-${num} still expires ${parent.expiryDate}.`;
@@ -1118,7 +1403,14 @@ async function termsAndRenewals(role, A, O) {
     "Approvals; create dialog",
     "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
     "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential need their own review",
-    () => routed("Create child contract", "Create child contract", "Open the child contract", `${G} child ${tag}`, (rel, ref) => /Parent/i.test(rel) && rel.includes(ref)),
+    () =>
+      routed(
+        "Create child contract",
+        "Create child contract",
+        "Open the child contract",
+        `${G} child ${tag}`,
+        (rel, ref) => /Parent/i.test(rel) && rel.includes(ref),
+      ),
   );
 
   await step(
@@ -1129,7 +1421,14 @@ async function termsAndRenewals(role, A, O) {
     "Approvals; create dialog",
     "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
     "A new Contract linked as renewing this predecessor, with the same carry-over rules",
-    () => routed("Create successor contract", "New successor contract", "Open the successor", `${G} successor ${tag}`, (rel, ref) => /Renews/i.test(rel) && rel.includes(ref)),
+    () =>
+      routed(
+        "Create successor contract",
+        "New successor contract",
+        "Open the successor",
+        `${G} successor ${tag}`,
+        (rel, ref) => /Renews/i.test(rel) && rel.includes(ref),
+      ),
   );
 
   await step(
@@ -1149,10 +1448,19 @@ async function termsAndRenewals(role, A, O) {
       });
       must(created.status === 201, `create ${created.status}`);
       const lapsed = created.json.contract.number;
-      results.records.push({ article: art, role, purpose: "passed renewal date", reference: `C-${lapsed}`, title: `${G} lapsed ${tag}` });
+      results.records.push({
+        article: art,
+        role,
+        purpose: "passed renewal date",
+        reference: `C-${lapsed}`,
+        title: `${G} lapsed ${tag}`,
+      });
       await A.api("PATCH", `/contracts/${lapsed}`, { termType: "auto_renew" });
       const past = isoPlusDays(-5);
-      const e = await A.api("PATCH", `/contracts/${lapsed}`, { expiryDate: past, renewalPeriodMonths: 12 });
+      const e = await A.api("PATCH", `/contracts/${lapsed}`, {
+        expiryDate: past,
+        renewalPeriodMonths: 12,
+      });
       must(e.status === 200, `expiry PATCH ${e.status}`);
       await approvals(p, lapsed);
       const banner = p.getByText(/Renewal date passed — pending confirmation/);
@@ -1183,12 +1491,22 @@ async function termsAndRenewals(role, A, O) {
       await approvals();
       const renewCount = await p.getByRole("button", { name: "Renew", exact: true }).count();
       const c0 = await read();
-      const write = await A.api("POST", `/contracts/${num}/renewal`, { fromExpiry: c0.expiryDate, toExpiry: "2027-12-31" });
+      const write = await A.api("POST", `/contracts/${num}/renewal`, {
+        fromExpiry: c0.expiryDate,
+        toExpiry: "2027-12-31",
+      });
       const r = await A.api("POST", `/contracts/${num}/restore`, {});
       const c = await read();
       await approvals();
       const rows = await renewRows();
-      must(renewCount === 0 && write.status === 409 && r.status === 200 && c.expiryDate === c0.expiryDate && rows === 2, `renew ${renewCount} write ${write.status} restore ${r.status} rows ${rows}`);
+      must(
+        renewCount === 0 &&
+          write.status === 409 &&
+          r.status === 200 &&
+          c.expiryDate === c0.expiryDate &&
+          rows === 2,
+        `renew ${renewCount} write ${write.status} restore ${r.status} rows ${rows}`,
+      );
       return `Archived C-${num}: Approvals showed ${renewCount} Renew buttons and a renewal write answered ${write.status}. After Restore (${r.status}) expiry ${c.expiryDate} and ${rows} renewal rows remain.`;
     },
   );

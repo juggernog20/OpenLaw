@@ -778,8 +778,12 @@ for (const role of ["legal_team_member", "administrator", "business_user"]) {
       await dlg.waitFor({ state: "detached" });
       const refused = await expectRefused(k.key);
       await apiKeysPane(ltm, role);
-      const row = await rowText(ltm, k.name);
-      expectThat(/Revoked/.test(row), row);
+      const row = await until(async () => {
+        const t = await rowText(ltm, k.name);
+        if (/Revoked/.test(t)) return t;
+        await ltm.reload();
+        return null;
+      }, "Nadia's row never read Revoked", 20000);
       return `Dialog "Revoke API key": "${warn}". After Revoke: ${refused}. Nadia's row "${row}".`;
     });
     await step({ ...CH, role, page: "SDK Client" }, "Negative: a revoked key cannot connect", "401", async () => expectRefused(k.key));
@@ -791,8 +795,12 @@ for (const role of ["legal_team_member", "administrator", "business_user"]) {
       await dlg.getByRole("button", { name: "Revoke", exact: true }).click();
       await dlg.waitFor({ state: "detached" });
       const refused = await expectRefused(k.key);
-      const row = await rowText(page, k.name);
-      expectThat(/Revoked/.test(row), row);
+      const row = await until(async () => {
+        const t = await rowText(page, k.name);
+        if (/Revoked/.test(t)) return t;
+        await page.reload();
+        return null;
+      }, "the row never read Revoked", 20000);
       return `${refused}. Row "${row}".`;
     });
   }
@@ -810,11 +818,17 @@ await step(as(CM, "administrator", "/settings/audit-log"), "Each Organization ch
   if (!(await auditLink.isVisible())) await nav.getByRole("button", { name: "Advanced" }).click();
   await auditLink.click();
   await admin.waitForURL(/\/settings\/audit-log/);
-  await pause(2000);
+  // Other agents share work2, so narrow to this Administrator and the settings action.
+  await admin.locator("#auditAction").selectOption("org_settings.updated");
+  const person = admin.locator("#auditActor");
+  if (await person.count()) await person.selectOption({ label: PEOPLE.administrator.name });
+  const entries = admin.locator("main").getByText("Daniel Okafor changed the organization settings");
+  await entries.first().waitFor({ timeout: 20000 });
+  const n = await entries.count();
   const text = await main(admin);
-  const m = text.match(/.{0,80}(org_settings|Organization settings|MCP).{0,120}/);
-  expectThat(!!m, text.slice(0, 400));
-  return `Audit log page shows: "${m[0]}"`;
+  const i = text.indexOf("Daniel Okafor changed the organization settings");
+  expectThat(n >= 1, "no organization settings entries");
+  return `Action filter "org_settings.updated" option label "${flat(await admin.locator("#auditAction option:checked").innerText())}", Person Daniel Okafor: ${n} "Daniel Okafor changed the organization settings" entries on the first page; newest: "${text.slice(i, i + 260)}".`;
 });
 
 // ---------- restore everything this run changed ----------

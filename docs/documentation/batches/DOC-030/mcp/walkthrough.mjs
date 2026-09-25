@@ -8,9 +8,10 @@
 // PHASE is one of:
 //   m40       shared work2 lab: V-M40-MCP (Administrator) and V-M40-CLIENT (all three roles)
 //   lan       owned mcplan lab: operator pins, Instance address changes, plain-HTTP LAN refusals
+//   m40r      shared work2 lab: re-run of the m40 revoke and Audit log steps only
 //   m41       owned mcplan lab: V-M41-MCP OAuth Clients, Allowed Clients, grants, lifetime restart
 // Every phase replaces its own steps in walkthrough.json. API keys, Client secrets,
 // sign-in links, cookies and raw mail are never written to a file.
 const phase = process.env.PHASE;
-if (!["m40", "lan", "m41"].includes(phase)) throw new Error("Set PHASE to m40, lan or m41.");
+if (!["m40", "m40r", "lan", "m41"].includes(phase)) throw new Error("Set PHASE to m40, m40r, lan or m41.");
 await import(`./phase-${phase}.mjs`);

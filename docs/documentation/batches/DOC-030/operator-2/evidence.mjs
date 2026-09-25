@@ -1,0 +1,90 @@
+// Writes the V-C44, V-C46, V-C47 and V-C48 evidence records from the operator-2 walkthrough log.
+// Run from the worktree root: node docs/documentation/batches/DOC-030/operator-2/evidence.mjs
+import { createHash } from "node:crypto";
+import { readFileSync, writeFileSync } from "node:fs";
+
+const dir = "docs/documentation/batches/DOC-030/operator-2";
+const log = JSON.parse(readFileSync(`${dir}/walkthrough.json`, "utf8"));
+const review = JSON.parse(readFileSync(`${dir}/technical-review.json`, "utf8"));
+const sha = (id) => createHash("sha256").update(readFileSync(`docs/user-guides/${id}.md`)).digest("hex");
+const COMMIT = "067c1646829df85e62b809ee9157921e867c84e7";
+const REVIEWER = "DOC-030 independent walkthrough agent (operator-2)";
+const r2 = log.steps.filter((s) => s.round === 2);
+const last = (article) => r2.filter((s) => s.article === article && s.result === "pass").map((s) => s.at).sort().pop();
+const img = (k) => log.images[k].containers;
+const logRef = [`${dir}/walkthrough.json`, `${dir}/walkthrough.mjs`, `${dir}/op-lib.mjs`];
+const common = [
+  "Independent agent walkthrough by an agent that did not write or source-review the guide; container-operation by an agent acting as a fictional operator, not a human operator study.",
+  "Round 1 (10:15 to 13:23 UTC) walked every step on openlaw-doc030-opinst, -opup, -oprecover, -oprestore and -opmigfix and failed the guide on TRUSTED_PROXIES, the wrong-key behavior and the saved-settings recovery command. Round 2 (13:35 to 13:59 UTC) re-walked every changed step on fresh projects openlaw-doc030-opinst2, -opup2 and -oprestore2 after the author's correction; unchanged steps keep their round 1 observations. Failed steps in the log that were walkthrough-script defects were rerun; the log's supersededAttempts note explains them.",
+  "All projects were cloned from GitHub at the named revisions and built by the guides' own docker compose build commands with a warm Docker build cache, so build times are not first-build times. Every project, support container, volume and private backup was destroyed after the walk.",
+  "Mail went to an owned Mailpit relay; the AI provider was an owned OpenAI-compatible stand-in that accepts only the saved key; object storage was an owned MinIO. None is a live provider.",
+];
+const prev = (id) => {
+  const e = JSON.parse(readFileSync(`docs/documentation/evidence/${id}.json`, "utf8"));
+  return e.previousEvidence && e.appCommit === COMMIT ? e.previousEvidence : { appCommit: e.appCommit, contentSha256: e.contentSha256, verifiedAt: e.verifiedAt };
+};
+const reviewSources = (id) => review.articles.find((a) => a.articleId === id)?.sources ?? [];
+const author = {
+  install: "Codex documentation author; corrections by DOC-029 and DOC-029r2 source-review author agents (operator-install); DOC-030 corrections by DOC-030 source-review author agent (shared-files) and DOC-030 source-review author agent (operator-2)",
+  upgrade: "Codex documentation author; corrections by DOC-029 and DOC-029r2 source-review author agents (operator-lifecycle); DOC-030 corrections by DOC-030 source-review author agent (operator-2)",
+  "backup-and-restore": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle); DOC-030 corrections by DOC-030 source-review author agent (operator-2)",
+  "operator-troubleshooting": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle); DOC-030 corrections by DOC-030 source-review author agent (operator-2)",
+};
+function record(id, scenario, coverage, { buildId, environment, prerequisites, expected, actual, limitations }) {
+  return {
+    articleId: id,
+    contentSha256: sha(id),
+    appCommit: COMMIT,
+    buildId,
+    environment,
+    author: author[id],
+    technicalReviewer: review.reviewer,
+    walkthroughReviewer: REVIEWER,
+    reviewerKind: "agent",
+    verifiedAt: last(id),
+    status: "pass",
+    sources: [...new Set([`docs/user-guides/${id}.md`, "docs/user-guides/deployment-configuration.md", `${dir}/technical-review.json`, ...logRef, ...reviewSources(id).filter((s) => !s.startsWith(`docs/user-guides/${id}.md`))])],
+    scenarios: [{ id: scenario, coverage: [coverage], role: "operator", method: "container-operation", prerequisites, expected, actual, result: "pass", evidence: logRef }],
+    limitations: [...common, ...limitations],
+    previousEvidence: prev(id),
+    compatibilityReview: null,
+    copyOnlyReview: null,
+  };
+}
+const eng = (k) => `app and worker ${img(k).app}; engine ${img(k)["doc-engine"]}`;
+const out = {
+  install: record("install", "V-C44", "C44", {
+    buildId: `${eng("install")} (openlaw-local and openlaw-engine-local tagged ${COMMIT}, built by the guide in openlaw-doc030-opinst2)`,
+    environment: "openlaw-doc030-opinst2 (round 2); openlaw-doc030-opinst (round 1); same-host Caddy proxy at https://openlaw-doc030.localhost with an internal CA",
+    prerequisites: ["Disposable host project cloned from https://github.com/juggernog20/OpenLaw.git at 067c1646, built with the guide's compose.operator.yml per-revision tags; a fictional operator following install.md.", "Owned Mailpit relay reachable as op2-mail; a same-host Caddy proxy for the HTTPS origin."],
+    expected: "The app reaches readiness and first-run setup with the documented production defaults and topology. Missing secrets, occupied ports and unavailable dependencies lead to the documented recovery; the authoring lab is not counted.",
+    actual: "Round 2 on openlaw-doc030-opinst2: Git, OpenSSL, Docker Engine 29.8.1 and Compose 5.5.1 checked; clone and git checkout --detach 067c1646; the grouped .env commands wrote mode-600 keys and a second run refused to overwrite .env; .env set once without TRUSTED_PROXIES; compose.operator.yml written; config --quiet printed nothing and config --services listed app, doc-engine, postgres, worker; pull, build (3 s, warm cache), up; curl --fail /readyz 200 in 20 s from the first command; worker running, doc-engine healthy; docker compose port app 3000 printed 127.0.0.1:24640 and the LAN address refused. Build step 4: docker network inspect openlaw-doc030-opinst2_openlaw-backend printed gateway 192.168.32.1 and subnet 192.168.32.0/20; TRUSTED_PROXIES=192.168.32.1 applied with up -d. Step 5 read the token after the documented line; a restart replaced it. Step 6: the Caddy origin showed Set up OpenLaw; the replaced token showed 'The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.'; the current token created the Administrator and opened Welcome to OpenLaw 55 s after the first command; the wizard saved and tested the relay and sent an invitation. The guide's remoteAddress command then counted 24 requests from 127.0.0.1 (the browser) and 1 from the gateway (a direct readiness probe). With the gateway value, four wrong passwords from 127.0.0.2 left a correct sign-in from 127.0.0.1 at 200; with 127.0.0.1 there was no warning and it answered 429, as the guide states. Working checks: sign-in through the origin, Create contract, Upload, download with the same SHA-256, text ready, invitation link Password set and sign-in, a new PDF processed after docker compose restart worker, no token printed once a user exists. Round 1 negatives on openlaw-doc030-opinst: blank AUTH_SECRET refused by Compose; PORT on an occupied port left app and worker created and the same up recovered after the port was corrected; a stopped Postgres gave /healthz 200 and /readyz 503 and recovered.",
+    limitations: ["Public certificate issuance and employee-device TLS trust were not tested; Caddy used its internal CA.", "The proxy check used two loopback source addresses (127.0.0.1 and 127.0.0.2), not two machines."],
+  }),
+  upgrade: record("upgrade", "V-C46", "C46", {
+    buildId: `candidate ${eng("upgrade-after")} (openlaw-doc030-opup2); starting build d1d098ba app ${img("upgrade-baseline").app}, engine ${img("upgrade-baseline")["doc-engine"]}; round 1 recovery target on d1d098ba app ${img("recover").app}`,
+    environment: "openlaw-doc030-opup2 behind a same-host Caddy proxy at http://127.0.0.1:24651 (round 2); openlaw-doc030-opup and openlaw-doc030-oprecover (round 1)",
+    prerequisites: ["Starting build d1d098ba installed with install.md's files and populated through the API: Administrator, Legal Team Member, Contributor, Entity, a Contract Field and a global Field on a Contract type and a Matter type, three Contracts (one Confidential), a Matter, two Documents with two Versions each, a saved relay with a password and an AI connector key.", "Target 067c1646 selected by the guide; pre-upgrade coherent backup retained."],
+    expected: "Accounts, permissions, records, files and required encrypted configuration survive the supported upgrade; recovery is a restore of the pre-upgrade backup into a separate target, not a downgrade.",
+    actual: "Round 2 on openlaw-doc030-opup2 (starting build published 0.0.0.0:24650): recorded revision, images, project, COMPOSE_FILE and local storage; Settings → Advanced does not exist on the starting build. git status/fetch/rev-parse; git checkout --detach 067c1646 and build without changing the 4 running containers; app and worker resolve to the same image. Step 3: port 127.0.0.1:24650; docker network inspect read gateway 192.168.64.1 before the upgrade and TRUSTED_PROXIES was set to it; default ceilings; VAPID unset. Outstanding jobs checked; backup steps 1 to 4 with app and worker kept stopped. Start: the first migration line was 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'; the worker restarted once on the missing advanced_settings column and stayed running; port 127.0.0.1:24650; readiness in 6 s; journal 91 rows before. Step 2: the guide's remoteAddress command counted 437 requests from 127.0.0.1 and none from the gateway, and wrong passwords from 127.0.0.2 did not refuse a correct sign-in from 127.0.0.1. Administrator and Legal Team Member signed in in the browser; C-1 to C-3, M-1 and the Entity matched; the Legal Team Member and the former Contributor (now Business User) were refused Confidential C-3 (404 and 403). The global Field became one Contract Field (original slug) and one Matter copy with the same name and values. Four Version hashes matched; a new upload was processed; Send test email delivered through the saved relay; Test connection said 'Connection successful.'; System status Refresh showed API and Worker Running and Current. An old tab navigated without the reload notice. Round 1 recovery: the pre-upgrade backup restored into openlaw-doc030-oprecover on d1d098ba matched hashes and access, and a post-backup upload was absent.",
+    limitations: ["The starting build has no business_owner_id column and no Request type intake questions, so the Business Owner backfill and the intake-to-Form move had no data to rewrite; Document types on Versions and the AI Saved key move were observed.", "An old browser tab did not show 'This part of OpenLaw was updated. Reload to continue.'; the guide says it can.", "Immediately after a restart System status can list a stale API row for up to a minute (product bug in the log)."],
+  }),
+  "backup-and-restore": record("backup-and-restore", "V-C47", "C47", {
+    buildId: `source ${eng("backup-source")} (openlaw-doc030-opup2); target ${eng("restore-start")} (openlaw-doc030-oprestore2)`,
+    environment: "openlaw-doc030-opup2 (source) and openlaw-doc030-oprestore2 (target), round 2; openlaw-doc030-opup and openlaw-doc030-oprestore, round 1",
+    prerequisites: ["Populated source after the V-C46 upgrade with File uploads 150 and S3 Document storage saved in Settings → Advanced, a Document stored only in the owned MinIO bucket, a sealed relay password, AI key and generated VAPID pair.", "Retained AUTH_SECRET and OPENLAW_SECRET_KEY in a private secret store; a separate empty target project."],
+    expected: "Records and permissions work, file hashes match, and required encrypted configuration is usable with the retained key; missing or wrong keys and missing files are detected; an archive alone is not a restore.",
+    actual: "Round 2: Settings → Advanced showed Maximum file size 150 and the S3 fields as Saved in OpenLaw. Backup steps 1 to 5 in a fresh mode-700 directory: app and worker stopped, pg_dump custom format, tar through a one-off app container, app-source.txt and images.json; pg_restore --list 884 TOC entries, tar 5 files, SHA256SUMS; restart, readiness and a hash-matching download; retained copy checked with sha256sum --check. Restore into openlaw-doc030-oprestore2 with the retained keys, its own BASE_URL and project: hashes OK, empty database and volume confirmed, pg_restore --exit-on-error exit 0, files restored, readiness. Verification: Administrator, Legal Team Member refused C-3, Business User refused; values and four Version hashes matched; new upload processed; test email delivered; Test connection 'Connection successful.'; Instance address showed http://127.0.0.1:24652 'Deployment configuration · Read only'; File uploads 150 and S3 storage 'Saved in OpenLaw'; the S3-only Document downloaded with its SHA-256 from the source's live bucket; after a minute System status showed API and Worker Running and Current and 'Active storage: s3'. Wrong key: app and worker started (restart count 0); the start log named api_key, smtp_url, vapid_private_key and advanced_settings and logged the VAPID line; File uploads and storage showed Default, Active storage local, the S3-only Document answered 500, the instance address stayed BASE_URL, the test email gave the 'SMTP is not configured' message; with the retained key everything returned. Round 1: missing OPENLAW_SECRET_KEY refused by Compose; a deleted file gave a listed Document with a failed download, and reapplying the archive restored the hash.",
+    limitations: ["The backup used the bundled Postgres and local volume; object-store snapshots were not taken. The restored target read the source's live MinIO bucket because its .env left the storage keys empty, which the guide warns about.", "No two-factor enrollment, Signing connector, SSO provider or browser push subscription existed in the fixture; their restore symptoms were not observed.", "The 'Emailed links or sign-in go to the source's address' row was not exercised because the source's BASE_URL was pinned."],
+  }),
+  "operator-troubleshooting": record("operator-troubleshooting", "V-C48", "C48", {
+    buildId: `${eng("upgrade-after")} (openlaw-doc030-opup2, round 2); round 1 fault-injection instance openlaw-doc030-opup on the same revision`,
+    environment: "openlaw-doc030-opup2 and openlaw-doc030-opinst2 (round 2); openlaw-doc030-opup, -opinst, -oprecover and -opmigfix (round 1)",
+    prerequisites: ["Dedicated upgraded installation with recorded baseline health (config --quiet, ps --all, System status API and Worker Running and Current), a same-host proxy, saved Advanced settings and a sealed relay and AI key.", "Pre-upgrade backups kept for the migration recovery drill."],
+    expected: "Each diagnosis reaches a concrete cause or supported escalation and restored service is checked; logs omit credentials; no destructive recovery is offered without its scope.",
+    actual: "Round 2: unset TRUSTED_PROXIES logged 'TRUSTED_PROXIES is not set' and four wrong passwords from 127.0.0.2 made a correct sign-in from 127.0.0.1 answer 429; the guide's remoteAddress command showed the gateway; with the gateway from docker network inspect the warning was gone, a browser signed in through the proxy, sign-in stayed 200 and the recorded addresses were the clients'. A non-IP entry stopped the app with 'invalid IP address' until the gateway value returned. A saved Application address refused sign-in (403); the recovery command removed it (exit 0) but left http://localhost:3000 [default] and sign-in through the proxy still 403; BASE_URL in .env fixed it. A wrong key let app and worker start, named advanced_settings in the start log, gave the exact 'SMTP is not configured' test message, failed Test connection with HTTP 401, fell back to local storage (S3-only Document 500) and recovered with the retained key. Under a wrong key the recovery command exited 0 and removed all six saved values; the retained key could not bring them back; pinning the S3 variables in .env made the Document readable again. Round 1 unchanged rows: Compose refused a missing key; a short OPENLAW_SECRET_KEY stopped app and worker; a short AUTH_SECRET only warned; an occupied port left app and worker created; a container proxy timed out on 127.0.0.1 and worked with APP_BIND; a 64m ceiling showed OOMKilled true; Postgres stopped gave healthz 200 and readyz 503; the journal guard refusal and both read-only commands; the two accounts.issuer refusals; the 0157 refusal named the Request type, left 158 of 173 journal rows applied, and the documented backup-based recovery upgraded a corrected target; SMTP_URL pinning; S3 saved storage, reset and env pinning; the 1 MB upload message; a killed worker showed No recent heartbeat; engine down and 503 with Retry-After at 1/1 limits; the AI 401 message and redacted log line; Signing updates Polling and Webhook; container logs held no secrets.",
+    limitations: ["Live event stream caps were observed only as reconnects of six streams in one tab; the 500-per-process cap was not reached.", "The host firewall rule that admits only a container proxy was not tested.", "Signing, SSO and push symptoms under a wrong key were not observed because none was configured; real providers remain out of scope (C42, C43).", "A clean docker compose stop removes the Worker row instead of showing No recent heartbeat; the label was observed with docker compose kill."],
+  }),
+};
+for (const [id, rec] of Object.entries(out)) writeFileSync(`docs/documentation/evidence/${id}.json`, `${JSON.stringify(rec, null, 2)}\n`);
+console.log(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.verifiedAt])));

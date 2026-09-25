@@ -1,106 +1,130 @@
 {
   "articleId": "roles-and-access",
-  "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (roles, round 2)",
+  "contentSha256": "24154ab5101e2dd5148e99935ad7ad3e3a4d0562f844b4db89a6a0ffaa9da1a7",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (roles); DOC-030 corrections by DOC-030 source-review author agent (access)",
+  "technicalReviewer": "DOC-030 source-review author agent (access)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access)",
   "reviewerKind": "agent",
-  "technicalReviewer": "DOC-029 source-review author agent (roles)",
-  "verifiedAt": "2026-09-16T16:20:59.865Z",
+  "verifiedAt": "2026-09-25T13:35:00.599Z",
   "status": "pass",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (roles)",
   "sources": [
     "docs/user-guides/roles-and-access.md",
+    "docs/documentation/batches/DOC-030/access/technical-review.json",
+    "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/access/lib.mjs",
+    "docs/documentation/batches/DOC-030/access/setup.mjs",
+    "docs/documentation/batches/DOC-030/access/fixtures.json",
+    "docs/documentation/batches/DOC-030/access/walkthrough.json",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/explanation.md",
+    "docs/documentation/evidence/roles-and-access.json",
     "docs/documentation/batches/DOC-029/roles/technical-review.json",
-    "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json"
+    "docs/decision-records/DECISIONS.md",
+    "docs/decision-records/DECISIONS-CONTRACTS.md",
+    "docs/decision-records/DECISIONS-MATTERS.md",
+    "docs/decision-records/DECISIONS-ENTITIES.md",
+    "apps/api/src/lib/contract-access.ts",
+    "apps/api/src/lib/entity-access.ts",
+    "apps/api/src/lib/portal-record-access.ts",
+    "apps/api/src/modules/contracts/service.ts",
+    "apps/api/src/modules/matters/service.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/contracts/create.ts",
+    "apps/api/src/modules/requests/convert.ts",
+    "apps/api/src/modules/portal/applets.ts",
+    "apps/api/src/modules/portal/approvals.ts",
+    "apps/web/src/routes/portal-approvals.tsx",
+    "apps/web/src/components/record-team-applet.tsx",
+    "apps/web/src/components/portal/record-shell.tsx",
+    "apps/web/src/lib/comments.ts",
+    "apps/web/src/components/comments/comment-applet.tsx",
+    "apps/web/src/routes/portal-request.tsx",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C06",
-      "coverage": ["C06"],
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Seeded fictional Administrator account signed in on the shared work documentation lab (openlaw-docs-41255c61-work).",
-        "Reviewer-created records named DOC-029 roles ... from setup-r1.mjs and setup-r1-part2.mjs (fixtures-r1.json); round 2 restored the 25 paging Matters that round 1 archived and archived them again at the end."
+      "coverage": [
+        "C06"
       ],
-      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
-      "actual": "7 recorded steps passed for this role on 3fa407e3. Settings > Users listed Administrator, Legal team member and Business user and no Contributor; the role control offered Legal team member. Daniel was refused Confidential C-36 and M-20 on a copied link and after reload, and M-19 showed Restricted Matter and Restricted contract without links. Header search and the full lists omitted both Confidential records. With a team row he had Add team member and the Confidential switch enabled. He was refused the Confidential Entity without a Grant, opened it after Nadia granted one through Manage access, and was refused after removal. He saw Manage access on a non-Confidential Entity where Nadia did not. He posted a Legal Only comment and a Contract Team comment from the Audience control on C-35 for the Portal History checks.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.mjs"
-      ]
-    },
-    {
-      "id": "V-C06",
-      "coverage": ["C06"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member account signed in on the shared work documentation lab (openlaw-docs-41255c61-work).",
-        "Reviewer-created records named DOC-029 roles ... from setup-r1.mjs and setup-r1-part2.mjs (fixtures-r1.json); round 2 restored the 25 paging Matters that round 1 archived and archived them again at the end."
+        "work2 lab from 067c1646. Daniel Okafor (Administrator), Nadia Haddad and Priya Raman (Legal Team Members) by password; Jonas Weber and Amara Nwosu (Business Users) by fresh magic links; one browser context each.",
+        "Fixtures (setup.mjs, API): open and Confidential DOC-030 access Contracts and Matters with a link and a parent Matter; a Confidential parent Contract with Jonas on its team and an open child Contract; two Confidential Entities created by Nadia; three comments at Legal Only, Working Team and Full Thread; Jonas's converted Request; per run, three approval requests naming Jonas (one with a Confidential primary Document).",
+        "A fixture reset at the start of each run removes leftover team rows and owners from earlier runs."
       ],
       "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
-      "actual": "13 recorded steps passed for this role on 3fa407e3. Nadia was redirected from /settings/users and opened open C-35 and M-19 without a team row. Add team member had one Person control and no role picker, and existing members were not offered. Priya, on the C-36 team but not Creator or Legal Owner, had Add team member, remove controls and the Confidential switch disabled. Removing team rows refused Daniel and Priya on the next read. Legal Owner on C-36 and Matter Manager on M-20 admitted Daniel without a team row, and returning them refused him. Removing Nadia from open C-35 kept her access but hid the Confidential Document again. The creator Grant was listed, and removing the last Grant was refused. Adding Jonas to Contract team gave him Portal access. The Audience control, above New comment, offered Legal Only and Contract Team on a Contract and Legal Only and Matter Team on a Matter; rows showed Contract Team, Legal Only and Internal team for the three fixture tiers. Business Owner statements stayed on the row after membership removal and did not grant access.",
+      "actual": "14 recorded steps passed on 067c1646. fixture.reset: Reset answers: 404,404,404,404,404,404,404,404,200,200,200. Approval requests naming Jonas on C-527, C-528 (Confidential primary Document) and C-529. A2.settings-admin-only: Nadia at /settings/users landed on /settings/profile with no Invite user; an organization settings write answered 403. B1.open-records: Nadia (no team row) opened C-68 \"DOC-030 access open contract 09251012\" and M-32 \"DOC-030 access open matter 09251012\". B4.add-team-member: The Add team member dialog had one control, Person, and no role picker; Nadia (already on the team) was not offered. Roster: NH Legal Owner Creator Nadia Haddad | DO Daniel Okafor. Daniel then opened C-69 \"DOC-030 access confidential contract 09251012\". B6.reader-no-audience-right: Priya opened C-69. Add team member disabled; Confidential switch disabled; 3 remove controls, none enabled; Legal Owner control enabled true: choosing Priya Raman showed \"Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\"; after reload the Legal Owner control read \"NH Nadia Haddad\". Naming herself Legal Owner through the record write answered 403 (\"Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\"). B7.remove-ends-access: After Nadia removed both rows, Daniel's and Priya's reloads of C-69 showed \"does not exist, or you cannot open it\". B8.legal-owner: After Nadia set Legal Owner to Daniel, Daniel opened C-69 (roster: DO Legal Owner Daniel Okafor | NH Creator Nadia Haddad). Daniel set Legal Owner back to Nadia; his reload was then refused and Nadia kept access. B9.matter-manager-and-team: Daniel opened M-33 through a team row, was refused after removal, opened it again as Matter Manager, and was refused after he named Nadia Matter Manager again. B10.ltm-open-removal-and-document: The Confidential Document doc030-access-confidential-note.txt was hidden from Nadia before, shown while she was on the team, and hidden after removal; she still opened C-68. Daniel (creator, Legal Owner) saw it throughout. C2.entity-grant: Manage access opened Confidential access with Nadia's creator Grant listed. Person offered 47 staff people and no Business Users. After Grant access, Daniel opened the Entity and saw Manage access, but the second Confidential Entity still showed \"Entity not found\". After Remove Daniel Okafor, Daniel's reload was refused. C3.last-grant: Removing the only Grant was refused (Grant another person access before removing the last person from a confidential entity.); Nadia still opened the Entity. D4.add-business-user: After Nadia added Jonas, he opened /portal/contracts/68 \"DOC-030 access open contract 09251012\". D6.legal-audience: Audience above New comment offered \"Audience Legal Only Contract Team\" on the Contract and \"Audience Legal Only Matter Team\" on the Matter. Row labels: Full Thread \"NH Nadia Haddad Contract Team 3 hours ago \"; Legal Only \"NH Nadia Haddad Legal Only 3 hours ago \"; older Working Team \"NH Nadia Haddad Internal team 3 hours ago \". D10.business-owner: Setting Business Owner to Amara added her row: DO Legal Owner Creator Daniel Okafor | AN Business Owner Amara Nwosu | JW Jonas Weber. Her row had no remove control, and a direct removal answered 409 \"Change the Business Owner before removing this person from the team.\". Amara opened C-68 in the Portal (her roster: DO Legal Owner Creator Daniel Okafor | AN Business Owner Amara Nwosu | JW Jonas Weber). After Business Owner changed to Jonas, Amara stayed on the team (DO Legal Owner Creator Daniel Okafor | JW Business Owner Jonas Weber | AN Amara Nwosu). Nadia then removed her; Amara's reload of the old link showed Contract not found, a Documents read answered 404 and a reply answered 404. Business Owner cleared to Unassigned; Jonas kept his team row (DO Legal Owner Creator Daniel Okafor | JW Jonas Weber).",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.mjs"
+        "docs/documentation/batches/DOC-030/access/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access/lib.mjs"
       ]
     },
     {
       "id": "V-C06",
-      "coverage": ["C06"],
+      "coverage": [
+        "C06"
+      ],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "work2 lab from 067c1646. Daniel Okafor (Administrator), Nadia Haddad and Priya Raman (Legal Team Members) by password; Jonas Weber and Amara Nwosu (Business Users) by fresh magic links; one browser context each.",
+        "Fixtures (setup.mjs, API): open and Confidential DOC-030 access Contracts and Matters with a link and a parent Matter; a Confidential parent Contract with Jonas on its team and an open child Contract; two Confidential Entities created by Nadia; three comments at Legal Only, Working Team and Full Thread; Jonas's converted Request; per run, three approval requests naming Jonas (one with a Confidential primary Document).",
+        "A fixture reset at the start of each run removes leftover team rows and owners from earlier runs."
+      ],
+      "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
+      "actual": "6 recorded steps passed on 067c1646. A1.accounts: The Role column showed Administrator, Legal team member, Business user and no Contributor. Ravi Menon's role control offered \"Administrator Legal team member Business user\". Escape closed it with no change. B2.admin-confidential: Daniel saw \"Contract not found\" / \"This Contract does not exist, or you cannot open it.\" for C-69 on the copied link and after reload; M-33 showed \"Matter not found\". B3.related-records: On M-32 Daniel saw \"Restricted Matter\" for the Confidential child M-33 and \"Restricted contract\" for the linked C-69, with no links to their titles. Daniel opened the open child C-71; its parent (Confidential C-70) showed as \"Restricted contract\" with no link. Jonas, on the parent's team, opened C-70 in the Portal but the child showed \"Contract not found\". B5.admin-audience: Daniel (team row, Administrator) had Add team member, the Confidential switch and the Legal Owner control enabled on C-69. C1.entity-admin-needs-grant: Daniel saw \"Entity not found\" and Priya saw \"Entity not found\" for the Confidential Entity; neither has a Grant. C4.open-entity-manage: On \"Helix Software Group, Inc.\" Daniel saw Manage access and Nadia (no Grant) did not. No Grant was changed.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/access/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-C06",
+      "coverage": [
+        "C06"
+      ],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Business User account signed in on the shared work documentation lab (openlaw-docs-41255c61-work).",
-        "Reviewer-created records named DOC-029 roles ... from setup-r1.mjs and setup-r1-part2.mjs (fixtures-r1.json); round 2 restored the 25 paging Matters that round 1 archived and archived them again at the end.",
-        "Jonas signed in with a fresh magic link from the work lab Mailpit; the link was not stored."
+        "work2 lab from 067c1646. Daniel Okafor (Administrator), Nadia Haddad and Priya Raman (Legal Team Members) by password; Jonas Weber and Amara Nwosu (Business Users) by fresh magic links; one browser context each.",
+        "Fixtures (setup.mjs, API): open and Confidential DOC-030 access Contracts and Matters with a link and a parent Matter; a Confidential parent Contract with Jonas on its team and an open child Contract; two Confidential Entities created by Nadia; three comments at Legal Only, Working Team and Full Thread; Jonas's converted Request; per run, three approval requests naming Jonas (one with a Confidential primary Document).",
+        "A fixture reset at the start of each run removes leftover team rows and owners from earlier runs."
       ],
       "expected": "Each account sees only its permitted records/actions, including the Administrator exception. Removed membership/Grants cease granting access; parent or related-record links do not grant inherited reach.",
-      "actual": "10 recorded steps passed for this role on 3fa407e3. Full-app, search, Entities and settings links returned Jonas to /portal, and the Portal navigation had no Entities. Records whose teams did not include him showed Contract not found or Matter not found. His Request R-16 address led to converted C-37, where he was Business Owner and a team member. Added later to C-35, he read the earlier Full Thread note with the Contract Team label and saw no Legal Only or older Working Team note and no audience picker. His Portal History did not change after Legal Only and Working Team comments, and its newest row became Daniel Okafor commented after a Contract Team comment. After Nadia changed Region and Description, his Overview and Fields showed the new values, and Portal History had no change row and no contract.updated entry. On M-19 he saw Nadia's Matter Team comment, not her Legal Only one, and History showed it. He added Amara from the Portal with no remove control. After removal his old link, Documents read and Comments read were refused. Linked Confidential C-36 and child M-20 stayed refused. On Confidential C-36 Add team member was disabled with Ask Legal to add members to a Confidential record. After Legal archived C-37 it left Your Contracts and R-16 showed the original ask with an archived notice and no Documents or comments.",
+      "actual": "11 recorded steps passed on 067c1646. D1.full-app-closed: /contracts/68 -> /portal; /entities -> /portal; /entities/01a0d80f-9d0b-7cc4-b911-b9919966f250 -> /portal; /settings/users -> /portal. Portal navigation: \"Requests Approvals Contracts Matters Auto-Docs\". An Entity read answered 403. D2.not-on-team: /portal/contracts/68: Contract not found; /portal/contracts/69: Contract not found; /portal/matters/32: Matter not found; /portal/matters/33: Matter not found D3.conversion: /portal/requests/34 led to /portal/contracts/75. Contract team: NH Legal Owner Creator Nadia Haddad | JW Business Owner Jonas Weber. D5.comments: Jonas, added after the three fixture comments, saw the earlier Full Thread comment (\"NH Nadia Haddad Contract Team 3 hours ago \") and neither the Legal Only nor the Working Team comment; no audience picker. His reply row read \"JW Jonas Weber Contract Team this minute \". D7.portal-history: Priority change: not shown (0 new); Risk change: not shown (0 new); Legal Only comment: not shown (0 new); Working Team (Internal team) comment: not shown (0 new); Field kept off the Portal changed: not shown (0 new); Field with Visible on Portal changed: shown (1 new contract.updated); Task added with a due date: shown (1 new task.added); Second task added: shown (1 new task.added); Task edited: not shown (0 new); Tasks reordered: not shown (0 new); Task completed: shown (1 new task.completed); Task removed: not shown (0 new); Value changed: shown (1 new contract.updated); Expiry date changed: shown (1 new contract.updated); Stage move to Internal review (review): shown (1 new contract.stage_changed); Full Thread (team) comment: shown (1 new comment.posted); Legal Owner change: shown (1 new). Portal History panel: \"History Nadia Haddad commented this minute Nadia Haddad changed the stage Draft → Review this minute Nadia Haddad changed Expiry date Sep 15, 2029 → Feb 14, 2029 this minute Nadia Haddad changed Value £4,000.00 /year → £5,000.00 /year this minute Nadia Haddad completed the task DOC-030 access probe task A edited 132697 this minute Nadia Haddad added the task DOC-030 access probe task B 132697 this minute Nadia Haddad added the task DOC-030 access probe task A 132697, due Dec 15 this minute Nadia Haddad changed DOC-030 access Visible field 09251012 DOC-030 access shown change 126272 → DOC-030 access shown change 132697 this minute Jonas Weber commented this minute Nadia Haddad changed Busines\". See roles-portal-history.png. D8.no-legal-controls: No Field inputs (0), no Task, Key date, approval or signing controls; main buttons were: Upload documents, Drop files here or click to upload, Search, doc030-access-baseline.txt, Add version, doc030-access-confidential-note.txt. D9.portal-team-add: Jonas added Amara Nwosu (existing members were not offered); no remove control in the Portal. Nadia saw Amara on the same team in the full app and removed her. D11.matter-team-and-status: Nadia's rows: \"NH Nadia Haddad Matter Team this minute \" and \"NH Nadia Haddad Legal Only this minute \". Jonas saw the Matter Team comment (\"NH Nadia Haddad Matter Team this minute \") and not the Legal Only one. Matter History probe: Priority change: not shown (0 new); Risk change: not shown (0 new); Legal Only comment: not shown (0 new); Working Team (Internal team) comment: not shown (0 new); Task added with a due date: shown (1 new task.added); Second task added: shown (1 new task.added); Task edited: not shown (0 new); Tasks reordered: not shown (0 new); Task completed: shown (1 new task.completed); Task removed: not shown (0 new); Status move to In progress: shown (1 new matter.status_changed); Full Thread (team) comment: shown (1 new comment.posted). Linked C-69 showed \"Contract not found\" and child M-33 showed \"Matter not found\"; the Matter page named neither. D12.confidential-portal: With a team row Jonas opened C-69; Add team member was disabled with \"Ask Legal to add members to a Confidential record.\" After removal his reload showed Contract not found. D13.approval-exception: Your approvals (Pending) listed the three DOC-030 access requests created for this run naming Jonas. The open request read \"All approvals C-527 DOC-030 access open approval 132697 Pending doc030-access-open-paper-132697.txt Download Download the document to review it 37 byte Download Approval request NH Requested by Nadia Haddad Requested Sep 25, 2026, 5:31 PM GMT+4 Your decision N\" with no applet bar, Fields, comments or team; /portal/contracts/527 showed \"Contract not found\". The request whose primary Document is Confidential read \"All approvals C-528 DOC-030 access confidentialPaper approval 132697 Pending Primary document No document attached No primary document is available. Contact the requester if you need a document to rev\". Legal withdrew one request (200) and archived the other Contract (200); both left Your approvals, and the withdrawn request's address read \"\". Legal restored the Contract afterwards (200). D14.archived-request: Legal archived C-75 (200). Your Contracts no longer listed it; its link showed \"Contract not found\". The old Request link read \"Your requests DOC-030 access Jonas request 09251012 In progress R-34 · Contract review · Submitted Sep 25 The record created from this Request was archived. Your original request is shown below. What you submitted Description DOC-030 access fictional ask from \" with no Documents and no comment controls. Legal restored C-75 (200).",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.mjs"
+        "docs/documentation/batches/DOC-030/access/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access/lib.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
-    "The work lab is shared with other DOC-029 agents. This walkthrough created only records named DOC-029 roles ... and changed no organisation settings. It restored teams, owners, Grants and Region after each check.",
-    "The conversion of existing Contributor accounts to Business Users, the removal of the Stakeholder list and the preservation of Confidential audiences at upgrade were not replayed; the seeded lab has no pre-upgrade data. They rest on source inspection in technical-review.json.",
-    "Some Legal set-up actions used API stand-ins, named in each step: fixture comments at the older Working Team tier (the UI no longer offers it), archiving and restoring C-37, and the fixture records in setup-r1.mjs.",
-    "Notification delivery after removal was not checked; removal was checked through the record link, the Documents read and the Comments read.",
-    "Round 1 failed on the comment tier labels and on a Portal History sentence (walkthrough-r1.json). Round 2 ran the whole article again against the corrected text."
+    "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
+    "The work2 lab is shared with other DOC-030 agents. The walkthrough created only records and accounts named DOC-030 access (fixtures.json) and deleted nothing that another guide uses. Legal and Administrator actions that are fixtures or a second actor's writes used API sessions; each such step says so.",
+    "The shared sign-in link budget (3 per address and 30 per client address in 15 minutes) made the script wait out 429 answers before Business User sign-in. Earlier attempts are kept as walkthrough-attempt2.json, run-attempt2.log and run-3.log (run-3.log holds the final portal-sign-in run; run-4.log the final contributor-guide run; run-5.log the final roles-and-access run; run-5-interrupted.log is a roles run cut short by a session restart). The earlier failures were reviewer script errors: a stale team row from a previous run, a message read before it rendered, a task reorder that listed only two tasks, an unchanged expiry date, an Entity list read past its first page, and a History count compared by length on a full page.",
+    "Legal changes read by the Business User's Portal History (Priority, Risk, Fields, Tasks, Value, dates, Stage and Status moves, comments) were made through the API as Nadia, as the second actor; the Business User side was read in the browser and through the Portal activity read.",
+    "On the Confidential Contract, Priya's Legal Owner control is enabled. Choosing herself shows the refusal Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract., which matches the guide.",
+    "That removal ends notifications was not checked; old links, replies and Documents were.",
+    "The Contributor and Stakeholder migration statements cannot be observed on a fresh seed. Creator is historical: Business Users cannot create records, so a Creator-only Portal case was not built."
   ],
   "previousEvidence": {
-    "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-    "contentSha256": "d3fcc8fc2ea63b5fb1b5b55e33cceb1c9b1cd8b0ce6d059b61accb6189998e91",
-    "verifiedAt": "2026-09-07T06:43:31.726Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8",
+    "verifiedAt": "2026-09-16T16:20:59.865Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (roles)) found the article compatible: I inspected the 43 app files and messages/en-US.json changed from 3fa407e3 to 57e77e38; none touches access scopes, teams, Grants, comment tiers, Portal History or the labels this article names. I replayed the round 1 V-C06 walkthrough on the work2 lab built from 57e77e38, and all 30 roles-and-access steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/roles.json",
-        "sha256": "9ef1cd3fcd7dc772b27d0d8dd82c46bee4ab0f9724ab0ef0d695ff4eac59e48e"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

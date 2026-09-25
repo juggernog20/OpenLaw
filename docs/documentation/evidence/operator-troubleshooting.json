@@ -1,81 +1,92 @@
 {
   "articleId": "operator-troubleshooting",
-  "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app and worker sha256:765a5f31491d62385ead2be2940ceeb022d24e18697f2bb144e23268d6c5f7ca; engine sha256:5f74ad801697b447597412380ba88e4c91c5b923c601c40f95efa4b82631761d (candidate in openlaw-docs-d029r2-lc-diag); starting build d1d098ba app sha256:7838cf19709aa6d763efc8fefe820db25773801e9b772d6471200b926d996cee",
-  "environment": "openlaw-docs-d029r2-lc-diag",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle)",
-  "technicalReviewer": "DOC-029 source-review author agent (operator-lifecycle)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (operator-lifecycle, round 2)",
+  "contentSha256": "a685d653b2b8da37a179868dde0955f0f747b83438d6af345771ab4a3606cdd0",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app and worker sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30; engine sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b (openlaw-doc030-opup2, round 2); round 1 fault-injection instance openlaw-doc030-opup on the same revision",
+  "environment": "openlaw-doc030-opup2 and openlaw-doc030-opinst2 (round 2); openlaw-doc030-opup, -opinst, -oprecover and -opmigfix (round 1)",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle); DOC-030 corrections by DOC-030 source-review author agent (operator-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (operator-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (operator-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T16:14:35Z",
+  "verifiedAt": "2026-09-25T13:58:58.252Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/operator-troubleshooting.md",
-    "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
-    "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2.json",
+    "docs/user-guides/deployment-configuration.md",
+    "docs/documentation/batches/DOC-030/operator-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
     "compose.yml",
-    "packages/db/src/migration-journal.ts",
-    "packages/db/src/index.ts",
-    "packages/db/migrations/0060_account_issuer.sql",
+    ".env.example",
+    "docs/DEPLOYMENT.md",
+    "docs/user-guides/install.md (read only, final shared-files text)",
+    "docs/documentation/batches/DOC-030/operator/technical-review.json",
+    "docs/documentation/templates/troubleshooting.md",
+    "docs/documentation/evidence/operator-troubleshooting.json",
+    "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
+    "apps/api/src/index.ts",
+    "apps/worker/src/index.ts",
+    "apps/api/src/app.ts (healthz, readyz, trustProxy)",
+    "apps/api/src/logging.ts",
+    "apps/api/src/reset-advanced-settings.ts",
+    "apps/api/src/modules/advanced-settings/config.ts",
+    "apps/api/src/modules/advanced-settings/routes.ts",
     "apps/api/src/modules/events/routes.ts",
-    "apps/web/src/routes/settings-ai-analysis.tsx"
+    "apps/api/src/lib/event-hub.ts",
+    "services/doc-engine/src/server.ts",
+    "apps/api/src/lib/doc-engine/http.ts",
+    "apps/api/src/lib/uploads.ts",
+    "apps/api/src/modules/ai-connector/routes.ts",
+    "apps/api/src/lib/ai/http.ts",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "packages/db/src/index.ts",
+    "packages/db/src/migration-journal.ts",
+    "packages/db/src/secrets.ts",
+    "packages/db/migrations/0157_type-forms.sql",
+    "Dockerfile (reset script and lint-migration-journal.mjs in the image)",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C48",
-      "coverage": ["C48"],
+      "coverage": [
+        "C48"
+      ],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "Fresh clone of the public repository at the starting build d1d098ba9f4ba6557a542857d530446b76b1847c (the baseline in evidence/upgrade.json), installed with the installation guide's .env and compose.operator.yml in project openlaw-docs-d029r2-lc-diag on 127.0.0.1:23330.",
-        "Fixture made through the API: a fictional Administrator, an activated Legal Team Member, a saved encrypted SMTP relay to an owned Mailpit, two DOC-029 Contracts and two Documents (one PDF).",
-        "The fixture was upgraded to 3fa407e3 with a private pg_dump taken first. Owned support containers: Mailpit, MinIO, a Caddy listener holding 127.0.0.1:23331, and an nginx proxy on 127.0.0.1:23337."
+        "Dedicated upgraded installation with recorded baseline health (config --quiet, ps --all, System status API and Worker Running and Current), a same-host proxy, saved Advanced settings and a sealed relay and AI key.",
+        "Pre-upgrade backups kept for the migration recovery drill."
       ],
-      "expected": "Each diagnosis reaches a concrete cause or supported escalation and restored service is actually checked. Logs and reports omit credentials/private payloads; no destructive recovery is offered without its actual scope and consequence.",
-      "actual": "Induced one fault at a time on 3fa407e3 and followed the article to cause, recovery and proof. The three first commands ran; config --quiet printed nothing. Startup: with either key removed, config and up exited 1 and no container changed. A short OPENLAW_SECRET_KEY passed config, but app and worker restarted with 'OPENLAW_SECRET_KEY is shorter than 32 characters'; the retained key, config --quiet and a recreate gave readiness and a Contract read. A short AUTH_SECRET only logged the better-auth warning. Port row (the round 1 failure): with PORT on a port an unrelated listener held, up exited 1 with 'port is already allocated'. docker compose ps --all showed app created and worker created, plain docker compose ps did not list them, /readyz did not answer and the other listener kept answering. The same up command after correcting PORT gave readiness. A move to an unused port with BASE_URL updated gave sign-in through that origin. An unreachable DATABASE_URL made the app restart with a connection error; stopping Postgres gave /healthz 200 and /readyz 503; both recovered with a record read and write. Behind the proxy, sign-in answered 403 INVALID_ORIGIN until BASE_URL named the proxy origin; then sign-in, an invitation link with that origin, its acceptance and the invited sign-in worked. A proxy that buffered and compressed /api/events held back a comment from a second signed-in person for 20 s; without buffering the frame arrived in 19 ms. Migrations: upgrading the starting database, which recorded 0090_request_triage_assignee, logged 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'. A controlled journal fault gave 'This database cannot apply the migrations it is missing.', and both read-only commands ran and mapped the recorded hash. The shipped 0060_account_issuer.sql refused a scratch database with 'Cannot resolve an issuer for accounts under provider(s): doc029-retired-idp' and 'Two accounts share one 1.7 identity', left no issuer column, and applied cleanly once corrected. Email: an SMTP_URL pin gave source env, delivered from the SMTP_FROM address and refused a save (409); removing it restored delivery through the saved relay. A wrong valid-length key gave source unset and exactly 'The test email could not be sent. SMTP is not configured — save a relay first.' while a Contract and a download still worked; the retained key restored delivery. Storage: the file volume belongs to uid 1000 (node). A wrong S3 endpoint left /readyz 200 and the Document listed while its download answered 500; a missing bucket failed the upload with the app ready; both recovered with matching bytes. MAX_UPLOAD_MB=1 refused 1,100,000 bytes with 413 and accepted 900,000. Worker: with the worker stopped, docker compose ps worker doc-engine did not list it, a new PDF stayed pending and downloaded intact, and after start it reached ready. With the engine stopped a PDF reached failed after 222 s while /readyz stayed 200 and the original downloaded; a new PDF after restart reached ready and the earlier record stayed failed. Providers: Signing updates offers Polling (outbound access only) and Webhook (public HTTPS gateway and Connect subscription), and the Provider card on AI analysis has Test connection. A scan of all container logs found none of 10 known secret values and no relay URL with credentials.",
+      "expected": "Each diagnosis reaches a concrete cause or supported escalation and restored service is checked; logs omit credentials; no destructive recovery is offered without its scope.",
+      "actual": "Round 2: unset TRUSTED_PROXIES logged 'TRUSTED_PROXIES is not set' and four wrong passwords from 127.0.0.2 made a correct sign-in from 127.0.0.1 answer 429; the guide's remoteAddress command showed the gateway; with the gateway from docker network inspect the warning was gone, a browser signed in through the proxy, sign-in stayed 200 and the recorded addresses were the clients'. A non-IP entry stopped the app with 'invalid IP address' until the gateway value returned. A saved Application address refused sign-in (403); the recovery command removed it (exit 0) but left http://localhost:3000 [default] and sign-in through the proxy still 403; BASE_URL in .env fixed it. A wrong key let app and worker start, named advanced_settings in the start log, gave the exact 'SMTP is not configured' test message, failed Test connection with HTTP 401, fell back to local storage (S3-only Document 500) and recovered with the retained key. Under a wrong key the recovery command exited 0 and removed all six saved values; the retained key could not bring them back; pinning the S3 variables in .env made the Document readable again. Round 1 unchanged rows: Compose refused a missing key; a short OPENLAW_SECRET_KEY stopped app and worker; a short AUTH_SECRET only warned; an occupied port left app and worker created; a container proxy timed out on 127.0.0.1 and worked with APP_BIND; a 64m ceiling showed OOMKilled true; Postgres stopped gave healthz 200 and readyz 503; the journal guard refusal and both read-only commands; the two accounts.issuer refusals; the 0157 refusal named the Request type, left 158 of 173 journal rows applied, and the documented backup-based recovery upgraded a corrected target; SMTP_URL pinning; S3 saved storage, reset and env pinning; the 1 MB upload message; a killed worker showed No recent heartbeat; engine down and 503 with Retry-After at 1/1 limits; the AI 401 message and redacted log line; Signing updates Polling and Webhook; container logs held no secrets.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2.mjs"
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human operator study and not feature-owner approval.",
-    "Signing and AI connector diagnostics checked only the controls and their hints. Real provider access is still blocked under C42/C43 in #742, so no connection test, Envelope or Analysis run was made.",
-    "The accounts.issuer refusals were exercised by running the candidate image's 0060_account_issuer.sql with psql against scratch databases shaped like pre-0060 accounts and sso_providers tables. They were not seen during an app start, because no pre-0060 starting build was installed.",
-    "The 0049_contract_tasks automatic repair was not induced. The reconciled log line was observed only for the 0090 case.",
-    "The journal fault was injected and undone by the reviewer as fixture custodian; that undo is not an operator repair procedure.",
-    "The proxy was local plain-HTTP nginx on 127.0.0.1; TLS, public DNS and hostname routing were not tested. The first buffering fault (proxy_buffering with X-Accel-Buffering ignored) did not hold frames back; gzip of the event stream was added to induce the fault. Both runs are kept in the log.",
-    "S3 checks used an owned MinIO with explicit keys; Azure Blob and cloud identity chains were not exercised. A missing bucket gave a generic 500 on upload, which the article does not quote.",
-    "The upgrade ran between two development revisions (d1d098ba to 3fa407e3), not between published releases. Host Docker address pools were exhausted, so the project networks were created with explicit subnets before Compose started.",
-    "Three failed steps are kept in walkthrough-r2.json with dispositions: two were reviewer checker faults on the collapsed AI analysis Provider card, and one was the fault injection that did not take. Each was superseded by a passing run."
+    "Independent agent walkthrough by an agent that did not write or source-review the guide; container-operation by an agent acting as a fictional operator, not a human operator study.",
+    "Round 1 (10:15 to 13:23 UTC) walked every step on openlaw-doc030-opinst, -opup, -oprecover, -oprestore and -opmigfix and failed the guide on TRUSTED_PROXIES, the wrong-key behavior and the saved-settings recovery command. Round 2 (13:35 to 13:59 UTC) re-walked every changed step on fresh projects openlaw-doc030-opinst2, -opup2 and -oprestore2 after the author's correction; unchanged steps keep their round 1 observations. Failed steps in the log that were walkthrough-script defects were rerun; the log's supersededAttempts note explains them.",
+    "All projects were cloned from GitHub at the named revisions and built by the guides' own docker compose build commands with a warm Docker build cache, so build times are not first-build times. Every project, support container, volume and private backup was destroyed after the walk.",
+    "Mail went to an owned Mailpit relay; the AI provider was an owned OpenAI-compatible stand-in that accepts only the saved key; object storage was an owned MinIO. None is a live provider.",
+    "Live event stream caps were observed only as reconnects of six streams in one tab; the 500-per-process cap was not reached.",
+    "The host firewall rule that admits only a container proxy was not tested.",
+    "Signing, SSO and push symptoms under a wrong key were not observed because none was configured; real providers remain out of scope (C42, C43).",
+    "A clean docker compose stop removes the Worker row instead of showing No recent heartbeat; the label was observed with docker compose kill."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "4f5920cb683a58e59e590a6ab7bc756bab31080345b6936baccfcadf0e5e1aab",
-    "verifiedAt": "2026-09-08T10:04:19.834Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (operator-lifecycle)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff (SMTP save body and failure texts, sign-in branding, AI analysis intro, BASE_URL wording) and confirmed compose.yml, packages/db, apps/worker and services did not change. Replayed the round 1 V-C48 script on 57e77e38 from a populated d1d098ba upgrade: startup, port, database, proxy origin, live updates, migration, email, storage, worker, engine and provider-control faults all reached the documented cause and recovery (39 of 39 steps). From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article mentions the saved wizard relay only. The change does not touch the Outbound email step.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/operator-lifecycle.json",
-        "sha256": "df6ecde75c37a04ffeb0856df7b56d0181c38de7f9e55fe056bbf194f94535d3"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T16:14:35Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

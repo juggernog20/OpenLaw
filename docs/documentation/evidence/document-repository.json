@@ -1,99 +1,76 @@
 {
   "articleId": "document-repository",
-  "contentSha256": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (documents)",
-  "technicalReviewer": "DOC-029 source-review author agent (documents)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (documents, round 1)",
+  "contentSha256": "136781c9af2801bb4a743ffa84972fea28040ca2e7e535cee124a7c80524e13e",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (shared-files)",
+  "technicalReviewer": "DOC-030 source-review author agent (shared-files)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (documents-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:44:43.091Z",
+  "verifiedAt": "2026-09-25T13:30:44.440Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/document-repository.md",
-    "apps/web/src/routes/documents.tsx",
-    "apps/web/src/components/documents/document-filter-bar.tsx",
-    "apps/web/src/components/table/record-filter-bar.tsx",
-    "apps/web/src/components/documents/document-drop-folders.tsx",
-    "apps/api/src/modules/documents/repository.ts",
-    "apps/api/src/lib/document-access.ts",
-    "apps/web/src/lib/documents.ts",
-    "docs/decision-records/DECISIONS-DOCUMENTS.md",
-    "docs/documentation/batches/DOC-029/documents/technical-review.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+    "docs/documentation/batches/DOC-030/shared-files/technical-review.json",
+    "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/documents-2/lib.mjs",
+    "apps/api/src/modules/search/service.ts",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-009, DOC-015)"
   ],
   "scenarios": [
     {
       "id": "V-C30",
-      "coverage": ["C30"],
+      "coverage": [
+        "C30"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab.",
-        "Walkthrough-created paper on a Contract (with a Counterparty, a folder, a two-Version Document and an Executed-kind Document), a Matter, an Entity, a Knowledge Item and an Auto-Doc template, all named with DOC-029 documents and a run stamp.",
-        "An Administrator-created Confidential Contract whose team is the Administrator alone, as the hidden owner."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z.",
+        "Per role: a Contract with a Counterparty, a folder and four Documents (a two-Version PDF whose v1 is Draft · ours and v2 Draft · theirs, an Executed DOCX in the folder, two text files), plus one Document each on a Matter, an Entity, a Knowledge Item and an Auto-Doc template. A Confidential Contract created by the Administrator alone, with its own Counterparty and Document, as the hidden owner. A two-Version text Document with a different marker word in each Version for the search check."
       ],
-      "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
-      "actual": "8 recorded browser steps passed for this role. Documents in navigation opened the repository; Recent listed five Documents in the newest-current-Version order and opening an older Document did not add it. Owner offered Contracts, Matters, Entities, Auto-Docs and Knowledge and each choice kept only paper of that owner kind, including the Auto-Doc template. Record with Search choices narrowed to the Contract, Folder then appeared with the folder and Record root, and Knowledge and Auto-Docs offered no Folder. Format with two values matched either; Kind used the current Version; Kind, Counterparty and Uploader together kept only the matching Document; Uploaded From and To on the same day included it and a later From showed \"No documents match these filters.\"; removing one filter and Clear all widened the list, and Recent was hidden while filtered. Selecting a name opened the owning record on the current v2 and the chain opened v1. The Confidential Contract outside this reader's team gave \"No matching choices\" in Record, was absent from the repository read, and its address answered not found. Filter, Show archived showed the archived row with Restore, which made it live. Dragging a row showed Move to folder for its record and the drop filed it.",
+      "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Negative checks: Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
+      "actual": "10 browser steps passed as Nadia Haddad (Legal Team Member) in an isolated Playwright Chromium context. (1) The Documents navigation link opened the repository. Recent listed 5 Documents in the same order as the newest-current-Version read (repo-autodoc-legal-09251315.docx, repo-knowledge-legal-09251315.pdf, …). After opening the older \"repo-folder-legal-09251315.docx\" and returning, Recent still matched the upload-time order and did not add it. (2) Owner offered Contracts, Matters, Entities, Auto-Docs, Knowledge. Contracts: 50 rows including repo-root-legal-09251315.pdf; Matters: 50 rows including repo-matter-legal-09251315.pdf; Entities: 50 rows including repo-entity-legal-09251315.pdf; Knowledge: 50 rows including repo-knowledge-legal-09251315.pdf; Auto-Docs: 12 rows including repo-autodoc-legal-09251315.docx. Each list left out the fixture paper of the other owner kinds. (3) Record with Search choices \"C-524\" narrowed the list to the Contract's 4 live Documents, and the Filter menu then offered Owner, Record, Folder, Format, Kind, Counterparty, Uploader, Uploaded, Show archived. Folder \"DOC-030 Legal Repo folder\" showed only \"repo-folder-legal-09251315.docx\"; the Folder chip's editor (\"Folder Record root DOC-030 Legal Repo folder Choose one value Apply\") switched to Record root showed the Documents outside folders. With Owner Knowledge the menu offered Owner, Record, Format, Kind, Counterparty, Uploader, Uploaded, Show archived; with Owner Auto-Docs Owner, Record, Format, Kind, Counterparty, Uploader, Uploaded, Show archived: no Folder. (4) On C-524, Format PDF + Word (\"Format PDF Word PowerPoint Image Email Other Matches any selected value Apply\") kept the PDF and the Word Document and left out the text file. Kind offered General, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, Generated redline. Kind Draft · ours left out \"repo-root-legal-09251315.pdf\", whose v1 is Draft · ours but whose current v2 is Draft · theirs; adding Draft · theirs brought it back (any of the selected values). Kind Executed left only \"repo-folder-legal-09251315.docx\" (row \"repo-folder-legal-09251315.docx C-524 · DOC-030 documents-2 Legal repository Contract 09251315 Executed DOCX 5.3 kB 1 NH Nadia Haddad this m\"); … (5) The repository row read \"repo-root-legal-09251315.pdf C-524 · DOC-030 documents-2 Legal repository Contract 09251315 Draft · theirs PDF 33.3 kB 2 NH Nadia Haddad this minute\" (owning reference C-524). Selecting \"repo-root-legal-09251315.pdf\" opened C-524's Documents tab with the reader on \"repo-root-legal-09251315.pdf, version 2\". Expanding the chain and selecting the earlier round opened version 1. (6) A PDF Document \"repo-search-legal-09251315.pdf\" had \"zululegal09251315\" only in v1 and \"yankeelegal09251315\" only in v2 (text states ready/ready). Header Search, \"yankeelegal09251315\", See all results listed it (\"1 match repo-search-legal-09251315.pdf C-524 · DOC-030 documents-2 Legal repository Contract 09251315 Fictional supplier note, second round. Marker yankeelegal0\"). The same search for \"zululegal09251315\" did not list it (\"0 matches No matches No matches for “zululegal09251315”. Try another word or record number.\"). On C-524's Documents tab, \"Show the 1 earlier version of repo-search-legal-09251315.pdf\" expanded the chain and selecting the earlier round opened \"repo-search-legal-092… (7) As Legal Team Member outside its team, Record choices for C-521 read \"Record No matching choices Choose one value Apply\", Counterparty choices for \"DOC-030 Hidden Counterparty 09251315\" read \"Counterparty No matching choices Matches any selected value Apply\", the repository read did not include its Document, the direct Documents read answered 404, and the address showed \"C-521 does not exist, or you cannot open it. Back to Contracts\". (8) After archiving \"repo-archive-legal-09251315.txt\" it was absent from the Record-filtered list. Filter, Show archived added its row \"repo-archive-legal-09251315.txt Archived C-524 · DOC-030 documents-2 Legal repository Contract 09251315 — TXT 46 byte 1 NH Nadia Haddad this\" with a Restore action; Restore made it live again (read-back). (9) Record C-524 with Format Email gave \"No documents match these filters. Clear filters to return to the whole list.\". Clear all brought back the whole list (50 rows on the first page) and Recent documents. (10) Dragging the \"repo-drag-legal-09251315.txt\" row revealed the Move to folder panel with \"DOC-030 Legal Repo folder\" as a target; dropping on \"DOC-030 Legal Repo folder\" filed the Document there (read-back). Business User negative check, Jonas Weber through a fresh Portal magic link: Jonas's Portal session asking for /documents ended on /portal; the staff repository read answered 403.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C30",
-      "coverage": ["C30"],
+      "coverage": [
+        "C30"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab.",
-        "Walkthrough-created paper on a Contract (with a Counterparty, a folder, a two-Version Document and an Executed-kind Document), a Matter, an Entity, a Knowledge Item and an Auto-Doc template, all named with DOC-029 documents and a run stamp.",
-        "An Administrator-created Confidential Contract whose team is the Administrator alone, as the hidden owner."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z.",
+        "Per role: a Contract with a Counterparty, a folder and four Documents (a two-Version PDF whose v1 is Draft · ours and v2 Draft · theirs, an Executed DOCX in the folder, two text files), plus one Document each on a Matter, an Entity, a Knowledge Item and an Auto-Doc template. A Confidential Contract created by the Administrator alone, with its own Counterparty and Document, as the hidden owner. A two-Version text Document with a different marker word in each Version for the search check."
       ],
-      "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
-      "actual": "8 recorded browser steps passed for this role. Documents in navigation opened the repository; Recent listed five Documents in the newest-current-Version order and opening an older Document did not add it. Owner offered Contracts, Matters, Entities, Auto-Docs and Knowledge and each choice kept only paper of that owner kind, including the Auto-Doc template. Record with Search choices narrowed to the Contract, Folder then appeared with the folder and Record root, and Knowledge and Auto-Docs offered no Folder. Format with two values matched either; Kind used the current Version; Kind, Counterparty and Uploader together kept only the matching Document; Uploaded From and To on the same day included it and a later From showed \"No documents match these filters.\"; removing one filter and Clear all widened the list, and Recent was hidden while filtered. Selecting a name opened the owning record on the current v2 and the chain opened v1. As an Administrator the Confidential Contract's paper was listed, which the article does not contradict. Filter, Show archived showed the archived row with Restore, which made it live. Dragging a row showed Move to folder for its record and the drop filed it.",
+      "expected": "The repository shows permitted Documents and links to the correct owners/Versions. Negative checks: Hidden owners do not leak through results or filters; archived/empty result behavior matches the guide.",
+      "actual": "10 browser steps passed as Daniel Okafor (Administrator) in an isolated Playwright Chromium context. (1) The Documents navigation link opened the repository. Recent listed 5 Documents in the same order as the newest-current-Version read (repo-autodoc-admin-09251315.docx, repo-knowledge-admin-09251315.pdf, …). After opening the older \"repo-folder-admin-09251315.docx\" and returning, Recent still matched the upload-time order and did not add it. (2) Owner offered Contracts, Matters, Entities, Auto-Docs, Knowledge. Contracts: 50 rows including repo-root-admin-09251315.pdf; Matters: 50 rows including repo-matter-admin-09251315.pdf; Entities: 50 rows including repo-entity-admin-09251315.pdf; Knowledge: 50 rows including repo-knowledge-admin-09251315.pdf; Auto-Docs: 11 rows including repo-autodoc-admin-09251315.docx. Each list left out the fixture paper of the other owner kinds. (3) Record with Search choices \"C-522\" narrowed the list to the Contract's 4 live Documents, and the Filter menu then offered Owner, Record, Folder, Format, Kind, Counterparty, Uploader, Uploaded, Show archived. Folder \"DOC-030 Admin Repo folder\" showed only \"repo-folder-admin-09251315.docx\"; the Folder chip's editor (\"Folder Record root DOC-030 Admin Repo folder Choose one value Apply\") switched to Record root showed the Documents outside folders. With Owner Knowledge the menu offered Owner, Record, Format, Kind, Counterparty, Uploader, Uploaded, Show archived; with Owner Auto-Docs Owner, Record, Format, Kind, Counterparty, Uploader, Uploaded, Show archived: no Folder. (4) On C-522, Format PDF + Word (\"Format PDF Word PowerPoint Image Email Other Matches any selected value Apply\") kept the PDF and the Word Document and left out the text file. Kind offered General, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, Generated redline. Kind Draft · ours left out \"repo-root-admin-09251315.pdf\", whose v1 is Draft · ours but whose current v2 is Draft · theirs; adding Draft · theirs brought it back (any of the selected values). Kind Executed left only \"repo-folder-admin-09251315.docx\" (row \"repo-folder-admin-09251315.docx C-522 · DOC-030 documents-2 Admin repository Contract 09251315 Executed DOCX 5.3 kB 1 DO Daniel Okafor this \"); … (5) The repository row read \"repo-root-admin-09251315.pdf C-522 · DOC-030 documents-2 Admin repository Contract 09251315 Draft · theirs PDF 33.3 kB 2 DO Daniel Okafor this minute\" (owning reference C-522). Selecting \"repo-root-admin-09251315.pdf\" opened C-522's Documents tab with the reader on \"repo-root-admin-09251315.pdf, version 2\". Expanding the chain and selecting the earlier round opened version 1. (6) A PDF Document \"repo-search-admin-09251315.pdf\" had \"zuluadmin09251315\" only in v1 and \"yankeeadmin09251315\" only in v2 (text states ready/ready). Header Search, \"yankeeadmin09251315\", See all results listed it (\"1 match repo-search-admin-09251315.pdf C-522 · DOC-030 documents-2 Admin repository Contract 09251315 Fictional supplier note, second round. Marker yankeeadmin0\"). The same search for \"zuluadmin09251315\" did not list it (\"0 matches No matches No matches for “zuluadmin09251315”. Try another word or record number.\"). On C-522's Documents tab, \"Show the 1 earlier version of repo-search-admin-09251315.pdf\" expanded the chain and selecting the earlier round opened \"repo-search-admin-092… (7) As Administrator, Record choices for C-521 offered \"DOC-030 documents-2 hidden owner 09251315\", the repository read listed its Document, and the record's Documents read answered 200. The guide does not claim an Administrator is refused. (8) After archiving \"repo-archive-admin-09251315.txt\" it was absent from the Record-filtered list. Filter, Show archived added its row \"repo-archive-admin-09251315.txt Archived C-522 · DOC-030 documents-2 Admin repository Contract 09251315 — TXT 46 byte 1 DO Daniel Okafor thi\" with a Restore action; Restore made it live again (read-back). (9) Record C-522 with Format Email gave \"No documents match these filters. Clear filters to return to the whole list.\". Clear all brought back the whole list (50 rows on the first page) and Recent documents. (10) Dragging the \"repo-drag-admin-09251315.txt\" row revealed the Move to folder panel with \"DOC-030 Admin Repo folder\" as a target; dropping on \"DOC-030 Admin Repo folder\" filed the Document there (read-back). Business User negative check, Jonas Weber through a fresh Portal magic link: Jonas's Portal session asking for /documents ended on /portal; the staff repository read answered 403.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the article author and the source reviewer; not a human user study and not feature-owner approval.",
-    "Owner-kind checks compared the first page of results (up to 50 rows) with the fixture paper; the shared lab held many other agents' Documents, so full-list totals are not claimed.",
-    "Recent was compared with the API's newest-five read at the same moment; parallel uploads by other agents could reorder it between reads, and the script re-read until both matched.",
-    "Hidden-owner leakage was checked through Record choices, the repository read and the direct address; Counterparty and Uploader choice lists and saved views were not inspected for the hidden record.",
-    "The Uploaded filter used the UTC date of the run, which was the same calendar day in the organization's timezone at the time.",
-    "The Business User's refusal of the staff repository is recorded in the document-previews business_user steps."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named \"DOC-030 documents-2 …\" were created. Organization settings changed for the run and put back: Matter Document type list \"DOC-030 documents-2 Matter type 09251315\" (archived at teardown (200)); Knowledge type list \"DOC-030 documents-2 retired Knowledge type 09251315\" (delete answered 204); Matter Document type list \"DOC-030 documents-2 Matter type 09251152\" (archived at teardown (200)). Development runs before the recorded run left more DOC-030 documents-2 records; they are not credited. An earlier full run stopped when the orchestrating session restarted; its Matter type was archived by this run's teardown and its archived Knowledge type fixture was deleted through the lab API before this run finished.",
+    "Confirmed the author's limitation: DOC-009 does not state the latest-Version rule. On the lab, header Search found a Document by a word only in its latest Version and did not find it by a word only in its earlier Version.",
+    "The Kind filter offers the fixed kinds (General, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, Generated redline) while the list's Type column shows the Document type name. The guide names the Kind filter and does not say the rows show the kind.",
+    "Archived owning records, saved views and Contributor or Business User use of the staff repository beyond the refused address and read were not exercised."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "59f88467c3a576764b212e36ebf5cb8bd49ff84a146a1ec3321d3d0a3da19969",
-    "verifiedAt": "2026-09-07T21:28:12.634Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
+    "verifiedAt": "2026-09-16T15:44:43.091Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "6ac981e3103514197a3035361324aa695cf28a1faecacb20efb43cf978d2f0e3",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/documents.json",
-        "sha256": "3129c2786313b928fdd642e565cda91ea74a4bd3467b1839b0dfcec7d3ee8b7a"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

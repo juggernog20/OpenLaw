@@ -1,76 +1,79 @@
 {
   "articleId": "backup-and-restore",
-  "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "source app sha256:7f5e14ed71b39da53e30fe23e2d37d7d697ed500ae416162e0ff4200b434cd52 (openlaw-docs-41255c61-lc-upgrade); target app sha256:14e6658c2a6665d1e3385bd76f172707fdf7a0977d283ea6cf8dd4a9896e6080; engine sha256:e22cf78fe1195a40da922956d16717064bde8f274af28610483d57fd3ba6331b (openlaw-docs-41255c61-lc-restore)",
-  "environment": "openlaw-docs-41255c61-lc-upgrade (source); openlaw-docs-41255c61-lc-restore (target)",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle)",
-  "technicalReviewer": "DOC-029 source-review author agent (operator-lifecycle)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (operator-lifecycle, round 1)",
+  "contentSha256": "c9e9d5d4e4f7e68546b5a27d8ba77d7cb235ae7aaf8647f3f016f925b0a7d9b5",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "source app and worker sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30; engine sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b (openlaw-doc030-opup2); target app and worker sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a; engine sha256:446014ba57dd471342989e3fba911ee3c8b8d3da9aad641aa1a46b23db6a40f1 (openlaw-doc030-oprestore2)",
+  "environment": "openlaw-doc030-opup2 (source) and openlaw-doc030-oprestore2 (target), round 2; openlaw-doc030-opup and openlaw-doc030-oprestore, round 1",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle); DOC-030 corrections by DOC-030 source-review author agent (operator-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (operator-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (operator-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:31:52Z",
+  "verifiedAt": "2026-09-25T13:54:46.107Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/backup-and-restore.md",
+    "docs/user-guides/deployment-configuration.md",
+    "docs/documentation/batches/DOC-030/operator-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "compose.yml",
+    ".env.example",
+    "docs/DEPLOYMENT.md",
+    "docs/user-guides/install.md (read only, final shared-files text)",
+    "docs/documentation/batches/DOC-030/operator/technical-review.json",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/evidence/backup-and-restore.json",
     "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review.json",
-    "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.json"
+    "packages/db/src/rewrap.ts (SEALED_COLUMNS)",
+    "packages/db/src/schema/org.ts",
+    "apps/api/src/modules/advanced-settings/config.ts",
+    "apps/api/src/modules/advanced-settings/routes.ts",
+    "apps/api/src/index.ts",
+    "apps/worker/src/index.ts",
+    "apps/api/src/lib/notifications/vapid.ts",
+    "packages/db/migrations/0139_advanced-settings.sql",
+    "packages/db/migrations/0154_device-notifications.sql",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C47",
-      "coverage": ["C47"],
+      "coverage": [
+        "C47"
+      ],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "The populated installation upgraded to 3fa407e3 in openlaw-docs-41255c61-lc-upgrade, with known Version hashes, a saved encrypted relay, and retained keys copied to a private secret store.",
-        "A separate fresh clone at 3fa407e3 for the target project openlaw-docs-41255c61-lc-restore on 127.0.0.1:23332, with its own volumes."
+        "Populated source after the V-C46 upgrade with File uploads 150 and S3 Document storage saved in Settings → Advanced, a Document stored only in the owned MinIO bucket, a sealed relay password, AI key and generated VAPID pair.",
+        "Retained AUTH_SECRET and OPENLAW_SECRET_KEY in a private secret store; a separate empty target project."
       ],
-      "expected": "Records and permissions work, file hashes match, and required encrypted configuration is usable with the retained key. Missing/wrong keys or missing files are detected; a backup archive alone never counts as a successful restore.",
-      "actual": "Took the backup exactly as written: a fresh mode-700 directory, app and worker stopped with Postgres running, pg_dump custom format, the file volume archived through the app service, app-source.txt and images.json recorded (all exit 0), pg_restore --list gave 684 entries and tar listed 5 files, and SHA256SUMS was written. Step 5 restarted the services; readiness, a Contract read and a Version hash passed, and the copy in a separate retained directory passed sha256sum --check. The target was prepared from the recorded source with the retained AUTH_SECRET and OPENLAW_SECRET_KEY and no first-run setup. The hashes passed on the target, the database had zero tables and the file volume zero entries, pg_restore --exit-on-error --no-owner --no-privileges exited 0, and the archive filled the volume with 5 files. The target came up ready. The Administrator and the Legal Team Member signed in through the browser. Contracts, the Matter, the Entity and Field values matched the inventory, and all four original and later Version downloads matched their SHA-256. The Legal Team Member was refused the Confidential Contract and its Document. The Business User (former Contributor) kept portal reach on its member Contract only. A new PDF reached text ready, and a test email through the restored relay reached the controlled recipient. Negative checks: a valid-length wrong OPENLAW_SECRET_KEY kept Contracts readable, logged 'No configured key opens these stored credentials: smtp_url (1)', showed email as unset and refused the test send with 'SMTP is not configured \u2014 save a relay first.', and nothing was delivered. The retained key and a recreate restored delivery. Removing one stored blob left the Document listed while its download returned HTTP 500; extracting the retained archive again restored both Version hashes. With OPENLAW_SECRET_KEY removed, docker compose config --quiet and up both refused.",
+      "expected": "Records and permissions work, file hashes match, and required encrypted configuration is usable with the retained key; missing or wrong keys and missing files are detected; an archive alone is not a restore.",
+      "actual": "Round 2: Settings → Advanced showed Maximum file size 150 and the S3 fields as Saved in OpenLaw. Backup steps 1 to 5 in a fresh mode-700 directory: app and worker stopped, pg_dump custom format, tar through a one-off app container, app-source.txt and images.json; pg_restore --list 884 TOC entries, tar 5 files, SHA256SUMS; restart, readiness and a hash-matching download; retained copy checked with sha256sum --check. Restore into openlaw-doc030-oprestore2 with the retained keys, its own BASE_URL and project: hashes OK, empty database and volume confirmed, pg_restore --exit-on-error exit 0, files restored, readiness. Verification: Administrator, Legal Team Member refused C-3, Business User refused; values and four Version hashes matched; new upload processed; test email delivered; Test connection 'Connection successful.'; Instance address showed http://127.0.0.1:24652 'Deployment configuration · Read only'; File uploads 150 and S3 storage 'Saved in OpenLaw'; the S3-only Document downloaded with its SHA-256 from the source's live bucket; after a minute System status showed API and Worker Running and Current and 'Active storage: s3'. Wrong key: app and worker started (restart count 0); the start log named api_key, smtp_url, vapid_private_key and advanced_settings and logged the VAPID line; File uploads and storage showed Default, Active storage local, the S3-only Document answered 500, the instance address stayed BASE_URL, the test email gave the 'SMTP is not configured' message; with the retained key everything returned. Round 1: missing OPENLAW_SECRET_KEY refused by Compose; a deleted file gave a listed Document with a failed download, and reapplying the archive restored the hash.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/operator-lifecycle/r1-restore-admin-confidential-contract.png"
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human operator study and not feature-owner approval.",
-    "The upgrade ran between two development revisions (d1d098ba to 3fa407e3), not between published releases.",
-    "Host Docker address pools were exhausted by other projects, so the walkthrough pre-created each project's two Compose networks with explicit subnets and Compose labels. The Compose files, services and network names were the articles' own.",
-    "The controlled relay was an owned Mailpit reachable as lc-mail on every project network, so the restored and recovered targets reached a controlled recipient under the relay name saved on the source.",
-    "Only the bundled Postgres and the local file volume were backed up and restored. Object-store snapshot tooling was not exercised.",
-    "Docker Compose 5.5.1 labels each built image with its project, so the same source has a different image ID in each project; build steps came from the build cache.",
-    "Provider guides and real provider checks C42/C43 stay blocked and are not waived. No human proofreading is recorded.",
-    "No account had two-factor authentication enrolled, so the 'Existing two-factor authentication no longer works' row was not exercised. The 'Import stopped partway through' row was not induced.",
-    "The pre-upgrade backup was also restored onto the starting build as part of V-C46 (see evidence/upgrade.json); that run used the HTTP sign-in API because the starting build's web client did not load in headless Chromium.",
-    "Walkthrough-r1.json keeps four failed restore-negative steps from a reviewer-script error (an async helper read as a plain result). They were fixed and all four passed on rerun; the dispositions are in the log."
+    "Independent agent walkthrough by an agent that did not write or source-review the guide; container-operation by an agent acting as a fictional operator, not a human operator study.",
+    "Round 1 (10:15 to 13:23 UTC) walked every step on openlaw-doc030-opinst, -opup, -oprecover, -oprestore and -opmigfix and failed the guide on TRUSTED_PROXIES, the wrong-key behavior and the saved-settings recovery command. Round 2 (13:35 to 13:59 UTC) re-walked every changed step on fresh projects openlaw-doc030-opinst2, -opup2 and -oprestore2 after the author's correction; unchanged steps keep their round 1 observations. Failed steps in the log that were walkthrough-script defects were rerun; the log's supersededAttempts note explains them.",
+    "All projects were cloned from GitHub at the named revisions and built by the guides' own docker compose build commands with a warm Docker build cache, so build times are not first-build times. Every project, support container, volume and private backup was destroyed after the walk.",
+    "Mail went to an owned Mailpit relay; the AI provider was an owned OpenAI-compatible stand-in that accepts only the saved key; object storage was an owned MinIO. None is a live provider.",
+    "The backup used the bundled Postgres and local volume; object-store snapshots were not taken. The restored target read the source's live MinIO bucket because its .env left the storage keys empty, which the guide warns about.",
+    "No two-factor enrollment, Signing connector, SSO provider or browser push subscription existed in the fixture; their restore symptoms were not observed.",
+    "The 'Emailed links or sign-in go to the source's address' row was not exercised because the source's BASE_URL was pinned."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "3a36f9794df340c90d415b20578e8cc58b97ee1972ccdec4c09913358a308361",
-    "verifiedAt": "2026-09-08T10:04:19.834Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (operator-lifecycle)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff (SMTP discrete fields and storage format, public sign-in branding, logo limit, welcome URL steps, BASE_URL wording) and found no change to any backup, restore or verification statement. Replayed the round 1 V-C47 script on 57e77e38 in disposable Compose projects: backup, restore into an empty target, role and Confidential checks, Version hashes, relay test email, and the wrong-key, missing-blob and missing-key negatives all passed (45 of 45 steps). From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article mentions two-factor authentication only for a retained AUTH_SECRET after restore. The enrollment flow and key handling did not change.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/operator-lifecycle.json",
-        "sha256": "df6ecde75c37a04ffeb0856df7b56d0181c38de7f9e55fe056bbf194f94535d3"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:31:52Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

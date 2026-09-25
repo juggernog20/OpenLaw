@@ -98,14 +98,15 @@ export function toLab(href) {
 
 /** Requests a fresh Portal sign-in link and opens it. 429 answers are waited out. */
 export async function portalSignIn(page, email) {
-  for (let attempt = 1; attempt <= 12; attempt++) {
+  for (let attempt = 1; attempt <= 20; attempt++) {
     const since = Date.now();
     const r = await fetch(`${BASE}/api/v1/auth/magic-link`, {
       method: "POST",
       headers: { "content-type": "application/json", origin: BASE },
       body: JSON.stringify({ email, group: "business" }),
     });
-    if (r.status === 429) {
+    // The shared lab limits sign-in links per address and per client; other walkers spend them too.
+    if (r.status === 429 || r.status >= 500) {
       await pause(60000);
       continue;
     }

@@ -9,7 +9,8 @@
 // A run replaces the log entries of the sections it runs and keeps the others.
 // The seed password comes only from the environment. Sign-in links, cookies, API
 // key secrets and raw mail are never written to the results.
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import os from "node:os";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -1558,6 +1559,7 @@ async function formsSection(admin, browser, contexts) {
     "The card order and markers match the Form; the preview shows the Request type name and description; Expiry date shows only for Fixed; Submit request refuses missing answers; Escape closes and focus returns to the eye button.",
     async () => {
       const card = admin.getByRole("region", { name: "Intake form" });
+      await card.getByRole("listitem").last().getByText("Attachments").waitFor({ timeout: 15000 });
       const items = (await card.getByRole("listitem").allInnerTexts()).map(flat);
       const controls = (await card.getByRole("textbox").count()) + (await card.getByRole("switch").count()) + (await card.getByRole("combobox").count());
       expectThat(/^Title/.test(items[0]) && /^Department/.test(items[1]) && /^Urgency/.test(items[2]) && /^Attachments/.test(items.at(-1)), `items ${q(items)}`);
@@ -1636,30 +1638,30 @@ async function formsSection(admin, browser, contexts) {
       await admin.getByRole("heading", { name: "Deflection links" }).first().waitFor();
       await admin.getByRole("button", { name: "Add link" }).first().click();
       let d = admin.getByRole("dialog", { name: "Add link" });
-      await d.getByLabel("Target").selectOption({ label: "External address" });
-      await d.getByLabel("Address").fill("example.com/doc-030-supplier-checklist");
-      await d.getByLabel("Label").fill(F.extLabel);
-      await d.getByLabel("Placement").selectOption({ label: F.contractForm });
+      await d.getByRole("radio", { name: "External address" }).check();
+      await d.getByRole("textbox", { name: "Address" }).fill("example.com/doc-030-supplier-checklist");
+      await d.getByRole("textbox", { name: "Label" }).fill(F.extLabel);
+      await d.getByRole("combobox", { name: "Placement" }).selectOption({ label: F.contractForm });
       await d.getByRole("button", { name: "Add link" }).click();
       await pause(800);
       const refusal = flat(await d.getByText(/Enter a full web address/).first().innerText().catch(() => ""));
-      await d.getByLabel("Address").fill("https://example.com/doc-030-supplier-checklist");
+      await d.getByRole("textbox", { name: "Address" }).fill("https://example.com/doc-030-supplier-checklist");
       await d.getByRole("button", { name: "Add link" }).click();
       await d.waitFor({ state: "hidden", timeout: 15000 });
       await admin.getByRole("button", { name: "Add link" }).first().click();
       d = admin.getByRole("dialog", { name: "Add link" });
-      await d.getByLabel("Target").selectOption({ label: "Knowledge item" });
-      const kiSel = d.getByLabel("Knowledge item", { exact: true });
+      await d.getByRole("radio", { name: "Knowledge item" }).check();
+      const kiSel = d.getByRole("combobox", { name: "Knowledge item" });
       const kis = (await kiSel.locator("option").allInnerTexts()).map(flat).filter((o) => o && !/^Choose/.test(o) && !/\(archived\)$/.test(o));
       S.kiName = kis.find((o) => /legal/i.test(o)) ?? kis[0];
       await kiSel.selectOption({ label: S.kiName });
-      await d.getByLabel("Label").fill(`${F.kiLabel} draft`);
-      await d.getByLabel("Placement").selectOption({ label: F.matterForm });
+      await d.getByRole("textbox", { name: "Label" }).fill(`${F.kiLabel} draft`);
+      await d.getByRole("combobox", { name: "Placement" }).selectOption({ label: F.matterForm });
       await d.getByRole("button", { name: "Add link" }).click();
       await d.waitFor({ state: "hidden", timeout: 15000 });
       await admin.getByRole("button", { name: `Edit ${F.kiLabel} draft`, exact: true }).click();
       d = admin.getByRole("dialog");
-      await d.getByLabel("Label").fill(F.kiLabel);
+      await d.getByRole("textbox", { name: "Label" }).fill(F.kiLabel);
       await d.getByRole("button", { name: "Save" }).click();
       await d.waitFor({ state: "hidden", timeout: 15000 });
       for (const l of [F.extLabel, F.kiLabel]) record("deflection link", l);
@@ -1726,14 +1728,33 @@ async function formsSection(admin, browser, contexts) {
       const urgOpts = (await urg.locator("option").allInnerTexts().catch(() => [])).map(flat).filter((o) => o && !/^(Choose|Select|Not set)/.test(o));
       if (urgOpts.length) await urg.selectOption({ label: urgOpts.find((o) => /Medium|Normal/.test(o)) ?? urgOpts[0] });
       await business.getByLabel(new RegExp(`^${escapeRe(F.dealValue)}`)).fill("125000");
-      await business.getByLabel(/^Term type/).first().selectOption({ label: "Evergreen" });
+      const termSel = business.getByLabel(/^Term type/).first();
+      const termOpts = (await termSel.locator("option").allInnerTexts()).map(flat);
+      await termSel.selectOption({ value: "fixed" });
+      await pause(500);
+      const expiryFixed = (await business.locator("main label").allInnerTexts()).map(flat).filter((l) => /^Expiry date/.test(l));
+      await termSel.selectOption({ value: "evergreen" });
+      await pause(500);
+      const expiryEvergreen = (await business.locator("main label").allInnerTexts()).map(flat).filter((l) => /^Expiry date/.test(l));
+      expectThat(expiryFixed.length === 1 && expiryEvergreen.length === 0, `Portal Expiry date: fixed ${q(expiryFixed)}, evergreen ${q(expiryEvergreen)}`);
+      if (termOpts.includes("evergreen")) {
+        results.productBugs.push({
+          section,
+          scenario: SC,
+          title: "The Portal form shows Term type choices as machine values",
+          reproduction: `Turn on On intake form for the built-in Term type Row on a Contract type's Form, point a Request type at it, and open that form on the Portal as a Business User. The Term type choices read ${q(termOpts)}.`,
+          expected: "Not set, Fixed, Auto-renew, Evergreen (the labels the Form builder preview and the Create contract dialog show)",
+          observed: q(termOpts),
+          source: "apps/web/src/routes/portal-request-form.tsx built-in Term type Row options",
+        });
+      }
       const since = Date.now();
       await business.getByRole("button", { name: "Submit request" }).click();
       await business.getByText("Thanks! Your request has been submitted to legal.").waitFor({ timeout: 20000 });
       S.contractRequest = await submittedNumber(business, since);
       record("request", name(SC, "Supplier contract request"), { number: S.contractRequest });
       expectThat(href === "https://example.com/doc-030-supplier-checklist", `href ${href}`);
-      return `Jonas Weber ${how}. ${denied.join("; ")}. Portal card: ${q(card)}. ${q(F.contractForm)} shows Before you submit with ${q(F.extLabel)} -> ${href}; labels ${q(labels)}. Submit with only a Title showed ${q(refusal)} and stayed on the form. With Department ${q(deptOpts[0])}, ${q(F.dealValue)} 125000 and Term type Evergreen, Submit showed "Thanks! Your request has been submitted to legal." (R-${S.contractRequest}). Screenshot v-c40-portal-contract-form.png.`;
+      return `Jonas Weber ${how}. ${denied.join("; ")}. Portal card: ${q(card)}. ${q(F.contractForm)} shows Before you submit with ${q(F.extLabel)} -> ${href}; labels ${q(labels)}. Submit with only a Title showed ${q(refusal)} and stayed on the form. Term type offered ${q(termOpts)}; with fixed the form showed ${q(expiryFixed)}, with evergreen no Expiry date. With Department ${q(deptOpts[0])}, ${q(F.dealValue)} 125000 and Term type evergreen, Submit showed "Thanks! Your request has been submitted to legal." (R-${S.contractRequest}). Screenshot v-c40-portal-contract-form.png.`;
     });
 
   await step(SC, "business_user",
@@ -1786,8 +1807,12 @@ async function formsSection(admin, browser, contexts) {
       const type = await d.getByLabel("Contract type").evaluate((e) => (e.tagName === "SELECT" ? e.selectedOptions[0]?.textContent : e.textContent));
       const dText = flat(await d.innerText());
       await d.getByRole("button", { name: "Convert to contract" }).click();
-      await admin.waitForURL(/\/contracts\/\d+/, { timeout: 30000 });
-      S.convertedContract = admin.url().match(/\/contracts\/(\d+)/)[1];
+      const conv = await until(async () => (await api(admin, "GET", `/api/v1/requests/${S.contractRequest}`)).body?.request?.convertedRecord, "Request not converted", 30000);
+      S.convertedContract = String(conv.number);
+      await pause(1500);
+      const pageLink = flat(await admin.locator("main").getByRole("link", { name: new RegExp(`C-${S.convertedContract}`) }).first().innerText().catch(() => ""));
+      const statusCard = flat(await admin.getByRole("region", { name: "Status" }).innerText().catch(() => ""));
+      await admin.goto(`${BASE}/contracts/${S.convertedContract}`);
       record("contract", "converted", { number: S.convertedContract });
       const c = (await api(admin, "GET", `/api/v1/contracts/${S.convertedContract}`)).body;
       const deal = c?.contract?.customFields?.[S.dealSlug];
@@ -1796,7 +1821,7 @@ async function formsSection(admin, browser, contexts) {
       await admin.getByRole("navigation", { name: "Contract sections" }).getByRole("link", { name: "Fields" }).click();
       const shown = await admin.locator("main").getByRole("textbox", { name: new RegExp(`^${escapeRe(F.dealValue)}`) }).inputValue().catch(async () => admin.locator("main").getByRole("spinbutton", { name: new RegExp(`^${escapeRe(F.dealValue)}`) }).inputValue().catch(() => null));
       expectThat(flat(type) === F.msa && Number(deal) === 125000 && term === "evergreen", `type ${type}, deal ${deal}, term ${term}`);
-      return `Inbox R-${S.contractRequest} > Triage > Convert to contract opened a dialog with Contract type ${q(flat(type))} (${q(dText.slice(0, 160))}…). Convert opened C-${S.convertedContract} of type ${q(typeName)}; it holds ${q(F.dealValue)} ${deal} (Fields tab shows ${q(shown)}) and Term type ${term}.`;
+      return `Inbox R-${S.contractRequest} > Triage > Convert to contract opened a dialog with Contract type ${q(flat(type))} (${q(dText.slice(0, 160))}…). After Convert the Request page read Status ${q(statusCard)}${pageLink ? ` with a link ${q(pageLink)}` : ""}. C-${S.convertedContract} is of type ${q(typeName)}; it holds ${q(F.dealValue)} ${deal} (Fields tab shows ${q(shown)}) and Term type ${term}.`;
     });
 
   await step(SC, role,
@@ -1810,12 +1835,14 @@ async function formsSection(admin, browser, contexts) {
       await d.waitFor({ timeout: 15000 });
       const type = await d.getByLabel("Matter type").evaluate((e) => (e.tagName === "SELECT" ? e.selectedOptions[0]?.textContent : e.textContent));
       await d.getByRole("button", { name: "Convert to matter" }).click();
-      await admin.waitForURL(/\/matters\/\d+/, { timeout: 30000 });
-      S.convertedMatter = admin.url().match(/\/matters\/(\d+)/)[1];
+      const conv = await until(async () => (await api(admin, "GET", `/api/v1/requests/${S.matterRequest}`)).body?.request?.convertedRecord, "Request not converted", 30000);
+      S.convertedMatter = String(conv.number);
+      await pause(1500);
+      const statusCard = flat(await admin.getByRole("region", { name: "Status" }).innerText().catch(() => ""));
       record("matter", "converted", { number: S.convertedMatter });
       const m = (await api(admin, "GET", `/api/v1/matters/${S.convertedMatter}`)).body?.matter;
       expectThat(flat(type) === F.advisory && m?.customFields?.[S.scopeSlug] === "Privacy" && m?.matterTypeName === F.advisory, `type ${type}, value ${q(m?.customFields)}`);
-      return `Inbox R-${S.matterRequest} > Triage > Convert to matter proposed Matter type ${q(flat(type))}. Convert opened M-${S.convertedMatter} (${q(m.matterTypeName)}) holding ${q(F.matterScope)} = ${q(m.customFields[S.scopeSlug])}.`;
+      return `Inbox R-${S.matterRequest} > Triage > Convert to matter proposed Matter type ${q(flat(type))}. After Convert the Request page read Status ${q(statusCard)}; M-${S.convertedMatter} (${q(m.matterTypeName)}) is holding ${q(F.matterScope)} = ${q(m.customFields[S.scopeSlug])}.`;
     });
 
   await step(SC, "business_user",
@@ -1936,7 +1963,952 @@ async function formsSection(admin, browser, contexts) {
     });
 }
 
+// =====================================================================
+// V-C41 reminders-and-audit: lead times, comment emails, delivery
+// =====================================================================
+function localDate(zone, addDays = 0) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const d = new Date(`${parts}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + addDays);
+  return d.toISOString().slice(0, 10);
+}
+function localHour(zone) {
+  return Number(new Intl.DateTimeFormat("en-GB", { timeZone: zone, hour: "2-digit", hourCycle: "h23" }).format(new Date()));
+}
+const ZONES = ["Asia/Dubai", "Asia/Tokyo", "Europe/London", "America/New_York", "Pacific/Honolulu", "Pacific/Pago_Pago", "Asia/Kolkata", "Australia/Sydney", "America/Los_Angeles", "Pacific/Kiritimati", "Pacific/Auckland"];
+async function leadTimes(page) {
+  await page.getByRole("heading", { name: "Reminder lead times" }).waitFor();
+  await page.getByRole("button", { name: /^Reorder / }).first().waitFor();
+  await pause(400);
+  return page.getByRole("button", { name: /^Reorder / }).evaluateAll((els) => els.map((e) => e.getAttribute("aria-label").replace(/^Reorder (.*), position.*$/, "$1")));
+}
+async function addLeadTime(page, days) {
+  await page.getByRole("button", { name: "Add lead time" }).click();
+  await page.getByRole("spinbutton", { name: "days before the date" }).fill(String(days));
+  const save = page.getByRole("button", { name: "Save", exact: true });
+  if (await save.isEnabled()) await save.click();
+  else await page.getByRole("spinbutton", { name: "days before the date" }).press("Enter");
+  await pause(1200);
+  const open = page.getByRole("listitem").filter({ has: page.getByRole("spinbutton", { name: "days before the date" }) });
+  if (await open.count()) return flat(await open.innerText()) || "(Save stayed disabled)";
+  return null;
+}
+async function closeAddRow(page) {
+  const cancel = page.getByRole("button", { name: "Cancel", exact: true });
+  if (await cancel.count()) {
+    await cancel.click();
+    await page.getByRole("spinbutton", { name: "days before the date" }).waitFor({ state: "detached", timeout: 10000 });
+  }
+}
+async function runMorningRound(admin) {
+  const r = await api(admin, "POST", "/api/v1/notifications/morning-round");
+  if (r.status === 200) return { how: "POST /api/v1/notifications/morning-round (the lab's dev overlay trigger, which runs the cron's own round)", summary: r.body };
+  const script = `const m=await import('/app/node_modules/.pnpm/pg-boss@12.34.0/node_modules/pg-boss/dist/index.js');
+const b=new m.PgBoss({connectionString:process.env.DATABASE_URL, supervise:false, schedule:false});
+await b.start(); let id=null; for (let i=0;i<60 && !id;i++){ id=await b.send('notification.morning-round',{}); if(!id) await new Promise(r=>setTimeout(r,2000)); }
+let job=null; for (let i=0;i<120;i++){ job=await b.getJobById('notification.morning-round', id); if(job && ['completed','failed','cancelled'].includes(job.state)) break; await new Promise(r=>setTimeout(r,1000)); }
+console.log(JSON.stringify({id, state: job?.state, output: job?.output ?? null})); await b.stop({graceful:false, wait:false}); process.exit(0);`;
+  const out = execFileSync("docker", ["exec", "-w", "/app/apps/api", `${PROJECT}-worker-1`, "node", "--input-type=module", "-e", script], { timeout: 300000 }).toString().trim().split("\n").pop();
+  return { how: `pg-boss job notification.morning-round queued in ${PROJECT}-worker-1 (trigger route answered ${r.status})`, summary: JSON.parse(out) };
+}
+async function inviteAndActivate(admin, browser, contexts, displayName, email) {
+  await admin.goto(`${BASE}/settings/users`);
+  await admin.getByRole("button", { name: "Invite user" }).click();
+  const d = admin.getByRole("dialog", { name: "Invite user" });
+  await d.getByRole("textbox", { name: "Display name" }).fill(displayName);
+  await d.getByRole("textbox", { name: "Email" }).fill(email);
+  await d.getByRole("radio", { name: "Legal team member" }).check();
+  const since = Date.now();
+  await d.getByRole("button", { name: "Send invite" }).click();
+  await d.waitFor({ state: "hidden", timeout: 15000 });
+  const mail = await waitForMail(email, null, since, 90000);
+  expectThat(mail, `no invitation mail for ${email}`);
+  const match = mail.text.match(/https?:\/\/[^\s)\]>"]+\/auth\/set-password[^\s)\]>"]*/);
+  expectThat(match, "no set-password link in the invitation");
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  contexts.push(ctx);
+  const page = await ctx.newPage();
+  await page.goto(toLab(match[0]));
+  await page.getByLabel("New password").fill(process.env.LAB_PASSWORD);
+  await page.getByLabel("Confirm password").fill(process.env.LAB_PASSWORD);
+  await page.getByRole("button", { name: "Set password" }).click();
+  await page.getByText("Password set").waitFor({ timeout: 20000 });
+  await browserSignIn(page, { email, name: displayName });
+  return page;
+}
+async function setTimezone(page, zone) {
+  await page.goto(`${BASE}/settings/profile`);
+  const combo = page.getByRole("combobox", { name: "Timezone" });
+  await combo.click();
+  const city = zone.split("/").pop().replace(/_/g, " ");
+  await combo.fill(city);
+  await page.getByRole("option", { name: new RegExp(escapeRe(city)) }).first().click();
+  await pause(1500);
+  const me = await api(page, "GET", "/api/v1/me");
+  return me.body?.user?.timezone ?? me.body?.timezone;
+}
+async function addKeyDate(page, matterNumber, { date, event, extraLead = null, recipient = null }) {
+  await page.goto(`${BASE}/matters/${matterNumber}/key-dates`);
+  await page.getByRole("button", { name: "Add date" }).or(page.getByRole("heading", { name: "Something went wrong." })).first().waitFor({ timeout: 20000 });
+  if (await page.getByRole("heading", { name: "Something went wrong." }).count()) {
+    S.keyDateErrorPages = (S.keyDateErrorPages ?? 0) + 1;
+    await pause(2000);
+    await page.reload();
+  }
+  await page.getByRole("button", { name: "Add date" }).click();
+  const d = page.getByRole("dialog", { name: "Add a Key date" });
+  await d.getByRole("textbox", { name: "Date" }).fill(date);
+  await d.getByRole("textbox", { name: "Event" }).fill(event);
+  if (extraLead !== null) {
+    await d.getByRole("spinbutton", { name: "Additional lead time (days before)" }).fill(String(extraLead));
+    await d.getByRole("button", { name: "Add lead time" }).click();
+  }
+  const remind = flat(await d.getByText(/^This date will remind:/).textContent());
+  const boxes = await d.getByRole("checkbox").evaluateAll((els) => els.map((e) => `${e.getAttribute("aria-label") ?? e.parentElement?.textContent}: ${e.checked ?? e.getAttribute("aria-checked")}`));
+  if (recipient) {
+    const box = d.getByRole("checkbox", { name: recipient });
+    if ((await box.getAttribute("aria-checked")) !== "true" && !(await box.isChecked().catch(() => false))) await box.check();
+  }
+  await d.getByRole("button", { name: "Add date" }).click();
+  await d.waitFor({ state: "hidden", timeout: 15000 });
+  return { remind, boxes };
+}
+
+async function remindersSection(admin, browser, contexts) {
+  const SC = "V-C41";
+  const role = "administrator";
+  const A = PEOPLE.administrator;
+  currentPage = admin;
+  const orig = (await api(admin, "GET", "/api/v1/org/reminder-offsets")).body?.offsets;
+  S.originalOffsets = orig;
+  const probe = [9, 11, 12, 13, 17, 19, 23].find((n) => !orig.includes(n));
+
+  try {
+    await step(SC, role,
+      "Set reminder lead times, steps 1-2: profile menu > Settings > Organization > Notifications shows Reminder lead times; Personal > Notifications changes only your preferences",
+      "Organization > Notifications shows the Reminder lead times list; Personal > Notifications shows Notification preferences and the personal lead time switch.",
+      async () => {
+        await openSettings(admin, A, "Notifications");
+        const list = await leadTimes(admin);
+        const orgPath = new URL(admin.url()).pathname;
+        const headings = (await admin.locator("main").getByRole("heading").allInnerTexts()).map(flat);
+        const note = flat(await admin.getByText(/Keep at least one lead time/).first().innerText());
+        await openSettings(admin, A, "Notifications", "Personal");
+        await admin.getByRole("heading", { name: "Notification preferences" }).waitFor();
+        const personalPath = new URL(admin.url()).pathname;
+        const own = await admin.getByRole("switch", { name: "Use the organization's default lead times" }).count();
+        S.originalLeadTimes = list;
+        expectThat(orgPath !== personalPath && own === 1, `${orgPath} ${personalPath} ${own}`);
+        return `Organization > Notifications opened ${orgPath} with headings ${q(headings)} and the list ${q(list)}; the note reads ${q(note)}. Personal > Notifications opened ${personalPath} with Notification preferences and the switch "Use the organization's default lead times".`;
+      });
+
+    await step(SC, role,
+      "Steps 3-5: Add lead time with Save; Cancel discards; a duplicate and 731 are refused; reorder with the arrow keys; Remove; reload and confirm; at most 20 entries",
+      "The new lead time is added; duplicates and 731 are refused; the reorder persists after reload; a 21st entry is refused; Remove removes an entry.",
+      async () => {
+        await openSettings(admin, A, "Notifications");
+        await leadTimes(admin);
+        await admin.getByRole("button", { name: "Add lead time" }).click();
+        await admin.getByRole("spinbutton", { name: "days before the date" }).fill("33");
+        await admin.getByRole("button", { name: "Cancel", exact: true }).click();
+        await pause(800);
+        const afterCancel = await leadTimes(admin);
+        expectThat(!afterCancel.includes("33 days before"), `Cancel saved 33`);
+        const label = `${probe} days before`;
+        await addLeadTime(admin, probe);
+        await admin.getByRole("button", { name: new RegExp(`^Reorder ${label}, position`) }).waitFor({ timeout: 10000 });
+        const dup = await addLeadTime(admin, probe);
+        await closeAddRow(admin);
+        const big = await addLeadTime(admin, 731);
+        await closeAddRow(admin);
+        const zero = (await leadTimes(admin)).includes("On the day");
+        const listNow = await leadTimes(admin);
+        expectThat(listNow.filter((l) => l === label).length === 1 && !listNow.includes("731 days before"), `list ${q(listNow)}`);
+        const { before, after } = await moveUp(admin, label);
+        const reloaded = await leadTimes(admin);
+        const extra = [];
+        for (let n = 40; (await leadTimes(admin)).length < 20; n++) {
+          if (orig.includes(n)) continue;
+          await addLeadTime(admin, n);
+          extra.push(n);
+        }
+        const twentyFirst = await addLeadTime(admin, 90);
+        await closeAddRow(admin);
+        const after21 = await leadTimes(admin);
+        for (const n of extra) {
+          await admin.getByRole("button", { name: `Remove ${n} days before`, exact: true }).click();
+          await admin.getByRole("button", { name: `Remove ${n} days before`, exact: true }).waitFor({ state: "detached", timeout: 10000 });
+        }
+        expectThat(after21.length === 20 && !after21.includes("90 days before"), `21st saved: ${after21.length}`);
+        expectThat(dup && big, "a refusal showed nothing");
+        await admin.screenshot({ path: path.join(SHOTS, "v-c41-reminder-lead-times.png") });
+        return `Add lead time with 33 and Cancel saved nothing. ${probe} + Save added ${q(label)}. A second ${probe} stayed in the add row with ${q(dup)}; 731 with ${q(big)}. "On the day" (0) is on the list: ${zero}. ArrowUp moved ${q(label)} from ${before} to ${after}; after reload the list read ${q(reloaded)}. ${extra.length} temporary entries filled the list to 20; 90 was then refused with ${q(twentyFirst)} and the list stayed at ${after21.length}. Remove took the temporary entries away again.`;
+      });
+
+    await step(SC, role,
+      "Choose whether comment emails carry the words: Comment emails card, Include comment words in email, on by default; saves on change; recorded as an Administrator-only Audit log event",
+      "The switch starts on, turns off and saves, and the Audit log shows the change with an Administrator audience; it is put back on.",
+      async () => {
+        await openSettings(admin, A, "Notifications");
+        const sw = admin.getByRole("switch", { name: "Include comment words in email" });
+        const start = await sw.getAttribute("aria-checked");
+        const help = flat(await admin.getByText(/Applies to everyone in the organization/).innerText());
+        await sw.click();
+        await until(async () => (await sw.getAttribute("aria-checked")) === "false", "switch did not turn off");
+        await pause(1200);
+        await admin.reload();
+        const persisted = await admin.getByRole("switch", { name: "Include comment words in email" }).getAttribute("aria-checked");
+        await admin.getByRole("switch", { name: "Include comment words in email" }).click();
+        await until(async () => (await admin.getByRole("switch", { name: "Include comment words in email" }).getAttribute("aria-checked")) === "true", "switch did not turn back on");
+        await pause(1200);
+        await admin.goto(`${BASE}/settings/audit-log`);
+        await admin.getByRole("searchbox", { name: "Search" }).fill("comment");
+        await pause(2000);
+        const rows = (await admin.getByRole("table").getByRole("row").allInnerTexts()).slice(1).map(flat).filter((r) => /Daniel Okafor/.test(r) && /comment/i.test(r));
+        await admin.getByRole("button", { name: "Clear filters" }).click();
+        expectThat(start === "true" && persisted === "false", `start ${start}, persisted ${persisted}`);
+        expectThat(rows.length > 0 && /Administrator/.test(rows[0]), `audit rows ${q(rows.slice(0, 2))}`);
+        return `The Comment emails card's switch started on (${start}); help ${q(help)}. Turning it off saved and read off after reload; it was turned back on. Audit log Search "comment" shows ${rows.length} of Daniel Okafor's rows, newest ${q(rows[0]?.slice(0, 260))}.`;
+      });
+
+    await step(SC, role,
+      "Check delivery: two fictional Legal Team Members, one past 08:00 and one before 08:00 in their saved timezone; Key dates at listed and unlisted distances; a Key date's own lead time; run the morning round; read each bell and briefing email",
+      "The past-08:00 colleague gets one reminder per Key date at a listed distance (two Key dates on one date each remind) and for the Key date's own lead time, none at an unlisted distance; the before-08:00 colleague gets nothing yet.",
+      async () => {
+        const ready = ZONES.find((z) => localHour(z) >= 9 && localHour(z) <= 21);
+        const early = ZONES.find((z) => localHour(z) < 7);
+        expectThat(ready && early, `no zone pair: ${q(ZONES.map((z) => [z, localHour(z)]))}`);
+        const users = {};
+        for (const [key, zone] of [["ready", ready], ["early", early]]) {
+          const displayName = name(SC, `Reminder ${key}`);
+          const email = `doc030-admincfg-${key}-${stamp}@helix.example`;
+          const page = await inviteAndActivate(admin, browser, contexts, displayName, email);
+          const saved = await setTimezone(page, zone);
+          expectThat(saved === zone, `timezone saved as ${saved}`);
+          const me = await api(page, "GET", "/api/v1/me");
+          users[key] = { displayName, email, zone, page, id: me.body?.user?.id ?? me.body?.id, hour: localHour(zone) };
+          record("user", displayName, { role: "legal_team_member", timezone: zone });
+          const mts = (await api(admin, "GET", "/api/v1/matter-types")).body?.matterTypes ?? [];
+          const m = await api(admin, "POST", "/api/v1/matters", { title: name(SC, `Reminder matter ${key}`), matterTypeId: mts.find((t) => t.displayName === "Default").id, managerId: users[key].id });
+          users[key].matter = m.body?.matter?.number;
+          expectThat(users[key].matter, `matter fixture ${m.status} ${q(m.body)}`);
+          record("matter", name(SC, `Reminder matter ${key}`), { number: users[key].matter });
+        }
+        const r = users.ready;
+        const listed = orig.filter((n) => n > 1).sort((a, b) => a - b)[0] ?? 7;
+        const unlisted = [11, 12, 13, 17, 19, 23].find((n) => !orig.includes(n));
+        const own = [15, 16, 18, 20, 22].find((n) => !orig.includes(n));
+        const plan = [
+          { event: name(SC, `KD listed A ${listed}`), days: listed, expect: true },
+          { event: name(SC, `KD listed B ${listed}`), days: listed, expect: true },
+          { event: name(SC, `KD unlisted ${unlisted}`), days: unlisted, expect: false },
+          { event: name(SC, `KD own lead ${own}`), days: own, extraLead: own, expect: true },
+        ];
+        const notes = [];
+        for (const k of plan) {
+          k.date = localDate(r.zone, k.days);
+          const res = await addKeyDate(admin, r.matter, { date: k.date, event: k.event, extraLead: k.extraLead ?? null, recipient: r.displayName });
+          notes.push(`${k.event.replace(`${G} ${SC} `, "")} on ${k.date}: ${res.remind}`);
+        }
+        const e = users.early;
+        const earlyKd = { event: name(SC, `KD early ${listed}`), date: localDate(e.zone, listed) };
+        await addKeyDate(admin, e.matter, { ...earlyKd, recipient: e.displayName });
+        const round = await runMorningRound(admin);
+        await pause(4000);
+        const bell = await api(r.page, "GET", "/api/v1/notifications");
+        const items = bell.body?.notifications ?? bell.body?.items ?? [];
+        const observed = {};
+        for (const k of plan) observed[k.event] = items.filter((n) => JSON.stringify(n).includes(k.event)).length;
+        const mail = await waitForMail(r.email, /briefing/i, Date.now() - 120000, 45000);
+        const mailHits = {};
+        for (const k of plan) mailHits[k.event] = mail ? mail.text.includes(k.event) : null;
+        const earlyBell = await api(e.page, "GET", "/api/v1/notifications");
+        const earlyHas = JSON.stringify(earlyBell.body).includes(earlyKd.event);
+        const earlyMail = await waitForMail(e.email, /briefing/i, Date.now() - 120000, 5000);
+        await r.page.goto(`${BASE}/`);
+        const bellButton = await r.page.getByRole("banner").getByRole("button", { name: /^Notifications/ }).getAttribute("aria-label");
+        const wrong = plan.filter((k) => (k.expect ? observed[k.event] !== 1 : observed[k.event] !== 0));
+        expectThat(wrong.length === 0, `bell ${q(observed)}; mail ${q(mailHits)}; round ${q(round)}`);
+        expectThat(!earlyHas && !earlyMail, `early colleague served: bell ${earlyHas}, mail ${!!earlyMail}`);
+        return `Invited ${q(r.displayName)} (timezone ${r.zone}, local hour ${r.hour}) and ${q(e.displayName)} (${e.zone}, local hour ${e.hour}) as Legal Team Members; each set a password from the invitation mail and saved the timezone on Profile. Each manages one Matter (M-${r.matter}, M-${e.matter}). Key dates on M-${r.matter}: ${notes.join("; ")}. The Key dates page showed the generic error page ${S.keyDateErrorPages ?? 0} times on navigation and loaded after Reload. The round ran through ${round.how}: ${q(round.summary)}. ${q(r.displayName)}'s bell items per Key date: ${q(observed)}; header bell ${q(bellButton)}; briefing mail ${mail ? q(mail.subject) : "not found"} with Key date names ${q(mailHits)}. ${q(e.displayName)} (before 08:00): bell holds its Key date ${earlyHas}; briefing mail ${earlyMail ? "found" : "none"}.`;
+      });
+  } finally {
+    await step(SC, role,
+      "Restore the organization lead time list (the guide's last-entry rule checked on the way) and confirm it after reload",
+      "The last entry cannot be removed; the list reads as before the walkthrough.",
+      async () => {
+        await openSettings(admin, A, "Notifications");
+        let list = await leadTimes(admin);
+        for (const l of list.slice(1)) {
+          await admin.getByRole("button", { name: `Remove ${l}`, exact: true }).click();
+          await admin.getByRole("button", { name: `Remove ${l}`, exact: true }).waitFor({ state: "detached", timeout: 10000 });
+        }
+        const last = (await leadTimes(admin))[0];
+        const lastRemove = admin.getByRole("button", { name: `Remove ${last}`, exact: true });
+        const lastState = (await lastRemove.count()) === 0 ? "no Remove control" : `Remove disabled=${await lastRemove.isDisabled()} aria-disabled=${await lastRemove.getAttribute("aria-disabled")}`;
+        if ((await lastRemove.count()) && (await lastRemove.isEnabled())) {
+          await lastRemove.click();
+          await pause(1200);
+        }
+        const stillOne = (await leadTimes(admin)).length;
+        const put = await api(admin, "PUT", "/api/v1/org/reminder-offsets", { offsets: S.originalOffsets });
+        await admin.reload();
+        const final = await leadTimes(admin);
+        const now = (await api(admin, "GET", "/api/v1/org/reminder-offsets")).body?.offsets;
+        expectThat(stillOne === 1, `last entry removed (${stillOne})`);
+        expectThat(q(now) === q(S.originalOffsets), `final ${q(now)} vs ${q(S.originalOffsets)}`);
+        return `Removed entries down to one (${q(last)}): ${lastState}; the list kept ${stillOne} entry. The original offsets ${q(S.originalOffsets)} were put back with PUT /api/v1/org/reminder-offsets (${put.status}); after reload the page reads ${q(final)}.`;
+      }, "restore");
+  }
+}
+
+// =====================================================================
+// V-C41 reminders-and-audit: Audit log
+// =====================================================================
+async function auditRows(page) {
+  await pause(1500);
+  const table = page.getByRole("table");
+  await table.or(page.getByText(/^No (entry|Tool calls) match/)).first().waitFor();
+  if (!(await table.count())) return [];
+  return (await table.getByRole("row").allInnerTexts()).slice(1).map(flat);
+}
+async function exportCsv(page, linkName = "Export CSV") {
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: linkName }).click()]);
+  const dir = mkdtempSync(path.join(os.tmpdir(), "doc030-audit-"));
+  const file = path.join(dir, download.suggestedFilename());
+  await download.saveAs(file);
+  const text = readFileSync(file, "utf8");
+  rmSync(dir, { recursive: true, force: true });
+  return { name: download.suggestedFilename(), lines: text.trim().split("\n") };
+}
+function browserToday(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+async function selectContaining(page, label, re) {
+  const sel = page.getByRole("combobox", { name: label });
+  const opts = (await sel.locator("option").allInnerTexts()).map(flat);
+  const pick = opts.find((o) => re.test(o));
+  expectThat(pick, `${label} has no option matching ${re}: ${q(opts.slice(0, 30))}`);
+  await sel.selectOption({ label: pick });
+  return pick;
+}
+
+async function auditSection(admin, browser, contexts) {
+  const SC = "V-C41";
+  const role = "administrator";
+  const A = PEOPLE.administrator;
+  currentPage = admin;
+
+  await step(SC, role,
+    "Find a change in the Audit log, steps 1-2: Settings > Advanced > Audit log; combine Person, Action and Record",
+    "The Activity tab opens; Person Daniel Okafor plus an Action plus a Record kind narrow to matching rows only.",
+    async () => {
+      await openSettings(admin, A, "Audit log", "Advanced");
+      await admin.getByRole("navigation", { name: "Audit log panes" }).waitFor();
+      const tabs = (await admin.getByRole("navigation", { name: "Audit log panes" }).getByRole("link").allInnerTexts()).map(flat);
+      const header = (await admin.getByRole("columnheader").allInnerTexts()).map(flat);
+      await admin.getByRole("combobox", { name: "Person" }).selectOption({ label: A.name });
+      const actions = (await admin.getByRole("combobox", { name: "Action" }).locator("option").allInnerTexts()).map(flat);
+      const action = await selectContaining(admin, "Action", /matter type|matter_type/i);
+      const records = (await admin.getByRole("combobox", { name: "Record" }).locator("option").allInnerTexts()).map(flat);
+      const rows = await auditRows(admin);
+      expectThat(rows.length > 0 && rows.every((r) => r.startsWith(A.name)), `rows ${q(rows.slice(0, 3))}`);
+      await admin.screenshot({ path: path.join(SHOTS, "v-c41-audit-log-filtered.png") });
+      return `Settings > Advanced > Audit log opened ${new URL(admin.url()).pathname} with tabs ${q(tabs)} and columns ${q(header)}. Action offered ${actions.length} choices; Record offered ${q(records)}. Person Daniel Okafor + Action ${q(action)} showed ${rows.length} rows, all by Daniel Okafor, for example ${q(rows[0].slice(0, 220))}.`;
+    });
+
+  await step(SC, role,
+    "Steps 3-5: From and To in the browser's local days; Search; read event, record, audience, time and before-and-after values; Show older; Clear filters",
+    "Today's bounds keep rows; yesterday's bounds remove them; Search narrows to this walk's records; Show older adds rows; Clear filters resets every filter.",
+    async () => {
+      await admin.getByRole("textbox", { name: "From" }).fill(browserToday(0));
+      await admin.getByRole("textbox", { name: "To" }).fill(browserToday(0));
+      const todayRows = await auditRows(admin);
+      await admin.getByRole("textbox", { name: "From" }).fill(browserToday(-1));
+      await admin.getByRole("textbox", { name: "To" }).fill(browserToday(-1));
+      const yRows = await auditRows(admin);
+      await admin.getByRole("button", { name: "Clear filters" }).click();
+      await pause(800);
+      const cleared = {
+        person: flat(await admin.getByRole("combobox", { name: "Person" }).locator("option:checked").innerText()),
+        action: flat(await admin.getByRole("combobox", { name: "Action" }).locator("option:checked").innerText()),
+        record: flat(await admin.getByRole("combobox", { name: "Record" }).locator("option:checked").innerText()),
+        from: await admin.getByRole("textbox", { name: "From" }).inputValue(),
+        search: await admin.getByRole("searchbox", { name: "Search" }).inputValue(),
+      };
+      const first = (await auditRows(admin)).length;
+      await admin.getByRole("button", { name: "Show older" }).click();
+      await until(async () => (await admin.getByRole("table").getByRole("row").count()) - 1 > first, "Show older added no rows");
+      const second = (await auditRows(admin)).length;
+      await admin.getByRole("searchbox", { name: "Search" }).fill(`${G} V-C38`);
+      const searched = await auditRows(admin);
+      const withChange = searched.find((r) => /→/.test(r));
+      await admin.getByRole("button", { name: "Clear filters" }).click();
+      expectThat(todayRows.length > 0 && yRows.length === 0, `today ${todayRows.length}, yesterday ${yRows.length}`);
+      expectThat(!cleared.from && !cleared.search, `cleared ${q(cleared)}`);
+      const exports = searched.filter((r) => !r.includes(G));
+      expectThat(searched.length > 0 && exports.every((r) => /exported the audit log/.test(r)), `search ${q(exports.slice(0, 2))}`);
+      return `From/To ${browserToday(0)} kept ${todayRows.length} rows; ${browserToday(-1)} left ${yRows.length}. Clear filters reset to ${q(cleared)}. Unfiltered first page ${first} rows; Show older made ${second}. Search "${G} V-C38" left ${searched.length} rows: ${searched.length - exports.length} name this walk's records and ${exports.length} are earlier "exported the audit log" entries whose saved filter holds the same words; one with before-and-after values reads ${q(withChange?.slice(0, 260))}.`;
+    });
+
+  await step(SC, role,
+    "Export CSV downloads the matching entries",
+    "The file has a header and only rows that match the filter.",
+    async () => {
+      await admin.getByRole("combobox", { name: "Person" }).selectOption({ label: A.name });
+      await admin.getByRole("searchbox", { name: "Search" }).fill(`${G} V-C38`);
+      const shown = (await auditRows(admin)).length;
+      const csv = await exportCsv(admin);
+      const body = csv.lines.slice(1);
+      await admin.getByRole("button", { name: "Clear filters" }).click();
+      expectThat(body.length > 0 && body.every((l) => l.includes(G) || l.startsWith('"') || /V-C38/.test(l)), `csv ${q(body.slice(0, 2))}`);
+      return `With Person Daniel Okafor and Search "${G} V-C38" the page showed ${shown} rows. Export CSV downloaded ${q(csv.name)} with header ${q(csv.lines[0])} and ${body.length} data lines naming this walk's records. The file was saved outside the repository and deleted.`;
+    });
+
+  await step(SC, "legal_team_member+administrator",
+    "Entries about a Confidential Matter appear only when the Administrator is in its audience, in the page and in Export CSV",
+    "While Nadia Haddad's Confidential Matter excludes Daniel Okafor, Search and the CSV hold none of its entries; after Nadia adds Daniel to the team they appear.",
+    async () => {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      contexts.push(ctx);
+      const member = await ctx.newPage();
+      await browserSignIn(member, PEOPLE.legal_team_member);
+      const title = name(SC, "Confidential audit");
+      const mts = (await api(admin, "GET", "/api/v1/matter-types")).body?.matterTypes ?? [];
+      const me = (await api(member, "GET", "/api/v1/me")).body;
+      const m = await api(member, "POST", "/api/v1/matters", { title, matterTypeId: (mts.find((t) => t.displayName === "Default") ?? mts[0])?.id, isConfidential: true, managerId: me?.user?.id ?? me?.id });
+      const number = m.body?.matter?.number;
+      expectThat(number, `confidential matter ${m.status} ${q(m.body)}`);
+      record("matter (confidential)", title, { number, createdBy: PEOPLE.legal_team_member.name });
+      const adminRead = await api(admin, "GET", `/api/v1/matters/${number}`);
+      await admin.goto(`${BASE}/settings/audit-log`);
+      await admin.getByRole("searchbox", { name: "Search" }).fill(title);
+      const hidden = (await auditRows(admin)).filter((r) => r.includes(title) || r.includes(`M-${number}`));
+      const csvHidden = (await exportCsv(admin)).lines.slice(1).filter((l) => l.includes(title) || l.includes(`M-${number}`)).length;
+      currentPage = member;
+      await member.goto(`${BASE}/matters/${number}`);
+      await member.getByRole("button", { name: "Matter team" }).click();
+      await member.getByRole("button", { name: "Add team member" }).click();
+      const td = member.getByRole("dialog", { name: "Add team member" });
+      await td.getByRole("combobox", { name: "Person" }).selectOption({ label: A.name });
+      await td.getByRole("button", { name: "Add", exact: true }).click();
+      await td.waitFor({ state: "hidden", timeout: 15000 });
+      await until(async () => (await api(admin, "GET", `/api/v1/matters/${number}`)).status === 200, "Daniel still cannot read the Matter");
+      currentPage = admin;
+      await admin.getByRole("button", { name: "Clear filters" }).click();
+      await admin.getByRole("searchbox", { name: "Search" }).fill(title);
+      const shown = await auditRows(admin);
+      const csvShown = (await exportCsv(admin)).lines.slice(1).filter((l) => l.includes(title) || l.includes(`M-${number}`)).length;
+      await admin.getByRole("button", { name: "Clear filters" }).click();
+      expectThat(hidden.length === 0 && csvHidden === 0, `hidden entries shown ${hidden.length}/${csvHidden}`);
+      expectThat(shown.length > 0 && csvShown > 0, `entries still hidden ${shown.length}/${csvShown}`);
+      return `Nadia Haddad created Confidential M-${number} ${q(title)} (API fixture as Nadia). Daniel's GET of it answered ${adminRead.status}. Audit log Search for the title showed ${hidden.length} entries and Export CSV held ${csvHidden}. After Nadia added Daniel Okafor through Matter team > Add team member, the same Search showed ${shown.length} rows (for example ${q(shown[0]?.slice(0, 200))}) and the CSV held ${csvShown}.`;
+    });
+
+  await step(SC, "legal_team_member",
+    "Negative check: the Audit log is unavailable to other roles",
+    "Nadia Haddad (Legal Team Member) is sent away from /settings/audit-log and its Tool calls tab, and the API refuses both.",
+    async () => {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      contexts.push(ctx);
+      const member = await ctx.newPage();
+      currentPage = member;
+      await browserSignIn(member, PEOPLE.legal_team_member);
+      const out = [];
+      for (const [u, a] of [["/settings/audit-log", "/api/v1/audit-log"], ["/settings/audit-log/tool-calls", "/api/v1/audit-log/tool-calls"]]) {
+        await member.goto(`${BASE}${u}`);
+        await member.waitForLoadState("networkidle").catch(() => {});
+        await pause(1000);
+        const landed = new URL(member.url()).pathname;
+        const r = await api(member, "GET", a);
+        expectThat(landed !== u && r.status === 403, `${u} -> ${landed}; ${a} ${r.status}`);
+        out.push(`${u} -> ${landed}; GET ${a} answered ${r.status}`);
+      }
+      const rail = (await member.getByRole("navigation", { name: "Settings sections" }).getByRole("link").allInnerTexts()).map(flat);
+      return `${out.join(". ")}. Nadia's Settings rail lists ${q(rail)}.`;
+    });
+}
+
+// =====================================================================
+// V-C41 reminders-and-audit: Tool calls (needs one MCP call)
+// =====================================================================
+async function toolCallsSection(admin, browser, contexts) {
+  const SC = "V-C41";
+  const role = "administrator";
+  const A = PEOPLE.administrator;
+  currentPage = admin;
+  const policyBefore = (await api(admin, "GET", "/api/v1/mcp-settings")).body;
+  const clientName = name(SC, "Headless client");
+  let client = null;
+  try {
+    await step(SC, "legal_team_member+administrator",
+      "Fixture: one MCP Tool call through an API key that Nadia Haddad requests and Daniel Okafor approves on this lab; one Tool makes a change",
+      "MCP is on with Legal API keys allowed; the approved key connects a Client; openlaw_whoami answers; a write Tool changes a fictional record.",
+      async () => {
+        const needs = !policyBefore.enabled || !policyBefore.legalApiKeysEnabled || policyBefore.readOnly;
+        if (needs) {
+          const p = await api(admin, "PATCH", "/api/v1/mcp-settings", { enabled: true, legalApiKeysEnabled: true, readOnly: false });
+          expectThat(p.status === 200, `policy ${p.status} ${q(p.body)}`);
+        }
+        const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+        contexts.push(ctx);
+        const member = await ctx.newPage();
+        currentPage = member;
+        await browserSignIn(member, PEOPLE.legal_team_member);
+        await member.goto(`${BASE}/settings/api-keys`);
+        await member.getByRole("button", { name: "Request a key", exact: true }).click();
+        const d = member.getByRole("dialog", { name: "Request an API key" });
+        await d.getByLabel("Client name").fill(clientName);
+        await d.getByRole("checkbox", { name: "Matters", exact: true }).check();
+        const writeRadio = d.getByRole("radio", { name: /^Read and write/ });
+        if (await writeRadio.count()) await writeRadio.check();
+        else await d.getByRole("radio").last().check();
+        await d.getByRole("button", { name: "Send request" }).click();
+        await member.getByRole("row").filter({ hasText: clientName }).waitFor({ timeout: 15000 });
+        currentPage = admin;
+        await admin.goto(`${BASE}/`);
+        await admin.getByRole("button", { name: /^Notifications/ }).click();
+        const approval = admin.getByRole("region", { name: "Your approvals" }).getByRole("listitem").filter({ hasText: clientName });
+        await approval.getByRole("button", { name: "Approve", exact: true }).click();
+        await approval.waitFor({ state: "detached", timeout: 15000 });
+        await admin.keyboard.press("Escape");
+        currentPage = member;
+        await member.reload();
+        const ready = member.getByRole("dialog", { name: "Your key is ready" });
+        await ready.waitFor({ timeout: 15000 });
+        const key = await ready.getByRole("code").innerText();
+        await ready.getByRole("button", { name: "Done", exact: true }).click();
+        record("api key", clientName, { owner: PEOPLE.legal_team_member.name });
+        const mod = await import(path.join(ROOT, "node_modules/.pnpm/@modelcontextprotocol+client@2.0.0/node_modules/@modelcontextprotocol/client/dist/index.mjs"));
+        client = new mod.Client({ name: clientName, version: "1" });
+        await client.connect(new mod.StreamableHTTPClientTransport(new URL("/mcp", BASE), { requestInit: { headers: { "x-api-key": key } } }));
+        const tools = (await client.listTools()).tools;
+        const who = await client.callTool({ name: "openlaw_whoami", arguments: {} });
+        let change = "no write Tool called";
+        const create = tools.find((t) => /^openlaw_matter_create$/.test(t.name));
+        if (create) {
+          const mts = (await api(admin, "GET", "/api/v1/matter-types")).body?.matterTypes ?? [];
+          const title = name(SC, "Matter via MCP");
+          const args = { matterTypeId: mts.find((t) => t.displayName === "Default").id, answers: { title } };
+          const res = await client.callTool({ name: create.name, arguments: args });
+          S.mcpMatterTitle = title;
+          change = `${create.name} answered isError=${!!res.isError} ${q(JSON.stringify(res.structuredContent ?? res.content).slice(0, 160))}`;
+          record("matter", title, { via: clientName });
+        }
+        S.mcpClientName = clientName;
+        S.mcpTools = tools.map((t) => t.name);
+        expectThat(!who.isError, "whoami failed");
+        return `MCP policy before: enabled ${policyBefore.enabled}, Legal API keys ${policyBefore.legalApiKeysEnabled}, read-only ${policyBefore.readOnly}${needs ? "; turned on for this step and put back afterwards" : ""}. Nadia Haddad requested ${q(clientName)} on Settings > API keys (Matters, read and write); Daniel Okafor approved it from the bell's Your approvals; Nadia's "Your key is ready" dialog showed the key once (not recorded). The SDK Client connected over /mcp with ${tools.length} Tools; openlaw_whoami answered; ${change}.`;
+      }, "fixture-setup");
+
+    currentPage = admin;
+    await step(SC, role,
+      "Read Tool calls, steps 1-3: Settings > Advanced > Audit log > Tool calls; When, Person, Client, Tool, Outcome, Duration; From and To; Load more; Clear filters",
+      "The tab lists the call with Nadia Haddad, the Client name, openlaw_whoami, an outcome and a duration; the date filters narrow; Clear filters resets.",
+      async () => {
+        await openSettings(admin, A, "Audit log", "Advanced");
+        await admin.getByRole("navigation", { name: "Audit log panes" }).getByRole("link", { name: "Tool calls" }).click();
+        await admin.getByRole("heading", { name: "Tool calls" }).waitFor();
+        const header = (await admin.getByRole("columnheader").allInnerTexts()).map(flat);
+        const mine = async () => (await auditRows(admin)).filter((r) => r.includes(clientName));
+        const rows = await until(async () => { const m = await mine(); return m.length ? m : null; }, "no Tool call row for the Client", 20000);
+        await admin.getByRole("textbox", { name: "From" }).fill(browserToday(-1));
+        await admin.getByRole("textbox", { name: "To" }).fill(browserToday(-1));
+        const yesterday = await mine();
+        await admin.getByRole("button", { name: "Clear filters" }).click();
+        await pause(800);
+        const loadMore = await admin.getByRole("button", { name: "Load more" }).count();
+        let more = "no Load more button (all calls fit on one page)";
+        if (loadMore) {
+          const before = (await auditRows(admin)).length;
+          await admin.getByRole("button", { name: "Load more" }).click();
+          await pause(1500);
+          more = `Load more took the table from ${before} to ${(await auditRows(admin)).length} rows`;
+        }
+        const text = rows.join(" | ");
+        expectThat(/Nadia Haddad/.test(text) && /openlaw_whoami/.test(text) && /(Success|Error|Refused|Pending)/.test(text) && /\d+ ms/.test(text), `rows ${text}`);
+        expectThat(yesterday.length === 0, `yesterday rows ${yesterday.length}`);
+        return `Tool calls columns ${q(header)}. Rows for ${q(clientName)}: ${q(rows.map((r) => r.slice(0, 160)))}. From/To = ${browserToday(-1)} hid them. ${more}. Clear filters reset the dates.`;
+      });
+
+    await step(SC, role,
+      "Tool calls: a change a Tool made appears on the Activity tab attributed to the person via the Client; Export CSV of calls is itself recorded on the Activity tab as an Administrator-only event",
+      "Activity shows Nadia Haddad, via the Client, creating the Matter; after Export CSV an Administrator-only export entry appears.",
+      async () => {
+        let via = "no write Tool was available";
+        if (S.mcpMatterTitle) {
+          await admin.goto(`${BASE}/settings/audit-log`);
+          await admin.getByRole("searchbox", { name: "Search" }).fill(S.mcpMatterTitle);
+          const rows = await auditRows(admin);
+          via = rows.find((r) => r.includes("via")) ?? rows[0] ?? "(none)";
+          expectThat(new RegExp(`Nadia Haddad, via ${escapeRe(clientName)}`).test(via), `activity ${q(rows.slice(0, 2))}`);
+        }
+        await admin.goto(`${BASE}/settings/audit-log/tool-calls`);
+        await admin.getByRole("heading", { name: "Tool calls" }).waitFor();
+        const csv = await exportCsv(admin);
+        await admin.goto(`${BASE}/settings/audit-log`);
+        await admin.getByRole("combobox", { name: "Person" }).selectOption({ label: A.name });
+        const exportAction = await selectContaining(admin, "Action", /export/i);
+        const rows = await auditRows(admin);
+        await admin.getByRole("button", { name: "Clear filters" }).click();
+        expectThat(rows.length > 0 && /Administrator/.test(rows[0]), `export rows ${q(rows.slice(0, 2))}`);
+        return `Activity Search for the Matter the Tool made reads ${q(via.slice(0, 220))}. Tool calls Export CSV downloaded ${q(csv.name)} with header ${q(csv.lines[0])} and ${csv.lines.length - 1} data lines (file deleted). Activity with Person Daniel Okafor and Action ${q(exportAction)} now shows ${q(rows[0]?.slice(0, 200))}.`;
+      });
+
+    await step(SC, role,
+      "On Settings, MCP, the Tool calls in the last day button opens the Tool calls tab filtered to the last 24 hours",
+      "The link opens /settings/audit-log/tool-calls with a last-day range and the From date set.",
+      async () => {
+        await openSettings(admin, A, "MCP");
+        await admin.getByRole("link", { name: "Tool calls in the last day" }).click();
+        await admin.waitForURL(/\/settings\/audit-log\/tool-calls/, { timeout: 15000 });
+        await admin.getByRole("heading", { name: "Tool calls" }).waitFor();
+        const from = await admin.getByRole("textbox", { name: "From" }).inputValue();
+        const rows = (await auditRows(admin)).filter((r) => r.includes(clientName)).length;
+        const note = flat(await admin.getByText(/^Last 24 hours:/).first().innerText().catch(() => ""));
+        expectThat(/range=last-day/.test(admin.url()) && note, `url ${admin.url()} note ${note}`);
+        return `Settings > MCP > Tool calls in the last day opened ${new URL(admin.url()).pathname + new URL(admin.url()).search}; the tab reads ${q(note)} (From box ${q(from)}); it lists ${rows} rows for ${q(clientName)}.`;
+      });
+  } finally {
+    try { await client?.close(); } catch {}
+    await step(SC, role,
+      "Restore the MCP policy",
+      "The MCP policy reads as before this walk.",
+      async () => {
+        const keys = (await api(admin, "GET", "/api/v1/mcp-settings/api-keys")).body;
+        const list = Array.isArray(keys) ? keys : keys?.keys ?? [];
+        const mine = list.find((k) => k.clientName === clientName);
+        let revoked = "key not found in the listing";
+        if (mine?.id) revoked = `POST /api/v1/api-key-requests/{id}/revoke answered ${(await api(admin, "POST", `/api/v1/api-key-requests/${mine.id}/revoke`, {})).status}`;
+        const p = await api(admin, "PATCH", "/api/v1/mcp-settings", { enabled: policyBefore.enabled, legalApiKeysEnabled: policyBefore.legalApiKeysEnabled, readOnly: policyBefore.readOnly });
+        const now = (await api(admin, "GET", "/api/v1/mcp-settings")).body;
+        expectThat(now.enabled === policyBefore.enabled && now.legalApiKeysEnabled === policyBefore.legalApiKeysEnabled, `policy now ${now.enabled}/${now.legalApiKeysEnabled}`);
+        return `The walk's key: ${revoked}. PATCH /api/v1/mcp-settings answered ${p.status}; MCP enabled ${now.enabled}, Legal API keys ${now.legalApiKeysEnabled}, read-only ${now.readOnly}, as before.`;
+      }, "restore");
+  }
+}
+
+// =====================================================================
+// V-C56 auto-doc-template
+// =====================================================================
+const FIXTURES = path.join(here, "fixtures");
+const fixture = (n) => path.join(FIXTURES, n);
+function adTab(page, label) {
+  return page.getByRole("navigation", { name: "Auto-Doc sections" }).getByRole("link", { name: label });
+}
+async function uploadRefused(page, file) {
+  await page.getByRole("button", { name: "Upload version" }).click();
+  const dialog = page.getByRole("dialog", { name: "Upload version" });
+  await dialog.getByLabel("Word template").setInputFiles(file);
+  await dialog.getByRole("button", { name: "Upload", exact: true }).click();
+  const alert = dialog.getByRole("alert");
+  await alert.waitFor({ timeout: 20000 });
+  const text = flat(await alert.textContent());
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await dialog.waitFor({ state: "hidden" });
+  return text;
+}
+async function uploadReport(page, file) {
+  await page.getByRole("button", { name: "Upload version" }).click();
+  const dialog = page.getByRole("dialog", { name: "Upload version" });
+  const caption = flat(await dialog.getByText(/Each upload adds a file version/).textContent());
+  await dialog.getByLabel("Word template").setInputFiles(file);
+  await dialog.getByRole("button", { name: "Upload", exact: true }).click();
+  const status = dialog.getByRole("status");
+  await status.waitFor({ timeout: 30000 });
+  const report = flat(await status.textContent());
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await dialog.waitFor({ state: "hidden" });
+  return { report, caption };
+}
+async function adFields(page) {
+  const labels = await page.getByRole("button", { name: /^Edit / }).evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+  return labels.filter((l) => !/^Edit the rule for /.test(l)).map((l) => l.replace(/^Edit /, ""));
+}
+async function pill(page) {
+  return flat(await page.getByText(/^File version \d+$/).first().textContent());
+}
+
+async function autoDocSection(browser, contexts) {
+  const SC = "V-C56";
+  for (const [role, person] of [["legal_team_member", PEOPLE.legal_team_member], ["administrator", PEOPLE.administrator]]) {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
+    contexts.push(ctx);
+    const page = await ctx.newPage();
+    currentPage = page;
+    await browserSignIn(page, person);
+    const adName = name(SC, `${role === "administrator" ? "Admin" : "Member"} Services Agreement`);
+    let base = null;
+
+    await step(SC, role,
+      "Download a starter template: Download starter template (.docx) beside the page title on Auto-Docs",
+      "A Word file downloads with an instruction page (placeholders, bold, underline, italic, capitals, three date formats, currency, blocks) and an example services agreement with five fields and a confidentiality block.",
+      async () => {
+        await page.goto(`${BASE}/`);
+        await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Auto-Docs" }).click();
+        await page.getByRole("heading", { name: "Auto-Docs", level: 1 }).waitFor();
+        const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Download starter template (.docx)" }).click()]);
+        const dir = mkdtempSync(path.join(os.tmpdir(), "doc030-starter-"));
+        const file = path.join(dir, download.suggestedFilename());
+        await download.saveAs(file);
+        const xml = execFileSync("unzip", ["-p", file, "word/document.xml"]).toString();
+        rmSync(dir, { recursive: true, force: true });
+        const text = xml.replace(/<w:br[^>]*w:type="page"[^>]*\/>/g, "\n[PAGE BREAK]\n").replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, "");
+        const placeholders = [...new Set([...text.matchAll(/\{\{([^}]+)\}\}/g)].map((m) => m[1]))];
+        const pageBreak = /\[PAGE BREAK\]/.test(text);
+        const agreement = text.slice(text.indexOf("[PAGE BREAK]"));
+        const agreementNames = [...new Set([...agreement.matchAll(/\{\{([a-z][a-z0-9_]*)(?:\|[^}]*)?\}\}/g)].map((m) => m[1]))];
+        const has = (re) => placeholders.some((p) => re.test(p));
+        expectThat(pageBreak && has(/\|bold$/) && has(/\|underline$/) && has(/\|italic$/) && has(/\|upper$/) && has(/date:YYYY-MM-DD/) && has(/date:DD\/MM\/YYYY/) && has(/date:MMMM D, YYYY/) && has(/currency:/) && has(/^#block/), `starter placeholders ${q(placeholders)}`);
+        expectThat(agreementNames.length === 5 && /\{\{#block confidentiality/.test(agreement), `agreement names ${q(agreementNames)}`);
+        return `Primary navigation > Auto-Docs showed the link "Download starter template (.docx)" beside the title; it downloaded ${q(download.suggestedFilename())} (saved outside the repository and deleted). The file has a page break; the instruction page shows ${q([...new Set([...text.slice(0, text.indexOf("[PAGE BREAK]")).matchAll(/\{\{([^}]+)\}\}/g)].map((m) => m[1]))])}; the agreement after the break uses ${q(agreementNames)} and a confidentiality Block.`;
+      });
+
+    await step(SC, role,
+      "Before you start: open Auto-Docs, create an Auto-Doc, open its Form section; the file shows on the left and the form on the right; Upload version",
+      "The Form section shows an empty template pane beside the form and an Upload version button.",
+      async () => {
+        await page.getByRole("button", { name: "Create Auto-Doc" }).first().click();
+        const dialog = page.getByRole("dialog");
+        await dialog.getByLabel("Name").fill(adName);
+        await dialog.getByRole("button", { name: "Create", exact: true }).click();
+        await page.waitForURL(/\/auto-docs\/[0-9a-f-]+/, { timeout: 20000 });
+        base = page.url().replace(/\/(overview|form|settings)?$/, "").match(/.*\/auto-docs\/[0-9a-f-]+/)[0];
+        record("auto-doc", adName, { role });
+        await adTab(page, "Form").click();
+        await page.waitForURL(/\/form$/);
+        const empty = flat(await page.getByText("Upload a Word file to start the form.").textContent());
+        expectThat(await page.getByRole("button", { name: "Upload version" }).isVisible(), "no Upload version");
+        return `Create Auto-Doc > Name > Create made ${q(adName)} and opened ${new URL(base).pathname}. The Form section reads ${q(empty)} with Upload version.`;
+      });
+
+    await step(SC, role,
+      "Upload the file with Placeholders, directives (bold, italic, underline, upper, dates, currency) and one Block; read the template pane",
+      "The upload reports the counts; the pane marks every Placeholder and Block in body, header, footer, footnote and endnote; new fields follow the pane order, body first; directives set the field types.",
+      async () => {
+        const { report, caption } = await uploadReport(page, fixture("doc030-services-v1.docx"));
+        await page.getByRole("heading", { name: "doc030-services-v1.docx" }).waitFor();
+        const summary = flat(await page.getByText(/\d+ Placeholders?, \d+ Blocks?/).first().textContent());
+        const parts = {};
+        for (const n of ["Body", "Header", "Footer", "Footnotes", "Endnotes"]) {
+          const sec = page.locator(`section[aria-label="${n}"]`);
+          parts[n] = (await sec.count()) ? await sec.getByRole("button", { name: /^Placeholder / }).evaluateAll((els) => els.map((e) => e.getAttribute("aria-label").replace(/^Placeholder /, ""))) : null;
+        }
+        const partOrder = await page.locator("section[aria-label]").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")).filter((l) => ["Body", "Header", "Footer", "Footnotes", "Endnotes"].includes(l)));
+        const block = flat(await page.getByRole("button", { name: "Block arbitration" }).textContent());
+        const fields = await adFields(page);
+        const types = {};
+        for (const [slug, label] of [["fee_amount", "Fee amount"], ["signing_date", "Signing date"], ["provider_contact", "Provider contact"], ["governing_law", "Governing law"], ["client_matter", "Client matter"]]) {
+          await page.getByRole("button", { name: `Placeholder ${slug}`, exact: true }).or(page.getByRole("button", { name: new RegExp(`^Placeholder ${slug}\\|`) })).first().click();
+          types[slug] = flat(await page.getByRole("region", { name: label }).getByLabel("Type").locator("option:checked").innerText());
+        }
+        expectThat(/File version 1:/.test(report), `report ${report}`);
+        expectThat(partOrder[0] === "Body" && parts.Header?.length && parts.Footer?.length && parts.Footnotes?.length && parts.Endnotes?.length, `parts ${q(parts)}`);
+        expectThat(types.fee_amount === "Currency" && types.signing_date === "Date" && types.provider_contact === "Text" && types.governing_law === "Text", `types ${q(types)}`);
+        expectThat(fields.indexOf("Client matter") > fields.indexOf("Arbitration seat") && fields.indexOf("Schedule number") > fields.indexOf("Arbitration seat"), `order ${q(fields)}`);
+        if (role === "administrator") await page.screenshot({ path: path.join(SHOTS, "v-c56-admin-template-pane.png"), fullPage: true });
+        return `Upload version caption ${q(caption)}; report ${q(report)}. Pane summary ${q(summary)}; parts in order ${q(partOrder)} with chips ${q(parts)}. Block tag ${q(block)}. Fields in order ${q(fields)} (body first). Types: ${q(types)}; the header {{counterparty_name|upper}} and the bold, italic and underline Placeholders uploaded without refusal.`;
+      });
+
+    await step(SC, role,
+      "Edit a field from its card: select its chip, change the label and help; Template placeholder connects the field to the marker; the form follows each commit",
+      "The chip opens the card with Label, Template placeholder, Type and Help text; the Fields list follows the new label; help saves.",
+      async () => {
+        const chip = page.getByRole("button", { name: "Placeholder counterparty_name", exact: true }).first();
+        await chip.click();
+        const card = page.getByRole("region", { name: "Counterparty name" });
+        await card.waitFor();
+        const controls = [];
+        for (const l of ["Label", "Template placeholder", "Type", "Help text"]) controls.push(`${l}:${await card.getByLabel(l, { exact: true }).count()}`);
+        const tp = await card.getByLabel("Template placeholder", { exact: true }).inputValue();
+        await card.getByLabel("Label", { exact: true }).fill("Counterparty legal name");
+        await card.getByLabel("Label", { exact: true }).press("Enter");
+        const renamed = page.getByRole("region", { name: "Counterparty legal name" });
+        await renamed.waitFor({ timeout: 15000 });
+        await renamed.getByLabel("Help text").fill("Use the registered company name.");
+        await renamed.getByLabel("Help text").press("Enter");
+        await pause(1000);
+        const listed = await adFields(page);
+        expectThat(listed.includes("Counterparty legal name") && controls.every((c) => c.endsWith(":1")), `controls ${q(controls)}; list ${q(listed)}`);
+        return `The chip opened the card with ${q(controls)}; Template placeholder reads ${q(tp)}. Label "Counterparty legal name" + Enter renamed the card and the Fields list (${q(listed.slice(0, 4))}…); Help text saved.`;
+      });
+
+    await step(SC, role,
+      "Mark a Block: open the Block under Clauses, choose When a rule matches, pick the form field, the operator and the value",
+      "Clauses notes that a Block with no rule is always included; after the rule the Block tag and Clauses row show the rule.",
+      async () => {
+        const before = flat(await page.getByRole("button", { name: "Block arbitration" }).textContent());
+        const note = flat(await page.getByText("A Block with no rule is always included.").textContent());
+        await page.getByRole("button", { name: "Edit the rule for arbitration" }).click();
+        const card = page.getByRole("region", { name: "arbitration" });
+        await card.waitFor();
+        const include = (await card.getByLabel("Include").locator("option").allInnerTexts()).map(flat);
+        await card.getByLabel("Include").selectOption({ label: "When a rule matches" });
+        await card.getByLabel("Form field").selectOption({ label: "Governing law" });
+        const ops = (await card.getByLabel("Operator").locator("option").allInnerTexts()).map(flat);
+        await card.getByLabel("Operator").selectOption({ index: 0 });
+        await card.getByLabel("Value").fill("England and Wales");
+        await card.getByLabel("Value").press("Tab");
+        await pause(1500);
+        const after = flat(await page.getByRole("button", { name: "Block arbitration" }).textContent());
+        const rowText = flat(await page.getByText(/Included when/).first().textContent().catch(() => "(none)"));
+        expectThat(after !== before && /when/i.test(after + rowText), `block ${before} -> ${after}`);
+        return `Clauses reads ${q(note)}; Block tag ${q(before)}. Include offered ${q(include)}; Operator offered ${q(ops)}. After When a rule matches / Governing law / ${q(ops[0])} / "England and Wales" the tag reads ${q(after)} and the row ${q(rowText)}.`;
+      });
+
+    await step(SC, role,
+      "Negative: an unclosed Block, an unclosed brace, a bad name, an unknown directive, an unknown currency code and two directives on one Placeholder are refused and quote the text",
+      "Each upload is refused with the offending text quoted; no file version is written.",
+      async () => {
+        const out = {};
+        for (const [f, re] of [
+          ["doc030-unclosed-block.docx", /#block arbitration/],
+          ["doc030-unclosed-brace.docx", /\{\{counterparty_name/],
+          ["doc030-bad-name.docx", /Counterparty-Name/],
+          ["doc030-bad-directive.docx", /lower/],
+          ["doc030-bad-currency.docx", /ZZZ/],
+          ["doc030-two-directives-one-placeholder.docx", /upper\|bold|counterparty_name/],
+        ]) {
+          out[f] = await uploadRefused(page, fixture(f));
+          expectThat(re.test(out[f]), `${f}: ${out[f]}`);
+        }
+        const p = await pill(page);
+        expectThat(p === "File version 1", `pill ${p}`);
+        return `Refusals: ${Object.entries(out).map(([f, t]) => `${f}: ${q(t)}`).join("; ")}. The pane still reads ${q(p)}.`;
+      });
+
+    await step(SC, role,
+      "Negative: a macro, a non-hyperlink external link, an INCLUDETEXT field and a package that expands past 32 MiB are refused with the reason named",
+      "Each upload is refused and the refusal names the reason; no file version is written.",
+      async () => {
+        const out = {};
+        for (const [f, re] of [
+          ["doc030-macro.docx", /macro/i],
+          ["doc030-external-link.docx", /external .*link.*Only hyperlinks/i],
+          ["doc030-includetext-field.docx", /INCLUDETEXT/],
+          ["doc030-expands-past-32mib.docx", /32 MiB/],
+        ]) {
+          out[f] = await uploadRefused(page, fixture(f));
+          expectThat(re.test(out[f]), `${f}: ${out[f]}`);
+        }
+        const p = await pill(page);
+        expectThat(p === "File version 1", `pill ${p}`);
+        return `Refusals: ${Object.entries(out).map(([f, t]) => `${f}: ${q(t)}`).join("; ")}. The pane still reads ${q(p)}. Fixtures are fictional files built by fixtures/build-fixtures.py.`;
+      });
+
+    await step(SC, role,
+      "Negative: Publish refuses a field whose type cannot print its directive and names it (currency directive on a Text field)",
+      "Publish shows a refusal naming the field and the Placeholder; the Auto-Doc stays Draft.",
+      async () => {
+        await page.getByRole("button", { name: "Placeholder fee_amount|currency:USD", exact: true }).or(page.getByRole("button", { name: "Placeholder fee_amount", exact: true })).first().click();
+        const card = page.getByRole("region", { name: "Fee amount" });
+        await card.getByLabel("Type").selectOption({ label: "Text" });
+        await pause(1200);
+        await page.getByRole("button", { name: "Publish", exact: true }).first().click();
+        const dialog = page.getByRole("dialog", { name: "Publish" });
+        await dialog.getByRole("button", { name: "Publish", exact: true }).click();
+        const alert = dialog.getByRole("alert");
+        await alert.waitFor({ timeout: 15000 });
+        const text = flat(await alert.textContent());
+        await dialog.getByRole("button", { name: "Cancel" }).click();
+        await dialog.waitFor({ state: "hidden" });
+        await card.getByLabel("Type").selectOption({ label: "Currency" });
+        await pause(1200);
+        expectThat(/Fee amount/.test(text) && /fee_amount\|currency:USD/.test(text), `refusal ${text}`);
+        if (role === "administrator") await page.screenshot({ path: path.join(SHOTS, "v-c56-admin-publish-refusal.png") });
+        return `With Fee amount set to Text, Publish refused with ${q(text)}. Type was set back to Currency.`;
+      });
+
+    await step(SC, role,
+      "Upload a new version that drops a Placeholder: the orphaned field stays, marked No Placeholder in file version N; a new Placeholder gets a new field",
+      "Signing date stays with the mark; Notice address is added.",
+      async () => {
+        const { report } = await uploadReport(page, fixture("doc030-services-v2.docx"));
+        await page.getByRole("heading", { name: "doc030-services-v2.docx" }).waitFor();
+        const p = await pill(page);
+        const mark = flat(await page.getByText(/^No Placeholder in file version \d+$/).first().textContent());
+        const fields = await adFields(page);
+        expectThat(fields.includes("Signing date") && fields.includes("Notice address") && mark === "No Placeholder in file version 2", `fields ${q(fields)} mark ${mark}`);
+        if (role === "legal_team_member") await page.screenshot({ path: path.join(SHOTS, "v-c56-member-orphaned-field.png"), fullPage: true });
+        return `Report ${q(report)}; pane ${q(p)}. Fields ${q(fields)}; the Signing date row reads ${q(mark)}.`;
+      });
+
+    await step(SC, role,
+      "Publish pins one file version and one form version together; later edits change nothing live until you publish again",
+      "The Publish dialog offers file and form versions; after Publish the state is Published; a later edit leaves the live pair and Overview warns that a newer version exists.",
+      async () => {
+        await page.getByRole("button", { name: "Publish", exact: true }).first().click();
+        const dialog = page.getByRole("dialog", { name: "Publish" });
+        const files = (await dialog.getByLabel("File version").locator("option").allInnerTexts()).map(flat);
+        const forms = (await dialog.getByLabel("Form version").locator("option").allInnerTexts()).map(flat);
+        const caption = flat(await dialog.getByText(/Later edits leave this pair unchanged/).textContent());
+        await dialog.getByLabel("File version").selectOption({ label: "File version 2" });
+        await dialog.getByRole("button", { name: "Publish", exact: true }).click();
+        let refusal = null;
+        await dialog.waitFor({ state: "hidden", timeout: 15000 }).catch(async () => {
+          refusal = flat(await dialog.getByRole("alert").textContent().catch(() => ""));
+        });
+        if (refusal !== null) {
+          // The orphaned field may block Publish: remove it (the guide: remove the field or put the Placeholder back).
+          await dialog.getByRole("button", { name: "Cancel" }).click();
+          await page.getByRole("button", { name: "Remove Signing date", exact: true }).click();
+          await pause(1500);
+          await page.getByRole("button", { name: "Publish", exact: true }).first().click();
+          await dialog.getByLabel("File version").selectOption({ label: "File version 2" });
+          await dialog.getByRole("button", { name: "Publish", exact: true }).click();
+          await dialog.waitFor({ state: "hidden", timeout: 15000 });
+        }
+        await page.getByText("Published", { exact: true }).first().waitFor({ timeout: 15000 });
+        await adTab(page, "Overview").click();
+        const live = flat(await page.getByText(/^Live since /).textContent());
+        await adTab(page, "Form").click();
+        await page.getByRole("button", { name: "Placeholder governing_law", exact: true }).first().click();
+        const card = page.getByRole("region", { name: "Governing law" });
+        await card.getByLabel("Help text").fill("Name the jurisdiction.");
+        await card.getByLabel("Help text").press("Enter");
+        await pause(1200);
+        await adTab(page, "Overview").click();
+        const liveAfter = flat(await page.getByText(/^Live since /).textContent());
+        const newer = flat(await page.getByText(/newer than the currently published/).textContent());
+        expectThat(live === liveAfter, `live changed ${live} -> ${liveAfter}`);
+        return `Publish offered file versions ${q(files)} and form versions ${q(forms)} with caption ${q(caption)}${refusal ? `; the first Publish with the orphaned field showed ${q(refusal)}, so Remove Signing date was used as the guide says, then Publish succeeded` : ""}. After Publish with File version 2 the state reads Published and Overview reads ${q(live)}. A later Help text edit left ${q(liveAfter)} and Overview warns ${q(newer)}.`;
+      });
+
+    await step(SC, role,
+      "Directive disagreement: one name with a date directive and a currency directive becomes a text field, and Publish names the gap",
+      "The new field is Text; Publish refuses and names the Placeholder.",
+      async () => {
+        await page.goto(`${BASE}/auto-docs`);
+        await page.getByRole("button", { name: "Create Auto-Doc" }).first().click();
+        const dialog = page.getByRole("dialog");
+        const n2 = name(SC, `${role === "administrator" ? "Admin" : "Member"} disagreeing directives`);
+        await dialog.getByLabel("Name").fill(n2);
+        await dialog.getByRole("button", { name: "Create", exact: true }).click();
+        await page.waitForURL(/\/auto-docs\/[0-9a-f-]+/, { timeout: 20000 });
+        record("auto-doc", n2, { role });
+        await adTab(page, "Form").click();
+        const { report } = await uploadReport(page, fixture("doc030-disagreeing-directives.docx"));
+        await page.getByRole("button", { name: /^Placeholder payment/ }).first().click();
+        const type = flat(await page.getByRole("region", { name: "Payment" }).getByLabel("Type").locator("option:checked").innerText());
+        await page.getByRole("button", { name: "Publish", exact: true }).first().click();
+        const pub = page.getByRole("dialog", { name: "Publish" });
+        await pub.getByRole("button", { name: "Publish", exact: true }).click();
+        const alert = pub.getByRole("alert");
+        await alert.waitFor({ timeout: 15000 });
+        const text = flat(await alert.textContent());
+        await pub.getByRole("button", { name: "Cancel" }).click();
+        expectThat(type === "Text" && /payment\|/.test(text), `type ${type}, refusal ${text}`);
+        return `${q(n2)}: upload of {{payment|currency:USD}} and {{payment|date:YYYY-MM-DD}} reported ${q(report)}; the Payment field's Type is ${q(type)}. Publish refused with ${q(text)}.`;
+      });
+  }
+
+}
+
 // SECTION-MARKER
+
+
 
 
 
@@ -1967,6 +2939,10 @@ async function main() {
     officers: () => officersSection(admin),
     access: () => accessSection(browser, contexts),
     forms: () => formsSection(admin, browser, contexts),
+    reminders: () => remindersSection(admin, browser, contexts),
+    audit: () => auditSection(admin, browser, contexts),
+    toolcalls: () => toolCallsSection(admin, browser, contexts),
+    autodoc: () => autoDocSection(browser, contexts),
   };
   try {
     for (const s of SECTIONS) {

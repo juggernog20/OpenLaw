@@ -76,7 +76,7 @@ for (const [articleId, g] of Object.entries(Object.fromEntries(plan.groups["docu
   const prev = { appCommit: g.priorEvidence.appCommit, contentSha256: author.contentSha256Before, verifiedAt: g.priorEvidence.verifiedAt };
   const limitations = [
     "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
-    `work2 is shared with other DOC-030 agents. Only records named "DOC-030 documents-2 …" were created. Organization settings changed for the run and put back: ${log.settingsChanged.map((s) => `${s.setting} "${s.added}" (${s.restored ?? "not restored"})`).join("; ")}. Development runs before the recorded run left more DOC-030 documents-2 records; they are not credited.`,
+    `work2 is shared with other DOC-030 agents. Only records named "DOC-030 documents-2 …" were created. Organization settings changed for the run and put back: ${log.settingsChanged.map((s) => `${s.setting} "${s.added}" (${s.restored ?? "not restored"})`).join("; ")}. Development runs before the recorded run left more DOC-030 documents-2 records; they are not credited. An earlier full run stopped when the orchestrating session restarted; its Matter type was archived by this run's teardown and its archived Knowledge type fixture was deleted through the lab API before this run finished.`,
     ...log.limitations.filter((l) => l.article === articleId).map((l) => `${l.claim} ${l.note}`),
   ];
   if (articleId === "document-folders")

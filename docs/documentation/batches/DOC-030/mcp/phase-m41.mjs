@@ -64,6 +64,8 @@ const ltm = await context("legal_team_member");
 const main = async (page) => flat(await page.locator("main").innerText());
 const clip = (page) => page.evaluate(() => navigator.clipboard.readText());
 async function openSettings(page, name = PEOPLE.administrator.name) {
+  // After a consent the tab sits on the Client's callback page; come back to OpenLaw first.
+  if (!page.url().startsWith(BASE)) await page.goto(`${BASE}/`);
   await page.getByRole("banner").getByRole("button", { name }).click();
   await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
   await page.waitForURL(/\/settings/);
@@ -318,9 +320,9 @@ await step(S("/settings/mcp"), "Dynamic client registration: on lets a Client re
     const r = await fetch(endpoint ?? `${BASE}/api/auth/oauth2/register`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ client_name: name, redirect_uris: [REDIRECT], token_endpoint_auth_method: "none", grant_types: ["authorization_code", "refresh_token"], response_types: ["code"] }),
+      body: JSON.stringify({ client_name: name, application_type: "native", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none", grant_types: ["authorization_code", "refresh_token"], response_types: ["code"] }),
     });
-    return r.status;
+    return { status: r.status, body: (await r.text()).slice(0, 200) };
   };
   const selfName = `DOC-030 mcp self-registered ${stamp}`;
   const r1 = await reg(selfName);
@@ -338,8 +340,8 @@ await step(S("/settings/mcp"), "Dynamic client registration: on lets a Client re
   await d.getByRole("button", { name: "Delete Client" }).click();
   await d.waitFor({ state: "detached" });
   const gone = (await allowed()).some((c) => c.name === selfName);
-  expectThat(s1 === 200 && !!endpoint && r1 === 201 && /Registered by the Client/.test(row) && enabled === "true" && !disc2.registration_endpoint && r2 >= 400 && enabledAfter === "true" && !gone, JSON.stringify({ s1, endpoint, r1, row, s2, r2, rowAfter }));
-  return `On (${s1}): discovery registration_endpoint ${new URL(endpoint).pathname}; self-registration → ${r1}; row "${row}", enabled ${enabled}. Off (${s2}): discovery has registration_endpoint ${"registration_endpoint" in disc2}; a new registration → ${r2}; the earlier entry is still "${rowAfter}", enabled ${enabledAfter}. Edit → Delete Client removed it.`;
+  expectThat(s1 === 200 && !!endpoint && r1.status === 201 && /Registered by the Client/.test(row) && enabled === "true" && !disc2.registration_endpoint && r2.status >= 400 && enabledAfter === "true" && !gone, JSON.stringify({ s1, endpoint, r1, row, s2, r2, rowAfter }));
+  return `On (${s1}): discovery registration_endpoint ${new URL(endpoint).pathname}; self-registration (a native Client with a loopback callback) → ${r1.status}; row "${row}", enabled ${enabled}. Off (${s2}): discovery has registration_endpoint ${"registration_endpoint" in disc2}; a new registration → ${r2.status} ${r2.body}; the earlier entry is still "${rowAfter}", enabled ${enabledAfter}. Edit → Delete Client removed it.`;
 });
 
 await step(S("/settings/mcp"), "Revoke a grant from Active keys and grants: Revoke → Revoke OAuth grant → Revoke", "Next request refused; grant leaves the list", async () => {

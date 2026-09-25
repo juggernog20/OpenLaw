@@ -48,14 +48,8 @@
     "terms-and-renewals": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec"
   },
   "selection": {
-    "articles": [
-      "manual-signing",
-      "terms-and-renewals"
-    ],
-    "roles": [
-      "legal_team_member",
-      "administrator"
-    ]
+    "articles": ["manual-signing", "terms-and-renewals"],
+    "roles": ["legal_team_member", "administrator"]
   },
   "stamp": 1790335883058,
   "records": [
@@ -143,9 +137,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "fixture (API)",
       "action": "Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector",
       "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
@@ -159,9 +151,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/{n}",
       "action": "Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
       "expected": "The Contract moves to Out for signature; with no Signing connector there is no Send for signature control and no Envelope",
@@ -175,9 +165,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Documents",
       "action": "Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed",
       "expected": "The first upload makes one Document; Add version adds v2 on the same chain with the Executed type",
@@ -191,9 +179,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Documents reader",
       "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy",
       "expected": "The reader opens the current Version and Download returns the exact uploaded bytes",
@@ -207,9 +193,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Documents",
       "action": "Negative: choosing the Executed type during upload does not set the executed designation",
       "expected": "No Version carries the executed designation; the Version cell shows no Executed mark",
@@ -223,9 +207,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Documents",
       "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document",
       "expected": "v2 carries the executed designation; the Status does not change; after a second Document is uploaded the paper keeps Primary",
@@ -239,9 +221,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Documents",
       "action": "Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again",
       "expected": "v3 becomes current while v2 stays designated; marking v3 moves the designation; v2's own actions offer Unmark as executed copy / Mark as executed copy",
@@ -255,9 +235,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/{n}",
       "action": "Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity",
       "expected": "The Contract reaches Active without a connector; History records the executed designation and the Status change; no Envelope row exists",
@@ -271,10 +249,7 @@
       "scenario": "V-C17-manual",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Karim Aziz (Portal)"
-      ],
+      "actors": ["Nadia Haddad", "Karim Aziz (Portal)"],
       "page": "Portal and API",
       "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged",
       "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v2 stays designated",
@@ -288,9 +263,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "fixture (API)",
       "action": "Prerequisite: an unarchived NDA Contract with an Entity, a Counterparty, a value, High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
       "expected": "The record exists for this role",
@@ -304,9 +277,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Overview",
       "action": "Record the term: on Overview use the Contract card; its Rows follow the Contract type's Form; choose Term type Fixed term, then Effective date, Expiry date and Notice period (days), one change at a time",
       "expected": "The term controls sit in the Contract card in the NDA Form's order; Fixed term offers no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
@@ -320,9 +291,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Overview; Key dates",
       "action": "Term timeline draws the recorded dates; Key dates shows Current term expires and Renewal notice deadline derived from the term",
       "expected": "Derived rows match the term and carry no row actions",
@@ -336,9 +305,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Overview",
       "action": "Change Term type to Auto-renewing and enter Renewal period (months)",
       "expected": "Auto-renewing accepts a renewal period in months",
@@ -352,9 +319,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Overview; Key dates",
       "action": "Change Term type to Evergreen and review the saved values",
       "expected": "Evergreen has no expiry date; the change clears the expiry and the renewal period",
@@ -368,9 +333,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Overview",
       "action": "Back to Auto-renewing with expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
       "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
@@ -384,9 +347,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Key dates",
       "action": "Negative: a Task due before the notice deadline does not feed the term-derived deadlines",
       "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task is not a Key date row",
@@ -400,9 +361,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Approvals",
       "action": "Confirm a renewal steps 1-3: open Approvals and select Renew; Confirm the roll is the default; a New expiry date that is not after the current expiry is refused; Cancel changes nothing; Paper as amendment is absent without a primary Document",
       "expected": "The dialog refuses the invalid date with its message; Cancel keeps the term; no Paper as amendment option",
@@ -416,9 +375,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Approvals; Overview; Key dates",
       "action": "Confirm a renewal step 4: Confirm renewal with the proposed date, then check the new expiry, notice deadline, Last renewal and the renewal row; Status and Stage unchanged",
       "expected": "The term advances only through the confirmation; Status and Stage do not change",
@@ -432,10 +389,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
       "page": "Approvals",
       "action": "Stale date: with Renew open, the other staff role changes the expiry; Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen Renew gives a fresh proposed date",
       "expected": "A stale roll is refused and re-read; no second roll is recorded",
@@ -449,10 +403,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
       "page": "Approvals (two browser contexts)",
       "action": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
       "expected": "Two competing confirmations do not record the same roll twice",
@@ -466,9 +417,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Documents; Approvals",
       "action": "Paper as amendment: upload the first Document; reopen Renew without a reload, then reload the record and reopen Renew; File the amendment opens Add version with Type set to Amendment; the new Version is not executed until marked, and marking replaces the chain's designation",
       "expected": "The option appears after a reload; Add version opens on the primary Document with Type Amendment; no new Contract; no expiry change",
@@ -482,9 +431,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Approvals; create dialog",
       "action": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
       "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential need their own review",
@@ -498,9 +445,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Approvals; create dialog",
       "action": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
       "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
@@ -514,9 +459,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Approvals",
       "action": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation; Review renewal opens the same dialog",
       "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
@@ -530,9 +473,7 @@
       "scenario": "V-C18",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "Approvals",
       "action": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
       "expected": "Archived records are handled differently from an active renewal",
@@ -546,9 +487,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "fixture (API)",
       "action": "Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector",
       "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
@@ -562,9 +501,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/{n}",
       "action": "Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
       "expected": "The Contract moves to Out for signature; with no Signing connector there is no Send for signature control and no Envelope",
@@ -578,9 +515,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Documents",
       "action": "Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed",
       "expected": "The first upload makes one Document; Add version adds v2 on the same chain with the Executed type",
@@ -594,9 +529,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Documents reader",
       "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy",
       "expected": "The reader opens the current Version and Download returns the exact uploaded bytes",
@@ -610,9 +543,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Documents",
       "action": "Negative: choosing the Executed type during upload does not set the executed designation",
       "expected": "No Version carries the executed designation; the Version cell shows no Executed mark",
@@ -626,9 +557,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Documents",
       "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document",
       "expected": "v2 carries the executed designation; the Status does not change; after a second Document is uploaded the paper keeps Primary",
@@ -642,9 +571,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Documents",
       "action": "Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again",
       "expected": "v3 becomes current while v2 stays designated; marking v3 moves the designation; v2's own actions offer Unmark as executed copy / Mark as executed copy",
@@ -658,9 +585,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/{n}",
       "action": "Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity",
       "expected": "The Contract reaches Active without a connector; History records the executed designation and the Status change; no Envelope row exists",
@@ -674,10 +599,7 @@
       "scenario": "V-C17-manual",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Karim Aziz (Portal)"
-      ],
+      "actors": ["Daniel Okafor", "Karim Aziz (Portal)"],
       "page": "Portal and API",
       "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged",
       "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v2 stays designated",
@@ -691,9 +613,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "fixture (API)",
       "action": "Prerequisite: an unarchived NDA Contract with an Entity, a Counterparty, a value, High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
       "expected": "The record exists for this role",
@@ -707,9 +627,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Overview",
       "action": "Record the term: on Overview use the Contract card; its Rows follow the Contract type's Form; choose Term type Fixed term, then Effective date, Expiry date and Notice period (days), one change at a time",
       "expected": "The term controls sit in the Contract card in the NDA Form's order; Fixed term offers no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
@@ -723,9 +641,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Overview; Key dates",
       "action": "Term timeline draws the recorded dates; Key dates shows Current term expires and Renewal notice deadline derived from the term",
       "expected": "Derived rows match the term and carry no row actions",
@@ -739,9 +655,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Overview",
       "action": "Change Term type to Auto-renewing and enter Renewal period (months)",
       "expected": "Auto-renewing accepts a renewal period in months",
@@ -755,9 +669,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Overview; Key dates",
       "action": "Change Term type to Evergreen and review the saved values",
       "expected": "Evergreen has no expiry date; the change clears the expiry and the renewal period",
@@ -771,9 +683,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Overview",
       "action": "Back to Auto-renewing with expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
       "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
@@ -787,9 +697,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Key dates",
       "action": "Negative: a Task due before the notice deadline does not feed the term-derived deadlines",
       "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task is not a Key date row",
@@ -803,9 +711,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Approvals",
       "action": "Confirm a renewal steps 1-3: open Approvals and select Renew; Confirm the roll is the default; a New expiry date that is not after the current expiry is refused; Cancel changes nothing; Paper as amendment is absent without a primary Document",
       "expected": "The dialog refuses the invalid date with its message; Cancel keeps the term; no Paper as amendment option",
@@ -819,9 +725,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Approvals; Overview; Key dates",
       "action": "Confirm a renewal step 4: Confirm renewal with the proposed date, then check the new expiry, notice deadline, Last renewal and the renewal row; Status and Stage unchanged",
       "expected": "The term advances only through the confirmation; Status and Stage do not change",
@@ -835,10 +739,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Nadia Haddad"
-      ],
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
       "page": "Approvals",
       "action": "Stale date: with Renew open, the other staff role changes the expiry; Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen Renew gives a fresh proposed date",
       "expected": "A stale roll is refused and re-read; no second roll is recorded",
@@ -852,10 +753,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Nadia Haddad"
-      ],
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
       "page": "Approvals (two browser contexts)",
       "action": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
       "expected": "Two competing confirmations do not record the same roll twice",
@@ -869,9 +767,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Documents; Approvals",
       "action": "Paper as amendment: upload the first Document; reopen Renew without a reload, then reload the record and reopen Renew; File the amendment opens Add version with Type set to Amendment; the new Version is not executed until marked, and marking replaces the chain's designation",
       "expected": "The option appears after a reload; Add version opens on the primary Document with Type Amendment; no new Contract; no expiry change",
@@ -885,9 +781,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Approvals; create dialog",
       "action": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
       "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential need their own review",
@@ -901,9 +795,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Approvals; create dialog",
       "action": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
       "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
@@ -917,9 +809,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Approvals",
       "action": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation; Review renewal opens the same dialog",
       "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
@@ -933,9 +823,7 @@
       "scenario": "V-C18",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Approvals",
       "action": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
       "expected": "Archived records are handled differently from an active renewal",

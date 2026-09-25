@@ -16,7 +16,9 @@ const { chromium } = require(
 );
 
 export const HOME = process.env.HOME;
-export const WORK = path.join(HOME, ".cache/openlaw-doc030/operator/op2");
+// Round 2 re-walks the corrected guides on fresh projects with their own private state.
+export const ROUND = process.env.OP2_ROUND === "2" ? 2 : 1;
+export const WORK = path.join(HOME, ROUND === 2 ? ".cache/openlaw-doc030/operator/op2r2" : ".cache/openlaw-doc030/operator/op2");
 export const LOG = path.join(here, "walkthrough.json");
 const STATE = path.join(WORK, "state.json");
 const SECRETS = path.join(WORK, "secret-store.json");
@@ -38,11 +40,23 @@ export const PROJECTS = {
   restore: { project: "openlaw-doc030-oprestore", port: 24622 },
   migfix: { project: "openlaw-doc030-opmigfix", port: 24623 },
 };
+if (ROUND === 2) {
+  PROJECTS.inst = { project: "openlaw-doc030-opinst2", port: 24640 };
+  PROJECTS.up = { project: "openlaw-doc030-opup2", port: 24650 };
+  PROJECTS.restore = { project: "openlaw-doc030-oprestore2", port: 24652 };
+  delete PROJECTS.recover;
+  delete PROJECTS.migfix;
+}
 for (const [name, p] of Object.entries(PROJECTS)) {
   p.name = name;
   p.home = path.join(WORK, name);
   p.dir = path.join(p.home, "openlaw");
   p.base = `http://127.0.0.1:${p.port}`;
+}
+// Round 2: the upgraded instance sits behind a same-host Caddy proxy, and its origin is the proxy's.
+if (ROUND === 2) {
+  PROJECTS.up.proxyPort = 24651;
+  PROJECTS.up.base = "http://127.0.0.1:24651";
 }
 
 // ---------------------------------------------------------------- private files
@@ -134,6 +148,7 @@ export function setPhase(phase) {
  */
 export async function step(meta, fn) {
   const entry = {
+    round: ROUND,
     phase: currentPhase,
     article: meta.article,
     scenario: meta.scenario,
@@ -351,6 +366,7 @@ export function attach(p, container, alias) {
 export function attachSupport(p) {
   attach(p, MAIL_NAME, "op2-mail");
   attach(p, AI_NAME, "op2-ai");
+  attach(p, "openlaw-doc030-op2-minio", "op2-minio");
 }
 
 // ---------------------------------------------------------------- mail

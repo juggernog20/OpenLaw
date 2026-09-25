@@ -27,7 +27,7 @@
       "articleId": "upgrade",
       "scenario": ["V-C46"],
       "contentSha256Before": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc",
-      "contentSha256": "f9819188ddbacb1c9a7f200f26fe18685da3c9b6cb8e3fc7c8701ef4a347fb36",
+      "contentSha256": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -143,13 +143,14 @@
         "Whether the d1d098ba fixture's Request types pass the 0157 guard was not checked; if the walkthrough hits the refusal, it is a fixture fact to record, and troubleshooting has the recovery.",
         "The worker's restart while the app migrates is read from the code order, not observed. With a short migration the worker may simply wait on the ALTER TABLE lock and never restart.",
         "The starting build stays d1d098ba as the triage asked. The previous supported edition (432dba3a) is not the upgrade baseline."
-      ]
+      ],
+      "contentSha256Round1": "f9819188ddbacb1c9a7f200f26fe18685da3c9b6cb8e3fc7c8701ef4a347fb36"
     },
     {
       "articleId": "backup-and-restore",
       "scenario": ["V-C47"],
       "contentSha256Before": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
-      "contentSha256": "bd04a2a60c52fa1d44e89ddf4cedca11a25367e5c2efcae581121fe5168b6a00",
+      "contentSha256": "c9e9d5d4e4f7e68546b5a27d8ba77d7cb235ae7aaf8647f3f016f925b0a7d9b5",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -232,15 +233,16 @@
       ],
       "limitations": [
         "Source inspection only; V-C47 still needs a container-operation walkthrough at 067c1646.",
-        "To exercise the new rows the walkthrough fixture should save at least one Settings → Advanced value (for example Maximum file size (MiB)) on the source before the backup. Without it a wrong key does not stop startup.",
+        "To exercise the wrong-key rows the source should save at least one Settings → Advanced value (for example Maximum file size (MiB)) before the backup; under a wrong key that field then shows Default on the target.",
         "Object-store snapshot tooling and a saved S3 or Azure configuration pointing at a live store were not exercised; the text relies on effectiveEnvironment."
-      ]
+      ],
+      "contentSha256Round1": "bd04a2a60c52fa1d44e89ddf4cedca11a25367e5c2efcae581121fe5168b6a00"
     },
     {
       "articleId": "operator-troubleshooting",
       "scenario": ["V-C48"],
       "contentSha256Before": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
-      "contentSha256": "d8171252164c77698e0f311e03df15879d6fd22c5dc4365a67168e9815fab470",
+      "contentSha256": "a685d653b2b8da37a179868dde0955f0f747b83438d6af345771ab4a3606cdd0",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -384,14 +386,57 @@
         "The per-person stream cap closes the oldest stream and the browser's EventSource reconnects; how a tab behaves while six are open was not observed.",
         "The 0157 recovery asks the operator to correct Request types on the starting build's own settings pages, whose labels this review did not check at d1d098ba.",
         "Real provider checks (Signing, AI) remain blocked under C42/C43."
-      ]
+      ],
+      "contentSha256Round1": "d8171252164c77698e0f311e03df15879d6fd22c5dc4365a67168e9815fab470"
+    },
+    {
+      "articleId": "install",
+      "scenario": ["V-C44"],
+      "note": "Round 2 only, released to this seat after the shared-files seat finished.",
+      "contentSha256Before": "e3721923de08056ce6be7fa71ed7f05068a4778df8c04b745c794bb27636d0e6",
+      "contentSha256": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e",
+      "sources": [
+        "docs/user-guides/install.md",
+        "compose.yml",
+        "apps/api/src/app.ts",
+        "apps/api/src/index.ts",
+        "apps/api/src/logging.ts"
+      ],
+      "corrections": [
+        {
+          "file": "all six operator texts",
+          "claim": "TRUSTED_PROXIES value for a proxy on the same host",
+          "before": "TRUSTED_PROXIES=127.0.0.1,::1.",
+          "after": "Each entry is an IP address or CIDR range, as the app sees the peer inside its container. A same-host proxy arrives through Docker's port publishing from the gateway of <project>_openlaw-backend; read it with docker network inspect ... --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}' and list it (e.g. 172.18.0.1); read it again after the network is recreated. A proxy on another host keeps its source address. Check through the proxy with the request log's remoteAddress. A non-matching value trusts nothing, shares one bucket and logs no warning; an invalid entry stops the start with 'invalid IP address'.",
+          "source": "app.ts trustProxy; handler.ts writes request.ip into X-Forwarded-For for better-auth; @better-auth/core getIPFromHeader; logging.ts remoteAddress; fastify probe; lab: 127.0.0.2 lockout answered 429 for 127.0.0.1"
+        },
+        {
+          "file": "docs/user-guides/install.md",
+          "claim": "When to set TRUSTED_PROXIES",
+          "before": "Prepare step 3 set TRUSTED_PROXIES=127.0.0.1,::1.",
+          "after": "Prepare step 3 leaves it out. New Build and start step 4 reads the gateway after the first start, sets it and recreates the app, before the setup token is read (a recreate replaces a printed token). Step 6 (was 5) adds the remoteAddress check after first sign-in.",
+          "source": "docker assigns the network range at first up; index.ts setup token per boot"
+        }
+      ],
+      "confirmed": [],
+      "limitations": ["Source inspection only; V-C44 needs a new walkthrough."]
     }
   ],
   "productBugs": [
     {
+      "file": "apps/api/src/modules/advanced-settings/config.ts (parseSettings) with packages/db/src/secrets.ts (encryptedText)",
+      "symptom": "encryptedText returns '' for a sealed value no key opens, so parseSettings' guard 'present && raw === null' never fires. With a wrong OPENLAW_SECRET_KEY the app and worker start and every saved Advanced value silently falls back to the environment or the default, including STORAGE_DRIVER to local and BASE_URL to http://localhost:3000. The guard's message 'Advanced settings cannot be decrypted. Restore the instance encryption key before restarting.' is dead code.",
+      "contradicts": "The 61ccf95f design stated in docs/user-guides/deployment-configuration.md before this round ('An unreadable saved Advanced configuration stops startup rather than silently switching document storage') and the guard's own intent; DOC-014 (reads must not silently land somewhere nobody would look)"
+    },
+    {
       "file": "apps/api/src/reset-advanced-settings.ts",
-      "symptom": "The operator recovery command calls parseSettings before deleting a section, so it throws 'Advanced settings cannot be decrypted...' when OPENLAW_SECRET_KEY cannot open org_settings.advanced_settings. Once any Advanced value was saved, the column stays non-null even after a reset, and API and worker startup (resolveAdvancedSettings, no catch) refuses on every boot. A lost key therefore leaves no supported way to start the instance.",
-      "contradicts": "TECH-022 (a lost key costs only the sealed credentials; recovery is to paste them again, and a read that threw would fail the pane the recovery happens in) and docs/DEPLOYMENT.md 'If you lose it'"
+      "symptom": "Under a wrong key the recovery command reads the configuration as empty, deletes nothing, and writes an empty configuration sealed under the wrong key over the unreadable one. It exits 0 and prints 'Saved <section> overrides removed'. Every section's saved values are erased for good, not only the named one.",
+      "contradicts": "TECH-022 (unreadable values are left in place so the right key can still recover them) and the command's own contract of removing one section"
+    },
+    {
+      "file": "compose.yml and the shipped docs (.env.example, docs/DEPLOYMENT.md before this round)",
+      "symptom": "The documented same-host value 127.0.0.1,::1 never matches: the app sees the Compose network gateway. The value trusts nothing and the start warning is silent because the list is non-empty. compose.yml does not pin the openlaw-backend subnet, so the correct gateway can change when the network is recreated.",
+      "contradicts": "TECH-032 (per-client sign-in buckets behind a named proxy)"
     },
     {
       "file": "apps/worker/src/index.ts",
@@ -406,5 +451,124 @@
     "docs/user-guides/deployment-configuration.md (operator group): the recovery command uses 'docker compose exec app', which fails while the app is restarting. operator-troubleshooting.md now uses 'docker compose run -T --rm --no-deps app'. Consider the same form there.",
     "docs/documentation/edition.json, scenarios.json and evidence/{upgrade,backup-and-restore,operator-troubleshooting}.json: the content hashes change to f9819188..., bd04a2a6... and d8171252...; acceptance needs new V-C46, V-C47 and V-C48 walkthroughs at 067c1646."
   ],
-  "statusChange": null
+  "statusChange": null,
+  "round2": {
+    "reviewedAt": "2026-09-25T12:00:00Z",
+    "trigger": "The independent operator-2 walkthrough failed install, upgrade, backup-and-restore and operator-troubleshooting on TRUSTED_PROXIES, the wrong-key behavior and the saved-settings recovery command. The coordinator released install.md to this seat.",
+    "sourcesAdded": [
+      "packages/db/src/secrets.ts (encryptedText maps an unreadable value to UNREADABLE_SECRET = \"\")",
+      "apps/api/src/modules/advanced-settings/config.ts parseSettings",
+      "apps/api/src/reset-advanced-settings.ts",
+      "apps/api/src/app.ts trustProxy",
+      "apps/api/src/auth/handler.ts",
+      "apps/api/src/auth/instance.ts advanced.ipAddress",
+      "apps/api/src/auth/limits.ts clientAddress",
+      "apps/api/src/logging.ts req serializer remoteAddress",
+      "@better-auth/core 1.7.5 dist/utils/ip.mjs getIPFromHeader and parseCIDR",
+      "better-auth 1.7.5 dist/api/rate-limiter/index.mjs",
+      "fastify trustProxy (probed with node: an invalid entry throws 'invalid IP address: bogus'; ['127.0.0.1','::1'] leaves request.ip at 172.18.0.1; ['172.18.0.0/16'] resolves X-Forwarded-For)",
+      "apps/api/src/lib/signing/resolver.ts",
+      "apps/api/src/modules/signing-connector/routes.ts hasPrivateKey/hasWebhookSecret",
+      "apps/api/src/lib/ai/resolver.ts",
+      "apps/api/src/modules/ai-connector/routes.ts hasApiKey",
+      "apps/api/src/modules/auth/routes.ts oidcConfigOf",
+      "apps/api/src/lib/notifications/vapid.ts",
+      "apps/api/src/modules/api-keys/routes.ts",
+      "compose.yml networks"
+    ],
+    "corrections": [
+      {
+        "file": "all six operator texts",
+        "claim": "TRUSTED_PROXIES value for a proxy on the same host",
+        "before": "TRUSTED_PROXIES=127.0.0.1,::1.",
+        "after": "Each entry is an IP address or CIDR range, as the app sees the peer inside its container. A same-host proxy arrives through Docker's port publishing from the gateway of <project>_openlaw-backend; read it with docker network inspect ... --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}' and list it (e.g. 172.18.0.1); read it again after the network is recreated. A proxy on another host keeps its source address. Check through the proxy with the request log's remoteAddress. A non-matching value trusts nothing, shares one bucket and logs no warning; an invalid entry stops the start with 'invalid IP address'.",
+        "source": "app.ts trustProxy; handler.ts writes request.ip into X-Forwarded-For for better-auth; @better-auth/core getIPFromHeader; logging.ts remoteAddress; fastify probe; lab: 127.0.0.2 lockout answered 429 for 127.0.0.1"
+      },
+      {
+        "file": "docs/user-guides/deployment-configuration.md",
+        "claim": "Canonical trusted proxy procedure",
+        "before": "'set TRUSTED_PROXIES to the proxy's own address, for example 127.0.0.1,::1'; private VM .env block listed 127.0.0.1,::1.",
+        "after": "New H3 'Find the trusted proxy address' with the inspect command, the log check and the wrong-value effects. The private VM block drops the value and points to the H3 after the first start.",
+        "source": "as above"
+      },
+      {
+        "file": "docs/user-guides/install.md",
+        "claim": "When to set TRUSTED_PROXIES",
+        "before": "Prepare step 3 set TRUSTED_PROXIES=127.0.0.1,::1.",
+        "after": "Prepare step 3 leaves it out. New Build and start step 4 reads the gateway after the first start, sets it and recreates the app, before the setup token is read (a recreate replaces a printed token). Step 6 (was 5) adds the remoteAddress check after first sign-in.",
+        "source": "docker assigns the network range at first up; index.ts setup token per boot"
+      },
+      {
+        "file": "docs/user-guides/upgrade.md",
+        "claim": "TRUSTED_PROXIES bullet and sign-in check",
+        "before": "'such as 127.0.0.1,::1'.",
+        "after": "Gateway of the existing Compose network, readable before the upgrade; a non-matching value shares one bucket with no warning. Step 2 adds the recorded-address check.",
+        "source": "as above"
+      },
+      {
+        "file": "docs/DEPLOYMENT.md and .env.example",
+        "claim": "TRUSTED_PROXIES examples",
+        "before": "127.0.0.1,::1 in the table, Trusted proxies, the Caddy and nginx recipes and the .env.example comment.",
+        "after": "Gateway of the app's Compose network with the inspect command, the recreate caveat, the log check and the wrong-value effects; .env.example example value 172.18.0.1.",
+        "source": "as above"
+      },
+      {
+        "file": "backup-and-restore.md, operator-troubleshooting.md, deployment-configuration.md, docs/DEPLOYMENT.md",
+        "claim": "Wrong OPENLAW_SECRET_KEY with saved Advanced settings",
+        "before": "App and worker stop with 'Advanced settings cannot be decrypted'; a lost key leaves no way to start.",
+        "after": "App and worker start. encryptedText returns '' for a value no key opens, so parseSettings' decrypt guard (present && raw === null) never fires and the saved configuration reads as empty: Advanced fields the environment does not set show Default, the instance address falls back to BASE_URL or http://localhost:3000, storage to local (Documents in a store only the saved values named fail to download). The same wrong key empties the SMTP relay (test email says SMTP is not configured), Signing private key and Connect secret (shown missing, sends fail, webhook deliveries refused), the AI Saved key (calls to a keyed provider fail), SSO client configuration (sign-in through it fails), the VAPID private key ('Device notifications are off until the VAPID pair can be read') and an unread API key ('The API key cannot be opened. Contact an Administrator.'). The start log line 'No configured key opens these stored credentials' names the columns. Recovery: restore the key and recreate; meanwhile do not save in Advanced, run the recovery command or paste credentials. Lost key: pin BASE_URL and storage in .env, then re-enter.",
+        "source": "secrets.ts encryptedText/UNREADABLE_SECRET; config.ts parseSettings; signing resolver and routes; ai resolver and routes; auth/routes.ts oidcConfigOf; vapid.ts; api-keys/routes.ts; index.ts rewrap warning; lab"
+      },
+      {
+        "file": "operator-troubleshooting.md and deployment-configuration.md",
+        "claim": "Saved-settings recovery command",
+        "before": "Removes only the named section; with a wrong key it stops with the startup message.",
+        "after": "With a wrong key it exits successfully and replaces the whole saved configuration with an empty one, erasing every section for good; check the start log for advanced_settings first. Removing the saved instance address leaves the app on BASE_URL or http://localhost:3000, so the fix for a bad saved address is BASE_URL in .env.",
+        "source": "reset-advanced-settings.ts: parseSettings('' , true) returns emptySettings, the delete loop finds nothing, and the update writes {version, values: {}} sealed under the wrong key; config.ts defaults.BASE_URL; lab"
+      },
+      {
+        "file": "operator-troubleshooting.md",
+        "claim": "App keeps restarting and sign-in rows",
+        "before": "Named 'Advanced settings cannot be decrypted' as a restart cause; sign-in row linked the reset for a saved address; shared-bucket row checked only the start warning.",
+        "after": "Restart row names an invalid TRUSTED_PROXIES entry instead; sign-in row says to set BASE_URL and that removing a saved address alone leaves http://localhost:3000; shared-bucket row checks the value against the gateway and the recorded remoteAddress.",
+        "source": "as above"
+      }
+    ],
+    "hashes": {
+      "install": {
+        "before": "e3721923de08056ce6be7fa71ed7f05068a4778df8c04b745c794bb27636d0e6",
+        "after": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e"
+      },
+      "upgrade": {
+        "before": "f9819188ddbacb1c9a7f200f26fe18685da3c9b6cb8e3fc7c8701ef4a347fb36",
+        "after": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da"
+      },
+      "backup-and-restore": {
+        "before": "bd04a2a60c52fa1d44e89ddf4cedca11a25367e5c2efcae581121fe5168b6a00",
+        "after": "c9e9d5d4e4f7e68546b5a27d8ba77d7cb235ae7aaf8647f3f016f925b0a7d9b5"
+      },
+      "operator-troubleshooting": {
+        "before": "d8171252164c77698e0f311e03df15879d6fd22c5dc4365a67168e9815fab470",
+        "after": "a685d653b2b8da37a179868dde0955f0f747b83438d6af345771ab4a3606cdd0"
+      },
+      "deployment-configuration (operator group's guide)": {
+        "before": "af0ef822f497f373442f33696ced87f33aa23f340d0d97fe3662fc9f9ff307f9",
+        "after": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0"
+      },
+      "docs/DEPLOYMENT.md": {
+        "before": "cdd2ca141a23d3392a4de440e7091aa27062433e1187f821bc1e038421645e0d",
+        "after": "2c9953e591b808da2cae8ada1692fb01eaf87fe78b398fd39ff8b3f1d7978942"
+      },
+      ".env.example": {
+        "before": "87c811f1f9e6b7809a91542843e68ee91f3a3a9d751f65e1fd19cc1a97d69f62",
+        "after": "80fed2b960e9721343ba2ae1a200bd91d34d567dbf7e40b2f849344855a0d4aa"
+      }
+    },
+    "limitations": [
+      "The gateway recipe assumes Docker with its userland proxy or hairpin NAT for the loopback-published port. Podman and rootless Docker can present another source address; the remoteAddress check is the authority.",
+      "The gateway is not fixed: compose.yml does not pin the openlaw-backend subnet, so recreating the network can change it.",
+      "SSO and Signing symptoms under a wrong key are read from the code, not observed on the lab."
+    ],
+    "withdrawn": "Round 1 productBugs[0] (lost key leaves no way to start) was wrong: the app starts; the real defects are the two above."
+  }
 }

@@ -1,19 +1,54 @@
 {
   "articleId": "contributor-guide",
-  "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (roles, round 2)",
+  "contentSha256": "e11d9743d2fbf74a314460577b9c3661c00553c2c530f4e6caf9280d47c67921",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "Codex integration author; corrections by DOC-029 source-review author agent (roles); link label correction by DOC-029 integration author agent; DOC-030 corrections by DOC-030 source-review author agent (access); Kind wording by DOC-030 source-review author agent (shared-files)",
+  "technicalReviewer": "DOC-030 source-review author agent (access)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access)",
   "reviewerKind": "agent",
-  "technicalReviewer": "DOC-029 source-review author agent (roles)",
-  "verifiedAt": "2026-09-16T16:20:59.865Z",
+  "verifiedAt": "2026-09-25T11:47:02.288Z",
   "status": "pass",
-  "author": "Codex integration author; corrections by DOC-029 source-review author agent (roles); link label correction by DOC-029 integration author agent",
   "sources": [
     "docs/user-guides/contributor-guide.md",
+    "docs/documentation/batches/DOC-030/access/technical-review.json",
+    "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/access/lib.mjs",
+    "docs/documentation/batches/DOC-030/access/setup.mjs",
+    "docs/documentation/batches/DOC-030/access/fixtures.json",
+    "docs/documentation/batches/DOC-030/access/walkthrough.json",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/evidence/contributor-guide.json",
     "docs/documentation/batches/DOC-029/roles/technical-review.json",
-    "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json"
+    "docs/decision-records/DECISIONS.md",
+    "docs/decision-records/DECISIONS-CONTRACTS.md",
+    "apps/web/src/routes/portal-contracts.tsx",
+    "apps/web/src/routes/portal-matters.tsx",
+    "apps/web/src/components/portal/record-list.tsx",
+    "apps/web/src/components/table/record-filter-bar.tsx",
+    "apps/web/src/components/table/column-menu.tsx",
+    "apps/api/src/modules/portal/contracts.ts",
+    "apps/web/src/routes/portal-contract.tsx",
+    "apps/web/src/routes/portal-matter.tsx",
+    "apps/web/src/components/portal/record-work.tsx",
+    "apps/api/src/modules/portal/record-work.ts",
+    "apps/api/src/lib/custom-fields.ts",
+    "packages/shared/src/form-evaluator.ts",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/components/portal/documents-section.tsx",
+    "apps/api/src/modules/portal/document-service.ts",
+    "apps/web/src/components/portal/record-shell.tsx",
+    "apps/web/src/lib/comments.ts",
+    "apps/api/src/modules/portal/applets.ts",
+    "apps/web/src/components/portal/portal-nav.tsx",
+    "apps/web/src/routes/portal-approvals.tsx",
+    "apps/api/src/modules/portal/approvals.ts",
+    "apps/api/src/lib/contract-access.ts",
+    "messages/en-US.json",
+    "docs/documentation/batches/DOC-030/shared-files/technical-review.json"
   ],
   "scenarios": [
     {
@@ -22,69 +57,33 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Business User account signed in on the shared work documentation lab (openlaw-docs-41255c61-work).",
-        "Reviewer-created records named DOC-029 roles ... from setup-r1.mjs and setup-r1-part2.mjs (fixtures-r1.json); round 2 restored the 25 paging Matters that round 1 archived and archived them again at the end.",
-        "Ravi signed in with a fresh magic link from the work lab Mailpit; the link was not stored. Ravi is on the M-24, M-50 and paging Matter teams and on a freshly converted Contract, and absent from M-19."
+        "work2 lab from 067c1646. Ravi Menon (Business User) by fresh magic link; Nadia Haddad (Legal Team Member) by password; Amara Nwosu for team-add reach.",
+        "Fixtures (setup.mjs, API): Ravi's converted Contract C-76 of DOC-030 access Form type 09251012 (a Field Visible on Portal, a Field off the Portal, a Gate and a Branch Field), a second type whose Row for the same Field is off the Portal, an Administrator-added Document type, Ravi's Matter, a comparable Matter without Ravi, a Matter with 51 Documents and 26 paging Contracts with Ravi on the team."
       ],
-      "expected": "Contributor actions succeed only on reached work and the guide identifies the actual legal-action limits. Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access.",
-      "actual": "16 Business User steps passed on 3fa407e3, with 2 Legal fixture steps. Before Legal added him, M-24 showed Matter not found; after, Portal > Matters listed it with its M- reference, and M-19 stayed refused. Search by title with Enter, by reference with Search, and by primary Counterparty worked. Filter offered Type, Legal Owner, Stage and Expiry date on Contracts and Type, Matter Manager, Status and Lifecycle on Matters; one chip and Clear all worked. Heading sort cycled asc, desc and default in the address; Back and a bookmark kept it; Show more went from 25 to 27 rows; a heading edge drag resized Reference. Details and Fields showed Department and Region and Legal's Description change after reload, with no editable controls, while Original request kept the ask. Documents listed the Primary Document first, a PDF preview opened and download answered 200. Upload documents with New documents, Kind and Note uploaded two files; Retry failed uploads resent only an injected failure. Add version opened with the Document selected and a single-file input; earlier versions and Signed copy showed and the Primary designation stayed. Drop opened the dialog, there were no folder or archive controls, and Search Documents and Show more worked. Comments had no audience picker, kept the draft and attachment across applet switches, offered @ mentions, and Comment actions edited and deleted. Ravi's replies showed Matter Team on M-24 and Contract Team on the Contract, with Visible to Legal and all Matter team members. and Visible to Legal and all Contract team members. below the composer; Legal Only and Working Team comments stayed hidden. He added Amara from Matter team with existing members excluded and no remove control; on Confidential M-20 Add team member was disabled with Ask Legal. No Stage, Status, owner, party, confidentiality, relationship, Task, Key date or Approval controls appeared, and a direct write answered 403. A Closed Matter and an Expired (ended) Contract stayed open to him with Upload documents; an archived Matter left the Portal; removal from the team refused the link and the Documents read.",
+      "expected": "Business User actions succeed only on reached work and the guide identifies the actual legal-action limits. Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access.",
+      "actual": "19 recorded steps passed on 067c1646. fixture.reset: Reset answers: 404,404,404,409,200. G1.before-start: Before: \"Matter not found\". After Nadia added Ravi through Matter team, Matters listed the record; it showed \"DOC-030 access Ravi matter 09251012\" and M-34. The comparable M-35 showed \"Matter not found\". On his converted C-76 the team read: NH Legal Owner Creator Nadia Haddad | RM Business Owner Ravi Menon. G2.search: \"DOC-030 access Ravi\" + Enter listed M-34; \"M-34\" + Search listed only M-34; Contracts search \"Fictional Supplier\" listed C-76 through its primary Counterparty. G3.filter: Contracts Filter offered Type, Legal Owner, Stage, Expiry date; Matters Filter offered Type, Matter Manager, Status, Lifecycle. Lifecycle showed \"Lifecycle Open Closed Choose one value Apply\". Lifecycle Open with search \"DOC-030 access\" gave one chip (address ?q=DOC-030+access&category=open); Clear all removed it. G4.sort-columns-more: Your Contracts rows 25 -> 49 after Show more. Title heading: ascending ?sort=title&dir=asc -> descending ?sort=title&dir=desc -> null (no query). Back from a record returned to ?sort=title&dir=asc; reopening the bookmarked address kept aria-sort ascending. Columns showed \"Columns Reference Title Counterparty Stage Legal Owner Expiry date Type Business Owner Effective date Value Reset columns\". Dragging the Reference edge changed its width 112 -> 230 px. G5.read-record: M-34 showed Department and Region and no Original request (it started without a Request). C-76 Overview: \"Overview Counterparty DOC-030 access Fictional Supplier Ltd 09251012 Stage Draft Business Owner Ravi Menon Legal Owner Nadia Haddad Department Sales Region EMEA Term type Fixed term Value £15,000.00 /year Effective date Jan 1 Expiry date Feb 14, 2029 Renewal p\". Fields: \"Fields Description DOC-030 access live description 425353 DOC-030 access Branch field 09251012 Not recorded DOC-030 access Visible field 09251012 DOC-030 access shown change 425353 DOC-030 access Gate 09251012 No\". The Visible field and the Gate (No) were listed; the Hidden field was absent; the Branch field was listed as \"DOC-030 access Branch field 09251012 Not recorded DOC-03\" although the Gate is No. No editable controls in the record (0); Business Users cannot edit any Field. After Nadia changed the Visible field and the Description, Ravi's reload showed both, and Original request still read \"Original request DOC-030 access Ravi request 09251012 R-35 · Ravi Menon · Submitted Sep 25 Urgency: Medium DOC-030 access fictional ask from Ravi.\". On C-104 (the second type, where the same Field's Row is off the Portal) Fields read \"Fields Description Not recorded\". G6.documents-read: First row: \"Primary Document doc030-access-supporting-v1.txt Version 5 General Current 57 byte RM Ravi Menon · Sep 25 Add version 4 earlier versions\". The PDF uploaded by Legal with the Administrator-added type \"DOC-030 access Admin document type 09251012\" read \"doc030-access-preview-126272.pdf Version 1 General Current 612 byte NH Nadia Haddad · Sep 25 Add version\" (kind General). Its name opened the viewer with 1 rendered page element(s); see contributor-portal-preview.png. The download control answered 200. G7.upload-contract: Add as offered New documents, New version of doc030-access-supporting-v1.txt, New version of doc030-access-preview-126272.pdf, New version of doc030-access-general-upload-425353.txt, New version of doc030-access-second-upload-425353.txt, New version of doc030-access-business-upload-425353.txt, New version of doc030-access-preview-425353.pdf, New version of doc030-access-general-upload-729888.txt, New version of doc030-access-second-upload-729888.txt, New version of doc030-access-business-upload-729888.txt, New version of doc030-access-preview-729888.pdf, New version of doc030-access-general-upload-619901.txt, New version of doc030-access-second-upload-619901.txt, New version of doc030-access-business-upload-619901.txt, New version of doc030-access-preview-619901.pdf, New version of doc030-access-general-upload-938209.txt, New version of doc030-access-second-upload-938209.txt, New version of doc030-access-business-upload-938209.txt, New version of doc030-access-preview-938209.pdf. Kind started on General and offered General, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Amendment, Executed. With one failure injected by the reviewer's browser route, the dialog read \"Upload documents Add as New documents New version of doc030-access-supporting-v1.txt New version of doc030-access-business-upload-126272.txt New version of doc030-access-preview-126272.pdf New version\"; Retry failed uploads sent only the failed file (3 POSTs). Both Documents carry the note. Legal's Document list shows the Draft · theirs uploads as \"Draft · theirs\" / \"Draft · theirs\", and the General upload with no type (null). G7b.upload-matter: The Matter Upload documents dialog read \"Upload documents Add as New documents New version of doc030-access-matter-upload-425353.txt New version of doc030-access-matter-upload-729888.txt New version of doc030-access-matter-upload-619901.txt \" with no Kind control; the upload finished. G8.add-version: Legal pinned Version 1 as the signed copy (API). Add version opened Upload documents with \"New version of doc030-access-supporting-v1.txt\" and a single-file input. After upload the row read \"Primary Document doc030-access-supporting-v1.txt Version 6 General Current 57 byte RM Ravi Menon · Sep 25 Add version 5 earlier versions doc030-access-supporting-425353.txt Version 5 General 57 byte RM Ravi Menon · Sep 25 doc030-access-supporting-729888.txt Version 4 General 57 b\"; the first row is still the Primary Document. G9.drop-no-folders: Dropping doc030-access-dropped.txt on \"Drop files here or click to upload\" opened Upload documents with the file listed (cancelled). Documents had no folder or archive controls. G10.search-documents: \"supporting-v1\" (the first Version's filename) listed the supporting Document whose current Version is newer: \"Documents Upload documents Drop files here or click to upload Search Clear Primary Document doc030-access-supporting-v1.txt Version 6 General Current 57 byte RM\". On M-36 Documents showed 50 rows and Show more added the rest (51); \"page-37\" listed doc030-access-page-37.txt. G11.comments: Comments button before opening: \"1 Comments (1)\"; after the comments loaded and a reload: \" Comments\". No audience picker. The draft and its attachment stayed after switching to History and back and after closing and reopening Comments. @Nad offered NH Nadia Haddad. The reply posted with its attachment; Comment actions > Edit > Save changed it; Delete removed it. G12.reply-label: Matter reply row \"RM Ravi Menon Matter Team this minute \", composer text \"Visible to Legal and all Matter team members.\"; Contract reply row \"RM Ravi Menon Contract Team this minute \", composer text \"Visible to Legal and all Contract team members.\". Legal Only and Working Team comments on M-34 did not appear. See contributor-reply-label.png. G13.history: Priority change: not shown (0 new); Risk change: not shown (0 new); Legal Only comment: not shown (0 new); Working Team (Internal team) comment: not shown (0 new); Field kept off the Portal changed: not shown (0 new); Field with Visible on Portal changed: shown (1 new contract.updated); Task added with a due date: shown (1 new task.added); Second task added: shown (1 new task.added); Task edited: not shown (0 new); Tasks reordered: not shown (0 new); Task completed: shown (1 new task.completed); Task removed: not shown (0 new); Value changed: shown (1 new contract.updated); Expiry date changed: shown (1 new contract.updated); Stage move to Internal review (review): shown (1 new contract.stage_changed); Full Thread (team) comment: shown (1 new comment.posted). Contract History panel (newest first): \"History Nadia Haddad commented this minute Nadia Haddad changed the stage Draft → Review this minute Nadia Haddad changed Expiry date Feb 14, 2029 → Sep 15, 2029 this minute Nadia Haddad changed Value £15,000.00 /year → £16,000.00 /year this minute Nadia Haddad completed the task DOC-030 access probe task A edited 126272 this minute Nadia Haddad added the task DOC-030 access probe task B 126272 this minute Nadia Haddad added the task DOC-030 access probe task A 126272, due Dec 15 this minute Nadia Haddad changed DOC-030 access Visible field 09251012 DOC-030 access Legal update 126272 → DOC-030 access shown change 126272 this minute Ravi Menon commented this minute Nadia Haddad changed 2 fiel\". Closing M-34 as \"Closed\" with a closing note added 1 History entry (matter.status_changed); the Matter panel read \"History Nadia Haddad changed the status Open → Closed this minute Ravi Menon commented this minute Ravi Menon deleted a comment this minute Ravi Menon changed a comment this minute Ravi Menon commente\" and did not contain the note. See contributor-portal-history.png. Legal reopened the Matter. G14.team-add: The picker excluded Ravi and Nadia (existing members). Ravi added Amara Nwosu; she then opened M-34 in the Portal, and Nadia saw her on the full-app team (NH Matter Manager Creator Nadia Haddad | AN Amara Nwosu | RM Ravi Menon). No remove control in the Portal. On Confidential M-33 Add team member was disabled: \"Matter team NH Matter Manager Creator Nadia Haddad RM Ravi Menon Ask Legal to add members to a Confidential record.\". Nadia removed Amara and Ravi afterwards. G15.legal-limits: Neither Portal record offered Stage or Status moves, owner, party, confidentiality, relationship, Task, Key date, approval, signing or team-removal controls. Direct record writes answered 403 and 403. G16.close-end-archive-remove: Legal closed M-34 as \"Closed\" (200); Ravi still opened it with Upload documents enabled. Legal ended C-76 as \"Expired\" (200); Ravi still opened it with Upload documents and the Comments composer; Legal moved it back (200). After archiving (200) M-34 left Your Matters and its link showed \"Matter not found\"; Legal restored (200) and reopened (200) it. After Nadia removed Ravi through Matter team, his reload showed \"Matter not found\" and a Documents read answered 404. G17.approvals: Your approvals (Pending) listed both new requests. Searching the Contract title kept only that request; searching \"Nadia\" (the requester) listed both. The request page read \"All approvals C-468 DOC-030 access Ravi approve approval 126272 Pending doc030-access-approve-paper-126272.txt Download Download the document to review it 43 byte Download Approval request NH Requested by Nadia Haddad Requested Sep 25, 2026\". Jonas's decision on Ravi's request answered 404. Ravi entered a Note and selected Approve; the page then read \"Your decision Approved Sep 25, 2026, 3:46 PM GMT+4 DOC-030 access approval note 126272\" with no Approve or Reject, and a second decision answered 409. Reject on the other request worked. Completed listed both. /portal/contracts/468 showed \"Contract not found\" (the request did not add Ravi to the team).",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/roles/walkthrough-r2.mjs"
+        "docs/documentation/batches/DOC-030/access/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access/lib.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
-    "Legal-side changes used API stand-ins, named in each step: Request conversion and primary upload, the primary Counterparty, the signed-copy pin, closing, archiving, restoring and reopening M-24, moving the Contract to Expired and back, and Legal Only and Working Team probe comments.",
-    "The upload failure was injected by the reviewer's browser route, not produced by the server.",
-    "The drop onto Documents was a synthetic drag-and-drop event, not a native file drag from the desktop.",
-    "The work lab is shared with other DOC-029 agents. This walkthrough created only records named DOC-029 roles ... and changed no organisation settings.",
-    "Round 1 failed on the reply tier label sentence (walkthrough-r1.json). Round 2 ran the whole article again against the corrected text."
+    "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
+    "The work2 lab is shared with other DOC-030 agents. The walkthrough created only records and accounts named DOC-030 access (fixtures.json) and deleted nothing that another guide uses. Legal and Administrator actions that are fixtures or a second actor's writes used API sessions; each such step says so.",
+    "The shared sign-in link budget (3 per address and 30 per client address in 15 minutes) made the script wait out 429 answers before Business User sign-in. Earlier attempts are kept as walkthrough-attempt2.json, run-attempt2.log and run-3.log (run-3.log holds the final portal-sign-in run; run-4.log the final contributor-guide run; run-5.log the final roles-and-access run; run-5-interrupted.log is a roles run cut short by a session restart). The earlier failures were reviewer script errors: a stale team row from a previous run, a message read before it rendered, a task reorder that listed only two tasks, an unchanged expiry date, an Entity list read past its first page, and a History count compared by length on a full page.",
+    "The registry action Edit permitted business Fields has no control: the Portal record has no editable Field, and direct record writes by Ravi answered 403. The guide says to ask Legal, which is what the app supports.",
+    "Removing Ravi's reach is a Legal action: Nadia removed him through Matter team in the full app; the Portal has no remove control.",
+    "Product bug confirmed (not a guide failure; the guide describes the current behavior): Portal record ignores Branch conditions (DD-028 points 4 and 5). Reproduction: on work2, C-76 uses DOC-030 access Form type 09251012, whose Branch shows DOC-030 access Branch field 09251012 only when DOC-030 access Gate 09251012 is Yes. With the Gate at No and the Branch field empty, Ravi Menon's Portal record lists the Branch field as Not recorded (step G5). The staff record applies the Form evaluator; the Portal record does not.",
+    "Stage and Status moves, closing, ending, archiving and pinning the signed copy were done by Legal through the API as the second actor."
   ],
   "previousEvidence": {
-    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-    "contentSha256": "279714f01601850e530c33fc253bf68bbf5efb8ea8585651ff3a4053e8fc437e",
-    "verifiedAt": null
-  },
-  "copyOnlyReview": {
-    "classification": "copy-only",
-    "reviewer": "DOC-029 independent re-walk agent",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T17:37:45Z",
-    "previousContentSha256": "0062352d67a7c20bc2a0500f59ac4fcbfc8d663004bdb5f391b6f2069392cc0b",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
-    "priorEvidence": {
-      "path": "docs/documentation/evidence/contributor-guide.json",
-      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-      "contentSha256": "0062352d67a7c20bc2a0500f59ac4fcbfc8d663004bdb5f391b6f2069392cc0b",
-      "verifiedAt": "2026-09-16T16:20:59.865Z",
-      "walkthroughReviewer": "DOC-029 independent walkthrough agent (roles, round 2)"
-    },
-    "changes": [
-      "Line 41: the link label for comments-and-activity.md changed from \"Comments, attachments, and activity\" to \"Choose who can read a comment\". That is the article title in articles.json and its H1. The link target did not change."
-    ],
-    "whyPriorWalkthroughsApply": "No action, prerequisite, result, control name or meaning changed. Only the visible text of one link changed, so the link now names the article it opens. The walkthrough evidence above ran against the previous bytes and is kept unchanged. No fresh walkthrough is claimed for these bytes."
+    "verifiedAt": "2026-09-16T16:20:59.865Z"
   },
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "41061cf95fdcba870bce03536267de1b675e4d5a4dc865d3ed2fc10c54c8a00a",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (roles)) found the article compatible: I inspected the 43 app files and messages/en-US.json changed from 3fa407e3 to 57e77e38; none touches Portal lists, record pages, Documents, Comments or team applets. I replayed the round 1 V-C25 walkthrough on the work2 lab built from 57e77e38, and all 18 contributor-guide steps passed as Business User with Legal fixture steps. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/roles.json",
-        "sha256": "9ef1cd3fcd7dc772b27d0d8dd82c46bee4ab0f9724ab0ef0d695ff4eac59e48e"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "copyOnlyReview": null,
+  "compatibilityReview": null
 }

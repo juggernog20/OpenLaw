@@ -1,99 +1,79 @@
 {
   "articleId": "document-folders",
-  "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (documents)",
-  "technicalReviewer": "DOC-029 source-review author agent (documents)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (documents, round 1)",
+  "contentSha256": "827703e03b632fcbcf3286aaf0f1d36b6470986afc290fd84e17767ac5eb81c3",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (shared-files)",
+  "technicalReviewer": "DOC-030 source-review author agent (shared-files)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (documents-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:44:43.090Z",
+  "verifiedAt": "2026-09-25T13:30:42.371Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/document-folders.md",
-    "apps/web/src/components/documents/documents-card.tsx",
+    "docs/documentation/batches/DOC-030/shared-files/technical-review.json",
+    "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/documents-2/lib.mjs",
     "apps/web/src/components/documents/batch-dialog.tsx",
-    "apps/web/src/components/documents/bulk-document-actions.tsx",
-    "apps/web/src/components/documents/use-document-drag.ts",
-    "apps/api/src/modules/documents/folders.ts",
-    "apps/api/src/modules/documents/routes.ts",
-    "apps/web/src/components/portal/documents-section.tsx",
-    "docs/decision-records/DECISIONS-DOCUMENTS.md",
-    "docs/documentation/batches/DOC-029/documents/technical-review.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/lib/documents.ts",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C27",
-      "coverage": ["C27"],
+      "coverage": [
+        "C27"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab.",
-        "Walkthrough-created Contracts and a Matter named \"DOC-029 documents ...\"; reviewer-built fixture files and a local folder tree built at run time with one nested and one empty folder.",
-        "Named browser-network fixtures: one 503 answer for a retryable failure, one 413 answer for a size refusal, and slowed uploads for Cancel remaining."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z.",
+        "Fictional Contract, Matter and Entity records named \"DOC-030 documents-2 … folders …\" created by the signed-in role through the lab API, with two loose text Documents on the Contract. A local folder tree (one nested folder, one empty folder, two files) and a 101 MiB zero-byte file, one MiB over the lab's default 100 MB upload ceiling, generated at run time as the intentionally failing file.",
+        "Administrator added the Matter Document type \"DOC-030 documents-2 Matter type <stamp>\" in Settings → Documents in the browser; the run archived it at the end. The Entity list held a type another agent had added."
       ],
-      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
-      "actual": "15 recorded browser steps passed for this role. New folder created an empty folder with no expand control; New subfolder and Rename worked and the parent gained an expand control. A case-only duplicate, a blank name, a slash, . and .. were each refused with a message and nothing was created. Move into omitted the folder and its descendant, the seam refused both cycles with 409, a folder moved under another folder and back to the top level with None. Move to folder with File in filed a Document and None moved it out; a row dragged onto a folder row was filed and dragged onto \"Drop here to move out of folders\" was moved out; checkboxes and the selection bar Move filed two Documents. Folder Delete said \"Anything in it moves onto the contract itself. Nothing is deleted.\" and left both Documents live. A three-file import showed Destination Record root and Version kind, settled at \"Imported 2 of 3 files\" with a row Retry and \"Retry 1 file\", kept the good files as v1 Documents, and the row Retry sent only the failed file. A 413 row had no Retry and Done closed. A fully successful import closed by itself. Cancel remaining settled a slowed five-file import with the queued files cancelled and the uploaded files on the record. Choose folder kept the nested path, dropped the empty folder, and reused the existing folder path on a second import. A local tree dropped on a folder row named that folder as Destination and recreated the empty folder. A Matter import had no Version kind.",
+      "expected": "Successful files remain available and the failed item is identified separately. Negative checks: Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": "16 browser steps passed as Nadia Haddad (Legal Team Member) in an isolated Playwright Chromium context. (1) New folder opened a dialog with Name and Save. The \"DOC-030 Legal Parent\" row appeared reading \"DOC-030 Legal Parent Empty\" with no expand control. (2) Actions for the DOC-030 Legal Parent folder offered New subfolder; its dialog \"New folder in DOC-030 Legal Parent\" created the child, shown under the parent, which now had an expand/collapse control. Rename opened \"Rename folder\" and changed \"DOC-030 Legal Child draft\" to \"DOC-030 Legal Child\". Read-back: the child's parent is DOC-030 Legal Parent. (3) All five names were refused in the dialog and no folder was created (2 folders before and after). \"DOC-030 LEGAL PARENT\": A folder named DOC-030 LEGAL PARENT is already here.; \"   \": Give the folder a name.; \"DOC-030 a/b\": A folder name cannot contain a slash. Make a folder inside instead.; \".\": A folder cannot be named . or .. — those address a path, not a folder.; \"..\": A folder cannot be named . or .. — those address a path, not a folder.. (4) Move into for \"DOC-030 Legal Parent\" offered None, DOC-030 Legal Other: not the folder itself or its child. A second-actor request to move it into its own child was refused (409: A folder cannot be moved inside itself.) and into itself (409). Moving \"DOC-030 Legal Child\" into \"DOC-030 Legal Other\" read back as DOC-030 Legal Other/DOC-030 Legal Child; Move into None put it at the top level. (5) Move to folder opened \"Move doc030-legal-loose-a.txt\" with File in; choosing \"DOC-030 Legal Parent\" filed the Document there, shown after expanding the folder. File in None moved it back onto the record (read-back). (6) Dragging the \"doc030-legal-loose-b.txt\" row onto the \"DOC-030 Legal Other\" folder row filed it there (read-back). Dragging it from inside the folder showed \"Drop here to move out of folders\"; dropping on it moved the Document back to the record. (7) Selecting both checkboxes showed \"2 selected\" with Move. The \"Move 2 documents\" dialog with File in \"DOC-030 Legal Parent\" filed both Documents there (read-back). (8) The confirmation read \"Delete the DOC-030 Legal Parent folder? Anything in it moves onto the contract itself. Nothing is deleted. Cancel Delete\". After Delete the folder was gone and both Documents were live at the record root (read-back). (9) Upload, Choose files with two files opened \"Import 2 files\" with Type on \"No type\"; its options were No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012. Choosing Type \"Executed\" in Upload document first, then two files, opened the Import dialog with Type already on \"Executed\". Cancel closed both without uploading. (10) Choose files with three text files and a 101 MiB file opened \"Import 4 files\" reading \"Import 4 files Destination Record root doc029-bulk-a.txt 46 byte doc029-bulk-b.txt 46 byte doc029-bulk-c.txt 46 byte doc030-oversize.bin 105.9 MB Type No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DO\". The Type control's help (aria-describedby batch-type-help) read \"Applied to every file in this import. Notes are not collected in bulk.\". With Type \"Draft · theirs\" and the browser dropping the connection once for doc029-bulk-c.txt, the dialog settled as \"Imported 2 of 4 files 2 of 4 files uploaded doc029-bulk-c.txt That file could not be uploaded. Retry doc030-overs… (11) A two-file import with no failure closed the dialog by itself; the Documents list showed the new rows and the record gained two Documents (read-back). (12) With each upload slowed four seconds by the browser, the running dialog said \"Keep this dialog open until the import finishes.\" Cancel remaining settled it at \"Imported 3 of 5 files\": 2 file(s) read \"Cancelled before it was uploaded.\" and the 3 uploaded file(s) were on the record (read-back +3). (13) Choose folder on a local tree (two files, one nested folder, one empty folder) opened \"Import 2 files\" reading \"Import 2 files Destination Record root Folder structure is kept doc030-tree-legal-09251315 1 folder · 2 files sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No type Draft · ours Draft · theirs Redline\". The import created doc030-tree-legal-09251315 and doc030-tree-legal-09251315/sub-a with the files; the empty folder was not created. Importing the same tree again reused doc030-tree-legal-09251315 (still one folder of that name). (14) Dropping the local tree on the \"DOC-030 Legal Other\" row opened a dialog reading \"Import 2 files Destination DOC-030 Legal Other Folder structure is kept doc030-tree-legal-09251315 2 folders · 2 files empty-dir Empty sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No type Draft · ou\". The import created DOC-030 Legal Other/doc030-tree-legal-09251315/sub-a and the empty DOC-030 Legal Other/doc030-tree-legal-09251315/empty-dir. (15) The Matter's active type list held 4 type(s). Import 2 files showed Destination and Type (start \"No type\"; options No type, DOC-030 admin-config V-C38 Board resolution renamed 0925112134, DOC-030 admin-config V-C38 Board resolution renamed 0925112257, DOC-030 documents-2 Matter type 09251152, DOC-030 documents-2 Matter type 09251315). With \"DOC-030 documents-2 Matter type 09251315\" chosen, both new Documents were Version 1 of that type (read-back). (16) The Entity type list held 0 active type(s) (none). On Entity \"DOC-030 documents-2 Legal folders Entity 09251315 Ltd\", Import 2 files showed Destination and no Type control. Cancel closed it. Business User negative check, Jonas Weber through a fresh Portal magic link: Jonas Weber signed in to the Portal with a fresh magic link. On C-525, Upload documents (\"Upload documents Add as New documents New version of doc030-portal-seed-09251315.txt Drop files or choose files Kind General Draft · ours Dr\") had no Choose folder; the Documents section had no New folder or Move to folder. Two files uploaded together became two Documents at the record root (read-back by Legal). A folder create request answered 403 and moving a Document into a folder answered 403; the Docu…",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C27",
-      "coverage": ["C27"],
+      "coverage": [
+        "C27"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab.",
-        "Walkthrough-created Contracts and a Matter named \"DOC-029 documents ...\"; reviewer-built fixture files and a local folder tree built at run time with one nested and one empty folder.",
-        "Named browser-network fixtures: one 503 answer for a retryable failure, one 413 answer for a size refusal, and slowed uploads for Cancel remaining."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z.",
+        "Fictional Contract, Matter and Entity records named \"DOC-030 documents-2 … folders …\" created by the signed-in role through the lab API, with two loose text Documents on the Contract. A local folder tree (one nested folder, one empty folder, two files) and a 101 MiB zero-byte file, one MiB over the lab's default 100 MB upload ceiling, generated at run time as the intentionally failing file.",
+        "Administrator added the Matter Document type \"DOC-030 documents-2 Matter type <stamp>\" in Settings → Documents in the browser; the run archived it at the end. The Entity list held a type another agent had added."
       ],
-      "expected": "Successful files remain available and the failed item is identified separately. Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
-      "actual": "15 recorded browser steps passed for this role. New folder created an empty folder with no expand control; New subfolder and Rename worked and the parent gained an expand control. A case-only duplicate, a blank name, a slash, . and .. were each refused with a message and nothing was created. Move into omitted the folder and its descendant, the seam refused both cycles with 409, a folder moved under another folder and back to the top level with None. Move to folder with File in filed a Document and None moved it out; a row dragged onto a folder row was filed and dragged onto \"Drop here to move out of folders\" was moved out; checkboxes and the selection bar Move filed two Documents. Folder Delete said \"Anything in it moves onto the contract itself. Nothing is deleted.\" and left both Documents live. A three-file import showed Destination Record root and Version kind, settled at \"Imported 2 of 3 files\" with a row Retry and \"Retry 1 file\", kept the good files as v1 Documents, and the row Retry sent only the failed file. A 413 row had no Retry and Done closed. A fully successful import closed by itself. Cancel remaining settled a slowed five-file import with the queued files cancelled and the uploaded files on the record. Choose folder kept the nested path, dropped the empty folder, and reused the existing folder path on a second import. A local tree dropped on a folder row named that folder as Destination and recreated the empty folder. A Matter import had no Version kind.",
+      "expected": "Successful files remain available and the failed item is identified separately. Negative checks: Unsupported folder actions or uploads are refused for the relevant role without claiming the whole batch succeeded.",
+      "actual": "17 browser steps passed as Daniel Okafor (Administrator) in an isolated Playwright Chromium context. (1) Settings → Documents opened /settings/documents/matters (active Matter types before: DOC-030 admin-config V-C38 Board resolution renamed 0925112134, DOC-030 admin-config V-C38 Board resolution renamed 0925112257, DOC-030 documents-2 Matter type 09251152). Add type, New type name, Save listed \"DOC-030 documents-2 Matter type 09251315\" (read-back active). (2) New folder opened a dialog with Name and Save. The \"DOC-030 Admin Parent\" row appeared reading \"DOC-030 Admin Parent Empty\" with no expand control. (3) Actions for the DOC-030 Admin Parent folder offered New subfolder; its dialog \"New folder in DOC-030 Admin Parent\" created the child, shown under the parent, which now had an expand/collapse control. Rename opened \"Rename folder\" and changed \"DOC-030 Admin Child draft\" to \"DOC-030 Admin Child\". Read-back: the child's parent is DOC-030 Admin Parent. (4) All five names were refused in the dialog and no folder was created (2 folders before and after). \"DOC-030 ADMIN PARENT\": A folder named DOC-030 ADMIN PARENT is already here.; \"   \": Give the folder a name.; \"DOC-030 a/b\": A folder name cannot contain a slash. Make a folder inside instead.; \".\": A folder cannot be named . or .. — those address a path, not a folder.; \"..\": A folder cannot be named . or .. — those address a path, not a folder.. (5) Move into for \"DOC-030 Admin Parent\" offered None, DOC-030 Admin Other: not the folder itself or its child. A second-actor request to move it into its own child was refused (409: A folder cannot be moved inside itself.) and into itself (409). Moving \"DOC-030 Admin Child\" into \"DOC-030 Admin Other\" read back as DOC-030 Admin Other/DOC-030 Admin Child; Move into None put it at the top level. (6) Move to folder opened \"Move doc030-admin-loose-a.txt\" with File in; choosing \"DOC-030 Admin Parent\" filed the Document there, shown after expanding the folder. File in None moved it back onto the record (read-back). (7) Dragging the \"doc030-admin-loose-b.txt\" row onto the \"DOC-030 Admin Other\" folder row filed it there (read-back). Dragging it from inside the folder showed \"Drop here to move out of folders\"; dropping on it moved the Document back to the record. (8) Selecting both checkboxes showed \"2 selected\" with Move. The \"Move 2 documents\" dialog with File in \"DOC-030 Admin Parent\" filed both Documents there (read-back). (9) The confirmation read \"Delete the DOC-030 Admin Parent folder? Anything in it moves onto the contract itself. Nothing is deleted. Cancel Delete\". After Delete the folder was gone and both Documents were live at the record root (read-back). (10) Upload, Choose files with two files opened \"Import 2 files\" with Type on \"No type\"; its options were No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012. Choosing Type \"Executed\" in Upload document first, then two files, opened the Import dialog with Type already on \"Executed\". Cancel closed both without uploading. (11) Choose files with three text files and a 101 MiB file opened \"Import 4 files\" reading \"Import 4 files Destination Record root doc029-bulk-a.txt 46 byte doc029-bulk-b.txt 46 byte doc029-bulk-c.txt 46 byte doc030-oversize.bin 105.9 MB Type No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DO\". The Type control's help (aria-describedby batch-type-help) read \"Applied to every file in this import. Notes are not collected in bulk.\". With Type \"Draft · theirs\" and the browser dropping the connection once for doc029-bulk-c.txt, the dialog settled as \"Imported 2 of 4 files 2 of 4 files uploaded doc029-bulk-c.txt That file could not be uploaded. Retry doc030-overs… (12) A two-file import with no failure closed the dialog by itself; the Documents list showed the new rows and the record gained two Documents (read-back). (13) With each upload slowed four seconds by the browser, the running dialog said \"Keep this dialog open until the import finishes.\" Cancel remaining settled it at \"Imported 3 of 5 files\": 2 file(s) read \"Cancelled before it was uploaded.\" and the 3 uploaded file(s) were on the record (read-back +3). (14) Choose folder on a local tree (two files, one nested folder, one empty folder) opened \"Import 2 files\" reading \"Import 2 files Destination Record root Folder structure is kept doc030-tree-admin-09251315 1 folder · 2 files sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No type Draft · ours Draft · theirs Redline\". The import created doc030-tree-admin-09251315 and doc030-tree-admin-09251315/sub-a with the files; the empty folder was not created. Importing the same tree again reused doc030-tree-admin-09251315 (still one folder of that name). (15) Dropping the local tree on the \"DOC-030 Admin Other\" row opened a dialog reading \"Import 2 files Destination DOC-030 Admin Other Folder structure is kept doc030-tree-admin-09251315 2 folders · 2 files empty-dir Empty sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No type Draft · ou\". The import created DOC-030 Admin Other/doc030-tree-admin-09251315/sub-a and the empty DOC-030 Admin Other/doc030-tree-admin-09251315/empty-dir. (16) The Matter's active type list held 4 type(s). Import 2 files showed Destination and Type (start \"No type\"; options No type, DOC-030 admin-config V-C38 Board resolution renamed 0925112134, DOC-030 admin-config V-C38 Board resolution renamed 0925112257, DOC-030 documents-2 Matter type 09251152, DOC-030 documents-2 Matter type 09251315). With \"DOC-030 documents-2 Matter type 09251315\" chosen, both new Documents were Version 1 of that type (read-back). (17) The Entity type list held 0 active type(s) (none). On Entity \"DOC-030 documents-2 Admin folders Entity 09251315 Ltd\", Import 2 files showed Destination and no Type control. Cancel closed it. Business User negative check, Jonas Weber through a fresh Portal magic link: Jonas Weber signed in to the Portal with a fresh magic link. On C-525, Upload documents (\"Upload documents Add as New documents New version of doc030-portal-seed-09251315.txt Drop files or choose files Kind General Draft · ours Dr\") had no Choose folder; the Documents section had no New folder or Move to folder. Two files uploaded together became two Documents at the record root (read-back by Legal). A folder create request answered 403 and moving a Document into a folder answered 403; the Docu…",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the article author and the source reviewer; not a human user study and not feature-owner approval.",
-    "The folder drop used Chromium DevTools drag events carrying a real local directory, in headless Playwright; drag of Document rows used mouse drag in the same browser. Other browsers were not checked.",
-    "Upload failures were browser-network fixtures (503 and 413); a real deployment size limit and a real connection loss were not produced. The unreadable-folder warning for a partly unreadable dropped tree was not produced.",
-    "Folder Delete was observed for a top-level folder (contents move onto the record); dissolving a nested folder into its parent was not exercised.",
-    "Business User limits (no Choose folder or New folder in the Portal, 403 for folder create and move) are a supplementary business_user step; V-C27 does not require that role.",
-    "The shared work lab was used by other agents at the same time; only records named DOC-029 documents ... were created."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named \"DOC-030 documents-2 …\" were created. Organization settings changed for the run and put back: Matter Document type list \"DOC-030 documents-2 Matter type 09251315\" (archived at teardown (200)); Knowledge type list \"DOC-030 documents-2 retired Knowledge type 09251315\" (delete answered 204); Matter Document type list \"DOC-030 documents-2 Matter type 09251152\" (archived at teardown (200)). Development runs before the recorded run left more DOC-030 documents-2 records; they are not credited. An earlier full run stopped when the orchestrating session restarted; its Matter type was archived by this run's teardown and its archived Knowledge type fixture was deleted through the lab API before this run finished.",
+    "The retryable failure was a connection the browser dropped once for one file (a Playwright route abort), and Cancel remaining ran with each upload slowed four seconds by the browser. The size refusal was real: the lab refused the 101 MiB file with \"That file is over the 100 MB upload limit.\". Cycle refusals were checked with a second request through the lab API after the browser showed no such choice."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "1844521ab7ef07fc40fe8e0c01aaeb7df5022acf1e8059b2b24716f809838fec",
-    "verifiedAt": "2026-09-07T21:17:26.874Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
+    "verifiedAt": "2026-09-16T15:44:43.090Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "a247d1e835a71ac3570cc54f0b45829f4b309536c434459ca2881aa2c18406c7",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/documents.json",
-        "sha256": "3129c2786313b928fdd642e565cda91ea74a4bd3467b1839b0dfcec7d3ee8b7a"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

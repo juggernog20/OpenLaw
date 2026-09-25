@@ -1,104 +1,95 @@
 {
   "articleId": "request-forms",
-  "contentSha256": "b7be99eb4442a012c4e00fbe17cc964a74d347ac4195e5b28b3faafb11be64fd",
-  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-  "buildId": "app sha256:1cd2f4154a95ada8f160c0d0c19b707c1976c6f8c9567ac2c9e1ff8e72e82612; engine sha256:a08aec1325443a0894322590772fabfa0e5ce1e7a1d3b281ce2263534f7a15c9",
-  "environment": "openlaw-docs-41255c61-admin2",
-  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (admin-config, round 1)",
+  "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-030 source-review author agent (admin-config)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-config)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-config); round 2 corrections by DOC-029r2 source-review author agent (admin-config)",
-  "technicalReviewer": "DOC-029r2 source-review author agent (admin-config)",
-  "verifiedAt": "2026-09-16T18:12:47Z",
+  "verifiedAt": "2026-09-25T13:31:22.161Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/request-forms.md",
-    "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
-    "docs/documentation/batches/DOC-029/admin-config/technical-review-r2.json",
-    "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json"
+    "docs/documentation/batches/DOC-030/admin-config/technical-review.json",
+    "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
+    "docs/documentation/batches/DOC-030/admin-config/api.mjs",
+    "docs/documentation/batches/DOC-030/admin-config/v-c40-portal-contract-form.png",
+    "docs/documentation/batches/DOC-030/admin-config/v-c40-portal-archived-destination.png",
+    "CONTEXT.md",
+    "docs/decision-records/DECISIONS.md (DD-028 points 6, 7 and built addendum)",
+    "docs/decision-records/DECISIONS-INTAKE.md (INT-002 addenda 2026-08-20 and the archived target type addendum, DD-028 addendum)",
+    "apps/web/src/routes/settings-request-types.tsx",
+    "apps/web/src/routes/settings-request-type-editor.tsx",
+    "apps/web/src/components/type-form/intake-card.tsx",
+    "apps/web/src/components/type-form/preview.tsx",
+    "apps/web/src/components/type-form/model.ts",
+    "apps/web/src/routes/settings-intake-links.tsx",
+    "apps/web/src/routes/portal.tsx",
+    "apps/web/src/routes/portal-request-form.tsx",
+    "apps/web/src/components/intake/convert-dialog.tsx",
+    "apps/api/src/modules/request-types/routes.ts",
+    "apps/api/src/lib/intake-form.ts",
+    "apps/api/src/modules/portal/routes.ts",
+    "apps/api/src/modules/requests/convert.ts",
+    "packages/db/src/schema/request-types.ts",
+    "packages/db/migrations/0157_type-forms.sql",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C40",
-      "coverage": ["C40"],
+      "coverage": [
+        "C40"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator signed in on the admin2 documentation lab built from 57e77e38; seeded Business User signed in to the Portal with a fresh emailed link.",
-        "Reviewer-created Contract and Matter destination types, Global Entity and User Fields, a Portal-listed fictional Entity, and three request types added in Settings."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "API fixtures as the Administrator: destination Contract type (MSA) with a required Number Field on intake, Term type, Value and Counterparties on intake and a Branch 'Term type is Fixed' holding a required Expiry date; destination Matter type (Advisory) with a required Single select Field on intake; a third Contract type used as the archived destination. The Knowledge guidance is the seeded published Item 'How to ask legal for help'."
       ],
-      "expected": "Add request type saves with Save and Cancel discards a draft. A request type added in Settings shows No target and offers only Global Fields; the editor has no Target control. Description, turnaround, Required, order and deflection links save and appear on the Portal. A missing required answer is refused. Conversion to a Contract and to a Matter carries attached answers, lists unattached answers under Does not carry, refuses a blank type, and never uses an archived configured type or another module silently. Archiving a request type removes its Portal card and form but keeps its Requests readable.",
-      "actual": "13 recorded steps passed on 57e77e38 for the Administrator and the Business User. Cancel on a named request type draft created no row (checked after reload). Add request type with a display name and Save showed \"Target: No target\"; the editor had only Display name, Description and Target turnaround (business days). 36501 was refused with \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\"; 5 saved. The No target Attach field menu listed only \"\u00b7 global\" Fields, while seeded Contract- and Matter-targeted types also offered their module Fields. Required and ArrowUp reorder persisted; Department is a required basic; a User Field's Required is disabled with \"... can't be required. A requester cannot pick a person in the Portal.\"; an Entity Field's Required saved. An address without https:// was refused; an External address link and a Knowledge item link saved with per-form Placement, Edit and reorder. On the Portal both cards showed the description and \"Estimated turnaround: 5 business days\" / \"0 business days\", each form showed only its own Before you submit link, Fields showed in the configured order with \"(required)\", a missing Deal value was refused with \"Deal value (USD) is required.\", and the Entity Field offered only the Portal-listed Entity. Converting to a Contract refused a blank type with \"Pick a contract type.\", carried Deal value 125000 and listed Country under \"Does not carry into the contract\". Converting the Matter form Request to the Matter type showed no Does not carry list, and the new Matter holds the Entity answer and the Request title. With the configured Target type archived, conversion offered only live types, refused a blank type, and created a Contract of the chosen live type. Archiving a request type removed its card, sent its form address to /portal, kept R-29 readable, and Restore brought the card back. Remove deleted the links with no archive and the Knowledge Item stayed published.",
+      "expected": "One Request type per conversion target collects the intended values through the destination Form; conversion follows the configured target; missing required answers are refused; an archived target does not route work to another module.",
+      "actual": "15 recorded steps passed (12 as Daniel Okafor, 3 as Jonas Weber). Profile menu > Settings > Intake > Request types listed a Destination column (\"Destination\"). Add request type + Cancel left no row; Save added \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" (row \"DOC-030 admin-config V-C40 Docs Contract review 0925132941 Destination: Matter · Default\"), \"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" and \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\". Edit opened the editor with Default destination \"Matter\" and Default matter type \"Default\". The Description saved on Tab and read \"Ask Legal to review a supplier contract. Fictional DOC-030 walkthrough form.\" after reload. Default destination Contract showed Default contract type \"Default\" with \"Default\" as the first option; choosing \"DOC-030 admin-config V-C40 MSA 0925132941\" refreshed the Intake form card to its Rows. Switching to Matter reset the type to \"Default\"; back to Contract it read \"Default\". After choosing \"DOC-030 admin-config V-C40 MSA 0925132941\" again and reloading it read \"DOC-030 admin-config V-C40 MSA 0925132941\". The list row reads \"DOC-030 admin-config V-C40 Docs Contract review 0925132941 Ask Legal to review a supplier contract. Fictional DOC-030 walkthrough form. Destination: Contract · DOC-030 admin-config V-C40 MSA 0925132941\". 36501 + Enter showed \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\". 5 + Tab saved; after reload the control reads \"5\". The Intake form card has no inputs (0) and lists [\"Title Text Required\",\"Department Single select Required\",\"Urgency Single select Required\",\"Description Long text Optional\",\"DOC-030 admin-config V-C40 Deal value 0925132941 Number Required\",\"Counterparties Multi select Optional\",\"Term type Single select Optional\",\"Value Money Optional\",\"Show when all of: Term type is Fixed Expiry date Date Required\",\"Expiry date Date Required\",\"Attachments Files Optional\"]; its text includes the Branch header (Show when … Term type is Fixed present). The eye button opened a preview naming \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" with its description. Expiry date showed for Fixed and not for Evergreen. Submit request showed \"Title is required. | Department is required. | DOC-030 admin-config V-C40 Deal value 0925132941 is required.\" and sent nothing. Escape closed it and focus returned to \"Preview intake form\". Edit form opened /settings/contracts/types/01a0d8c1-ec84-738f-85a8-221cbe182155/form (Form header \"Form DOC-030 admin-config V-C40 MSA 0925132941 Attach Field Create Field Add condition Preview intake form\"). Built-in Contract Rows: Counterparties: present, Effective date: present, Expiry date: present, Term type: present, Value: present; Status Row absent. \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\" with Contract and type Default showed a card for the Default type (\"Intake form Edit form Default Title Text Required Department Single select Required Urgency Single select Required Descr\"…) whose Edit form link opens the Default Contract type (\"Default\"); it was then pointed at \"DOC-030 admin-config V-C40 Retired destination 0925132941\". \"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" saved Default destination Matter with \"DOC-030 admin-config V-C40 Advisory 0925132941\"; its card lists [\"Title Text Required\",\"Department Single select Required\",\"Urgency Single select Required\",\"Description Long text Optional\",\"DOC-030 admin-config V-C40 Advice area 0925132941 Single select Required\",\"Attachments Files Optional\"]. A bare address was refused with \"Enter a full web address that starts with http:// or https://.\"; with https:// the External address link \"DOC-030 admin-config V-C40 Supplier checklist 0925132941\" saved with Placement \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\". Knowledge item offered 24 live items; \"How to ask legal for help\" saved as \"DOC-030 admin-config V-C40 How to ask Legal 0925132941\" for \"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" after Edit changed its Label. ArrowUp moved it from 14 to 13, kept after reload. Inbox R-158 > Triage > Convert to contract opened a dialog with Contract type \"DOC-030 admin-config V-C40 MSA 0925132941\" (\"Convert R-158 to a contract DOC-030 admin-config V-C40 Docs Contract review 0925132941 · submitted by Jonas Weber Title* Contract type* Type… NDA MSA SOW Sales \"…). After Convert the Request page read Status \"Status Converted C-526 Converted by Daniel Okafor on Sep 25\" with a link \"C-526\". C-526 is of type \"DOC-030 admin-config V-C40 MSA 0925132941\"; it holds \"DOC-030 admin-config V-C40 Deal value 0925132941\" 125000 (Fields tab shows \"125,000\") and Term type evergreen. Inbox R-159 > Triage > Convert to matter proposed Matter type \"DOC-030 admin-config V-C40 Advisory 0925132941\". After Convert the Request page read Status \"Status Converted M-211 Converted by Daniel Okafor on Sep 25\"; M-211 (\"DOC-030 admin-config V-C40 Advisory 0925132941\") is holding \"DOC-030 admin-config V-C40 Advice area 0925132941\" = \"Privacy\". Inbox R-160 reads \"Converts to Contract\". Triage offered [\"Convert to contract\",\"Convert to matter\",\"Resolve request without converting\"]. Convert to contract opened \"Convert R-160 to a contract\" with Contract type \"Type…\"; the archived \"DOC-030 admin-config V-C40 Retired destination 0925132941\" is not offered (40 options). The dialog stays in the Contract module. It was closed without converting. Archive \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\" read \"Archive DOC-030 admin-config V-C40 Docs retired destination form 0925132941 DOC-030 admin-config V-C40 Docs retired destination form 0925132941 is used by 1 request. Pick a replacement type — that request moves to it when the type is archived. Reassign 1 request to No reassignment NDA request Contract review Legal question Vendor onboarding Employment question DOC-030 portal Evaluation review 1790330794487 DOC-030 inbox Supplier contract request DOC-030 inbox Advisory matter request DOC-030 contracts-c matter request 20260925112623 DOC-030 contracts-c matter request 20260925112826 DOC-030 contracts-c matter request 20260925112933 DOC-030 contracts-c matter request 20260925113117 DOC-030 contracts-c matter request 20260925113237 DOC-030 contracts-c matter request 20260925113332 DOC-030 admin-config V-C40 Docs Contract review 0925114526 DOC-030 admin-config V-C40 Docs Matter advice 0925114526 DOC-030 admin-config V-C40 Docs Contract review 0925114842 DOC-030 admin-config V-C40 Docs Matter advice 0925114842 DOC-030 admin-config V-C40 Docs Contract review 0925115126 DOC-030 admin-config V-C40 Docs Matter advice 0925115126 DOC-030 admin-config V-C40 Docs Contract review 0925115403 DOC-030 admin-config V-C40 Docs Matter advice 0925115403 DOC-030 admin-config V-C40 Docs Contract review 0925131603 DOC-030 admin-config V-C40 Docs Matter advice 0925131603 DOC-030 admin-config V-C40 Docs retired destination form 0925131603 DOC-030 admin-config V-C40 Docs Contract review 0925132941 DOC-030 admin-config V-C40 Docs Matter advice 0925132941 The change applies immediately and is recorded in the audit log. Cancel Archive type\"; with \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" chosen, Archive type archived it. The Portal then listed it 0 times; R-160 reads request type \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\". Show archived > Restore made it live again; it was archived again afterwards (no Requests left) so other walkers do not meet its error page.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/admin-config/api.mjs"
       ]
     },
     {
       "id": "V-C40",
-      "coverage": ["C40"],
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Seeded fictional Legal Team Member signed in on the admin2 documentation lab in a separate browser context."
+      "coverage": [
+        "C40"
       ],
-      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
-      "actual": "Role confirmed as legal_team_member from /api/v1/me. /settings/intake/request-types sent the browser to /settings/profile. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
-      ]
-    },
-    {
-      "id": "V-C40",
-      "coverage": ["C40"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Business User signed in to the Portal with a fresh emailed sign-in link in a separate browser context."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit."
       ],
-      "expected": "Negative check: the Settings pages for this article do not open and the configuration API refuses the call.",
-      "actual": "Role confirmed as business_user from /api/v1/me. /settings/intake/request-types sent the browser to /portal. POST /api/v1/request-types answered 403 (\"You do not have permission to perform this action.\").",
+      "expected": "The Portal shows each form's description, turnaround, guidance, Rows and required markers; a missing required answer is refused; a form whose destination type is archived shows an error instead of the questions.",
+      "actual": "Jonas Weber signed in with a fresh magic link from the lab Mailpit. /settings/contracts/types -> /portal; /settings/intake/request-types -> /portal. Portal card: \"DOC-030 admin-config V-C40 Docs Contract review 0925132941 Ask Legal to review a supplier contract. Fictional DOC-030 walkthrough form. Estimated turnaround: 5 business days\". \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" shows Before you submit with \"DOC-030 admin-config V-C40 Supplier checklist 0925132941\" -> https://example.com/doc-030-supplier-checklist; labels [\"Title* (required)\",\"Department* (required)\",\"Urgency* (required)\",\"Description\",\"DOC-030 admin-config V-C40 Deal value 0925132941* (required)\",\"Counterparties\",\"Term type\",\"Value\",\"Currency\",\"Frequency\",\"Attachments\"]. Submit with only a Title showed \"DOC-030 admin-config V-C40 Deal value 0925132941 is required. | Fill DOC-030 admin-config V-C40 Deal value 0925132941 first — the form requires it.\" and stayed on the form. Term type offered [\"Not set\",\"fixed\",\"auto_renew\",\"evergreen\"]; with fixed the form showed [\"Expiry date* (required)\"], with evergreen no Expiry date. With Department \"Engineering\", \"DOC-030 admin-config V-C40 Deal value 0925132941\" 125000 and Term type evergreen, Submit showed \"Thanks! Your request has been submitted to legal.\" (R-158). Screenshot v-c40-portal-contract-form.png. \"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" shows Before you submit with \"DOC-030 admin-config V-C40 How to ask Legal 0925132941\" only (external link count 0); labels [\"Title* (required)\",\"Department* (required)\",\"Urgency* (required)\",\"Description\",\"DOC-030 admin-config V-C40 Advice area 0925132941* (required)\",\"Attachments\"]. Submit with \"DOC-030 admin-config V-C40 Advice area 0925132941\" Privacy created R-159. The Knowledge link opened /portal/knowledge/01a0d801-f7e3-7fde-b27b-642983d213d8 with heading \"How to ask legal for help\". R-160 was submitted on \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\" while \"DOC-030 admin-config V-C40 Retired destination 0925132941\" was live. The Administrator archived \"DOC-030 admin-config V-C40 Retired destination 0925132941\" (no Contracts used it). The Request types list row then read \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941 Fictional form whose destination type will be archived. Destination: Contract · DOC-030 admin-config V-C40 Retired destination 0925132941\"; the editor's Default contract type read \"DOC-030 admin-config V-C40 Retired destination 0925132941 (unavailable)\"; the Intake form card read \"Intake form Edit form DOC-030 admin-config V-C40 Retired destination 0925132941 Title Text Required Department Single select Required Urgency Single select Requ\". On the Portal the card is still listed (1); opening it showed \"Something went wrong. The page could not load. Reload to try again. Reload Back to Home\" with 0 Submit request buttons. The API detail read answers 400 \"This Request type needs a destination type.\". The guide's \"If it does not work\" describes this as an error instead of the questions; the product bug is recorded.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/admin-config/walkthrough-r2-1.mjs"
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/admin-config/api.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not feature-owner approval.",
-    "The admin2 lab was shared with other DOC-029r2 agents. Records were named DOC-029r2 admin-config walk. Records named DOC-029r2 admin-config compat came from another agent and were not changed. Organisation reminder lead times were changed during the run and restored to 30, 14, 7, 1, and On the day; this was confirmed after reload.",
-    "Two development runs of single sections of the same script (logs not kept in the repository) left extra fictional records with the suffixes mu4erz3c and mu4ev57k. The one failure in those runs was a reviewer script error; walkthrough-r2-1.json reviewerNotes describes it.",
-    "Negative access checks used the seeded Legal Team Member (nadia.haddad) and Business User (jonas.weber), each in its own browser context; roles were confirmed from /api/v1/me.",
-    "The round 2 source-review author agent changed Create the request type, step 2, from 'press Enter' to 'select Save' and 'select Cancel to discard the draft'. This walkthrough followed the changed text.",
-    "The editor has no Target control, so the archived-target check set a reviewer request type's Target with PATCH /api/v1/request-types/<id> as a fixture; everything after that used the browser.",
-    "No seeded Entity in the admin2 lab is Portal-listed. The reviewer turned Portal-listed on for its own Entity for the check and off again afterwards.",
-    "The Matter conversion used No template; Matter template defaults are covered by matter-templates.",
-    "Not checked: renaming and reordering request types, Department carry-through to the record, and what a turnaround of 0 displays after submission.",
-    "The external deflection link was checked by its address and target only; the external site was not opened."
+    "Confirmed product bug (the author's suspicion): the Portal still lists a Request type whose destination type is archived, and opening it shows the generic 'Something went wrong.' page; the Portal API answers 400 'This Request type needs a destination type.'. The guide's If it does not work describes this built behavior. The retired-destination form was archived again after the check so other walkers do not meet it.",
+    "With an archived destination type, the Convert dialog stays on Contract but preselects no type ('Type…'); the author's note that conversion lands on the Default type was not seen in the dialog.",
+    "Product bug recorded: the Portal form shows the built-in Term type choices as machine values (fixed, auto_renew, evergreen) instead of Fixed, Auto-renew, Evergreen.",
+    "The Contract and Matter destination Forms were set through the API as fixtures; the Form builder steps themselves are walked in types-statuses-fields (V-C38)."
   ],
   "previousEvidence": {
-    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "contentSha256": "417d8285bde34a0849db9f57bd573957b12c00979ec343ae12ff608c3a97d82d",
-    "verifiedAt": "2026-09-16T16:26:15Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe",
+    "verifiedAt": "2026-09-25T13:31:22.161Z"
   },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "b7be99eb4442a012c4e00fbe17cc964a74d347ac4195e5b28b3faafb11be64fd",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

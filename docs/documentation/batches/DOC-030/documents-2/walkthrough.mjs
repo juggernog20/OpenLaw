@@ -64,6 +64,10 @@ const results = {
       sha256: sha(fs.readFileSync(kfix(f))),
     })),
     {
+      path: "(generated at run time, not kept) repo-search-<role>-<stamp>.pdf and -v2.pdf",
+      note: "one-page PDFs with one fictional line each; v1 holds a zulu marker word, v2 a yankee marker word",
+    },
+    {
       path: "(generated at run time, not kept) doc030-oversize.bin",
       note: `${SIZE_LIMIT_MB + 1} MiB of zero bytes, one MiB over the lab's default upload ceiling: the intentionally failing file`,
     },
@@ -144,6 +148,30 @@ function copyAs(src, name) {
   const dest = path.join(dir, name);
   fs.copyFileSync(src, dest);
   return dest;
+}
+// A one-page PDF with one line of text, so the lab extracts words from it (plain text files
+// are not extracted).
+function textPdf(file, line) {
+  const esc = line.replace(/[\\()]/g, (c) => `\\${c}`);
+  const stream = `BT /F1 14 Tf 72 720 Td (${esc}) Tj ET`;
+  const objs = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ];
+  let out = "%PDF-1.4\n";
+  const offsets = [];
+  objs.forEach((o, i) => {
+    offsets.push(out.length);
+    out += `${i + 1} 0 obj\n${o}\nendobj\n`;
+  });
+  const xref = out.length;
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("")}`;
+  out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  fs.writeFileSync(file, out, "latin1");
+  return file;
 }
 function oversize() {
   const file = path.join(WORK, "doc030-oversize.bin");
@@ -1020,21 +1048,21 @@ async function repository(role, person) {
   await step(A, role, "Search and narrow closing text: global search reads only the latest Version; an earlier Version is read from the owning record's Documents tab", "Header Search finds the Document by a word in its latest Version and not by a word only in the earlier Version; the chain on the record still opens the earlier Version", async () => {
     const oldWord = `zulu${label.toLowerCase()}${stamp}`;
     const newWord = `yankee${label.toLowerCase()}${stamp}`;
-    const v1File = path.join(fs.mkdtempSync(path.join(WORK, "s-")), `repo-search-${tag}.txt`);
-    fs.writeFileSync(v1File, `Fictional supplier note, first round. Marker ${oldWord}.\n`);
-    const v2File = path.join(fs.mkdtempSync(path.join(WORK, "s-")), `repo-search-${tag}-v2.txt`);
-    fs.writeFileSync(v2File, `Fictional supplier note, second round. Marker ${newWord}.\n`);
+    const v1File = textPdf(path.join(fs.mkdtempSync(path.join(WORK, "s-")), `repo-search-${tag}.pdf`), `Fictional supplier note, first round. Marker ${oldWord}.`);
+    const v2File = textPdf(path.join(fs.mkdtempSync(path.join(WORK, "s-")), `repo-search-${tag}-v2.pdf`), `Fictional supplier note, second round. Marker ${newWord}.`);
     const doc = await uploadApi(page, `${recUrl}/documents`, v1File);
     const textDone = async (vid) => {
       const b = (await api(page, "GET", `/documents/${doc.id}/versions/${vid}/text`)).body;
       const st = b?.text?.state ?? b?.state;
       return st && !["pending", "processing", "queued"].includes(st) ? st : null;
     };
-    const v1State = await until(() => textDone(doc.versions[0].id), "v1 text not processed", 120000);
+    const v1State = await until(() => textDone(doc.versions[0].id), "v1 text not processed", 600000);
+    expect(v1State === "ready", `v1 text state ${v1State}`);
     const nv = await api(page, "POST", `/documents/${doc.id}/versions`, undefined, { file: part(v2File) });
     expect(nv.status === 201, `fixture version ${nv.status}`);
     const v2id = (await getDoc(page, recUrl, doc.id)).versions.find((v) => v.versionNumber === 2).id;
-    const v2State = await until(() => textDone(v2id), "v2 text not processed", 120000);
+    const v2State = await until(() => textDone(v2id), "v2 text not processed", 600000);
+    expect(v2State === "ready", `v2 text state ${v2State}`);
     const search = async (word) => {
       await page.goto(`${BASE}/documents`);
       const box = page.getByRole("banner").getByRole("combobox", { name: "Search", exact: true });
@@ -1054,9 +1082,10 @@ async function repository(role, person) {
     expect(!oldText.includes(doc.title), `earlier Version word found the Document: ${oldText.slice(0, 200)}`);
     await openDocuments(page, `${recUrl}/documents`);
     await page.getByRole("button", { name: `Show the 1 earlier version of ${doc.title}` }).click();
-    const earlier = await page.getByRole("button", { name: `Show the 1 earlier version of ${doc.title}` }).getAttribute("aria-expanded");
+    await page.getByRole("button", { name: doc.title, exact: true }).last().click();
+    await page.getByRole("complementary", { name: `${doc.title}, version 1` }).waitFor({ timeout: 30000 });
     await page.goto(`${BASE}/documents`);
-    return `A text Document "${doc.title}" had "${oldWord}" only in v1 and "${newWord}" only in v2 (text states ${v1State}/${v2State}). Header Search, "${newWord}", See all results listed it ("${newText.slice(0, 160)}"). The same search for "${oldWord}" did not list it ("${oldText.slice(0, 120)}"). On C-${contract.number}'s Documents tab, "Show the 1 earlier version of ${doc.title}" expanded the chain (aria-expanded ${earlier}).`;
+    return `A PDF Document "${doc.title}" had "${oldWord}" only in v1 and "${newWord}" only in v2 (text states ${v1State}/${v2State}). Header Search, "${newWord}", See all results listed it ("${newText.slice(0, 160)}"). The same search for "${oldWord}" did not list it ("${oldText.slice(0, 120)}"). On C-${contract.number}'s Documents tab, "Show the 1 earlier version of ${doc.title}" expanded the chain and selecting the earlier round opened "${doc.title}, version 1".`;
   });
 
   await step(A, role, "Missing or archived: a hidden record's Document does not appear through a filter, the list, or a direct link", role === "administrator" ? "An Administrator reaches every Contract, so the Confidential Contract's paper is listed" : "The Confidential Contract outside this reader's team is absent from Record and Counterparty choices and the list, and its address is refused", async () => {

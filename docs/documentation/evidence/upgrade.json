@@ -1,73 +1,90 @@
 {
   "articleId": "upgrade",
-  "contentSha256": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc",
-  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-  "buildId": "app sha256:79ac46d4f83803ecc29b11af1f885281154598930404d0a9bc54476b739c7719; engine sha256:d7bc25991932159bc7e0727fd639db8500592c3f72f294dd06d0f5973b991fec (candidate in openlaw-docs-d029r21-lc-upgrade); starting build d1d098ba app sha256:e7cb4e0daa0c57deb0dd84ae6fc003dac3a7b39f8c8e4dc502841f3c48a2aeb5",
-  "environment": "openlaw-docs-d029r21-lc-upgrade; openlaw-docs-d029r21-lc-recovery",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-lifecycle); round 2 corrections by DOC-029r2 source-review author agent (operator-lifecycle)",
-  "technicalReviewer": "DOC-029r2 source-review author agent (operator-lifecycle)",
-  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (operator-lifecycle, round 1)",
+  "contentSha256": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "candidate app and worker sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30; engine sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b (openlaw-doc030-opup2); starting build d1d098ba app sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599, engine sha256:aa48478ed9c63e1122ff9d993cf903afa636815b1a9131b1c939abb7083d6af9; round 1 recovery target on d1d098ba app sha256:d2ff1e13a1a9cb4e7819cbc3c662b6971ab8b203f6b84974bd3f57d2e4e85596",
+  "environment": "openlaw-doc030-opup2 behind a same-host Caddy proxy at http://127.0.0.1:24651 (round 2); openlaw-doc030-opup and openlaw-doc030-oprecover (round 1)",
+  "author": "Codex documentation author; corrections by DOC-029 and DOC-029r2 source-review author agents (operator-lifecycle); DOC-030 corrections by DOC-030 source-review author agent (operator-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (operator-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (operator-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T18:17:16Z",
+  "verifiedAt": "2026-09-25T13:49:34.278Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/upgrade.md",
+    "docs/user-guides/deployment-configuration.md",
+    "docs/documentation/batches/DOC-030/operator-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "compose.yml",
+    ".env.example",
+    "docs/DEPLOYMENT.md",
+    "docs/user-guides/install.md (read only, final shared-files text)",
+    "docs/documentation/batches/DOC-030/operator/technical-review.json",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/evidence/upgrade.json",
     "docs/documentation/batches/DOC-029/operator-lifecycle/technical-review-r2.json",
-    "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2-1.json"
+    "git show d1d098ba:compose.yml and 57e77e38:compose.yml (ports and limits)",
+    "packages/db/src/index.ts (runMigrations)",
+    "packages/db/src/migration-journal.ts (unchanged since 57e77e38)",
+    "node_modules drizzle-orm pg-core/dialect.js migrate (one outer transaction)",
+    "packages/db/migrations/0138_business-owner-membership.sql",
+    "packages/db/migrations/0139_advanced-settings.sql",
+    "packages/db/migrations/0140_remove-global-fields.sql",
+    "packages/db/migrations/0155_saved-ai-keys.sql",
+    "packages/db/migrations/0157_type-forms.sql",
+    "packages/db/migrations/0159_retire-legacy-fields.sql",
+    "packages/db/migrations/0160_document_types.sql",
+    "packages/db/migrations/0161_document_types_without_knowledge.sql",
+    "apps/api/src/index.ts",
+    "apps/worker/src/index.ts",
+    "apps/api/src/modules/advanced-settings/config.ts",
+    "apps/api/src/modules/advanced-settings/routes.ts",
+    "apps/api/src/lib/notifications/vapid.ts",
+    "apps/api/src/lib/contract-access.ts",
+    "apps/api/src/lib/matter-access.ts",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C46",
-      "coverage": ["C46"],
+      "coverage": [
+        "C46"
+      ],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "Fresh clone of the public repository at the starting build d1d098ba9f4ba6557a542857d530446b76b1847c, installed with the installation guide's .env and compose.operator.yml in project openlaw-docs-d029r21-lc-upgrade on 127.0.0.1:23338.",
-        "Fixture made through the starting build's API: a fictional Administrator, an activated Legal Team Member and Contributor, a saved encrypted SMTP relay, an Entity, a custom Contract Field, three Contracts (one Confidential), a Matter, and two Documents with an original and a later Version (one a PDF); Contributor membership on one Contract. All records are named 'DOC-029r2 operator-lifecycle ...'."
+        "Starting build d1d098ba installed with install.md's files and populated through the API: Administrator, Legal Team Member, Contributor, Entity, a Contract Field and a global Field on a Contract type and a Matter type, three Contracts (one Confidential), a Matter, two Documents with two Versions each, a saved relay with a password and an AI connector key.",
+        "Target 067c1646 selected by the guide; pre-upgrade coherent backup retained."
       ],
-      "expected": "Accounts, permissions, records, files, and required encrypted configuration survive the supported upgrade. Exercise backup-based recovery in a separate target; do not imply that downgrading a migrated database is supported.",
-      "actual": "Followed the article from d1d098ba to 57e77e38. Recorded the revision, image IDs, project, file list and local storage. git status --short showed only compose.operator.yml. git fetch, git checkout --detach 57e77e38 and OPENLAW_BUILD_COMMIT were set, config --quiet passed, and the build left all four running containers unchanged; app and worker both resolved to openlaw-local:57e77e38. Before the pause pg-boss held 2 completed jobs and there were no Envelopes. The coherent backup ran at step 3 with app and worker stopped; app-source.txt held the target revision and images.json the running d1d098ba image, so the pre-upgrade revision was recorded beside it. docker compose up -d --no-build --pull never reached readiness in 4 s. The first migration line in the app log was 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'; the journal then held 139 rows. The worker restarted once after a failed startup query and then ran. The Administrator and the Legal Team Member signed in through the browser; all three Contracts kept title, Confidential flag, Entity and Field value; the Matter and Entity matched; all four Version downloads matched their pre-upgrade SHA-256. The Legal Team Member kept 200/200/404 and was refused the Confidential Document and its title in the browser. The Contributor became a Business User (migration 0109): staff API 403 on every Contract, portal reach 200 on its member Contract and 404 on the other and the Confidential one, the same reach as before. A new PDF reached text ready. A test email through the relay saved on the starting build as a legacy URL reached the controlled recipient. pg-boss then held only completed jobs and there were no Envelopes. Recovery was exercised, not assumed: the pre-upgrade backup was restored into the separate empty project openlaw-docs-d029r21-lc-recovery on the d1d098ba image (zero tables and files before import, pg_restore --exit-on-error exit 0, 91 journal rows). It came up ready with the same accounts, records, hashes, reach and relay delivery, and without the upload accepted on the upgraded instance after the backup. No older image opened the migrated database.",
+      "expected": "Accounts, permissions, records, files and required encrypted configuration survive the supported upgrade; recovery is a restore of the pre-upgrade backup into a separate target, not a downgrade.",
+      "actual": "Round 2 on openlaw-doc030-opup2 (starting build published 0.0.0.0:24650): recorded revision, images, project, COMPOSE_FILE and local storage; Settings → Advanced does not exist on the starting build. git status/fetch/rev-parse; git checkout --detach 067c1646 and build without changing the 4 running containers; app and worker resolve to the same image. Step 3: port 127.0.0.1:24650; docker network inspect read gateway 192.168.64.1 before the upgrade and TRUSTED_PROXIES was set to it; default ceilings; VAPID unset. Outstanding jobs checked; backup steps 1 to 4 with app and worker kept stopped. Start: the first migration line was 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'; the worker restarted once on the missing advanced_settings column and stayed running; port 127.0.0.1:24650; readiness in 6 s; journal 91 rows before. Step 2: the guide's remoteAddress command counted 437 requests from 127.0.0.1 and none from the gateway, and wrong passwords from 127.0.0.2 did not refuse a correct sign-in from 127.0.0.1. Administrator and Legal Team Member signed in in the browser; C-1 to C-3, M-1 and the Entity matched; the Legal Team Member and the former Contributor (now Business User) were refused Confidential C-3 (404 and 403). The global Field became one Contract Field (original slug) and one Matter copy with the same name and values. Four Version hashes matched; a new upload was processed; Send test email delivered through the saved relay; Test connection said 'Connection successful.'; System status Refresh showed API and Worker Running and Current. An old tab navigated without the reload notice. Round 1 recovery: the pre-upgrade backup restored into openlaw-doc030-oprecover on d1d098ba matched hashes and access, and a post-backup upload was absent.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/operator-lifecycle/walkthrough-r2-1.mjs",
-        "docs/documentation/batches/DOC-029/operator-lifecycle/r2-1-upgrade-admin-confidential-contract.png"
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human operator study and not feature-owner approval.",
-    "The upgrade ran between two development revisions (d1d098ba to 57e77e38), not between published releases.",
-    "Compose created the upgrade project's networks. Host Docker address pools were exhausted when the recovery project started, so the walkthrough pre-created that project's two Compose networks with explicit subnets and Compose labels. The Compose files, services and network names were the articles' own.",
-    "Another agent's project held ports 23330, 23331 and 23335 when this run started. The first start failed on the port bind before any fixture existed; that project was removed and the run used 23338, 23339 and 23333.",
-    "The controlled relay was an owned Mailpit reachable as lc-mail on every project network, so the recovered target reached a controlled recipient under the relay name saved on the source.",
-    "Only the bundled Postgres and the local file volume were backed up and restored. Object-store snapshot tooling was not exercised.",
-    "The candidate build took 2 s from the host build cache. Docker Compose 5.5.1 labels each built image with its project, so the same source has a different image ID in each project.",
-    "Provider guides and real provider checks C42/C43 stay blocked and are not waived. No human proofreading is recorded.",
-    "The recovery target ran the starting build, whose web client showed 'Something went wrong. The page could not load.' at /login in headless Chromium. Its account, reach, hash and relay checks used the HTTP sign-in API through the same origin, not the browser.",
-    "No two-factor enrolment, SSO provider or signing connector was in the fixture, so those were not carried across the upgrade.",
-    "The warning against docker compose down -v and the statement that repeated restarts do not repair an incomplete schema were not exercised destructively."
+    "Independent agent walkthrough by an agent that did not write or source-review the guide; container-operation by an agent acting as a fictional operator, not a human operator study.",
+    "Round 1 (10:15 to 13:23 UTC) walked every step on openlaw-doc030-opinst, -opup, -oprecover, -oprestore and -opmigfix and failed the guide on TRUSTED_PROXIES, the wrong-key behavior and the saved-settings recovery command. Round 2 (13:35 to 13:59 UTC) re-walked every changed step on fresh projects openlaw-doc030-opinst2, -opup2 and -oprestore2 after the author's correction; unchanged steps keep their round 1 observations. Failed steps in the log that were walkthrough-script defects were rerun; the log's supersededAttempts note explains them.",
+    "All projects were cloned from GitHub at the named revisions and built by the guides' own docker compose build commands with a warm Docker build cache, so build times are not first-build times. Every project, support container, volume and private backup was destroyed after the walk.",
+    "Mail went to an owned Mailpit relay; the AI provider was an owned OpenAI-compatible stand-in that accepts only the saved key; object storage was an owned MinIO. None is a live provider.",
+    "The starting build has no business_owner_id column and no Request type intake questions, so the Business Owner backfill and the intake-to-Form move had no data to rewrite; Document types on Versions and the AI Saved key move were observed.",
+    "An old browser tab did not show 'This part of OpenLaw was updated. Reload to continue.'; the guide says it can.",
+    "Immediately after a restart System status can list a stale API row for up to a minute (product bug in the log)."
   ],
   "previousEvidence": {
-    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "contentSha256": "4ef9d09163a7db9453fdbf3a237aad580c345b3461d8c02ad2f74d1a47d2cd6d",
-    "verifiedAt": "2026-09-16T15:29:13Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
     "contentSha256": "8ede534213fe2e4e33beef06f32b8da1d0d54327d37ef593c9136dd0ed3655cc",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. It asks the operator to sign in and check accounts after an upgrade. It makes no statement about the wizard or two-factor enrollment.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T18:17:16Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

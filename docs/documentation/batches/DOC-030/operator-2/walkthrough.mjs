@@ -25,6 +25,7 @@ import {
   PROJECTS,
   PROXY_NAME,
   REPO,
+  ROUND,
   WORK,
   attach,
   attachSupport,
@@ -75,11 +76,11 @@ import {
 const phases = {};
 const I = PROJECTS.inst;
 const PROXY_HOST = "openlaw-doc030.localhost";
-const PROXY_PORT = 24611;
+const PROXY_PORT = ROUND === 2 ? 24641 : 24611;
 const ORIGIN = `https://${PROXY_HOST}:${PROXY_PORT}`;
-const OCCUPIED_PORT = 24613;
-const ALT_PORT = 24614;
-const CPROXY_PORT = 24615;
+const OCCUPIED_PORT = ROUND === 2 ? 24643 : 24613;
+const ALT_PORT = ROUND === 2 ? 24644 : 24614;
+const CPROXY_PORT = ROUND === 2 ? 24645 : 24615;
 
 const INSTALL = { article: "install", scenario: "V-C44" };
 const UPGRADE = { article: "upgrade", scenario: "V-C46" };
@@ -261,7 +262,7 @@ phases["inst-source"] = async () => {
         ["OPENLAW_BUILD_DIRTY", "false"],
         ["BASE_URL", ORIGIN],
         ["PORT", String(p.port)],
-        ["TRUSTED_PROXIES", "127.0.0.1,::1"],
+        ...(ROUND === 2 ? [] : [["TRUSTED_PROXIES", "127.0.0.1,::1"]]),
       ])
         envSet(p, key, value);
       const keys = readFileSync(`${p.dir}/.env`, "utf8")
@@ -398,7 +399,7 @@ function caddyUp() {
     path.join(dir, "Caddyfile"),
     `{
 \tadmin off
-\thttp_port 24612
+\thttp_port ${ROUND === 2 ? 24642 : 24612}
 \tauto_https disable_redirects
 \tdefault_bind 127.0.0.1
 \tskip_install_trust
@@ -465,7 +466,7 @@ phases["inst-token"] = async () => {
   await step(
     {
       ...INSTALL,
-      action: "Build step 4: read the setup token from docker compose logs app",
+      action: `Build step ${ROUND === 2 ? 5 : 4}: read the setup token from docker compose logs app`,
       command: "docker compose logs app",
       expected: 'The app prints the token after "First-run setup is open. Paste this setup token into the setup screen:"',
       critical: true,
@@ -497,7 +498,7 @@ phases["inst-token"] = async () => {
     },
   );
   await step(
-    { ...INSTALL, action: "Build step 5: configure the reverse proxy on the same host (Caddy, internal TLS)", critical: true },
+    { ...INSTALL, action: `Build step ${ROUND === 2 ? 6 : 5}: configure the reverse proxy on the same host (Caddy, internal TLS)`, critical: true },
     async () => {
       const how = caddyUp();
       let r;
@@ -517,7 +518,7 @@ phases["inst-token"] = async () => {
       {
         ...INSTALL,
         role: "operator",
-        action: "Build step 5: open the intended HTTPS address and check it reaches Set up OpenLaw; an old token is refused",
+        action: `Build step ${ROUND === 2 ? 6 : 5}: open the intended HTTPS address and check it reaches Set up OpenLaw; an old token is refused`,
         expected: 'Set up OpenLaw; a replaced token shows "The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN."',
         critical: true,
       },
@@ -539,7 +540,7 @@ phases["inst-token"] = async () => {
     await step(
       {
         ...INSTALL,
-        action: "Build step 5: create the initial account with the current setup token (first-run setup)",
+        action: `Build step ${ROUND === 2 ? 6 : 5}: create the initial account with the current setup token (first-run setup)`,
         expected: "A successful setup signs you in and opens Welcome to OpenLaw.",
         critical: true,
       },
@@ -707,6 +708,24 @@ phases["inst-checks"] = async () => {
       return `source ${rev}; project ${p.project}; origin ${ORIGIN}; storage local driver at /var/lib/openlaw/files on volume ${vol.split(" ")[0]}; images app ${images.containers.app}, worker ${images.containers.worker}, engine ${images.containers["doc-engine"]}, postgres ${images.containers.postgres}`;
     },
   );
+};
+
+phases["inst-worker"] = async () => {
+  const p = I;
+  await step({ ...INSTALL, action: "Check the working installation: the worker processes new work after a restart", command: "docker compose restart worker" }, async () => {
+    must("docker compose restart worker", p.dir, { timeout: 180_000 });
+    const s2 = await browserSignIn(ORIGIN, "avery.morgan@doc030-install.example", password("instAdmin"));
+    try {
+      const n = Number(psql(p, "select max(number) from contracts"));
+      const body = pdf(["DOC-030 operator-2 after worker restart.", "Worker restart words."]);
+      const up = await uploadInBrowser(s2.page, ORIGIN, n, "doc030-install-after-restart.pdf", body);
+      const text = await waitText({ raw: (m, r) => s2.request(m, r) }, up.documentId, up.versionId, 240_000);
+      check(text.state === "ready" && /Worker restart words/.test(text.text), `text ${text.state}`);
+      return `docker compose restart worker exit 0; a PDF uploaded in the browser on Contract ${n} afterwards reached ready with its words`;
+    } finally {
+      await s2.context.close();
+    }
+  });
 };
 
 phases["inst-trust"] = async () => {
@@ -1208,13 +1227,17 @@ phases.upgrade = async () => {
     },
   );
   await step(
-    { ...UPGRADE, action: "Prepare step 3: review the settings the target's Compose file changes and decide them in .env", command: "APP_BIND unset; TRUSTED_PROXIES=127.0.0.1,::1; default ceilings; VAPID unset; no compose.private.yml" },
+    { ...UPGRADE, action: "Prepare step 3: review the settings the target's Compose file changes and decide them in .env", command: ROUND === 2 ? "APP_BIND unset; docker network inspect <project>_openlaw-backend; TRUSTED_PROXIES=<gateway>; default ceilings; VAPID unset; no compose.private.yml" : "APP_BIND unset; TRUSTED_PROXIES=127.0.0.1,::1; default ceilings; VAPID unset; no compose.private.yml" },
     () => {
-      envSet(p, "TRUSTED_PROXIES", "127.0.0.1,::1");
+      let gatewayRead = null;
+      if (ROUND === 2) {
+        gatewayRead = must(`docker network inspect ${p.project}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'`, p.dir).stdout.trim();
+        envSet(p, "TRUSTED_PROXIES", gatewayRead.split(" ")[0]);
+      } else envSet(p, "TRUSTED_PROXIES", "127.0.0.1,::1");
       const cfg = JSON.parse(must("docker compose config --format json", p.dir).stdout).services;
       const ports = cfg.app.ports.map((x) => `${x.host_ip}:${x.published}->${x.target}`);
       const limits = Object.fromEntries(["app", "worker", "doc-engine"].map((s) => [s, `cpus ${cfg[s].cpus} mem ${cfg[s].mem_limit} pids ${cfg[s].pids_limit}`]));
-      return { appPorts: ports, limits, vapid: `VAPID_PUBLIC_KEY="${cfg.app.environment.VAPID_PUBLIC_KEY}" VAPID_PRIVATE_KEY set=${Boolean(cfg.app.environment.VAPID_PRIVATE_KEY)}`, trustedProxies: cfg.app.environment.TRUSTED_PROXIES, note: "The TRUSTED_PROXIES value is the guide's; the install walkthrough found that a same-host proxy reaches the app from the Docker bridge gateway, so this value does not trust it." };
+      return { appPorts: ports, limits, vapid: `VAPID_PUBLIC_KEY="${cfg.app.environment.VAPID_PUBLIC_KEY}" VAPID_PRIVATE_KEY set=${Boolean(cfg.app.environment.VAPID_PRIVATE_KEY)}`, trustedProxies: cfg.app.environment.TRUSTED_PROXIES, ...(ROUND === 2 ? { gatewayAndSubnetReadBeforeTheUpgrade: gatewayRead, proxy: "same-host Caddy at the instance origin" } : { note: "The TRUSTED_PROXIES value is the guide's; the install walkthrough found that a same-host proxy reaches the app from the Docker bridge gateway, so this value does not trust it." }) };
     },
   );
   await step(
@@ -1315,7 +1338,15 @@ async function advancedSources(page, base) {
   }
   return out;
 }
-async function systemStatus(page, base) {
+async function systemStatus(page, base, settle = false) {
+  const first = await systemStatusOnce(page, base);
+  if (!settle || processRowsOk(first)) return first;
+  // A stopped API leaves its heartbeat row for up to a minute (product bug in this log); refresh after it ages out.
+  await sleep(65_000);
+  const again = await systemStatusOnce(page, base);
+  return { ...again, firstRefresh: first.rows };
+}
+async function systemStatusOnce(page, base) {
   await page.goto(`${base}/settings/system-status`);
   await page.getByRole("heading", { name: "System status" }).first().waitFor({ timeout: 20_000 });
   await page.getByRole("button", { name: "Refresh" }).click();
@@ -1435,7 +1466,7 @@ async function verifyInstance(p, { meta, label, adminPw, people, modern = true, 
       });
     if (modern) {
       if (want("status")) await step({ ...meta, role: "administrator", method: "browser-walkthrough", action: `${label}: Settings → Advanced → System status → Refresh: API and Worker rows Running and Current` }, async () => {
-        const st = await systemStatus(admin.page, p.base);
+        const st = await systemStatus(admin.page, p.base, ROUND === 2);
         check(processRowsOk(st), JSON.stringify(st));
         return st;
       });
@@ -1626,23 +1657,32 @@ phases["br-restore"] = async () => {
     const ai = "AI connector base URL http://op2-ai:8080/v1 (owned stand-in)";
     return `${relay}; ${ai}; no Signing connector or SSO provider configured; push_subscriptions in the source: ${psql(U, "select count(*) from push_subscriptions")}; the restore target joins only the owned relay and stand-in`;
   });
-  await restoreInto(p, state.sourceBackup, COMMIT, { meta: BACKUP, keysFrom: "up", extra: { TRUSTED_PROXIES: "127.0.0.1,::1" } });
+  await restoreInto(p, state.sourceBackup, COMMIT, { meta: BACKUP, keysFrom: "up", extra: ROUND === 2 ? { OPENLAW_PLAIN_HTTP_HOSTS: "op2-minio" } : { TRUSTED_PROXIES: "127.0.0.1,::1" } });
 };
 
 phases["br-verify"] = async (only) => {
   const p = R;
   await verifyInstance(p, { meta: BACKUP, label: "restored target", adminPw: password("upAdmin"), people: state.people, only: only ? only.split(",") : null });
-  if (only) return;
+  if (only && !only.split(",").includes("final")) return;
   await step({ ...BACKUP, role: "administrator", method: "browser-walkthrough", action: "restored target: Instance address shows the target origin; Document storage names the restored store; env-set fields show Deployment configuration · Read only; the saved upload limit travelled in the dump" }, async () => {
     const s = await browserSignIn(p.base, state.people.admin.email, password("upAdmin"));
     const src = await advancedSources(s.page, p.base);
-    const st = await systemStatus(s.page, p.base);
+    const st = await systemStatus(s.page, p.base, ROUND === 2);
     await s.context.close();
     const inst = src["Instance address"][0];
     check(inst === `Application address = ${p.base} [Deployment configuration · Read only]`, inst);
     check(src["File uploads"][0] === "Maximum file size (MiB) = 150 [Saved in OpenLaw]", src["File uploads"][0]);
-    check(st.activeStorage === "Active storage: local" && processRowsOk(st), JSON.stringify(st));
-    return { instance: src["Instance address"], uploads: src["File uploads"], storage: src["Document storage"], systemStatus: st };
+    const wantStorage = ROUND === 2 ? "Active storage: s3" : "Active storage: local";
+    let s3Doc = null;
+    if (ROUND === 2) {
+      const s2 = await browserSignIn(p.base, state.people.admin.email, password("upAdmin"));
+      const r = await s2.request("GET", `/api/v1/documents/${state.s3Doc.documentId}/versions/${state.s3Doc.versionId}/download`);
+      await s2.context.close();
+      s3Doc = `${r.status}${r.status === 200 && sha256(r.buffer) === state.s3Doc.sha256 ? ", SHA-256 matches" : ""}`;
+      check(s3Doc.endsWith("matches"), `S3 Document ${s3Doc}`);
+    }
+    check(st.activeStorage === wantStorage && processRowsOk(st), JSON.stringify(st));
+    return { instance: src["Instance address"], uploads: src["File uploads"], storage: src["Document storage"].filter((l) => !/secret/i.test(l)), systemStatus: st, ...(s3Doc ? { documentOnlyInTheSavedBucket: s3Doc, note: "The target's .env leaves the storage keys empty, so the source's saved S3 values apply and the target reads the source's live bucket, as the guide warns." } : {}) };
   });
 };
 
@@ -1780,6 +1820,7 @@ phases["br-wrongkey"] = async () => {
 
 const D = PROJECTS.up;
 const MINIO_NAME = "openlaw-doc030-op2-minio";
+const MINIO_PORT = ROUND === 2 ? 24653 : 24603;
 const adminLogin = () => browserSignIn(D.base, state.people.admin.email, password("upAdmin"));
 const restarts = (p, svc) => sh(`docker inspect --format '{{.RestartCount}} {{.State.Status}} OOMKilled={{.State.OOMKilled}}' $(docker compose ps -aq ${svc})`, p.dir).stdout.trim();
 
@@ -2199,6 +2240,20 @@ phases["diag-0157"] = async () => {
   });
 };
 
+phases["diag-0157-recheck"] = async () => {
+  const p = PROJECTS.recover;
+  await step({ ...DIAG, action: "Re-read of the refused start: the refusal names the Request type inside the migration's SQL error; the app keeps restarting; journal rows show earlier pending migrations applied" }, () => {
+    const logs = sh("docker compose logs --no-log-prefix app", p.dir).stdout;
+    const named = [...new Set(logs.match(/Cannot migrate the intake form of Request types: DOC-030 operator-2 guarded intake\. A Field has no Row[^"\\]*/g) ?? [])];
+    const sqlError = lines(logs, /DrizzleQueryError|Failed query|error: Cannot migrate/i, 1);
+    const rows = psql(p, "select count(*) from drizzle.__drizzle_migrations");
+    const st = restarts(p, "app");
+    must("docker compose stop app worker", p.dir, { timeout: 120_000 });
+    check(named.length && Number(rows) > 91, JSON.stringify({ named, rows }));
+    return { refusal: named[0].slice(0, 300), sqlErrorContext: sqlError.map((l) => l.slice(0, 200)), journalRows: `91 on the starting build; ${rows} after the refused start`, appState: st, afterwards: "app and worker stopped; the old image was not started on this database" };
+  });
+};
+
 phases["diag-mail"] = async () => {
   const p = D;
   const good = secrets.up.OPENLAW_SECRET_KEY;
@@ -2277,12 +2332,12 @@ phases["diag-storage"] = async () => {
   });
   await step({ ...DIAG, role: "administrator", method: "browser-walkthrough", action: "Fixture through the app: an owned MinIO; Document storage saved as S3 after Test connection passes; restart; a new upload lands in the bucket", critical: true }, async () => {
     if (sh(`docker inspect ${MINIO_NAME}`, root).code !== 0)
-      must(`docker run -d --name ${MINIO_NAME} --label openlaw-doc030-owner=operator-2 --network ${p.project}_openlaw-backend --network-alias op2-minio -p 127.0.0.1:24603:9000 -e MINIO_ROOT_USER=${secrets.minio.user} -e MINIO_ROOT_PASSWORD=${secrets.minio.secret} minio/minio:RELEASE.2025-09-07T16-13-09Z server /data`, root);
+      must(`docker run -d --name ${MINIO_NAME} --label openlaw-doc030-owner=operator-2 --network ${p.project}_openlaw-backend --network-alias op2-minio -p 127.0.0.1:${MINIO_PORT}:9000 -e MINIO_ROOT_USER=${secrets.minio.user} -e MINIO_ROOT_PASSWORD=${secrets.minio.secret} minio/minio:RELEASE.2025-09-07T16-13-09Z server /data`, root);
     await sleep(5000);
     const { createRequire } = await import("node:module");
     const req = createRequire(path.join(root, "package.json"));
     const s3 = req(path.join(root, "node_modules/.pnpm/@aws-sdk+client-s3@3.1139.0/node_modules/@aws-sdk/client-s3"));
-    const client = new s3.S3Client({ endpoint: "http://127.0.0.1:24603", region: "us-east-1", forcePathStyle: true, credentials: { accessKeyId: secrets.minio.user, secretAccessKey: secrets.minio.secret } });
+    const client = new s3.S3Client({ endpoint: `http://127.0.0.1:${MINIO_PORT}`, region: "us-east-1", forcePathStyle: true, credentials: { accessKeyId: secrets.minio.user, secretAccessKey: secrets.minio.secret } });
     await client.send(new s3.CreateBucketCommand({ Bucket: "doc030-op2" })).catch((e) => { if (!/BucketAlready/.test(e.name)) throw e; });
     envSet(p, "OPENLAW_PLAIN_HTTP_HOSTS", "op2-minio");
     recreate(p);
@@ -2336,16 +2391,27 @@ phases["diag-storage"] = async () => {
     check(reset.code === 0 && s3got.status !== 200 && localGot.status === 200 && again.status === 200 && sha256(again.buffer) === d.sha256, JSON.stringify({ reset: reset.code, s3: s3got.status, local: localGot.status, again: again.status }));
     return { resetCommand: `exit ${reset.code}: ${reset.stdout.trim().split("\n").pop()}`, afterRestart: { activeStorage: st.activeStorage, s3OnlyDocumentDownload: `${s3got.status} ${s3got.body?.detail ?? s3got.body?.title ?? ""}`.slice(0, 120), localDocumentDownload: localGot.status }, deploymentConfiguresTheStore: `S3_* reader settings in .env (write driver still local); ${st2.activeStorage}; the S3 Document downloads again with its SHA-256` };
   });
+};
+
+phases["diag-upload"] = async () => {
+  const p = D;
   await step({ ...DIAG, role: "administrator", method: "browser-walkthrough", action: "Upload refusal: File uploads saved at 1 MiB; a file above is refused with the app's message; a file below is accepted; restore 150" }, async () => {
     let s = await adminLogin();
-    await saveUploadLimit(s.page, p.base, 1);
-    await s.context.close();
-    must("docker compose restart app worker", p.dir, { timeout: 240_000 });
-    await waitReady(p);
-    s = await adminLogin();
+    const current = (await advancedSources(s.page, p.base))["File uploads"][0];
+    if (!current.startsWith("Maximum file size (MiB) = 1 ")) {
+      await saveUploadLimit(s.page, p.base, 1);
+      await s.context.close();
+      must("docker compose restart app worker", p.dir, { timeout: 240_000 });
+      await waitReady(p);
+      s = await adminLogin();
+    }
     const n = state.inventory.contracts[1].number;
-    await s.page.goto(`${p.base}/contracts/${n}/documents`);
-    await s.page.getByRole("button", { name: "Upload", exact: true }).first().click();
+    await s.page.goto(`${p.base}/contracts/${n}`);
+    await s.page.locator(`a[href="/contracts/${n}/documents"]`).first().click();
+    await s.page.getByRole("button", { name: "Upload", exact: true }).first().click().catch(async (e) => {
+      await s.page.screenshot({ path: path.join(WORK, "upload-refusal-debug.png") });
+      throw e;
+    });
     const dialog = s.page.getByRole("dialog", { name: "Upload document" });
     const chooser = s.page.waitForEvent("filechooser");
     await dialog.getByRole("button", { name: "Choose files" }).click();
@@ -2353,7 +2419,7 @@ phases["diag-storage"] = async () => {
     await dialog.getByRole("button", { name: "Upload", exact: true }).click();
     await s.page.getByText(/over the 1 MB upload limit/).first().waitFor({ timeout: 20_000 });
     const shown = (await bodyText(s.page)).match(/That file is over the 1 MB upload limit\./)?.[0];
-    await s.page.keyboard.press("Escape");
+    await s.page.reload();
     const small = await uploadInBrowser(s.page, p.base, n, "doc030-op2-small.txt", Buffer.alloc(600_000, 98));
     await saveUploadLimit(s.page, p.base, 150);
     await s.context.close();
@@ -2364,11 +2430,11 @@ phases["diag-storage"] = async () => {
   });
 };
 
-phases["diag-worker"] = async () => {
+phases["diag-worker"] = async (only) => {
   const p = D;
   const n = state.inventory.contracts[1].number;
-  await step({ ...DIAG, role: "administrator", method: "browser-walkthrough", action: "Worker stopped: the two commands; System status shows No recent heartbeat; a new upload waits; start; the upload is processed", command: "docker compose ps worker doc-engine; docker compose logs --since=10m worker doc-engine" }, async () => {
-    must("docker compose stop worker", p.dir, { timeout: 120_000 });
+  await step({ ...DIAG, role: "administrator", method: "browser-walkthrough", action: "Worker killed (not a clean stop, so its heartbeat row stays): the two commands; System status shows No recent heartbeat; a new upload waits; start; the upload is processed. An earlier clean docker compose stop removed the Worker row instead and showed only the missing-heartbeat warning.", command: "docker compose kill worker; docker compose ps worker doc-engine; docker compose logs --since=10m worker doc-engine" }, async () => {
+    must("docker compose kill worker", p.dir, { timeout: 120_000 });
     const ps = sh("docker compose ps worker doc-engine", p.dir).stdout.trim().split("\n").slice(1).map((l) => l.replace(/\s+/g, " ").slice(0, 100));
     const logs = sh("docker compose logs --since=10m worker doc-engine", p.dir);
     const s = await adminLogin();
@@ -2386,6 +2452,7 @@ phases["diag-worker"] = async () => {
     check(logs.code === 0 && st.rows.some((r) => /^Worker No recent heartbeat/.test(r)) && st.warning && pending === "pending" && text.state === "ready", JSON.stringify({ st, pending, text: text.state }));
     return { psWhileStopped: ps, systemStatusWhileStopped: st, stateWhileStopped: pending, afterStart: text.state, systemStatusAfter: st2.rows };
   });
+  if (only === "worker") return;
   await step({ ...DIAG, role: "administrator", method: "browser-walkthrough", action: "Engine down: the API stays ready; a new PDF does not finish while the engine is stopped; restore; a new controlled PDF is processed" }, async () => {
     must("docker compose stop doc-engine", p.dir);
     const s = await adminLogin();
@@ -2433,6 +2500,24 @@ async function uploadViaSession(s, number, filename, bytes) {
   return { documentId: body.document.id, versionId: v.id };
 }
 
+phases["diag-engine-busy"] = async () => {
+  const p = D;
+  await step({ ...DIAG, action: "Engine busy, observed directly: with DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=1 (0 is not a positive integer and falls back to the default 8), six concurrent engine requests from inside the app container get 503 with Retry-After", expected: "Past both, it answers 503 with Retry-After." }, async () => {
+    envSet(p, "DOC_ENGINE_MAX_CONCURRENT", "1");
+    envSet(p, "DOC_ENGINE_MAX_QUEUED", "1");
+    must("docker compose up -d --no-build --pull never --force-recreate doc-engine", p.dir, { timeout: 240_000 });
+    await sleep(15_000);
+    const b64 = pdf(["DOC-030 operator-2 engine busy probe.", "Busy words."]).toString("base64");
+    const script = `const b=Buffer.from('${b64}','base64');Promise.all(Array.from({length:6},()=>fetch('http://doc-engine:8080/ocr',{method:'POST',headers:{'content-type':'application/pdf'},body:b}).then(async r=>r.status+' retry-after='+r.headers.get('retry-after')))).then(s=>console.log(s.join('; ')))`;
+    const r = sh(`docker compose exec -T app node -e ${JSON.stringify(script)}`, p.dir, { timeout: 300_000 });
+    envSet(p, "DOC_ENGINE_MAX_CONCURRENT", null);
+    envSet(p, "DOC_ENGINE_MAX_QUEUED", null);
+    must("docker compose up -d --no-build --pull never --force-recreate doc-engine", p.dir, { timeout: 240_000 });
+    check(r.stdout.includes("503 retry-after="), r.stdout + r.stderr.slice(-300));
+    return { concurrentStatuses: r.stdout.trim(), restored: "limits removed; engine recreated" };
+  });
+};
+
 phases["diag-providers"] = async () => {
   const p = D;
   await step({ ...DIAG, role: "administrator", method: "browser-walkthrough", action: "AI connector refusal: Test connection shows only the HTTP status; the app log line has the provider status and a short redacted reply; restore the provider", expected: "The connection test failed. The provider refused the request with HTTP 401. The app log then has The AI provider refused the connection test." }, async () => {
@@ -2443,7 +2528,7 @@ phases["diag-providers"] = async () => {
     await s.page.getByRole("button", { name: "Provider", exact: true }).first().click();
     await s.page.getByRole("button", { name: "Test connection" }).first().click();
     await s.page.getByText(/Connection successful\.|The connection test failed/).first().waitFor({ timeout: 30_000 });
-    const shown = (await bodyText(s.page)).match(/The connection test failed\.[^.]*\.[^.]*\./)?.[0];
+    const shown = (await bodyText(s.page)).match(/The connection test failed\.[^.]*\./)?.[0];
     await s.page.screenshot({ path: path.join(here, "troubleshooting-ai-test-401.png") });
     must(`docker exec ${AI_NAME} rm -f /tmp/refuse`, root);
     await s.page.getByRole("button", { name: "Test connection" }).first().click();
@@ -2461,12 +2546,15 @@ phases["diag-providers"] = async () => {
     await s.page.goto(`${p.base}/settings/integrations/e-signature`);
     const provider = s.page.getByRole("button", { name: "DocuSign" });
     if (await provider.isVisible({ timeout: 8000 }).catch(() => false)) await provider.click();
-    const select = s.page.getByLabel("Signing updates");
+    await s.page.waitForLoadState("networkidle").catch(() => {});
+    const select = s.page.locator("#ds-update-mode");
+    if (!(await select.isVisible().catch(() => false))) await s.page.getByRole("button", { name: /DocuSign/ }).first().click().catch(() => {});
     await select.waitFor({ timeout: 15_000 });
+    const label = await s.page.locator('label[for="ds-update-mode"]').innerText().catch(() => "");
     const options = await select.locator("option").allInnerTexts();
     await s.context.close();
     check(options.includes("Polling") && options.includes("Webhook"), options.join());
-    return { signingUpdatesOptions: options, note: "nothing saved; a live Signing provider is out of scope (C42)" };
+    return { label, signingUpdatesOptions: options, note: "nothing saved; a live Signing provider is out of scope (C42)" };
   });
 };
 
@@ -2520,6 +2608,396 @@ phases["diag-logscan"] = async () => {
   await step({ ...DIAG, action: "Negative: no destructive recovery is offered without its actual scope and consequence" }, () => "The guide's recoveries were followed as written: the journal guard asks for a maintainer and forbids deleting journal rows; the accounts.issuer cases name what each deletion does (people re-link at next sign-in); the 0157 recovery restores into a separate target and forbids starting the old image on the migrated database; the reset command names what it removes and that files do not move. The one observed gap is recorded as a guide failure: under a wrong key the reset command removed every section's saved values, which the guide does not say.");
 };
 
+phases.findings = async () => {
+  const p = I;
+  await step({ ...DIAG, action: "Product check: a clean docker compose stop app; exit code and the API heartbeat row", command: "docker compose stop app; docker inspect ExitCode; runtime_status rows" }, async () => {
+    const t0 = Date.now();
+    must("docker compose stop app", p.dir, { timeout: 120_000 });
+    const ms = Date.now() - t0;
+    const code = sh(`docker inspect --format '{{.State.ExitCode}}' $(docker compose ps -aq app)`, p.dir).stdout.trim();
+    must("docker compose start app", p.dir);
+    await waitReady(p);
+    const rows = psql(p, "select role, count(*) from runtime_status group by role order by role").replace(/\n/g, "; ");
+    if (code === "137")
+      productBug(
+        "The API process ignores SIGTERM, so docker compose stop app waits the 10 s grace period and kills it (exit 137); its runtime_status heartbeat row is never deleted.",
+        `On ${p.project}: docker compose stop app took ${Math.round(ms / 1000)} s and the container exited 137. runtime_status then held ${rows}: one API row per earlier start. Right after docker compose restart app worker, Settings → Advanced → System status showed a third row 'API Running Restart required' for the stopped process for up to a minute; a backup taken after 'docker compose stop app worker' carries the API row (2 rows after stop on ${U.project}).`,
+        "apps/api/src/index.ts registers stopHeartbeat only as a Fastify onClose hook and installs no SIGTERM handler; the worker handles SIGTERM and deletes its row. The upgrade guide asks for API and Worker rows Running and Current right after start.",
+      );
+    return { stopMs: ms, exitCode: code, runtimeStatusRows: rows };
+  });
+  await step({ ...UPGRADE, action: "Upgrade step 3 TRUSTED_PROXIES bullet checked against the same build: a host request reaches the app from the Docker bridge gateway, not 127.0.0.1" }, async () => {
+    const t = new Date().toISOString();
+    await http(`${U.base}/api/v1/auth/setup`);
+    await sleep(1000);
+    const seen = [...new Set(sh(`docker compose logs --no-log-prefix --since ${t} app`, U.dir).stdout.split("\n").map((l) => l.match(/"remoteAddress":"([^"]+)"/)?.[1]).filter(Boolean))];
+    guideFailure(
+      "upgrade",
+      "Prepare the target, step 3, bullet 'Set TRUSTED_PROXIES to the proxy's own address, such as 127.0.0.1,::1 for a proxy on the same host'",
+      "With TRUSTED_PROXIES=127.0.0.1,::1 a proxy on the same host is trusted and each visitor gets their own sign-in bucket.",
+      `Same mechanism as the install finding: on the upgraded ${U.project} a request from the host to 127.0.0.1:${U.port} reaches the app from ${seen.join(", ")}. The install walkthrough showed that with this value one client's wrong passwords still returned 429 to another client behind a same-host Caddy proxy.`,
+    );
+    return { remoteAddressSeenForAHostRequest: seen, trustedProxies: envGet(U, "TRUSTED_PROXIES") };
+  });
+  productBug(
+    "reset-advanced-settings.js run under a wrong OPENLAW_SECRET_KEY exits 0 and replaces every section's saved Advanced settings with an empty set sealed under the wrong key.",
+    "On openlaw-doc030-oprestore and openlaw-doc030-opup: File uploads 150 saved; OPENLAW_SECRET_KEY set to a random value; 'docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance' (and 'mcp') printed 'Saved ... overrides removed' and exited 0. After the retained key was restored, File uploads showed 100 [Default]; the saved value was gone.",
+    "The unreadable column opens to UNREADABLE_SECRET (an empty string), and parseSettings(\"\", true) returns empty settings instead of refusing. The author's technical review expected the command to throw 'Advanced settings cannot be decrypted'.",
+  );
+  productBug(
+    "A wrong OPENLAW_SECRET_KEY with saved Advanced settings does not stop startup; saved values silently fall back to defaults or the environment.",
+    "Same fixture: app and worker start (RestartCount 0, readyz 200); the only signal is 'No configured key opens these stored credentials: ... advanced_settings (1)'. A saved storage driver or Application address would silently revert.",
+    "config.ts parseSettings throws only when raw === null; encryptedText returns \"\" for an unreadable value. The guides and the technical review describe a restart loop with 'Advanced settings cannot be decrypted'.",
+  );
+  log.supersededAttempts = "Steps with result fail whose failure was a walkthrough-script defect (selector, timing or fixture API shape) were rerun; the later step with the same action is the recorded outcome. The failures that are guide findings are listed in guideFailures. The first 'Engine busy' step set DOC_ENGINE_MAX_QUEUED=0, which the engine treats as unset (default 8), so the direct probe with 1/1 is the recorded outcome.";
+  saveLog();
+};
+
+phases.destroy = async () => {
+  await step({ scenario: "teardown", action: "Destroy every owned project (containers, networks, volumes), the support containers and the private backups and clones" }, () => {
+    const out = [];
+    for (const p of Object.values(PROJECTS)) {
+      if (!existsSync(`${p.dir}/.env`)) continue;
+      const r = sh(`docker compose -p ${p.project} down -v --remove-orphans`, p.dir, { timeout: 300_000 });
+      out.push(`${p.project} down -v exit ${r.code}`);
+      for (const n of ["openlaw-backend", "openlaw-doc-engine"]) if (sh(`docker network inspect ${p.project}_${n}`, root).code === 0) sh(`docker network rm ${p.project}_${n}`, root);
+    }
+    for (const c of [MAIL_NAME, AI_NAME, OCCUPIER_NAME, PROXY_NAME, `${PROXY_NAME}-up`, CPROXY_NAME, "openlaw-doc030-op2-minio"]) out.push(`${c} rm exit ${sh(`docker rm -f ${c}`, root).code}`);
+    const left = sh("docker ps -a --format '{{.Names}}' | grep -E '^openlaw-doc030-op(inst|up|recover|restore|migfix|2)' || true", root).stdout.trim();
+    const vols = sh("docker volume ls -q | grep -E '^openlaw-doc030-op(inst|up|recover|restore|migfix)_' || true", root).stdout.trim();
+    return `${out.join("; ")}; remaining containers: ${left || "none"}; remaining volumes: ${vols || "none"}; images tagged openlaw-local and openlaw-engine-local stay in the Docker cache`;
+  });
+};
+
+// ---------------------------------------------------------------- round 2: re-walk of the corrected guides
+
+const r2 = (meta) => ({ ...meta, round: 2 });
+const GUIDE_ADDRESSES = "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c";
+function recordedAddresses(p) {
+  return sh(GUIDE_ADDRESSES, p.dir).stdout.trim().split("\n").filter(Boolean).map((l) => l.trim().replace(/\s+/g, " "));
+}
+function gatewayOf(p) {
+  return must(`docker network inspect ${p.project}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'`, p.dir).stdout.trim();
+}
+/** Plain-http request to the upgraded instance's proxy origin from a chosen loopback source address. */
+async function viaHttpProxy(p, method, route, { json, localAddress = "127.0.0.1" } = {}) {
+  const http = await import("node:http");
+  return new Promise((resolve) => {
+    const body = json === undefined ? undefined : JSON.stringify(json);
+    const req = http.request({ host: "127.0.0.1", port: p.proxyPort, localAddress, method, path: route, headers: { origin: p.base, ...(body ? { "content-type": "application/json", "content-length": Buffer.byteLength(body) } : {}) } }, (res) => {
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => resolve({ status: res.statusCode, text: Buffer.concat(chunks).toString("utf8") }));
+    });
+    req.on("error", (e) => resolve({ status: 0, text: e.message }));
+    if (body) req.write(body);
+    req.end();
+  });
+}
+async function lockoutProbe(send, adminEmail, adminPw) {
+  await sleep(12_000);
+  const wrong = [];
+  for (let i = 0; i < 4; i += 1) wrong.push((await send("POST", "/api/auth/sign-in/email", { json: { email: "nobody@doc030-op2.example", password: "not-the-password" }, localAddress: "127.0.0.2" })).status);
+  const right = await send("POST", "/api/auth/sign-in/email", { json: { email: adminEmail, password: adminPw }, localAddress: "127.0.0.1" });
+  return { wrongFrom127_0_0_2: wrong, correctFrom127_0_0_1: right.status };
+}
+
+phases["r2-inst-step4"] = async () => {
+  const p = I;
+  await step(r2({ ...INSTALL, action: "Build step 4: read the Compose network gateway, set TRUSTED_PROXIES to it, apply with up", command: `docker network inspect ${p.project}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'; TRUSTED_PROXIES=<gateway>; docker compose up -d --no-build --pull never`, critical: true }), async () => {
+    const read = gatewayOf(p);
+    envSet(p, "TRUSTED_PROXIES", read.split(" ")[0]);
+    const t = new Date().toISOString();
+    const u = upCommand(p);
+    check(u.code === 0, u.stderr.slice(-300));
+    await waitReady(p);
+    const warn = lines(sh(`docker compose logs --no-log-prefix --since ${t} app`, p.dir).stdout, /TRUSTED_PROXIES is not set/, 1);
+    const earlierWarn = lines(sh("docker compose logs --no-log-prefix app", p.dir).stdout, /TRUSTED_PROXIES is not set/, 1);
+    return { gatewayAndSubnet: read, trustedProxies: envGet(p, "TRUSTED_PROXIES"), upExit: u.code, warningBeforeStep4: earlierWarn.length > 0, warningAfterStep4: warn.length > 0 };
+  });
+};
+
+phases["r2-inst-addr"] = async () => {
+  const p = I;
+  await step(r2({ ...INSTALL, method: "browser-walkthrough", action: "Build step 6: after setup, check that the app records the browser's address, not the gateway", command: GUIDE_ADDRESSES }), async () => {
+    const s = await browserSignIn(ORIGIN, "avery.morgan@doc030-install.example", password("instAdmin"));
+    await s.context.close();
+    const counts = recordedAddresses(p);
+    const gw = gatewayOf(p).split(" ")[0];
+    const n = (a) => Number(counts.find((l) => l.includes(`"${a}"`))?.split(" ")[0] ?? 0);
+    check(n("127.0.0.1") > 0 && n("127.0.0.1") > n(gw), JSON.stringify({ counts, gw }));
+    return { browserSignIn: s.role, recordedAddresses: counts, gateway: gw, note: "The browser's requests through the proxy are recorded as 127.0.0.1, its own address. The few gateway lines are the reviewer's direct readiness probes to 127.0.0.1:<PORT>, which bypass the proxy." };
+  });
+};
+
+phases["r2-inst-trust"] = async () => {
+  const p = I;
+  const gw = envGet(p, "TRUSTED_PROXIES");
+  const send = (m, r, o) => viaProxy(m, r, o);
+  await step(r2({ ...INSTALL, action: "TRUSTED_PROXIES set to the gateway (the guide's value): one client's wrong passwords do not refuse another client's sign-in through the same-host proxy" }), async () => {
+    const r = await lockoutProbe(send, "avery.morgan@doc030-install.example", password("instAdmin"));
+    const counts = recordedAddresses(p);
+    check(r.correctFrom127_0_0_1 === 200, JSON.stringify(r));
+    return { trustedProxies: gw, ...r, recordedAddresses: counts };
+  });
+  await step(r2({ ...INSTALL, action: "A value that does not match the proxy, 127.0.0.1: no start warning, and one client's wrong passwords refuse the other client (the guide's stated effect)" }), async () => {
+    envSet(p, "TRUSTED_PROXIES", "127.0.0.1");
+    const t = new Date().toISOString();
+    recreate(p, "app");
+    await waitReady(p);
+    const warn = lines(sh(`docker compose logs --no-log-prefix --since ${t} app`, p.dir).stdout, /TRUSTED_PROXIES is not set/, 1);
+    const r = await lockoutProbe(send, "avery.morgan@doc030-install.example", password("instAdmin"));
+    check(!warn.length && r.correctFrom127_0_0_1 === 429, JSON.stringify({ warn, r }));
+    return { trustedProxies: "127.0.0.1", startWarning: warn.length > 0, ...r };
+  });
+  await step(r2({ ...DIAG, action: "App keeps restarting: an entry in TRUSTED_PROXIES that is not an IP address or CIDR range stops the start with invalid IP address; the gateway value recovers" }), async () => {
+    envSet(p, "TRUSTED_PROXIES", "proxy.doc030.example");
+    const t = new Date().toISOString();
+    recreate(p, "app");
+    await sleep(20_000);
+    const logs = sh(`docker compose logs --no-log-prefix --since ${t} app`, p.dir).stdout;
+    const line = lines(logs, /invalid IP address/i, 1);
+    const st = sh(`docker inspect --format '{{.RestartCount}} {{.State.Status}}' $(docker compose ps -aq app)`, p.dir).stdout.trim();
+    const ready = await http(`${p.base}/readyz`);
+    envSet(p, "TRUSTED_PROXIES", gw);
+    recreate(p, "app");
+    await waitReady(p);
+    check(line.length && ready.status !== 200, JSON.stringify({ line, st, ready: ready.status }));
+    return { firstError: line, restartsAndState: st, readyz: ready.status, recovery: `TRUSTED_PROXIES=${gw} again; readyz 200` };
+  });
+};
+
+phases["r2-up-proxy"] = async () => {
+  const p = U;
+  await step(r2({ ...UPGRADE, action: "Fixture: a same-host Caddy reverse proxy in front of the installation; its origin is BASE_URL" }), () => {
+    const dir = path.join(WORK, "caddy-up");
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
+    writeFileSync(path.join(dir, "Caddyfile"), `{\n\tadmin off\n\tauto_https off\n\tdefault_bind 127.0.0.1\n}\n\nhttp://:${p.proxyPort} {\n\treverse_proxy 127.0.0.1:${p.port}\n}\n`, { mode: 0o644 });
+    if (sh(`docker inspect ${PROXY_NAME}-up`, root).code !== 0)
+      must(`docker run -d --name ${PROXY_NAME}-up --label openlaw-doc030-owner=operator-2 --network host -v ${dir}/Caddyfile:/etc/caddy/Caddyfile:ro caddy:2-alpine`, root);
+    return `caddy:2-alpine on the host network serves ${p.base} with reverse_proxy 127.0.0.1:${p.port}`;
+  });
+};
+
+phases["r2-up-addr"] = async () => {
+  const p = U;
+  await step(r2({ ...UPGRADE, method: "browser-walkthrough", action: "Start step 2: sign in through the normal origin and check that the app records the browser's address rather than the proxy's", command: GUIDE_ADDRESSES }), async () => {
+    const s = await browserSignIn(p.base, state.people.admin.email, password("upAdmin"));
+    await s.context.close();
+    const counts = recordedAddresses(p);
+    const gw = gatewayOf(p).split(" ")[0];
+    const probe = await lockoutProbe((m, r, o) => viaHttpProxy(p, m, r, o), state.people.admin.email, password("upAdmin"));
+    const n = (a) => Number(counts.find((l) => l.includes(`"${a}"`))?.split(" ")[0] ?? 0);
+    check(n("127.0.0.1") > n(gw) && probe.correctFrom127_0_0_1 === 200, JSON.stringify({ counts, gw, probe }));
+    return { recordedAddresses: counts, gateway: gw, trustedProxies: envGet(p, "TRUSTED_PROXIES"), lockoutProbe: probe };
+  });
+};
+
+async function saveS3Storage(page, base) {
+  await page.goto(`${base}/settings/storage`);
+  await page.getByLabel("Store new documents in").selectOption("s3");
+  await page.getByLabel("S3 bucket").fill("doc030-op2");
+  await page.getByLabel("S3 endpoint (optional for AWS)").fill("http://op2-minio:9000");
+  await page.getByLabel("S3 region").fill("us-east-1");
+  await page.getByLabel("S3 path-style addressing").selectOption("true");
+  await page.getByLabel("S3 access key ID").fill(secrets.minio.user);
+  await page.getByLabel("S3 secret access key").fill(secrets.minio.secret);
+  await page.getByRole("button", { name: "Test connection" }).click();
+  await page.getByText(/Connection test passed\.|The storage test failed/).first().waitFor({ timeout: 30_000 });
+  const tested = (await bodyText(page)).match(/Connection test passed\.|The storage test failed[^.]*\./)?.[0];
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
+  return tested;
+}
+
+phases["r2-br-s3"] = async () => {
+  const p = U;
+  secrets.minio ??= { user: "doc030op2", secret: randomBytes(18).toString("base64url") };
+  saveSecrets();
+  await step(r2({ ...BACKUP, role: "administrator", method: "browser-walkthrough", action: "Fixture through the app on the source: an owned MinIO; Document storage saved as S3 in Settings → Advanced; a Document stored only in that bucket", critical: true }), async () => {
+    if (sh(`docker inspect ${MINIO_NAME}`, root).code !== 0)
+      must(`docker run -d --name ${MINIO_NAME} --label openlaw-doc030-owner=operator-2 --network ${p.project}_openlaw-backend --network-alias op2-minio -p 127.0.0.1:${MINIO_PORT}:9000 -e MINIO_ROOT_USER=${secrets.minio.user} -e MINIO_ROOT_PASSWORD=${secrets.minio.secret} minio/minio:RELEASE.2025-09-07T16-13-09Z server /data`, root);
+    await sleep(5000);
+    const { createRequire } = await import("node:module");
+    const req = createRequire(path.join(root, "package.json"));
+    const s3 = req(path.join(root, "node_modules/.pnpm/@aws-sdk+client-s3@3.1139.0/node_modules/@aws-sdk/client-s3"));
+    const client = new s3.S3Client({ endpoint: `http://127.0.0.1:${MINIO_PORT}`, region: "us-east-1", forcePathStyle: true, credentials: { accessKeyId: secrets.minio.user, secretAccessKey: secrets.minio.secret } });
+    await client.send(new s3.CreateBucketCommand({ Bucket: "doc030-op2" })).catch((e) => { if (!/BucketAlready/.test(e.name)) throw e; });
+    envSet(p, "OPENLAW_PLAIN_HTTP_HOSTS", "op2-minio");
+    recreate(p);
+    await waitReady(p);
+    const s = await adminLogin();
+    const tested = await saveS3Storage(s.page, p.base);
+    await s.context.close();
+    must("docker compose restart app worker", p.dir, { timeout: 240_000 });
+    await waitReady(p);
+    const s2 = await adminLogin();
+    const body = Buffer.from(`DOC-030 operator-2 object-store file ${Date.now()}\n`);
+    const up = await uploadInBrowser(s2.page, p.base, state.inventory.contracts[1].number, "doc030-op2-s3.txt", body);
+    const src = await advancedSources(s2.page, p.base);
+    await s2.context.close();
+    const ref = psql(p, `select file_ref from document_versions where id = '${up.versionId}'`);
+    state.s3Doc = { ...up, contract: state.inventory.contracts[1].number };
+    check(tested === "Connection test passed." && ref.startsWith("s3:"), `${tested} ${ref}`);
+    return { testConnection: tested, fileRefPrefix: ref.split(":")[0], savedInOpenLaw: Object.values(src).flat().filter((l) => l.includes("Saved in OpenLaw")) };
+  });
+};
+
+async function wrongKeyObservation(p, base, meta, label) {
+  const good = secrets.up.OPENLAW_SECRET_KEY;
+  envSet(p, "OPENLAW_SECRET_KEY", randomBytes(32).toString("base64"));
+  const t = new Date().toISOString();
+  recreate(p);
+  await sleep(35_000);
+  const ready = await http(`${p.base}/readyz`);
+  const logs = sh(`docker compose logs --no-log-prefix --since ${t} app`, p.dir).stdout;
+  const states = ["app", "worker"].map((svc) => `${svc} ${sh(`docker inspect --format '{{.RestartCount}} {{.State.Status}}' $(docker compose ps -aq ${svc})`, p.dir).stdout.trim()}`);
+  const s = await browserSignIn(base, state.people.admin.email, password("upAdmin"));
+  const src = await advancedSources(s.page, base);
+  const st = await systemStatus(s.page, base);
+  const d = state.s3Doc;
+  const s3dl = await s.request("GET", `/api/v1/documents/${d.documentId}/versions/${d.versionId}/download`);
+  const email = (await s.request("GET", "/api/v1/email-settings")).body;
+  const test = await s.request("POST", "/api/v1/email-settings/test");
+  await s.page.goto(`${base}/settings/ai-analysis`);
+  await s.page.getByRole("button", { name: "Provider", exact: true }).first().click();
+  const aiText = (await bodyText(s.page)).match(/Key in use|No key saved|Key missing|Paste[^.]*\./)?.[0] ?? null;
+  const ai = await s.request("POST", "/api/v1/ai-connector/test");
+  await s.context.close();
+  const obs = {
+    readyz: ready.status,
+    restartCountsAndStates: states,
+    startLog: lines(logs, /No configured key opens|Device notifications are off|Advanced settings cannot be decrypted/, 3),
+    advancedFields: { instance: src["Instance address"], uploads: src["File uploads"], storage: src["Document storage"].filter((l) => !/secret/i.test(l)) },
+    systemStatus: st.activeStorage,
+    s3OnlyDocumentDownload: s3dl.status,
+    emailSource: email?.source,
+    testEmail: `${test.status} ${test.body?.detail ?? ""}`,
+    aiConnectorPage: aiText,
+    aiTest: `${ai.status} ${ai.body?.detail ?? ""}`.slice(0, 200),
+  };
+  envSet(p, "OPENLAW_SECRET_KEY", good);
+  recreate(p);
+  await waitReady(p);
+  const s2 = await browserSignIn(base, state.people.admin.email, password("upAdmin"));
+  const src2 = await advancedSources(s2.page, base);
+  const s3dl2 = await s2.request("GET", `/api/v1/documents/${d.documentId}/versions/${d.versionId}/download`);
+  await s2.context.close();
+  obs.afterRetainedKey = { uploads: src2["File uploads"], storageDriver: src2["Document storage"][0], s3OnlyDocumentDownload: `${s3dl2.status}${s3dl2.status === 200 && sha256(s3dl2.buffer) === d.sha256 ? ", SHA-256 matches" : ""}` };
+  void meta;
+  void label;
+  return obs;
+}
+
+phases["r2-br-wrongkey"] = async () => {
+  const p = R;
+  await step(r2({ ...BACKUP, action: "If verification fails: a target whose OPENLAW_SECRET_KEY differs from the source (No configured key row; Fields show Default row); supply the retained key and recreate", expected: "The line names columns such as advanced_settings, smtp_url or vapid_private_key. App and worker still start and each value reads as empty. Advanced fields show Default; storage falls back to local; a Document only in the saved store fails to download; the instance address falls back to BASE_URL." }), async () => {
+    const obs = await wrongKeyObservation(p, p.base, BACKUP, "restored target");
+    check(obs.readyz === 200 && obs.startLog.some((l) => /advanced_settings/.test(l) && /smtp_url/.test(l) && /vapid_private_key/.test(l)) && obs.advancedFields.uploads[0].endsWith("[Default]") && obs.systemStatus === "Active storage: local" && obs.s3OnlyDocumentDownload !== 200 && obs.advancedFields.instance[0].includes(p.base) && obs.afterRetainedKey.s3OnlyDocumentDownload.startsWith("200") && obs.afterRetainedKey.uploads[0].includes("150"), JSON.stringify(obs));
+    return obs;
+  });
+};
+
+phases["r2-diag-trust"] = async () => {
+  const p = D;
+  const send = (m, r, o) => viaHttpProxy(p, m, r, o);
+  await step(r2({ ...DIAG, action: "Password sign-in refuses people who did not enter a wrong password: warning when unset; recorded addresses with the guide's command; set the gateway; sign in through the proxy; recorded addresses are the browsers'", command: GUIDE_ADDRESSES }), async () => {
+    const gw = gatewayOf(p).split(" ")[0];
+    envSet(p, "TRUSTED_PROXIES", null);
+    let t = new Date().toISOString();
+    recreate(p, "app");
+    await waitReady(p);
+    const warn = lines(sh(`docker compose logs --no-log-prefix --since ${t} app`, p.dir).stdout, /TRUSTED_PROXIES is not set/, 1);
+    const unset = await lockoutProbe(send, state.people.admin.email, password("upAdmin"));
+    const countsUnset = recordedAddresses(p);
+    envSet(p, "TRUSTED_PROXIES", gw);
+    t = new Date().toISOString();
+    recreate(p, "app");
+    await waitReady(p);
+    const warn2 = lines(sh(`docker compose logs --no-log-prefix --since ${t} app`, p.dir).stdout, /TRUSTED_PROXIES is not set/, 1);
+    await sleep(12_000);
+    const s = await browserSignIn(p.base, state.people.admin.email, password("upAdmin"));
+    await s.context.close();
+    const set = await lockoutProbe(send, state.people.admin.email, password("upAdmin"));
+    await sleep(1000);
+    const counts = sh(`docker compose logs --since ${t} app | grep -o '"remoteAddress":"[^"]*"' | sort | uniq -c`, p.dir).stdout.trim().split("\n").map((l) => l.trim().replace(/\s+/g, " "));
+    check(warn.length && unset.correctFrom127_0_0_1 === 429 && !warn2.length && set.correctFrom127_0_0_1 === 200 && !counts.some((l) => l.includes(`"${gw}"`)), JSON.stringify({ warn, unset, warn2, set, counts }));
+    return { unset: { startWarning: warn, ...unset, recordedAddressesLast5m: countsUnset }, gateway: gw, set: { startWarning: warn2.length > 0, browserSignIn: s.role, ...set, recordedAddressesSinceRecreate: counts } };
+  });
+};
+
+phases["r2-diag-origin"] = async () => {
+  const p = D;
+  await step(r2({ ...DIAG, action: "Sign-in or emailed links fail behind the proxy: a saved Application address refuses sign-in; removing it without BASE_URL leaves http://localhost:3000 and sign-in still fails; setting BASE_URL fixes it", expected: "Set BASE_URL in .env to the public origin; it pins the address over a saved one. Removing a saved address without setting BASE_URL leaves the app on http://localhost:3000, and sign-in through the proxy still fails." }), async () => {
+    const out = {};
+    envSet(p, "BASE_URL", null);
+    recreate(p);
+    await waitReady(p);
+    let fx = new Api(p.base, "http://localhost:3000");
+    await fx.signIn(state.people.admin.email, password("upAdmin"));
+    let cur = await fx.get("/api/v1/advanced-settings/instance");
+    await fx.put("/api/v1/advanced-settings/instance", { version: cur.version, values: { BASE_URL: "http://127.0.0.1:24699" } });
+    must("docker compose restart app worker", p.dir, { timeout: 240_000 });
+    await waitReady(p);
+    out.savedWrongAddress = (await new Api(p.base).raw("POST", "/api/auth/sign-in/email", { json: { email: state.people.admin.email, password: password("upAdmin") } })).status;
+    const reset = sh("docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance", p.dir);
+    must("docker compose restart app worker", p.dir, { timeout: 240_000 });
+    await waitReady(p);
+    out.resetCommand = `exit ${reset.code}: ${reset.stdout.trim().split("\n").pop()}`;
+    out.signInThroughProxyAfterRemoval = (await new Api(p.base).raw("POST", "/api/auth/sign-in/email", { json: { email: state.people.admin.email, password: password("upAdmin") } })).status;
+    fx = new Api(p.base, "http://localhost:3000");
+    await fx.signIn(state.people.admin.email, password("upAdmin"));
+    cur = await fx.get("/api/v1/advanced-settings/instance");
+    out.instanceAfterRemoval = cur.fields.map((f) => `${f.key} = ${f.value} [${f.source}]`);
+    envSet(p, "BASE_URL", p.base);
+    recreate(p);
+    await waitReady(p);
+    const s = await adminLogin();
+    out.afterBaseUrl = { browserSignIn: s.role, instance: (await advancedSources(s.page, p.base))["Instance address"] };
+    await s.context.close();
+    check(out.savedWrongAddress !== 200 && reset.code === 0 && out.signInThroughProxyAfterRemoval !== 200 && out.instanceAfterRemoval[0].startsWith("BASE_URL = http://localhost:3000") && out.afterBaseUrl.browserSignIn === "administrator", JSON.stringify(out));
+    return out;
+  });
+};
+
+phases["r2-diag-wrongkey"] = async () => {
+  const p = D;
+  await step(r2({ ...DIAG, action: "Email and stored credentials: a wrong OPENLAW_SECRET_KEY; app and worker start; the start log names the columns; relay unset with the exact test-send message; AI Saved key missing; Advanced values fall back; restore the key", expected: "The app and worker still start with a wrong key, and each of those values reads as empty. Saved Settings → Advanced values fall back to the environment or the defaults, including local storage. The AI connector loses its secret; device notifications stop." }), async () => {
+    const obs = await wrongKeyObservation(p, p.base, DIAG, "diagnosis instance");
+    check(obs.readyz === 200 && obs.startLog.some((l) => /advanced_settings/.test(l)) && obs.startLog.some((l) => /Device notifications are off/.test(l)) && obs.emailSource === "unset" && obs.testEmail.includes("The test email could not be sent. SMTP is not configured — save a relay first.") && !obs.aiTest.startsWith("200") && obs.systemStatus === "Active storage: local" && obs.s3OnlyDocumentDownload !== 200 && obs.afterRetainedKey.s3OnlyDocumentDownload.startsWith("200"), JSON.stringify(obs));
+    return obs;
+  });
+  await step(r2({ ...DIAG, action: "Remove saved Advanced settings under a wrong key: the start log names advanced_settings; the command still exits successfully and erases every section; the correct key cannot recover them; pinning the storage variables in .env makes the stored Document readable", expected: "With a key that cannot open the saved settings, it still exits successfully and prints the same message, but it replaces the whole saved configuration with an empty one." }), async () => {
+    const good = secrets.up.OPENLAW_SECRET_KEY;
+    let s = await adminLogin();
+    const before = Object.values(await advancedSources(s.page, p.base)).flat().filter((l) => l.includes("Saved in OpenLaw"));
+    await s.context.close();
+    envSet(p, "OPENLAW_SECRET_KEY", randomBytes(32).toString("base64"));
+    const t = new Date().toISOString();
+    recreate(p);
+    await waitReady(p);
+    const startLine = lines(sh(`docker compose logs --no-log-prefix --since ${t} app`, p.dir).stdout, /No configured key opens/, 1);
+    const reset = sh("docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js mcp", p.dir);
+    envSet(p, "OPENLAW_SECRET_KEY", good);
+    recreate(p);
+    await waitReady(p);
+    s = await adminLogin();
+    const after = Object.values(await advancedSources(s.page, p.base)).flat().filter((l) => l.includes("Saved in OpenLaw"));
+    const d = state.s3Doc;
+    const dl = (await s.request("GET", `/api/v1/documents/${d.documentId}/versions/${d.versionId}/download`)).status;
+    await s.context.close();
+    for (const [k, v] of [["S3_BUCKET", "doc030-op2"], ["S3_ENDPOINT", "http://op2-minio:9000"], ["S3_REGION", "us-east-1"], ["S3_FORCE_PATH_STYLE", "true"], ["S3_ACCESS_KEY_ID", secrets.minio.user], ["S3_SECRET_ACCESS_KEY", secrets.minio.secret]]) envSet(p, k, v);
+    recreate(p);
+    await waitReady(p);
+    s = await adminLogin();
+    const dl2 = await s.request("GET", `/api/v1/documents/${d.documentId}/versions/${d.versionId}/download`);
+    await s.context.close();
+    const out = { savedBefore: before, startLogUnderWrongKey: startLine, resetMcpUnderWrongKey: `exit ${reset.code}: ${reset.stdout.trim().split("\n").pop()}`, savedAfterRetainedKey: after, s3DocumentAfterErase: dl, afterPinningStorageInEnv: `${dl2.status}${dl2.status === 200 && sha256(dl2.buffer) === d.sha256 ? ", SHA-256 matches" : ""}` };
+    check(before.length >= 2 && /advanced_settings/.test(startLine[0] ?? "") && reset.code === 0 && after.length === 0 && dl !== 200 && dl2.status === 200, JSON.stringify(out));
+    return out;
+  });
+};
+
 // ---------------------------------------------------------------- browser record helpers
 
 async function createContractInBrowser(page, base, title) {
@@ -2539,6 +3017,14 @@ async function createContractInBrowser(page, base, title) {
 }
 
 async function uploadInBrowser(page, base, number, filename, bytes) {
+  try {
+    return await uploadInBrowserOnce(page, base, number, filename, bytes);
+  } catch (e) {
+    await page.screenshot({ path: path.join(WORK, "upload-failure.png") }).catch(() => {});
+    throw new Error(`${e.message.split("\n")[0]}; at ${page.url()}; page: ${(await bodyText(page)).slice(0, 400)}`);
+  }
+}
+async function uploadInBrowserOnce(page, base, number, filename, bytes) {
   // document-versions.md: Documents tab, Upload, Upload document dialog, Choose files, Upload.
   await page.goto(`${base}/contracts/${number}`);
   await page.locator(`a[href="/contracts/${number}/documents"]`).first().click();
@@ -2549,12 +3035,16 @@ async function uploadInBrowser(page, base, number, filename, bytes) {
   await dialog.getByRole("button", { name: "Choose files" }).or(dialog.getByText("Choose files")).first().click();
   const fc = await chooser;
   await fc.setFiles({ name: filename, mimeType: filename.endsWith(".pdf") ? "application/pdf" : "text/plain", buffer: bytes });
+  await dialog.getByText(filename).first().waitFor({ timeout: 10_000 }).catch(() => {});
   const waitCreate = page.waitForResponse(
     (r) => /\/api\/v1\/contracts\/\d+\/documents$/.test(new URL(r.url()).pathname) && r.request().method() === "POST",
     { timeout: 60_000 },
   );
   await dialog.getByRole("button", { name: "Upload", exact: true }).click();
-  const response = await waitCreate;
+  const response = await waitCreate.catch(async (e) => {
+    await page.screenshot({ path: path.join(WORK, "upload-timeout.png") }).catch(() => {});
+    throw new Error(`${e.message}; page: ${(await bodyText(page)).slice(0, 300)}`);
+  });
   const body = await response.json();
   const doc = body.document;
   const version = doc.versions.find((v) => v.isCurrent) ?? doc.versions[0];
@@ -2570,7 +3060,7 @@ if (!phases[phase]) {
   process.exit(2);
 }
 setPhase(phase);
-const run = { phase, argument: process.argv[3] ?? null, startedAt: new Date().toISOString(), finishedAt: null };
+const run = { phase, argument: process.argv[3] ?? null, round: ROUND, articleHashes: Object.fromEntries(Object.entries(log.articles).map(([k, v]) => [k, v.contentSha256.slice(0, 16)])), startedAt: new Date().toISOString(), finishedAt: null };
 log.runs.push(run);
 try {
   await phases[phase](process.argv[3]);

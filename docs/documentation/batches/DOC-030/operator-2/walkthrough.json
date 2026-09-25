@@ -25,201 +25,201 @@
   "note": "Container-operation walkthrough by an agent, not a human operator study. Every command ran against disposable Compose projects owned by this walkthrough, cloned from GitHub at the named revisions and built by the guides' own commands. Keys, passwords, setup tokens, cookies, mail bodies and links are not recorded; command output is reduced to exit codes and selected, redacted lines.",
   "articles": {
     "install": {
-      "contentSha256": "e3721923de08056ce6be7fa71ed7f05068a4778df8c04b745c794bb27636d0e6"
+      "contentSha256": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e"
     },
     "upgrade": {
-      "contentSha256": "f9819188ddbacb1c9a7f200f26fe18685da3c9b6cb8e3fc7c8701ef4a347fb36"
+      "contentSha256": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da"
     },
     "backup-and-restore": {
-      "contentSha256": "bd04a2a60c52fa1d44e89ddf4cedca11a25367e5c2efcae581121fe5168b6a00"
+      "contentSha256": "c9e9d5d4e4f7e68546b5a27d8ba77d7cb235ae7aaf8647f3f016f925b0a7d9b5"
     },
     "operator-troubleshooting": {
-      "contentSha256": "d8171252164c77698e0f311e03df15879d6fd22c5dc4365a67168e9815fab470"
+      "contentSha256": "a685d653b2b8da37a179868dde0955f0f747b83438d6af345771ab4a3606cdd0"
     }
   },
   "images": {
     "install": {
-      "project": "openlaw-doc030-opinst",
-      "at": "2026-09-25T10:16:08.811Z",
+      "project": "openlaw-doc030-opinst2",
+      "at": "2026-09-25T13:35:57.422Z",
       "services": [
         {
-          "container": "openlaw-doc030-opinst-postgres-1",
+          "container": "openlaw-doc030-opinst2-postgres-1",
           "repository": "postgres",
           "tag": "16",
           "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
         },
         {
-          "container": "openlaw-doc030-opinst-worker-1",
+          "container": "openlaw-doc030-opinst2-app-1",
           "repository": "openlaw-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1"
+          "id": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8"
         },
         {
-          "container": "openlaw-doc030-opinst-doc-engine-1",
+          "container": "openlaw-doc030-opinst2-doc-engine-1",
           "repository": "openlaw-engine-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:be33c0dfa2da628593fe88dbd3064c5b621d6c635fa997f485d031cd68d72c15"
+          "id": "sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550"
         },
         {
-          "container": "openlaw-doc030-opinst-app-1",
+          "container": "openlaw-doc030-opinst2-worker-1",
           "repository": "openlaw-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1"
+          "id": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8"
         }
       ],
       "containers": {
-        "app": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1",
-        "worker": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1",
-        "doc-engine": "sha256:be33c0dfa2da628593fe88dbd3064c5b621d6c635fa997f485d031cd68d72c15",
+        "app": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8",
+        "worker": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8",
+        "doc-engine": "sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "install-final": {
-      "project": "openlaw-doc030-opinst",
-      "at": "2026-09-25T10:20:52.023Z",
+      "project": "openlaw-doc030-opinst2",
+      "at": "2026-09-25T13:45:30.862Z",
       "services": [
         {
-          "container": "openlaw-doc030-opinst-app-1",
-          "repository": "openlaw-local",
-          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1"
-        },
-        {
-          "container": "openlaw-doc030-opinst-doc-engine-1",
+          "container": "openlaw-doc030-opinst2-doc-engine-1",
           "repository": "openlaw-engine-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:be33c0dfa2da628593fe88dbd3064c5b621d6c635fa997f485d031cd68d72c15"
+          "id": "sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550"
         },
         {
-          "container": "openlaw-doc030-opinst-worker-1",
+          "container": "openlaw-doc030-opinst2-worker-1",
           "repository": "openlaw-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1"
+          "id": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8"
         },
         {
-          "container": "openlaw-doc030-opinst-postgres-1",
+          "container": "openlaw-doc030-opinst2-app-1",
+          "repository": "openlaw-local",
+          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
+          "id": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8"
+        },
+        {
+          "container": "openlaw-doc030-opinst2-postgres-1",
           "repository": "postgres",
           "tag": "16",
           "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
         }
       ],
       "containers": {
-        "app": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1",
-        "worker": "sha256:031c3c1d70cc63b8396b7a8e32d7355e109bb7adb9be0ce614aa62a32fd8e6f1",
-        "doc-engine": "sha256:be33c0dfa2da628593fe88dbd3064c5b621d6c635fa997f485d031cd68d72c15",
+        "app": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8",
+        "worker": "sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8",
+        "doc-engine": "sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "upgrade-baseline": {
-      "project": "openlaw-doc030-opup",
-      "at": "2026-09-25T10:24:53.367Z",
+      "project": "openlaw-doc030-opup2",
+      "at": "2026-09-25T13:46:52.402Z",
       "services": [
         {
-          "container": "openlaw-doc030-opup-app-1",
+          "container": "openlaw-doc030-opup2-worker-1",
           "repository": "openlaw-local",
           "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-          "id": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0"
+          "id": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599"
         },
         {
-          "container": "openlaw-doc030-opup-postgres-1",
+          "container": "openlaw-doc030-opup2-postgres-1",
           "repository": "postgres",
           "tag": "16",
           "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
         },
         {
-          "container": "openlaw-doc030-opup-doc-engine-1",
+          "container": "openlaw-doc030-opup2-doc-engine-1",
           "repository": "openlaw-engine-local",
           "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-          "id": "sha256:e4f615d519e5ffc2366f0d94b31d5531ab543548423c1c36959962e8a97edf70"
+          "id": "sha256:aa48478ed9c63e1122ff9d993cf903afa636815b1a9131b1c939abb7083d6af9"
         },
         {
-          "container": "openlaw-doc030-opup-worker-1",
+          "container": "openlaw-doc030-opup2-app-1",
           "repository": "openlaw-local",
           "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-          "id": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0"
+          "id": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599"
         }
       ],
       "containers": {
-        "app": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0",
-        "worker": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0",
-        "doc-engine": "sha256:e4f615d519e5ffc2366f0d94b31d5531ab543548423c1c36959962e8a97edf70",
+        "app": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599",
+        "worker": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599",
+        "doc-engine": "sha256:aa48478ed9c63e1122ff9d993cf903afa636815b1a9131b1c939abb7083d6af9",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "upgrade-before": {
-      "project": "openlaw-doc030-opup",
-      "at": "2026-09-25T10:25:50.527Z",
+      "project": "openlaw-doc030-opup2",
+      "at": "2026-09-25T13:47:16.404Z",
       "services": [
         {
-          "container": "openlaw-doc030-opup-postgres-1",
+          "container": "openlaw-doc030-opup2-worker-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599"
+        },
+        {
+          "container": "openlaw-doc030-opup2-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:aa48478ed9c63e1122ff9d993cf903afa636815b1a9131b1c939abb7083d6af9"
+        },
+        {
+          "container": "openlaw-doc030-opup2-app-1",
+          "repository": "openlaw-local",
+          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "id": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599"
+        },
+        {
+          "container": "openlaw-doc030-opup2-postgres-1",
           "repository": "postgres",
           "tag": "16",
           "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
-        },
-        {
-          "container": "openlaw-doc030-opup-doc-engine-1",
-          "repository": "openlaw-engine-local",
-          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-          "id": "sha256:e4f615d519e5ffc2366f0d94b31d5531ab543548423c1c36959962e8a97edf70"
-        },
-        {
-          "container": "openlaw-doc030-opup-app-1",
-          "repository": "openlaw-local",
-          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-          "id": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0"
-        },
-        {
-          "container": "openlaw-doc030-opup-worker-1",
-          "repository": "openlaw-local",
-          "tag": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-          "id": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0"
         }
       ],
       "containers": {
-        "app": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0",
-        "worker": "sha256:dc04c4b9e9b460aaacf082b66ab9978ac1401a59c667f8d31fb0d23837770ee0",
-        "doc-engine": "sha256:e4f615d519e5ffc2366f0d94b31d5531ab543548423c1c36959962e8a97edf70",
+        "app": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599",
+        "worker": "sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599",
+        "doc-engine": "sha256:aa48478ed9c63e1122ff9d993cf903afa636815b1a9131b1c939abb7083d6af9",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "upgradeTarget": {
-      "app": "openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7",
-      "engine": "openlaw-engine-local:067c1646829df85e62b809ee9157921e867c84e7 sha256:04fc7d53d74daf64e3abfdb42af9cf4c1d81a38f7d6372ca06d822c2e6882b23",
+      "app": "openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30",
+      "engine": "openlaw-engine-local:067c1646829df85e62b809ee9157921e867c84e7 sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b",
       "postgres": "postgres:16"
     },
     "upgrade-after": {
-      "project": "openlaw-doc030-opup",
-      "at": "2026-09-25T10:26:51.308Z",
+      "project": "openlaw-doc030-opup2",
+      "at": "2026-09-25T13:48:19.177Z",
       "services": [
         {
-          "container": "openlaw-doc030-opup-doc-engine-1",
-          "repository": "openlaw-engine-local",
-          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:04fc7d53d74daf64e3abfdb42af9cf4c1d81a38f7d6372ca06d822c2e6882b23"
-        },
-        {
-          "container": "openlaw-doc030-opup-app-1",
+          "container": "openlaw-doc030-opup2-worker-1",
           "repository": "openlaw-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7"
+          "id": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30"
         },
         {
-          "container": "openlaw-doc030-opup-postgres-1",
+          "container": "openlaw-doc030-opup2-postgres-1",
           "repository": "postgres",
           "tag": "16",
           "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
         },
         {
-          "container": "openlaw-doc030-opup-worker-1",
+          "container": "openlaw-doc030-opup2-app-1",
           "repository": "openlaw-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7"
+          "id": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30"
+        },
+        {
+          "container": "openlaw-doc030-opup2-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
+          "id": "sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b"
         }
       ],
       "containers": {
-        "app": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7",
-        "worker": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7",
-        "doc-engine": "sha256:04fc7d53d74daf64e3abfdb42af9cf4c1d81a38f7d6372ca06d822c2e6882b23",
+        "app": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30",
+        "worker": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30",
+        "doc-engine": "sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
@@ -296,74 +296,74 @@
       }
     },
     "backup-source": {
-      "project": "openlaw-doc030-opup",
-      "at": "2026-09-25T10:34:14.580Z",
+      "project": "openlaw-doc030-opup2",
+      "at": "2026-09-25T13:50:10.113Z",
       "services": [
         {
-          "container": "openlaw-doc030-opup-app-1",
-          "repository": "openlaw-local",
+          "container": "openlaw-doc030-opup2-doc-engine-1",
+          "repository": "openlaw-engine-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7"
+          "id": "sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b"
         },
         {
-          "container": "openlaw-doc030-opup-postgres-1",
+          "container": "openlaw-doc030-opup2-app-1",
+          "repository": "openlaw-local",
+          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
+          "id": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30"
+        },
+        {
+          "container": "openlaw-doc030-opup2-worker-1",
+          "repository": "openlaw-local",
+          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
+          "id": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30"
+        },
+        {
+          "container": "openlaw-doc030-opup2-postgres-1",
           "repository": "postgres",
           "tag": "16",
           "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
-        },
-        {
-          "container": "openlaw-doc030-opup-worker-1",
-          "repository": "openlaw-local",
-          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7"
-        },
-        {
-          "container": "openlaw-doc030-opup-doc-engine-1",
-          "repository": "openlaw-engine-local",
-          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:04fc7d53d74daf64e3abfdb42af9cf4c1d81a38f7d6372ca06d822c2e6882b23"
         }
       ],
       "containers": {
-        "app": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7",
-        "worker": "sha256:0c55a4612c616a15f15c4b5c2820cd041d66725f29ea4a129ce47aa0b3689be7",
-        "doc-engine": "sha256:04fc7d53d74daf64e3abfdb42af9cf4c1d81a38f7d6372ca06d822c2e6882b23",
+        "app": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30",
+        "worker": "sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30",
+        "doc-engine": "sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "restore-start": {
-      "project": "openlaw-doc030-oprestore",
-      "at": "2026-09-25T10:35:25.283Z",
+      "project": "openlaw-doc030-oprestore2",
+      "at": "2026-09-25T13:51:20.447Z",
       "services": [
         {
-          "container": "openlaw-doc030-oprestore-worker-1",
+          "container": "openlaw-doc030-oprestore2-worker-1",
           "repository": "openlaw-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:ff1a3f8895f4eb36bc7714f2307eb9218a74747dd9e544eb1af641808b179df6"
+          "id": "sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a"
         },
         {
-          "container": "openlaw-doc030-oprestore-app-1",
+          "container": "openlaw-doc030-oprestore2-app-1",
           "repository": "openlaw-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:ff1a3f8895f4eb36bc7714f2307eb9218a74747dd9e544eb1af641808b179df6"
+          "id": "sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a"
         },
         {
-          "container": "openlaw-doc030-oprestore-doc-engine-1",
+          "container": "openlaw-doc030-oprestore2-doc-engine-1",
           "repository": "openlaw-engine-local",
           "tag": "067c1646829df85e62b809ee9157921e867c84e7",
-          "id": "sha256:522e52bc05bf7dd6b777326bd8ead893a0dac84404b1e510b4058000f7b8d1c2"
+          "id": "sha256:446014ba57dd471342989e3fba911ee3c8b8d3da9aad641aa1a46b23db6a40f1"
         },
         {
-          "container": "openlaw-doc030-oprestore-postgres-1",
+          "container": "openlaw-doc030-oprestore2-postgres-1",
           "repository": "postgres",
           "tag": "16",
           "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
         }
       ],
       "containers": {
-        "app": "sha256:ff1a3f8895f4eb36bc7714f2307eb9218a74747dd9e544eb1af641808b179df6",
-        "worker": "sha256:ff1a3f8895f4eb36bc7714f2307eb9218a74747dd9e544eb1af641808b179df6",
-        "doc-engine": "sha256:522e52bc05bf7dd6b777326bd8ead893a0dac84404b1e510b4058000f7b8d1c2",
+        "app": "sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a",
+        "worker": "sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a",
+        "doc-engine": "sha256:446014ba57dd471342989e3fba911ee3c8b8d3da9aad641aa1a46b23db6a40f1",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
@@ -400,6 +400,42 @@
         "app": "sha256:d1291a187a2b2865e933012e59bed398809dd05ebf47620dde3db4f38262232b",
         "worker": "sha256:d1291a187a2b2865e933012e59bed398809dd05ebf47620dde3db4f38262232b",
         "doc-engine": "sha256:2eb107bc017604d90110b659d776c32c2d2ff2ebf1cbba0ab9e1b8fc1cfa779e",
+        "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+      }
+    },
+    "migfix-upgraded": {
+      "project": "openlaw-doc030-opmigfix",
+      "at": "2026-09-25T11:47:29.453Z",
+      "services": [
+        {
+          "container": "openlaw-doc030-opmigfix-worker-1",
+          "repository": "openlaw-local",
+          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
+          "id": "sha256:64e1a82bd922301d9f17c0a6e41b1321ececbb7d213dccd2fffaf56f2f7b76f8"
+        },
+        {
+          "container": "openlaw-doc030-opmigfix-postgres-1",
+          "repository": "postgres",
+          "tag": "16",
+          "id": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+        },
+        {
+          "container": "openlaw-doc030-opmigfix-app-1",
+          "repository": "openlaw-local",
+          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
+          "id": "sha256:64e1a82bd922301d9f17c0a6e41b1321ececbb7d213dccd2fffaf56f2f7b76f8"
+        },
+        {
+          "container": "openlaw-doc030-opmigfix-doc-engine-1",
+          "repository": "openlaw-engine-local",
+          "tag": "067c1646829df85e62b809ee9157921e867c84e7",
+          "id": "sha256:c1acd60be25545e176de19558334964c9ba1b7f9699da13ab3fe4ab3d3a4943d"
+        }
+      ],
+      "containers": {
+        "app": "sha256:64e1a82bd922301d9f17c0a6e41b1321ececbb7d213dccd2fffaf56f2f7b76f8",
+        "worker": "sha256:64e1a82bd922301d9f17c0a6e41b1321ececbb7d213dccd2fffaf56f2f7b76f8",
+        "doc-engine": "sha256:c1acd60be25545e176de19558334964c9ba1b7f9699da13ab3fe4ab3d3a4943d",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     }
@@ -649,7 +685,536 @@
       "phase": "diag-0157",
       "argument": null,
       "startedAt": "2026-09-25T11:45:34.378Z",
-      "finishedAt": null
+      "finishedAt": "2026-09-25T11:47:30.116Z"
+    },
+    {
+      "phase": "diag-0157-recheck",
+      "argument": null,
+      "startedAt": "2026-09-25T11:47:46.402Z",
+      "finishedAt": "2026-09-25T11:47:47.128Z"
+    },
+    {
+      "phase": "diag-mail",
+      "argument": null,
+      "startedAt": "2026-09-25T11:47:47.649Z",
+      "finishedAt": "2026-09-25T11:49:26.546Z"
+    },
+    {
+      "phase": "diag-storage",
+      "argument": null,
+      "startedAt": "2026-09-25T11:49:31.409Z",
+      "finishedAt": "2026-09-25T11:52:03.773Z"
+    },
+    {
+      "phase": "diag-upload",
+      "argument": null,
+      "startedAt": "2026-09-25T11:52:23.178Z",
+      "finishedAt": "2026-09-25T11:52:45.992Z"
+    },
+    {
+      "phase": "diag-worker",
+      "argument": null,
+      "startedAt": "2026-09-25T11:52:51.648Z",
+      "finishedAt": "2026-09-25T11:55:42.273Z"
+    },
+    {
+      "phase": "diag-worker",
+      "argument": "worker",
+      "startedAt": "2026-09-25T13:16:02.165Z",
+      "finishedAt": "2026-09-25T13:17:20.742Z"
+    },
+    {
+      "phase": "diag-engine-busy",
+      "argument": null,
+      "startedAt": "2026-09-25T13:17:38.670Z",
+      "finishedAt": "2026-09-25T13:18:00.341Z"
+    },
+    {
+      "phase": "diag-engine-busy",
+      "argument": null,
+      "startedAt": "2026-09-25T13:18:16.954Z",
+      "finishedAt": "2026-09-25T13:18:35.936Z"
+    },
+    {
+      "phase": "diag-providers",
+      "argument": null,
+      "startedAt": "2026-09-25T13:18:41.241Z",
+      "finishedAt": "2026-09-25T13:19:04.317Z"
+    },
+    {
+      "phase": "diag-providers",
+      "argument": null,
+      "startedAt": "2026-09-25T13:19:28.938Z",
+      "finishedAt": "2026-09-25T13:19:38.175Z"
+    },
+    {
+      "phase": "diag-reset-wrongkey",
+      "argument": null,
+      "startedAt": "2026-09-25T13:19:44.822Z",
+      "finishedAt": "2026-09-25T13:21:06.534Z"
+    },
+    {
+      "phase": "diag-logscan",
+      "argument": null,
+      "startedAt": "2026-09-25T13:21:06.930Z",
+      "finishedAt": "2026-09-25T13:21:07.403Z"
+    },
+    {
+      "phase": "findings",
+      "argument": null,
+      "startedAt": "2026-09-25T13:22:12.719Z",
+      "finishedAt": "2026-09-25T13:22:27.045Z"
+    },
+    {
+      "phase": "destroy",
+      "argument": null,
+      "startedAt": "2026-09-25T13:22:42.089Z",
+      "finishedAt": "2026-09-25T13:23:27.639Z"
+    },
+    {
+      "phase": "support-up",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:35:36.627Z",
+      "finishedAt": "2026-09-25T13:35:37.243Z"
+    },
+    {
+      "phase": "inst-prereq",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:35:37.473Z",
+      "finishedAt": "2026-09-25T13:35:37.582Z"
+    },
+    {
+      "phase": "inst-source",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:35:37.831Z",
+      "finishedAt": "2026-09-25T13:35:41.565Z"
+    },
+    {
+      "phase": "inst-build",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:35:41.808Z",
+      "finishedAt": "2026-09-25T13:35:57.959Z"
+    },
+    {
+      "phase": "r2-inst-step4",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:35:58.203Z",
+      "finishedAt": "2026-09-25T13:36:12.624Z"
+    },
+    {
+      "phase": "inst-token",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:36:12.872Z",
+      "finishedAt": "2026-09-25T13:36:36.231Z"
+    },
+    {
+      "phase": "r2-inst-addr",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:36:43.054Z",
+      "finishedAt": "2026-09-25T13:36:44.507Z"
+    },
+    {
+      "phase": "inst-checks",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:36:44.850Z",
+      "finishedAt": "2026-09-25T13:37:41.396Z"
+    },
+    {
+      "phase": "r2-inst-trust",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:37:41.857Z",
+      "finishedAt": "2026-09-25T13:39:01.512Z"
+    },
+    {
+      "phase": "r2-inst-addr",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:39:14.537Z",
+      "finishedAt": "2026-09-25T13:39:16.693Z"
+    },
+    {
+      "phase": "inst-checks",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:39:17.138Z",
+      "finishedAt": "2026-09-25T13:40:06.106Z",
+      "error": "critical step failed: Create a fictional Contract, upload a small supported Document, download it again, check its processing result"
+    },
+    {
+      "phase": "inst-checks",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:40:11.520Z",
+      "finishedAt": "2026-09-25T13:42:06.460Z",
+      "error": "critical step failed: Create a fictional Contract, upload a small supported Document, download it again, check its processing result"
+    },
+    {
+      "phase": "inst-checks",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:42:38.191Z",
+      "finishedAt": "2026-09-25T13:43:58.313Z",
+      "error": "critical step failed: Create a fictional Contract, upload a small supported Document, download it again, check its processing result"
+    },
+    {
+      "phase": "inst-checks",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:44:08.167Z",
+      "finishedAt": "2026-09-25T13:45:31.189Z"
+    },
+    {
+      "phase": "inst-worker",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:45:42.044Z",
+      "finishedAt": "2026-09-25T13:46:13.809Z"
+    },
+    {
+      "phase": "inst-worker",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:46:26.959Z",
+      "finishedAt": "2026-09-25T13:46:30.940Z"
+    },
+    {
+      "phase": "r2-up-proxy",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:46:36.353Z",
+      "finishedAt": "2026-09-25T13:46:36.559Z"
+    },
+    {
+      "phase": "up-baseline",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:46:36.758Z",
+      "finishedAt": "2026-09-25T13:46:52.939Z"
+    },
+    {
+      "phase": "up-populate",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:46:53.452Z",
+      "finishedAt": "2026-09-25T13:47:09.211Z"
+    },
+    {
+      "phase": "upgrade",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:47:13.865Z",
+      "finishedAt": "2026-09-25T13:49:02.887Z"
+    },
+    {
+      "phase": "up-verify",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:49:03.117Z",
+      "finishedAt": "2026-09-25T13:49:20.769Z"
+    },
+    {
+      "phase": "r2-up-addr",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:49:20.997Z",
+      "finishedAt": "2026-09-25T13:49:34.282Z"
+    },
+    {
+      "phase": "br-prepare",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:49:39.659Z",
+      "finishedAt": "2026-09-25T13:50:10.486Z"
+    },
+    {
+      "phase": "r2-br-s3",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:50:10.778Z",
+      "finishedAt": "2026-09-25T13:50:48.519Z"
+    },
+    {
+      "phase": "br-backup",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:50:48.810Z",
+      "finishedAt": "2026-09-25T13:51:03.824Z"
+    },
+    {
+      "phase": "br-restore",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:51:04.040Z",
+      "finishedAt": "2026-09-25T13:51:20.910Z"
+    },
+    {
+      "phase": "br-verify",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:51:27.378Z",
+      "finishedAt": "2026-09-25T13:51:49.990Z"
+    },
+    {
+      "phase": "r2-br-wrongkey",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:51:50.210Z",
+      "finishedAt": "2026-09-25T13:53:01.150Z"
+    },
+    {
+      "phase": "br-verify",
+      "argument": "fields,status",
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:53:18.722Z",
+      "finishedAt": "2026-09-25T13:54:29.523Z"
+    },
+    {
+      "phase": "br-verify",
+      "argument": "final",
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:54:38.707Z",
+      "finishedAt": "2026-09-25T13:54:46.112Z"
+    },
+    {
+      "phase": "r2-diag-trust",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:54:52.104Z",
+      "finishedAt": "2026-09-25T13:55:57.135Z"
+    },
+    {
+      "phase": "r2-diag-origin",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:55:57.365Z",
+      "finishedAt": "2026-09-25T13:56:55.493Z"
+    },
+    {
+      "phase": "r2-diag-wrongkey",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:56:55.706Z",
+      "finishedAt": "2026-09-25T13:58:58.256Z"
+    },
+    {
+      "phase": "destroy",
+      "argument": null,
+      "round": 2,
+      "articleHashes": {
+        "install": "aabcaf18cf5eb6ea",
+        "upgrade": "224f6e7a7fdc040b",
+        "backup-and-restore": "c9e9d5d4e4f7e685",
+        "operator-troubleshooting": "a685d653b2b8da37"
+      },
+      "startedAt": "2026-09-25T13:59:13.574Z",
+      "finishedAt": "2026-09-25T13:59:47.770Z"
     }
   ],
   "steps": [
@@ -2819,6 +3384,2034 @@
       "actual": "pg_restore --list 549 TOC entries; tar lists 5 files; SHA256SUMS 971094540714f156068e9478cd5df5f7e3301228ec751609a21a136e4c001350 database.dump 5699a355c5526792564688059d0d85bb0945b4a8bfffe710e2de72f3b16799c0 files.tar.gz",
       "result": "pass",
       "elapsedMs": 239
+    },
+    {
+      "phase": "diag-0157",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Repeat the upgrade on the corrected target: migrations complete and the app is ready",
+      "startedAt": "2026-09-25T11:47:16.504Z",
+      "at": "2026-09-25T11:47:30.112Z",
+      "actual": "readyz 200; journal rows 173; app sha256:64e1a82bd922301d9f17c0a6e41b1321ececbb7d213dccd2fffaf56f2f7b76f8",
+      "result": "pass",
+      "elapsedMs": 13608
+    },
+    {
+      "phase": "diag-0157-recheck",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Re-read of the refused start: the refusal names the Request type inside the migration's SQL error; the app keeps restarting; journal rows show earlier pending migrations applied",
+      "startedAt": "2026-09-25T11:47:46.403Z",
+      "at": "2026-09-25T11:47:47.121Z",
+      "actual": "{\"refusal\":\"Cannot migrate the intake form of Request types: DOC-030 operator-2 guarded intake. A Field has no Row on the destination type (outside its module, a Contract Overview attribute, or a built-in without a Matter Row). Re-target the Request type or detach those Fields before upgrading.\\n      at /app/no\",\"sqlErrorContext\":[\"DrizzleQueryError: Failed query:\"],\"journalRows\":\"91 on the starting build; 158 after the refused start\",\"appState\":\"10 restarting OOMKilled=false\",\"afterwards\":\"app and worker stopped; the old image was not started on this database\"}",
+      "result": "pass",
+      "elapsedMs": 718
+    },
+    {
+      "phase": "diag-mail",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SMTP_URL pins the environment: the saved relay is ignored; a valid SMTP_FROM; recreate app and worker; verify; then remove the override",
+      "startedAt": "2026-09-25T11:47:47.649Z",
+      "at": "2026-09-25T11:48:25.727Z",
+      "actual": "{\"pinnedSource\":\"env\",\"deliveredFrom\":\"env@doc030-upgrade.example\",\"afterRemoval\":\"source app; delivered from openlaw@doc030-upgrade.example\"}",
+      "result": "pass",
+      "elapsedMs": 38078
+    },
+    {
+      "phase": "diag-mail",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Wrong OPENLAW_SECRET_KEY: the start log names unreadable columns; email reads unset; the test send gives the exact message; an unrelated Contract stays readable; restore the key",
+      "expected": "The test email could not be sent. SMTP is not configured — save a relay first.",
+      "startedAt": "2026-09-25T11:48:25.730Z",
+      "at": "2026-09-25T11:49:26.538Z",
+      "actual": "{\"readyzWithWrongKey\":200,\"startLog\":[\"No configured key opens these stored credentials: api_key (1), smtp_url (1), vapid_private_key (1), advanced_settings (1). They are left as they are, so they are still recoverable: boot once with the old key in OPENLAW_SECRET_KEY_PREVIOUS, or paste the credentials again in Settings.\"],\"emailSource\":\"unset\",\"testSend\":\"502 The test email could not be sent. SMTP is not configured — save a relay first.\",\"unrelatedContract\":200,\"fileUploadsWithWrongKey\":[\"Maximum file size (MiB) = 100 [Default]\"],\"afterRetainedKey\":\"test 200, delivered; File uploads Maximum file size (MiB) = 150 [Saved in OpenLaw]\"}",
+      "result": "pass",
+      "elapsedMs": 60808
+    },
+    {
+      "phase": "diag-storage",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Local storage: the file volume belongs to the image's unprivileged user",
+      "startedAt": "2026-09-25T11:49:31.411Z",
+      "at": "2026-09-25T11:49:32.266Z",
+      "actual": "{\"uid\":\"1000\",\"user\":\"node\",\"volumeOwnerUidMode\":\"node 1000 755\"}",
+      "result": "pass",
+      "elapsedMs": 855
+    },
+    {
+      "phase": "diag-storage",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Storage settings name their source; System status shows Active storage; Test connection on Document storage (local)",
+      "startedAt": "2026-09-25T11:49:32.271Z",
+      "at": "2026-09-25T11:49:39.188Z",
+      "actual": "{\"documentStorage\":[\"Store new documents in = Local filesystem [Default]\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"],\"testConnection\":\"Connection test passed.\",\"systemStatus\":\"Active storage: local\"}",
+      "result": "pass",
+      "elapsedMs": 6917
+    },
+    {
+      "phase": "diag-storage",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Fixture through the app: an owned MinIO; Document storage saved as S3 after Test connection passes; restart; a new upload lands in the bucket",
+      "startedAt": "2026-09-25T11:49:39.193Z",
+      "at": "2026-09-25T11:50:28.080Z",
+      "actual": "{\"testConnection\":\"Connection test passed.\",\"fileRefPrefix\":\"s3\",\"activeStorage\":\"Active storage: s3\",\"storageFields\":[\"Store new documents in = S3-compatible storage [Saved in OpenLaw]\",\"S3 bucket = doc030-op2 [Saved in OpenLaw · Read only]\",\"S3 endpoint (optional for AWS) = http://op2-minio:9000 [Saved in OpenLaw · Read only]\",\"S3 region = us-east-1 [Saved in OpenLaw]\",\"S3 path-style addressing = Yes [Saved in OpenLaw]\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"]}",
+      "result": "pass",
+      "elapsedMs": 48887
+    },
+    {
+      "phase": "diag-storage",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove saved Advanced settings: storage; files do not move; a Document only the saved values named stays unreadable until the deployment configures that store",
+      "expected": "Removing saved storage values does not move files. A Document in a bucket or container that only the saved values named stays unreadable until the deployment configures that store.",
+      "startedAt": "2026-09-25T11:50:28.086Z",
+      "at": "2026-09-25T11:51:12.141Z",
+      "actual": "{\"resetCommand\":\"exit 0: Saved storage overrides removed. Restart both app and worker to use their deployment configuration.\",\"afterRestart\":{\"activeStorage\":\"Active storage: local\",\"s3OnlyDocumentDownload\":\"500 Internal server error\",\"localDocumentDownload\":200},\"deploymentConfiguresTheStore\":\"S3_* reader settings in .env (write driver still local); Active storage: local; the S3 Document downloads again with its SHA-256\"}",
+      "result": "pass",
+      "elapsedMs": 44055
+    },
+    {
+      "phase": "diag-storage",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload refusal: File uploads saved at 1 MiB; a file above is refused with the app's message; a file below is accepted; restore 150",
+      "startedAt": "2026-09-25T11:51:12.147Z",
+      "at": "2026-09-25T11:52:03.768Z",
+      "actual": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/contracts/2/documents\"]').first()\u001b[22m\n",
+      "result": "fail",
+      "elapsedMs": 51621
+    },
+    {
+      "phase": "diag-upload",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Upload refusal: File uploads saved at 1 MiB; a file above is refused with the app's message; a file below is accepted; restore 150",
+      "startedAt": "2026-09-25T11:52:23.179Z",
+      "at": "2026-09-25T11:52:45.987Z",
+      "actual": "{\"over\":\"That file is over the 1 MB upload limit.\",\"under\":\"Documents tab, Upload, Upload document dialog, Choose files doc030-op2-small.txt, Upload (201)\",\"restored\":\"File uploads 150 saved again; app and worker restarted\"}",
+      "result": "pass",
+      "elapsedMs": 22808
+    },
+    {
+      "phase": "diag-worker",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Worker stopped: the two commands; System status shows No recent heartbeat; a new upload waits; start; the upload is processed",
+      "command": "docker compose ps worker doc-engine; docker compose logs --since=10m worker doc-engine",
+      "startedAt": "2026-09-25T11:52:51.649Z",
+      "at": "2026-09-25T11:54:12.741Z",
+      "actual": "{\"st\":{\"rows\":[\"API Running Current 3:54 PM\"],\"activeStorage\":\"Active storage: local\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":\"An API or worker heartbeat is missing. Check that both services are running.\"},\"pending\":\"pending\",\"text\":\"ready\"}",
+      "result": "fail",
+      "elapsedMs": 81092
+    },
+    {
+      "phase": "diag-worker",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Engine down: the API stays ready; a new PDF does not finish while the engine is stopped; restore; a new controlled PDF is processed",
+      "startedAt": "2026-09-25T11:54:12.746Z",
+      "at": "2026-09-25T11:55:19.422Z",
+      "actual": "{\"readyzWhileEngineDown\":200,\"stateAfter45s\":\"pending\",\"workerLog\":[],\"newPdfAfterRestore\":\"ready\",\"earlierUploadLater\":\"ready\"}",
+      "result": "pass",
+      "elapsedMs": 66676
+    },
+    {
+      "phase": "diag-worker",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Engine busy: DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=0; a burst of uploads; the engine answers 503 with Retry-After; processing slows rather than fails; restore",
+      "startedAt": "2026-09-25T11:55:19.427Z",
+      "at": "2026-09-25T11:55:42.264Z",
+      "actual": "{\"healthProbeStatuses\":\"200,200,200,200\",\"burstResults\":[\"ready\",\"ready\",\"ready\",\"ready\",\"ready\"],\"busyLogLines\":[\"app-1         | {\\\"level\\\":30,\\\"time\\\":1790337069755,\\\"pid\\\":1,\\\"hostname\\\":\\\"f16cf724dba3\\\",\\\"reqId\\\":\\\"req-r\\\",\\\"res\\\":{\\\"statusCode\\\":200},\\\"responseTime\\\":10.202503000000434,\\\"msg\\\":\\\"request completed\\\"}\",\"app-1         | {\\\"level\\\":30,\\\"time\\\":1790337091667,\\\"pid\\\":1,\\\"hostname\\\":\\\"f16cf724dba3\\\",\\\"reqId\\\":\\\"req-j\\\",\\\"res\\\":{\\\"statusCode\\\":200},\\\"responseTime\\\":1.503605000000789,\\\"msg\\\":\\\"request completed\\\"}\",\"app-1         | {\\\"level\\\":30,\\\"time\\\":1790337092948,\\\"pid\\\":1,\\\"hostname\\\":\\\"f16cf724dba3\\\",\\\"reqId\\\":\\\"req-1c\\\",\\\"res\\\":{\\\"statusCode\\\":200},\\\"responseTime\\\":31.9503109999996,\\\"msg\\\":\\\"request completed\\\"}\"],\"restored\":\"limits removed; engine recreated\"}",
+      "result": "pass",
+      "elapsedMs": 22837
+    },
+    {
+      "phase": "diag-worker",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Worker killed (not a clean stop, so its heartbeat row stays): the two commands; System status shows No recent heartbeat; a new upload waits; start; the upload is processed. An earlier clean docker compose stop removed the Worker row instead and showed only the missing-heartbeat warning.",
+      "command": "docker compose kill worker; docker compose ps worker doc-engine; docker compose logs --since=10m worker doc-engine",
+      "startedAt": "2026-09-25T13:16:02.166Z",
+      "at": "2026-09-25T13:17:20.737Z",
+      "actual": "{\"psWhileStopped\":[\"openlaw-doc030-opup-doc-engine-1 openlaw-engine-local:067c1646829df85e62b809ee9157921e867c84e7 \\\"dock\"],\"systemStatusWhileStopped\":{\"rows\":[\"API Running Current 5:17 PM\",\"Worker No recent heartbeat Current 5:15 PM\"],\"activeStorage\":\"Active storage: local\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":\"An API or worker heartbeat is missing. Check that both services are running.\"},\"stateWhileStopped\":\"pending\",\"afterStart\":\"ready\",\"systemStatusAfter\":[\"Worker Running Current 5:17 PM\",\"API Running Current 5:17 PM\"]}",
+      "result": "pass",
+      "elapsedMs": 78571
+    },
+    {
+      "phase": "diag-engine-busy",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Engine busy, observed directly: with DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=0, concurrent engine requests from inside the app container get 503 with Retry-After",
+      "expected": "Past both, it answers 503 with Retry-After.",
+      "startedAt": "2026-09-25T13:17:38.671Z",
+      "at": "2026-09-25T13:18:00.334Z",
+      "actual": "200 retry-after=null; 200 retry-after=null; 200 retry-after=null; 200 retry-after=null\n",
+      "result": "fail",
+      "elapsedMs": 21663
+    },
+    {
+      "phase": "diag-engine-busy",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Engine busy, observed directly: with DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=1 (0 is not a positive integer and falls back to the default 8), six concurrent engine requests from inside the app container get 503 with Retry-After",
+      "expected": "Past both, it answers 503 with Retry-After.",
+      "startedAt": "2026-09-25T13:18:16.955Z",
+      "at": "2026-09-25T13:18:35.930Z",
+      "actual": "{\"concurrentStatuses\":\"200 retry-after=null; 200 retry-after=null; 503 retry-after=5; 503 retry-after=5; 503 retry-after=5; 503 retry-after=5\",\"restored\":\"limits removed; engine recreated\"}",
+      "result": "pass",
+      "elapsedMs": 18975
+    },
+    {
+      "phase": "diag-providers",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "AI connector refusal: Test connection shows only the HTTP status; the app log line has the provider status and a short redacted reply; restore the provider",
+      "expected": "The connection test failed. The provider refused the request with HTTP 401. The app log then has The AI provider refused the connection test.",
+      "startedAt": "2026-09-25T13:18:41.241Z",
+      "at": "2026-09-25T13:18:47.916Z",
+      "actual": "{\"line\":\"{\\\"level\\\":40,\\\"time\\\":1790342323555,\\\"pid\\\":1,\\\"hostname\\\":\\\"f16cf724dba3\\\",\\\"reqId\\\":\\\"req-4f\\\",\\\"providerStatus\\\":401,\\\"providerReply\\\":\\\"Incorrect API key provided: sk-doc03****. You can find your API key in the stand-in.\\\",\\\"msg\\\":\\\"The AI provider refused the connection test.\\\"}\",\"keyInLog\":false,\"again\":\"Connection successful.\"}",
+      "result": "fail",
+      "elapsedMs": 6675
+    },
+    {
+      "phase": "diag-providers",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Signing: the Signing updates control offers Polling and Webhook",
+      "startedAt": "2026-09-25T13:18:47.921Z",
+      "at": "2026-09-25T13:19:04.311Z",
+      "actual": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Signing updates') to be visible\u001b[22m\n",
+      "result": "fail",
+      "elapsedMs": 16390
+    },
+    {
+      "phase": "diag-providers",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "AI connector refusal: Test connection shows only the HTTP status; the app log line has the provider status and a short redacted reply; restore the provider",
+      "expected": "The connection test failed. The provider refused the request with HTTP 401. The app log then has The AI provider refused the connection test.",
+      "startedAt": "2026-09-25T13:19:28.939Z",
+      "at": "2026-09-25T13:19:35.719Z",
+      "actual": "{\"shownInBrowser\":\"The connection test failed. The provider refused the request with HTTP 401.\",\"logLine\":\"The AI provider refused the connection test.\",\"providerStatus\":401,\"providerReply\":\"Incorrect API key provided: sk-doc03****. You can find your API key in the stand-in.\",\"keyOrKeyPrefixInLog\":false,\"afterProviderRestored\":\"Connection successful.\"}",
+      "result": "pass",
+      "elapsedMs": 6780
+    },
+    {
+      "phase": "diag-providers",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Signing: the Signing updates control offers Polling and Webhook",
+      "startedAt": "2026-09-25T13:19:35.728Z",
+      "at": "2026-09-25T13:19:38.170Z",
+      "actual": "{\"label\":\"Signing updates\",\"signingUpdatesOptions\":[\"Polling\",\"Webhook\"],\"note\":\"nothing saved; a live Signing provider is out of scope (C42)\"}",
+      "result": "pass",
+      "elapsedMs": 2442
+    },
+    {
+      "phase": "diag-reset-wrongkey",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Wrong key with saved Advanced settings, and the recovery command under that key",
+      "expected": "If settings were saved in Settings → Advanced, a wrong key stops app and worker startup with Advanced settings cannot be decrypted. The recovery command needs the correct key; with a key that cannot open the saved settings it stops with the same message as startup. It removes only that section's saved values.",
+      "startedAt": "2026-09-25T13:19:44.823Z",
+      "at": "2026-09-25T13:21:06.528Z",
+      "actual": "{\"savedBefore\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\"],\"readyzWithWrongKey\":200,\"states\":[\"0 running OOMKilled=false\",\"0 running OOMKilled=false\"],\"cannotBeDecrypted\":false,\"resetMcpWithWrongKey\":\"exit 0: Saved mcp overrides removed. Restart both app and worker to use their deployment configuration.\",\"savedAfterRetainedKey\":[]}",
+      "result": "pass",
+      "elapsedMs": 81705
+    },
+    {
+      "phase": "diag-logscan",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: container logs after every induced fault omit keys, relay, storage and provider credentials, setup tokens and fixture passwords",
+      "startedAt": "2026-09-25T13:21:06.930Z",
+      "at": "2026-09-25T13:21:07.391Z",
+      "actual": "{\"openlaw-doc030-opup\":{\"lines\":366,\"secretHits\":0,\"smtpUrlWithPassword\":false},\"openlaw-doc030-opinst\":{\"lines\":397,\"secretHits\":0,\"smtpUrlWithPassword\":false},\"openlaw-doc030-oprestore\":{\"lines\":646,\"secretHits\":0,\"smtpUrlWithPassword\":false},\"openlaw-doc030-oprecover\":{\"lines\":1469,\"secretHits\":0,\"smtpUrlWithPassword\":false},\"openlaw-doc030-opmigfix\":{\"lines\":295,\"secretHits\":0,\"smtpUrlWithPassword\":false}}",
+      "result": "pass",
+      "elapsedMs": 461
+    },
+    {
+      "phase": "diag-logscan",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Negative: no destructive recovery is offered without its actual scope and consequence",
+      "startedAt": "2026-09-25T13:21:07.398Z",
+      "at": "2026-09-25T13:21:07.398Z",
+      "actual": "The guide's recoveries were followed as written: the journal guard asks for a maintainer and forbids deleting journal rows; the accounts.issuer cases name what each deletion does (people re-link at next sign-in); the 0157 recovery restores into a separate target and forbids starting the old image on the migrated database; the reset command names what it removes and that files do not move. The one observed gap is recorded as a guide failure: under a wrong key the reset command removed every section's saved values, which the guide does not say.",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "phase": "findings",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Product check: a clean docker compose stop app; exit code and the API heartbeat row",
+      "command": "docker compose stop app; docker inspect ExitCode; runtime_status rows",
+      "startedAt": "2026-09-25T13:22:12.719Z",
+      "at": "2026-09-25T13:22:25.947Z",
+      "actual": "{\"stopMs\":10344,\"exitCode\":\"137\",\"runtimeStatusRows\":\"api|13; worker|2\"}",
+      "result": "pass",
+      "elapsedMs": 13228
+    },
+    {
+      "phase": "findings",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Upgrade step 3 TRUSTED_PROXIES bullet checked against the same build: a host request reaches the app from the Docker bridge gateway, not 127.0.0.1",
+      "startedAt": "2026-09-25T13:22:25.950Z",
+      "at": "2026-09-25T13:22:27.029Z",
+      "actual": "{\"remoteAddressSeenForAHostRequest\":[\"192.168.224.1\"],\"trustedProxies\":\"127.0.0.1,::1\"}",
+      "result": "pass",
+      "elapsedMs": 1079
+    },
+    {
+      "phase": "destroy",
+      "scenario": "teardown",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Destroy every owned project (containers, networks, volumes), the support containers and the private backups and clones",
+      "startedAt": "2026-09-25T13:22:42.090Z",
+      "at": "2026-09-25T13:23:27.635Z",
+      "actual": "openlaw-doc030-opinst down -v exit 0; openlaw-doc030-opup down -v exit 0; openlaw-doc030-oprecover down -v exit 0; openlaw-doc030-oprestore down -v exit 0; openlaw-doc030-opmigfix down -v exit 0; openlaw-doc030-op2-mail rm exit 0; openlaw-doc030-op2-ai rm exit 0; openlaw-doc030-op2-occupier rm exit 0; openlaw-doc030-op2-proxy rm exit 0; openlaw-doc030-op2-cproxy rm exit 0; openlaw-doc030-op2-minio rm exit 0; remaining containers: none; remaining volumes: none; images tagged openlaw-local and openlaw-engine-local stay in the Docker cache",
+      "result": "pass",
+      "elapsedMs": 45545
+    },
+    {
+      "round": 2,
+      "phase": "support-up",
+      "scenario": "setup",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start owned support containers: Mailpit relay, AI provider stand-in, and an unrelated listener",
+      "startedAt": "2026-09-25T13:35:36.627Z",
+      "at": "2026-09-25T13:35:37.240Z",
+      "actual": "openlaw-doc030-op2-mail: Mailpit v1.30, UI 127.0.0.1:24601, joins each project's backend network as op2-mail; openlaw-doc030-op2-ai: OpenAI-compatible stand-in (not a live provider) that answers 200 only for the expected key, joins backend networks as op2-ai; openlaw-doc030-op2-occupier: unrelated listener on 127.0.0.1:24643",
+      "result": "pass",
+      "elapsedMs": 613
+    },
+    {
+      "round": 2,
+      "phase": "inst-prereq",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Before you start: check Git, OpenSSL, docker version, docker compose version and docker context show",
+      "command": "git --version; openssl version; docker version; docker compose version; docker context show",
+      "startedAt": "2026-09-25T13:35:37.474Z",
+      "at": "2026-09-25T13:35:37.579Z",
+      "actual": "git version 2.55.0; OpenSSL 3.6.4 25 Aug 2026 (Library: OpenSSL 3.6.4 25 Aug 2026); Docker Engine 29.8.1; Docker Compose version 5.5.1; docker context show: default (unix:///var/run/docker.sock); free space for the installation directory 1.5T",
+      "result": "pass",
+      "elapsedMs": 105
+    },
+    {
+      "round": 2,
+      "phase": "inst-source",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 1: clone into a new directory and select the documented revision",
+      "command": "git clone https://github.com/juggernog20/OpenLaw.git openlaw; cd openlaw; git checkout --detach 067c1646829df85e62b809ee9157921e867c84e7",
+      "startedAt": "2026-09-25T13:35:37.831Z",
+      "at": "2026-09-25T13:35:41.521Z",
+      "actual": "git clone exit 0 in 3 s; git checkout --detach exit 0; HEAD 067c1646829df85e62b809ee9157921e867c84e7",
+      "result": "pass",
+      "elapsedMs": 3690
+    },
+    {
+      "round": 2,
+      "phase": "inst-source",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 2: copy .env.example to .env with the grouped commands; a second run refuses to overwrite",
+      "command": "(\n  umask 077\n  set -C\n  cat .env.example > .env || exit 1\n  chmod 600 .env\n  sed -i \"s|^AUTH_SECRET=$|AUTH_SECRET=$(openssl rand -base64 32)|\" .env\n  sed -i \"s|^OPENLAW_SECRET_KEY=$|OPENLAW_SECRET_KEY=$(openssl rand -base64 32)|\" .env\n)",
+      "expected": "The grouped commands refuse to overwrite an existing .env and stop before changing its keys.",
+      "startedAt": "2026-09-25T13:35:41.524Z",
+      "at": "2026-09-25T13:35:41.547Z",
+      "actual": "first run exit 0; .env mode 600; AUTH_SECRET and OPENLAW_SECRET_KEY filled with 44-character base64 values; second run exit 1 with \"bash: line 4: .env: cannot overwrite existing file\"; .env hash unchanged",
+      "result": "pass",
+      "elapsedMs": 23
+    },
+    {
+      "round": 2,
+      "phase": "inst-source",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 3: edit .env with origin, port, project name, proxy address (each setting once)",
+      "command": "COMPOSE_PROJECT_NAME, COMPOSE_FILE=compose.yml:compose.operator.yml, OPENLAW_BUILD_COMMIT, OPENLAW_BUILD_DIRTY=false, BASE_URL, PORT, TRUSTED_PROXIES=127.0.0.1,::1",
+      "startedAt": "2026-09-25T13:35:41.549Z",
+      "at": "2026-09-25T13:35:41.556Z",
+      "actual": "keys set once: AUTH_SECRET, OPENLAW_SECRET_KEY, COMPOSE_PROJECT_NAME, COMPOSE_FILE, OPENLAW_BUILD_COMMIT, OPENLAW_BUILD_DIRTY, BASE_URL, PORT; SETUP_TOKEN left out so the app prints one; .env.example shows commented examples for BASE_URL, PORT, TRUSTED_PROXIES, SETUP_TOKEN",
+      "result": "pass",
+      "elapsedMs": 7
+    },
+    {
+      "round": 2,
+      "phase": "inst-source",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 4: create compose.operator.yml beside compose.yml",
+      "startedAt": "2026-09-25T13:35:41.560Z",
+      "at": "2026-09-25T13:35:41.560Z",
+      "actual": "compose.operator.yml written (sha256 d304966daadfcb4d)",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "round": 2,
+      "phase": "inst-source",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 5: save both generated keys in the secret store, apart from backups",
+      "startedAt": "2026-09-25T13:35:41.562Z",
+      "at": "2026-09-25T13:35:41.563Z",
+      "actual": "both keys copied to the private secret store (mode 600) outside the installation directory and outside any backup directory; exported shell deployment overrides: none",
+      "result": "pass",
+      "elapsedMs": 1
+    },
+    {
+      "round": 2,
+      "phase": "inst-build",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 1: check Compose resolves the configuration without printing secrets",
+      "command": "docker compose config --quiet; docker compose config --services",
+      "expected": "The base installation has app, worker, postgres, and doc-engine.",
+      "startedAt": "2026-09-25T13:35:41.808Z",
+      "at": "2026-09-25T13:35:41.912Z",
+      "actual": "config --quiet exit 0 with no output; config --services: app, doc-engine, postgres, worker (no mail catcher)",
+      "result": "pass",
+      "elapsedMs": 104
+    },
+    {
+      "round": 2,
+      "phase": "inst-build",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 2: pull Postgres, build the two selected images, start, and list",
+      "command": "docker compose pull postgres; docker compose build app doc-engine; docker compose up -d --no-build --pull never; docker compose ps",
+      "startedAt": "2026-09-25T13:35:41.916Z",
+      "at": "2026-09-25T13:35:53.216Z",
+      "actual": "pull postgres exit 0 (2 s); build app doc-engine exit 0 in 3 s; openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8; openlaw-engine-local:067c1646829df85e62b809ee9157921e867c84e7 sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550; up exit 0; ps: app running; doc-engine running; postgres running; worker running",
+      "result": "pass",
+      "elapsedMs": 11300
+    },
+    {
+      "round": 2,
+      "phase": "inst-build",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 3: curl --fail /readyz on the chosen port; worker running; document engine healthy",
+      "command": "curl --fail http://127.0.0.1:24640/readyz",
+      "startedAt": "2026-09-25T13:35:53.218Z",
+      "at": "2026-09-25T13:35:57.902Z",
+      "actual": "curl --fail exit 0, body {\"status\":\"ok\"}; worker running; doc-engine healthy; app container image sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8, worker sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8, engine sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550; elapsed from the first prerequisite command to readiness 20 s",
+      "result": "pass",
+      "elapsedMs": 4684
+    },
+    {
+      "round": 2,
+      "phase": "inst-build",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The base Compose file publishes the app port only on 127.0.0.1",
+      "command": "docker compose port app 3000; LAN address probe",
+      "expected": "A proxy on the same host can reach the port and other hosts cannot.",
+      "startedAt": "2026-09-25T13:35:57.907Z",
+      "at": "2026-09-25T13:35:57.957Z",
+      "actual": "docker compose port app 3000 printed 127.0.0.1:24640; http://<host LAN address>:24640/readyz got no answer (ECONNREFUSED)",
+      "result": "pass",
+      "elapsedMs": 50
+    },
+    {
+      "round": 2,
+      "phase": "r2-inst-step4",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 4: read the Compose network gateway, set TRUSTED_PROXIES to it, apply with up",
+      "command": "docker network inspect openlaw-doc030-opinst2_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'; TRUSTED_PROXIES=<gateway>; docker compose up -d --no-build --pull never",
+      "startedAt": "2026-09-25T13:35:58.203Z",
+      "at": "2026-09-25T13:36:12.621Z",
+      "actual": "{\"gatewayAndSubnet\":\"192.168.32.1 192.168.32.0/20\",\"trustedProxies\":\"192.168.32.1\",\"upExit\":0,\"warningBeforeStep4\":false,\"warningAfterStep4\":false}",
+      "result": "pass",
+      "elapsedMs": 14418
+    },
+    {
+      "round": 2,
+      "phase": "inst-token",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 5: read the setup token from docker compose logs app",
+      "command": "docker compose logs app",
+      "expected": "The app prints the token after \"First-run setup is open. Paste this setup token into the setup screen:\"",
+      "startedAt": "2026-09-25T13:36:12.872Z",
+      "at": "2026-09-25T13:36:12.938Z",
+      "actual": "the documented line appears 1 time(s); a 32-character token follows it (not recorded); \"TRUSTED_PROXIES is not set\" warning present: false",
+      "result": "pass",
+      "elapsedMs": 66
+    },
+    {
+      "round": 2,
+      "phase": "inst-token",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "A restart replaces a printed token: restart the app and read the log again",
+      "command": "docker compose restart app; docker compose logs app",
+      "startedAt": "2026-09-25T13:36:12.941Z",
+      "at": "2026-09-25T13:36:29.525Z",
+      "actual": "after docker compose restart app the log shows the documented line again with a different token",
+      "result": "pass",
+      "elapsedMs": 16584
+    },
+    {
+      "round": 2,
+      "phase": "inst-token",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 6: configure the reverse proxy on the same host (Caddy, internal TLS)",
+      "startedAt": "2026-09-25T13:36:29.528Z",
+      "at": "2026-09-25T13:36:30.873Z",
+      "actual": "caddy:2-alpine on the host network (started) serves https://openlaw-doc030.localhost:24641 with an internal-CA certificate and reverse_proxy 127.0.0.1:24640; /readyz through the proxy 200. The browser accepts the internal CA; public certificate issuance is not tested.",
+      "result": "pass",
+      "elapsedMs": 1345
+    },
+    {
+      "round": 2,
+      "phase": "inst-token",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 6: open the intended HTTPS address and check it reaches Set up OpenLaw; an old token is refused",
+      "expected": "Set up OpenLaw; a replaced token shows \"The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.\"",
+      "startedAt": "2026-09-25T13:36:30.974Z",
+      "at": "2026-09-25T13:36:31.915Z",
+      "actual": "GET https://openlaw-doc030.localhost:24641 200 shows heading \"Set up OpenLaw\" with Setup token, Name, Email, Password, Confirm password; the token printed before the restart shows \"The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.\"",
+      "result": "pass",
+      "elapsedMs": 941
+    },
+    {
+      "round": 2,
+      "phase": "inst-token",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Build step 6: create the initial account with the current setup token (first-run setup)",
+      "expected": "A successful setup signs you in and opens Welcome to OpenLaw.",
+      "startedAt": "2026-09-25T13:36:31.918Z",
+      "at": "2026-09-25T13:36:32.246Z",
+      "actual": "Create Administrator with the current token signed in Avery Morgan (fictional) and opened \"Welcome to OpenLaw\" at /welcome; elapsed from the first prerequisite command to a usable first-run state 55 s (build 3 s with a warm Docker build cache)",
+      "result": "pass",
+      "elapsedMs": 328
+    },
+    {
+      "round": 2,
+      "phase": "inst-token",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Work through the welcome steps to Outbound email; save and test the relay; invite a colleague; Finish",
+      "expected": "Continue stays unavailable until email is configured; the test email and the invitation arrive; Finish enters the app.",
+      "startedAt": "2026-09-25T13:36:32.249Z",
+      "at": "2026-09-25T13:36:36.221Z",
+      "actual": "Continue on Outbound email (Step 5 of 9) disabled before a relay: true; SMTP server op2-mail, Port 1025, Connection security None, Authentication Username and password, sender openlaw@doc030-install.example; Save relay then Send test email delivered \"OpenLaw test email\"; Send invite delivered \"Set your OpenLaw password\" to the fictional colleague; E-signature and AI analysis set up later; Finish entered the app at /",
+      "result": "pass",
+      "elapsedMs": 3972
+    },
+    {
+      "round": 2,
+      "phase": "r2-inst-addr",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Build step 6: after setup, check that the app records the browser's address, not the gateway",
+      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
+      "startedAt": "2026-09-25T13:36:43.054Z",
+      "at": "2026-09-25T13:36:44.503Z",
+      "actual": "{\"counts\":[\"67 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\",\"2 \\\"remoteAddress\\\":\\\"192.168.32.1\\\"\"],\"gw\":\"192.168.32.1\"}",
+      "result": "fail",
+      "elapsedMs": 1449
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The app prints no token once a user exists",
+      "command": "docker compose restart app; docker compose logs app",
+      "startedAt": "2026-09-25T13:36:44.850Z",
+      "at": "2026-09-25T13:37:01.632Z",
+      "actual": "after a restart the app log has no \"First-run setup is open\" line; GET /api/v1/auth/setup 200 {\"needsSetup\":false}",
+      "result": "pass",
+      "elapsedMs": 16782
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: sign in through the intended origin",
+      "startedAt": "2026-09-25T13:37:03.626Z",
+      "at": "2026-09-25T13:37:03.626Z",
+      "actual": "password sign-in at https://openlaw-doc030.localhost:24641/auth/login as the Administrator; landed on /",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Create a fictional Contract, upload a small supported Document, download it again, check its processing result",
+      "startedAt": "2026-09-25T13:37:03.631Z",
+      "at": "2026-09-25T13:37:07.138Z",
+      "actual": "Contracts, Create contract, Title \"DOC-030 operator-2 install check contract\", Contract type showing \"Default\", Create opened /contracts/1; Documents tab, Upload, Upload document dialog, Choose files doc030-install-check.pdf, Upload (201); download 200 with the uploaded SHA-256 4829972b2fa4b73b; processing state ready with the uploaded words",
+      "result": "pass",
+      "elapsedMs": 3507
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: the test invitation's link is usable",
+      "startedAt": "2026-09-25T13:37:07.149Z",
+      "at": "2026-09-25T13:37:08.909Z",
+      "actual": "the invitation link uses https://openlaw-doc030.localhost:24641; opening it and setting a password showed \"Password set\"; the colleague signed in through the origin as legal_team_member",
+      "result": "pass",
+      "elapsedMs": 1760
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: the worker processes new work after a restart",
+      "command": "docker compose restart worker",
+      "startedAt": "2026-09-25T13:37:08.912Z",
+      "at": "2026-09-25T13:37:40.843Z",
+      "actual": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/contracts/1/documents\"]').first()\u001b[22m\n",
+      "result": "fail",
+      "elapsedMs": 31931
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Record the source revision, resolved images, project name, origin and storage location",
+      "startedAt": "2026-09-25T13:37:40.846Z",
+      "at": "2026-09-25T13:37:41.392Z",
+      "actual": "source 067c1646829df85e62b809ee9157921e867c84e7; project openlaw-doc030-opinst2; origin https://openlaw-doc030.localhost:24641; storage local driver at /var/lib/openlaw/files on volume openlaw-doc030-opinst2_openlaw-files; images app sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8, worker sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8, engine sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550, postgres sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
+      "result": "pass",
+      "elapsedMs": 546
+    },
+    {
+      "round": 2,
+      "phase": "r2-inst-trust",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "TRUSTED_PROXIES set to the gateway (the guide's value): one client's wrong passwords do not refuse another client's sign-in through the same-host proxy",
+      "startedAt": "2026-09-25T13:37:41.857Z",
+      "at": "2026-09-25T13:37:54.120Z",
+      "actual": "{\"trustedProxies\":\"192.168.32.1\",\"wrongFrom127_0_0_2\":[401,401,401,429],\"correctFrom127_0_0_1\":200,\"recordedAddresses\":[\"226 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\",\"4 \\\"remoteAddress\\\":\\\"127.0.0.2\\\"\",\"3 \\\"remoteAddress\\\":\\\"192.168.32.1\\\"\"]}",
+      "result": "pass",
+      "elapsedMs": 12263
+    },
+    {
+      "round": 2,
+      "phase": "r2-inst-trust",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "A value that does not match the proxy, 127.0.0.1: no start warning, and one client's wrong passwords refuse the other client (the guide's stated effect)",
+      "startedAt": "2026-09-25T13:37:54.124Z",
+      "at": "2026-09-25T13:38:21.821Z",
+      "actual": "{\"trustedProxies\":\"127.0.0.1\",\"startWarning\":false,\"wrongFrom127_0_0_2\":[401,401,401,429],\"correctFrom127_0_0_1\":429}",
+      "result": "pass",
+      "elapsedMs": 27697
+    },
+    {
+      "round": 2,
+      "phase": "r2-inst-trust",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "App keeps restarting: an entry in TRUSTED_PROXIES that is not an IP address or CIDR range stops the start with invalid IP address; the gateway value recovers",
+      "startedAt": "2026-09-25T13:38:21.826Z",
+      "at": "2026-09-25T13:39:01.508Z",
+      "actual": "{\"firstError\":[\"throw new TypeError('invalid IP address: ' + str)\"],\"restartsAndState\":\"5 running\",\"readyz\":0,\"recovery\":\"TRUSTED_PROXIES=192.168.32.1 again; readyz 200\"}",
+      "result": "pass",
+      "elapsedMs": 39682
+    },
+    {
+      "round": 2,
+      "phase": "r2-inst-addr",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Build step 6: after setup, check that the app records the browser's address, not the gateway",
+      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
+      "startedAt": "2026-09-25T13:39:14.538Z",
+      "at": "2026-09-25T13:39:16.687Z",
+      "actual": "{\"browserSignIn\":\"administrator\",\"recordedAddresses\":[\"24 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\",\"1 \\\"remoteAddress\\\":\\\"192.168.32.1\\\"\"],\"gateway\":\"192.168.32.1\",\"note\":\"The browser's requests through the proxy are recorded as 127.0.0.1, its own address. The few gateway lines are the reviewer's direct readiness probes to 127.0.0.1:<PORT>, which bypass the proxy.\"}",
+      "result": "pass",
+      "elapsedMs": 2149
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The app prints no token once a user exists",
+      "command": "docker compose restart app; docker compose logs app",
+      "startedAt": "2026-09-25T13:39:17.138Z",
+      "at": "2026-09-25T13:39:33.911Z",
+      "actual": "after a restart the app log has no \"First-run setup is open\" line; GET /api/v1/auth/setup 200 {\"needsSetup\":false}",
+      "result": "pass",
+      "elapsedMs": 16773
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: sign in through the intended origin",
+      "startedAt": "2026-09-25T13:39:35.659Z",
+      "at": "2026-09-25T13:39:35.659Z",
+      "actual": "password sign-in at https://openlaw-doc030.localhost:24641/auth/login as the Administrator; landed on /",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Create a fictional Contract, upload a small supported Document, download it again, check its processing result",
+      "startedAt": "2026-09-25T13:39:35.664Z",
+      "at": "2026-09-25T13:40:06.097Z",
+      "actual": "page.waitForURL: Timeout 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================",
+      "result": "fail",
+      "elapsedMs": 30433
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The app prints no token once a user exists",
+      "command": "docker compose restart app; docker compose logs app",
+      "startedAt": "2026-09-25T13:40:11.520Z",
+      "at": "2026-09-25T13:40:28.184Z",
+      "actual": "after a restart the app log has no \"First-run setup is open\" line; GET /api/v1/auth/setup 200 {\"needsSetup\":false}",
+      "result": "pass",
+      "elapsedMs": 16664
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: sign in through the intended origin",
+      "startedAt": "2026-09-25T13:41:05.279Z",
+      "at": "2026-09-25T13:41:05.279Z",
+      "actual": "password sign-in at https://openlaw-doc030.localhost:24641/auth/login as the Administrator; landed on /",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Create a fictional Contract, upload a small supported Document, download it again, check its processing result",
+      "startedAt": "2026-09-25T13:41:05.285Z",
+      "at": "2026-09-25T13:42:06.444Z",
+      "actual": "page.waitForResponse: Timeout 60000ms exceeded while waiting for event \"response\"",
+      "result": "fail",
+      "elapsedMs": 61158
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The app prints no token once a user exists",
+      "command": "docker compose restart app; docker compose logs app",
+      "startedAt": "2026-09-25T13:42:38.191Z",
+      "at": "2026-09-25T13:42:54.913Z",
+      "actual": "after a restart the app log has no \"First-run setup is open\" line; GET /api/v1/auth/setup 200 {\"needsSetup\":false}",
+      "result": "pass",
+      "elapsedMs": 16722
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: sign in through the intended origin",
+      "startedAt": "2026-09-25T13:42:56.878Z",
+      "at": "2026-09-25T13:42:56.878Z",
+      "actual": "password sign-in at https://openlaw-doc030.localhost:24641/auth/login as the Administrator; landed on /",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Create a fictional Contract, upload a small supported Document, download it again, check its processing result",
+      "startedAt": "2026-09-25T13:42:56.883Z",
+      "at": "2026-09-25T13:43:58.304Z",
+      "actual": "page.waitForResponse: Timeout 60000ms exceeded while waiting for event \"response\"",
+      "result": "fail",
+      "elapsedMs": 61421
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "The app prints no token once a user exists",
+      "command": "docker compose restart app; docker compose logs app",
+      "startedAt": "2026-09-25T13:44:08.168Z",
+      "at": "2026-09-25T13:44:24.972Z",
+      "actual": "after a restart the app log has no \"First-run setup is open\" line; GET /api/v1/auth/setup 200 {\"needsSetup\":false}",
+      "result": "pass",
+      "elapsedMs": 16804
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: sign in through the intended origin",
+      "startedAt": "2026-09-25T13:44:26.878Z",
+      "at": "2026-09-25T13:44:26.878Z",
+      "actual": "password sign-in at https://openlaw-doc030.localhost:24641/auth/login as the Administrator; landed on /",
+      "result": "pass",
+      "elapsedMs": 0
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Create a fictional Contract, upload a small supported Document, download it again, check its processing result",
+      "startedAt": "2026-09-25T13:44:26.883Z",
+      "at": "2026-09-25T13:44:28.231Z",
+      "actual": "Contracts, Create contract, Title \"DOC-030 operator-2 install check contract\", Contract type showing \"Default\", Create opened /contracts/5; Documents tab, Upload, Upload document dialog, Choose files doc030-install-check.pdf, Upload (201); download 200 with the uploaded SHA-256 4829972b2fa4b73b; processing state ready with the uploaded words",
+      "result": "pass",
+      "elapsedMs": 1348
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: the test invitation's link is usable",
+      "startedAt": "2026-09-25T13:44:28.246Z",
+      "at": "2026-09-25T13:44:58.735Z",
+      "actual": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('Password set').first() to be visible\u001b[22m\n",
+      "result": "fail",
+      "elapsedMs": 30489
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: the worker processes new work after a restart",
+      "command": "docker compose restart worker",
+      "startedAt": "2026-09-25T13:44:58.739Z",
+      "at": "2026-09-25T13:45:30.844Z",
+      "actual": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/contracts/5/documents\"]').first()\u001b[22m\n",
+      "result": "fail",
+      "elapsedMs": 32105
+    },
+    {
+      "round": 2,
+      "phase": "inst-checks",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Record the source revision, resolved images, project name, origin and storage location",
+      "startedAt": "2026-09-25T13:45:30.846Z",
+      "at": "2026-09-25T13:45:31.187Z",
+      "actual": "source 067c1646829df85e62b809ee9157921e867c84e7; project openlaw-doc030-opinst2; origin https://openlaw-doc030.localhost:24641; storage local driver at /var/lib/openlaw/files on volume openlaw-doc030-opinst2_openlaw-files; images app sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8, worker sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8, engine sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550, postgres sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
+      "result": "pass",
+      "elapsedMs": 341
+    },
+    {
+      "round": 2,
+      "phase": "inst-worker",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: the worker processes new work after a restart",
+      "command": "docker compose restart worker",
+      "startedAt": "2026-09-25T13:45:42.045Z",
+      "at": "2026-09-25T13:46:13.805Z",
+      "actual": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Upload', exact: true }).first()\u001b[22m\n",
+      "result": "fail",
+      "elapsedMs": 31760
+    },
+    {
+      "round": 2,
+      "phase": "inst-worker",
+      "article": "install",
+      "scenario": "V-C44",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check the working installation: the worker processes new work after a restart",
+      "command": "docker compose restart worker",
+      "startedAt": "2026-09-25T13:46:26.959Z",
+      "at": "2026-09-25T13:46:30.937Z",
+      "actual": "docker compose restart worker exit 0; a PDF uploaded in the browser on Contract 5 afterwards reached ready with its words",
+      "result": "pass",
+      "elapsedMs": 3978
+    },
+    {
+      "round": 2,
+      "phase": "r2-up-proxy",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Fixture: a same-host Caddy reverse proxy in front of the installation; its origin is BASE_URL",
+      "startedAt": "2026-09-25T13:46:36.353Z",
+      "at": "2026-09-25T13:46:36.555Z",
+      "actual": "caddy:2-alpine on the host network serves http://127.0.0.1:24651 with reverse_proxy 127.0.0.1:24650",
+      "result": "pass",
+      "elapsedMs": 202
+    },
+    {
+      "round": 2,
+      "phase": "up-baseline",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Fixture: install the starting build d1d098ba with the installation guide's files",
+      "startedAt": "2026-09-25T13:46:36.759Z",
+      "at": "2026-09-25T13:46:39.933Z",
+      "actual": "git clone exit 0 (3 s); git checkout --detach d1d098ba exit 0; grouped .env commands exit 0",
+      "result": "pass",
+      "elapsedMs": 3174
+    },
+    {
+      "round": 2,
+      "phase": "up-baseline",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Fixture: build and start the starting build; readiness",
+      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
+      "startedAt": "2026-09-25T13:46:39.936Z",
+      "at": "2026-09-25T13:46:52.934Z",
+      "actual": "build 2 s; readyz 200; docker compose port app 3000 printed 0.0.0.0:24650 on the starting build; app sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599, engine sha256:aa48478ed9c63e1122ff9d993cf903afa636815b1a9131b1c939abb7083d6af9",
+      "result": "pass",
+      "elapsedMs": 12998
+    },
+    {
+      "round": 2,
+      "phase": "up-populate",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: first Administrator (no setup token on this build) and a saved relay with a password",
+      "startedAt": "2026-09-25T13:46:53.453Z",
+      "at": "2026-09-25T13:46:53.771Z",
+      "actual": "setup needsSetup=true; Administrator administrator; saved relay with SMTP password; test email delivered; onboarding completed",
+      "result": "pass",
+      "elapsedMs": 318
+    },
+    {
+      "round": 2,
+      "phase": "up-populate",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: invite and activate a Legal Team Member and a Contributor",
+      "startedAt": "2026-09-25T13:46:53.776Z",
+      "at": "2026-09-25T13:46:54.135Z",
+      "actual": "reader legal_team_member; contributor contributor",
+      "result": "pass",
+      "elapsedMs": 359
+    },
+    {
+      "round": 2,
+      "phase": "up-populate",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: Entity, a Contract Field, a global Field on a Contract type and a Matter type, three Contracts (one Confidential), a Matter",
+      "startedAt": "2026-09-25T13:46:54.139Z",
+      "at": "2026-09-25T13:46:54.383Z",
+      "actual": "{\"contracts\":[\"1 confidential=false values={\\\"doc_030_operator_2_reference\\\":\\\"ref-1\\\",\\\"doc_030_operator_2_shared_code\\\":\\\"shared-C1\\\"}\",\"2 confidential=false values={\\\"doc_030_operator_2_reference\\\":\\\"ref-2\\\",\\\"doc_030_operator_2_shared_code\\\":\\\"shared-C2\\\"}\",\"3 confidential=true values={\\\"doc_030_operator_2_reference\\\":\\\"ref-3\\\",\\\"doc_030_operator_2_shared_code\\\":\\\"shared-C3\\\"}\"],\"matter\":\"1 {\\\"doc_030_operator_2_shared_code\\\":\\\"shared-M1\\\"}\",\"globalField\":\"doc_030_operator_2_shared_code\"}",
+      "result": "pass",
+      "elapsedMs": 244
+    },
+    {
+      "round": 2,
+      "phase": "up-populate",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: two Documents with original and later Versions (one PDF), Contributor membership",
+      "startedAt": "2026-09-25T13:46:54.387Z",
+      "at": "2026-09-25T13:46:56.625Z",
+      "actual": "[\"doc030-op2-draft.txt: v1 5cf635b94818 unsupported, v2 e1f3f78fa9f6 unsupported\",\"doc030-op2-settlement.pdf: v1 e129a6ecb29f ready, v2 e16ba4e8aff9 ready\"]",
+      "result": "pass",
+      "elapsedMs": 2238
+    },
+    {
+      "round": 2,
+      "phase": "up-populate",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: AI connector (custom endpoint stand-in) with a saved key; its test passes on the starting build",
+      "startedAt": "2026-09-25T13:46:56.656Z",
+      "at": "2026-09-25T13:46:56.699Z",
+      "actual": "connector configured=true preset custom hasApiKey=true; test 200 through the stand-in",
+      "result": "pass",
+      "elapsedMs": 43
+    },
+    {
+      "round": 2,
+      "phase": "up-populate",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "action": "Fixture: record baseline reach, Request types and schema facts",
+      "startedAt": "2026-09-25T13:46:56.703Z",
+      "at": "2026-09-25T13:47:09.207Z",
+      "actual": "{\"reach\":{\"reader\":{\"1\":200,\"2\":200,\"3\":404},\"contributor\":{\"1\":200,\"2\":404,\"3\":404}},\"requestTypes\":\"3\",\"requestTypeFields\":\"0\",\"contractsBusinessOwnerColumn\":\"0\",\"journalRows\":\"91\"}",
+      "result": "pass",
+      "elapsedMs": 12504
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Before you start: record source revision, image identities, project, file list, storage configuration and Settings → Advanced",
+      "startedAt": "2026-09-25T13:47:15.561Z",
+      "at": "2026-09-25T13:47:16.990Z",
+      "actual": "{\"sourceRevision\":\"d1d098ba9f4ba6557a542857d530446b76b1847c\",\"images\":{\"app\":\"sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599\",\"worker\":\"sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599\",\"doc-engine\":\"sha256:aa48478ed9c63e1122ff9d993cf903afa636815b1a9131b1c939abb7083d6af9\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"},\"project\":\"openlaw-doc030-opup2\",\"composeFile\":\"compose.yml:compose.operator.yml\",\"storage\":{\"STORAGE_DRIVER\":\"(unset: local)\",\"STORAGE_PATH\":\"/var/lib/openlaw/files\"},\"settingsAdvancedOnStartingBuild\":\"Settings rail shows Instance address: false; GET /api/v1/advanced-settings/instance status() {\\n        return this._initializer.status;\\n      }; nothing can show Saved in OpenLaw on this build\",\"keysInSecretStore\":true}",
+      "result": "pass",
+      "elapsedMs": 1429
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 1: fetch the source and inspect local changes",
+      "command": "git status --short; git fetch origin; git rev-parse HEAD",
+      "startedAt": "2026-09-25T13:47:17.610Z",
+      "at": "2026-09-25T13:47:18.443Z",
+      "actual": "git status --short: \"?? compose.operator.yml\" (compose.operator.yml and .env are untracked or ignored); git fetch origin exit 0; HEAD d1d098ba9f4ba6557a542857d530446b76b1847c",
+      "result": "pass",
+      "elapsedMs": 833
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 2: select the target, update OPENLAW_BUILD_COMMIT, validate and build without recreating the running containers",
+      "command": "git checkout --detach 067c1646829df85e62b809ee9157921e867c84e7; docker compose config --quiet; docker compose build app doc-engine",
+      "startedAt": "2026-09-25T13:47:18.449Z",
+      "at": "2026-09-25T13:47:20.913Z",
+      "actual": "build 2 s; 4 containers kept their IDs and states; app and worker both resolve to openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 (sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30); engine sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b; postgres stays postgres:16",
+      "result": "pass",
+      "elapsedMs": 2464
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare step 3: review the settings the target's Compose file changes and decide them in .env",
+      "command": "APP_BIND unset; docker network inspect <project>_openlaw-backend; TRUSTED_PROXIES=<gateway>; default ceilings; VAPID unset; no compose.private.yml",
+      "startedAt": "2026-09-25T13:47:20.919Z",
+      "at": "2026-09-25T13:47:21.024Z",
+      "actual": "{\"appPorts\":[\"127.0.0.1:24650->3000\"],\"limits\":{\"app\":\"cpus 2 mem 1073741824 pids 256\",\"worker\":\"cpus 2 mem 1073741824 pids 256\",\"doc-engine\":\"cpus 2 mem 4294967296 pids 512\"},\"vapid\":\"VAPID_PUBLIC_KEY=\\\"\\\" VAPID_PRIVATE_KEY set=false\",\"trustedProxies\":\"192.168.64.1\",\"gatewayAndSubnetReadBeforeTheUpgrade\":\"192.168.64.1 192.168.64.0/20\",\"proxy\":\"same-host Caddy at the instance origin\"}",
+      "result": "pass",
+      "elapsedMs": 105
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Before you start: check outstanding signing and processing work before the pause",
+      "command": "psql: pg-boss job states; contract_envelopes by status",
+      "startedAt": "2026-09-25T13:47:21.028Z",
+      "at": "2026-09-25T13:47:21.305Z",
+      "actual": "pg-boss: completed|2; contract_envelopes: (none)",
+      "result": "pass",
+      "elapsedMs": 277
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade (step 4 calls backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 1: create a fresh private backup directory",
+      "command": "BACKUP_DIR=...; umask 077; mkdir -p \"$BACKUP_DIR\"; chmod 700 \"$BACKUP_DIR\"",
+      "startedAt": "2026-09-25T13:47:21.310Z",
+      "at": "2026-09-25T13:47:21.319Z",
+      "actual": "mode 700",
+      "result": "pass",
+      "elapsedMs": 9
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade (step 4 calls backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 2: stop app and worker, keep Postgres running",
+      "command": "docker compose stop app worker; docker compose ps --all",
+      "startedAt": "2026-09-25T13:47:21.323Z",
+      "at": "2026-09-25T13:47:32.242Z",
+      "actual": "{\"app\":\"exited\",\"doc-engine\":\"running\",\"postgres\":\"running\",\"worker\":\"exited\",\"runtimeStatusRowsAfterStop\":\"table absent on this build\"}",
+      "result": "pass",
+      "elapsedMs": 10919
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade (step 4 calls backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 3: dump the database, archive the file volume, record source and images",
+      "command": "pg_dump --format=custom > \"$BACKUP_DIR/database.dump\"; docker compose run -T --rm --no-deps app tar -czf - -C /var/lib/openlaw/files . > \"$BACKUP_DIR/files.tar.gz\"; git rev-parse HEAD > app-source.txt; docker compose images --format json > images.json",
+      "startedAt": "2026-09-25T13:47:32.246Z",
+      "at": "2026-09-25T13:47:32.809Z",
+      "actual": "exit codes 0, 0, 0, 0; app-source.txt 067c1646829df85e62b809ee9157921e867c84e7; images.json app openlaw-local:d1d098ba9f4ba6557a542857d530446b76b1847c sha256:378523fa135e5c80877b9afa9bf0a2f6a35fa83449904d77a9088680ac9d5599; running build d1d098ba9f4ba6557a542857d530446b76b1847c recorded beside it because the checkout already points at the target; dump 260285 bytes; files 731 bytes",
+      "result": "pass",
+      "elapsedMs": 563
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade (step 4 calls backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 4: list both archives and record hashes",
+      "command": "pg_restore --list; tar -tzf; sha256sum > SHA256SUMS",
+      "startedAt": "2026-09-25T13:47:32.813Z",
+      "at": "2026-09-25T13:47:32.922Z",
+      "actual": "pg_restore --list 549 TOC entries; tar lists 4 files; SHA256SUMS dd953bcea0be3f8d7318918345341e1c1f99e9d4f5d1fbbe782693e6a64eb846 database.dump 7c76ace4961d637b9e741048955018d3fae76808634126b9301b202bf09fbdee files.tar.gz",
+      "result": "pass",
+      "elapsedMs": 109
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start step 1: start the target with the retained project and volumes; ps; port; logs",
+      "command": "docker compose up -d --no-build --pull never; docker compose ps; docker compose port app 3000; docker compose logs --tail=100 app worker",
+      "expected": "The first app migration line is 'migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations'; the worker can stop on a missing column or table and Compose restarts it; port 127.0.0.1:3000 form by default.",
+      "startedAt": "2026-09-25T13:47:32.926Z",
+      "at": "2026-09-25T13:48:19.507Z",
+      "actual": "{\"psRightAfterUp\":[\"app running Up Less than a second (health: starting)\",\"doc-engine running Up 1 second (health: starting)\",\"postgres running Up 52 seconds (healthy)\",\"worker running Up Less than a second\"],\"port\":\"127.0.0.1:24650\",\"readyAfterSeconds\":6,\"firstMigrationLine\":\"migrations: reconciled 0090_onboarding_reviewed_types; continuing with pending migrations\",\"workerRestartCountAndState\":\"1 running 2026-09-25T13:47:36.268758411Z\",\"workerErrorLinesMatchingSchema\":[\"DrizzleQueryError: Failed query: select \\\"advanced_settings\\\", \\\"advanced_settings\\\" is not null from \\\"org_settings\\\"\",\"query: 'select \\\"advanced_settings\\\", \\\"advanced_settings\\\" is not null from \\\"org_settings\\\"',\",\"cause: error: column \\\"advanced_settings\\\" does not exist\"],\"journalRowsAndLatest\":\"91 before; 173|1790319086915 after\",\"tail100Lines\":85,\"errorLikeLinesInTail\":5}",
+      "result": "pass",
+      "elapsedMs": 46581
+    },
+    {
+      "round": 2,
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Start step 5: a browser tab opened before the upgrade, used after it",
+      "expected": "An old tab can show This part of OpenLaw was updated. Reload to continue.",
+      "startedAt": "2026-09-25T13:48:19.515Z",
+      "at": "2026-09-25T13:49:02.884Z",
+      "actual": "{\"navigationsInOldTab\":[\"Matters: /matters\",\"Entities: /entities\",\"Knowledge: /knowledge\",\"Documents: /documents\",\"Auto-Docs: /documents\"],\"pageErrors\":[],\"afterReload\":\"Skip to content openlaw / workspace / Help DB Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Do\"}",
+      "result": "pass",
+      "elapsedMs": 43369
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: Administrator signs in through the origin; representative Contracts, Matter and Entity match the inventory",
+      "startedAt": "2026-09-25T13:49:04.153Z",
+      "at": "2026-09-25T13:49:05.003Z",
+      "actual": "{\"landed\":\"/\",\"contracts\":[\"C-1 heading shown; Confidential false; Entity DOC-030 operator-2 Holdings Ltd; DOC-030 operator-2 reference ref-1\",\"C-2 heading shown; Confidential false; Entity DOC-030 operator-2 Holdings Ltd; DOC-030 operator-2 reference ref-2\",\"C-3 heading shown; Confidential true; Entity DOC-030 operator-2 Holdings Ltd; DOC-030 operator-2 reference ref-3\"],\"matter\":\"M-1 heading shown\",\"entity\":\"DOC-030 operator-2 Holdings Ltd read 200\"}",
+      "result": "pass",
+      "elapsedMs": 850
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: a Field several modules shared appears once in each module with the same name and saved values",
+      "startedAt": "2026-09-25T13:49:05.008Z",
+      "at": "2026-09-25T13:49:06.511Z",
+      "actual": "Fields named \"DOC-030 operator-2 shared code\": doc_030_operator_2_shared_code|contract, doc_030_operator_2_shared_code_matter|matter (Contract kept the original slug; Matter got a copy); Contract values shared-C1, shared-C2, shared-C3; Matter value doc_030_operator_2_shared_code_matter=shared-M1; the Matter's and Contract's Fields tabs show the name and values in the browser",
+      "result": "pass",
+      "elapsedMs": 1503
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "after upgrade: download original and later Document Versions and compare hashes with the inventory",
+      "startedAt": "2026-09-25T13:49:06.517Z",
+      "at": "2026-09-25T13:49:06.564Z",
+      "actual": "[\"doc030-op2-draft.txt v1 5cf635b9481841af match\",\"doc030-op2-draft.txt v2 e1f3f78fa9f60319 match\",\"doc030-op2-settlement.pdf v1 e129a6ecb29f84e4 match\",\"doc030-op2-settlement.pdf v2 e16ba4e8aff99ae4 match\"]",
+      "result": "pass",
+      "elapsedMs": 47
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: a new upload in the browser is processed by the worker",
+      "startedAt": "2026-09-25T13:49:06.569Z",
+      "at": "2026-09-25T13:49:09.134Z",
+      "actual": "Documents tab, Upload, Upload document dialog, Choose files doc030-op2-up-1790344146570.pdf, Upload (201); processing ready with the uploaded words",
+      "result": "pass",
+      "elapsedMs": 2565
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: an actual use of the saved encrypted relay: Send test email",
+      "startedAt": "2026-09-25T13:49:09.139Z",
+      "at": "2026-09-25T13:49:11.324Z",
+      "actual": "Settings → Outbound email → Send test email: Test email sent to morgan.; \"OpenLaw test email\" reached the controlled recipient through the saved relay",
+      "result": "pass",
+      "elapsedMs": 2185
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: Test connection on the configured AI connector (stand-in endpoint)",
+      "startedAt": "2026-09-25T13:49:11.331Z",
+      "at": "2026-09-25T13:49:11.785Z",
+      "actual": "Settings → AI analysis → Test connection: \"Connection successful.\" (the stand-in answers 200 only for the key saved on the starting build); ai_saved_keys rows 1",
+      "result": "pass",
+      "elapsedMs": 454
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: Settings → Advanced → System status → Refresh: API and Worker rows Running and Current",
+      "startedAt": "2026-09-25T13:49:11.791Z",
+      "at": "2026-09-25T13:49:13.497Z",
+      "actual": "{\"rows\":[\"Worker Running Current 5:49 PM\",\"API Running Current 5:49 PM\"],\"activeStorage\":\"Active storage: local\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":null}",
+      "result": "pass",
+      "elapsedMs": 1706
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: Settings → Advanced fields and their sources",
+      "startedAt": "2026-09-25T13:49:13.501Z",
+      "at": "2026-09-25T13:49:16.555Z",
+      "actual": "{\"Instance address\":[\"Application address = http://127.0.0.1:24651 [Deployment configuration · Read only]\"],\"File uploads\":[\"Maximum file size (MiB) = 100 [Default]\"],\"Document storage\":[\"Store new documents in = Local filesystem [Default]\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"],\"Document processing\":[\"Document service address = http://doc-engine:8080 [Deployment configuration · Read only]\",\"Processing timeout (milliseconds) = 300000 [Default]\",\"Comparison timeout (milliseconds) = 600000 [Default]\"],\"MCP\":[\"Calls per hour per credential = 600 [Default]\",\"OAuth grant lifetime (days) = 90 [Default]\"]}",
+      "result": "pass",
+      "elapsedMs": 3054
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: lower-access account (reader) signs in; a Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-25T13:49:16.565Z",
+      "at": "2026-09-25T13:49:18.421Z",
+      "actual": "{\"role\":\"legal_team_member\",\"landed\":\"/\",\"baselineReach\":{\"1\":200,\"2\":200,\"3\":404},\"reachNow\":{\"1\":200,\"2\":200,\"3\":404},\"portalConfidential\":null,\"confidentialDownload\":404,\"confidentialTitleVisible\":false,\"teamMemberOfConfidential\":\"0\",\"pageText\":\"Skip to content openlaw / workspace / Help DR Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Do\"}",
+      "result": "pass",
+      "elapsedMs": 1856
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "lower-access",
+      "method": "browser-walkthrough",
+      "action": "after upgrade: lower-access account (contributor) signs in; a Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-25T13:49:18.425Z",
+      "at": "2026-09-25T13:49:20.045Z",
+      "actual": "{\"role\":\"business_user\",\"landed\":\"/portal/onboarding\",\"baselineReach\":{\"1\":200,\"2\":404,\"3\":404},\"reachNow\":{\"1\":403,\"2\":403,\"3\":403},\"portalConfidential\":404,\"confidentialDownload\":404,\"confidentialTitleVisible\":false,\"teamMemberOfConfidential\":\"0\",\"pageText\":\"Skip to content openlaw Legal portal Sign out Welcome to your Business Portal Set up your profile and choose how you’d l\"}",
+      "result": "pass",
+      "elapsedMs": 1620
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "after upgrade: inspect outstanding jobs and Envelopes",
+      "command": "psql: pg-boss job states; contract_envelopes",
+      "startedAt": "2026-09-25T13:49:20.048Z",
+      "at": "2026-09-25T13:49:20.221Z",
+      "actual": "pg-boss completed|8; contract_envelopes (none)",
+      "result": "pass",
+      "elapsedMs": 173
+    },
+    {
+      "round": 2,
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "after upgrade: the data rewrites the guide lists",
+      "command": "psql reads",
+      "startedAt": "2026-09-25T13:49:20.224Z",
+      "at": "2026-09-25T13:49:20.764Z",
+      "actual": "Contract Document Versions typed: 1 Draft · ours; 2 Draft · ours; 1 Draft · ours; 2 Draft · ours; AI key moved to ai_saved_keys (1) and the connector references it (1); Business Owner backfill: 0 Contracts had a Business Owner (the starting build has no business_owner_id column: true) and 0 backfill Activity entries; Request types 3 (starting build had 3 with 0 intake questions)",
+      "result": "pass",
+      "elapsedMs": 540
+    },
+    {
+      "round": 2,
+      "phase": "r2-up-addr",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Start step 2: sign in through the normal origin and check that the app records the browser's address rather than the proxy's",
+      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
+      "startedAt": "2026-09-25T13:49:20.997Z",
+      "at": "2026-09-25T13:49:34.278Z",
+      "actual": "{\"recordedAddresses\":[\"437 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\"],\"gateway\":\"192.168.64.1\",\"trustedProxies\":\"192.168.64.1\",\"lockoutProbe\":{\"wrongFrom127_0_0_2\":[401,401,401,429],\"correctFrom127_0_0_1\":200}}",
+      "result": "pass",
+      "elapsedMs": 13281
+    },
+    {
+      "round": 2,
+      "phase": "br-prepare",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Fixture through the app: an Administrator saves Settings → Advanced → File uploads → Maximum file size (MiB) = 150",
+      "startedAt": "2026-09-25T13:49:40.719Z",
+      "at": "2026-09-25T13:50:05.855Z",
+      "actual": "{\"savedNotice\":\"Settings saved. Restart the API and worker to apply changes.\",\"sourceLabel\":\"Saved in OpenLaw\",\"systemStatusBeforeRestart\":{\"rows\":[\"Worker Running Restart required 5:49 PM\",\"API Running Restart required 5:49 PM\"],\"activeStorage\":\"Active storage: local\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":null},\"afterRestartAppWorker\":{\"rows\":[\"Worker Running Current 5:49 PM\",\"API Running Current 5:49 PM\",\"API Running Restart required 5:49 PM\"],\"activeStorage\":\"Active storage: local\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":null}}",
+      "result": "pass",
+      "elapsedMs": 25136
+    },
+    {
+      "round": 2,
+      "phase": "br-prepare",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Before you start: record every Settings → Advanced field that shows Saved in OpenLaw, the source revision, images, database major version, project and storage",
+      "startedAt": "2026-09-25T13:50:05.860Z",
+      "at": "2026-09-25T13:50:10.479Z",
+      "actual": "{\"savedInOpenLaw\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\"],\"sourceRevision\":\"067c1646829df85e62b809ee9157921e867c84e7\",\"images\":{\"app\":\"sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30\",\"worker\":\"sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30\",\"doc-engine\":\"sha256:3e013c3264d4fdb9c337418bc1098e9ecd9cd0219569d62ad5244e67f65f701b\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"},\"postgres\":\"16.15 (Debian 16.15-1.pgdg13+2)\",\"project\":\"openlaw-doc030-opup2\",\"storage\":[\"Store new documents in = Local filesystem [Default]\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"],\"sealedVapidPrivateKeyInDatabase\":true,\"vapidInEnv\":false,\"keysInSecretStore\":true}",
+      "result": "pass",
+      "elapsedMs": 4619
+    },
+    {
+      "round": 2,
+      "phase": "r2-br-s3",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Fixture through the app on the source: an owned MinIO; Document storage saved as S3 in Settings → Advanced; a Document stored only in that bucket",
+      "startedAt": "2026-09-25T13:50:10.778Z",
+      "at": "2026-09-25T13:50:48.514Z",
+      "actual": "{\"testConnection\":\"Connection test passed.\",\"fileRefPrefix\":\"s3\",\"savedInOpenLaw\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\",\"Store new documents in = S3-compatible storage [Saved in OpenLaw]\",\"S3 bucket = doc030-op2 [Saved in OpenLaw · Read only]\",\"S3 endpoint (optional for AWS) = http://op2-minio:9000 [Saved in OpenLaw · Read only]\",\"S3 region = us-east-1 [Saved in OpenLaw]\",\"S3 path-style addressing = Yes [Saved in OpenLaw]\"]}",
+      "result": "pass",
+      "elapsedMs": 37736
+    },
+    {
+      "round": 2,
+      "phase": "br-backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 1: create a fresh private backup directory",
+      "command": "BACKUP_DIR=...; umask 077; mkdir -p \"$BACKUP_DIR\"; chmod 700 \"$BACKUP_DIR\"",
+      "startedAt": "2026-09-25T13:50:48.811Z",
+      "at": "2026-09-25T13:50:48.820Z",
+      "actual": "mode 700",
+      "result": "pass",
+      "elapsedMs": 9
+    },
+    {
+      "round": 2,
+      "phase": "br-backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 2: stop app and worker, keep Postgres running",
+      "command": "docker compose stop app worker; docker compose ps --all",
+      "startedAt": "2026-09-25T13:50:48.827Z",
+      "at": "2026-09-25T13:50:59.546Z",
+      "actual": "{\"app\":\"exited\",\"doc-engine\":\"running\",\"postgres\":\"running\",\"worker\":\"exited\",\"runtimeStatusRowsAfterStop\":\"4\"}",
+      "result": "pass",
+      "elapsedMs": 10719
+    },
+    {
+      "round": 2,
+      "phase": "br-backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 3: dump the database, archive the file volume, record source and images",
+      "command": "pg_dump --format=custom > \"$BACKUP_DIR/database.dump\"; docker compose run -T --rm --no-deps app tar -czf - -C /var/lib/openlaw/files . > \"$BACKUP_DIR/files.tar.gz\"; git rev-parse HEAD > app-source.txt; docker compose images --format json > images.json",
+      "startedAt": "2026-09-25T13:50:59.551Z",
+      "at": "2026-09-25T13:51:00.153Z",
+      "actual": "exit codes 0, 0, 0, 0; app-source.txt 067c1646829df85e62b809ee9157921e867c84e7; images.json app openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 sha256:086a6753b6b34dceaf26ce3cc283d128935ee9a884a967d927df2ff8d19e5c30; dump 442709 bytes; files 918 bytes",
+      "result": "pass",
+      "elapsedMs": 602
+    },
+    {
+      "round": 2,
+      "phase": "br-backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 4: list both archives and record hashes",
+      "command": "pg_restore --list; tar -tzf; sha256sum > SHA256SUMS",
+      "startedAt": "2026-09-25T13:51:00.157Z",
+      "at": "2026-09-25T13:51:00.252Z",
+      "actual": "pg_restore --list 884 TOC entries; tar lists 5 files; SHA256SUMS aea35d587a1e70b816062e2f85e639754db16912125d44922651e31d52edd60d database.dump 62c40af7b9ca305d56287ff4e79a03352df5bbd4db488c9f2952a3ea515e549e files.tar.gz",
+      "result": "pass",
+      "elapsedMs": 95
+    },
+    {
+      "round": 2,
+      "phase": "br-backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Backup step 5: restart app and worker; confirm readiness and an actual operation",
+      "command": "docker compose up -d --no-build --pull never",
+      "startedAt": "2026-09-25T13:51:00.256Z",
+      "at": "2026-09-25T13:51:03.807Z",
+      "actual": "readyz 200; Version download hash matches 5cf635b94818",
+      "result": "pass",
+      "elapsedMs": 3551
+    },
+    {
+      "round": 2,
+      "phase": "br-backup",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Copy the backup to its retained location and verify its hashes there",
+      "startedAt": "2026-09-25T13:51:03.812Z",
+      "at": "2026-09-25T13:51:03.821Z",
+      "actual": "2026-09-25-source-retained: database.dump: OK; files.tar.gz: OK",
+      "result": "pass",
+      "elapsedMs": 9
+    },
+    {
+      "round": 2,
+      "phase": "br-restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Review restored destinations before starting app or worker",
+      "startedAt": "2026-09-25T13:51:04.040Z",
+      "at": "2026-09-25T13:51:04.126Z",
+      "actual": "smtp relay host op2-mail (owned Mailpit, controlled recipients); AI connector base URL http://op2-ai:8080/v1 (owned stand-in); no Signing connector or SSO provider configured; push_subscriptions in the source: 0; the restore target joins only the owned relay and stand-in",
+      "result": "pass",
+      "elapsedMs": 86
+    },
+    {
+      "round": 2,
+      "phase": "br-restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 1: prepare source 067c1646 and its images, retained keys, distinct project, origin and port; no first-run setup",
+      "startedAt": "2026-09-25T13:51:04.132Z",
+      "at": "2026-09-25T13:51:09.579Z",
+      "actual": "git clone exit 0 (3 s); git checkout --detach 067c1646 exit 0; grouped .env commands exit 0; build 2 s; project openlaw-doc030-oprestore2, BASE_URL http://127.0.0.1:24652, PORT 24652; retained AUTH_SECRET and OPENLAW_SECRET_KEY supplied from the secret store; backup images.json names openlaw-local:067c1646829df85e62b809ee9157921e867c84e7; target app image openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 (sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a)",
+      "result": "pass",
+      "elapsedMs": 5447
+    },
+    {
+      "round": 2,
+      "phase": "br-restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 2: verify the hashes on the target host and start Postgres",
+      "command": "(cd \"$BACKUP_DIR\" && sha256sum --check SHA256SUMS); docker compose up -d postgres",
+      "startedAt": "2026-09-25T13:51:09.584Z",
+      "at": "2026-09-25T13:51:10.095Z",
+      "actual": "database.dump: OK; files.tar.gz: OK",
+      "result": "pass",
+      "elapsedMs": 511
+    },
+    {
+      "round": 2,
+      "phase": "br-restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Confirm the target's database and file store are empty before importing",
+      "startedAt": "2026-09-25T13:51:10.101Z",
+      "at": "2026-09-25T13:51:12.755Z",
+      "actual": "non-system tables 0; entries under /var/lib/openlaw/files 0",
+      "result": "pass",
+      "elapsedMs": 2654
+    },
+    {
+      "round": 2,
+      "phase": "br-restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 3: restore the database with --exit-on-error",
+      "command": "docker compose exec -T postgres pg_restore -U openlaw -d openlaw --exit-on-error --no-owner --no-privileges < \"$BACKUP_DIR/database.dump\"",
+      "startedAt": "2026-09-25T13:51:12.759Z",
+      "at": "2026-09-25T13:51:15.020Z",
+      "actual": "pg_restore exit 0; stderr lines 0",
+      "result": "pass",
+      "elapsedMs": 2261
+    },
+    {
+      "round": 2,
+      "phase": "br-restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 4: restore the local files through the target app service's volume",
+      "command": "docker compose run -T --rm --no-deps app tar -xzf - -C /var/lib/openlaw/files < \"$BACKUP_DIR/files.tar.gz\"",
+      "startedAt": "2026-09-25T13:51:15.025Z",
+      "at": "2026-09-25T13:51:15.922Z",
+      "actual": "tar exit 0; files in the target volume 5",
+      "result": "pass",
+      "elapsedMs": 897
+    },
+    {
+      "round": 2,
+      "phase": "br-restore",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restore step 5: start the target and check readiness (controlled relay and AI stand-in reachable under their saved names first)",
+      "command": "docker compose up -d --no-build --pull never; docker compose ps",
+      "startedAt": "2026-09-25T13:51:15.929Z",
+      "at": "2026-09-25T13:51:20.904Z",
+      "actual": "{\"readyz\":200,\"ps\":[\"app running\",\"doc-engine running\",\"postgres running\",\"worker running\"],\"images\":{\"app\":\"sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a\",\"worker\":\"sha256:dcc4965747911fe030188f39c8c16a0438bce4436db716ae6c44d9ef54e1bf9a\",\"doc-engine\":\"sha256:446014ba57dd471342989e3fba911ee3c8b8d3da9aad641aa1a46b23db6a40f1\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"}}",
+      "result": "pass",
+      "elapsedMs": 4975
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Administrator signs in through the origin; representative Contracts, Matter and Entity match the inventory",
+      "startedAt": "2026-09-25T13:51:29.107Z",
+      "at": "2026-09-25T13:51:30.083Z",
+      "actual": "{\"landed\":\"/\",\"contracts\":[\"C-1 heading shown; Confidential false; Entity DOC-030 operator-2 Holdings Ltd; DOC-030 operator-2 reference ref-1\",\"C-2 heading shown; Confidential false; Entity DOC-030 operator-2 Holdings Ltd; DOC-030 operator-2 reference ref-2\",\"C-3 heading shown; Confidential true; Entity DOC-030 operator-2 Holdings Ltd; DOC-030 operator-2 reference ref-3\"],\"matter\":\"M-1 heading shown\",\"entity\":\"DOC-030 operator-2 Holdings Ltd read 200\"}",
+      "result": "pass",
+      "elapsedMs": 976
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: a Field several modules shared appears once in each module with the same name and saved values",
+      "startedAt": "2026-09-25T13:51:30.090Z",
+      "at": "2026-09-25T13:51:31.531Z",
+      "actual": "Fields tabs do not show the name and value",
+      "result": "fail",
+      "elapsedMs": 1440
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "restored target: download original and later Document Versions and compare hashes with the inventory",
+      "startedAt": "2026-09-25T13:51:31.537Z",
+      "at": "2026-09-25T13:51:31.579Z",
+      "actual": "[\"doc030-op2-draft.txt v1 5cf635b9481841af match\",\"doc030-op2-draft.txt v2 e1f3f78fa9f60319 match\",\"doc030-op2-settlement.pdf v1 e129a6ecb29f84e4 match\",\"doc030-op2-settlement.pdf v2 e16ba4e8aff99ae4 match\"]",
+      "result": "pass",
+      "elapsedMs": 42
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: a new upload in the browser is processed by the worker",
+      "startedAt": "2026-09-25T13:51:31.585Z",
+      "at": "2026-09-25T13:51:34.076Z",
+      "actual": "Documents tab, Upload, Upload document dialog, Choose files doc030-op2-restore-1790344291585.pdf, Upload (201); processing ready with the uploaded words",
+      "result": "pass",
+      "elapsedMs": 2491
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: an actual use of the saved encrypted relay: Send test email",
+      "startedAt": "2026-09-25T13:51:34.080Z",
+      "at": "2026-09-25T13:51:36.236Z",
+      "actual": "Settings → Outbound email → Send test email: Test email sent to morgan.; \"OpenLaw test email\" reached the controlled recipient through the saved relay",
+      "result": "pass",
+      "elapsedMs": 2156
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Test connection on the configured AI connector (stand-in endpoint)",
+      "startedAt": "2026-09-25T13:51:36.243Z",
+      "at": "2026-09-25T13:51:36.481Z",
+      "actual": "Settings → AI analysis → Test connection: \"Connection successful.\" (the stand-in answers 200 only for the key saved on the starting build); ai_saved_keys rows 1",
+      "result": "pass",
+      "elapsedMs": 238
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Settings → Advanced → System status → Refresh: API and Worker rows Running and Current",
+      "startedAt": "2026-09-25T13:51:36.484Z",
+      "at": "2026-09-25T13:51:38.092Z",
+      "actual": "{\"rows\":[\"API Running Current 5:51 PM\",\"Worker Running Current 5:51 PM\",\"API Running Restart required 5:50 PM\"],\"activeStorage\":\"Active storage: s3\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":null}",
+      "result": "fail",
+      "elapsedMs": 1608
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Settings → Advanced fields and their sources",
+      "startedAt": "2026-09-25T13:51:38.097Z",
+      "at": "2026-09-25T13:51:40.960Z",
+      "actual": "{\"Instance address\":[\"Application address = http://127.0.0.1:24652 [Deployment configuration · Read only]\"],\"File uploads\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\"],\"Document storage\":[\"Store new documents in = S3-compatible storage [Saved in OpenLaw]\",\"S3 bucket = doc030-op2 [Saved in OpenLaw · Read only]\",\"S3 endpoint (optional for AWS) = http://op2-minio:9000 [Saved in OpenLaw · Read only]\",\"S3 region = us-east-1 [Saved in OpenLaw]\",\"S3 path-style addressing = Yes [Saved in OpenLaw]\",\"S3 access key ID = (secret) []\",\"S3 secret access key = (secret) []\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"],\"Document processing\":[\"Document service address = http://doc-engine:8080 [Deployment configuration · Read only]\",\"Processing timeout (milliseconds) = 300000 [Default]\",\"Comparison timeout (milliseconds) = 600000 [Default]\"],\"MCP\":[\"Calls per hour per credential = 600 [Default]\",\"OAuth grant lifetime (days) = 90 [Default]\"]}",
+      "result": "pass",
+      "elapsedMs": 2863
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "restored target: lower-access account (reader) signs in; a Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-25T13:51:40.971Z",
+      "at": "2026-09-25T13:51:42.665Z",
+      "actual": "{\"role\":\"legal_team_member\",\"landed\":\"/\",\"baselineReach\":{\"1\":200,\"2\":200,\"3\":404},\"reachNow\":{\"1\":200,\"2\":200,\"3\":404},\"portalConfidential\":null,\"confidentialDownload\":404,\"confidentialTitleVisible\":false,\"teamMemberOfConfidential\":\"0\",\"pageText\":\"Skip to content openlaw / workspace / Help DR Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Do\"}",
+      "result": "pass",
+      "elapsedMs": 1694
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "lower-access",
+      "method": "browser-walkthrough",
+      "action": "restored target: lower-access account (contributor) signs in; a Confidential record outside its audience stays refused",
+      "startedAt": "2026-09-25T13:51:42.668Z",
+      "at": "2026-09-25T13:51:44.288Z",
+      "actual": "{\"role\":\"business_user\",\"landed\":\"/portal/onboarding\",\"baselineReach\":{\"1\":200,\"2\":404,\"3\":404},\"reachNow\":{\"1\":403,\"2\":403,\"3\":403},\"portalConfidential\":404,\"confidentialDownload\":404,\"confidentialTitleVisible\":false,\"teamMemberOfConfidential\":\"0\",\"pageText\":\"Skip to content openlaw Legal portal Sign out Welcome to your Business Portal Set up your profile and choose how you’d l\"}",
+      "result": "pass",
+      "elapsedMs": 1620
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "restored target: inspect outstanding jobs and Envelopes",
+      "command": "psql: pg-boss job states; contract_envelopes",
+      "startedAt": "2026-09-25T13:51:44.291Z",
+      "at": "2026-09-25T13:51:44.479Z",
+      "actual": "pg-boss completed|15; contract_envelopes (none)",
+      "result": "pass",
+      "elapsedMs": 188
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Instance address shows the target origin; Document storage names the restored store; env-set fields show Deployment configuration · Read only; the saved upload limit travelled in the dump",
+      "startedAt": "2026-09-25T13:51:44.483Z",
+      "at": "2026-09-25T13:51:49.984Z",
+      "actual": "{\"rows\":[\"API Running Current 5:51 PM\",\"Worker Running Current 5:51 PM\",\"API Running Restart required 5:50 PM\"],\"activeStorage\":\"Active storage: s3\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":null}",
+      "result": "fail",
+      "elapsedMs": 5501
+    },
+    {
+      "round": 2,
+      "phase": "r2-br-wrongkey",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "If verification fails: a target whose OPENLAW_SECRET_KEY differs from the source (No configured key row; Fields show Default row); supply the retained key and recreate",
+      "expected": "The line names columns such as advanced_settings, smtp_url or vapid_private_key. App and worker still start and each value reads as empty. Advanced fields show Default; storage falls back to local; a Document only in the saved store fails to download; the instance address falls back to BASE_URL.",
+      "startedAt": "2026-09-25T13:51:50.211Z",
+      "at": "2026-09-25T13:53:01.144Z",
+      "actual": "{\"readyz\":200,\"restartCountsAndStates\":[\"app 0 running\",\"worker 0 running\"],\"startLog\":[\"No configured key opens these stored credentials: api_key (1), smtp_url (1), vapid_private_key (1), advanced_settings (1). They are left as they are, so they are still recoverable: boot once with the old key in OPENLAW_SECRET_KEY_PREVIOUS, or paste the credentials again in Settings.\",\"Device notifications are off until the VAPID pair can be read: The stored VAPID pair is incomplete or unreadable. Check OPENLAW_SECRET_KEY.\"],\"advancedFields\":{\"instance\":[\"Application address = http://127.0.0.1:24652 [Deployment configuration · Read only]\"],\"uploads\":[\"Maximum file size (MiB) = 100 [Default]\"],\"storage\":[\"Store new documents in = Local filesystem [Default]\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"]},\"systemStatus\":\"Active storage: local\",\"s3OnlyDocumentDownload\":500,\"emailSource\":\"unset\",\"testEmail\":\"502 The test email could not be sent. SMTP is not configured — save a relay first.\",\"aiConnectorPage\":null,\"aiTest\":\"502 The connection test failed. The provider refused the request with HTTP 401.\",\"afterRetainedKey\":{\"uploads\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\"],\"storageDriver\":\"Store new documents in = S3-compatible storage [Saved in OpenLaw]\",\"s3OnlyDocumentDownload\":\"200, SHA-256 matches\"}}",
+      "result": "pass",
+      "elapsedMs": 70933
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: a Field several modules shared appears once in each module with the same name and saved values",
+      "startedAt": "2026-09-25T13:53:19.733Z",
+      "at": "2026-09-25T13:53:21.190Z",
+      "actual": "Fields named \"DOC-030 operator-2 shared code\": doc_030_operator_2_shared_code|contract, doc_030_operator_2_shared_code_matter|matter (Contract kept the original slug; Matter got a copy); Contract values shared-C1, shared-C2, shared-C3; Matter value doc_030_operator_2_shared_code_matter=shared-M1; the Matter's and Contract's Fields tabs show the name and values in the browser",
+      "result": "pass",
+      "elapsedMs": 1457
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Settings → Advanced → System status → Refresh: API and Worker rows Running and Current",
+      "startedAt": "2026-09-25T13:53:21.197Z",
+      "at": "2026-09-25T13:54:29.508Z",
+      "actual": "{\"rows\":[\"API Running Current 5:54 PM\",\"Worker Running Current 5:54 PM\"],\"activeStorage\":\"Active storage: s3\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":null,\"firstRefresh\":[\"Worker Running Current 5:53 PM\",\"API Running Current 5:53 PM\",\"API Running Restart required 5:52 PM\"]}",
+      "result": "pass",
+      "elapsedMs": 68311
+    },
+    {
+      "round": 2,
+      "phase": "br-verify",
+      "article": "backup-and-restore",
+      "scenario": "V-C47",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "restored target: Instance address shows the target origin; Document storage names the restored store; env-set fields show Deployment configuration · Read only; the saved upload limit travelled in the dump",
+      "startedAt": "2026-09-25T13:54:39.704Z",
+      "at": "2026-09-25T13:54:46.107Z",
+      "actual": "{\"instance\":[\"Application address = http://127.0.0.1:24652 [Deployment configuration · Read only]\"],\"uploads\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\"],\"storage\":[\"Store new documents in = S3-compatible storage [Saved in OpenLaw]\",\"S3 bucket = doc030-op2 [Saved in OpenLaw · Read only]\",\"S3 endpoint (optional for AWS) = http://op2-minio:9000 [Saved in OpenLaw · Read only]\",\"S3 region = us-east-1 [Saved in OpenLaw]\",\"S3 path-style addressing = Yes [Saved in OpenLaw]\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"],\"systemStatus\":{\"rows\":[\"API Running Current 5:54 PM\",\"Worker Running Current 5:54 PM\"],\"activeStorage\":\"Active storage: s3\",\"documentService\":\"Document service: http://doc-engine:8080\",\"warning\":null},\"documentOnlyInTheSavedBucket\":\"200, SHA-256 matches\",\"note\":\"The target's .env leaves the storage keys empty, so the source's saved S3 values apply and the target reads the source's live bucket, as the guide warns.\"}",
+      "result": "pass",
+      "elapsedMs": 6403
+    },
+    {
+      "round": 2,
+      "phase": "r2-diag-trust",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Password sign-in refuses people who did not enter a wrong password: warning when unset; recorded addresses with the guide's command; set the gateway; sign in through the proxy; recorded addresses are the browsers'",
+      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
+      "startedAt": "2026-09-25T13:54:52.105Z",
+      "at": "2026-09-25T13:55:57.131Z",
+      "actual": "{\"unset\":{\"startWarning\":[\"TRUSTED_PROXIES is not set. Sign-in rate limits are keyed on the socket address, which behind a reverse proxy is the proxy itself. Set TRUSTED_PROXIES to the proxy's address so each client gets its own bucket. See docs/DEPLOYMENT.md.\"],\"wrongFrom127_0_0_2\":[401,401,401,429],\"correctFrom127_0_0_1\":429,\"recordedAddressesLast5m\":[\"1 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\",\"6 \\\"remoteAddress\\\":\\\"192.168.64.1\\\"\"]},\"gateway\":\"192.168.64.1\",\"set\":{\"startWarning\":false,\"browserSignIn\":\"administrator\",\"wrongFrom127_0_0_2\":[401,401,401,429],\"correctFrom127_0_0_1\":200,\"recordedAddressesSinceRecreate\":[\"21 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\",\"4 \\\"remoteAddress\\\":\\\"127.0.0.2\\\"\"]}}",
+      "result": "pass",
+      "elapsedMs": 65026
+    },
+    {
+      "round": 2,
+      "phase": "r2-diag-origin",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Sign-in or emailed links fail behind the proxy: a saved Application address refuses sign-in; removing it without BASE_URL leaves http://localhost:3000 and sign-in still fails; setting BASE_URL fixes it",
+      "expected": "Set BASE_URL in .env to the public origin; it pins the address over a saved one. Removing a saved address without setting BASE_URL leaves the app on http://localhost:3000, and sign-in through the proxy still fails.",
+      "startedAt": "2026-09-25T13:55:57.365Z",
+      "at": "2026-09-25T13:56:55.489Z",
+      "actual": "{\"savedWrongAddress\":403,\"resetCommand\":\"exit 0: Saved instance overrides removed. Restart both app and worker to use their deployment configuration.\",\"signInThroughProxyAfterRemoval\":403,\"instanceAfterRemoval\":[\"BASE_URL = http://localhost:3000 [default]\"],\"afterBaseUrl\":{\"browserSignIn\":\"administrator\",\"instance\":[\"Application address = http://127.0.0.1:24651 [Deployment configuration · Read only]\"]}}",
+      "result": "pass",
+      "elapsedMs": 58124
+    },
+    {
+      "round": 2,
+      "phase": "r2-diag-wrongkey",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Email and stored credentials: a wrong OPENLAW_SECRET_KEY; app and worker start; the start log names the columns; relay unset with the exact test-send message; AI Saved key missing; Advanced values fall back; restore the key",
+      "expected": "The app and worker still start with a wrong key, and each of those values reads as empty. Saved Settings → Advanced values fall back to the environment or the defaults, including local storage. The AI connector loses its secret; device notifications stop.",
+      "startedAt": "2026-09-25T13:56:55.706Z",
+      "at": "2026-09-25T13:58:06.575Z",
+      "actual": "{\"readyz\":200,\"restartCountsAndStates\":[\"app 0 running\",\"worker 0 running\"],\"startLog\":[\"No configured key opens these stored credentials: api_key (1), smtp_url (1), vapid_private_key (1), advanced_settings (1). They are left as they are, so they are still recoverable: boot once with the old key in OPENLAW_SECRET_KEY_PREVIOUS, or paste the credentials again in Settings.\",\"Device notifications are off until the VAPID pair can be read: The stored VAPID pair is incomplete or unreadable. Check OPENLAW_SECRET_KEY.\"],\"advancedFields\":{\"instance\":[\"Application address = http://127.0.0.1:24651 [Deployment configuration · Read only]\"],\"uploads\":[\"Maximum file size (MiB) = 100 [Default]\"],\"storage\":[\"Store new documents in = Local filesystem [Default]\",\"Local storage path = /var/lib/openlaw/files [Deployment configuration · Read only]\"]},\"systemStatus\":\"Active storage: local\",\"s3OnlyDocumentDownload\":500,\"emailSource\":\"unset\",\"testEmail\":\"502 The test email could not be sent. SMTP is not configured — save a relay first.\",\"aiConnectorPage\":null,\"aiTest\":\"502 The connection test failed. The provider refused the request with HTTP 401.\",\"afterRetainedKey\":{\"uploads\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\"],\"storageDriver\":\"Store new documents in = S3-compatible storage [Saved in OpenLaw]\",\"s3OnlyDocumentDownload\":\"200, SHA-256 matches\"}}",
+      "result": "pass",
+      "elapsedMs": 70869
+    },
+    {
+      "round": 2,
+      "phase": "r2-diag-wrongkey",
+      "article": "operator-troubleshooting",
+      "scenario": "V-C48",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove saved Advanced settings under a wrong key: the start log names advanced_settings; the command still exits successfully and erases every section; the correct key cannot recover them; pinning the storage variables in .env makes the stored Document readable",
+      "expected": "With a key that cannot open the saved settings, it still exits successfully and prints the same message, but it replaces the whole saved configuration with an empty one.",
+      "startedAt": "2026-09-25T13:58:06.579Z",
+      "at": "2026-09-25T13:58:58.252Z",
+      "actual": "{\"savedBefore\":[\"Maximum file size (MiB) = 150 [Saved in OpenLaw]\",\"Store new documents in = S3-compatible storage [Saved in OpenLaw]\",\"S3 bucket = doc030-op2 [Saved in OpenLaw · Read only]\",\"S3 endpoint (optional for AWS) = http://op2-minio:9000 [Saved in OpenLaw · Read only]\",\"S3 region = us-east-1 [Saved in OpenLaw]\",\"S3 path-style addressing = Yes [Saved in OpenLaw]\"],\"startLogUnderWrongKey\":[\"No configured key opens these stored credentials: api_key (1), smtp_url (1), vapid_private_key (1), advanced_settings (1). They are left as they are, so they are still recoverable: boot once with the old key in OPENLAW_SECRET_KEY_PREVIOUS, or paste the credentials again in Settings.\"],\"resetMcpUnderWrongKey\":\"exit 0: Saved mcp overrides removed. Restart both app and worker to use their deployment configuration.\",\"savedAfterRetainedKey\":[],\"s3DocumentAfterErase\":500,\"afterPinningStorageInEnv\":\"200, SHA-256 matches\"}",
+      "result": "pass",
+      "elapsedMs": 51673
+    },
+    {
+      "round": 2,
+      "phase": "destroy",
+      "scenario": "teardown",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Destroy every owned project (containers, networks, volumes), the support containers and the private backups and clones",
+      "startedAt": "2026-09-25T13:59:13.574Z",
+      "at": "2026-09-25T13:59:47.765Z",
+      "actual": "openlaw-doc030-opinst2 down -v exit 0; openlaw-doc030-opup2 down -v exit 0; openlaw-doc030-oprestore2 down -v exit 0; openlaw-doc030-op2-mail rm exit 0; openlaw-doc030-op2-ai rm exit 0; openlaw-doc030-op2-occupier rm exit 0; openlaw-doc030-op2-proxy rm exit 0; openlaw-doc030-op2-proxy-up rm exit 0; openlaw-doc030-op2-cproxy rm exit 0; openlaw-doc030-op2-minio rm exit 0; remaining containers: none; remaining volumes: none; images tagged openlaw-local and openlaw-engine-local stay in the Docker cache",
+      "result": "pass",
+      "elapsedMs": 34191
     }
   ],
   "guideFailures": [
@@ -2849,10 +5442,50 @@
       "expected": "Setting TRUSTED_PROXIES to the proxy's own address removes the warning and lets two client addresses sign in independently.",
       "observed": "With a same-host Caddy proxy, TRUSTED_PROXIES=127.0.0.1,::1 removed the warning, but four wrong passwords from 127.0.0.2 still made the next correct sign-in from 127.0.0.1 answer 429. The app sees the proxy at 192.168.128.1 (the Docker bridge gateway), so the proxy's own address is not what the app must trust.",
       "at": "2026-09-25T11:43:26.934Z"
+    },
+    {
+      "article": "operator-troubleshooting",
+      "step": "Startup table 'App keeps restarting' and 'Email and stored credentials' ('If settings were saved in Settings → Advanced, a wrong key stops app and worker startup with Advanced settings cannot be decrypted')",
+      "expected": "A wrong OPENLAW_SECRET_KEY with saved Advanced settings stops app and worker with 'Advanced settings cannot be decrypted. Restore the instance encryption key before restarting.'",
+      "observed": "Saved: Maximum file size (MiB) = 150 [Saved in OpenLaw]. With a wrong key app and worker started (0 running OOMKilled=false, 0 running OOMKilled=false, readyz 200); no 'cannot be decrypted' line; the saved values silently fell back to defaults.",
+      "at": "2026-09-25T13:21:06.516Z"
+    },
+    {
+      "article": "operator-troubleshooting",
+      "step": "Remove saved Advanced settings ('With a key that cannot open the saved settings, it stops with the same message as startup'; 'It removes only that section's saved values')",
+      "expected": "Under a wrong key the command stops with 'Advanced settings cannot be decrypted' and removes nothing.",
+      "observed": "Under a wrong key 'reset-advanced-settings.js mcp' exit 0: Saved mcp overrides removed. Restart both app and worker to use their deployment configuration.. After the retained key was restored, the other sections' saved values were gone too: before Maximum file size (MiB) = 150 [Saved in OpenLaw]; after none.",
+      "at": "2026-09-25T13:21:06.522Z"
+    },
+    {
+      "article": "upgrade",
+      "step": "Prepare the target, step 3, bullet 'Set TRUSTED_PROXIES to the proxy's own address, such as 127.0.0.1,::1 for a proxy on the same host'",
+      "expected": "With TRUSTED_PROXIES=127.0.0.1,::1 a proxy on the same host is trusted and each visitor gets their own sign-in bucket.",
+      "observed": "Same mechanism as the install finding: on the upgraded openlaw-doc030-opup a request from the host to 127.0.0.1:24620 reaches the app from 192.168.224.1. The install walkthrough showed that with this value one client's wrong passwords still returned 429 to another client behind a same-host Caddy proxy.",
+      "at": "2026-09-25T13:22:27.025Z"
     }
   ],
-  "productBugs": [],
-  "updatedAt": "2026-09-25T11:47:16.498Z",
+  "productBugs": [
+    {
+      "summary": "The API process ignores SIGTERM, so docker compose stop app waits the 10 s grace period and kills it (exit 137); its runtime_status heartbeat row is never deleted.",
+      "reproduction": "On openlaw-doc030-opinst: docker compose stop app took 10 s and the container exited 137. runtime_status then held api|13; worker|2: one API row per earlier start. Right after docker compose restart app worker, Settings → Advanced → System status showed a third row 'API Running Restart required' for the stopped process for up to a minute; a backup taken after 'docker compose stop app worker' carries the API row (2 rows after stop on openlaw-doc030-opup).",
+      "contradicts": "apps/api/src/index.ts registers stopHeartbeat only as a Fastify onClose hook and installs no SIGTERM handler; the worker handles SIGTERM and deletes its row. The upgrade guide asks for API and Worker rows Running and Current right after start.",
+      "at": "2026-09-25T13:22:25.944Z"
+    },
+    {
+      "summary": "reset-advanced-settings.js run under a wrong OPENLAW_SECRET_KEY exits 0 and replaces every section's saved Advanced settings with an empty set sealed under the wrong key.",
+      "reproduction": "On openlaw-doc030-oprestore and openlaw-doc030-opup: File uploads 150 saved; OPENLAW_SECRET_KEY set to a random value; 'docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance' (and 'mcp') printed 'Saved ... overrides removed' and exited 0. After the retained key was restored, File uploads showed 100 [Default]; the saved value was gone.",
+      "contradicts": "The unreadable column opens to UNREADABLE_SECRET (an empty string), and parseSettings(\"\", true) returns empty settings instead of refusing. The author's technical review expected the command to throw 'Advanced settings cannot be decrypted'.",
+      "at": "2026-09-25T13:22:27.038Z"
+    },
+    {
+      "summary": "A wrong OPENLAW_SECRET_KEY with saved Advanced settings does not stop startup; saved values silently fall back to defaults or the environment.",
+      "reproduction": "Same fixture: app and worker start (RestartCount 0, readyz 200); the only signal is 'No configured key opens these stored credentials: ... advanced_settings (1)'. A saved storage driver or Application address would silently revert.",
+      "contradicts": "config.ts parseSettings throws only when raw === null; encryptedText returns \"\" for an unreadable value. The guides and the technical review describe a restart loop with 'Advanced settings cannot be decrypted'.",
+      "at": "2026-09-25T13:22:27.040Z"
+    }
+  ],
+  "updatedAt": "2026-09-25T13:59:47.770Z",
   "networkFallback": [
     {
       "project": "openlaw-doc030-oprestore",
@@ -2862,5 +5495,22 @@
         "openlaw-doc030-oprestore_openlaw-doc-engine"
       ]
     }
-  ]
+  ],
+  "supersededAttempts": "Steps with result fail whose failure was a walkthrough-script defect (selector, timing or fixture API shape) were rerun; the later step with the same action is the recorded outcome. The failures that are guide findings are listed in guideFailures. The first 'Engine busy' step set DOC_ENGINE_MAX_QUEUED=0, which the engine treats as unset (default 8), so the direct probe with 1/1 is the recorded outcome.",
+  "round2": {
+    "at": "2026-09-25T14:02:26.140Z",
+    "projects": [
+      "openlaw-doc030-opinst2",
+      "openlaw-doc030-opup2",
+      "openlaw-doc030-oprestore2"
+    ],
+    "articleHashes": {
+      "install": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e",
+      "upgrade": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da",
+      "backup-and-restore": "c9e9d5d4e4f7e68546b5a27d8ba77d7cb235ae7aaf8647f3f016f925b0a7d9b5",
+      "operator-troubleshooting": "a685d653b2b8da37a179868dde0955f0f747b83438d6af345771ab4a3606cdd0"
+    },
+    "guideFailuresResolved": "Every round 1 guide failure was re-walked on the corrected text (steps with round 2) and passed: gateway TRUSTED_PROXIES with the remoteAddress check and lockout probe, the 127.0.0.1 mismatch effect, the invalid IP address stop, wrong-key start with fallbacks, the recovery command erasing every section, and the saved-address removal leaving http://localhost:3000.",
+    "destroyed": "All round 2 projects, support containers, volumes and private state were destroyed."
+  }
 }

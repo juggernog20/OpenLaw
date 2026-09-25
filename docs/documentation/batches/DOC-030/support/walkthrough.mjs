@@ -209,6 +209,7 @@ async function shot(page, name) {
 async function applet(page, name) {
   const panel = page.getByRole("complementary", { name, exact: true });
   if (!(await panel.isVisible().catch(() => false))) {
+    await waitOrReload(page, page.getByRole("toolbar", { name: "Applets" }), "The Applets toolbar");
     await page
       .getByRole("toolbar", { name: "Applets" })
       .getByRole("button", { name: new RegExp(`^${name}\\b`) })
@@ -1875,14 +1876,15 @@ if (run("R")) {
       const p = B.page;
       await go(p, `/portal/contracts/${FX.buApproval.number}`);
       const text = (await bodyText(p)).slice(0, 300);
-      const teamRes = await N.api("GET", `/contracts/${FX.buApproval.number}/team`);
-      const team = JSON.stringify(teamRes.json ?? {});
-      const onTeam = team.includes(ids.bu);
+      await go(N.page, `/contracts/${FX.buApproval.number}`);
+      const teamPanel = await applet(N.page, "Contract team");
+      const team = clean(await teamPanel.innerText());
+      const onTeam = team.includes(BU_NAME);
       await go(p, `/portal/matters/${FX.relatedMatter.number}`);
       const matter = (await bodyText(p)).match(/This Matter does not exist, or you cannot open it\./)?.[0] ?? "";
       here_(p);
       check(/This Contract does not exist, or you cannot open it\./.test(text) && !onTeam && matter, `text ${text} onTeam ${onTeam} matter ${matter}`);
-      return `/portal/contracts/${FX.buApproval.number} (the Contract whose Approval Request names this Business User) showed ${q(text.match(/Contract not found[^]*?open it\./)?.[0] ?? text)}; the Contract team read by Legal ${onTeam ? "includes" : "does not include"} the Business User (status ${teamRes.status}). M-${FX.relatedMatter.number}, linked to shared C-${FX.shared.number}, showed ${q(matter)}.`;
+      return `/portal/contracts/${FX.buApproval.number} (the Contract whose Approval Request names this Business User) showed ${q(text.match(/Contract not found[^]*?open it\./)?.[0] ?? text)}; Nadia's Contract team applet on that Contract read ${q(team.slice(0, 160))}, which ${onTeam ? "includes" : "does not include"} ${BU_NAME}. M-${FX.relatedMatter.number}, linked to shared C-${FX.shared.number}, showed ${q(matter)}.`;
     });
   await step(R, C50, "administrator", "Put the added Contract Document type back: archive it",
     "Archive type removes the added type from the upload pickers; the Version keeps its type.",

@@ -36,16 +36,16 @@ The API refuses a save and shows the reason when:
 
 Only an Administrator can open these pages. The navigation does not show them to other roles, opening their address leads elsewhere, and the API refuses their requests with 403.
 
-Keep the same encryption key on both processes. An unreadable saved Advanced configuration stops startup rather than silently switching document storage. Restore the key before restarting. Database/bootstrap secrets and volume mounts remain deployment-managed. SMTP has its own rule: a deployment SMTP configuration takes precedence over an app-saved relay, and saving an app relay otherwise takes effect on the next send.
+Keep the same encryption key on both processes. The saved Advanced configuration is sealed with `OPENLAW_SECRET_KEY`. With a key that cannot open it, the app and worker still start, and every saved value falls back to the deployment environment or the default. Document storage then falls back to the local driver. See [Preserve and rotate encryption keys](#preserve-and-rotate-encryption-keys) for the symptoms and recovery. Database/bootstrap secrets and volume mounts remain deployment-managed. SMTP has its own rule: a deployment SMTP configuration takes precedence over an app-saved relay, and saving an app relay otherwise takes effect on the next send.
 
-If a saved address prevents sign-in, set `BASE_URL` in `.env` and recreate app and worker; the environment value pins the address. Or remove that section's saved overrides from the installation directory:
+If a saved address prevents sign-in, set `BASE_URL` in `.env` and recreate app and worker; the environment value pins the address. Removing the saved address alone is not enough: the app then uses `BASE_URL`, or `http://localhost:3000` when `BASE_URL` is empty, and sign-in at the public address still fails. To remove one section's saved overrides from the installation directory:
 
 ```bash
 docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance
 docker compose restart app worker
 ```
 
-The recovery command also accepts `uploads`, `storage`, `processing` or `mcp`. It removes only that section's app-saved overrides, never prints their values, and writes an Audit log entry. `run` starts a one-off container, so the command works while the app keeps restarting. It needs the correct `OPENLAW_SECRET_KEY`. With a key that cannot open the saved settings, it stops with the same message as startup. For a storage migration, stop document writes, migrate and verify the files, configure the intended locations and credentials in the deployment, then remove the saved storage overrides and recreate both services. Removing overrides alone does not move files. Keep backups and the previous stores until verification is complete.
+The recovery command also accepts `uploads`, `storage`, `processing` or `mcp`. It removes only that section's app-saved overrides, never prints their values, and writes an Audit log entry. `run` starts a one-off container, so the command works while the app keeps restarting. It needs the correct `OPENLAW_SECRET_KEY`. With a key that cannot open the saved settings, it still exits successfully, but it replaces the whole saved configuration with an empty one. That removes every section's saved values, not only the named section, and the correct key can no longer recover them. For a storage migration, stop document writes, migrate and verify the files, configure the intended locations and credentials in the deployment, then remove the saved storage overrides and recreate both services. Removing overrides alone does not move files. Keep backups and the previous stores until verification is complete.
 
 Apply deployment changes with `docker compose up -d --no-build --pull never`. `docker compose restart` restarts the existing containers with their existing environment; it does not apply a changed `.env`. Check the effective behavior after recreation. Avoid printing `docker compose config` into a shared log: the expanded configuration can contain secrets. Use `docker compose config --quiet` for validation.
 
@@ -59,7 +59,27 @@ Set `BASE_URL` in `.env` to the browser-facing origin, such as `https://legal.ex
 
 The reverse proxy must terminate TLS, preserve the incoming `Origin` and `Host`, forward paths without rewriting them, and allow uploads at least as large as the app limit. Disable response buffering for `/api/events` so live updates can arrive. Keep the database and document-engine ports unpublished.
 
-The proxy must also set `X-Forwarded-For` to the client's address, replacing any value the client sent, and set `X-Forwarded-Proto`. Caddy's `reverse_proxy` does both by default. Then set `TRUSTED_PROXIES` in `.env` to the proxy's own address, for example `127.0.0.1,::1` for a proxy on the same host. The app reads the client address from `X-Forwarded-For` only when the request comes from a listed address. Without the list, everyone behind the proxy shares one sign-in rate-limit bucket, and the app logs a warning at start. Never list a range that also contains clients.
+The proxy must also set `X-Forwarded-For` to the client's address, replacing any value the client sent, and set `X-Forwarded-Proto`. Caddy's `reverse_proxy` does both by default. Then set `TRUSTED_PROXIES` in `.env` to the address that the proxy's connections come from, as the app sees it. The app reads the client address from `X-Forwarded-For` only when the request comes from a listed address. Without the list, everyone behind the proxy shares one sign-in rate-limit bucket, and the app logs a warning at start.
+
+### Find the trusted proxy address
+
+`TRUSTED_PROXIES` is a comma-separated list. Each entry is an IP address or a CIDR range. A proxy on the same host does not reach the app from `127.0.0.1`. Docker forwards the published port into the container, so the proxy's connections arrive from the gateway of the app's Compose network. Read that gateway and the network's range after the first start. Replace the first `openlaw` with your `COMPOSE_PROJECT_NAME`:
+
+```bash
+docker network inspect openlaw_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'
+```
+
+Set `TRUSTED_PROXIES` to the gateway address, such as `172.18.0.1`, then run `docker compose up -d --no-build --pull never`. Docker can give the network another range when it creates it again, for example after `docker compose down`. Read the gateway again after that. A proxy on another host, reached through `APP_BIND`, keeps its own source address. List that address.
+
+Check the value through the proxy. Sign in once from a browser, then list the client addresses the app recorded:
+
+```bash
+docker compose logs --since=5m app | grep -o '"remoteAddress":"[^"]*"' | sort | uniq -c
+```
+
+With a correct value, the lines show the browsers' addresses. If every request shows the gateway address, the list does not match the proxy.
+
+A value that does not match, such as `127.0.0.1,::1` for a proxy on the same host, trusts nothing. Every visitor then shares one sign-in rate-limit bucket, as with an empty list, but the app logs no warning. A few wrong passwords from one person then refuse password sign-in for everyone for a short time. An entry that is not an IP address or CIDR range stops the app at start with `invalid IP address`. Never list a range that also contains clients.
 
 For example, a Caddy instance on the app host can forward a public hostname to the local port:
 
@@ -71,7 +91,7 @@ legal.example.com {
 
 This example assumes a hostname eligible for automatic certificate issuance. For a private installation, use the certificate example below. Use [Caddy's HTTPS instructions](https://caddyserver.com/docs/quick-starts/https) for DNS, public ports, and certificate prerequisites.
 
-The standard Compose file publishes the app only on the host's `127.0.0.1`, so a proxy running directly on the host can reach it. A proxy in a container has its own `127.0.0.1`, and a proxy on another host cannot reach the host's loopback address. For those, set `APP_BIND` to a host address the proxy can reach, such as `0.0.0.0`. Add a network rule that admits only the proxy to the port, and set `TRUSTED_PROXIES` to the address the proxy connects from.
+The standard Compose file publishes the app only on the host's `127.0.0.1`, so a proxy running directly on the host can reach it. A proxy in a container has its own `127.0.0.1`, and a proxy on another host cannot reach the host's loopback address. For those, set `APP_BIND` to a host address the proxy can reach, such as `0.0.0.0`. Add a network rule that admits only the proxy to the port, and set `TRUSTED_PROXIES` to the address the proxy connects from, as described in [Find the trusted proxy address](#find-the-trusted-proxy-address).
 
 Check sign-in, an invitation link, an upload, a download, and a live update through that origin. A responding home page alone does not prove the proxy preserves authentication or event delivery. Configure origin-wide response headers and traffic limits at the proxy according to your deployment policy; the app's sign-in rate limiter remains enabled in a normal installation.
 
@@ -94,8 +114,9 @@ Run the HTTPS reverse proxy on the VM host. The standard Compose file publishes 
 ```dotenv
 BASE_URL=https://openlaw.company.example
 PORT=3000
-TRUSTED_PROXIES=127.0.0.1,::1
 ```
+
+After the first start, set `TRUSTED_PROXIES` to the gateway address from [Find the trusted proxy address](#find-the-trusted-proxy-address) and recreate the app.
 
 For an existing installation, keep the project name, image selection, file list, volumes, and secrets unchanged. If you need another port, change `PORT` and the proxy upstream together. After startup, `docker compose port app 3000` must print `127.0.0.1:3000`. If it prints `0.0.0.0:3000`, remove `APP_BIND` from `.env` and from the shell, then recreate the app.
 
@@ -280,4 +301,17 @@ To rotate this credential key:
 
 Device notifications use a VAPID key pair. With `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` unset, OpenLaw generates a pair on first use and stores it. Set both to pin a pair of your own; setting only one stops startup. Use the same pair for app and worker, and keep it stable while browsers are subscribed. A new pair means people must enable device notifications again.
 
-The previous key is accepted for reads during rotation. Keeping it configured indefinitely does not finish retiring it. If the wrong key was supplied, restore the correct key and recreate the app and worker before replacing saved provider credentials. Unreadable saved secrets are retained for recovery; replacing them intentionally writes new values.
+The previous key is accepted for reads during rotation. Keeping it configured indefinitely does not finish retiring it.
+
+A wrong `OPENLAW_SECRET_KEY` does not stop the app or the worker. Each stored value the key cannot open reads as empty:
+
+- Saved **Settings → Advanced** values fall back to the deployment environment or the default, and those fields show **Default**. The instance address becomes `BASE_URL`, or `http://localhost:3000` when `BASE_URL` is empty. Storage becomes the local driver, so a Document stored only in a saved bucket or container fails to download.
+- The saved SMTP relay reads as unset, and a test email fails with **The test email could not be sent. SMTP is not configured — save a relay first.**
+- The Signing connector shows its private key and Connect secret as missing. Sending fails, and webhook deliveries are refused.
+- The AI connector's Saved key reads as missing, so calls to a provider that needs a key fail.
+- SSO sign-in through a saved provider fails, because its client configuration cannot be read.
+- Device notifications stop. The app logs **Device notifications are off until the VAPID pair can be read**.
+
+The app's start log names each affected column in a line that begins **No configured key opens these stored credentials**, for example `advanced_settings`, `smtp_url` and `vapid_private_key`. Restore the correct key, then recreate the app and worker. Until then, do not save in **Settings → Advanced**, run the recovery command, or paste credentials again. Each of those writes over a value that the correct key can still open.
+
+If the key is lost, the same symptoms remain. Set `BASE_URL` and the storage variables in `.env` first, so that the instance address and every store that holds Documents are pinned. Then paste the provider credentials again and save the Advanced values again. A value you save replaces the unreadable one for good.

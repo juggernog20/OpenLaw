@@ -1,0 +1,133 @@
+{
+  "articleId": "connect-headless-client",
+  "contentSha256": "962c2db4f05be7dcc300ecdf257abd07ac6ff37e1fe68635a46490726fd912ab",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (mcp)",
+  "reviewerKind": "agent",
+  "technicalReviewer": "DOC-030 source-review author agent (mcp)",
+  "author": "DOC-030 source-review author agent (mcp)",
+  "verifiedAt": "2026-09-25T13:17:43.486Z",
+  "status": "pass",
+  "sources": [
+    "docs/user-guides/connect-headless-client.md",
+    "docs/documentation/batches/DOC-030/mcp/technical-review.json",
+    "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+    "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-lan.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-m41.mjs",
+    "docs/documentation/batches/DOC-030/mcp/overlay-rate.json",
+    "docs/documentation/batches/DOC-030/mcp/overlay-unpin.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
+    "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
+    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135, #1138 addenda)",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/settings-api-keys.tsx",
+    "apps/web/src/routes/portal-settings.tsx",
+    "apps/web/src/components/portal/portal-shell.tsx",
+    "apps/web/src/components/api-keys.tsx",
+    "apps/web/src/components/connected-clients.tsx",
+    "apps/web/src/components/notification-bell.tsx",
+    "apps/web/src/components/mcp-scope.tsx",
+    "apps/api/src/modules/api-keys/routes.ts",
+    "apps/api/src/auth/api-keys.ts",
+    "apps/api/src/mcp/auth.ts",
+    "apps/api/src/mcp/routes.ts",
+    "apps/api/src/mcp/register.ts",
+    "apps/api/src/mcp/guide.ts",
+    "apps/api/src/mcp/calls.ts",
+    "e2e/tests/62-m40-mcp.spec.ts",
+    "https://code.claude.com/docs/en/mcp (vendor page, read for the header expansion claim only)"
+  ],
+  "scenarios": [
+    {
+      "id": "V-M40-CLIENT",
+      "coverage": [
+        "C58"
+      ],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "work2's organization MCP policy was read first (all switches off, 13 Toolsets, Read-only off, 90 days) and put back exactly as found at the end of each run. MCP, Legal Users and Business Users API keys were on during the walk; lifetime 30 days.",
+        "Claude Code 2.1.282 ran only with HOME and CLAUDE_CONFIG_DIR pointed at a throwaway directory (~/.cache/openlaw-doc030/mcp-claude-home), deleted afterwards.",
+        "Fixture setup, not a reader step: the expired-key check moved this role's own api_keys row expiry into the past with docker exec openlaw-docs-80ceef9e-work2-postgres-1 psql."
+      ],
+      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. An expired or revoked key cannot connect.",
+      "actual": "Nadia Haddad requested from Settings → Personal → API keys: Request a key opened Request an API key with Nothing is selected for you., 12 Toolsets (the ceiling), Read and Write radios, Note (Optional) and Expires 30 days after approval. The organization sets this lifetime.; Send request stayed disabled until name, Toolset and scope were set. The row read Pending approval. Daniel approved from Your approvals in the bell. After reload Your key is ready showed Approved by Daniel Okafor, the key once with Copy, Client, Toolsets, Scope, Expires and a Connect a headless Client link (/documentation/connect-headless-client, new tab); a click outside kept it open and Esc closed it; after reload no dialog came back, the row read Active, and GET /api/v1/api-key-requests/:id had no key. Cancel request on a pending row with confirmation gave Cancelled; a Denied row showed the Administrator's note. The guide's Bash block, run as written with the lab Server address and the key on stdin, printed Added HTTP MCP server openlaw ... Headers: { \"x-api-key\": \"[REDACTED]\" }; the saved config holds x-api-key: ${OPENLAW_API_KEY} and the key is in no file; claude mcp list reported openlaw ✔ Connected with OPENLAW_API_KEY set, and ! Needs authentication plus a Missing environment variables: OPENLAW_API_KEY warning without it, so the single-quoted header expands at connect time as the guide says. SDK Client (Streamable HTTP, x-api-key): 16 Tools including openlaw_whoami, openlaw_docs_search, openlaw_docs_read, openlaw_contracts_list, openlaw_matters_list and openlaw_matter_create; whoami Nadia Haddad; Authorization: Bearer returned the same list; a browser session cookie alone got 401. The guide's mcp-remote@0.14.3 entry, run headless through npx with the key in env, connected (16 Tools, whoami Nadia Haddad); the --header-file variant also connected; without the env block the bridge failed. Guide Tools: openlaw_docs_search for Connect a headless Client ranked connect-headless-client first; openlaw_docs_read returned Connect a headless Client and Configure MCP. Expired key (fixture): 401 Authentication required. with WWW-Authenticate, the row read Expired, claude mcp list read Needs authentication. Daniel revoked her second key from Active keys and grants (Revoke API key → Revoke): 401, row Revoked (re-run m40r).",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+      ]
+    },
+    {
+      "id": "V-M40-CLIENT",
+      "coverage": [
+        "C58"
+      ],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "work2's organization MCP policy was read first (all switches off, 13 Toolsets, Read-only off, 90 days) and put back exactly as found at the end of each run. MCP, Legal Users and Business Users API keys were on during the walk; lifetime 30 days.",
+        "Claude Code 2.1.282 ran only with HOME and CLAUDE_CONFIG_DIR pointed at a throwaway directory (~/.cache/openlaw-doc030/mcp-claude-home), deleted afterwards.",
+        "Fixture setup, not a reader step: the expired-key check moved this role's own api_keys row expiry into the past with docker exec openlaw-docs-80ceef9e-work2-postgres-1 psql."
+      ],
+      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. An expired or revoked key cannot connect.",
+      "actual": "Daniel Okafor's own request approved itself: Your key is ready opened at once, Copy then Done; the row read Active and a later read had no key. The guide's Bash block, run as written with the lab Server address and the key on stdin, printed Added HTTP MCP server openlaw ... Headers: { \"x-api-key\": \"[REDACTED]\" }; the saved config holds x-api-key: ${OPENLAW_API_KEY} and the key is in no file; claude mcp list reported openlaw ✔ Connected with OPENLAW_API_KEY set, and ! Needs authentication plus a Missing environment variables: OPENLAW_API_KEY warning without it, so the single-quoted header expands at connect time as the guide says. SDK Client (Streamable HTTP, x-api-key): 9 Tools (Contracts and Entities read Tools plus Guide Tools); whoami Daniel Okafor. Guide Tools: openlaw_docs_search for Connect a headless Client ranked connect-headless-client first; openlaw_docs_read returned Connect a headless Client and Configure MCP. Expired key (fixture): 401 Authentication required. with WWW-Authenticate, the row read Expired, claude mcp list read Needs authentication. He revoked his second key on his own row (Revoke API key → Revoke): 401, row Revoked (re-run m40r).",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+      ]
+    },
+    {
+      "id": "V-M40-CLIENT",
+      "coverage": [
+        "C58"
+      ],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "work2's organization MCP policy was read first (all switches off, 13 Toolsets, Read-only off, 90 days) and put back exactly as found at the end of each run. MCP, Legal Users and Business Users API keys were on during the walk; lifetime 30 days.",
+        "Claude Code 2.1.282 ran only with HOME and CLAUDE_CONFIG_DIR pointed at a throwaway directory (~/.cache/openlaw-doc030/mcp-claude-home), deleted afterwards.",
+        "Fixture setup, not a reader step: the expired-key check moved this role's own api_keys row expiry into the past with docker exec openlaw-docs-80ceef9e-work2-postgres-1 psql."
+      ],
+      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. An expired or revoked key cannot connect.",
+      "actual": "Jonas Weber (magic link) selected the Notification settings gear in the Portal header, then API keys (/portal/settings/api-keys), and Request a key; the row read Pending approval. Daniel approved it from the API key requests card with a note. After reload Your key is ready showed the key once (outside click kept it open), Done closed it, the row read Active with the approval note, and a later read had no key. The guide's Bash block, run as written with the lab Server address and the key on stdin, printed Added HTTP MCP server openlaw ... Headers: { \"x-api-key\": \"[REDACTED]\" }; the saved config holds x-api-key: ${OPENLAW_API_KEY} and the key is in no file; claude mcp list reported openlaw ✔ Connected with OPENLAW_API_KEY set, and ! Needs authentication plus a Missing environment variables: OPENLAW_API_KEY warning without it, so the single-quoted header expands at connect time as the guide says. SDK Client (Streamable HTTP, x-api-key): 9 Tools: Requests and Knowledge Tools plus openlaw_whoami, openlaw_docs_search, openlaw_docs_read, openlaw_form_get, openlaw_vocabulary; whoami Jonas Weber. Guide Tools: openlaw_docs_search for Connect a headless Client ranked connect-headless-client first; openlaw_docs_read returned Connect a headless Client and Configure MCP. Expired key (fixture): 401 Authentication required. with WWW-Authenticate, the row read Expired, claude mcp list read Needs authentication. He revoked his second key on his own Portal row (Revoke API key → Revoke): 401, row Revoked.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+      ]
+    }
+  ],
+  "limitations": [
+    "The final line of the Claude Code block, the interactive claude session and its /mcp view, was not run: the throwaway home has no Claude account. claude mcp add, claude mcp list and claude mcp get ran; claude mcp list's ✔ Connected health check stands in for /mcp, and the SDK Client made the Guide Tool calls the guide's example question asks for.",
+    "Claude Cowork and Claude Desktop were not installed. Their API key path was checked by running the guide's mcpServers entry (npx -y mcp-remote@0.14.3 <Server address> --header x-api-key:${OPENLAW_API_KEY} --transport http-only, env block) headless as a stdio server, and the --header-file variant. Settings → Developer, Edit Config, the tools menu and app restart are vendor UI and were not seen.",
+    "Expired keys were produced as fixture setup by moving each role's own api_keys expiry into the past in the work2 database; the shortest key lifetime is one day.",
+    "The Guide Tools serve the article bytes built into the pinned app image (067c1646), not the reviewed text; the check shows the Tools find and read these articles.",
+    "Business User steps ran in the full m40 run only. The m40r re-run of the Legal Team Member and Administrator revoke steps did not repeat them because work2's Mailpit had exited by then.",
+    "Rate limit reached was checked on the owned mcplan lab (configure-mcp operator scenario), not with a Business or Legal key on work2."
+  ],
+  "previousEvidence": null,
+  "compatibilityReview": null,
+  "copyOnlyReview": null
+}

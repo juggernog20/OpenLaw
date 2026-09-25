@@ -1,126 +1,149 @@
 {
   "articleId": "reference",
-  "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (support, round 1)",
+  "contentSha256": "1319240ad60cfe2077499ef55943bce00c40e6146b26a3f1b37bf77a3be412bb",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (support)",
+  "technicalReviewer": "DOC-030 source-review author agent (support)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (support)",
   "reviewerKind": "agent",
-  "author": "Codex integration author; corrections by DOC-029 source-review author agent (support)",
-  "technicalReviewer": "DOC-029 source-review author agent (support)",
-  "verifiedAt": "2026-09-16T16:25:31Z",
+  "verifiedAt": "2026-09-25T11:55:31Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/reference.md",
-    "docs/documentation/batches/DOC-029/support/technical-review.json",
-    "docs/documentation/batches/DOC-029/support/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-030/support/technical-review.json",
+    "docs/documentation/batches/DOC-030/support/walkthrough.json",
+    "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/support/lib.mjs",
+    "docs/documentation/batches/DOC-030/support/fixtures.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 2026-09-10 amendment, ENT-011 and its 2026-09-18 amendments)",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+    "docs/decision-records/DECISIONS-CONTRACTS.md (2026-09-17 amendment)",
+    "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-004 2026-09-24 addendum)",
+    "docs/decision-records/DECISIONS.md (DD-029)",
+    "apps/api/src/lib/entity-access.ts",
+    "apps/web/src/components/entities/ownership-card.tsx",
+    "apps/web/src/components/entities/share-register-tab.tsx",
+    "packages/db/migrations/0160_document_types.sql",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/portal/documents-section.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/components/my-reminder-lead-times.tsx",
+    "apps/web/src/components/api-keys.tsx",
+    "apps/web/src/components/connected-clients.tsx",
+    "apps/web/src/routes/settings-api-keys.tsx",
+    "apps/web/src/routes/portal-settings.tsx",
+    "apps/web/src/routes/settings-mcp.tsx",
+    "apps/web/src/components/notification-bell.tsx",
+    "apps/api/src/modules/api-keys/routes.ts",
+    "apps/api/src/mcp/auth.ts",
+    "docs/user-guides/connect-headless-client.md",
+    "docs/user-guides/configure-mcp.md",
+    "docs/user-guides/connect-claude.md",
+    "docs/user-guides/contract-approvals.md"
   ],
   "scenarios": [
     {
       "id": "V-C50",
-      "coverage": ["C50"],
+      "coverage": [
+        "C50"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator (Daniel Okafor) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Seeded fictional Administrator Daniel Okafor, password sign-in, in his own browser context on the shared work2 lab (openlaw-docs-80ceef9e-work2, 067c1646).",
+        "Reviewer-created records named DOC-030 support ... 09251133 (fixtures.json); DOC-029 support fixture files in docs/documentation/batches/DOC-029/support/fixtures. MCP switches, Read-only and one Contract Document type were set for single steps and put back."
       ],
       "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
-      "actual": "3 recorded steps passed for this role on 3fa407e3. The role control for a user offered only Administrator, Legal team member and Business user. Contract statuses showed the Stages Draft, Review, Approval, Signature, Active and Ended, and a new Matter status asked for Category Open or Closed; Cancel changed nothing. A Confidential Entity answered \"Entity not found\" without a Grant, opened with one, and was refused again after removal. A Confidential Contract without named access answered \"Contract not found\". The Administrator's Document actions included Delete, and the Legal Team Member's did not.",
+      "actual": "11 recorded steps passed for this role on 067c1646. The role control offered only Administrator, Legal team member and Business user. Contract statuses showed the Stages Draft, Review, Approval, Signature, Active, Ended; a new Matter status asked for Category Open or Closed. Settings > Organization > Documents had Matters, Contracts and Entities lists; the Contract list's fixed types were the six named; Matter and Entity lists had no fixed types (only other groups' additions). Pages opened for types, the DPA Form (On intake form, Required for creation, Visible on Portal switches), Statuses, Fields, Approver groups, Matter templates, Request types, Reminder lead times, Document types and MCP. A Confidential Entity answered \"Entity not found\" without a Grant, opened with one, and was refused after removal; a Confidential Contract without named access answered \"Contract not found\". API key facts: Approve and Deny from Your approvals in the bell (no note there) and from API key requests in Organization > MCP (with Note (Optional)); his own request approved itself; lifetime 400 refused with \"API key lifetime must be a whole number from 1 to 365 days.\". The added test Document type was archived again.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/support/walkthrough.json",
+        "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/support/lib.mjs",
+        "docs/documentation/batches/DOC-030/support/fixtures.json"
       ]
     },
     {
       "id": "V-C50",
-      "coverage": ["C50"],
+      "coverage": [
+        "C50"
+      ],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member (Nadia Haddad) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Seeded fictional Legal Team Member Nadia Haddad, password sign-in, in her own browser context on the shared work2 lab.",
+        "Reviewer-created records named DOC-030 support ... 09251133 (fixtures.json); DOC-029 support fixture files in docs/documentation/batches/DOC-029/support/fixtures. MCP switches, Read-only and one Contract Document type were set for single steps and put back."
       ],
       "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
-      "actual": "4 recorded steps passed for this role on 3fa407e3. Add a key date had no assignee, an Additional lead time and team-member reminder recipients. Add task had Assignee and Due date. The Contract showed Our entity separately from Counterparties. Version kinds included Draft · ours and Executed. The actions offered Mark as executed copy and Compare with previous, with no action to delete a single Version and no Delete. A PNG opened inline, an SVG showed \"This file type does not open here. Download it to read it.\", and an EML opened the email reader with its Subject and From. The 100 MB refusal and the 255-character filename refusal came from the troubleshooting steps on the same run. Settings > Users stayed closed.",
+      "actual": "10 recorded steps passed for this role on 067c1646. On a register Entity the Register of members listed an Individual and an Entity holder; the holder Entity's Holdings in other Entities row read From register with a disabled percent and disabled Remove; Add Holding offered an Entity or an Individual owner. Add a key date had no assignee, lead times and team recipients; Add task had Assignee and Due date; the Contract showed Our entity separately from Counterparties. Upload document's Type started at No type and listed the six Contract types and an added one; the Type column changed a Version to Draft · ours and kept it after reload. Document actions offered Mark as executed copy and Compare with previous; Compare opened a comparison page and the Document still had 2 Versions; no action deletes a single Version, and only the Administrator's menu had Delete. A PNG read inline, an SVG showed \"This file type does not open here. Download it to read it.\", an EML opened with Subject and From. A Knowledge file's Type column showed the item's Knowledge type. Organization settings stayed closed; Personal listed Notifications and API keys. API key rows: Pending approval, Active, Denied with its note, Cancelled, Revoked; \"Your key is ready\" said OpenLaw will not show the key again and to send it in the x-api-key header; Write was absent while Read-only.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/support/walkthrough.json",
+        "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/support/lib.mjs",
+        "docs/documentation/batches/DOC-030/support/fixtures.json"
       ]
     },
     {
       "id": "V-C50",
-      "coverage": ["C50"],
+      "coverage": [
+        "C50"
+      ],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Business User (Jonas Weber, fresh magic links from the lab Mailpit) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Fictional Business User Lena Fischer (doc030.support.bu@helix.example), created by Portal sign-in on the allowed helix.example domain and onboarded in the browser; fresh sign-in links from the lab Mailpit. A second created Business User (doc030.support.bu2@helix.example) was used only for the spent-link check.",
+        "Reviewer-created records named DOC-030 support ... 09251133 (fixtures.json); DOC-029 support fixture files in docs/documentation/batches/DOC-029/support/fixtures. MCP switches, Read-only and one Contract Document type were set for single steps and put back."
       ],
       "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
-      "actual": "2 recorded steps passed for this role on 3fa407e3. Staff addresses landed on /portal. On a shared Contract the Primary Document showed Version 2 with 1 earlier version, and both Versions had Download links; Version 1 downloaded its original 57 bytes. A PNG opened in the Portal reader. A linked Matter stayed closed. A published Knowledge Item (audience everyone) with a two-Version file showed one Download and no Version control, and it returned the current Version's bytes. Record Fields were read-only, as the troubleshooting steps on the same run record.",
+      "actual": "5 recorded steps passed for this role on 067c1646. /documents landed in the Portal. The Portal Documents list showed General for a Version with No type and for one with an added type, and Draft · ours for a fixed type; the primary Document showed an earlier Version and Version 1 downloaded its original bytes. Published Knowledge showed one Download and no Version control, returning the current Version. The Contract whose Approval Request names the Business User answered \"This Contract does not exist, or you cannot open it.\" and its team did not include them; a Matter linked to a shared Contract stayed closed. API keys were reached from Notification settings, then API keys.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/support/walkthrough.json",
+        "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/support/lib.mjs",
+        "docs/documentation/batches/DOC-030/support/fixtures.json"
       ]
     },
     {
       "id": "V-C50",
-      "coverage": ["C50"],
+      "coverage": [
+        "C50"
+      ],
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-out browser context with no app account.",
-        "The reviewed article bytes on disk for link checks."
+        "Signed-out browser context with no app account; read-only docker exec, docker inspect and psql reads of the work2 containers and .documentation-labs/work2/source/compose.yml."
       ],
       "expected": "Representative terms and limits in the reference match the app: fixed concepts are separate from configured labels, and role and file limits are accurate. Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version.",
-      "actual": "2 recorded steps passed for this role on 3fa407e3. Signed out, /documentation/reference opened \"Look up terms, permissions, and file behavior\" with the Deployment operator row and MAX_UPLOAD_MB. The only app API request was a session check. Signed-out /help landed on /documentation. All 21 internal link targets in the reviewed bytes opened in the formal reader.",
+      "actual": "3 recorded steps passed for this role on 067c1646. Signed out, /documentation/reference opened with the Deployment operator row and MAX_UPLOAD_MB; the only app API request was /api/v1/me; /help redirected to /documentation. Container-level reads: compose.yml passes MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-} and the openlaw-files and openlaw-pgdata volumes; in the app container MAX_UPLOAD_MB is set but empty and the built uploads module has DEFAULT_MAX_UPLOAD_MB = 100 (MiB, 104,857,600 bytes) and MAX_FILENAME_LENGTH = 255; the users table allows only administrator, legal_team_member and business_user, so there is no operator account role; BASE_URL is http://127.0.0.1:43300, so the MCP address is that plus /mcp. Every internal link and anchor in the reviewed bytes of both guides opened in the bundled formal reader.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/support/walkthrough.json",
+        "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/support/lib.mjs",
+        "docs/documentation/batches/DOC-030/support/fixtures.json"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the source-review author; not a human user study and not feature-owner approval.",
-    "The lab Help and formal readers serve the article bytes committed at 3fa407e3, which differ from the reviewed corrected bytes. Steps followed the reviewed bytes against the app. Reader checks prove the routes, headings and UI behavior; link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
-    "The admin lab is shared with other DOC-029 agents. The walkthrough created only records named DOC-029 support ... and changed no organisation settings.",
-    "Two earlier recorded attempts (walkthrough-r1-attempt1.json, walkthrough-r1-attempt2.json) each had one reviewer harness fault and are kept with their disposition. Exploratory probes and development runs before them are not evidence.",
-    "Representative terms were compared with the app; Holding, Registration, Officer, Obligation, Signer, Envelope, Comparison and Generated redline rows were checked in the article text only, not exercised in this walkthrough.",
-    "Word/PowerPoint conversion and PDF OCR were not exercised here; the Document reading groups verify them."
+    "The lab Help and formal readers serve the article bytes bundled at 067c1646, which predate the reviewed bytes. Steps followed the reviewed bytes against the app; link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
+    "The work2 lab is shared with other DOC-030 agents. This walkthrough created records named DOC-030 support ... and put back every organization setting it changed (MCP switches, Read-only, one Contract Document type, archived again). Run history and reruns of reviewer harness faults are in walkthrough.json runNotes.",
+    "Registration, Officer, Obligation, Signer, Envelope, Analysis run and Generated redline rows were checked in the article text only, not exercised here.",
+    "Word/PowerPoint conversion and PDF OCR were not exercised; Compare with previous on two plain-text Versions opened the comparison page with \"Version 1 does not support extracted text.\", which shows a Comparison is not a Version but not a completed comparison.",
+    "No OAuth Client was connected on this lab; the OAuth Clients row was checked against the empty Connected Clients card only. An Expired key could not be produced within a 1-day minimum lifetime.",
+    "An Administrator can also set Maximum file size (MiB) under Settings > Advanced > File uploads; the reference names only MAX_UPLOAD_MB. Recorded as an observation for the author, not a failure."
   ],
   "previousEvidence": {
-    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-    "contentSha256": "71259a27b93b495c22a73ba251ec3224ac610ae24b6dee7b88de83a2ac809135",
-    "verifiedAt": null
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "add26ec349160f792827801693904e1713c8146e3a25cbac064eeb476a2668bd",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to roles, access scopes, Stages, Key dates, Documents, the upload limit or file reading; the new 5 MB limit is for the organization logo only. I replayed the round 1 V-C50 walkthrough on the admin2 lab and all 11 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. It makes no statement about the wizard Authentication step or two-factor enrollment.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/support.json",
-        "sha256": "2a585ecc57a52770b2a537f10edc806b7b22535f91701f6265ecef59d916f18f"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T16:25:31Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

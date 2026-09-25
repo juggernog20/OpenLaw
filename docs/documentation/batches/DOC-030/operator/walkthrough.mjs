@@ -1582,6 +1582,2024 @@ phases["advanced-restart"] = async () => {
   );
 };
 
+const AZURITE_KEY =
+  "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+async function s3Client() {
+  const { S3Client, CreateBucketCommand, ListObjectsV2Command } = require(
+    pnpm("@aws-sdk+client-s3@3.1139.0/node_modules/@aws-sdk/client-s3"),
+  );
+  const client = new S3Client({
+    endpoint: MINIO_HOST,
+    region: "us-east-1",
+    forcePathStyle: true,
+    credentials: { accessKeyId: state.minioUser, secretAccessKey: state.minioPassword },
+  });
+  return {
+    create: (Bucket) => client.send(new CreateBucketCommand({ Bucket })),
+    list: async (Bucket) => (await client.send(new ListObjectsV2Command({ Bucket }))).Contents ?? [],
+  };
+}
+async function azureContainer(name, create = false) {
+  const { BlobServiceClient, StorageSharedKeyCredential } = require(
+    pnpm("@azure+storage-blob@12.33.0/node_modules/@azure/storage-blob"),
+  );
+  const svc = new BlobServiceClient(
+    `${AZURITE_HOST}/devstoreaccount1`,
+    new StorageSharedKeyCredential("devstoreaccount1", AZURITE_KEY),
+  );
+  const c = svc.getContainerClient(name);
+  if (create) await c.create();
+  const blobs = [];
+  for await (const b of c.listBlobsFlat()) blobs.push(b.name);
+  return blobs;
+}
+async function storageForm(page) {
+  await page.goto(`${ORIGIN}/settings/storage`);
+  await page.getByLabel("Store new documents in").waitFor({ timeout: 20_000 });
+}
+
+phases.storage = async () => {
+  const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+  const { page } = s;
+  try {
+    await step(
+      "V-C45-advanced-settings",
+      "administrator",
+      "browser-walkthrough",
+      "Document storage: choose S3-compatible storage for a bucket created first in MinIO, with endpoint http://minio:9000, and select Test connection",
+      "Save is unavailable before a passing test; Local storage path is read only; an internal DNS name over plain http is refused.",
+      async () => {
+        const s3 = await s3Client();
+        await s3.create("doc030-app");
+        await storageForm(page);
+        const localPath = await fieldSource(page, "Local storage path");
+        await page.getByLabel("Store new documents in").selectOption("s3");
+        await page.getByLabel("S3 bucket").fill("doc030-app");
+        await page.getByLabel("S3 endpoint (optional for AWS)").fill("http://minio:9000");
+        await page.getByLabel("S3 path-style addressing").selectOption("true");
+        await page.getByLabel("S3 access key ID").fill(state.minioUser);
+        await page.getByLabel("S3 secret access key").fill(state.minioPassword);
+        const saveDisabled = await page.getByRole("button", { name: "Save" }).isDisabled();
+        await page.getByRole("button", { name: "Test connection" }).click();
+        const alert = page.getByRole("alert").filter({ hasText: /https|failed/ });
+        await alert.first().waitFor({ timeout: 20_000 });
+        const msg = (await alert.first().innerText()).trim();
+        const stillDisabled = await page.getByRole("button", { name: "Save" }).isDisabled();
+        expect(saveDisabled && stillDisabled && /S3_ENDPOINT must use https/.test(msg), `${saveDisabled} ${stillDisabled} ${msg}`);
+        expect(localPath.includes("Deployment configuration · Read only") || localPath.some((l) => /Read only/.test(l)), `local path ${localPath}`);
+        return `Bucket doc030-app created in MinIO first. Local storage path reads ${localPath.slice(0, 1).join("")} with "${localPath.find((l) => /Read only/.test(l))}". After choosing S3-compatible storage and entering bucket, endpoint http://minio:9000, path-style Yes and the MinIO keys, Save was disabled. Test connection showed "${msg}" and Save stayed disabled.`;
+      },
+    );
+  } finally {
+    await s.context.close();
+  }
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "container-operation",
+    "Operator adds OPENLAW_PLAIN_HTTP_HOSTS=minio,azurite to .env and recreates app and worker",
+    "The app and worker receive the list.",
+    async () => {
+      setEnv({ OPENLAW_PLAIN_HTTP_HOSTS: "minio,azurite" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      return `up exited 0; OPENLAW_PLAIN_HTTP_HOSTS in the app container: ${containerEnv("app", "OPENLAW_PLAIN_HTTP_HOSTS")}; worker: ${containerEnv("worker", "OPENLAW_PLAIN_HTTP_HOSTS")} (Compose passes .env through env_file).`;
+    },
+  );
+  const s2 = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+  try {
+    const page = s2.page;
+    await step(
+      "V-C45-advanced-settings",
+      "administrator",
+      "browser-walkthrough",
+      "Document storage: enter the S3 settings again, Test connection, edit a field, test again, then Save",
+      "The test passes and enables Save; an edit disables Save until the next test; Save shows the restart message; credentials come back blank and write-only; bucket and endpoint become read only.",
+      async () => {
+        await storageForm(page);
+        await page.getByLabel("Store new documents in").selectOption("s3");
+        await page.getByLabel("S3 bucket").fill("doc030-app");
+        await page.getByLabel("S3 endpoint (optional for AWS)").fill("http://minio:9000");
+        await page.getByLabel("S3 path-style addressing").selectOption("true");
+        await page.getByLabel("S3 access key ID").fill(state.minioUser);
+        await page.getByLabel("S3 secret access key").fill(state.minioPassword);
+        await page.getByRole("button", { name: "Test connection" }).click();
+        await page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
+        const enabled = await page.getByRole("button", { name: "Save" }).isEnabled();
+        await page.getByLabel("S3 region").fill("eu-west-1");
+        const disabledAfterEdit = await page.getByRole("button", { name: "Save" }).isDisabled();
+        await page.getByRole("button", { name: "Test connection" }).click();
+        await page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
+        await page.getByRole("button", { name: "Save" }).click();
+        await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
+        await storageForm(page);
+        const secretVal = await page.getByLabel("S3 secret access key").inputValue();
+        const keyVal = await page.getByLabel("S3 access key ID").inputValue();
+        const secretType = await page.getByLabel("S3 secret access key").getAttribute("type");
+        const text = await page.locator("main").innerText();
+        const kept = (text.match(/Credential configured\. Leave blank to keep it\./g) ?? []).length;
+        const bucket = await fieldSource(page, "S3 bucket");
+        const endpoint = await fieldSource(page, "S3 endpoint (optional for AWS)");
+        const driver = await fieldSource(page, "Store new documents in");
+        const st = await json(await page.request.get(`${ORIGIN}/api/v1/advanced-settings/storage`));
+        const leaked = JSON.stringify(st).includes(state.minioPassword) || JSON.stringify(st).includes(state.minioUser);
+        expect(enabled && disabledAfterEdit && secretVal === "" && keyVal === "" && kept === 2 && !leaked, `${enabled} ${disabledAfterEdit} ${secretVal.length} ${keyVal.length} ${kept} leaked ${leaked}`);
+        expect(bucket.some((l) => /Saved in OpenLaw · Read only/.test(l)) && endpoint.some((l) => /Read only/.test(l)), `${bucket} ${endpoint}`);
+        return `Test connection showed "Connection test passed." and enabled Save; changing S3 region to eu-west-1 disabled Save until another test passed; Save showed "Settings saved. Restart the API and worker to apply changes." On reload, both credential fields (type ${secretType}) were empty, each with "Credential configured. Leave blank to keep it."; the API state carries no credential value. S3 bucket reads "${bucket.filter((l) => /Saved|Read/.test(l)).join(" ")}", S3 endpoint "${endpoint.filter((l) => /Saved|Read/.test(l)).join(" ")}". Store new documents in: ${driver.filter((l) => /Saved|Active/.test(l)).join(" / ")}.`;
+      },
+    );
+    await step(
+      "V-C45-advanced-settings",
+      "administrator",
+      "container-operation",
+      "Try to change the configured bucket through the API",
+      "The API refuses a change to a configured storage location.",
+      async () => {
+        const st = await json(await page.request.get(`${ORIGIN}/api/v1/advanced-settings/storage`));
+        const r = await page.request.put(`${ORIGIN}/api/v1/advanced-settings/storage`, {
+          headers: { origin: ORIGIN },
+          data: { version: st.version, values: { S3_BUCKET: "doc030-other" } },
+        });
+        const body = await json(r);
+        expect(r.status() === 400 && /existing storage location cannot be changed/.test(body.detail), `${r.status()} ${body.detail}`);
+        return `PUT with S3_BUCKET=doc030-other answered ${r.status()} "${body.detail}".`;
+      },
+    );
+  } finally {
+    await s2.context.close();
+  }
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "container-operation",
+    "docker compose restart app worker; upload a new Document and download it and the older local Document",
+    "New writes go to the S3 bucket; the older local Document stays readable; the worker processes the new one; System status names the s3 driver.",
+    async () => {
+      await restartBoth();
+      const api = await adminApi();
+      const f = pdfFile("doc030-s3-app.pdf", "DOC-030 operator app saved S3 storage");
+      const u = await upload(api, state.contractNumber, f);
+      expect(u.status === 201, `upload ${u.status}`);
+      const d = await download(api, u);
+      const old = await download(api, state.docs.local);
+      const t = await waitText(api, u);
+      const ref = storageRef(u.versionId);
+      const objects = await (await s3Client()).list("doc030-app");
+      const sys = await json(await api.get("/api/v1/system-status"));
+      state.docs.s3 = u;
+      saveState();
+      expect(d.matches && old.matches && t.state === "ready" && ref.startsWith("s3:") && sys.storageDriver === "s3", `${d.status} ${old.status} ${t.state} ${ref.split(":")[0]} ${sys.storageDriver}`);
+      return `After restart, System status reports storage driver ${sys.storageDriver}. A new PDF answered 201; its stored reference starts with s3: and the bucket doc030-app holds ${objects.length} object(s); the download matched its SHA-256; the worker's text state became ${t.state}. The older local Document still downloaded with identical bytes.`;
+    },
+  );
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "browser-walkthrough",
+    "Test connection again with the credential fields left blank",
+    "A blank credential keeps the configured credential, so the test passes.",
+    async () => {
+      const s3 = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+      try {
+        await storageForm(s3.page);
+        await s3.page.getByRole("button", { name: "Test connection" }).click();
+        await s3.page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
+        return `With both credential fields blank, Test connection showed "Connection test passed." (it writes, reads and deletes a check object in local storage and the S3 bucket).`;
+      } finally {
+        await s3.context.close();
+      }
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Make the object store unavailable (stop MinIO); check readiness, downloads and the storage test; start MinIO again",
+    "readyz stays 200 while the S3 Document's download fails and the local one works; the storage test fails; everything recovers after MinIO starts.",
+    async () => {
+      sh("docker compose stop minio", { cwd: FIX });
+      const api = await adminApi();
+      const rz = await readyz();
+      const s3dl = await download(api, state.docs.s3, 40_000);
+      const localdl = await download(api, state.docs.local);
+      const st = await json(await api.get("/api/v1/advanced-settings/storage"));
+      const values = Object.fromEntries(st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]));
+      const test = await api.post("/api/v1/advanced-settings/storage/test", { data: { version: st.version, values } });
+      const tbody = await json(test);
+      sh("docker compose start minio", { cwd: FIX });
+      await sleep(5000);
+      const again = await download(api, state.docs.s3);
+      expect(rz === 200 && s3dl.status !== 200 && localdl.matches && test.status() === 502 && again.matches, `${rz} ${s3dl.status} ${localdl.status} ${test.status()} ${again.status}`);
+      return `With MinIO stopped: /readyz answered ${rz}; the S3 Document's download answered ${s3dl.status}; the local Document downloaded with identical bytes; the storage test answered ${test.status()} "${tbody.detail}". After docker compose start minio the S3 Document downloaded again with identical bytes.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Local driver: check that app and worker mount the same named volume at STORAGE_PATH",
+    "Both containers mount the project's openlaw-files volume at /var/lib/openlaw/files.",
+    () => {
+      const m = (svc) =>
+        sh(`docker inspect --format '{{range .Mounts}}{{.Name}}:{{.Destination}} {{end}}' $(docker compose ps -q ${svc})`).stdout.trim();
+      const a = m("app");
+      const w = m("worker");
+      expect(a === w && a.includes(`${PROJECT}_openlaw-files:/var/lib/openlaw/files`), `${a} / ${w}`);
+      const files = sh(`docker compose exec -T worker sh -c 'find /var/lib/openlaw/files -type f | wc -l'`).stdout.trim();
+      return `app mounts ${a}; worker mounts ${w}; the worker sees ${files} stored file(s) there, including the local Document the app wrote.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "azure-blob through .env: create the container first in Azurite, set STORAGE_DRIVER=azure-blob and the AZURE_BLOB_* variables, recreate, upload and download",
+    "New writes go to Azure Blob; the worker processes them; the S3 and local Documents stay readable; the Document storage fields set in .env become Deployment configuration · Read only.",
+    async () => {
+      await azureContainer("doc030-env", true);
+      setEnv({
+        STORAGE_DRIVER: "azure-blob",
+        AZURE_BLOB_CONTAINER: "doc030-env",
+        AZURE_BLOB_ACCOUNT: "devstoreaccount1",
+        AZURE_BLOB_ACCOUNT_KEY: AZURITE_KEY,
+        AZURE_BLOB_ENDPOINT: "http://azurite:10000/devstoreaccount1",
+      });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      await sleep(3000);
+      const api = await adminApi();
+      const f = pdfFile("doc030-azure-env.pdf", "DOC-030 operator Azure Blob through the environment");
+      const u = await upload(api, state.contractNumber, f);
+      expect(u.status === 201, `upload ${u.status}`);
+      const d = await download(api, u);
+      const t = await waitText(api, u);
+      const ref = storageRef(u.versionId);
+      const blobs = await azureContainer("doc030-env");
+      const s3dl = await download(api, state.docs.s3);
+      const localdl = await download(api, state.docs.local);
+      state.docs.azure = u;
+      saveState();
+      const st = await json(await api.get("/api/v1/advanced-settings/storage"));
+      const src = Object.fromEntries(st.fields.map((f) => [f.key, `${f.source}${f.locked ? " (read only)" : ""}`]));
+      expect(d.matches && t.state === "ready" && ref.startsWith("azure-blob:") && s3dl.matches && localdl.matches, `${d.status} ${t.state} ${ref.split(":")[0]} ${s3dl.status} ${localdl.status}`);
+      expect(src.STORAGE_DRIVER.startsWith("deployment") && src.AZURE_BLOB_CONTAINER.startsWith("deployment") && src.S3_BUCKET.startsWith("app"), JSON.stringify(src));
+      return `Container doc030-env created first. After up, a new PDF answered 201 with a stored reference starting azure-blob:, the container holds ${blobs.length} blob(s), the download matched, and the worker's text state became ${t.state}. The app-saved S3 Document and the local Document still downloaded with identical bytes. Document storage sources: STORAGE_DRIVER ${src.STORAGE_DRIVER}, AZURE_BLOB_CONTAINER ${src.AZURE_BLOB_CONTAINER}, AZURE_BLOB_ACCOUNT_KEY ${src.AZURE_BLOB_ACCOUNT_KEY}, S3_BUCKET ${src.S3_BUCKET}, STORAGE_PATH ${src.STORAGE_PATH}.`;
+    },
+  );
+};
+
+phases["storage-recheck"] = async () => {
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "browser-walkthrough",
+    "Reopen Document storage and read the saved S3 fields (repeat of the failed read in the earlier attempt)",
+    "Credentials come back blank and write-only with the help text Credential configured. Leave blank to keep it.; bucket and endpoint are read only.",
+    async () => {
+      const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+      try {
+        const page = s.page;
+        await storageForm(page);
+        const out = {};
+        for (const label of ["S3 access key ID", "S3 secret access key"]) {
+          const input = page.getByLabel(label);
+          const box = input.locator("xpath=ancestor::div[1]");
+          out[label] = {
+            value: await input.inputValue(),
+            type: await input.getAttribute("type"),
+            help: (await box.locator("span[hidden]").allTextContents()).join(" ").trim(),
+          };
+        }
+        await page.getByLabel("S3 secret access key").locator("xpath=ancestor::div[1]").getByRole("button", { name: "More information" }).hover();
+        await sleep(800);
+        const tip = (await page.getByRole("dialog").allInnerTexts().catch(() => [])).join(" ").trim() || (await page.locator("[data-radix-popper-content-wrapper]").allInnerTexts()).join(" ");
+        const bucket = await fieldSource(page, "S3 bucket");
+        const endpoint = await fieldSource(page, "S3 endpoint (optional for AWS)");
+        const ok = Object.values(out).every((f) => f.value === "" && f.help === "Credential configured. Leave blank to keep it.");
+        expect(ok, JSON.stringify(out));
+        return `S3 access key ID and S3 secret access key are empty (types ${out["S3 access key ID"].type} and ${out["S3 secret access key"].type}); each field's More information help reads "${out["S3 secret access key"].help}" (hover shows "${tip.trim()}"). S3 bucket: ${bucket.filter((l) => /Saved|Read/.test(l)).join(" ")}; S3 endpoint: ${endpoint.filter((l) => /Saved|Read/.test(l)).join(" ")}. The earlier attempt looked for the help text in the visible page; it sits behind the field's More information button.`;
+      } finally {
+        await s.context.close();
+      }
+    },
+  );
+};
+
+phases["storage-ttl"] = async () => {
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "container-operation",
+    "Pass a storage test, wait more than 10 minutes without restarting, then save the same values",
+    "The API refuses a storage save more than 10 minutes after the test; a fresh test lets the same save through.",
+    async () => {
+      const api = await adminApi();
+      const st = await json(await api.get("/api/v1/advanced-settings/storage"));
+      const values = Object.fromEntries(st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]));
+      const t = await api.post("/api/v1/advanced-settings/storage/test", { data: { version: st.version, values } });
+      const testedAt = Date.now();
+      await sleep(10 * 60_000 + 30_000);
+      const api2 = await adminApi();
+      const late = await api2.put("/api/v1/advanced-settings/storage", { data: { version: st.version, values } });
+      const lateBody = await json(late);
+      const t2 = await api2.post("/api/v1/advanced-settings/storage/test", { data: { version: st.version, values } });
+      const ok = await api2.put("/api/v1/advanced-settings/storage", { data: { version: st.version, values } });
+      expect(t.status() === 200 && late.status() === 409 && t2.status() === 200 && ok.status() === 200, `${t.status()} ${late.status()} ${t2.status()} ${ok.status()}`);
+      return `Unlocked fields sent unchanged (${Object.keys(values).join(", ")}). The test answered ${t.status()}. ${Math.round((Date.now() - testedAt) / 1000)} s later the save answered ${late.status()} "${lateBody.detail}". A new test answered ${t2.status()} and the same save then answered ${ok.status()}.`;
+    },
+  );
+};
+
+const DEV_ORIGIN = "http://localhost:3000";
+function caddyfile(extra = "") {
+  writeFileSync(
+    path.join(FIX, "Caddyfile"),
+    `{
+\tadmin off
+\thttp_port ${CADDY_HTTP_PORT}
+\tauto_https disable_redirects
+\tdefault_bind 127.0.0.1 [::1]
+\tskip_install_trust
+}
+
+openlaw-cfg.localhost:${PROXY_PORT} {
+\treverse_proxy 127.0.0.1:${APP_PORT}
+}
+${extra}`,
+  );
+  const r = sh("docker compose restart proxy", { cwd: FIX });
+  expect(r.code === 0, `proxy restart ${r.code}`);
+}
+// The default Instance address is http://localhost:3000. Host port 127.0.0.1:3000 belongs to an
+// unrelated local service, so the reviewer serves [::1]:3000 through Caddy and checks a marker
+// header before signing in there.
+const LOCALHOST_SITE = `
+http://localhost:3000 {
+\tbind [::1]
+\theader X-Doc030-Lab cfg1
+\treverse_proxy 127.0.0.1:${APP_PORT}
+}
+`;
+async function devSession() {
+  const b = await chromium.launch({
+    headless: true,
+    args: ["--host-resolver-rules=MAP localhost [::1]"],
+  });
+  const context = await b.newContext({ baseURL: DEV_ORIGIN });
+  context.on("close", () => b.close().catch(() => {}));
+  const page = await context.newPage();
+  const r = await page.goto(`${DEV_ORIGIN}/auth/login`);
+  expect(r.headers()["x-doc030-lab"] === "cfg1", "localhost:3000 did not reach this lab");
+  await paceSignIn();
+  await page.getByLabel("Email").fill(ADMIN.email);
+  await page.getByLabel("Password", { exact: true }).fill(state.adminPassword);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30_000 });
+  return { context, page };
+}
+async function saveInstance(page, base, value) {
+  await page.goto(`${base}/settings/instance`);
+  await page.getByLabel("Application address").waitFor({ timeout: 20_000 });
+  await page.getByLabel("Application address").fill(value);
+  await page.getByRole("button", { name: "Save" }).click();
+  const box = page.getByRole("alert").filter({ hasText: /saved|must|could not|BASE_URL/ });
+  await box.first().waitFor({ timeout: 15_000 });
+  return (await box.first().innerText()).trim();
+}
+const resetCmd = (section) =>
+  `docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js ${section}`;
+
+phases.instance = async () => {
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "container-operation",
+    "Operator leaves BASE_URL empty: remove it from .env and recreate app and worker",
+    "Without BASE_URL the Instance address falls back to OpenLaw's default and the app warns; the proxy origin no longer passes the origin check.",
+    async () => {
+      setEnv({ BASE_URL: null });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const warn = /The instance address is http:\/\/localhost:3000/.test(logsSince("app", since));
+      const viaProxy = await apiClient(ORIGIN, ADMIN.email, state.adminPassword);
+      caddyfile(LOCALHOST_SITE);
+      expect(warn && viaProxy.signInStatus === 403, `warn ${warn} proxy sign-in ${viaProxy.signInStatus}`);
+      return `After removing BASE_URL and up, the app logged "The instance address is http://localhost:3000; emailed links and OIDC callbacks will point there." Sign-in through ${ORIGIN} now answered ${viaProxy.signInStatus}. The reviewer added a Caddy site for http://localhost:3000 on [::1] (the host's 127.0.0.1:3000 is taken) to reach the default origin.`;
+    },
+  );
+  const s = await devSession();
+  try {
+    await step(
+      "V-C45-advanced-settings",
+      "administrator",
+      "browser-walkthrough",
+      "At the default origin, open Instance address and try an address with a path and a public plain-http address",
+      "Application address shows the default with source Default; a path and plain http on a public name are refused with the reason.",
+      async () => {
+        await s.page.goto(`${DEV_ORIGIN}/settings/instance`);
+        await s.page.getByLabel("Application address").waitFor({ timeout: 20_000 });
+        const before = await fieldSource(s.page, "Application address");
+        const value = await s.page.getByLabel("Application address").inputValue();
+        const withPath = await saveInstance(s.page, DEV_ORIGIN, `${ORIGIN}/openlaw`);
+        const plain = await saveInstance(s.page, DEV_ORIGIN, "http://openlaw.company.example");
+        expect(value === DEV_ORIGIN && before.includes("Default") && /without a path/.test(withPath) && /must use https/.test(plain), `${value} ${before} | ${withPath} | ${plain}`);
+        return `Application address read ${value} with source "Default". Saving ${ORIGIN}/openlaw showed "${withPath}". Saving http://openlaw.company.example showed "${plain}".`;
+      },
+    );
+    await step(
+      "V-C45-advanced-settings",
+      "administrator",
+      "container-operation",
+      "Save plain-http private and allow-listed addresses through the API, then the intended HTTPS address in the browser",
+      "http on a private IP and on a host in OPENLAW_PLAIN_HTTP_HOSTS are accepted, an unlisted internal name is refused; the HTTPS address saves with Active: showing the old value.",
+      async () => {
+        const put = async (v) => {
+          const st = await json(await s.page.request.get(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`));
+          const r = await s.page.request.put(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`, {
+            headers: { origin: DEV_ORIGIN },
+            data: { version: st.version, values: { BASE_URL: v } },
+          });
+          return `${v} → ${r.status()}`;
+        };
+        const a = await put("http://10.20.30.40:8443");
+        const b = await put("http://minio:8443");
+        const c = await put("http://openlaw-internal:8443");
+        const since = new Date().toISOString();
+        const msg = await saveInstance(s.page, DEV_ORIGIN, ORIGIN);
+        const src = await fieldSource(s.page, "Application address");
+        await sleep(1000);
+        const hostLog = logsSince("app", since)
+          .split("\n")
+          .filter((l) => /endpoint host changed/.test(l))
+          .map((l) => {
+            try {
+              const j = JSON.parse(l.replace(/^.*?\|\s*/, ""));
+              return `${j.msg}: ${j.key} ${j.from} → ${j.to}`;
+            } catch {
+              return l.slice(0, 160);
+            }
+          });
+        expect(a.endsWith("200") && b.endsWith("200") && c.endsWith("400") && /Settings saved/.test(msg) && src.includes(`Active: ${DEV_ORIGIN}`), `${a} ${b} ${c} ${msg} ${src}`);
+        return `API saves: ${a}; ${b} (minio is listed in OPENLAW_PLAIN_HTTP_HOSTS); ${c} (an internal DNS name that is not listed). Browser: Application address ${ORIGIN} then Save showed "${msg}", with "${src.filter((l) => /Saved|Active/.test(l)).join(" / ")}". Process log: ${hostLog.join("; ") || "(none)"}.`;
+      },
+    );
+  } finally {
+    await s.context.close();
+  }
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "container-operation",
+    "docker compose restart app worker, then sign in through the saved address and check an emailed link",
+    "After both restart, the saved address is the origin: sign-in works through the proxy and a new sign-in email links to it.",
+    async () => {
+      await restartBoth();
+      const api = await adminApi();
+      const st = await json(await api.get("/api/v1/advanced-settings/instance"));
+      const f = st.fields[0];
+      const since = new Date().toISOString();
+      const page = await newSession();
+      await page.page.goto(`${ORIGIN}/auth/login`);
+      await page.page.getByLabel("Email").waitFor({ timeout: 30_000 });
+      await page.page.getByLabel("Email").fill(COLLEAGUE.email);
+      const link = page.page.getByRole("button", { name: "Email me a sign-in link" });
+      if (await link.count()) await link.click();
+      const msg = await waitMail(COLLEAGUE.email, null, since, 30_000);
+      await page.context.close();
+      const origin = msg ? firstLink(msg).origin : "no mail";
+      const audit = await json(await api.get("/api/v1/audit-log"));
+      const hosts = (audit.entries ?? []).filter((e) => JSON.stringify(e).includes("advanced.BASE_URL.host")).length;
+      expect(f.value === ORIGIN && f.activeValue === ORIGIN && f.source === "app" && origin === ORIGIN, `${JSON.stringify(f)} mail ${origin}`);
+      return `After restart, sign-in through ${ORIGIN} answered 200; Instance address reads ${f.value}, active ${f.activeValue}, source ${f.source}. A sign-in link requested for ${COLLEAGUE.name} arrived with a link on ${origin}. The Audit log holds ${hosts} host-change entries for advanced.BASE_URL.host.`;
+    },
+  );
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "container-operation",
+    "A saved address that prevents sign-in: save https://openlaw-wrong.localhost:25799 and restart both",
+    "Sign-in through the real origin is refused after the restart.",
+    async () => {
+      const api = await adminApi();
+      const st = await json(await api.get("/api/v1/advanced-settings/instance"));
+      const r = await api.put("/api/v1/advanced-settings/instance", {
+        data: { version: st.version, values: { BASE_URL: "https://openlaw-wrong.localhost:25799" } },
+      });
+      await restartBoth();
+      const c = await apiClient(ORIGIN, ADMIN.email, state.adminPassword);
+      expect(r.status() === 200 && c.signInStatus === 403, `${r.status()} ${c.signInStatus}`);
+      return `The save answered ${r.status()}. After docker compose restart app worker, sign-in through ${ORIGIN} answered ${c.signInStatus}.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Recovery: set BASE_URL in .env and recreate app and worker",
+    "The environment value pins the address, sign-in works again, and the saved wrong value is ignored.",
+    async () => {
+      setEnv({ BASE_URL: ORIGIN });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const st = await json(await api.get("/api/v1/advanced-settings/instance"));
+      const f = st.fields[0];
+      expect(f.source === "deployment" && f.locked && f.value === ORIGIN, JSON.stringify(f));
+      return `After BASE_URL=${ORIGIN} and up, sign-in through the proxy answered 200. Instance address reads ${f.value}, source ${f.source}, read only ${f.locked}; the saved https://openlaw-wrong.localhost:25799 is ignored.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Recovery command: docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance, then docker compose restart app worker",
+    "The command removes only the instance section's saved overrides, prints no values and writes an Audit log entry.",
+    async () => {
+      const r = sh(resetCmd("instance"));
+      const out = (r.stdout + r.stderr).trim();
+      compose("restart app worker");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const audit = await json(await api.get("/api/v1/audit-log"));
+      const entry = (audit.entries ?? []).find((e) => JSON.stringify(e).includes("deployment defaults restored by operator"));
+      const mcp = await json(await api.get("/api/v1/advanced-settings/mcp"));
+      expect(r.code === 0 && /Saved instance overrides removed\./.test(out) && !/openlaw-wrong/.test(out) && entry, `${r.code} ${out.slice(0, 300)}`);
+      expect(mcp.fields.every((f) => f.source === "app"), "other sections changed");
+      const line = out.split("\n").find((l) => /overrides removed/.test(l)) ?? "";
+      return `Exit ${r.code}; output "${line.trim()}". No saved value was printed. The Audit log has an entry with new value "${JSON.stringify(entry).match(/\[deployment defaults[^\]]*\]/)?.[0]}". The MCP fields keep source app, so other sections were untouched.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Confirm the reset: remove BASE_URL again and check that the default returns, then restore BASE_URL",
+    "With the saved override gone, the Instance address falls back to the default, not to the saved wrong address.",
+    async () => {
+      setEnv({ BASE_URL: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const s2 = await devSession();
+      const st = await json(await s2.page.request.get(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`));
+      await s2.context.close();
+      setEnv({ BASE_URL: ORIGIN });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const f = st.fields[0];
+      expect(f.value === DEV_ORIGIN && f.source === "default", JSON.stringify(f));
+      return `With BASE_URL removed, Instance address read ${f.value} with source ${f.source}. BASE_URL=${ORIGIN} was then restored and app and worker recreated.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Run the recovery command with mcp and with an unknown section",
+    "mcp is accepted and removes the MCP overrides; an unknown section is refused with the usage line.",
+    async () => {
+      const m = sh(resetCmd("mcp"));
+      const bad = sh(resetCmd("everything"));
+      compose("restart app worker");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const mcp = await json(await api.get("/api/v1/advanced-settings/mcp"));
+      const usage = (bad.stdout + bad.stderr).split("\n").find((l) => /Usage:/.test(l)) ?? "";
+      expect(m.code === 0 && bad.code !== 0 && mcp.fields.every((f) => f.source === "default"), `${m.code} ${bad.code} ${JSON.stringify(mcp.fields)}`);
+      return `mcp: exit ${m.code}, "${(m.stdout.match(/Saved mcp overrides removed\.[^\n]*/) ?? [""])[0]}"; after restart both MCP fields show source default (${mcp.fields.map((f) => `${f.key}=${f.activeValue}`).join(", ")}). "everything": exit ${bad.code}, "${usage.replace(/^.*?Usage/, "Usage")}". The usage line does not list mcp, although mcp is accepted.`;
+    },
+  );
+  caddyfile("");
+};
+
+phases.engine = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set DOC_ENGINE_TIMEOUT_MS=420001 and recreate; while the app restarts, run the recovery command for processing",
+    "App and worker stop at startup naming the bound; docker compose run --rm still runs the recovery command.",
+    async () => {
+      setEnv({ DOC_ENGINE_TIMEOUT_MS: "420001" });
+      const since = new Date().toISOString();
+      up();
+      const a = await waitExitOrRestart("app");
+      const w = await waitExitOrRestart("worker");
+      await sleep(3000);
+      const pick = (svc) => logsSince(svc, since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /DOC_ENGINE_TIMEOUT_MS/.test(l)) ?? "";
+      const line = pick("app");
+      const wline = pick("worker");
+      const r = sh(resetCmd("processing"));
+      setEnv({ DOC_ENGINE_TIMEOUT_MS: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const proc = await json(await api.get("/api/v1/advanced-settings/processing"));
+      expect(/restart|exited/i.test(`${a?.state} ${a?.status}`) && line && wline && r.code === 0, `${JSON.stringify(a)} ${JSON.stringify(w)} ${line} ${r.code}`);
+      return `App: ${a.state} (${a.status}); worker: ${w?.state} (${w?.status}). App log: "${line.slice(0, 200)}". The worker log carries the same bound. While the app was restarting, the recovery command for processing exited ${r.code} with "${(r.stdout.match(/Saved processing overrides removed\.[^\n]*/) ?? [""])[0]}". After removing the variable and up, readyz 200; Processing and Comparison timeouts now show ${proc.fields.filter((f) => f.key !== "DOC_ENGINE_URL").map((f) => `${f.activeValue} (${f.source})`).join(" and ")}.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set DOC_ENGINE_COMPARE_TIMEOUT_MS=840001 and recreate",
+    "App and worker stop at startup; removing it recovers.",
+    async () => {
+      setEnv({ DOC_ENGINE_COMPARE_TIMEOUT_MS: "840001" });
+      const since = new Date().toISOString();
+      up();
+      const a = await waitExitOrRestart("app");
+      await sleep(3000);
+      const pick = (svc) => logsSince(svc, since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /DOC_ENGINE_COMPARE_TIMEOUT_MS/.test(l)) ?? "";
+      const line = pick("app");
+      const wline = pick("worker");
+      setEnv({ DOC_ENGINE_COMPARE_TIMEOUT_MS: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      expect(line && wline, `${line} / ${wline}`);
+      return `App: ${a?.state} (${a?.status}). App log: "${line.slice(0, 200)}"; the worker log carries it too. After removing it and up, readyz 200.`;
+    },
+  );
+  await phases.limits();
+  const burst = (n) => {
+    const script = `const pdf=Buffer.from('%PDF-1.4\\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\\ntrailer<</Root 1 0 R>>\\n%%EOF');Promise.all(Array.from({length:${n}},()=>fetch('http://doc-engine:8080/ocr',{method:'POST',body:pdf}).then(r=>r.status+'/'+(r.headers.get('retry-after')||'-')).catch(e=>'err'))).then(a=>console.log(a.join(' ')))`;
+    writeFileSync(path.join(PRIVATE, "burst.js"), script);
+    return sh(`docker compose exec -T app node - < ${path.join(PRIVATE, "burst.js")}`, { timeout: 300_000 }).stdout.trim();
+  };
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Engine concurrency: send 12 OCR requests at once with the defaults, then 5 with DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=1",
+    "Past the running and waiting slots the engine answers 503 with Retry-After: 2 of 12 with 2+8 slots, 3 of 5 with 1+1.",
+    async () => {
+      const d = burst(12);
+      setEnv({ DOC_ENGINE_MAX_CONCURRENT: "1", DOC_ENGINE_MAX_QUEUED: "1" });
+      expect(up().code === 0, "up failed");
+      await waitHealthy("doc-engine", 120_000);
+      const c = burst(5);
+      setEnv({ DOC_ENGINE_MAX_CONCURRENT: null, DOC_ENGINE_MAX_QUEUED: null });
+      expect(up().code === 0, "up failed");
+      await waitHealthy("doc-engine", 120_000);
+      const n503 = (x) => x.split(" ").filter((y) => y.startsWith("503/")).length;
+      const retry = (x) => [...new Set(x.split(" ").filter((y) => y.startsWith("503/")).map((y) => y.split("/")[1]))].join(",");
+      expect(n503(d) === 2 && n503(c) === 3 && !/503\/-/.test(d + c), `${d} | ${c}`);
+      return `From inside the app container: 12 concurrent POST /ocr with the defaults answered [${d}] (status/Retry-After): ${n503(d)} refused with 503, Retry-After ${retry(d)}. With DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=1, 5 concurrent answered [${c}]: ${n503(c)} refused. The variables were removed again.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Stop the document engine, upload a PDF, and check readiness, processing and the Document processing test; start it again",
+    "readyz stays 200 while processing does not complete and the test fails; after start a new PDF is processed.",
+    async () => {
+      compose("stop doc-engine");
+      const api = await adminApi();
+      const rz = await readyz();
+      const u = await upload(api, state.contractNumber, pdfFile("doc030-engine-down.pdf", "DOC-030 operator engine down"));
+      await sleep(45_000);
+      const t = await textState(api, u);
+      const st = await json(await api.get("/api/v1/advanced-settings/processing"));
+      const values = Object.fromEntries(st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]));
+      const test = await api.post("/api/v1/advanced-settings/processing/test", { data: { version: st.version, values } });
+      const tb = await json(test);
+      compose("start doc-engine");
+      await waitHealthy("doc-engine", 120_000);
+      const u2 = await upload(api, state.contractNumber, pdfFile("doc030-engine-up.pdf", "DOC-030 operator engine back"));
+      const t2 = await waitText(api, u2, 180_000);
+      const t1b = await waitText(api, u, 240_000);
+      expect(rz === 200 && t.state !== "ready" && test.status() === 502 && t2.state === "ready", `${rz} ${t.state} ${test.status()} ${t2.state}`);
+      return `With doc-engine stopped: /readyz ${rz}; a PDF uploaded then (201) still had text state "${t.state}" after 45 s; Document processing Test connection answered ${test.status()} "${tb.detail}". After docker compose start doc-engine, a new PDF reached "${t2.state}", and the earlier PDF reached "${t1b.state}".`;
+    },
+  );
+};
+
+phases["instance-link"] = async () => {
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "container-operation",
+    "Repeat (the earlier attempt lost its browser page to ERR_NETWORK_CHANGED): with BASE_URL empty, save Application address in the browser, docker compose restart app worker, sign in through the saved address and check an emailed link",
+    "After both restart, the saved address is the origin: sign-in works through the proxy and a new sign-in email links to it.",
+    async () => {
+      setEnv({ BASE_URL: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      caddyfile(LOCALHOST_SITE);
+      const s = await devSession();
+      const msg0 = await saveInstance(s.page, DEV_ORIGIN, ORIGIN);
+      await s.context.close();
+      await restartBoth();
+      const api = await adminApi();
+      const st = await json(await api.get("/api/v1/advanced-settings/instance"));
+      const f = st.fields[0];
+      const since = new Date().toISOString();
+      const page = await newSession();
+      for (let i = 0; i < 3; i++) {
+        try {
+          await page.page.goto(`${ORIGIN}/auth/login`);
+          break;
+        } catch (e) {
+          if (i === 2) throw e;
+          await sleep(3000);
+        }
+      }
+      await page.page.getByLabel("Email").waitFor({ timeout: 30_000 });
+      await sleep(1000);
+      if (!(await page.page.getByRole("button", { name: "Send link" }).count()))
+        await page.page.getByRole("button", { name: "Email me a sign-in link" }).click();
+      await page.page.getByLabel("Email").fill(COLLEAGUE.email);
+      await page.page.getByRole("button", { name: "Send link" }).click();
+      await page.page.getByText("Check your email").first().waitFor({ timeout: 15_000 });
+      const msg = await waitMail(COLLEAGUE.email, null, since, 30_000);
+      await page.context.close();
+      const origin = msg ? firstLink(msg).origin : "no mail";
+      const audit = await json(await api.get("/api/v1/audit-log"));
+      const hosts = (audit.entries ?? []).filter((e) => JSON.stringify(e).includes("advanced.BASE_URL.host")).length;
+      // Put the deployment back the way the rest of the walkthrough expects it.
+      setEnv({ BASE_URL: ORIGIN });
+      const r = sh(resetCmd("instance"));
+      expect(up().code === 0, "up failed");
+      compose("restart app worker");
+      expect((await waitReady()) === 200, "not ready");
+      caddyfile("");
+      expect(/Settings saved/.test(msg0) && f.value === ORIGIN && f.activeValue === ORIGIN && f.source === "app" && origin === ORIGIN && r.code === 0, `${msg0} ${JSON.stringify(f)} mail ${origin}`);
+      return `Save showed "${msg0}". After docker compose restart app worker, sign-in through ${ORIGIN} answered 200; Instance address reads ${f.value}, active ${f.activeValue}, source ${f.source}. "Email me a sign-in link", Email, Send link ("Check your email") for ${COLLEAGUE.name} delivered "${msg.Subject}" with a link on ${origin}. The Audit log holds ${hosts} entries for advanced.BASE_URL.host. Afterwards BASE_URL was set in .env again, the instance override removed with the recovery command, and both services restarted.`;
+    },
+  );
+};
+
+phases.limits = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Read the container limits and engine scratch space, then raise APP_MEM_LIMIT and lower DOC_ENGINE_TMPFS_SIZE and recreate",
+    "Defaults: app and worker 2 CPUs, 1g, 256 processes; engine 2 CPUs, 4g, 512 processes, /tmp 2g. The changed values apply after up.",
+    async () => {
+      const lim = (svc) => {
+        const id = compose(`ps -q ${svc}`).stdout.trim();
+        return sh(`docker inspect --format '{{.HostConfig.NanoCpus}} {{.HostConfig.Memory}} {{.HostConfig.PidsLimit}} {{with index .HostConfig \"Tmpfs\"}}{{json .}}{{end}}' ${id}`).stdout.trim();
+      };
+      const before = { app: lim("app"), worker: lim("worker"), engine: lim("doc-engine") };
+      setEnv({ APP_MEM_LIMIT: "1536m", DOC_ENGINE_TMPFS_SIZE: "1g" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const after = { app: lim("app"), engine: lim("doc-engine") };
+      setEnv({ APP_MEM_LIMIT: null, DOC_ENGINE_TMPFS_SIZE: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      expect(before.app.startsWith("2000000000 1073741824 256") && before.worker.startsWith("2000000000 1073741824 256") && before.engine.startsWith("2000000000 4294967296 512") && /size=2g/.test(before.engine), JSON.stringify(before));
+      expect(after.app.startsWith("2000000000 1610612736 256") && /size=1g/.test(after.engine), JSON.stringify(after));
+      return `Defaults (NanoCpus, memory bytes, pids, tmpfs): app ${before.app}; worker ${before.worker}; doc-engine ${before.engine}. With APP_MEM_LIMIT=1536m and DOC_ENGINE_TMPFS_SIZE=1g after up: app ${after.app}; doc-engine ${after.engine}. Both removed again and recreated.`;
+    },
+  );
+};
+
+async function testEmail(api) {
+  const since = new Date().toISOString();
+  const r = await api.post("/api/v1/email-settings/test");
+  const body = await json(r);
+  const msg = r.status() === 200 ? await waitMail(ADMIN.email, "test email", since, 30_000) : null;
+  return { status: r.status(), detail: body.detail, delivered: Boolean(msg), from: msg?.From?.Address };
+}
+async function advancedSources(api) {
+  const out = {};
+  for (const section of ["uploads", "storage"]) {
+    const st = await json(await api.get(`/api/v1/advanced-settings/${section}`));
+    for (const f of st.fields ?? []) if (["MAX_UPLOAD_MB", "S3_BUCKET", "STORAGE_DRIVER"].includes(f.key)) out[f.key] = `${f.activeValue || f.value} (${f.source})`;
+  }
+  return out;
+}
+
+phases.keys = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Rotate OPENLAW_SECRET_KEY: keep the old value in OPENLAW_SECRET_KEY_PREVIOUS, set a new key, recreate, check the re-encryption result and the saved configuration",
+    "The app logs that stored credentials were resealed; the saved relay delivers and the app-saved S3 store still reads.",
+    async () => {
+      const old = envValue("OPENLAW_SECRET_KEY");
+      state.oldSecretKey = old;
+      state.newSecretKey = randomBytes(32).toString("base64");
+      saveState();
+      setEnv({ OPENLAW_SECRET_KEY_PREVIOUS: old, OPENLAW_SECRET_KEY: state.newSecretKey });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /resealed/.test(l)) ?? "";
+      const api = await adminApi();
+      const mail = await testEmail(api);
+      const s3 = await download(api, state.docs.s3);
+      expect(/Stored credentials resealed under the key in use/.test(line) && mail.delivered && s3.matches, `${line} ${JSON.stringify(mail)} ${s3.status}`);
+      return `App log: "${line}". The stored relay delivered a test email; the app-saved S3 Document downloaded with identical bytes.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Remove OPENLAW_SECRET_KEY_PREVIOUS, recreate, and verify again",
+    "The saved configuration works under the new key alone.",
+    async () => {
+      setEnv({ OPENLAW_SECRET_KEY_PREVIOUS: null });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const mail = await testEmail(api);
+      const s3 = await download(api, state.docs.s3);
+      const unreadable = /No configured key opens/.test(logsSince("app", since));
+      state.sourcesBefore = await advancedSources(api);
+      saveState();
+      expect(mail.delivered && s3.matches && !unreadable, `${JSON.stringify(mail)} ${s3.status} ${unreadable}`);
+      return `After removing OPENLAW_SECRET_KEY_PREVIOUS and up: the test email was delivered, the S3 Document downloaded with identical bytes, and the log has no "No configured key opens" warning. Saved Advanced values in use: ${JSON.stringify(state.sourcesBefore)}.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Mismatched key: set OPENLAW_SECRET_KEY to a different valid key and recreate; check startup, Advanced values, storage, the relay and the start log",
+    "App and worker still start. Saved Advanced values fall back and show Default; storage becomes local, so the saved-bucket Document fails to download; a test email fails with the SMTP-not-configured message; the start log names the affected columns in a No configured key opens line and says device notifications are off.",
+    async () => {
+      setEnv({ OPENLAW_SECRET_KEY: randomBytes(32).toString("base64") });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      const rz = await waitReady(120_000);
+      await sleep(3000);
+      const w = containerState("worker");
+      const log = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, ""));
+      const noKey = log.find((l) => /No configured key opens these stored credentials/.test(l)) ?? "";
+      const push = log.find((l) => /Device notifications are off until the VAPID pair can be read/.test(l)) ?? "";
+      expect(rz === 200, `readyz ${rz}`);
+      const api = await adminApi();
+      const sources = await advancedSources(api);
+      const upl = await json(await api.get("/api/v1/advanced-settings/uploads"));
+      const sys = await json(await api.get("/api/v1/system-status"));
+      const s3 = await download(api, state.docs.s3, 20_000);
+      const local = await download(api, state.docs.local);
+      const mail = await testEmail(api);
+      const detail = `App readyz ${rz}; worker ${w?.state}. Advanced values now: ${JSON.stringify(sources)} (before: ${JSON.stringify(state.sourcesBefore)}); Maximum file size source "${upl.fields[0].source}". System status storage driver: ${sys.storageDriver}. The app-saved S3 Document's download answered ${s3.status}; the local Document ${local.matches ? "downloaded with identical bytes" : `answered ${local.status}`}. Test email: ${mail.status} "${mail.detail}". Start log: "${noKey.slice(0, 260)}"; "${push.slice(0, 160)}".`;
+      expect(w?.state === "running" && upl.fields[0].source === "default" && sys.storageDriver === "local" && s3.status !== 200 && /SMTP is not configured — save a relay first\./.test(mail.detail ?? "") && /advanced_settings/.test(noKey) && /smtp_url/.test(noKey) && push, detail);
+      return detail;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "With the mismatched key still set, run the recovery command for one section (processing), then restore the correct key and recreate",
+    "The command still exits successfully but replaces the whole saved configuration with an empty one; after the correct key is back, every section's saved values are gone.",
+    async () => {
+      const r = sh(resetCmd("processing"));
+      const out = (r.stdout + r.stderr).split("\n").find((l) => /overrides removed|decrypted/.test(l)) ?? "";
+      setEnv({ OPENLAW_SECRET_KEY: state.newSecretKey });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const sources = await advancedSources(api);
+      const mail = await testEmail(api);
+      const s3 = await download(api, state.docs.s3, 20_000);
+      const noKey = /No configured key opens/.test(logsSince("app", since));
+      const detail = `The recovery command for processing exited ${r.code}: "${out.trim()}". After restoring the correct key and up: Advanced values ${JSON.stringify(sources)} (before: ${JSON.stringify(state.sourcesBefore)}); the S3 Document download answered ${s3.status}; the saved relay ${mail.delivered ? "delivered a test email (the relay is sealed in its own column)" : `failed: ${mail.status} ${mail.detail}`}; unreadable-credential warning at start: ${noKey}.`;
+      expect(r.code === 0 && !/app/.test(sources.MAX_UPLOAD_MB) && !/app/.test(sources.S3_BUCKET ?? "") && s3.status !== 200, detail);
+      return detail;
+    },
+  );
+  await step(
+    "V-C45-advanced-settings",
+    "administrator",
+    "browser-walkthrough",
+    "After the lost saved values: save the S3 store again in Document storage (Test connection, Save), then docker compose restart app worker",
+    "A value saved again replaces the unreadable one; the older S3 Document reads again.",
+    async () => {
+      const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+      try {
+        const page = s.page;
+        await storageForm(page);
+        // STORAGE_DRIVER is pinned to azure-blob by .env; the S3 reader is saved again.
+        await page.getByLabel("S3 bucket").waitFor({ timeout: 5000 }).catch(() => {});
+        if (!(await page.getByLabel("S3 bucket").count())) {
+          const st = await json(await page.request.get(`${ORIGIN}/api/v1/advanced-settings/storage`));
+          const values = { S3_BUCKET: "doc030-app", S3_ENDPOINT: "http://minio:9000", S3_FORCE_PATH_STYLE: "true", S3_REGION: "eu-west-1", S3_ACCESS_KEY_ID: state.minioUser, S3_SECRET_ACCESS_KEY: state.minioPassword };
+          const t = await page.request.post(`${ORIGIN}/api/v1/advanced-settings/storage/test`, { headers: { origin: ORIGIN }, data: { version: st.version, values } });
+          const r = await page.request.put(`${ORIGIN}/api/v1/advanced-settings/storage`, { headers: { origin: ORIGIN }, data: { version: st.version, values } });
+          expect(t.status() === 200 && r.status() === 200, `${t.status()} ${r.status()}`);
+          state.resaveNote = "The S3 fields are hidden while the pinned driver is azure-blob and no bucket is saved, so the reviewer tested and saved them through the same API the page uses";
+        } else {
+          await page.getByLabel("S3 bucket").fill("doc030-app");
+          await page.getByLabel("S3 endpoint (optional for AWS)").fill("http://minio:9000");
+          await page.getByLabel("S3 path-style addressing").selectOption("true");
+          await page.getByLabel("S3 access key ID").fill(state.minioUser);
+          await page.getByLabel("S3 secret access key").fill(state.minioPassword);
+          await page.getByRole("button", { name: "Test connection" }).click();
+          await page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
+          await page.getByRole("button", { name: "Save" }).click();
+          await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
+          state.resaveNote = "Document storage: bucket, endpoint, path style and keys entered again; Test connection passed; Save showed the restart message";
+        }
+        saveState();
+      } finally {
+        await s.context.close();
+      }
+      await restartBoth();
+      const api = await adminApi();
+      const s3 = await download(api, state.docs.s3);
+      expect(s3.matches, `s3 ${s3.status}`);
+      return `${state.resaveNote}. After docker compose restart app worker, the older S3 Document downloaded with identical bytes.`;
+    },
+  );
+  await phases["auth-secret"]();
+};
+
+function vapidPair() {
+  const { createECDH } = require("node:crypto");
+  const ecdh = createECDH("prime256v1");
+  ecdh.generateKeys();
+  return { pub: ecdh.getPublicKey().toString("base64url"), priv: ecdh.getPrivateKey().toString("base64url") };
+}
+phases.vapid = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Web Push keys: read the generated public key, set only VAPID_PUBLIC_KEY, then both keys, then neither",
+    "Unset, OpenLaw serves a generated pair; one key alone stops startup; both keys pin the pair for app and worker; removing them returns to the stored pair.",
+    async () => {
+      const api = await adminApi();
+      const gen = (await json(await api.get("/api/v1/me/notification-preferences"))).vapidPublicKey;
+      const pair = vapidPair();
+      setEnv({ VAPID_PUBLIC_KEY: pair.pub });
+      const since = new Date().toISOString();
+      up();
+      const a = await waitExitOrRestart("app");
+      const w = await waitExitOrRestart("worker");
+      await sleep(3000);
+      const line = (svc) => logsSince(svc, since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY/.test(l)) ?? "";
+      const aLine = line("app");
+      const wLine = line("worker");
+      setEnv({ VAPID_PRIVATE_KEY: pair.priv });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api2 = await adminApi();
+      const pinned = (await json(await api2.get("/api/v1/me/notification-preferences"))).vapidPublicKey;
+      const wEnv = containerEnv("worker", "VAPID_PUBLIC_KEY") === pair.pub;
+      setEnv({ VAPID_PUBLIC_KEY: null, VAPID_PRIVATE_KEY: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api3 = await adminApi();
+      const back = (await json(await api3.get("/api/v1/me/notification-preferences"))).vapidPublicKey;
+      expect(gen && aLine && wLine && pinned === pair.pub && wEnv && back === gen, `${Boolean(gen)} app "${aLine}" worker "${wLine}" ${pinned === pair.pub} ${wEnv} ${back === gen} app ${JSON.stringify(a)} worker ${JSON.stringify(w)}`);
+      return `Unset: the API served a generated public key (prefix ${gen.slice(0, 10)}…). With only VAPID_PUBLIC_KEY: app ${a?.state} (${a?.status}), worker ${w?.state} (${w?.status}); both logs "${aLine}". With both keys: the API served the pinned public key (prefix ${pair.pub.slice(0, 10)}…) and the worker received the same pair. With both removed: the API served the earlier generated key again.`;
+    },
+  );
+};
+
+phases.mail = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set SMTP_URL=smtp://relay:1025 without SMTP_FROM and recreate; check the test email, the sign-in pages, Send invite and Resend invite",
+    "No email can be sent: the test is refused, the sign-in pages hide both email links, Send invite refuses with a message naming the environment and leaves no Invited row, Resend invite shows the same message, and the relay receives nothing.",
+    async () => {
+      // An Invited row to resend: invite Casey while the saved relay still works.
+      const api0 = await adminApi();
+      const inv = await api0.post("/api/v1/auth/invites", { data: { email: "casey.invitee@doc030-cfg.example", displayName: "Casey Invitee", role: "legal_team_member" } });
+      expect([200, 201].includes(inv.status()), `fixture invite ${inv.status()}`);
+      setEnv({ SMTP_URL: "smtp://relay:1025", SMTP_FROM: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      await sleep(2000);
+      const before = await mailTotal();
+      const api = await adminApi();
+      const test = await testEmail(api);
+      const offers = {};
+      for (const p of ["/auth/login", "/portal/login"]) {
+        const s = await newSession();
+        await s.page.goto(`${ORIGIN}${p}`);
+        await s.page.getByRole("heading").first().waitFor({ timeout: 30_000 });
+        await s.page.waitForLoadState("networkidle").catch(() => {});
+        await sleep(1200);
+        const pw = s.page.getByRole("button", { name: "Sign in with a password" });
+        if (await pw.count()) await pw.first().click();
+        offers[p] = [];
+        for (const name of ["Set up or reset your password", "Email me a sign-in link"])
+          if (await s.page.getByRole("button", { name }).count()) offers[p].push(name);
+        await s.context.close();
+      }
+      const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+      let inviteMsg, rowCount, resendMsg;
+      try {
+        const page = s.page;
+        await page.goto(`${ORIGIN}/settings/users`);
+        await page.getByRole("button", { name: "Invite user" }).click();
+        const dialog = page.getByRole("dialog");
+        await dialog.getByLabel("Display name").fill("Dana Newcomer");
+        await dialog.getByLabel("Email").fill("dana.newcomer@doc030-cfg.example");
+        const answered = page.waitForResponse((r) => r.url().endsWith("/api/v1/auth/invites") && r.request().method() === "POST");
+        await dialog.getByRole("button", { name: "Send invite" }).click();
+        const resp = await answered;
+        await sleep(1500);
+        inviteMsg = `${resp.status()} "${(await page.getByRole("alert").allInnerTexts()).map((t) => t.trim()).filter(Boolean).join(" | ")}"`;
+        await page.screenshot({ path: path.join(here, "invite-without-smtp-from.png") });
+        await page.keyboard.press("Escape");
+        await page.reload();
+        await page.getByRole("button", { name: "Invite user" }).waitFor({ timeout: 20_000 });
+        rowCount = await page.getByRole("row").filter({ hasText: "dana.newcomer@doc030-cfg.example" }).count();
+        const row = page.getByRole("row").filter({ hasText: "casey.invitee@doc030-cfg.example" });
+        const resend = row.getByRole("button", { name: "Resend invite" });
+        if (await resend.count()) {
+          const ans = page.waitForResponse((r) => /invite/.test(r.url()) && r.request().method() === "POST");
+          await resend.first().click();
+          const rr = await ans;
+          await sleep(1500);
+          resendMsg = `${rr.status()} "${(await row.innerText()).replace(/\s+/g, " ").trim().slice(0, 300)}"`;
+        } else resendMsg = `no Resend invite on Casey's row: "${(await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim()}"`;
+      } finally {
+        await s.context.close();
+      }
+      const after = await mailTotal();
+      const detail = `Test email: ${test.status} "${test.detail}". Sign-in pages offer: /auth/login [${offers["/auth/login"].join(", ")}], /portal/login [${offers["/portal/login"].join(", ")}]. Settings → Users → Invite user → Send invite for the fictional Dana Newcomer: ${inviteMsg}; after reload ${rowCount} row for her. Resend invite on Casey Invitee's Invited row: ${resendMsg}. Relay message count ${before} before and ${after} after.`;
+      expect(test.status !== 200 && offers["/auth/login"].length === 0 && offers["/portal/login"].length === 0 && /^4\d\d/.test(inviteMsg) && /environment|SMTP_FROM/.test(inviteMsg) && rowCount === 0 && after === before, detail);
+      return `${detail} Screenshot invite-without-smtp-from.png.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set SMTP_FROM as well, recreate, and invite a test address",
+    "The invitation reaches the relay from SMTP_FROM with a link on BASE_URL.",
+    async () => {
+      setEnv({ SMTP_FROM: '"DOC-030 env relay <env-relay@doc030-cfg.example>"' });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const since = new Date().toISOString();
+      const r = await api.post("/api/v1/auth/invites", { data: { email: "dana.newcomer@doc030-cfg.example", displayName: "Dana Newcomer", role: "legal_team_member" } });
+      const msg = await waitMail("dana.newcomer@doc030-cfg.example", null, since, 30_000);
+      const origin = msg ? firstLink(msg).origin : null;
+      expect(msg && msg.From.Address === "env-relay@doc030-cfg.example" && origin === ORIGIN, `${r.status()} ${JSON.stringify(await json(r)).slice(0, 200)} from ${msg?.From?.Address} origin ${origin}`);
+      return `The invite answered ${r.status()}; "${msg.Subject}" arrived at the relay from ${msg.From.Address} with a link on ${origin}.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "With SMTP_URL pointing at an unreachable relay and SMTP_FROM set, send a test email; then remove both and send again",
+    "A set SMTP_URL wins over the saved wizard relay even when it cannot deliver; removing it restores the saved relay.",
+    async () => {
+      setEnv({ SMTP_URL: "smtp://relay-missing.invalid:1025" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const bad = await testEmail(api);
+      const settings = await json(await api.get("/api/v1/email-settings"));
+      setEnv({ SMTP_URL: null, SMTP_FROM: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api2 = await adminApi();
+      const good = await testEmail(api2);
+      const settings2 = await json(await api2.get("/api/v1/email-settings"));
+      expect(bad.status !== 200 && good.delivered && good.from === "openlaw@doc030-cfg.example", `${JSON.stringify(bad)} ${JSON.stringify(good)}`);
+      return `Unreachable env relay: the test answered ${bad.status} "${bad.detail}"; email settings report source ${settings.source}. After removing SMTP_URL and SMTP_FROM and up, source ${settings2.source}, and the test email was delivered from ${good.from} (the relay saved in the wizard).`;
+    },
+  );
+};
+
+phases.database = async () => {
+  const extUrl = () => `postgres://doc030ext:${state.extdbPassword}@extdb:5432/doc030ext`;
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set DATABASE_URL to the external postgres:16 and recreate",
+    "The app migrates the empty external database and starts; the bundled Postgres keeps running; the external database has no users yet.",
+    async () => {
+      setEnv({ DATABASE_URL: extUrl() });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      const ready = await waitReady(240_000);
+      const setup = await fetch(`${LOCAL}/api/v1/auth/setup`).then((x) => x.json());
+      const migrations = sh(`docker compose exec -T extdb psql -U doc030ext -d doc030ext -At -c "select count(*) from drizzle.__drizzle_migrations"`, { cwd: FIX }).stdout.trim();
+      const bundled = containerState("postgres");
+      const token = /Paste this setup token/.test(logsSince("app", since));
+      expect(ready === 200 && setup.needsSetup === true && bundled.state === "running", `${ready} ${JSON.stringify(setup)} ${bundled.state}`);
+      return `readyz ${ready}; GET /api/v1/auth/setup answered needsSetup=${setup.needsSetup}; the external database holds ${migrations} applied migration rows; the bundled postgres service is still ${bundled.state}; a new setup token was printed: ${token}. No records moved from the bundled database.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "On the external database, set STORAGE_DRIVER=s3 in .env with no S3_BUCKET and recreate",
+    "Startup stops and names the missing bucket.",
+    async () => {
+      const saved = { STORAGE_DRIVER: envValue("STORAGE_DRIVER") };
+      setEnv({ STORAGE_DRIVER: "s3" });
+      const since = new Date().toISOString();
+      up();
+      const a = await waitExitOrRestart("app");
+      await sleep(3000);
+      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /S3_BUCKET/.test(l)) ?? "";
+      setEnv(saved);
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      expect(line, "no S3_BUCKET message");
+      return `App ${a?.state} (${a?.status}); log "${line}". STORAGE_DRIVER was put back to ${saved.STORAGE_DRIVER} and the app started again.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "On the fresh external database with SMTP_URL set and SMTP_FROM unset: create the Administrator and open the welcome wizard's email step",
+    "The email step warns that the environment sets SMTP_URL but not SMTP_FROM, shows no Send test email, and the wizard cannot finish.",
+    async () => {
+      setEnv({ SMTP_URL: "smtp://relay:1025", SMTP_FROM: null, SETUP_TOKEN: secret("setupToken2") });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const { page, context } = await newSession();
+      try {
+        await page.goto(ORIGIN);
+        await page.getByRole("heading", { name: "Set up OpenLaw" }).waitFor({ timeout: 30_000 });
+        await page.getByLabel("Setup token").fill(state.setupToken2);
+        await page.getByLabel("Name", { exact: true }).fill("Jordan External");
+        await page.getByLabel("Email", { exact: true }).fill("jordan.external@doc030-cfg.example");
+        await page.getByLabel("Password", { exact: true }).fill(state.adminPassword);
+        await page.getByLabel("Confirm password", { exact: true }).fill(state.adminPassword);
+        await page.getByRole("button", { name: "Create Administrator" }).click();
+        await page.getByRole("heading", { name: "Welcome to OpenLaw" }).waitFor({ timeout: 30_000 });
+        await page.getByRole("button", { name: "Get started" }).click();
+        await page.getByLabel("Organization name").fill("DOC-030 external database Organization");
+        let warn = "";
+        for (let i = 0; i < 8 && !warn; i++) {
+          const text = await page.locator("main").innerText();
+          const m = text.split("\n").find((l) => /SMTP_URL but not SMTP_FROM/.test(l));
+          if (m) warn = m.trim();
+          else {
+            await page.getByRole("button", { name: "Continue" }).click();
+            await sleep(900);
+          }
+        }
+        const sendTest = await page.getByRole("button", { name: "Send test email" }).count();
+        const cont = page.getByRole("button", { name: "Continue" });
+        const disabled = (await cont.count()) ? await cont.isDisabled() : "absent";
+        const done = await page.request.post(`${ORIGIN}/api/v1/onboarding/complete`, { headers: { origin: ORIGIN } });
+        await page.screenshot({ path: path.join(here, "wizard-email-without-smtp-from.png") });
+        expect(warn && sendTest === 0 && done.status() === 409, `${warn} ${sendTest} ${disabled} ${done.status()}`);
+        return `After Create Administrator for the fictional Jordan External, the wizard's email step showed "${warn}", no Send test email button, Continue disabled: ${disabled}. A completion request answered ${done.status()}. Screenshot wizard-email-without-smtp-from.png.`;
+      } finally {
+        await context.close();
+      }
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Point DATABASE_URL at an unresolvable host, then remove DATABASE_URL",
+    "An unreachable database stops readiness; removing DATABASE_URL returns the bundled database and its records.",
+    async () => {
+      setEnv({ DATABASE_URL: "postgres://doc030ext:x@extdb-missing.invalid:5432/doc030ext", SMTP_URL: null, SETUP_TOKEN: null });
+      const since = new Date().toISOString();
+      up();
+      await sleep(20_000);
+      const rz = await readyz();
+      const a = containerState("app");
+      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /ENOTFOUND|getaddrinfo/.test(l)) ?? "";
+      setEnv({ DATABASE_URL: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const api = await adminApi();
+      const c = await json(await api.get(`/api/v1/contracts/${state.contractNumber}`));
+      expect(rz !== 200 && c.contract, `${rz} ${JSON.stringify(c).slice(0, 100)}`);
+      return `With an unresolvable host: /readyz ${rz}, app ${a?.state} (${a?.status}), log "${line.slice(0, 160)}". After removing DATABASE_URL and up: readyz 200, the bundled Administrator signs in and Contract ${state.contractNumber} is there.`;
+    },
+  );
+};
+
+function remoteAddresses() {
+  return sh(`docker compose logs --since=5m app | grep -o '"remoteAddress":"[^"]*"' | sort | uniq -c`).stdout
+    .trim()
+    .split("\n")
+    .map((l) => l.trim().replace(/\s+/, "× "))
+    .join("; ");
+}
+async function browserSignInVia(connectHost) {
+  const b = await chromium.launch({ headless: true, args: [`--host-resolver-rules=MAP openlaw-cfg.localhost ${connectHost}`] });
+  try {
+    const context = await b.newContext({ ignoreHTTPSErrors: true });
+    const page = await context.newPage();
+    await paceSignIn();
+    await page.goto(`${ORIGIN}/auth/login`);
+    await page.getByLabel("Email").fill(ADMIN.email);
+    await page.getByLabel("Password", { exact: true }).fill(state.adminPassword);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30_000 });
+  } finally {
+    await b.close();
+  }
+}
+/** Four wrong passwords from a client on 127.0.0.1, then the right password from a client on ::1. */
+async function sharedBucket() {
+  await sleep(11_000);
+  const wrong = [];
+  for (let i = 0; i < 4; i++) {
+    const body = JSON.stringify({ email: "nobody@doc030-cfg.example", password: "wrong-password-1" });
+    wrong.push(sh(`curl -sk --resolve openlaw-cfg.localhost:${PROXY_PORT}:127.0.0.1 -o /dev/null -w '%{http_code}' -H 'origin: ${ORIGIN}' -H 'content-type: application/json' --data '${body}' ${ORIGIN}/api/auth/sign-in/email`).stdout.trim());
+  }
+  const right = await sessionIpAfterSignIn({ connect: "::1" });
+  lastSignIn = Date.now();
+  await sleep(11_000);
+  return { wrong: wrong.join(","), right: right.status };
+}
+
+phases["trusted-proxy"] = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Find the trusted proxy address: run the guide's docker network inspect command for this project",
+    "It prints the gateway and range of the app's Compose network.",
+    () => {
+      const r = sh(`docker network inspect ${PROJECT}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'`);
+      const [gw, subnet] = r.stdout.trim().split(" ");
+      expect(r.code === 0 && gw && subnet, r.stdout + r.stderr);
+      state.backendGateway = gw;
+      saveState();
+      return `docker network inspect ${PROJECT}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}' printed "${r.stdout.trim()}".`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "With the non-matching TRUSTED_PROXIES=127.0.0.1,::1: sign in once from a browser, run the guide's log check, and try four wrong passwords from one client then the right password from another",
+    "Every request shows the gateway; the app logs no TRUSTED_PROXIES warning; one client's wrong passwords refuse the other client's sign-in.",
+    async () => {
+      setEnv({ TRUSTED_PROXIES: "127.0.0.1,::1" });
+      const since = new Date().toISOString();
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const warned = /TRUSTED_PROXIES is not set/.test(logsSince("app", since));
+      await browserSignInVia("127.0.0.1");
+      const addrs = remoteAddresses();
+      const bucket = await sharedBucket();
+      expect(!warned && addrs.includes(state.backendGateway) && !/127\.0\.0\.1/.test(addrs) && bucket.right === "429", `${warned} ${addrs} ${JSON.stringify(bucket)}`);
+      return `No TRUSTED_PROXIES warning in the start log. The log check printed: ${addrs}. Four wrong-password sign-ins through Caddy on 127.0.0.1 answered ${bucket.wrong}; the right password for ${COLLEAGUE.name} from a client on ::1 then answered ${bucket.right}.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set TRUSTED_PROXIES to the gateway, run docker compose up -d --no-build --pull never, sign in from a browser, run the log check, and repeat the two-client sign-in",
+    "The log shows the browser's own address; one client's wrong passwords no longer refuse the other client.",
+    async () => {
+      setEnv({ TRUSTED_PROXIES: state.backendGateway });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      await sleep(310_000); // let the five-minute log window pass the gateway-only lines
+      await browserSignInVia("127.0.0.1");
+      const addrs = remoteAddresses();
+      const bucket = await sharedBucket();
+      expect(/"remoteAddress":"127\.0\.0\.1"/.test(addrs) && bucket.right === "200", `${addrs} ${JSON.stringify(bucket)}`);
+      return `TRUSTED_PROXIES=${state.backendGateway}. The log check printed: ${addrs}. Four wrong-password sign-ins from the 127.0.0.1 client answered ${bucket.wrong}; the right password from the ::1 client then answered ${bucket.right}.`;
+    },
+  );
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Set a malformed entry (TRUSTED_PROXIES=proxy.internal) and recreate, then restore the gateway",
+    "The app stops at start with invalid IP address.",
+    async () => {
+      setEnv({ TRUSTED_PROXIES: "proxy.internal" });
+      const since = new Date().toISOString();
+      up();
+      const a = await waitExitOrRestart("app");
+      await sleep(3000);
+      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /invalid IP address/.test(l)) ?? "";
+      setEnv({ TRUSTED_PROXIES: state.backendGateway });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      expect(line, `app ${JSON.stringify(a)}`);
+      return `App ${a?.state} (${a?.status}); log "${line.slice(0, 200)}". TRUSTED_PROXIES was set back to ${state.backendGateway} and the app started.`;
+    },
+  );
+};
+
+const CERTS = path.join(FIX, "certs");
+const CA = path.join(CERTS, "ca.pem");
+function curlLan(args, { bind = LAN_IP, origin = LAN_ORIGIN } = {}) {
+  const u = new URL(origin);
+  const port = u.port || (u.protocol === "https:" ? 443 : 80);
+  const tls = u.protocol === "https:" ? `--cacert ${CA} --resolve ${u.hostname}:${port}:${bind}` : "";
+  return sh(`curl -sS -m 20 ${tls} ${args}`, { cwd: WORK });
+}
+/** A Streamable HTTP exchange through curl: initialize, then one request. Returns status and JSON. */
+function mcpExchange(auth, method, params = {}, opts = {}) {
+  const base = opts.origin ?? LAN_ORIGIN;
+  const hdrFile = path.join(PRIVATE, "mcp-headers.txt");
+  const bodyFile = path.join(PRIVATE, "mcp-body.json");
+  const post = (payload, session) => {
+    writeFileSync(bodyFile, JSON.stringify(payload), { mode: 0o600 });
+    const authFile = path.join(PRIVATE, "mcp-auth.txt");
+    writeFileSync(authFile, auth ? `${auth}\n` : "\n", { mode: 0o600 });
+    const r = curlLan(
+      `-D ${hdrFile} -o ${path.join(PRIVATE, "mcp-out.txt")} -w '%{http_code}' -H @${authFile} -H 'accept: application/json, text/event-stream' -H 'content-type: application/json' ${session ? `-H 'mcp-session-id: ${session}'` : ""} --data @${bodyFile} ${base}/mcp`,
+      opts,
+    );
+    const headers = existsSync(hdrFile) ? readFileSync(hdrFile, "utf8") : "";
+    const raw = existsSync(path.join(PRIVATE, "mcp-out.txt")) ? readFileSync(path.join(PRIVATE, "mcp-out.txt"), "utf8") : "";
+    let body = null;
+    const data = raw.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim());
+    try {
+      body = JSON.parse(data.length ? data.at(-1) : raw);
+    } catch {
+      body = raw.slice(0, 200);
+    }
+    return { status: r.stdout.trim() || `curl exit ${r.code}: ${firstLines(r.stderr, 1)}`, headers, body, session: headers.match(/^mcp-session-id:\s*(\S+)/im)?.[1] };
+  };
+  const init = post({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "doc030-walkthrough", version: "1" } } });
+  if (init.status !== "200") return init;
+  if (init.session) post({ jsonrpc: "2.0", method: "notifications/initialized" }, init.session);
+  const res = post({ jsonrpc: "2.0", id: 2, method, params }, init.session);
+  return res;
+}
+const keyHeader = () => `x-api-key: ${state.lanKey}`;
+
+async function lanSession(email, password) {
+  lanBind = LAN_IP;
+  const b = await chromium.launch({ headless: true, args: [`--host-resolver-rules=MAP ${LAN_HOST} ${LAN_IP}`] });
+  const context = await b.newContext({ ignoreHTTPSErrors: true, baseURL: LAN_ORIGIN });
+  context.on("close", () => b.close().catch(() => {}));
+  const page = await context.newPage();
+  await paceSignIn();
+  await page.goto(`${LAN_ORIGIN}/auth/login`);
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30_000 });
+  return { context, page };
+}
+function lanCaddy(extraSites) {
+  caddyfile(extraSites);
+}
+const LAN_SITE = () => `
+${LAN_HOST}:${LAN_PORT} {
+\tbind ${LAN_IP} ${TAILNET_IP}
+\ttls /etc/caddy/certs/openlaw.pem /etc/caddy/certs/openlaw-key.pem
+\theader {
+\t\tX-Frame-Options DENY
+\t\tReferrer-Policy strict-origin-when-cross-origin
+\t\tX-Content-Type-Options nosniff
+\t}
+\treverse_proxy 127.0.0.1:${APP_PORT}
+}
+`;
+const PLAIN_SITE = () => `
+http://${LAN_IP}:${LAN_HTTP_PORT} {
+\tbind ${LAN_IP}
+\treverse_proxy 127.0.0.1:${APP_PORT}
+}
+`;
+
+async function requestKey(clientName) {
+  const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
+  try {
+    const page = s.page;
+    await page.goto(`${LAN_ORIGIN}/settings/api-keys`);
+    await page.getByRole("button", { name: "Request a key" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByText("Request an API key").waitFor();
+    await dialog.getByLabel("Client name").fill(clientName);
+    await dialog.getByText("Contracts", { exact: true }).click();
+    await dialog.getByLabel("Read. Find and read what you can access.").check();
+    const expiry = (await dialog.innerText()).split("\n").find((l) => /Expires|expire/.test(l)) ?? "";
+    await dialog.getByRole("button", { name: "Send request" }).click();
+    await page.getByText("Pending approval").first().waitFor({ timeout: 15_000 });
+    return expiry.trim();
+  } finally {
+    await s.context.close();
+  }
+}
+async function approveKey(clientName) {
+  const s = await lanSession(ADMIN.email, state.adminPassword);
+  try {
+    const page = s.page;
+    await page.goto(`${LAN_ORIGIN}/settings/mcp`);
+    const row = page.getByRole("row").filter({ hasText: clientName }).filter({ hasText: "Pending approval" }).first();
+    await row.waitFor({ timeout: 20_000 });
+    await row.getByRole("button", { name: "Approve" }).click();
+    const confirm = page.getByRole("dialog").getByRole("button", { name: "Approve" });
+    if (await confirm.count()) await confirm.click();
+    await page.getByRole("row").filter({ hasText: clientName }).filter({ hasText: "Active" }).first().waitFor({ timeout: 15_000 });
+  } finally {
+    await s.context.close();
+  }
+}
+async function readKeyOnce() {
+  const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
+  try {
+    const page = s.page;
+    await page.goto(`${LAN_ORIGIN}/settings/api-keys`);
+    const dialog = page.getByRole("dialog").filter({ hasText: "Your key is ready" });
+    await dialog.waitFor({ timeout: 20_000 });
+    const key = (await dialog.locator("code").first().innerText()).trim();
+    await dialog.getByRole("button", { name: "Done" }).click();
+    await page.reload();
+    await sleep(1500);
+    const again = await page.getByRole("dialog").filter({ hasText: "Your key is ready" }).count();
+    return { key, again };
+  } finally {
+    await s.context.close();
+  }
+}
+
+phases["lan-setup"] = async () => {
+  await step(
+    "V-M40-LAN",
+    "operator",
+    "container-operation",
+    "Private HTTPS on the LAN and Tailscale addresses: fictional corporate CA and certificate, the guide's Caddyfile adapted (bind, tls, headers, reverse_proxy 127.0.0.1), caddy validate, BASE_URL set to the private origin, app and worker recreated",
+    "The adapted Caddyfile validates; the private origin answers over HTTPS with a certificate the CA verifies on both private addresses; the app port stays on loopback.",
+    async () => {
+      mkdirSync(CERTS, { recursive: true, mode: 0o700 });
+      const o = sh(
+        `openssl req -x509 -newkey rsa:2048 -nodes -keyout ca-key.pem -out ca.pem -days 2 -subj "/CN=DOC-030 fictional corporate CA" 2>&1 &&
+         openssl req -newkey rsa:2048 -nodes -keyout openlaw-key.pem -out openlaw.csr -subj "/CN=${LAN_HOST}" 2>&1 &&
+         printf 'subjectAltName=DNS:${LAN_HOST}\\nextendedKeyUsage=serverAuth\\n' > ext.cnf &&
+         openssl x509 -req -in openlaw.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out openlaw.pem -days 2 -extfile ext.cnf 2>&1 && chmod 644 openlaw.pem openlaw-key.pem ca.pem`,
+        { cwd: CERTS },
+      );
+      expect(o.code === 0, firstLines(o.stdout, 4));
+      const fxCompose = path.join(FIX, "compose.yml");
+      const text = readFileSync(fxCompose, "utf8");
+      if (!text.includes("./certs:/etc/caddy/certs"))
+        writeFileSync(fxCompose, text.replace("      - ./Caddyfile:/etc/caddy/Caddyfile:ro\n", "      - ./Caddyfile:/etc/caddy/Caddyfile:ro\n      - ./certs:/etc/caddy/certs:ro\n"));
+      expect(sh("docker compose up -d --pull never proxy", { cwd: FIX }).code === 0, "proxy recreate failed");
+      caddyfile(LAN_SITE());
+      const v = sh("docker compose exec -T proxy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile 2>&1 | tail -1", { cwd: FIX });
+      setEnv({ BASE_URL: LAN_ORIGIN });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const lan = curlLan(`-o /dev/null -D - -w '%{http_code} %{ssl_verify_result}' ${LAN_ORIGIN}/readyz`);
+      const ts = curlLan(`-o /dev/null -w '%{http_code} %{ssl_verify_result}' ${LAN_ORIGIN}/readyz`, { bind: TAILNET_IP });
+      const noCa = sh(`curl -sS -m 10 --resolve ${LAN_HOST}:${LAN_PORT}:${LAN_IP} -o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`);
+      const direct = sh(`curl -s -m 5 -o /dev/null -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`).stdout.trim();
+      const hdrs = lan.stdout.split("\n").filter((l) => /^(x-frame-options|referrer-policy|x-content-type-options):/i.test(l)).map((l) => l.trim());
+      expect(/Valid configuration/.test(v.stdout) && /200 0$/.test(lan.stdout.trim()) && /200 0/.test(ts.stdout) && noCa.code !== 0 && direct === "000", `${v.stdout} | ${lan.stdout} | ${ts.stdout} | ${noCa.code} | ${direct}`);
+      return `A fictional CA signed a certificate for ${LAN_HOST}. The adapted Caddyfile site binds ${LAN_IP} (LAN) and ${TAILNET_IP} (Tailscale) on port ${LAN_PORT} (443 needs root on this host), uses tls with the certificate files, the three headers, and reverse_proxy 127.0.0.1:${APP_PORT}; "caddy validate" printed "${v.stdout.trim()}". BASE_URL=${LAN_ORIGIN} and up. From this machine, curl with only the fictional CA trusted reached ${LAN_ORIGIN}/readyz on the LAN address: ${lan.stdout.trim().split("\n").at(-1)} (HTTP, verify result), headers ${hdrs.join("; ")}; on the Tailscale address: ${ts.stdout.trim()}. Without the CA, curl refused the certificate (exit ${noCa.code}). The app port on ${LAN_IP}:${APP_PORT} got no connection (${direct}). Hostname resolution used curl --resolve and browser host rules in place of internal DNS.`;
+    },
+  );
+  await step(
+    "V-M40-LAN",
+    "administrator",
+    "container-operation",
+    "Administrator at the private origin: Settings → Organization → MCP, read Server address, turn on MCP and Legal Users API keys",
+    "Server address reads the private origin with /mcp; each change shows Settings saved.",
+    async () => {
+      const s = await lanSession(ADMIN.email, state.adminPassword);
+      try {
+        const page = s.page;
+        await page.goto(`${LAN_ORIGIN}/settings/mcp`);
+        await page.getByText("Server address").first().waitFor({ timeout: 20_000 });
+        const addr = (await page.locator("span.font-mono").first().innerText()).trim();
+        const master = page.getByRole("switch", { name: "Enable MCP" });
+        if ((await master.getAttribute("aria-checked")) !== "true") await master.click();
+        await page.getByText("MCP is on").first().waitFor({ timeout: 15_000 });
+        const keys = page.getByRole("switch", { name: "Legal Users API keys" });
+        if ((await keys.getAttribute("aria-checked")) !== "true") await keys.click();
+        await page.getByText("Settings saved.").first().waitFor({ timeout: 15_000 });
+        expect(addr === `${LAN_ORIGIN}/mcp`, addr);
+        return `Server address reads ${addr}. Enable MCP turned the title to "MCP is on"; the Legal Users API keys switch saved with "Settings saved.".`;
+      } finally {
+        await s.context.close();
+      }
+    },
+  );
+  await step(
+    "V-M40-LAN",
+    "administrator",
+    "container-operation",
+    "The Legal Team Member requests a key (Client name Claude Code, Contracts, Read), the Administrator approves it, and the owner reads it once",
+    "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
+    async () => {
+      const expiry = await requestKey("Claude Code");
+      await approveKey("Claude Code");
+      const { key, again } = await readKeyOnce();
+      state.lanKey = key;
+      saveState();
+      expect(key.length > 20 && again === 0, `key length ${key.length}, dialog again ${again}`);
+      return `Request an API key: Client name "Claude Code", Toolset Contracts, Scope Read; the dialog said "${expiry}". The row read Pending approval; the Administrator selected Approve on the MCP page and the row became Active. The owner's API keys page showed "Your key is ready" with the key (${key.length} characters, not recorded); after Done and a reload it did not show again.`;
+    },
+  );
+  await step(
+    "V-M40-LAN",
+    "operator",
+    "container-operation",
+    "From this machine on the LAN address and on the Tailscale address, connect a Streamable HTTP Client with x-api-key and list Tools; also call openlaw_whoami",
+    "The Client connects over private HTTPS with certificate verification and lists Tools on both private addresses.",
+    async () => {
+      const lan = mcpExchange(keyHeader(), "tools/list");
+      const ts = mcpExchange(keyHeader(), "tools/list", {}, { bind: TAILNET_IP });
+      const who = mcpExchange(keyHeader(), "tools/call", { name: "openlaw_whoami", arguments: {} });
+      const names = (lan.body?.result?.tools ?? []).map((t) => t.name);
+      const whoText = JSON.stringify(who.body?.result ?? who.body).slice(0, 200);
+      expect(lan.status === "200" && names.length > 0 && ts.status === "200" && (ts.body?.result?.tools ?? []).length === names.length && who.status === "200", `${lan.status} ${names.length} ${ts.status} ${who.status}`);
+      return `On ${LAN_IP}: initialize and tools/list answered ${lan.status} with ${names.length} Tools (${names.slice(0, 6).join(", ")}…). On ${TAILNET_IP}: ${ts.status} with the same ${names.length} Tools. openlaw_whoami answered ${who.status}: ${sanitize(whoText)}. curl verified the certificate against the fictional CA only.`;
+    },
+  );
+};
+
+async function oauthPill(page) {
+  await page.goto(`${page.url().split("/settings")[0]}/settings/mcp`);
+  await page.getByText("Server address").first().waitFor({ timeout: 20_000 });
+  const pill = page.locator('[role="status"]').filter({ hasText: /Reachable|Not reachable/ });
+  return (await pill.count()) ? (await pill.first().innerText()).trim() : "(no pill)";
+}
+
+phases["m41-https"] = async () => {
+  await step(
+    "V-M41-PUBLIC",
+    "operator",
+    "container-operation",
+    "At the private HTTPS origin: request every discovery path in the forwarding table and an unauthenticated /mcp",
+    "Discovery returns JSON, not the web app; /mcp without credentials answers 401 with WWW-Authenticate pointing to resource discovery.",
+    () => {
+      const paths = [
+        "/.well-known/oauth-authorization-server",
+        "/.well-known/oauth-authorization-server/api/auth",
+        "/.well-known/openid-configuration",
+        "/.well-known/openid-configuration/api/auth",
+        "/.well-known/oauth-protected-resource",
+        "/.well-known/oauth-protected-resource/mcp",
+        "/api/auth/.well-known/openid-configuration",
+        "/api/auth/jwks",
+      ];
+      const out = paths.map((p) => {
+        const r = curlLan(`-o ${path.join(PRIVATE, "wk.json")} -w '%{http_code} %{content_type}' ${LAN_ORIGIN}${p}`);
+        let ok = false;
+        try {
+          JSON.parse(readFileSync(path.join(PRIVATE, "wk.json"), "utf8"));
+          ok = true;
+        } catch {}
+        return `${p} ${r.stdout.trim()}${ok ? " JSON" : " not JSON"}`;
+      });
+      const mcp = curlLan(`-o /dev/null -D - -X POST -H 'content-type: application/json' --data '{}' ${LAN_ORIGIN}/mcp`);
+      const www = mcp.stdout.split("\n").find((l) => /^www-authenticate:/i.test(l))?.trim() ?? "";
+      const code = mcp.stdout.split("\n")[0].trim();
+      expect(out.every((l) => / 200 application\/json.* JSON$/.test(l)) && / 401/.test(code) && /resource_metadata=.*oauth-protected-resource/.test(www), `${out.join("; ")} | ${code} | ${www}`);
+      return `${out.join("; ")}. Unauthenticated POST /mcp: "${code}" with "${www}".`;
+    },
+  );
+  await step(
+    "V-M41-PUBLIC",
+    "administrator",
+    "container-operation",
+    "Turn on Legal Users OAuth Clients at the private HTTPS origin and read the pill beside Server address",
+    "The switch saves while the authorization server runs; the pill names the failed checks for a private address and does not prove a vendor connection.",
+    async () => {
+      const s = await lanSession(ADMIN.email, state.adminPassword);
+      try {
+        const page = s.page;
+        await page.goto(`${LAN_ORIGIN}/settings/mcp`);
+        const sw = page.getByRole("switch", { name: "Legal Users OAuth Clients" });
+        await sw.waitFor({ timeout: 20_000 });
+        if ((await sw.getAttribute("aria-checked")) !== "true") await sw.click();
+        await page.getByText("Settings saved.").first().waitFor({ timeout: 15_000 });
+        await sleep(1000);
+        const pill = await oauthPill(page);
+        const checked = await page.getByRole("switch", { name: "Legal Users OAuth Clients" }).getAttribute("aria-checked");
+        expect(/^Not reachable · /.test(pill) && checked === "true", `${pill} ${checked}`);
+        return `Legal Users OAuth Clients saved ("Settings saved.", switch on). The pill reads "${pill}". The API resolves the private hostname from inside its container; this deployment has no public address, so the pill warns as the guide says it may.`;
+      } finally {
+        await s.context.close();
+      }
+    },
+  );
+};
+
+phases["m41-cc-oauth"] = async () => {
+  await step(
+    "V-M41-PUBLIC",
+    "administrator",
+    "container-operation",
+    "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+    "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+    async () => {
+      const { createHash: h, randomBytes: rb } = await import("node:crypto");
+      const http = await import("node:http");
+      const meta = JSON.parse(curlLan(`${LAN_ORIGIN}/.well-known/oauth-authorization-server`).stdout);
+      const verifier = rb(32).toString("base64url");
+      const challenge = h("sha256").update(verifier).digest("base64url");
+      let resolveCode;
+      const got = new Promise((r) => (resolveCode = r));
+      const server = http.createServer((req, res) => {
+        const u = new URL(req.url, "http://127.0.0.1");
+        if (u.pathname === "/callback") {
+          resolveCode(Object.fromEntries(u.searchParams));
+          res.end("ok");
+        } else res.end();
+      });
+      await new Promise((r) => server.listen(0, "127.0.0.1", r));
+      const port = server.address().port;
+      const redirect = `http://127.0.0.1:${port}/callback`;
+      const clientId = "https://claude.ai/oauth/claude-code-client-metadata";
+      const scopes = (meta.scopes_supported ?? []).filter((x) => /mcp|openid|offline/.test(x)).join(" ") || "openid";
+      const url = new URL(meta.authorization_endpoint);
+      url.search = new URLSearchParams({ response_type: "code", client_id: clientId, redirect_uri: redirect, code_challenge: challenge, code_challenge_method: "S256", scope: scopes, state: "doc030", resource: `${LAN_ORIGIN}/mcp` }).toString();
+      const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
+      let consentText = "";
+      let tokenStatus, tools, after, revoked;
+      try {
+        const page = s.page;
+        await page.goto(url.href);
+        await page.waitForLoadState("networkidle").catch(() => {});
+        await sleep(1500);
+        consentText = (await page.locator("main, body").first().innerText()).replace(/\s+/g, " ").slice(0, 300);
+        const contracts = page.getByLabel("Contracts", { exact: true });
+        if (await contracts.count()) await contracts.check().catch(() => {});
+        const allow = page.getByRole("button", { name: /Allow|Approve|Connect|Continue/ }).first();
+        await allow.click();
+        const code = await Promise.race([got, sleep(30_000).then(() => null)]);
+        expect(code?.code, `no code at the loopback callback; consent page said: ${consentText}`);
+        const tok = curlLan(`-o ${path.join(PRIVATE, "tok.json")} -w '%{http_code}' --data-urlencode grant_type=authorization_code --data-urlencode code=${code.code} --data-urlencode redirect_uri=${redirect} --data-urlencode client_id=${clientId} --data-urlencode code_verifier=${verifier} --data-urlencode resource=${LAN_ORIGIN}/mcp ${meta.token_endpoint}`);
+        tokenStatus = tok.stdout.trim();
+        const token = JSON.parse(readFileSync(path.join(PRIVATE, "tok.json"), "utf8")).access_token;
+        state.ccTokenLength = token?.length;
+        const list = mcpExchange(`authorization: Bearer ${token}`, "tools/list");
+        tools = `${list.status} with ${(list.body?.result?.tools ?? []).length} Tools`;
+        await page.goto(`${LAN_ORIGIN}/settings/api-keys`);
+        const row = page.getByRole("row").filter({ hasText: "Claude Code" }).filter({ hasText: /Granted|OAuth|grant/i }).first();
+        await row.waitFor({ timeout: 20_000 });
+        await row.getByRole("button", { name: "Revoke" }).click();
+        await page.getByRole("dialog").getByRole("button", { name: "Revoke" }).click();
+        await sleep(1500);
+        revoked = (await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim();
+        after = mcpExchange(`authorization: Bearer ${token}`, "tools/list").status;
+      } finally {
+        server.close();
+        await s.context.close();
+      }
+      expect(tokenStatus === "200" && /^200 /.test(tools) && after === "401", `${tokenStatus} ${tools} ${after}`);
+      return `Discovery named ${meta.authorization_endpoint} and ${meta.token_endpoint}. The authorization request with client_id ${clientId} and redirect ${redirect.replace(/:\d+\//, ":<port>/")} opened a consent page for the signed-in Legal Team Member ("${sanitize(consentText).slice(0, 160)}…"). After consent the browser returned to the loopback callback with a code; the token exchange with the PKCE verifier answered ${tokenStatus}; tools/list with the Bearer token answered ${tools}. On API keys the Claude Code grant row was revoked ("${revoked.slice(0, 80)}"); the next tools/list answered ${after}. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).`;
+    },
+  );
+};
+
+phases["m41-plain"] = async () => {
+  await step(
+    "V-M41-PUBLIC",
+    "operator",
+    "container-operation",
+    "Plain-HTTP LAN boot: serve http://<LAN IP>:<port> through Caddy on the LAN address, set BASE_URL to it and recreate",
+    "The app boots; the well-known documents answer 404; API keys still work.",
+    async () => {
+      lanCaddy(LAN_SITE() + PLAIN_SITE());
+      setEnv({ BASE_URL: LAN_PLAIN_ORIGIN });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const wk = [
+        "/.well-known/oauth-authorization-server",
+        "/.well-known/oauth-authorization-server/api/auth",
+        "/.well-known/openid-configuration",
+        "/.well-known/openid-configuration/api/auth",
+        "/.well-known/oauth-protected-resource",
+        "/.well-known/oauth-protected-resource/mcp",
+      ].map((p) => `${p} ${sh(`curl -s -m 10 -o /dev/null -w '%{http_code}' ${LAN_PLAIN_ORIGIN}${p}`).stdout.trim()}`);
+      const list = mcpExchange(keyHeader(), "tools/list", {}, { origin: LAN_PLAIN_ORIGIN });
+      expect(wk.every((l) => l.endsWith(" 404")) && list.status === "200", `${wk.join("; ")} | ${list.status}`);
+      return `BASE_URL=${LAN_PLAIN_ORIGIN}; up and readyz 200. Well-known: ${wk.join("; ")}. tools/list with the API key over plain HTTP answered ${list.status} with ${(list.body?.result?.tools ?? []).length} Tools.`;
+    },
+  );
+  await step(
+    "V-M41-PUBLIC",
+    "administrator",
+    "container-operation",
+    "At the plain-HTTP address: read the MCP page, try to turn on Business Users OAuth Clients, and try Add Client",
+    "The OAuth Clients switches stay off and refuse with failed checks named including HTTPS scheme; Add Client fails.",
+    async () => {
+      const b = await chromium.launch({ headless: true });
+      const context = await b.newContext({ baseURL: LAN_PLAIN_ORIGIN });
+      const page = await context.newPage();
+      try {
+        await paceSignIn();
+        await page.goto(`${LAN_PLAIN_ORIGIN}/auth/login`);
+        await page.getByLabel("Email").fill(ADMIN.email);
+        await page.getByLabel("Password", { exact: true }).fill(state.adminPassword);
+        await page.getByRole("button", { name: "Sign in", exact: true }).click();
+        await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30_000 });
+        await page.goto(`${LAN_PLAIN_ORIGIN}/settings/mcp`);
+        await page.getByText("Server address").first().waitFor({ timeout: 20_000 });
+        const pill = await oauthPill(page);
+        const legal = await page.getByRole("switch", { name: "Legal Users OAuth Clients" }).getAttribute("aria-checked");
+        const sw = page.getByRole("switch", { name: "Business Users OAuth Clients" });
+        const answered = page.waitForResponse((r) => r.url().endsWith("/api/v1/mcp-settings") && r.request().method() === "PATCH");
+        await sw.click();
+        const resp = await answered;
+        await sleep(1200);
+        const alert = (await page.getByRole("alert").allInnerTexts()).map((t) => t.trim()).filter(Boolean).join(" | ");
+        const after = await sw.getAttribute("aria-checked");
+        let add = "no Add Client button";
+        const addBtn = page.getByRole("button", { name: "Add Client" });
+        if (await addBtn.count()) {
+          await addBtn.first().click();
+          const d = page.getByRole("dialog");
+          const inputs = d.locator("input");
+          if (await inputs.count()) await inputs.first().fill("DOC-030 test client");
+          const urlField = d.getByLabel(/Callback|Redirect/i).first();
+          if (await urlField.count()) await urlField.fill("https://client.doc030-cfg.example/callback");
+          const ans = page.waitForResponse((r) => /allowed-clients/.test(r.url()) && r.request().method() === "POST", { timeout: 15_000 }).catch(() => null);
+          await d.getByRole("button", { name: /Add|Save|Create/ }).last().click();
+          const ar = await ans;
+          await sleep(1000);
+          add = `${ar ? ar.status() : "no request"} "${(await page.getByRole("alert").allInnerTexts()).map((t) => t.trim()).filter(Boolean).join(" | ")}"`;
+        }
+        expect(/HTTPS scheme/.test(pill) && resp.status() >= 400 && after === "false", `${pill} ${resp.status()} ${after} ${alert}`);
+        return `The pill reads "${pill}"; Legal Users OAuth Clients shows aria-checked=${legal} (it was on before the change of address). Turning on Business Users OAuth Clients answered ${resp.status()} with "${alert}", and the switch stayed off. Add Client: ${add}.`;
+      } finally {
+        await b.close();
+      }
+    },
+  );
+  await step(
+    "V-M41-PUBLIC",
+    "operator",
+    "container-operation",
+    "Return to the private HTTPS origin",
+    "BASE_URL is the private HTTPS origin again and OAuth discovery answers.",
+    async () => {
+      lanCaddy(LAN_SITE());
+      setEnv({ BASE_URL: LAN_ORIGIN });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const r = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/.well-known/oauth-authorization-server`).stdout.trim();
+      expect(r === "200", r);
+      return `BASE_URL=${LAN_ORIGIN}, up; discovery answered ${r}; the plain-HTTP Caddy site was removed.`;
+    },
+  );
+};
+
+phases["lan-revoke"] = async () => {
+  await step(
+    "V-M40-LAN",
+    "operator",
+    "container-operation",
+    "Revoke the test key in API keys (Revoke, then Revoke in Revoke API key) and make the next Client request",
+    "The row says Revoked and the next request is unauthorized.",
+    async () => {
+      const before = mcpExchange(keyHeader(), "tools/list").status;
+      const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
+      let rowText;
+      try {
+        const page = s.page;
+        await page.goto(`${LAN_ORIGIN}/settings/api-keys`);
+        const row = page.getByRole("row").filter({ hasText: "Claude Code" }).filter({ hasText: "Active" }).first();
+        await row.waitFor({ timeout: 20_000 });
+        await row.getByRole("button", { name: "Revoke" }).click();
+        const d = page.getByRole("dialog").filter({ hasText: "Revoke API key" });
+        await d.getByRole("button", { name: "Revoke" }).click();
+        await page.getByText("Revoked").first().waitFor({ timeout: 15_000 });
+        rowText = (await page.getByRole("row").filter({ hasText: "Revoked" }).first().innerText()).replace(/\s+/g, " ").trim();
+      } finally {
+        await s.context.close();
+      }
+      const after = mcpExchange(keyHeader(), "tools/list");
+      expect(before === "200" && after.status === "401", `${before} ${after.status}`);
+      return `Before: tools/list ${before}. Revoke API key → Revoke; the row reads "${rowText.slice(0, 120)}". The next initialize answered ${after.status}.`;
+    },
+  );
+  await step(
+    "V-M40-LAN",
+    "operator",
+    "container-operation",
+    "Expired key: request, approve and read a second key (Client name Script), call once, then move its expiry into the past (fixture shortcut in the database) and call again",
+    "The expired key cannot connect.",
+    async () => {
+      await requestKey("Script");
+      await approveKey("Script");
+      const { key } = await readKeyOnce();
+      state.lanKey2 = key;
+      saveState();
+      const ok = mcpExchange(`x-api-key: ${key}`, "tools/list").status;
+      const u = psql(`update api_keys set expires_at = now() - interval '1 minute' where id in (select k.id from api_keys k order by k.created_at desc limit 1) returning id`);
+      const after = mcpExchange(`x-api-key: ${key}`, "tools/list").status;
+      const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
+      let rowText = "";
+      try {
+        await s.page.goto(`${LAN_ORIGIN}/settings/api-keys`);
+        await sleep(1500);
+        rowText = (await s.page.getByRole("row").filter({ hasText: "Script" }).first().innerText()).replace(/\s+/g, " ").trim();
+      } finally {
+        await s.context.close();
+      }
+      expect(ok === "200" && after === "401" && u.code === 0, `${ok} ${after} ${u.stderr}`);
+      return `The Script key listed Tools (${ok}). After its expires_at was set a minute in the past (a database fixture step; the shortest lifetime is one day), the next initialize answered ${after}. Its row reads "${rowText.slice(0, 120)}".`;
+    },
+  );
+};
+
+phases["lan-pins"] = async () => {
+  await step(
+    "V-M40-LAN",
+    "operator",
+    "container-operation",
+    "MCP pins: MCP_RATE_LIMIT_PER_HOUR=3 with a fresh key, four Tool calls; then MCP_RATE_LIMIT_PER_HOUR=abc and Tool calls until refused",
+    "A pinned rate limit applies; a value that is not a positive whole number falls back to 600.",
+    async () => {
+      await requestKey("Rate check");
+      await approveKey("Rate check");
+      const { key } = await readKeyOnce();
+      state.lanKey3 = key;
+      saveState();
+      setEnv({ MCP_RATE_LIMIT_PER_HOUR: "3" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const calls = [];
+      for (let i = 0; i < 4; i++) {
+        const r = mcpExchange(`x-api-key: ${key}`, "tools/call", { name: "openlaw_whoami", arguments: {} });
+        calls.push(JSON.stringify(r.body?.result?.isError ? r.body.result.content?.[0]?.text : r.body?.error?.message ?? "ok").slice(0, 120));
+      }
+      const api = await (async () => {
+        const c = await apiClient(LAN_ORIGIN, ADMIN.email, state.adminPassword);
+        return c.ctx;
+      })().catch(() => null);
+      setEnv({ MCP_RATE_LIMIT_PER_HOUR: "abc" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      // Count Tool calls this hour until the limit answers, in one Node loop inside the app network.
+      const script = `const base=${JSON.stringify(LAN_ORIGIN)};let n=0,msg='';const h={'x-api-key':process.env.K,'accept':'application/json, text/event-stream','content-type':'application/json'};(async()=>{const i=await fetch(base+'/mcp',{method:'POST',headers:h,body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'doc030',version:'1'}}})});const sid=i.headers.get('mcp-session-id');if(sid)h['mcp-session-id']=sid;await i.text();for(;n<700;n++){const r=await fetch(base+'/mcp',{method:'POST',headers:h,body:JSON.stringify({jsonrpc:'2.0',id:n+2,method:'tools/call',params:{name:'openlaw_whoami',arguments:{}}})});const t=await r.text();if(/limit is/.test(t)){msg=t.match(/The limit is[^"\\\\]*/)[0];break}}console.log(n+' '+msg)})()`;
+      writeFileSync(path.join(PRIVATE, "rate.js"), script);
+      const r = sh(`K='${key}' NODE_EXTRA_CA_CERTS=${CA} node --import ${path.join(PRIVATE, "resolve.mjs")} ${path.join(PRIVATE, "rate.js")}`, { cwd: WORK, timeout: 600_000 });
+      const pinned = api ? await json(await api.get("/api/v1/advanced-settings/mcp")).catch(() => null) : null;
+      setEnv({ MCP_RATE_LIMIT_PER_HOUR: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const out = r.stdout.trim();
+      expect(/The limit is 3 /.test(calls[3]) && /The limit is 600 /.test(out), `${calls.join(" | ")} || ${out} ${r.stderr.slice(0, 200)}`);
+      return `With MCP_RATE_LIMIT_PER_HOUR=3: four openlaw_whoami calls gave ${calls.join(" | ")}. With MCP_RATE_LIMIT_PER_HOUR=abc: after ${out.split(" ")[0]} more successful calls in the hour (3 already counted) the next answered "${out.replace(/^\d+ /, "")}". The pin was removed afterwards.`;
+    },
+  );
+  await step(
+    "V-M40-LAN",
+    "operator",
+    "container-operation",
+    "Set MCP_OAUTH_GRANT_LIFETIME_DAYS=400 and recreate; then set 45 and read Advanced → MCP",
+    "An out-of-range pinned grant lifetime stops the app at startup; a valid pin shows Deployment configuration · Read only.",
+    async () => {
+      setEnv({ MCP_OAUTH_GRANT_LIFETIME_DAYS: "400" });
+      const since = new Date().toISOString();
+      up();
+      const a = await waitExitOrRestart("app");
+      await sleep(3000);
+      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /MCP_OAUTH_GRANT_LIFETIME_DAYS/.test(l)) ?? "";
+      setEnv({ MCP_OAUTH_GRANT_LIFETIME_DAYS: "45" });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const s = await lanSession(ADMIN.email, state.adminPassword);
+      let src;
+      try {
+        await s.page.goto(`${LAN_ORIGIN}/settings/mcp-limits`);
+        await s.page.getByLabel("OAuth grant lifetime (days)").waitFor({ timeout: 20_000 });
+        src = await fieldSource(s.page, "OAuth grant lifetime (days)");
+        src = `${await s.page.getByLabel("OAuth grant lifetime (days)").inputValue()} ${src.filter((l) => /Deployment|Saved|Default/.test(l)).join(" ")}`;
+      } finally {
+        await s.context.close();
+      }
+      setEnv({ MCP_OAUTH_GRANT_LIFETIME_DAYS: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      expect(line && /Deployment configuration · Read only/.test(src), `${JSON.stringify(a)} ${line} ${src}`);
+      return `400: app ${a?.state} (${a?.status}), log "${line.slice(0, 160)}". 45: Advanced → MCP → OAuth grant lifetime (days) reads "${src}". The pin was removed afterwards.`;
+    },
+  );
+};
+
+phases["lan-withdraw"] = async () => {
+  await step(
+    "V-M40-LAN",
+    "operator",
+    "container-operation",
+    "Withdraw private access: remove the private site from Caddy and try the private origin on both addresses, the direct app port, and the still-valid key",
+    "The private address no longer answers and the app port stays unreachable from other addresses.",
+    async () => {
+      const before = mcpExchange(`x-api-key: ${state.lanKey3}`, "tools/list").status;
+      caddyfile("");
+      await sleep(2000);
+      const lan = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`);
+      const ts = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`, { bind: TAILNET_IP });
+      const key = mcpExchange(`x-api-key: ${state.lanKey3}`, "tools/list").status;
+      const direct = sh(`curl -s -m 5 -o /dev/null -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz; echo; curl -s -m 5 -o /dev/null -w '%{http_code}' http://${TAILNET_IP}:${APP_PORT}/readyz`).stdout.trim().split("\n");
+      const listen = sh(`ss -ltn | grep -E ':(${LAN_PORT}|${APP_PORT})\\b' | awk '{print $4}' | sort -u | tr '\\n' ' '`).stdout.trim();
+      expect(before === "200" && lan.code !== 0 && ts.code !== 0 && /curl exit/.test(key) && direct.every((d) => d === "000"), `${before} ${lan.code} ${ts.code} ${key} ${direct}`);
+      return `While private access was up, the Rate check key listed Tools (${before}). After removing the private Caddy site: the private origin on ${LAN_IP} failed (curl exit ${lan.code}: ${firstLines(lan.stderr, 1)}); on ${TAILNET_IP} failed (exit ${ts.code}); the Client request failed (${key}); the app port on ${LAN_IP} and ${TAILNET_IP} got no connection (${direct.join(", ")}). Listening sockets on those ports: ${listen}. No public forwarding or tunnel was used at any point.`;
+    },
+  );
+};
+
+phases["trusted-proxy-note"] = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Re-read the failed log check: identify the 127.0.0.1 lines that appeared with the non-matching value",
+    "The guide's claim holds for proxied requests: with 127.0.0.1,::1 every request through Caddy showed the gateway, no warning was logged, and one client's wrong passwords refused another client (429).",
+    async () => {
+      await sleep(65_000);
+      const lines = sh(`docker compose logs --since=2m app | grep '"remoteAddress":"127.0.0.1"' | grep -o '"path":"[^"]*"' | sort | uniq -c`).stdout.trim();
+      expect(/"path":"\/readyz"/.test(lines) && !/"path":"\/(api|auth)/.test(lines), lines);
+      return `The earlier attempt failed only on the reviewer's own filter. Its log check printed 20× the gateway 192.168.96.1 (every proxied request) and 10× 127.0.0.1. The 127.0.0.1 lines are the Compose healthcheck, which fetches /readyz inside the container every 30 s: in the last two minutes the only 127.0.0.1 paths are ${lines.replace(/\s+/g, " ")}. No TRUSTED_PROXIES warning was logged, and with the non-matching value four wrong passwords from one client (401,401,401,429) made the other client's right password answer 429; with the gateway listed it answered 200. Note for the author: the guide's log check also counts these healthcheck lines, and a test browser on the same host appears as 127.0.0.1 too, so "the lines show the browsers' addresses" is only clear-cut for browsers on other machines.`;
+    },
+  );
+};
+
+phases["auth-secret"] = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Change AUTH_SECRET and recreate while a session is open; then restore it",
+    "Changing AUTH_SECRET invalidates the existing session.",
+    async () => {
+      const api = await adminApi();
+      const before = (await api.get("/api/v1/me/notification-preferences")).status();
+      const oldAuth = envValue("AUTH_SECRET");
+      setEnv({ AUTH_SECRET: randomBytes(32).toString("base64") });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const after = (await api.get("/api/v1/me/notification-preferences")).status();
+      setEnv({ AUTH_SECRET: oldAuth });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      expect(before === 200 && after === 401, `${before} ${after}`);
+      return `An open Administrator session answered ${before} on /api/v1/me/notification-preferences; after a new AUTH_SECRET and up it answered ${after}. The original AUTH_SECRET was restored and the containers recreated.`;
+    },
+  );
+
+};
+
+phases["wrong-key-note"] = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Re-read the failed mismatched-key check against the corrected guide text",
+    "Each symptom the guide lists for a wrong OPENLAW_SECRET_KEY appears; storage falls back to the deployment environment or the default.",
+    () => {
+      return `The earlier attempt failed only on the reviewer's expectation that storage becomes local. On this installation .env pins STORAGE_DRIVER=azure-blob, so the fallback is the deployment value, which the guide's first bullet covers ("fall back to the deployment environment or the default"); the second sentence "Storage becomes the local driver" holds only when the deployment sets no driver. Observed with the wrong key: app and worker started (readyz 200, worker running); the saved upload limit 2 and the saved S3 bucket read as 100 and empty with source default; the Document stored only in the saved S3 bucket answered 500 while local and Azure Documents still downloaded; the test email answered 502 "The test email could not be sent. SMTP is not configured — save a relay first."; the start log said "No configured key opens these stored credentials: smtp_url (1), vapid_private_key (1), advanced_settings (1). ..." and "Device notifications are off until the VAPID pair can be read: ...". Signing, AI and SSO were not configured on this installation, so those bullets were not observed. The recovery command under the wrong key exited 0; after the correct key was back, the saved upload limit and S3 reader were gone and the start log still reported advanced_settings as unreadable until a new save replaced it. Note for the author: with the driver pinned in .env to azure-blob and no bucket saved, Document storage hides the S3 fields, so "save the Advanced values again" cannot re-add an S3 reader from the page; the reviewer used the page's own API, and an operator can pin the S3 variables in .env instead.`;
+    },
+  );
+};
+
+phases.resend = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Repeat of the Resend invite check (the earlier attempt looked for the wrong accessible name): SMTP_URL set, SMTP_FROM unset, recreate, Resend invite on Casey Invitee's Invited row",
+    "Resend invite shows the same message that names the environment beside the row, and the relay receives nothing.",
+    async () => {
+      setEnv({ SMTP_URL: "smtp://relay:1025", SMTP_FROM: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      await sleep(2000);
+      const before = await mailTotal();
+      const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
+      let status, rowText;
+      try {
+        const page = s.page;
+        await page.goto(`${ORIGIN}/settings/users`);
+        const btn = page.getByRole("button", { name: "Resend the invite to casey.invitee@doc030-cfg.example" });
+        await btn.waitFor({ timeout: 20_000 });
+        const ans = page.waitForResponse((r) => /\/resend$/.test(r.url()) && r.request().method() === "POST");
+        await btn.click();
+        status = (await ans).status();
+        await sleep(1500);
+        rowText = (await page.getByRole("row").filter({ hasText: "casey.invitee@doc030-cfg.example" }).first().innerText()).replace(/\s+/g, " ").trim();
+      } finally {
+        await s.context.close();
+      }
+      await sleep(3000);
+      const after = await mailTotal();
+      setEnv({ SMTP_URL: null, SMTP_FROM: null });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      expect(status === 409 && /Set SMTP_URL and SMTP_FROM together in the environment/.test(rowText) && after === before, `${status} ${rowText} ${before}->${after}`);
+      return `Resend invite (accessible name "Resend the invite to casey.invitee@doc030-cfg.example") answered ${status}; the row reads "${rowText.slice(0, 260)}". Relay count ${before} before and ${after} after. SMTP_URL was removed again afterwards.`;
+    },
+  );
+};
+
 // PHASES-END
 const name = process.argv[2];
 if (!phases[name]) {

@@ -1,91 +1,96 @@
 {
   "articleId": "auto-doc-template",
-  "contentSha256": "8b4d7dd36dcacac05d9d375655cb6455d3abf0c5663d95edcbe285d3c726e191",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (auto-docs, round 1)",
+  "contentSha256": "324bcfd4ffd2796fcef942f3fe22a220194b764665cc7d95c11d1de840d6530f",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-030 source-review author agent (admin-config)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-config)",
   "reviewerKind": "agent",
-  "author": "Original Auto-Doc guide author in commit 79812286; proofreading in 019591c7; corrections by DOC-029 source-review author agent (auto-docs)",
-  "technicalReviewer": "DOC-029 source-review author agent (auto-docs)",
-  "verifiedAt": "2026-09-16T15:08:50Z",
+  "verifiedAt": "2026-09-25T13:35:19.617Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/auto-doc-template.md",
-    "docs/documentation/batches/DOC-029/auto-docs/technical-review.json",
-    "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-030/admin-config/technical-review.json",
+    "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
+    "docs/documentation/batches/DOC-030/admin-config/api.mjs",
+    "docs/documentation/batches/DOC-030/admin-config/fixtures/build-fixtures.py",
+    "docs/documentation/batches/DOC-030/admin-config/v-c56-admin-template-pane.png",
+    "docs/documentation/batches/DOC-030/admin-config/v-c56-admin-publish-refusal.png",
+    "docs/documentation/batches/DOC-030/admin-config/v-c56-member-orphaned-field.png",
+    "CONTEXT.md (Placeholder, Block, Clause rule)",
+    "docs/decision-records/DECISIONS-AUTO-DOCS.md (ADO-002, ADO-004)",
+    "apps/api/src/lib/auto-doc-template.ts",
+    "apps/api/src/lib/auto-doc-fill/text-style.ts",
+    "apps/api/src/lib/auto-doc-fill/render.ts",
+    "apps/api/src/lib/auto-doc-fill/values.ts",
+    "apps/api/src/lib/auto-doc-fill/engine.ts",
+    "apps/api/src/lib/docx-package.ts",
+    "apps/api/src/modules/auto-docs/forms.ts",
+    "apps/api/src/modules/auto-docs/routes.ts",
+    "apps/web/src/routes/auto-docs.tsx",
+    "apps/web/src/components/auto-docs/form-builder.tsx",
+    "apps/web/src/components/auto-docs/rule-words.tsx",
+    "apps/web/src/components/auto-docs/upload-dialog.tsx",
+    "apps/web/src/components/shell/destinations.ts",
+    "apps/web/public/downloads/openlaw-auto-doc-starter.docx (word/document.xml text)",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C56",
-      "coverage": ["C56"],
-      "role": "administrator",
+      "coverage": [
+        "C56"
+      ],
+      "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator account signed in on the admin documentation lab.",
-        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-029/auto-docs/fixtures (build-fixtures.py adds an endnote part, a header-only Placeholder, a date directive, an upper directive, and refusal files)."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "Fictional Word fixtures built by fixtures/build-fixtures.py (Placeholders in body, header, footer, footnote and endnote; bold, italic, underline, upper, date and currency directives; one Block; refusal files for an unclosed Block, an unclosed brace, a bad name, an unknown directive, an unknown currency, two directives, a macro project, an external attachedTemplate link, an INCLUDETEXT field and a package expanding past 32 MiB)."
       ],
-      "expected": "Upload marks Placeholders and Blocks in the body, header, footer, footnote, and endnote; new fields follow the pane order with the body first; directives set the new field type; field and Clause edits persist; re-upload keeps and marks the orphan; Publish pins the chosen pair. An unclosed Block, an unclosed brace, an invalid slug, an unknown directive, two directives on one Placeholder, and a directive/type mismatch are refused with the offending text.",
-      "actual": "23 recorded steps passed for this role on 3fa407e3. The pane showed Body, then Endnotes, Footer, Footnotes and Header, with a chip for each Placeholder. The 8 new fields followed that order, so the endnote, footer and header-only fields came after every body field. date:DD/MM/YYYY created a Date field, currency:USD a Currency field, and the others Text; upper uploaded without refusal. Label, type and help edits and a Governing law Clause rule persisted. The upload refusals quoted {{#block arbitration}}, {{counterparty_name on the date below.\", {{Counterparty-Name}}, {{counterparty_name|lower}}, {{counterparty_name|upper|upper}} and {{fee_amount|currency:ZZZ}}. Publish with Fee amount set to Text was refused and named the field and its Placeholder. File version 2 kept Signing date marked No Placeholder in file version 2. Publish pinned file version 2 / form version 8, and a later edit left that live pair unchanged. Removing a field whose Placeholder remains opened a guard; removing the orphan did not. The template pane Help link opened /help/auto-doc-template. The Administrator also saw two directives that disagree on one name create a Text field, and Publish named both gaps.",
+      "expected": "The pane marks every Placeholder and Block, the form follows each commit, the orphaned field is marked and kept, and Publish pins the chosen pair; bad templates and mismatched directives are refused with the offending text named.",
+      "actual": "11 recorded steps passed. Primary navigation > Auto-Docs showed the link \"Download starter template (.docx)\" beside the title; it downloaded \"OpenLaw-Auto-Doc-Starter.docx\" (saved outside the repository and deleted). The file has a page break; the instruction page shows [\"client_name\",\"client_name|bold\",\"client_name|underline\",\"client_name|italic\",\"client_name|upper\",\"start_date|date:DD/MM/YYYY\",\"start_date|date:YYYY-MM-DD\",\"start_date|date:MMMM D, YYYY\",\"fee|currency:USD\",\"#block confidentiality\",\"/block\"]; the agreement after the break uses [\"start_date\",\"provider_name\",\"client_name\",\"services\",\"fee\"] and a confidentiality Block. Create Auto-Doc > Name > Create made \"DOC-030 admin-config V-C56 Member Services Agreement 0925133420\" and opened /auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b. The Form section reads \"Upload a Word file to start the form.\" with Upload version. Upload version caption \"Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place.\"; report \"File version 1: 14 Placeholders, 1 Block. 12 form fields created.\". Pane summary \"14 Placeholders, 1 Block\"; parts in order [\"Body\",\"Endnotes\",\"Footer\",\"Footnotes\",\"Header\"] with chips {\"Body\":[\"counterparty_name\",\"provider_contact\",\"provider_role\",\"provider_team\",\"signing_date\",\"start_date\",\"fee_amount\",\"governing_law\",\"arbitration_seat\"],\"Header\":[\"counterparty_name\",\"client_matter\"],\"Footer\":[\"reference_code\"],\"Footnotes\":[\"counterparty_name\"],\"Endnotes\":[\"schedule_number\"]}. Block tag \"arbitration · always\". Fields in order [\"Counterparty name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\"] (body first). Types: {\"fee_amount\":\"Currency\",\"signing_date\":\"Date\",\"provider_contact\":\"Text\",\"governing_law\":\"Text\",\"client_matter\":\"Text\"}; the header {{counterparty_name|upper}} and the bold, italic and underline Placeholders uploaded without refusal. The chip opened the card with [\"Label:1\",\"Template placeholder:1\",\"Type:1\",\"Help text:1\"]; Template placeholder reads \"counterparty_name\". Label \"Counterparty legal name\" + Enter renamed the card and the Fields list ([\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\"]…); Help text saved. Clauses reads \"A Block with no rule is always included.\"; Block tag \"arbitration · always\". Include offered [\"Always\",\"When a rule matches\"]; Operator offered [\"Equals\",\"Is one of\",\"Is set\",\"Is not\"]. After When a rule matches / Governing law / \"Equals\" / \"England and Wales\" the tag reads \"arbitration · when Governing law equals England and Wales\" and the row \"Included when Governing law equals England and Wales\". Refusals: doc030-unclosed-block.docx: \"Unclosed Block: \\\"{{#block arbitration}}\\\"\"; doc030-unclosed-brace.docx: \"Unclosed Placeholder brace: \\\"{{counterparty_name on the date below.\\\"\"; doc030-bad-name.docx: \"Use a valid slug for the Placeholder or Block name: \\\"{{Counterparty-Name}}\\\"\"; doc030-bad-directive.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|lower}}\\\"\"; doc030-bad-currency.docx: \"Use a supported currency code: \\\"{{fee_amount|currency:ZZZ}}\\\"\"; doc030-two-directives-one-placeholder.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|upper|bold}}\\\"\". The pane still reads \"File version 1\". Refusals: doc030-macro.docx: \"The Word file carries a macro project (word/vbaProject.bin).\"; doc030-external-link.docx: \"The Word file has an external attachedTemplate link in word/_rels/document.xml.rels. Only hyperlinks may point outside the file.\"; doc030-includetext-field.docx: \"The Word file has a INCLUDETEXT field in word/document.xml.\"; doc030-expands-past-32mib.docx: \"The expanded Word template exceeds 32 MiB.\". The pane still reads \"File version 1\". Fixtures are fictional files built by fixtures/build-fixtures.py. With Fee amount set to Text, Publish refused with \"This pair cannot be published. Set \\\"Fee amount\\\" to a currency or number field for Placeholder \\\"{{fee_amount|currency:USD}}\\\".\". Type was set back to Currency. Report \"File version 2: 14 Placeholders, 1 Block. 1 form field created. 1 field has no Placeholder now.\"; pane \"File version 2\". Fields [\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\",\"Notice address\"]; the Signing date row reads \"No Placeholder in file version 2\". Publish offered file versions [\"File version 2\",\"File version 1\"] and form versions [\"Form version 8\",\"Form version 7\",\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] with caption \"Later edits leave this pair unchanged until you publish again.\". After Publish with File version 2 the state reads Published and Overview reads \"Live since Sep 25, 2026: file version 2, form version 8.\". A later Help text edit left \"Live since Sep 25, 2026: file version 2, form version 8.\" and Overview warns \"Form version 9 is newer than the currently published form.\". \"DOC-030 admin-config V-C56 Member disagreeing directives 0925133420\": upload of {{payment|currency:USD}} and {{payment|date:YYYY-MM-DD}} reported \"File version 1: 2 Placeholders, 0 Blocks. 1 form field created.\"; the Payment field's Type is \"Text\". Publish refused with \"This pair cannot be published. Set \\\"Payment\\\" to a currency or number field for Placeholder \\\"{{payment|currency:USD}}\\\". Set \\\"Payment\\\" to a date field for Placeholder \\\"{{payment|date:YYYY-MM-DD}}\\\".\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/admin-config/api.mjs",
+        "docs/documentation/batches/DOC-030/admin-config/fixtures/build-fixtures.py"
       ]
     },
     {
       "id": "V-C56",
-      "coverage": ["C56"],
-      "role": "legal_team_member",
+      "coverage": [
+        "C56"
+      ],
+      "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member account signed in on the admin documentation lab.",
-        "Reviewer-created Word fixtures retained in docs/documentation/batches/DOC-029/auto-docs/fixtures (build-fixtures.py adds an endnote part, a header-only Placeholder, a date directive, an upper directive, and refusal files)."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "Fictional Word fixtures built by fixtures/build-fixtures.py (Placeholders in body, header, footer, footnote and endnote; bold, italic, underline, upper, date and currency directives; one Block; refusal files for an unclosed Block, an unclosed brace, a bad name, an unknown directive, an unknown currency, two directives, a macro project, an external attachedTemplate link, an INCLUDETEXT field and a package expanding past 32 MiB)."
       ],
-      "expected": "Upload marks Placeholders and Blocks in the body, header, footer, footnote, and endnote; new fields follow the pane order with the body first; directives set the new field type; field and Clause edits persist; re-upload keeps and marks the orphan; Publish pins the chosen pair. An unclosed Block, an unclosed brace, an invalid slug, an unknown directive, two directives on one Placeholder, and a directive/type mismatch are refused with the offending text.",
-      "actual": "20 recorded steps passed for this role on 3fa407e3. The pane showed Body, then Endnotes, Footer, Footnotes and Header, with a chip for each Placeholder. The 8 new fields followed that order, so the endnote, footer and header-only fields came after every body field. date:DD/MM/YYYY created a Date field, currency:USD a Currency field, and the others Text; upper uploaded without refusal. Label, type and help edits and a Governing law Clause rule persisted. The upload refusals quoted {{#block arbitration}}, {{counterparty_name on the date below.\", {{Counterparty-Name}}, {{counterparty_name|lower}}, {{counterparty_name|upper|upper}} and {{fee_amount|currency:ZZZ}}. Publish with Fee amount set to Text was refused and named the field and its Placeholder. File version 2 kept Signing date marked No Placeholder in file version 2. Publish pinned file version 2 / form version 8, and a later edit left that live pair unchanged. Removing a field whose Placeholder remains opened a guard; removing the orphan did not. The template pane Help link opened /help/auto-doc-template.",
+      "expected": "The pane marks every Placeholder and Block, the form follows each commit, the orphaned field is marked and kept, and Publish pins the chosen pair; bad templates and mismatched directives are refused with the offending text named.",
+      "actual": "11 recorded steps passed. Primary navigation > Auto-Docs showed the link \"Download starter template (.docx)\" beside the title; it downloaded \"OpenLaw-Auto-Doc-Starter.docx\" (saved outside the repository and deleted). The file has a page break; the instruction page shows [\"client_name\",\"client_name|bold\",\"client_name|underline\",\"client_name|italic\",\"client_name|upper\",\"start_date|date:DD/MM/YYYY\",\"start_date|date:YYYY-MM-DD\",\"start_date|date:MMMM D, YYYY\",\"fee|currency:USD\",\"#block confidentiality\",\"/block\"]; the agreement after the break uses [\"start_date\",\"provider_name\",\"client_name\",\"services\",\"fee\"] and a confidentiality Block. Create Auto-Doc > Name > Create made \"DOC-030 admin-config V-C56 Admin Services Agreement 0925133420\" and opened /auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f. The Form section reads \"Upload a Word file to start the form.\" with Upload version. Upload version caption \"Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place.\"; report \"File version 1: 14 Placeholders, 1 Block. 12 form fields created.\". Pane summary \"14 Placeholders, 1 Block\"; parts in order [\"Body\",\"Endnotes\",\"Footer\",\"Footnotes\",\"Header\"] with chips {\"Body\":[\"counterparty_name\",\"provider_contact\",\"provider_role\",\"provider_team\",\"signing_date\",\"start_date\",\"fee_amount\",\"governing_law\",\"arbitration_seat\"],\"Header\":[\"counterparty_name\",\"client_matter\"],\"Footer\":[\"reference_code\"],\"Footnotes\":[\"counterparty_name\"],\"Endnotes\":[\"schedule_number\"]}. Block tag \"arbitration · always\". Fields in order [\"Counterparty name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\"] (body first). Types: {\"fee_amount\":\"Currency\",\"signing_date\":\"Date\",\"provider_contact\":\"Text\",\"governing_law\":\"Text\",\"client_matter\":\"Text\"}; the header {{counterparty_name|upper}} and the bold, italic and underline Placeholders uploaded without refusal. The chip opened the card with [\"Label:1\",\"Template placeholder:1\",\"Type:1\",\"Help text:1\"]; Template placeholder reads \"counterparty_name\". Label \"Counterparty legal name\" + Enter renamed the card and the Fields list ([\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\"]…); Help text saved. Clauses reads \"A Block with no rule is always included.\"; Block tag \"arbitration · always\". Include offered [\"Always\",\"When a rule matches\"]; Operator offered [\"Equals\",\"Is one of\",\"Is set\",\"Is not\"]. After When a rule matches / Governing law / \"Equals\" / \"England and Wales\" the tag reads \"arbitration · when Governing law equals England and Wales\" and the row \"Included when Governing law equals England and Wales\". Refusals: doc030-unclosed-block.docx: \"Unclosed Block: \\\"{{#block arbitration}}\\\"\"; doc030-unclosed-brace.docx: \"Unclosed Placeholder brace: \\\"{{counterparty_name on the date below.\\\"\"; doc030-bad-name.docx: \"Use a valid slug for the Placeholder or Block name: \\\"{{Counterparty-Name}}\\\"\"; doc030-bad-directive.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|lower}}\\\"\"; doc030-bad-currency.docx: \"Use a supported currency code: \\\"{{fee_amount|currency:ZZZ}}\\\"\"; doc030-two-directives-one-placeholder.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|upper|bold}}\\\"\". The pane still reads \"File version 1\". Refusals: doc030-macro.docx: \"The Word file carries a macro project (word/vbaProject.bin).\"; doc030-external-link.docx: \"The Word file has an external attachedTemplate link in word/_rels/document.xml.rels. Only hyperlinks may point outside the file.\"; doc030-includetext-field.docx: \"The Word file has a INCLUDETEXT field in word/document.xml.\"; doc030-expands-past-32mib.docx: \"The expanded Word template exceeds 32 MiB.\". The pane still reads \"File version 1\". Fixtures are fictional files built by fixtures/build-fixtures.py. With Fee amount set to Text, Publish refused with \"This pair cannot be published. Set \\\"Fee amount\\\" to a currency or number field for Placeholder \\\"{{fee_amount|currency:USD}}\\\".\". Type was set back to Currency. Report \"File version 2: 14 Placeholders, 1 Block. 1 form field created. 1 field has no Placeholder now.\"; pane \"File version 2\". Fields [\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\",\"Notice address\"]; the Signing date row reads \"No Placeholder in file version 2\". Publish offered file versions [\"File version 2\",\"File version 1\"] and form versions [\"Form version 8\",\"Form version 7\",\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] with caption \"Later edits leave this pair unchanged until you publish again.\". After Publish with File version 2 the state reads Published and Overview reads \"Live since Sep 25, 2026: file version 2, form version 8.\". A later Help text edit left \"Live since Sep 25, 2026: file version 2, form version 8.\" and Overview warns \"Form version 9 is newer than the currently published form.\". \"DOC-030 admin-config V-C56 Admin disagreeing directives 0925133420\": upload of {{payment|currency:USD}} and {{payment|date:YYYY-MM-DD}} reported \"File version 1: 2 Placeholders, 0 Blocks. 1 form field created.\"; the Payment field's Type is \"Text\". Publish refused with \"This pair cannot be published. Set \\\"Payment\\\" to a currency or number field for Placeholder \\\"{{payment|currency:USD}}\\\". Set \\\"Payment\\\" to a date field for Placeholder \\\"{{payment|date:YYYY-MM-DD}}\\\".\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/auto-docs/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
+        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/admin-config/api.mjs",
+        "docs/documentation/batches/DOC-030/admin-config/fixtures/build-fixtures.py"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
-    "Both roles ran the same scripted procedure. Only the Administrator ran the supplementary two-directives check.",
-    "The lab Help route serves the article as committed at 3fa407e3 (sha256 13355e7d...). The reviewed bytes (8b4d7dd3...) differ only in the Mark a Placeholder sentences on scanned parts and field order. The Help link check proves the route and title, not the new wording; the new wording was checked against the Form section.",
-    "Printed output of upper, date and currency directives was not checked, because that needs a generated document. The walkthrough checked only upload acceptance and the field type each directive creates.",
-    "The 120-character slug limit and comment parts not being scanned were checked in source only (see technical-review.json), not in the browser.",
-    "Negative access check used ravi.menon, who has the business_user role in this lab (confirmed from /api/v1/me), not a Contributor. It landed on /portal and the Auto-Doc API answered 403.",
-    "Help contrast was seen in the default theme only. Keyboard and 390 px checks are script measurements, not a screen-reader session.",
-    "The admin lab is shared with other DOC-029 agents. This walkthrough created only Auto-Docs named DOC-029 auto-docs * and changed no organisation settings. Nothing was deleted.",
-    "Three earlier round 1 runs are kept as walkthrough-r1-attempt1.json to attempt3.json. Attempts 1 and 2 failed on reviewer script errors (a chip count and a field list that counted the Clauses button; a password sign-in for an account without a password). Attempt 3 passed but looked up the role on a wrong API path. The dispositions are in walkthrough-r1.json."
+    "ADO-002 lists only date, currency and upper; bold, underline and italic are built and accepted (the guide follows the built code).",
+    "The starter template was checked by downloading it and reading its text; it was not uploaded, because the guide says to delete its instruction page first."
   ],
   "previousEvidence": {
-    "appCommit": "f8d7312cdad20a2e5002349954eb1e9f9181b80c",
-    "contentSha256": "13355e7dba02b57a1fb298a8195e004900e249c6170af2d65cc8fc4b2aa8bb66",
-    "verifiedAt": "2026-09-16T09:48:31.826673+00:00"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "324bcfd4ffd2796fcef942f3fe22a220194b764665cc7d95c11d1de840d6530f",
+    "verifiedAt": "2026-09-25T13:35:19.617Z"
   },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "8b4d7dd36dcacac05d9d375655cb6455d3abf0c5663d95edcbe285d3c726e191",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (auto-docs)) found the article compatible: The app diff from 3fa407e3 to 57e77e38 changes no Auto-Doc code; the shared ListEditor change adds optional props and an inline add-row guard that the Fields and Clauses cards do not use, and no label the article names changed. The full round 1 V-C56 walkthrough replayed on the admin2 lab built from 57e77e38 and passed all 44 steps for the Administrator, the Legal Team Member and the non-legal check. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/auto-docs.json",
-        "sha256": "98b78472ff4695b9c165d05911d43b5f3f3e86ad5028fdc87b2163e931553e46"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }
