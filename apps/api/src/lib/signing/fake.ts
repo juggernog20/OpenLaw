@@ -30,6 +30,7 @@ import type { SigningEnvironment, SigningProviderKey } from "@openlaw/db";
 import {
   ENVELOPE_STATUSES,
   EnvelopeNotFoundError,
+  EnvelopeEditConflictError,
   SigningConfigError,
   SigningRefusedError,
   SigningUnavailableError,
@@ -72,6 +73,7 @@ interface FakeEnvelope {
   subject: string;
   /** The bytes that were sent, which the executed copy is derived from. */
   source: Buffer;
+  fields?: { signer: number; page: number; value: string }[];
   reason?: string;
   completedAt?: Date;
 }
@@ -142,7 +144,7 @@ export class FakeSigningProvider implements SigningProvider {
   async launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string> {
     this.requireReachable();
     const envelope = this.require(providerEnvelopeId);
-    if (envelope.status !== "draft") throw new SigningRefusedError("Only a draft can be edited.");
+    if (envelope.status !== "draft") throw new EnvelopeEditConflictError("not_draft");
     this.launches.push({ providerEnvelopeId, returnUrl });
     return `https://demo.docusign.net/sender/${this.launches.length}`;
   }
@@ -263,6 +265,21 @@ export class FakeSigningProvider implements SigningProvider {
   }
 
   // Test controls that stand in for signer actions
+
+  saveFields(id: string, fields: { signer: number; page: number; value: string }[]): void {
+    this.require(id).fields = structuredClone(fields);
+  }
+
+  fieldsOf(id: string) {
+    return structuredClone(this.require(id).fields ?? []);
+  }
+
+  discardDraft(id: string): void {
+    const envelope = this.require(id);
+    if (envelope.status !== "draft") throw new EnvelopeEditConflictError("not_draft");
+    envelope.status = "discarded";
+    envelope.completedAt = new Date();
+  }
 
   sendDraft(providerEnvelopeId: string): void {
     this.require(providerEnvelopeId).status = "sent";

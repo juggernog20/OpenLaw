@@ -96,6 +96,7 @@ const ENVELOPE_STATUS_LABEL = {
     id: "signing.status.preparationFailed",
     defaultMessage: "Preparation failed",
   }),
+  discarded: defineMessage({ id: "signing.status.discarded", defaultMessage: "Discarded" }),
   sent: defineMessage({ id: "signing.status.sent", defaultMessage: "Out for signature" }),
   signed: defineMessage({ id: "signing.status.signed", defaultMessage: "Signed" }),
   declined: defineMessage({ id: "signing.status.declined", defaultMessage: "Declined" }),
@@ -638,6 +639,14 @@ export function SignaturesCard({
           </div>
         </>
       )}
+      {signing.preparationEnabled && live?.status === "draft" && (
+        <p className="px-4 py-2 text-sm text-muted">
+          <FormattedMessage
+            id="signing.resumeHelp"
+            defaultMessage="Save and Close keeps your fields in DocuSign. If a link expires or you close the browser, return here and Resume. A fresh link does not close an earlier editing session."
+          />
+        </p>
+      )}
       {launchError && (
         <p role="alert" className="px-4 py-2 text-sm text-status-danger-fg">
           {launchError}
@@ -646,6 +655,8 @@ export function SignaturesCard({
       {signing.preparationEnabled &&
         live?.status === "draft" &&
         !frozen &&
+        signing.signingConfigured &&
+        (viewerRole === "administrator" || viewerRole === "legal_team_member") &&
         (viewerRole === "administrator" || live.sentBy.id === viewerId || ownerId === viewerId) && (
           <Button
             type="button"
@@ -656,10 +667,14 @@ export function SignaturesCard({
               setStatus("saving");
               const detail = await launchContractEnvelope(live.id);
               setLaunchError(detail === null ? null : (detail ?? launchFailed));
+              if (detail !== null) {
+                const current = await readContractSigning(contractNumber);
+                if (current.ok) onSigning(current);
+              }
               setStatus("idle");
             }}
           >
-            <FormattedMessage id="signing.openDraft" defaultMessage="Open in DocuSign" />
+            <FormattedMessage id="signing.openDraft" defaultMessage="Resume in DocuSign" />
           </Button>
         )}
       {sending && signing.primaryDocument !== null && (

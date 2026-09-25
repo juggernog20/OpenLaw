@@ -116,10 +116,15 @@ const REASONED_STATUSES: ReadonlySet<EnvelopeStatus> = new Set(["declined", "voi
 /** Confirmed sends and terminal outcomes share one idempotent writer. */
 type EnvelopeEndingAction = Extract<
   ActivityAction,
-  "envelope.sent" | "envelope.signed" | "envelope.declined" | "envelope.voided"
+  | "envelope.sent"
+  | "envelope.signed"
+  | "envelope.declined"
+  | "envelope.voided"
+  | "envelope.discarded"
 >;
 const TRANSITION_ACTION: Partial<Record<EnvelopeStatus, EnvelopeEndingAction>> = {
   sent: "envelope.sent",
+  discarded: "envelope.discarded",
   signed: "envelope.signed",
   declined: "envelope.declined",
   voided: "envelope.voided",
@@ -209,6 +214,10 @@ export async function applyEnvelopeStatus(
       return { outcome: "unchanged", envelope: held };
     }
 
+    // A deletion observation must never turn a sent round into an unsent one.
+    if (change.status === "discarded" && row.status !== "draft")
+      return { outcome: "unchanged", envelope: held };
+
     const action = TRANSITION_ACTION[change.status];
     if (!action) return { outcome: "unchanged", envelope: held };
 
@@ -224,7 +233,9 @@ export async function applyEnvelopeStatus(
         reason,
         completedAt,
         confirmationPending: false,
-        ...(row.status === "draft" ? { sentAt: change.sentAt ?? new Date() } : {}),
+        ...(row.status === "draft" && change.status !== "discarded"
+          ? { sentAt: change.sentAt ?? new Date() }
+          : {}),
       })
       .where(eq(contractEnvelopes.id, row.id));
 
@@ -250,7 +261,7 @@ export async function applyEnvelopeStatus(
     // the default. **The actor is whoever the entry named, which is
     // usually nobody**: a provider reported the ending, and a webhook is
     // not a person, so no one is excluded and the whole team is told.
-    if (change.status !== "sent")
+    if (change.status !== "sent" && change.status !== "discarded")
       await notifier.envelopeEnded(tx, {
         contractId: row.contractId,
         actorId: change.actorId ?? null,

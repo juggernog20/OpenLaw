@@ -71,6 +71,19 @@ export class SigningRefusedError extends SigningError {
   }
 }
 
+export class EnvelopeEditConflictError extends SigningRefusedError {
+  constructor(readonly conflict: "locked" | "not_draft") {
+    super(
+      conflict === "locked"
+        ? "The Envelope is being edited in another session."
+        : "The Envelope is no longer editable as a draft.",
+    );
+    this.name = "EnvelopeEditConflictError";
+  }
+}
+
+export class EnvelopeAccessError extends SigningError {}
+
 /** No envelope with that provider id. Terminal — a webhook for an
  * envelope we do not know is ignored, not retried. */
 export class EnvelopeNotFoundError extends SigningError {
@@ -128,6 +141,7 @@ export function isTerminalSigningError(error: unknown): boolean {
     error instanceof SigningConfigError ||
     error instanceof SigningRefusedError ||
     error instanceof EnvelopeNotFoundError ||
+    error instanceof EnvelopeAccessError ||
     error instanceof WebhookSignatureError
   );
 }

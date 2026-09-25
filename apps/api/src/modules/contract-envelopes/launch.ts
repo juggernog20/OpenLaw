@@ -15,6 +15,7 @@ import {
   isNull,
   lte,
   or,
+  sql,
 } from "@openlaw/db";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -23,6 +24,12 @@ import { contractTeamScope, documentAudienceScope } from "../../lib/contract-acc
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { checkEnvelopeStatus, LAUNCH_LIFETIME_MINUTES } from "../../lib/signing/status-check.js";
 import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
+import {
+  EnvelopeEditConflictError,
+  EnvelopeAccessError,
+  EnvelopeNotFoundError,
+  SigningConfigError,
+} from "../../lib/signing/provider.js";
 import { requestExecutedCopy } from "../../lib/signing/completion.js";
 
 const hash = (state: string) => createHash("sha256").update(state).digest("hex");
@@ -70,7 +77,10 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
         !envelope.documentVersionId ||
         envelope.documentId !== contract.primaryDocumentId
       )
-        throw httpError(409, "This Envelope cannot be opened for preparation.");
+        throw httpError(
+          409,
+          "This Envelope cannot be resumed. Check its current status in Signatures. Sent Envelopes use Void.",
+        );
       if (
         request.user.role !== "administrator" &&
         request.user.id !== envelope.sentBy &&
@@ -92,36 +102,84 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
         )
         .limit(1);
       if (!source) throw httpError(409, "The source Version is no longer available.");
-      const signing = await app.resolveSigningProvider();
-      const account = signing ? await signing.testConnection().catch(() => null) : null;
-      if (
-        !signing ||
-        !account ||
-        signing.provider !== envelope.provider ||
-        signing.environment !== envelope.providerEnvironment ||
-        account.accountId !== envelope.providerAccountId
-      )
-        throw httpError(409, "The original Signing account is unavailable.");
+      // The claim coordinates requests across API replicas, not browser sessions.
+      // A crashed request releases itself after five minutes.
+      const [claimed] = await app.db
+        .update(contractEnvelopes)
+        .set({
+          launchClaimExpiresAt: sql`date_trunc('milliseconds', clock_timestamp()) + interval '5 minutes'`,
+        })
+        .where(
+          and(
+            eq(contractEnvelopes.id, envelope.id),
+            eq(contractEnvelopes.status, "draft"),
+            or(
+              isNull(contractEnvelopes.launchClaimExpiresAt),
+              sql`${contractEnvelopes.launchClaimExpiresAt} <= clock_timestamp()`,
+            ),
+          ),
+        )
+        .returning();
+      if (!claimed)
+        throw httpError(
+          409,
+          "Another launch is in progress. Wait, then Resume this same Envelope from Signatures.",
+        );
       const state = randomBytes(32).toString("base64url");
-      await app.db.insert(envelopeLaunches).values({
-        stateHash: hash(state),
-        envelopeId: envelope.id,
-        userId: request.user.id,
-        providerAccountId: envelope.providerAccountId!,
-        providerEnvironment: signing.environment,
-        expiresAt: new Date(Date.now() + LAUNCH_LIFETIME_MINUTES * 60_000),
-      });
-      const returnUrl = new URL(RETURN_PATH, app.baseUrl);
-      returnUrl.searchParams.set("state", state);
       try {
+        const signing = await app.resolveSigningProvider();
+        if (!signing)
+          throw httpError(
+            409,
+            "The Signing connector is disabled. Ask an Administrator to enable it, then Resume.",
+          );
+        const account = await signing.testConnection();
+        if (
+          signing.provider !== envelope.provider ||
+          signing.environment !== envelope.providerEnvironment ||
+          account.accountId !== envelope.providerAccountId
+        )
+          throw httpError(
+            409,
+            "This Envelope belongs to a different Signing account. Restore its original account before resuming.",
+          );
+        // A fresh creation needs no read. Resume shares the existing durable allowance.
+        const [previous] = await app.db
+          .select()
+          .from(envelopeLaunches)
+          .where(eq(envelopeLaunches.envelopeId, envelope.id))
+          .limit(1);
+        if (previous) {
+          const checked = await checkEnvelopeStatus(app.db, signing, envelope.id);
+          if (checked) {
+            const result = await applyEnvelopeStatus(app.notifier, {
+              provider: signing.provider,
+              providerEnvelopeId: envelope.providerEnvelopeId,
+              ...checked,
+            });
+            await requestExecutedCopy(app.jobs, request.log, result);
+            if (checked.status !== "draft")
+              throw httpError(
+                409,
+                "This Envelope is no longer a draft. Check its confirmed status in Signatures.",
+              );
+          }
+        }
+        await app.db.insert(envelopeLaunches).values({
+          stateHash: hash(state),
+          envelopeId: envelope.id,
+          userId: request.user.id,
+          providerAccountId: envelope.providerAccountId!,
+          providerEnvironment: signing.environment,
+          expiresAt: new Date(Date.now() + LAUNCH_LIFETIME_MINUTES * 60_000),
+        });
+        const returnUrl = new URL(RETURN_PATH, app.baseUrl);
+        returnUrl.searchParams.set("state", state);
         const url = await signing.launchEnvelope(envelope.providerEnvelopeId, returnUrl.href);
         await app.db
           .update(contractEnvelopes)
           .set({ confirmationPending: true })
-          .where(eq(contractEnvelopes.id, envelope.id));
-        // Spent correlations have nothing left to grant. Pruned only once
-        // the new one stands, so a launch the provider refuses changes
-        // nothing about the rows that were there before.
+          .where(and(eq(contractEnvelopes.id, envelope.id), eq(contractEnvelopes.status, "draft")));
         await app.db
           .delete(envelopeLaunches)
           .where(
@@ -134,11 +192,49 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
             ),
           );
         return { url };
-      } catch {
+      } catch (error) {
         await app.db.delete(envelopeLaunches).where(eq(envelopeLaunches.stateHash, hash(state)));
-        throw httpError(502, "DocuSign could not open this draft. Try again from Signatures.", {
-          expose: true,
-        });
+        if (error instanceof EnvelopeEditConflictError) {
+          await app.db
+            .update(contractEnvelopes)
+            .set({ confirmationPending: true })
+            .where(
+              and(eq(contractEnvelopes.id, envelope.id), eq(contractEnvelopes.status, "draft")),
+            );
+          throw httpError(
+            409,
+            error.conflict === "locked"
+              ? "DocuSign has this Envelope open in another editing session. Save and close that session, then Resume here. A new link does not close an earlier session."
+              : "DocuSign reports that this Envelope is no longer editable as a draft. Signatures is waiting for its next allowed status check. Do not start another preparation.",
+          );
+        }
+        if (error instanceof EnvelopeNotFoundError)
+          throw httpError(
+            409,
+            "DocuSign could not find this Envelope. Its preparation is still reserved. Ask an Administrator to check the original account and deletion history.",
+          );
+        if (error instanceof EnvelopeAccessError) throw httpError(403, error.message);
+        if (error instanceof SigningConfigError)
+          throw httpError(
+            409,
+            "The Signing credentials need attention. Ask an Administrator to repair the connector, then Resume this Envelope.",
+          );
+        if (typeof error === "object" && error !== null && "statusCode" in error) throw error;
+        throw httpError(
+          502,
+          "DocuSign is temporarily unavailable. This Envelope is still saved. Try Resume again from Signatures.",
+          { expose: true },
+        );
+      } finally {
+        await app.db
+          .update(contractEnvelopes)
+          .set({ launchClaimExpiresAt: null })
+          .where(
+            and(
+              eq(contractEnvelopes.id, envelope.id),
+              eq(contractEnvelopes.launchClaimExpiresAt, claimed.launchClaimExpiresAt!),
+            ),
+          );
       }
     },
   );
@@ -185,7 +281,6 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
             eq(envelopeLaunches.stateHash, hash(state)),
             eq(envelopeLaunches.userId, request.user.id),
             isNull(envelopeLaunches.consumedAt),
-            gt(envelopeLaunches.expiresAt, new Date()),
           ),
         )
         .limit(1);
@@ -197,6 +292,13 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
         row.envelope.providerEnvironment !== launch.providerEnvironment
       )
         throw httpError(404, UNAVAILABLE);
+      if (launch.expiresAt <= new Date()) {
+        reply.header("set-cookie", `${cookie("")}; Max-Age=0`);
+        return {
+          destination: `/contracts/${row.contract.number}/signatures`,
+          waiting: row.envelope.status === "draft",
+        };
+      }
       const signing = await app.resolveSigningProvider().catch(() => null);
       const account = signing ? await signing.testConnection().catch(() => null) : null;
       if (
@@ -235,7 +337,12 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
             await app.db
               .update(contractEnvelopes)
               .set({ confirmationPending: waiting })
-              .where(eq(contractEnvelopes.id, row.envelope.id));
+              .where(
+                and(
+                  eq(contractEnvelopes.id, row.envelope.id),
+                  eq(contractEnvelopes.status, "draft"),
+                ),
+              );
           }
         } catch {
           // A failed check retains the reservation and the durable allowance.

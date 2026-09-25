@@ -35,6 +35,8 @@ import { maxUploadBytes } from "../uploads.js";
 import { BodyTooLargeError, boundedReadable, readBoundedBody } from "./bounded-body.js";
 import {
   EnvelopeNotFoundError,
+  EnvelopeAccessError,
+  EnvelopeEditConflictError,
   SigningConfigError,
   SigningRefusedError,
   SigningTimeoutError,
@@ -460,7 +462,8 @@ class DocuSignProvider implements SigningProvider {
       relayFetchError(error);
     }
     if (response.ok) return response;
-    // 401/403 is the credential answer, 404 is a missing envelope, and
+    // Authentication refusals and Envelope access failures have separate remedies.
+    // A 404 is a missing envelope, and
     // every other 4xx is DocuSign saying no to this request — all
     // terminal. 5xx and 429 are the provider's own trouble, which a
     // retry heals. The refusal body is kept as a bounded cause only.
@@ -470,6 +473,23 @@ class DocuSignProvider implements SigningProvider {
     })
       .then((bytes) => bytes.toString("utf8"))
       .catch(() => "");
+    let code: string | undefined;
+    try {
+      code = readString(readObject(JSON.parse(body)) ?? {}, "errorCode")?.toUpperCase();
+    } catch {
+      /* An empty refusal still has its HTTP status. */
+    }
+    if (code === "EDIT_LOCK_ENVELOPE_LOCKED" || code === "ENVELOPE_LOCKED")
+      throw new EnvelopeEditConflictError("locked");
+    if (code === "ENVELOPE_INVALID_STATUS") throw new EnvelopeEditConflictError("not_draft");
+    if (
+      (response.status === 403 && /\/envelopes\/[^/]+/.test(new URL(url).pathname)) ||
+      code === "USER_LACKS_PERMISSIONS" ||
+      code === "ENVELOPE_ACCESS_DENIED"
+    )
+      throw new EnvelopeAccessError(
+        "The Signing user cannot access this Envelope. Ask an Administrator to check its permissions.",
+      );
     if (response.status === 401 || response.status === 403) {
       throw new SigningConfigError(
         "DocuSign refused the connector's credentials. Check the integration key, the user ID, " +
@@ -477,7 +497,7 @@ class DocuSignProvider implements SigningProvider {
         { cause: body },
       );
     }
-    if (response.status === 404) {
+    if (response.status === 404 || code === "ENVELOPE_DOES_NOT_EXIST") {
       throw new EnvelopeNotFoundError("DocuSign does not know that envelope.");
     }
     if (response.status === 429 || response.status >= 500) {
@@ -729,7 +749,9 @@ class DocuSignProvider implements SigningProvider {
     const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
     const body =
       readObject(
-        await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}`, { token }),
+        await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}?include=folders`, {
+          token,
+        }),
       ) ?? {};
     const rawStatus = readString(body, "status");
     const status = rawStatus ? mapEnvelopeStatus(rawStatus) : undefined;
@@ -738,13 +760,23 @@ class DocuSignProvider implements SigningProvider {
         `DocuSign reports a status we do not track: ${rawStatus ?? "none"}.`,
       );
     }
+    // Folder membership and unsent state come from one provider observation.
+    // Missing results, reserved deletedDateTime, and browser events prove nothing.
+    const discarded =
+      status === "draft" &&
+      !readString(body, "sentDateTime") &&
+      Array.isArray(body.folders) &&
+      body.folders.some(
+        (folder: unknown) =>
+          readString(readObject(folder) ?? {}, "type")?.toLowerCase() === "recyclebin",
+      );
     const reason = readString(body, "voidedReason") ?? readString(body, "declinedReason");
     const completedAt =
       readDate(body.completedDateTime) ??
       readDate(body.voidedDateTime) ??
       readDate(body.declinedDateTime);
     return {
-      status,
+      status: discarded ? "discarded" : status,
       ...(readDate(body.sentDateTime) ? { sentAt: readDate(body.sentDateTime)! } : {}),
       ...(reason !== undefined ? { reason } : {}),
       ...(completedAt !== undefined ? { completedAt } : {}),

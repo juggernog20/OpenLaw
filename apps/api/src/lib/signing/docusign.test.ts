@@ -21,6 +21,9 @@ import { describe, expect, it } from "vitest";
 import { describeSigningContract } from "../../testing/signing-contract.js";
 import {
   SigningConfigError,
+  EnvelopeEditConflictError,
+  EnvelopeAccessError,
+  EnvelopeNotFoundError,
   SigningRefusedError,
   SigningTimeoutError,
   SigningUnavailableError,
@@ -373,6 +376,9 @@ describe("the envelope payload", () => {
 /** What the stub is holding, in DocuSign's own vocabulary. */
 interface StubEnvelope {
   status: "created" | "sent" | "completed" | "declined" | "voided";
+  folders?: { type: string }[];
+  sentDateTime?: string;
+  refusal?: { status: number; errorCode: string };
   voidedReason?: string;
   declinedReason?: string;
   completedDateTime?: string;
@@ -389,6 +395,7 @@ interface Stub {
 interface StubOptions {
   /** What userinfo names as the account's base_uri. Default: the stub itself. */
   baseUri?: string;
+  tokenForbidden?: boolean;
   /** Answer the token exchange with a redirect to this path. */
   redirectTokenTo?: string;
   /** Send the executed copy's headers and one chunk, then never finish. */
@@ -425,6 +432,10 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
       const path = url.pathname;
 
       if (path === "/oauth/token" && request.method === "POST") {
+        if (options.tokenForbidden) {
+          sendJson(response, 403, { error: "forbidden" });
+          return;
+        }
         if (options.redirectTokenTo) {
           response.writeHead(307, { location: options.redirectTokenTo });
           response.end();
@@ -495,6 +506,10 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
           sendJson(response, 404, { errorCode: "ENVELOPE_DOES_NOT_EXIST" });
           return;
         }
+        if (envelope.refusal) {
+          sendJson(response, envelope.refusal.status, { errorCode: envelope.refusal.errorCode });
+          return;
+        }
         if (tail.join("/") === "views/sender" && request.method === "POST") {
           if (envelope.status !== "created") {
             sendJson(response, 400, { errorCode: "ENVELOPE_INVALID_STATUS" });
@@ -528,6 +543,9 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
         if (tail.length === 0 && request.method === "PUT") {
           const update = JSON.parse((await readBody(request)).toString("utf8")) as {
             status?: string;
+            folders?: { type: string }[];
+            sentDateTime?: string;
+            refusal?: { status: number; errorCode: string };
             voidedReason?: string;
           };
           if (update.status !== "voided" || envelope.status !== "sent") {
@@ -826,5 +844,85 @@ it("requests envelope-scoped Tagger with documented restrictions and ordinary fi
       },
       taggerSettings: { paletteSections: "default" },
     },
+  });
+});
+
+describe("resume and native discard through DocuSign HTTP", () => {
+  it("keeps a forbidden token exchange distinct from Envelope access", async () => {
+    const stub = await startStub({ tokenForbidden: true });
+    const provider = createDocuSignProvider(
+      {
+        environment: "demo",
+        integrationKey: INTEGRATION_KEY,
+        apiUserId: API_USER_ID,
+        privateKey: KEYS.privateKey,
+        webhookSecret: WEBHOOK_SECRET,
+      },
+      { hosts: { auth: stub.origin, api: stub.origin } },
+    );
+    try {
+      await expect(provider.testConnection()).rejects.toBeInstanceOf(SigningConfigError);
+    } finally {
+      await stub.close();
+    }
+  });
+
+  it("requires an unsent draft and recyclebin evidence together, never missing or sent", async () => {
+    const stub = await startStub();
+    const provider = createDocuSignProvider(
+      {
+        environment: "demo",
+        integrationKey: INTEGRATION_KEY,
+        apiUserId: API_USER_ID,
+        privateKey: KEYS.privateKey,
+        webhookSecret: WEBHOOK_SECRET,
+      },
+      { hosts: { auth: stub.origin, api: stub.origin } },
+    );
+    try {
+      stub.envelopes.set("saved", { status: "created" });
+      expect((await provider.readEnvelope("saved")).status).toBe("draft");
+      stub.envelopes.set("saved", { status: "created", folders: [{ type: "recyclebin" }] });
+      expect((await provider.readEnvelope("saved")).status).toBe("discarded");
+      stub.envelopes.set("saved", { status: "sent", folders: [{ type: "recyclebin" }] });
+      expect((await provider.readEnvelope("saved")).status).toBe("sent");
+      stub.envelopes.set("saved", {
+        status: "created",
+        sentDateTime: new Date().toISOString(),
+        folders: [{ type: "recyclebin" }],
+      });
+      expect((await provider.readEnvelope("saved")).status).toBe("draft");
+      await expect(provider.readEnvelope("missing")).rejects.toBeInstanceOf(EnvelopeNotFoundError);
+    } finally {
+      await stub.close();
+    }
+  });
+
+  it.each([
+    [400, "EDIT_LOCK_ENVELOPE_LOCKED", EnvelopeEditConflictError],
+    [400, "ENVELOPE_INVALID_STATUS", EnvelopeEditConflictError],
+    [403, "USER_LACKS_PERMISSIONS", EnvelopeAccessError],
+    [404, "ENVELOPE_DOES_NOT_EXIST", EnvelopeNotFoundError],
+    [503, "SERVICE_UNAVAILABLE", SigningUnavailableError],
+  ])("classifies a %s %s launch refusal", async (status, errorCode, errorClass) => {
+    const stub = await startStub();
+    const provider = createDocuSignProvider(
+      {
+        environment: "demo",
+        integrationKey: INTEGRATION_KEY,
+        apiUserId: API_USER_ID,
+        privateKey: KEYS.privateKey,
+        webhookSecret: WEBHOOK_SECRET,
+      },
+      { hosts: { auth: stub.origin, api: stub.origin } },
+    );
+    try {
+      stub.envelopes.set("saved", { status: "created", refusal: { status, errorCode } });
+      await expect(
+        provider.launchEnvelope("saved", "https://openlaw.example/return"),
+      ).rejects.toBeInstanceOf(errorClass);
+    } finally {
+      await stub.close();
+    }
   });
 });

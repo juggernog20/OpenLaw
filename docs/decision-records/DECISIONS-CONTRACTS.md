@@ -706,3 +706,35 @@ Only a provider read or verified notification confirms sending and records sent
 Activity without attributing the provider's shared identity to a browser user. This
 transition does not move the Contract Stage. A delayed or failed check leaves a
 visible waiting state and keeps the outstanding Envelope reserved.
+
+### CTR-013 addendum, 2026-09-26, #1173. Save, Resume and native Discard
+
+Signatures offers Resume to a Member+ preparer, current Legal Owner or Administrator
+with current Contract reach. Confidential Contract reach still applies to Administrators.
+Resume uses the existing provider Envelope and saved fields. Each launch issues a fresh
+link. A five-minute database claim coordinates launch requests across API replicas; it
+ends when the request completes and does not represent the duration of an open editor.
+Provider edit locks remain authoritative. Issuing another link does not revoke an older
+browser session. An expired authenticated return leads back to the reached Contract.
+
+Save, cancel, error, session end and browser closure never send or discard an Envelope.
+Resume, returns and the worker share the existing provider-read allowance. Missing,
+inaccessible, wrong-account and unavailable results retain the live reservation and give
+separate recovery guidance when Resume encounters them.
+
+Native Discard is enabled in the restricted editor. One provider read with
+`include=folders` confirms discard only when status is `created`, `sentDateTime` is
+absent, and `folders` contains a folder with `type=recyclebin`. A missing Envelope is
+not proof. A sent result retains its sent history and Void behavior. The transition
+writer refuses to apply a delayed discard observation to an already-sent local row.
+Confirmed discard records `envelope.discarded`, retains the preparation, and releases
+the live reservation without a Sent timestamp. OpenLaw adds no recycle-bin write.
+
+The request and response shape comes from the official
+[DocuSign OpenAPI snapshot](https://github.com/docusign/OpenAPI-Specifications/blob/858a3ae59b0edbc8beea4fa3a6d7fe803833dd68/esignature.rest.swagger-v2.1.json):
+Envelopes GET accepts `include=folders`; `envelope.folders` is a list of `folder` objects;
+`folder.type` includes `recyclebin`; `sentDateTime` is the read-only send time.
+The fake and HTTP tests prove OpenLaw's handling of that evidence. They do not prove
+that native Discard returns that combination for the deployment account. That live
+check, edit controls and restoration behavior remain part of #1178 and the later
+reconciliation tickets.

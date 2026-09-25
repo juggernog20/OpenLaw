@@ -71,6 +71,7 @@ export const ENVELOPE_STATUSES = [
   "preparing",
   "draft",
   "preparation_failed",
+  "discarded",
   "sent",
   "signed",
   "declined",
@@ -130,6 +131,7 @@ export const contractEnvelopes = pgTable(
     }),
     /** Next permitted provider status check, shared by all worker replicas. */
     confirmationPending: boolean("confirmation_pending").notNull().default(false),
+    launchClaimExpiresAt: timestamp("launch_claim_expires_at", { withTimezone: true }),
     nextReconcileAt: timestamp("next_reconcile_at", { withTimezone: true }),
     status: text("status", { enum: ENVELOPE_STATUSES }).notNull().default("sent"),
     /**
@@ -226,7 +228,7 @@ export const contractEnvelopes = pgTable(
     /** A sent time exactly when the round was sent. A draft has none. */
     check(
       "contract_envelopes_sent_time",
-      sql`(status in ('preparing', 'draft', 'preparation_failed')) = (sent_at is null)`,
+      sql`(status in ('preparing', 'draft', 'preparation_failed', 'discarded')) = (sent_at is null)`,
     ),
     /**
      * `provider`, `status`, and `executed_fetch` hold only the values
@@ -240,7 +242,7 @@ export const contractEnvelopes = pgTable(
     check("contract_envelopes_provider_check", sql`provider in ('docusign')`),
     check(
       "contract_envelopes_status_check",
-      sql`status in ('preparing', 'draft', 'preparation_failed', 'sent', 'signed', 'declined', 'voided')`,
+      sql`status in ('preparing', 'draft', 'preparation_failed', 'discarded', 'sent', 'signed', 'declined', 'voided')`,
     ),
     check(
       "contract_envelopes_executed_fetch_check",

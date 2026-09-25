@@ -96,7 +96,7 @@ test("selects an exact Version and Signers in Signatures and retains an unsent d
     });
     expect(stub.sentEnvelopeIds()).toHaveLength(1);
     expect(stub.statusOf(stub.sentEnvelopeIds()[0]!)).toBe("created");
-    await page.getByRole("button", { name: "Open in DocuSign" }).click();
+    await page.getByRole("button", { name: "Resume in DocuSign" }).click();
     await page.getByRole("link", { name: "Send", exact: true }).click();
     await expect(page.getByText("Waiting for confirmation", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Prepare Envelope", exact: true })).toHaveCount(

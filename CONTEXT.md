@@ -221,7 +221,7 @@ _Avoid_: suggestion, draft value, untrusted value
 The matter equivalent of Stage — `open` or `closed`, immutable once set on a status [MTR-002].
 
 **Envelope**:
-One durable round of signature on an exact Version of a Contract’s primary Document. Its status is `preparing`, `draft`, `preparation_failed`, `sent`, `signed`, `declined`, or `voided`. **Live** means preparing, draft, or sent; a Contract has at most one live Envelope. An uncertain creation remains preparing and reserved until its outcome is known. A draft is unsent and has no Sent timestamp. Envelope status `draft` is not Contract Stage `draft`. The preparation retains its Signers, Subject, source Version and Document chain, provider identity, and preparer; `sent_by` names that preparer for Void and executed-copy authorship [CTR-013, #1171].
+One durable round of signature on an exact Version of a Contract’s primary Document. Its status is `preparing`, `draft`, `preparation_failed`, `discarded`, `sent`, `signed`, `declined`, or `voided`. **Live** means preparing, draft, or sent; a Contract has at most one live Envelope. An uncertain creation remains preparing and reserved until its outcome is known. A draft is unsent and has no Sent timestamp. A discarded preparation retains its history with no Sent timestamp and releases its live reservation only after provider confirmation. Envelope status `draft` is not Contract Stage `draft`. The preparation retains its Signers, Subject, source Version and Document chain, provider identity, and preparer; `sent_by` names that preparer for Void and executed-copy authorship [CTR-013, #1171].
 _Avoid_: signature request, signing packet, DocuSign envelope (the term is provider-neutral), request (that is the intake term)
 
 **Signer**:

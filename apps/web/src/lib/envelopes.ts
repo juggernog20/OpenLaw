@@ -80,6 +80,7 @@ export type SigningOutcome = ({ ok: true } & SigningState) | ({ ok: false } & Pr
 export const ENVELOPE_PILL: Record<EnvelopeStatus, string> = {
   preparing: "bg-status-warning-bg text-status-warning-fg",
   draft: "bg-status-neutral-bg text-status-neutral-fg",
+  discarded: "bg-status-neutral-bg text-status-neutral-fg",
   preparation_failed: "bg-status-danger-bg text-status-danger-fg",
   sent: "bg-status-warning-bg text-status-warning-fg",
   signed: "bg-status-success-bg text-status-success-fg",
