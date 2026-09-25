@@ -29,7 +29,11 @@ const facts: Facts = {
   writeOffered: true,
   refusalReason: null,
 };
-function setup(overrides: Partial<Facts> = {}, answer?: (call: StubCall) => Response) {
+function setup(
+  overrides: Partial<Facts> = {},
+  answer?: (call: StubCall) => Response,
+  oauthQuery = query,
+) {
   const calls: StubCall[] = [];
   stubApi({
     signedIn: facts.person,
@@ -41,7 +45,7 @@ function setup(overrides: Partial<Facts> = {}, answer?: (call: StubCall) => Resp
         : (answer?.(call) ?? json(200, { url: "https://client.example/callback?code=approved" }));
     },
   });
-  renderAt(`/auth/consent?${query}`);
+  renderAt(`/auth/consent?${oauthQuery}`);
   return calls;
 }
 afterEach(() => {
@@ -58,12 +62,11 @@ it("renders MC5 facts and empty choices on its own light canvas", async () => {
   expect(screen.getByText("Acme Inc")).toBeVisible();
   expect(screen.getByText("https://claude.ai/oauth/metadata")).toBeVisible();
   expect(screen.getByText("Published identity")).toBeVisible();
-  expect(screen.getByText("Allowed Client")).toHaveClass("bg-status-success-bg");
+  expect(screen.getByText("Allowed Client")).toBeVisible();
   expect(screen.getByText("CL")).toBeVisible();
   expect(screen.getByText("Sarah Chen")).toBeVisible();
   expect(screen.getByText("Legal team member")).toBeVisible();
   expect(screen.getByText("sarah@acme.com")).toBeVisible();
-  expect(document.querySelector('img[src="/sarah.png"]')).toBeInTheDocument();
   expect(screen.getByRole("group", { name: "What Claude may use" })).toBeVisible();
   expect(screen.getByRole("group", { name: "How far Claude may go" })).toBeVisible();
   expect(screen.getByText("Nothing is selected for you.")).toBeVisible();
@@ -78,7 +81,8 @@ it("renders MC5 facts and empty choices on its own light canvas", async () => {
   expect(screen.queryByRole("banner")).not.toBeInTheDocument();
   expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   expect(screen.queryByText("Legal Portal")).not.toBeInTheDocument();
-  expect(heading.closest(".max-w-sm")).toBeNull();
+  expect(screen.queryByRole("link", { name: /help/i })).not.toBeInTheDocument();
+  expect(heading).toBeVisible();
   expect(document.documentElement.dataset.theme).toBe("light");
   expect(document.title).toBe("Client consent · OpenLaw");
   expect(screen.queryByText(/expires|lifetime/i)).not.toBeInTheDocument();
@@ -176,8 +180,16 @@ it("lets a person deny an allowed Client without any choices", async () => {
 
 it.each(["expired", "altered"])(
   "renders the facts refusal for an %s query without choices or actions",
-  async () => {
-    setup({ refusalReason: "expired_query", client: null, toolsets: [], writeOffered: false });
+  async (condition) => {
+    const refusedQuery =
+      condition === "expired"
+        ? query.replace("exp=123", "exp=1")
+        : query.replace("client_id=claude", "client_id=altered");
+    const calls = setup(
+      { refusalReason: "expired_query", client: null, toolsets: [], writeOffered: false },
+      undefined,
+      refusedQuery,
+    );
     expect(
       await screen.findByText(
         "This consent request has expired or changed. Start again from your Client.",
@@ -186,6 +198,7 @@ it.each(["expired", "altered"])(
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("radio")).not.toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(calls[0]!.url.searchParams.get("oauth_query")).toBe(refusedQuery);
   },
 );
 

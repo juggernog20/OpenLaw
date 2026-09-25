@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * DD-029 consent on DES-092's MC5 card. The Client acts as the signed-in
+ * person. Nothing is preselected, and the organization's read-only rule wins.
+ */
+
 import { useRef, useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
@@ -127,7 +132,7 @@ function Consent({ initial, oauthQuery }: { initial: Facts; oauthQuery: string }
       <PageTitle
         title={intl.formatMessage({ id: "consent.pageTitle", defaultMessage: "Client consent" })}
       />
-      <Card className="@container/consent w-full max-w-[520px] overflow-hidden">
+      <Card className="@container/consent w-full max-w-(--width-consent-card) overflow-hidden">
         <div className="flex flex-col gap-4 border-b border-border-default px-6 pt-6 pb-5">
           <div className="flex items-center justify-between gap-4">
             <span className="text-md font-semibold">
@@ -283,7 +288,7 @@ function Consent({ initial, oauthQuery }: { initial: Facts; oauthQuery: string }
               )}
             </fieldset>
             <p className="flex items-center gap-2 rounded-button border border-border-muted bg-legal-only-bg px-3 py-2.5 text-sm font-medium">
-              <Lock aria-hidden="true" className="size-3.5 shrink-0" />
+              <Lock aria-hidden="true" size={16} className="shrink-0" />
               <FormattedMessage
                 id="consent.reach"
                 defaultMessage="This Client can never see or change what you cannot."

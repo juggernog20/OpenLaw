@@ -13,7 +13,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
-import { oauthAuthorizeReturn } from "../lib/oauth-return";
+import { oauthAuthorizeReturn, oauthLoginSearch } from "../lib/oauth-return";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { field } from "../lib/forms";
@@ -36,8 +36,9 @@ export async function loginLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const group: "legal" | "business" =
     url.pathname.replace(/\/+$/, "") === "/portal/login" ? "business" : "legal";
-  const oauthReturn = oauthAuthorizeReturn(url.search);
-  const loginURL = `${group === "business" ? "/portal/login" : "/auth/login"}${oauthReturn ? url.search : ""}`;
+  const oauthSearch = oauthLoginSearch(url.search);
+  const oauthReturn = oauthAuthorizeReturn(oauthSearch);
+  const loginURL = `${group === "business" ? "/portal/login" : "/auth/login"}${oauthReturn ? oauthSearch : ""}`;
   if (url.searchParams.get("error") === "INVALID_TOKEN")
     return redirect(`/auth/link-expired${group === "business" ? "?portal=1" : ""}`);
   let user;
@@ -48,7 +49,7 @@ export async function loginLoader({ request }: LoaderFunctionArgs) {
       const target = error.headers.get("Location");
       if (target?.startsWith("/auth/two-factor")) {
         const destination = new URL(target, url.origin);
-        destination.searchParams.set("oauth_query", url.search.slice(1));
+        destination.searchParams.set("oauth_query", oauthSearch.slice(1));
         throw redirect(destination.pathname + destination.search);
       }
     }
