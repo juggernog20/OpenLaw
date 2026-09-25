@@ -239,7 +239,7 @@ describe("the Connect delivery body", () => {
   });
 
   it("refuses a status the record does not track", () => {
-    expect(() => parseConnectDelivery(delivery({ status: "created" }))).toThrow(
+    expect(() => parseConnectDelivery(delivery({ status: "unknown" }))).toThrow(
       WebhookSignatureError,
     );
   });
@@ -315,6 +315,22 @@ describe("the envelope payload", () => {
     Buffer.from("%PDF-1.7\n", "utf8"),
   );
 
+  it("creates an interactive draft with a transaction identity and no shared signature anchors", () => {
+    const input = {
+      document: Readable.from([]),
+      fileName: "agreement.pdf",
+      subject: "Draft",
+      signers: [{ name: "Signer", email: "signer@example.test" }],
+      transactionId: "durable-transaction",
+    };
+    const draft = buildEnvelopeDefinition(input, Buffer.from("paper"), true);
+    expect(draft).toMatchObject({ status: "created", transactionId: "durable-transaction" });
+    expect((draft.recipients as { signers: unknown[] }).signers).toEqual([
+      { recipientId: "1", routingOrder: "1", name: "Signer", email: "signer@example.test" },
+    ]);
+    expect(JSON.stringify(draft)).not.toContain("/sig/");
+  });
+
   it("goes out already sent, not as a draft in DocuSign's own console", () => {
     expect(definition.status).toBe("sent");
   });
@@ -349,7 +365,7 @@ describe("the envelope payload", () => {
 
 /** What the stub is holding, in DocuSign's own vocabulary. */
 interface StubEnvelope {
-  status: "sent" | "completed" | "declined" | "voided";
+  status: "created" | "sent" | "completed" | "declined" | "voided";
   voidedReason?: string;
   declinedReason?: string;
   completedDateTime?: string;
@@ -457,7 +473,9 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
         }
         minted += 1;
         const id = `stub-envelope-${String(minted).padStart(4, "0")}`;
-        envelopes.set(id, { status: "sent" });
+        envelopes.set(id, {
+          status: (definition as { status?: string }).status === "created" ? "created" : "sent",
+        });
         sendJson(response, 201, { envelopeId: id, status: "sent" });
         return;
       }

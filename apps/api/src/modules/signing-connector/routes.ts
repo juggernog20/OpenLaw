@@ -40,6 +40,8 @@
  * became.
  */
 
+import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
+import { inArray } from "@openlaw/db";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -437,7 +439,7 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
     const [row] = await tx
       .select({ live: count() })
       .from(contractEnvelopes)
-      .where(eq(contractEnvelopes.status, "sent"));
+      .where(inArray(contractEnvelopes.status, [...LIVE_ENVELOPE_STATUSES]));
     return row?.live ?? 0;
   }
 

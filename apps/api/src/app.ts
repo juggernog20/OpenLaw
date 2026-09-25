@@ -193,6 +193,8 @@ export interface AppDeps {
    * what lets the record leave the send affordance out entirely and
    * keeps CTR-013's zero-config manual hand-off working.
    */
+  /** Development-only until the complete preparation flow is released. */
+  signingPreparationEnabled?: boolean;
   resolveSigningProvider: SigningResolver;
   /** The enabled AI connector, read live before each probe or analysis run. */
   resolveAiProvider: AiResolver;
@@ -250,6 +252,7 @@ declare module "fastify" {
     docEngine: DocEngine;
     fillEngine: AutoDocFillEngine;
     jobs: JobQueue;
+    signingPreparationEnabled: boolean;
     resolveSigningProvider: SigningResolver;
     resolveAiProvider: AiResolver;
     notifier: Notifier;
@@ -320,6 +323,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("docEngine", deps.docEngine);
   app.decorate("fillEngine", deps.fillEngine);
   app.decorate("jobs", deps.jobs);
+  app.decorate("signingPreparationEnabled", deps.signingPreparationEnabled ?? false);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
   app.decorate("resolveAiProvider", deps.resolveAiProvider);
   app.decorate("notifier", deps.notifier);

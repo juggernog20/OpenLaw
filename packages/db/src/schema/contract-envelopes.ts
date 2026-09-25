@@ -1,47 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * One signing envelope on one contract, and the people it was sent to
- * (CTR-013, M15/2).
- *
- * An envelope is one round of signature on one version of a contract's
- * primary document. The provider holds the ceremony; this row is what
- * the record knows about it — which adapter carried it, the provider's
- * own id for it, where it stands, who sent it, what went out, and when.
- *
- * **Manual hand-off writes nothing here.** A team that never configures
- * a connector uploads the executed PDF and pins it by hand, exactly as
- * they do today (CTR-013), and their records hold no envelope row at
- * all. That is what the record's surfaces read to decide whether to
- * draw an envelope at all.
- *
- * **At most one live envelope per contract**, held by a partial unique
- * index on the `sent` status — the same shape M14 used for the
- * one-pending-ask rule. A declined or voided envelope blocks nothing:
- * the next round is a new row, and the earlier one stays on the record.
- *
- * **Adapter-keyed, like the connector it was sent through.** A record
- * sent through one provider is never voided through another, and the
- * webhook correlates on (`provider`, `provider_envelope_id`) rather than
- * on the provider's id alone.
- *
- * What is deliberately not here, and the step that brings it: nothing.
- * The columns the later M15 slices write — the decline or void reason,
- * the completion time, and the executed-copy fetch state — land with
- * this table rather than after it, because the one-transaction send has
- * to write a row the transition function can then move without a
- * migration between them.
- *
- * M15/5 adds one column this table could not have held earlier:
- * `executed_version_id`, the version this round filed. The fetch state
- * says *whether* the executed copy landed; this says *which file it
- * is*, and the two are different questions.
- */
+/** A durable signature round. Preparing and draft Envelopes reserve the
+ * Contract alongside sent rounds; uncertain creation remains preparing. */
 
+import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
 import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { contracts } from "./contracts.js";
-import { documentVersions } from "./documents.js";
+import { documents, documentVersions } from "./documents.js";
 import { users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
 import { SIGNING_PROVIDERS } from "./signing-connectors.js";
@@ -51,11 +17,19 @@ import { SIGNING_PROVIDERS } from "./signing-connectors.js";
  * has signed so far is provider-side detail v1 does not surface.
  *
  * Fixed rather than configurable for the reason the approval statuses
- * are: code branches on it — the live-envelope rule is `sent`, the
+ * are: code branches on it — the live-envelope rule includes preparations, the
  * executed-copy fetch fires on `signed`, and the record draws one
  * DES-005 pill family per value.
  */
-export const ENVELOPE_STATUSES = ["sent", "signed", "declined", "voided"] as const;
+export const ENVELOPE_STATUSES = [
+  "preparing",
+  "draft",
+  "preparation_failed",
+  "sent",
+  "signed",
+  "declined",
+  "voided",
+] as const;
 export type EnvelopeStatus = (typeof ENVELOPE_STATUSES)[number];
 
 /**
@@ -85,7 +59,17 @@ export const contractEnvelopes = pgTable(
     provider: text("provider", { enum: SIGNING_PROVIDERS }).notNull(),
     /** The provider's own id for the envelope — the correlation key for
      * every later call and for every inbound webhook delivery. */
-    providerEnvelopeId: text("provider_envelope_id").notNull(),
+    providerEnvelopeId: text("provider_envelope_id"),
+    documentId: text("document_id").references(() => documents.id, { onDelete: "set null" }),
+    subject: text("subject"),
+    idempotencyKey: text("idempotency_key"),
+    requestFingerprint: text("request_fingerprint"),
+    providerTransactionId: text("provider_transaction_id"),
+    providerAccountId: text("provider_account_id"),
+    providerEnvironment: text("provider_environment"),
+    preparationState: text("preparation_state", {
+      enum: ["pending", "uncertain", "created", "failed"],
+    }),
     /** Next permitted provider status check, shared by all worker replicas. */
     nextReconcileAt: timestamp("next_reconcile_at", { withTimezone: true }),
     status: text("status", { enum: ENVELOPE_STATUSES }).notNull().default("sent"),
@@ -101,8 +85,8 @@ export const contractEnvelopes = pgTable(
     documentVersionId: text("document_version_id").references(() => documentVersions.id, {
       onDelete: "set null",
     }),
-    /** Who sent it. No cascade, as everywhere a record names a person:
-     * somebody is archived, never deleted (SET-005). */
+    /** The preparer, retained for Void permission and executed-copy authorship.
+     * Users are archived, never deleted (SET-005). */
     sentBy: text("sent_by")
       .notNull()
       .references(() => users.id),
@@ -131,7 +115,7 @@ export const contractEnvelopes = pgTable(
     executedVersionId: text("executed_version_id").references(() => documentVersions.id, {
       onDelete: "set null",
     }),
-    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow(),
     /** When it reached a terminal status; NULL while it is live. */
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -164,7 +148,9 @@ export const contractEnvelopes = pgTable(
      */
     uniqueIndex("contract_envelopes_live_idx")
       .on(table.contractId)
-      .where(sql`status = 'sent'`),
+      .where(
+        sql.raw(`status in (${LIVE_ENVELOPE_STATUSES.map((status) => `'${status}'`).join(", ")})`),
+      ),
     /**
      * `provider`, `status`, and `executed_fetch` hold only the values
      * CTR-013 defines. Drizzle's `{ enum }` is a TypeScript narrowing
@@ -174,10 +160,24 @@ export const contractEnvelopes = pgTable(
      * pair. Every other closed union in this schema is guarded the same
      * way.
      */
+    uniqueIndex("contract_envelopes_idempotency_idx").on(table.contractId, table.idempotencyKey),
+    uniqueIndex("contract_envelopes_transaction_idx").on(table.providerTransactionId),
+    check(
+      "contract_envelopes_creation_check",
+      sql`preparation_state is null or preparation_state in ('pending', 'uncertain', 'created', 'failed')`,
+    ),
+    check(
+      "contract_envelopes_provider_required",
+      sql`status in ('preparing', 'preparation_failed') or provider_envelope_id is not null`,
+    ),
+    check(
+      "contract_envelopes_sent_time",
+      sql`(status in ('preparing', 'draft', 'preparation_failed')) = (sent_at is null)`,
+    ),
     check("contract_envelopes_provider_check", sql`provider in ('docusign')`),
     check(
       "contract_envelopes_status_check",
-      sql`status in ('sent', 'signed', 'declined', 'voided')`,
+      sql`status in ('preparing', 'draft', 'preparation_failed', 'sent', 'signed', 'declined', 'voided')`,
     ),
     check(
       "contract_envelopes_executed_fetch_check",
@@ -187,7 +187,10 @@ export const contractEnvelopes = pgTable(
      * envelope carries neither. The row prints "—" for a live
      * envelope's completion rather than guessing, so a row with a time
      * and no ending would be unreadable. */
-    check("contract_envelopes_completed_at", sql`(status = 'sent') = (completed_at is null)`),
+    check(
+      "contract_envelopes_completed_at",
+      sql`(status in ('preparing', 'draft', 'sent')) = (completed_at is null)`,
+    ),
     /** A reason belongs to a decline or a void and to nothing else. A
      * reason on a signed envelope would be a sentence with no act
      * behind it. */
@@ -207,10 +210,8 @@ export type ContractEnvelope = typeof contractEnvelopes.$inferSelect;
  * envelope row answers "who was asked to sign this", and a JSON column
  * could not be read back as rows.
  *
- * A signer is a name and an email typed into the send dialog, not a
- * user of this install and not a counterparty contact. The person on
- * the other side of a deal has no account here, and the envelope has to
- * reach them anyway.
+ * A Signer is resolved from a user of this install or entered as an
+ * external name and email address. Both are retained on the round.
  *
  * **Every signer is asked in parallel** (CTR-013 v1): `signing_order`
  * records the order they were entered, so the row draws them back as

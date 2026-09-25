@@ -213,7 +213,11 @@ export async function applyEnvelopeStatus(
     // An ending stands, and a status that is already the row's is
     // nothing to write. Both are the same answer to the caller: the
     // record already says what this feed came to say.
-    if (TERMINAL_STATUSES.has(row.status) || row.status === change.status) {
+    if (
+      row.status !== "sent" ||
+      TERMINAL_STATUSES.has(row.status) ||
+      row.status === change.status
+    ) {
       return { outcome: "unchanged", envelope: held };
     }
 

@@ -39,6 +39,7 @@ import {
   type EnvelopeState,
   type EnvelopeStatus,
   type SendEnvelopeInput,
+  type PrepareEnvelopeInput,
   type SentEnvelope,
   type SigningProvider,
   type WebhookDelivery,
@@ -132,6 +133,20 @@ export class FakeSigningProvider implements SigningProvider {
       );
     }
     return FAKE_ACCOUNT;
+  }
+
+  private readonly preparations = new Map<string, string>();
+
+  async prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope> {
+    const held = this.preparations.get(input.transactionId);
+    if (held) {
+      input.document.destroy();
+      return { providerEnvelopeId: held };
+    }
+    const result = await this.sendEnvelope(input);
+    this.require(result.providerEnvelopeId).status = "draft";
+    this.preparations.set(input.transactionId, result.providerEnvelopeId);
+    return result;
   }
 
   async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope> {

@@ -141,6 +141,8 @@ export interface EnvelopeSigner {
 
 /** What goes out: the bytes, what to call them, and who signs. */
 export interface SendEnvelopeInput {
+  /** Stable provider correlation, committed before creation. */
+  transactionId?: string;
   /** The document version's bytes, as the storage adapter opens them. */
   document: Readable;
   /** The file name the signers see, extension included. */
@@ -151,6 +153,10 @@ export interface SendEnvelopeInput {
 }
 
 /** What the provider answers when it accepts an envelope. */
+export interface PrepareEnvelopeInput extends SendEnvelopeInput {
+  transactionId: string;
+}
+
 export interface SentEnvelope {
   /** The provider's own id — the correlation key for every later call. */
   providerEnvelopeId: string;
@@ -214,6 +220,8 @@ export interface SigningProvider {
    * Rejects with {@link SigningRefusedError} when the provider will not
    * take the envelope as described.
    */
+  prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope>;
+
   sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope>;
 
   /**

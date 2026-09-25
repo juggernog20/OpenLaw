@@ -66,7 +66,7 @@ export const CONNECT_SIGNATURE_HEADER = "x-docusign-signature-1";
 /** One envelope the stand-in is holding, in DocuSign's own vocabulary
  * — `completed` is what DocuSign calls a signed envelope. */
 interface StubEnvelope {
-  status: "sent" | "completed" | "declined" | "voided";
+  status: "created" | "sent" | "completed" | "declined" | "voided";
   signers: { name: string; email: string }[];
   emailSubject: string;
   /** The bytes that were sent, so the demo can prove the round it
@@ -336,7 +336,7 @@ export class SigningStub {
       this.minted += 1;
       const id = `${this.idPrefix}-${String(this.minted).padStart(4, "0")}`;
       this.envelopes.set(id, {
-        status: "sent",
+        status: (definition as { status?: string }).status === "created" ? "created" : "sent",
         signers: signers.map((signer) => ({ name: signer.name ?? "", email: signer.email ?? "" })),
         emailSubject: definition.emailSubject ?? "",
         document: Buffer.from(definition.documents?.[0]?.documentBase64 ?? "", "base64"),
