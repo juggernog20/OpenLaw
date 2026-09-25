@@ -16,9 +16,12 @@
 # connector unreadable (TECH-022).
 
 set -euo pipefail
+# Optional Playwright arguments follow e2e:local. Set E2E_COMPOSE_PROJECT and
+# the three port variables below to keep another worktree's stack separate.
 cd "$(dirname "$0")/../.."
 
 APP_PORT="${APP_PORT:-3100}"
+PROJECT="${E2E_COMPOSE_PROJECT:-openlaw-e2e}"
 MAILPIT_HOST_PORT="${MAILPIT_HOST_PORT:-8125}"
 # Where the M15 demo's signing stand-in listens on the host, and where
 # the overlay tells both containers to dial. One value, so the stack and
@@ -35,7 +38,7 @@ if [[ -n "$(git status --porcelain)" ]]; then export OPENLAW_BUILD_DIRTY=true; f
 # code being tested, not whatever was built last time.
 PORT="$APP_PORT" BASE_URL="http://localhost:$APP_PORT" MAILPIT_PORT="$MAILPIT_HOST_PORT" \
   SIGNING_STUB_PORT="$SIGNING_STUB_PORT" \
-  docker compose -p openlaw-e2e -f compose.yml -f compose.dev.yml up -d --build
+  docker compose -p "$PROJECT" -f compose.yml -f compose.dev.yml up -d --build
 
 # Timeouts on the probe itself: a connection that opens but never
 # answers must count as "not ready", not hang the loop.
@@ -52,6 +55,6 @@ curl --connect-timeout 2 --max-time 5 -fsS "http://localhost:$APP_PORT/readyz" >
 
 E2E_BASE_URL="http://localhost:$APP_PORT" E2E_MAILPIT_URL="http://localhost:$MAILPIT_HOST_PORT" \
   E2E_SIGNING_STUB_PORT="$SIGNING_STUB_PORT" \
-  pnpm --filter @openlaw/e2e e2e
+  pnpm --filter @openlaw/e2e e2e "$@"
 
-echo "suite's stack left running on http://localhost:$APP_PORT (project openlaw-e2e)"
+echo "suite's stack left running on http://localhost:$APP_PORT (project $PROJECT)"

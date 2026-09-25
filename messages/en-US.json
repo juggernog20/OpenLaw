@@ -89,6 +89,24 @@
   "activity.aiSavedKey.stored": {
     "defaultMessage": "{actor} stored a Saved key for {provider} at {baseUrl}"
   },
+  "activity.allowedClient.created": {
+    "defaultMessage": "{actor} added Allowed Client {client}"
+  },
+  "activity.allowedClient.deleted": {
+    "defaultMessage": "{actor} deleted Allowed Client {client}"
+  },
+  "activity.allowedClient.linked": {
+    "defaultMessage": "{actor} linked a published identity for Allowed Client {client}"
+  },
+  "activity.allowedClient.secret_generated": {
+    "defaultMessage": "{actor} generated a secret for Allowed Client {client}"
+  },
+  "activity.allowedClient.toggled": {
+    "defaultMessage": "{actor} changed access for Allowed Client {client}"
+  },
+  "activity.allowedClient.updated": {
+    "defaultMessage": "{actor} edited Allowed Client {client}"
+  },
   "activity.apiKey.approved": {
     "defaultMessage": "{selfApproved, select, yes {{actor} approved their own API key request for {client}} other {{actor} approved the API key request for {client}}}"
   },
@@ -453,7 +471,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -619,6 +637,12 @@
   },
   "activity.notificationPreference.unknownState": {
     "defaultMessage": "on or off"
+  },
+  "activity.oauthGrant.granted": {
+    "defaultMessage": "{actor} connected Client {client}"
+  },
+  "activity.oauthGrant.revoked": {
+    "defaultMessage": "{actor} revoked the OAuth grant for {client}"
   },
   "activity.older": {
     "defaultMessage": "Show older"
@@ -815,14 +839,116 @@
   "activity.user.unarchived": {
     "defaultMessage": "{actor} restored {email}"
   },
+  "allowedClients.add": {
+    "defaultMessage": "Add Client"
+  },
+  "allowedClients.addCallback": {
+    "defaultMessage": "Add callback URL"
+  },
+  "allowedClients.callback": {
+    "defaultMessage": "Callback URL {number}"
+  },
+  "allowedClients.callbacks": {
+    "defaultMessage": "Callback URLs"
+  },
+  "allowedClients.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "allowedClients.clientId": {
+    "defaultMessage": "Client id"
+  },
+  "allowedClients.copied": {
+    "defaultMessage": "Copied"
+  },
+  "allowedClients.copy": {
+    "defaultMessage": "Copy"
+  },
+  "allowedClients.copyFailed": {
+    "defaultMessage": "Copy failed. Select and copy the secret before closing this dialog."
+  },
+  "allowedClients.delete": {
+    "defaultMessage": "Delete Client"
+  },
+  "allowedClients.deleteFailed": {
+    "defaultMessage": "The Client could not be deleted. Try again."
+  },
+  "allowedClients.done": {
+    "defaultMessage": "Done"
+  },
+  "allowedClients.dynamic": {
+    "defaultMessage": "Dynamic client registration"
+  },
+  "allowedClients.dynamicHelp": {
+    "defaultMessage": "The protocol deprecates dynamic client registration. A registered Client does not need it."
+  },
+  "allowedClients.edit": {
+    "defaultMessage": "Edit"
+  },
+  "allowedClients.editNamed": {
+    "defaultMessage": "Edit {client}"
+  },
+  "allowedClients.editTitle": {
+    "defaultMessage": "Edit Client"
+  },
+  "allowedClients.enable": {
+    "defaultMessage": "Enable {client}"
+  },
+  "allowedClients.failed": {
+    "defaultMessage": "The Client could not be saved. Check the callback URLs and try again."
+  },
+  "allowedClients.generate": {
+    "defaultMessage": "Generate secret"
+  },
+  "allowedClients.name": {
+    "defaultMessage": "Client name"
+  },
+  "allowedClients.noSecret": {
+    "defaultMessage": "No secret generated"
+  },
+  "allowedClients.notGenerated": {
+    "defaultMessage": "Generate a secret to create the client id."
+  },
+  "allowedClients.once": {
+    "defaultMessage": "OpenLaw will not show this secret again. Rotation invalidates the old secret at once and leaves grants in place."
+  },
+  "allowedClients.published": {
+    "defaultMessage": "Published identity"
+  },
+  "allowedClients.ready": {
+    "defaultMessage": "Your Client secret is ready"
+  },
+  "allowedClients.registered": {
+    "defaultMessage": "Registered client"
+  },
+  "allowedClients.rotate": {
+    "defaultMessage": "Rotate secret"
+  },
+  "allowedClients.save": {
+    "defaultMessage": "Save"
+  },
+  "allowedClients.secretDate": {
+    "defaultMessage": "Secret generated {date}"
+  },
+  "allowedClients.secretFailed": {
+    "defaultMessage": "The Client secret could not be generated. Try again."
+  },
+  "allowedClients.selfRegistered": {
+    "defaultMessage": "Registered by the Client"
+  },
+  "allowedClients.title": {
+    "defaultMessage": "Allowed Clients"
+  },
+  "allowedClients.toggleFailed": {
+    "defaultMessage": "The Client could not be turned on or off. Try again."
+  },
   "apiKeys.actions": {
     "defaultMessage": "Actions"
   },
   "apiKeys.active": {
     "defaultMessage": "Active"
   },
-  "apiKeys.activeTitle": {
-    "defaultMessage": "Active keys"
+  "apiKeys.activeCredentialsTitle": {
+    "defaultMessage": "Active keys and grants"
   },
   "apiKeys.approve": {
     "defaultMessage": "Approve"
@@ -851,6 +977,9 @@
   "apiKeys.copyFailed": {
     "defaultMessage": "Copy failed. Select and copy the key before closing this dialog."
   },
+  "apiKeys.credentialCounts": {
+    "defaultMessage": "{keys, plural, one {# key} other {# keys}} · {grants, plural, one {# grant} other {# grants}}"
+  },
   "apiKeys.denied": {
     "defaultMessage": "Denied"
   },
@@ -863,6 +992,9 @@
   "apiKeys.empty": {
     "defaultMessage": "No API keys to show."
   },
+  "apiKeys.emptyCredentials": {
+    "defaultMessage": "No API keys or grants to show."
+  },
   "apiKeys.expired": {
     "defaultMessage": "Expired"
   },
@@ -874,6 +1006,9 @@
   },
   "apiKeys.failed": {
     "defaultMessage": "API keys could not be updated. Try again."
+  },
+  "apiKeys.granted": {
+    "defaultMessage": "Granted"
   },
   "apiKeys.guide": {
     "defaultMessage": "Connect a headless Client"
@@ -928,6 +1063,12 @@
   },
   "apiKeys.revoke": {
     "defaultMessage": "Revoke"
+  },
+  "apiKeys.revokeGrantTitle": {
+    "defaultMessage": "Revoke OAuth grant"
+  },
+  "apiKeys.revokeGrantWarning": {
+    "defaultMessage": "This Client will lose access immediately. A new consent is needed to connect again."
   },
   "apiKeys.revokeTitle": {
     "defaultMessage": "Revoke API key"
@@ -1093,9 +1234,6 @@
   },
   "approvals.requestedBy": {
     "defaultMessage": "Requested by {name}"
-  },
-  "approvals.sectionSigning": {
-    "defaultMessage": "Approvals & signing"
   },
   "approvals.source.manual": {
     "defaultMessage": "Added manually"
@@ -1288,6 +1426,9 @@
   },
   "auth.field.password": {
     "defaultMessage": "Password"
+  },
+  "auth.legalLogin": {
+    "defaultMessage": "Legal User sign-in"
   },
   "auth.linkExpired.body": {
     "defaultMessage": "The link has expired or was already used. Request a new one from the sign-in page."
@@ -2522,6 +2663,90 @@
   "confidential.markerShort": {
     "defaultMessage": "CONFI"
   },
+  "connectedClients.disconnect": {
+    "defaultMessage": "Disconnect"
+  },
+  "connectedClients.disconnectNamed": {
+    "defaultMessage": "Disconnect {client}"
+  },
+  "connectedClients.empty": {
+    "defaultMessage": "No Client is connected."
+  },
+  "connectedClients.granted": {
+    "defaultMessage": "Granted {date}"
+  },
+  "connectedClients.help": {
+    "defaultMessage": "A Client on the Allowed Clients list asks to connect from inside the Client. You choose its Toolsets and scope on the consent page."
+  },
+  "connectedClients.lastUsed": {
+    "defaultMessage": "Last used {date}"
+  },
+  "connectedClients.never": {
+    "defaultMessage": "Never"
+  },
+  "connectedClients.title": {
+    "defaultMessage": "Connected Clients"
+  },
+  "consent.allow": {
+    "defaultMessage": "Allow"
+  },
+  "consent.allowedClient": {
+    "defaultMessage": "Allowed Client"
+  },
+  "consent.answerFailed": {
+    "defaultMessage": "Your answer could not be saved. Try again."
+  },
+  "consent.clientDisabled": {
+    "defaultMessage": "This Client is off in the organization's Allowed Clients list."
+  },
+  "consent.clientUnlisted": {
+    "defaultMessage": "This Client is not on the organization's Allowed Clients list."
+  },
+  "consent.disconnect": {
+    "defaultMessage": "You can disconnect {client} later from Settings → API keys."
+  },
+  "consent.disconnectPortal": {
+    "defaultMessage": "You can disconnect {client} later from Portal settings → API keys."
+  },
+  "consent.expired": {
+    "defaultMessage": "This consent request has expired or changed. Start again from your Client."
+  },
+  "consent.groupDisabled": {
+    "defaultMessage": "OAuth Clients are off for your account type."
+  },
+  "consent.mcpDisabled": {
+    "defaultMessage": "MCP is off for this organization."
+  },
+  "consent.pageTitle": {
+    "defaultMessage": "Client consent"
+  },
+  "consent.reach": {
+    "defaultMessage": "This Client can never see or change what you cannot."
+  },
+  "consent.read": {
+    "defaultMessage": "Read only"
+  },
+  "consent.readDescription": {
+    "defaultMessage": "{client} can list and read what you can see."
+  },
+  "consent.scope": {
+    "defaultMessage": "How far {client} may go"
+  },
+  "consent.title": {
+    "defaultMessage": "{client} wants to work in OpenLaw as you"
+  },
+  "consent.toolsets": {
+    "defaultMessage": "What {client} may use"
+  },
+  "consent.wordmark": {
+    "defaultMessage": "openlaw"
+  },
+  "consent.write": {
+    "defaultMessage": "Read and write"
+  },
+  "consent.writeDescription": {
+    "defaultMessage": "{client} can also create and change records, as you. Every change is recorded as you, via {client}."
+  },
   "contractMatter.contracts.empty": {
     "defaultMessage": "No Contracts are linked to this Matter."
   },
@@ -2948,18 +3173,6 @@
   "contracts.record.documents.searchLanding": {
     "defaultMessage": "Document search landing"
   },
-  "contracts.record.envelope.declined": {
-    "defaultMessage": "Envelope declined"
-  },
-  "contracts.record.envelope.sent": {
-    "defaultMessage": "Envelope sent"
-  },
-  "contracts.record.envelope.signed": {
-    "defaultMessage": "Envelope signed"
-  },
-  "contracts.record.envelope.voided": {
-    "defaultMessage": "Envelope voided"
-  },
   "contracts.record.notRecorded": {
     "defaultMessage": "—"
   },
@@ -3001,6 +3214,9 @@
   },
   "contracts.record.tab.overview": {
     "defaultMessage": "Overview"
+  },
+  "contracts.record.tab.signatures": {
+    "defaultMessage": "Signatures"
   },
   "contracts.record.tab.tasks": {
     "defaultMessage": "Tasks"
@@ -7457,6 +7673,9 @@
   "notifications.push.request.submitted": {
     "defaultMessage": "A new Request arrived"
   },
+  "notifications.push.title": {
+    "defaultMessage": "OpenLaw"
+  },
   "notifications.request.assigned": {
     "defaultMessage": "{actor} assigned you to triage {request}"
   },
@@ -8387,6 +8606,9 @@
   "records.department": {
     "defaultMessage": "Department"
   },
+  "records.people.section": {
+    "defaultMessage": "Owners"
+  },
   "renewal.action.amendment": {
     "defaultMessage": "File the amendment"
   },
@@ -9177,10 +9399,13 @@
     "defaultMessage": "Local storage path"
   },
   "settings.advanced.mcp": {
-    "defaultMessage": "MCP rate limit"
+    "defaultMessage": "MCP"
+  },
+  "settings.advanced.mcpGrantLifetime": {
+    "defaultMessage": "OAuth grant lifetime (days)"
   },
   "settings.advanced.mcpHelp": {
-    "defaultMessage": "Configure the MCP calls per hour per credential."
+    "defaultMessage": "Configure the MCP calls per hour per credential and OAuth grant lifetime (1 to 365 days; default 90)."
   },
   "settings.advanced.mcpRate": {
     "defaultMessage": "Calls per hour per credential"
@@ -11325,16 +11550,28 @@
     "defaultMessage": "Business Users"
   },
   "settings.mcp.businessHelp": {
-    "defaultMessage": "Their own Requests, Auto-Docs, portal Knowledge and the records they are on."
+    "defaultMessage": "They can see only their own Requests and Auto-Docs, portal Knowledge, and records they are on."
   },
   "settings.mcp.businessKeys": {
     "defaultMessage": "Business Users API keys"
+  },
+  "settings.mcp.businessOAuth": {
+    "defaultMessage": "Business Users OAuth Clients"
   },
   "settings.mcp.ceiling": {
     "defaultMessage": "Toolset ceiling"
   },
   "settings.mcp.ceilingSummary": {
     "defaultMessage": "{count} of {total} Toolsets · {readOnly, select, true {read-only} other {read and write allowed}}"
+  },
+  "settings.mcp.checkHttps": {
+    "defaultMessage": "HTTPS scheme"
+  },
+  "settings.mcp.checkIpv4": {
+    "defaultMessage": "IPv4 record"
+  },
+  "settings.mcp.checkPublicIpv4": {
+    "defaultMessage": "Public IPv4 address"
   },
   "settings.mcp.copied": {
     "defaultMessage": "Copied"
@@ -11358,10 +11595,13 @@
     "defaultMessage": "Legal Users"
   },
   "settings.mcp.legalHelp": {
-    "defaultMessage": "Administrators and Legal Team Members. Every Toolset in the ceiling."
+    "defaultMessage": "Administrators and Legal Team Members. They can use every Toolset you allow below."
   },
   "settings.mcp.legalKeys": {
     "defaultMessage": "Legal Users API keys"
+  },
+  "settings.mcp.legalOAuth": {
+    "defaultMessage": "Legal Users OAuth Clients"
   },
   "settings.mcp.lifetime": {
     "defaultMessage": "API key lifetime (days)"
@@ -11377,6 +11617,18 @@
   },
   "settings.mcp.masterState": {
     "defaultMessage": "MCP is {enabled, select, true {on} other {off}}"
+  },
+  "settings.mcp.notReachable": {
+    "defaultMessage": "Not reachable · {checks}"
+  },
+  "settings.mcp.oauthClients": {
+    "defaultMessage": "OAuth Clients"
+  },
+  "settings.mcp.oauthHelp": {
+    "defaultMessage": "OAuth Clients work only if this server is reachable from the internet. <note>How to set this up</note>"
+  },
+  "settings.mcp.reachable": {
+    "defaultMessage": "Reachable"
   },
   "settings.mcp.readOnly": {
     "defaultMessage": "Read-only"
@@ -12146,9 +12398,6 @@
   "signing.addSigner": {
     "defaultMessage": "Add signer"
   },
-  "signing.block": {
-    "defaultMessage": "Signing"
-  },
   "signing.column.actions": {
     "defaultMessage": "Actions"
   },
@@ -12167,6 +12416,12 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.emailPlaceholder": {
+    "defaultMessage": "Email address"
+  },
+  "signing.empty": {
+    "defaultMessage": "No signature requests on this contract yet."
+  },
   "signing.executedFailed": {
     "defaultMessage": "The executed copy could not be filed. Upload it to the record instead."
   },
@@ -12176,11 +12431,17 @@
   "signing.executedFiling": {
     "defaultMessage": "Filing the executed copy…"
   },
+  "signing.namePlaceholder": {
+    "defaultMessage": "Search people or type a name"
+  },
   "signing.needReason": {
     "defaultMessage": "Say why this envelope is being voided."
   },
   "signing.needSigners": {
     "defaultMessage": "Give every signer a name and an email address."
+  },
+  "signing.peopleMatches": {
+    "defaultMessage": "People in OpenLaw"
   },
   "signing.reason": {
     "defaultMessage": "Reason"
@@ -12190,6 +12451,9 @@
   },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
+  },
+  "signing.section": {
+    "defaultMessage": "Signatures"
   },
   "signing.send": {
     "defaultMessage": "Send for signature"
@@ -12221,6 +12485,9 @@
   "signing.signersHelp": {
     "defaultMessage": "Everyone you name is asked at once. They sign in any order."
   },
+  "signing.signersNote": {
+    "defaultMessage": "Pick someone in OpenLaw, and their email fills in for you. For someone outside OpenLaw, type their name and email address."
+  },
   "signing.status.declined": {
     "defaultMessage": "Declined"
   },
@@ -12233,14 +12500,14 @@
   "signing.status.voided": {
     "defaultMessage": "Voided"
   },
-  "signing.statusArrives": {
-    "defaultMessage": "{mode, select, polling {Signed, declined, and voided status is checked by polling, about every 15–20 minutes.} webhook {Signed, declined, and voided status arrives by webhook.} other {Automatic status updates are unavailable while the connector is disabled.}} The executed file is filed automatically. The Contract advances to Active only if it is still in the Signature Stage."
-  },
   "signing.subject": {
     "defaultMessage": "Subject"
   },
   "signing.subjectHelp": {
     "defaultMessage": "Signers see this on the invitation. Left blank, it names this contract."
+  },
+  "signing.usesAccountEmail": {
+    "defaultMessage": "Uses their OpenLaw email"
   },
   "signing.version": {
     "defaultMessage": "Version {number}"

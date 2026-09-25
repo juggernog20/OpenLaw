@@ -109,6 +109,26 @@ All lifecycle audit rows are `admin_only` system events. The notification record
 
 ---
 
+### `oauth_grants`
+
+Source: **DD-029**, **TECH-035**, **SET-014**. Added by M41/4, #1135.
+
+One `OAuthGrant` per `person_id` and `allowed_client_id`, enforced by a unique
+index. `toolsets` is a nonempty text array; `scope` is `read` or `write` under a
+CHECK. `consent_id` references the better-auth consent that completed the choice.
+`granted_at` and `expires_at` define its absolute lifetime. Re-consent replaces
+the choice and these dates, revokes earlier refresh tokens, and links the new
+consent. `last_used_at` records token use. `revoked_at` and `revoked_by` record
+revocation by the owner or an Administrator.
+
+Deleting a registered Allowed Client cascades to its grants. Grant ids remain in
+the Tool calls ledger and activity rows. Deleting a plugin consent clears its
+reference without deleting the grant. Grant and revocation audit actions are
+`oauth_grant.granted` and `oauth_grant.revoked`, both `admin_only`, with no bell
+item. This table is separate from ENT-004's Confidential Entity grants.
+
+---
+
 ### `accounts`
 
 Source: **TECH-008**
@@ -1619,3 +1639,16 @@ The five `entity_share_*` tables above. The Register of members is not a table: 
 ### `individual_holdings`
 
 Migration 0146 adds individual owners alongside `entity_holdings`: UUIDv7 `id`, `owned_entity_id` FK, `name` (1–200 trimmed characters), `ownership_percent` (numeric 5,2; 0–100), and timestamps. Individuals are recorded per Holding; names are not unique and do not identify app users or registry Entities. The owned Entity's access and archival rules govern reads and writes. Holdings routes use `individual:<id>` to distinguish individual owners, while chart nodes mark them with `kind: individual`. The existing graph advisory lock also serializes individual writes, combined percentage totals, and transactional Activity entries.
+
+### `allowed_clients` and `allowed_client_links` (#1134)
+
+An Allowed Client holds its name, `published` or `registered` kind, metadata
+document URL or registered client id, enabled and seeded flags, callback URLs,
+last secret generation time, creator and creation time. `registered_by_client`
+marks dynamic registration. Secrets remain hashed in the better-auth table and
+are never columns on the Allowed Client. Four enabled rows are seeded, including
+Claude Code. Microsoft 365 Copilot starts without a client id.
+
+`allowed_client_links` maps plugin client ids to the Allowed Client. A published
+ChatGPT identity can own many connection ids. `org_settings` adds
+`mcp_dynamic_client_registration_enabled`, false by default.

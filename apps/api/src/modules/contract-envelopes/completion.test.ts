@@ -601,10 +601,9 @@ describe("a signed envelope on a record that is not at the signature stage", () 
 
   beforeAll(async () => {
     contract = await recordWithPaper("Orion Cloud reseller agreement");
-    // Somebody moved it themselves while the envelope was out. Sending
-    // is legal at any stage (CTR-001), so this is an ordinary record.
-    statusBefore = await moveTo(contract.number, "review");
     envelope = await sendFrom(contract.number);
+    // A later manual move must survive completion of the envelope.
+    statusBefore = await moveTo(contract.number, "review");
     mark = await activityMark();
     await signIt(envelope);
     await settledFetch(contract.number, envelope.id);

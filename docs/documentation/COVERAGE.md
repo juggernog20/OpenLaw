@@ -145,3 +145,18 @@ not an independent documentation walkthrough or release publication.
 
 C45 also covers the LAN only profile added to `deployment-configuration`. Its
 private network and certificate checks remain in the operator walkthrough queue.
+
+## M41 documentation, #1138
+
+DOC-031 owns the three Client guides. C57 now includes OAuth Clients, reachability,
+Allowed Clients, secrets, dynamic registration and grants. C58 links the OAuth
+guides while retaining the key path. C45 includes both MCP deployment profiles.
+These articles remain under review. The Guide integration test proves discovery
+and shared Help text; live vendor checks and independent walkthroughs remain pending
+in V-M41-C59, V-M41-C60, V-M41-C61, V-M41-MCP and V-M41-PUBLIC.
+
+| ID  | User outcome                                                                  | Audience | Destination | Priority | Owner task      | Article ID                      |
+| --- | ----------------------------------------------------------------------------- | -------- | ----------- | -------- | --------------- | ------------------------------- |
+| C59 | Connect Claude, choose consent and disconnect, including Claude Code on a LAN | L/A/B    | S/P/F       | P1       | DOC-031 / #1138 | `connect-claude`                |
+| C60 | Connect ChatGPT with OAuth, scan Tools and disconnect                         | L/A/B    | S/P/F       | P1       | DOC-031 / #1138 | `connect-chatgpt`               |
+| C61 | Connect Copilot Studio or a declarative agent with the registered client      | L/A/B    | S/P/F       | P1       | DOC-031 / #1138 | `connect-microsoft-365-copilot` |

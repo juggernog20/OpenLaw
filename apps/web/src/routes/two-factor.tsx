@@ -10,6 +10,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import { oauthAuthorizeReturn } from "../lib/oauth-return";
 import { authClient } from "../lib/auth-client";
 import { useSignOut } from "../lib/session";
 import { networkError } from "../lib/messages";
@@ -24,7 +25,10 @@ export function TwoFactorPage() {
   const intl = useIntl();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const signOut = useSignOut(params.get("portal") === "1" ? "/portal/login" : "/auth/login");
+  const oauthQuery = params.get("oauth_query") ?? "";
+  const oauthReturn = oauthAuthorizeReturn(oauthQuery);
+  const loginURL = `${params.get("portal") === "1" ? "/portal/login" : "/auth/login"}${oauthReturn ? `?${oauthQuery}` : ""}`;
+  const signOut = useSignOut(loginURL);
   const [useBackup, setUseBackup] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -56,7 +60,8 @@ export function TwoFactorPage() {
         }
         return;
       }
-      void navigate(params.get("portal") === "1" ? "/portal" : "/");
+      if (oauthReturn) window.location.assign(oauthReturn);
+      else void navigate(params.get("portal") === "1" ? "/portal" : "/");
     } catch {
       setError(networkError(intl));
     } finally {

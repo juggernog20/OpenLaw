@@ -106,6 +106,7 @@ import {
   contractEnvelopes,
   contractEnvelopeSigners,
   contracts,
+  contractStatuses,
   signingConnectors,
   desc,
   documents,
@@ -280,6 +281,41 @@ const EnvelopesEnvelope = z.object({
 });
 
 const NumberParams = z.object({ number: z.coerce.number().int().positive() });
+
+/**
+ * The send's signers as the provider takes them: a name and an address
+ * each. A user of this install is read from `users`, so the address is
+ * the one they sign in with. An archived user is refused rather than
+ * sent to, for the reason every other picker leaves them out: they
+ * have left, and an invitation to sign should not follow them.
+ */
+async function namedSigners(
+  db: Executor,
+  signers: readonly ({ personId: string } | { name: string; email: string })[],
+): Promise<{ name: string; email: string }[]> {
+  const ids = signers.flatMap((signer) => ("personId" in signer ? [signer.personId] : []));
+  const people =
+    ids.length === 0
+      ? []
+      : await db
+          .select({ id: users.id, name: users.displayName, email: users.email })
+          .from(users)
+          .where(and(inArray(users.id, ids), isNull(users.archivedAt)));
+  const byId = new Map(people.map((person) => [person.id, person]));
+  return signers.map((signer) => {
+    if (!("personId" in signer)) return signer;
+    const person = byId.get(signer.personId);
+    if (!person) {
+      throw httpError(
+        422,
+        "One of the people picked to sign is not an active user of this install. " +
+          "Pick someone else, or enter their name and email address.",
+      );
+    }
+    return { name: person.name, email: person.email };
+  });
+}
+
 /** One envelope, addressed by its own id — as an approval's own writes
  * are addressed (CTR-012's precedent). A void is about the round, not
  * about the record, and the record it belongs to is read from it. */
@@ -767,8 +803,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           "v1, because the executed copy comes back to the chain the " +
           "send left from. Signers are name-and-email pairs and every " +
           "one of them is asked at once: there is no routing order. " +
-          "Sending is legal at any stage; CTR-001's transitions stay " +
-          "unrestricted. Refused with a typed problem when this install " +
+          "A successful send moves the contract to its first live Signature status. " +
+          "Sending is legal at any stage. Refused with a typed problem when this install " +
           "has no e-signature connector, and with another when the " +
           "contract already has an envelope out — two envelopes must " +
           "never race for one signature. The provider is called first " +
@@ -788,14 +824,21 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
            * dialog defaults, and a send is too consequential for the
            * seam to guess what the caller meant. */
           documentVersionId: RecordIdSchema,
+          /** A signer is a user of this install, named by id, or
+           * somebody outside it, named by name and address. A user's
+           * name and address are read here, so the sender never types
+           * a colleague's address and cannot get it wrong. */
           signers: z
             .array(
-              z.object({
-                name: z.string().trim().min(1).max(200),
-                // Checked as an address, because it is one: an envelope
-                // that cannot be delivered is worse than a refused send.
-                email: z.email().max(320),
-              }),
+              z.union([
+                z.object({ personId: RecordIdSchema }),
+                z.object({
+                  name: z.string().trim().min(1).max(200),
+                  // Checked as an address, because it is one: an envelope
+                  // that cannot be delivered is worse than a refused send.
+                  email: z.email().max(320),
+                }),
+              ]),
             )
             .min(1)
             .max(MAX_ENVELOPE_SIGNERS),
@@ -821,7 +864,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request, reply) => {
-      const { documentVersionId, signers } = request.body;
+      const { documentVersionId } = request.body;
 
       // Everything that can be refused without dialling anybody is
       // refused first. A send that was never going to work must not
@@ -867,6 +910,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         );
       }
 
+      const signers = await namedSigners(app.db, request.body.signers);
+
       // One address, one signer. Naming somebody twice is a client that
       // built the list badly, and it is refused here rather than left
       // to the provider — a 502 quoting somebody else's validator is a
@@ -898,7 +943,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       // goes wrong takes it back rather than leaving it out there.
       let answer: z.infer<typeof EnvelopesEnvelope>;
       try {
-        answer = await app.db.transaction(async (tx) => {
+        answer = await app.notifier.notifying(async (tx) => {
           // The lock, and the two questions asked again under it: a
           // send that raced this one may have archived the record or
           // put an envelope out since the checks above.
@@ -952,6 +997,54 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               signers: signers.map((signer) => ({ name: signer.name, email: signer.email })),
             },
           });
+
+          const [currentStatus] = await tx
+            .select({
+              id: contractStatuses.id,
+              displayName: contractStatuses.displayName,
+              stage: contractStatuses.stage,
+            })
+            .from(contracts)
+            .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+            .where(eq(contracts.id, locked.id));
+          const [signatureStatus] = await tx
+            .select()
+            .from(contractStatuses)
+            .where(
+              and(eq(contractStatuses.stage, "signature"), isNull(contractStatuses.archivedAt)),
+            )
+            .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
+            .limit(1)
+            .for("share");
+          if (!currentStatus || !signatureStatus) {
+            throw httpError(409, "Configure a live Signature status before sending for signature.");
+          }
+          if (currentStatus.id !== signatureStatus.id) {
+            await tx
+              .update(contracts)
+              .set({ statusId: signatureStatus.id, endedAt: null })
+              .where(eq(contracts.id, locked.id));
+            const change = {
+              from: currentStatus.displayName,
+              to: signatureStatus.displayName,
+              fromStage: currentStatus.stage,
+              toStage: signatureStatus.stage,
+            };
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: locked.id,
+              actorId: request.user.id,
+              action: "contract.status_changed",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: { number: locked.number, title: locked.title, ...change },
+            });
+            await app.notifier.statusChanged(tx, {
+              contractId: locked.id,
+              actorId: request.user.id,
+              actorName: request.user.displayName,
+              ...change,
+            });
+          }
 
           return {
             envelopes: await envelopesOf(tx, locked.id),

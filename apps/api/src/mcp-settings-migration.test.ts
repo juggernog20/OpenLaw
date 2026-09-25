@@ -18,9 +18,12 @@ it("leaves MCP off on upgrade and gives new Organization settings the same defau
     await runMigrations(db);
     const read = () =>
       db.execute(sql`select mcp_enabled, mcp_legal_api_keys_enabled, mcp_business_api_keys_enabled,
+      mcp_legal_oauth_clients_enabled, mcp_business_oauth_clients_enabled,
       mcp_toolset_ceiling, mcp_read_only, mcp_api_key_lifetime_days from org_settings`);
     const expected = {
       mcp_enabled: false,
+      mcp_legal_oauth_clients_enabled: false,
+      mcp_business_oauth_clients_enabled: false,
       mcp_legal_api_keys_enabled: false,
       mcp_business_api_keys_enabled: false,
       mcp_toolset_ceiling: [
@@ -78,6 +81,37 @@ it("rolls back a failed MCP upgrade in a multi-migration batch and permits a ret
     expect(
       (await db.execute(sql`select mcp_enabled, mcp_api_key_lifetime_days from org_settings`)).rows,
     ).toEqual([{ mcp_enabled: false, mcp_api_key_lifetime_days: 90 }]);
+  } finally {
+    await db.$client.end();
+  }
+});
+
+it("leaves existing MCP policy intact when adding the off-by-default OAuth Clients toggles", async () => {
+  const db = await freshDb(container, "oauth_settings_upgrade");
+  try {
+    await migrateThrough(db, "0170_email-layout", migrationEntries());
+    await db.execute(sql`update org_settings set mcp_enabled = true,
+      mcp_legal_api_keys_enabled = true, mcp_business_api_keys_enabled = true,
+      mcp_toolset_ceiling = '["contracts"]', mcp_read_only = true, mcp_api_key_lifetime_days = 30`);
+    await runMigrations(db);
+    expect(
+      (
+        await db.execute(sql`select mcp_enabled, mcp_legal_api_keys_enabled,
+      mcp_business_api_keys_enabled, mcp_toolset_ceiling, mcp_read_only, mcp_api_key_lifetime_days,
+      mcp_legal_oauth_clients_enabled, mcp_business_oauth_clients_enabled from org_settings`)
+      ).rows,
+    ).toEqual([
+      {
+        mcp_enabled: true,
+        mcp_legal_api_keys_enabled: true,
+        mcp_business_api_keys_enabled: true,
+        mcp_toolset_ceiling: ["contracts"],
+        mcp_read_only: true,
+        mcp_api_key_lifetime_days: 30,
+        mcp_legal_oauth_clients_enabled: false,
+        mcp_business_oauth_clients_enabled: false,
+      },
+    ]);
   } finally {
     await db.$client.end();
   }

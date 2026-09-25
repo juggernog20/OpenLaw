@@ -1198,6 +1198,13 @@
       "when": 1790288469379,
       "tag": "0170_email-layout",
       "breakpoints": true
+    },
+    {
+      "idx": 171,
+      "version": "7",
+      "when": 1790319086915,
+      "tag": "0171_m41-oauth-clients",
+      "breakpoints": true
     }
   ]
 }

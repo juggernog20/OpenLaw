@@ -14,7 +14,7 @@ import { Label } from "../components/ui/label";
 
 type Section = "instance" | "uploads" | "storage" | "processing" | "mcp";
 export const advancedTitles = defineMessages({
-  mcp: { id: "settings.advanced.mcp", defaultMessage: "MCP rate limit" },
+  mcp: { id: "settings.advanced.mcp", defaultMessage: "MCP" },
   instance: { id: "settings.advanced.instance", defaultMessage: "Instance address" },
   uploads: { id: "settings.advanced.uploads", defaultMessage: "File uploads" },
   storage: { id: "settings.advanced.storage", defaultMessage: "Document storage" },
@@ -22,6 +22,10 @@ export const advancedTitles = defineMessages({
   status: { id: "settings.advanced.status", defaultMessage: "System status" },
 });
 const labels = defineMessages({
+  MCP_OAUTH_GRANT_LIFETIME_DAYS: {
+    id: "settings.advanced.mcpGrantLifetime",
+    defaultMessage: "OAuth grant lifetime (days)",
+  },
   MCP_RATE_LIMIT_PER_HOUR: {
     id: "settings.advanced.mcpRate",
     defaultMessage: "Calls per hour per credential",
@@ -73,7 +77,8 @@ const driverOptions = defineMessages({
 const descriptions = defineMessages({
   mcp: {
     id: "settings.advanced.mcpHelp",
-    defaultMessage: "Configure the MCP calls per hour per credential.",
+    defaultMessage:
+      "Configure the MCP calls per hour per credential and OAuth grant lifetime (1 to 365 days; default 90).",
   },
   instance: {
     id: "settings.advanced.instanceHelp",
@@ -298,10 +303,11 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                       type={
                         field.secret
                           ? "password"
-                          : /(_MS|_MB|_PER_HOUR)$/.test(field.key)
+                          : /(_MS|_MB|_PER_HOUR|_DAYS)$/.test(field.key)
                             ? "number"
                             : "text"
                       }
+                      max={field.key === "MCP_OAUTH_GRANT_LIFETIME_DAYS" ? 365 : undefined}
                       min={1}
                       step={1}
                       autoComplete={field.secret ? "new-password" : "off"}
@@ -309,6 +315,7 @@ function AdvancedForm({ section, loaded }: { section: Section; loaded: Exclude<S
                         "BASE_URL",
                         "MAX_UPLOAD_MB",
                         "MCP_RATE_LIMIT_PER_HOUR",
+                        "MCP_OAUTH_GRANT_LIFETIME_DAYS",
                         "DOC_ENGINE_URL",
                         "DOC_ENGINE_TIMEOUT_MS",
                         "DOC_ENGINE_COMPARE_TIMEOUT_MS",

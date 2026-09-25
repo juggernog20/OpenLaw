@@ -207,7 +207,7 @@ One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration f
 - `packages/db/migrations/0054_reminder_dedup_entity_type.sql` opens with one, because its `CREATE INDEX CONCURRENTLY` statements cannot run inside a transaction block at all — Postgres refuses the statement rather than the transaction, so the file has to end the transaction first.
 - `packages/db/migrations/0060_account_issuer.sql` ends with the one that closes its own `BEGIN` (below).
 
-Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`.
+Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`. _(2026-09-25, [#1119](https://github.com/juggernog20/OpenLaw/issues/1119): **the trailing `COMMIT` is superseded** by the #1119 addendum below. A file on the pattern leaves its own `BEGIN` open, and the runner's `COMMIT` at the end of the batch closes it.)_
 
 After any of these files, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
 
@@ -240,6 +240,27 @@ transaction as its schema change. Unknown histories still refuse to start.
 The upgrade rehearsal covers current dev, the known Home branch history, repeat
 startup, and refusal of an unknown history. No existing database is changed as
 part of preparing this integration.
+
+### Addendum (2026-09-25, [#1119](https://github.com/juggernog20/OpenLaw/issues/1119)): a migration never ends outside a transaction
+
+**A file that opens its own transaction leaves it open. The runner's `COMMIT` at the end of the batch closes it.**
+
+drizzle-orm's `migrate()` sends `BEGIN` once before the batch and `COMMIT` or `ROLLBACK` once after it, on one connection. It never checks whether a file closed that transaction. The #390 addendum told each file on the preamble to end with a `COMMIT` of its own. That `COMMIT` is the trap the same addendum describes. After it, no transaction is open, so the file's own journal row and every later file in the batch run in autocommit. A file that leaves its `BEGIN` open keeps its statements, its journal row and every later file in one transaction, and a later failure rolls them all back.
+
+The M40 dev merge found it. The rehearsal in `apps/api/src/mcp-settings-migration.test.ts` makes the MCP settings migration fail on purpose and expects the batch to roll back. With `0160` and `0161` in front of it, the six `mcp_*` columns survived the failure. `0163_mcp-settings.sql` carries the preamble for this reason.
+
+24 applied files end in autocommit, in two shapes:
+
+- A trailing `COMMIT` after the file's own `BEGIN`: `0060`, `0064`–`0066`, `0068`, `0077`, `0079`, `0084`, `0132`, `0134`, `0148`, `0155`, `0160`, `0161`.
+- A `COMMIT` followed by statements that must run outside a transaction, with no `BEGIN` after them: `0054`'s `CREATE INDEX CONCURRENTLY`, and the `VALIDATE CONSTRAINT` that runs after the locks are released in `0055`, `0069`, `0070`, `0088`, `0093`, `0135`–`0137` and `0158`.
+
+The boot guard matches applied files by hash, so none of them can change. The rule from now on:
+
+- A file that opens its own transaction does not close it.
+- A file that must run statements outside a transaction ends with `BEGIN;`. Those statements commit as they run. A later failure rolls back their journal row but not their effect, so the next start runs them again, and they must be safe to repeat.
+- `pnpm lint:migrations` enforces both. `scripts/lint-migration-journal.mjs` refuses a file whose last transaction statement is `COMMIT`, `END`, `ROLLBACK` or `ABORT`, and lists the 24 files above as the only exceptions.
+
+**The #390 preamble is no longer needed after `0163`.** An install below `0163` crosses it on the way up, and its `BEGIN` reopens the transaction. An install at `0163` or later starts its batch inside the runner's transaction. The lint keeps every later file from closing it. So from `0164` on, a file starts inside the batch transaction on every upgrade path. A new file that must be atomic can leave the preamble out, and it should, because the preamble's leading `COMMIT` makes the earlier pending files durable before the new file runs. A failure in the new file then rolls back less of the upgrade.
 
 ## TECH-007: Background jobs — pg-boss on Postgres
 
@@ -440,6 +461,8 @@ The scheduled dependency sweep found `better-auth`, `@better-auth/drizzle-adapte
 - `@better-auth/core`'s schema-check registration changed shape: `registerSchemaCheck` now always registers a check and takes a separate `runtimeEnabled` flag, and `ctx.checkSchema` (what `apps/api/src/index.ts` awaits once at boot per the 1.7.3 addendum above) now resolves through the new `runtimeSchemaCheckFor`, gated on that flag, instead of the old always-present `schemaCheckFor`. Read against what the Drizzle adapter passes — `runtimeEnabled: checksSchema(options)`, the same `advanced.database.validateSchema` read the old gate used — this is a rename, not a behaviour change: `checkSchema` still resolves to the same check, gated the same way, as long as `validateSchema` is left at its default. Worth the sweep rule's diff specifically because the surrounding boot-time contract is exactly what #340/1.7.3 taught this rule to watch for, even though this time it held.
 
 Classified **Patch**, landed with the rest of the routine sweep's Patch/Minor group on one PR, no code changes required. `@better-auth/api-key` is added to this addendum's scope for future sweeps — it is a fourth `@better-auth/*` package now, not a one-off.
+
+M41 (TECH-035) landed on dev while this sweep was open. It added `@better-auth/cimd`, `@better-auth/mcp` and `@better-auth/oauth-provider` at exact 1.7.5, and changed `better-auth` in `apps/api` to an exact pin. The merge moves all three plugins and `better-auth` to exact 1.7.6. `cimd` declares exact peer versions of `better-auth`, `core`, `mcp` and `oauth-provider`, so the family cannot move in parts. The same tarball diff covered the three plugins. `cimd` and `mcp` changed only the embedded version string. `oauth-provider` renamed its hashed chunk files, and with the hashes normalized the only change is the version string. The 1.7.5 plugin behaviours the TECH-035 addenda record, such as root-only protected-resource discovery and the missing client-disable endpoint, still hold. Future sweeps diff all seven `@better-auth/*` packages.
 
 ## TECH-009: Real-time — SSE on live surfaces
 
@@ -1795,6 +1818,149 @@ T27 as built. `openlaw_document_upload` checks the target, the grant and record 
 
 The ticket is the only credential the route accepts. A cookie or an API key on the request counts for nothing, and the route is outside the TECH-033 origin check with `/mcp`. On each PUT the route reads the credential again (approval, revocation, expiry, the master switch and the audience switch) and re-checks the grant, the write scope and record reach, so a key revoked or a team row dropped after the URL was issued refuses the upload. The bytes are counted as they stream. The ceiling is the `MAX_UPLOAD_MB` the REST upload enforces, and an upload over it answers 413 and leaves no Version. One URL completes one Version. A second PUT, including a concurrent one, answers 409, and a refused PUT leaves no rows and no blob. Each attempt writes a fresh storage key under the Version's DOC-012 key, so a retry after a failed write never reuses a key. An unused URL expires and leaves nothing, because no row exists until the PUT commits. The PUT is not a Tool call and does not count against the per-credential rate limit; each URL costs one rate-limited `openlaw_document_upload` call and completes at most once. The REST upload routes and the MCP route share one completion service, so the designation, activity and notification rules of DOC-001 and CTR-014 are written once.
 
+### Addendum (2026-09-25, #1132): OAuth discovery and the resource rule
+
+The OAuth scope vocabulary is `toolset:<id>` for every selectable Toolset in
+`MCP_TOOLSETS`, plus `write` and `offline_access`. Guide is always available and has
+no OAuth scope. The discovery documents advertise that vocabulary. A 401 from
+`/mcp`, including an API key refusal, carries `resource_metadata` pointing to
+`${BASE_URL}/.well-known/oauth-protected-resource` and a `scope` list. That list
+contains only Toolsets within the current organization ceiling, `write` unless
+the organization is read-only, and `offline_access`.
+
+The API mounts six root discovery routes before the SPA fallback:
+
+- `/.well-known/oauth-authorization-server`
+- `/.well-known/oauth-authorization-server/api/auth`
+- `/.well-known/openid-configuration`
+- `/.well-known/openid-configuration/api/auth`
+- `/.well-known/oauth-protected-resource`
+- `/.well-known/oauth-protected-resource/mcp`
+
+Each route calls the better-auth handler for its `/api/auth/.well-known/` alias.
+The MCP plugin at 1.7.5 recognizes protected-resource discovery only at the root,
+so the plugin wrapper maps that prefixed alias back to its native path. OpenLaw
+does not offer OIDC identity scopes. The OpenID discovery aliases therefore
+return the same plugin-owned authorization server document. These routes are
+hidden from OpenAPI and exempt from the TECH-033 origin check, as are the OAuth
+endpoints under `/api/auth`.
+
+The JWT, MCP and CIMD plugins register together only when `${BASE_URL}/mcp`
+passes the MCP resource rule. The URL must use HTTPS, or HTTP on `localhost`,
+IPv4 loopback or IPv6 loopback, and must contain no credentials, query or fragment.
+The plugin's loopback test is its own and narrower than the `@better-auth/core`
+one. A `.localhost` subdomain such as `app.localhost` is refused. The API copies
+that rule and a test pins the copy against the pinned plugin.
+Plain HTTP on a LAN address still boots with API keys. It serves 404 for all six
+root documents. The MCP settings response reports `authorizationServerAvailable`
+so the OAuth Clients settings can refuse an unavailable server by name.
+
+CIMD uses the Node transport and the `mcp-2026-07-28` profile. Until M41/3 installs
+the Allowed Clients gate, its URL policy refuses every published identity before
+fetching. Dynamic registration stays disabled, discovery omits
+`registration_endpoint`, and the auth handler refuses `/oauth2/register` with 403.
+The handler also refuses the plugin's `/oauth2/create-client` endpoint with 403,
+so until M41/3 ships its Allowed Clients routes only the server API can create a
+Client.
+The JWT verifier checks the signature, issuer, `/mcp` audience and expiry against
+the same signing keys served at `/api/auth/jwks`. A verified JWT still receives 401
+until M41/4 can resolve its grant. API keys retain their M40 verifier and guards.
+
+Superseded in part by the #1134 and #1135 addenda below: the refuse-every-identity
+CIMD rule, the `/oauth2/create-client` refusal as the only way to create a Client, and
+the JWT-without-grant refusal were interim rules for M41/1.
+
+### Addendum (2026-09-25, #1134): Allowed Clients and registration
+
+The CIMD metadata gate admits only enabled published identities. The ChatGPT
+connection URL maps to its seeded identity. Authorization also reads the list
+before using a cached client and checks the code-owned published callbacks or
+the registered Client's exact pasted callbacks. `allowed_client_links` maps
+each plugin client id to its Allowed Client, including multiple ChatGPT
+connections.
+
+Registered Clients use the plugin's server APIs for creation, callback edits
+and secret rotation. Management and dynamic registration run on a transaction
+local adapter, so the protocol row, Allowed Client and audit commit together.
+All registered Clients belong to the organization so any Administrator can
+manage them. The 1.7.5 provider exposes no client-disable endpoint. A server-only
+plugin extension writes its `disabled` flag through the better-auth adapter.
+Deleting a non-seeded Allowed Client disables and retains the protocol row for
+existing token and consent references. It removes the row from the Allowed
+Clients list. Secrets appear only in the generation or registration response;
+OpenLaw never stores a recoverable copy. Rotation preserves consent rows.
+
+The registration switch is read at request time, including for the root and
+auth-prefixed discovery documents. A disabled switch refuses registration and
+omits `registration_endpoint`. A confidential dynamic registration returns a
+secret and creates an enabled registered Allowed Client with the caption
+"Registered by the Client". Direct HTTP client-management endpoints are closed;
+the Administrator uses the audited OpenLaw routes.
+
+The API tests run the pinned plugins against throwaway Postgres. Stubbed metadata
+admits Claude Code with loopback callbacks on different ports, and ChatGPT's
+stable identity with `private_key_jwt` and a validated RSA JWKS document. The
+server advertises `private_key_jwt` through the provider's built-in discovery.
+These tests verify protocol behavior, not a live vendor sign-in. Live Claude
+Code and Copilot Studio journeys remain part of the milestone runtime handoff.
+
+### Addendum (2026-09-25, #1135): consent and live OAuth grants
+
+The consent page reads `GET /api/v1/oauth-grants/consent?oauth_query=...` and
+answers through `POST /api/v1/oauth-grants/consent`. The query is the page's own
+signed query string. A server-only endpoint lets the provider's query hook verify
+its signature and its 600-second expiry without recording consent. Invalid or
+expired queries return `expired_query` with no choices. The other refusal codes
+are `mcp_disabled`, `group_disabled`, `client_unlisted` and `client_disabled`.
+Facts include the organization, Allowed Client, person, usable requested Toolsets
+within the ceiling, and whether write is offered.
+
+Allow takes `accept: true`, a nonempty `toolsets` array and `scope`. The grant,
+provider consent and audit commit together. The provider server API receives the
+person's session headers, the accepted OAuth scope subset, `oauth_query`, and a
+Request so it can resume authorization. Deny takes `accept: false` and returns
+the provider's `access_denied` redirect. Both answers return `url`. The raw plugin
+consent route is blocked so it cannot bypass these checks.
+
+Tokens resolve to `OAuthGrant` by subject and Allowed Client on every request.
+The token's scopes also bound access, so re-consent cannot widen an older token.
+The same live-person read, current switches, ceiling and read-only switch apply
+to MCP calls and signed uploads. A refused Tool call records the M40 error and
+returns HTTP 403 with the required OAuth scopes in `WWW-Authenticate`.
+
+A missing token-request `resource` defaults to the instance's `/mcp` resource.
+This keeps the parameter optional while issuing an audience-bound JWT. Refresh
+tokens retain the grant's absolute expiry through rotation. An expired grant
+requires new consent even when better-auth remembers the previous consent.
+
+Each authenticated MCP request reads the Allowed Client, grant, person and policy
+and writes `last_used_at`. These database calls make revocation and switch changes
+immediate; token-lifetime caching would break that guarantee. Defaulting an omitted
+resource supports Clients that omit RFC 8707's parameter and assigns them to the
+instance's sole MCP resource. It does not permit an arbitrary token audience.
+Clearing remembered consent when the person's grant is missing, revoked or expired
+forces an interactive consent instead of silently renewing access. This cleanup is
+limited to the signed-in person and their Client.
+
+### Addendum (2026-09-25, #1138): M41/2 reachability and grant lifetime as shipped
+
+M41/2 (#1133) adds three named checks against the active Instance address: HTTPS
+scheme, IPv4 record and Public IPv4 address. The API resolves IPv4 addresses and
+caches the result for 30 seconds. Every resolved address must pass the public-address
+check. Resolution failures produce failed checks rather than blocking startup.
+This is an address check, not a TLS, firewall or vendor connection test. Failed
+reachability checks do not block enabling OAuth when the authorization server is
+available. If the resource rule in the #1132 addendum disables that server, enabling
+either group's OAuth Clients returns the named `mcp-oauth-unavailable` problem and
+the failed checks. Plain-HTTP LAN installs retain API keys and return 404 for the
+six root discovery documents.
+
+`MCP_OAUTH_GRANT_LIFETIME_DAYS` is an Advanced setting, default 90, range 1 to 365.
+The environment pins it. A saved change takes effect after app and worker restart.
+A new grant uses the active lifetime. An existing grant retains its absolute expiry,
+including across token refresh. The API rejects invalid lifetime settings at boot
+and through the settings route.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -1833,4 +1999,4 @@ The ticket is the only credential the route accepts. A cookie or an API key on t
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 upload URL shape recorded by the 2026-09-24 addendum              |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1132, #1134, #1135, #1138                        |

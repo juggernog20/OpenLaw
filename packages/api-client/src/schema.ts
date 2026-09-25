@@ -632,6 +632,342 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/oauth-grants/consent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query: {
+          oauth_query: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              organizationName: string;
+              client: {
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "published" | "registered";
+                identityCaption: string;
+              } | null;
+              person: {
+                id: string;
+                displayName: string;
+                email: string;
+                /** @enum {string} */
+                role: "administrator" | "legal_team_member" | "business_user";
+                image: string | null;
+              };
+              toolsets: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
+              writeOffered: boolean;
+              refusalReason:
+                | (
+                    | "expired_query"
+                    | "mcp_disabled"
+                    | "group_disabled"
+                    | "client_unlisted"
+                    | "client_disabled"
+                  )
+                | null;
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          "application/json":
+            | {
+                /** @enum {boolean} */
+                accept: true;
+                toolsets: (
+                  | "workspace"
+                  | "contracts"
+                  | "matters"
+                  | "tasks"
+                  | "requests"
+                  | "comments"
+                  | "documents"
+                  | "auto-docs"
+                  | "entities"
+                  | "knowledge"
+                  | "people"
+                  | "team"
+                  | "administration"
+                )[];
+                /** @enum {string} */
+                scope: "read" | "write";
+                oauth_query: string;
+              }
+            | {
+                /** @enum {boolean} */
+                accept: false;
+                oauth_query: string;
+              };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              url: string;
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/oauth-grants": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: string;
+              personId: string;
+              owner: string;
+              clientName: string;
+              toolsets: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
+              /** @enum {string} */
+              scope: "read" | "write";
+              grantedAt: string;
+              expiresAt: string;
+              lastUsedAt: string | null;
+            }[];
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/oauth-grants": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              id: string;
+              personId: string;
+              owner: string;
+              clientName: string;
+              toolsets: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
+              /** @enum {string} */
+              scope: "read" | "write";
+              grantedAt: string;
+              expiresAt: string;
+              lastUsedAt: string | null;
+            }[];
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/oauth-grants/{id}/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @enum {boolean} */
+              revoked: true;
+            };
+          };
+        };
+        /** @description Problem details (RFC 9457) */
+        default: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/problem+json": components["schemas"]["Problem"];
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/api-key-requests": {
     parameters: {
       query?: never;
@@ -738,6 +1074,54 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["revokeApiKeyRequest"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/allowed-clients": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAllowedClients"];
+    put?: never;
+    post: operations["createAllowedClient"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/allowed-clients/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteAllowedClient"];
+    options?: never;
+    head?: never;
+    patch: operations["updateAllowedClient"];
+    trace?: never;
+  };
+  "/api/v1/mcp-settings/allowed-clients/{id}/secret": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["generateAllowedClientSecret"];
     delete?: never;
     options?: never;
     head?: never;
@@ -8604,6 +8988,7 @@ export interface operations {
           email: string;
           /** @enum {string} */
           group?: "legal" | "business";
+          callbackURL?: string;
         };
       };
     };
@@ -10275,6 +10660,218 @@ export interface operations {
       };
     };
   };
+  listAllowedClients: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "published" | "registered";
+            metadataUrl: string | null;
+            clientId: string | null;
+            enabled: boolean;
+            seeded: boolean;
+            callbackUrls: string[];
+            secretGeneratedAt: string | null;
+            registeredByClient: boolean;
+            createdBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          }[];
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createAllowedClient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name: string;
+          callbackUrls: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "published" | "registered";
+            metadataUrl: string | null;
+            clientId: string | null;
+            enabled: boolean;
+            seeded: boolean;
+            callbackUrls: string[];
+            secretGeneratedAt: string | null;
+            registeredByClient: boolean;
+            createdBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteAllowedClient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateAllowedClient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          name?: string;
+          callbackUrls?: string[];
+          enabled?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "published" | "registered";
+            metadataUrl: string | null;
+            clientId: string | null;
+            enabled: boolean;
+            seeded: boolean;
+            callbackUrls: string[];
+            secretGeneratedAt: string | null;
+            registeredByClient: boolean;
+            createdBy: string | null;
+            /** Format: date-time */
+            createdAt: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  generateAllowedClientSecret: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            clientId: string;
+            secret: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getMcpSettings: {
     parameters: {
       query?: never;
@@ -10292,8 +10889,11 @@ export interface operations {
         content: {
           "application/json": {
             enabled: boolean;
+            dynamicClientRegistrationEnabled: boolean;
             legalApiKeysEnabled: boolean;
             businessApiKeysEnabled: boolean;
+            legalOAuthClientsEnabled: boolean;
+            businessOAuthClientsEnabled: boolean;
             toolsetCeiling: (
               | "workspace"
               | "contracts"
@@ -10311,7 +10911,31 @@ export interface operations {
             )[];
             readOnly: boolean;
             apiKeyLifetimeDays: number;
+            reachability:
+              | {
+                  /** @enum {string} */
+                  name: "https" | "ipv4" | "public_ipv4";
+                  passed: boolean;
+                }[]
+              | null;
+            allowedClients: {
+              id: string;
+              name: string;
+              /** @enum {string} */
+              kind: "published" | "registered";
+              metadataUrl: string | null;
+              clientId: string | null;
+              enabled: boolean;
+              seeded: boolean;
+              callbackUrls: string[];
+              secretGeneratedAt: string | null;
+              registeredByClient: boolean;
+              createdBy: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
             serverAddress: string;
+            authorizationServerAvailable: boolean;
           };
         };
       };
@@ -10337,8 +10961,11 @@ export interface operations {
       content: {
         "application/json": {
           enabled?: boolean;
+          dynamicClientRegistrationEnabled?: boolean;
           legalApiKeysEnabled?: boolean;
           businessApiKeysEnabled?: boolean;
+          legalOAuthClientsEnabled?: boolean;
+          businessOAuthClientsEnabled?: boolean;
           toolsetCeiling?: (
             | "workspace"
             | "contracts"
@@ -10368,8 +10995,11 @@ export interface operations {
         content: {
           "application/json": {
             enabled: boolean;
+            dynamicClientRegistrationEnabled: boolean;
             legalApiKeysEnabled: boolean;
             businessApiKeysEnabled: boolean;
+            legalOAuthClientsEnabled: boolean;
+            businessOAuthClientsEnabled: boolean;
             toolsetCeiling: (
               | "workspace"
               | "contracts"
@@ -10387,7 +11017,59 @@ export interface operations {
             )[];
             readOnly: boolean;
             apiKeyLifetimeDays: number;
+            reachability:
+              | {
+                  /** @enum {string} */
+                  name: "https" | "ipv4" | "public_ipv4";
+                  passed: boolean;
+                }[]
+              | null;
+            allowedClients: {
+              id: string;
+              name: string;
+              /** @enum {string} */
+              kind: "published" | "registered";
+              metadataUrl: string | null;
+              clientId: string | null;
+              enabled: boolean;
+              seeded: boolean;
+              callbackUrls: string[];
+              secretGeneratedAt: string | null;
+              registeredByClient: boolean;
+              createdBy: string | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
             serverAddress: string;
+            authorizationServerAvailable: boolean;
+          };
+        };
+      };
+      /** @description OAuth authorization server unavailable */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:mcp-oauth-unavailable" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            reachability?: {
+              /** @enum {string} */
+              name: "https" | "ipv4" | "public_ipv4";
+              passed: boolean;
+            }[];
           };
         };
       };
@@ -27968,11 +28650,16 @@ export interface operations {
       content: {
         "application/json": {
           documentVersionId: string;
-          signers: {
-            name: string;
-            /** Format: email */
-            email: string;
-          }[];
+          signers: (
+            | {
+                personId: string;
+              }
+            | {
+                name: string;
+                /** Format: email */
+                email: string;
+              }
+          )[];
           subject?: string;
         };
       };

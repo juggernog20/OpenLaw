@@ -75,6 +75,18 @@ const ENVELOPE_ENDING = {
  * sample here.
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
+  "oauth_grant.granted": {
+    oauthGrantId: "g1",
+    personId: "u1",
+    allowedClientId: "c1",
+    clientName: "Client",
+  },
+  "oauth_grant.revoked": {
+    oauthGrantId: "g1",
+    personId: "u1",
+    allowedClientId: "c1",
+    clientName: "Client",
+  },
   "api_key.requested": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
   "api_key.minted": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
   "api_key.approved": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
@@ -140,6 +152,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "user.sessions_revoked": { email: "sam@example.com", sessions: 2 },
 
   // Organization settings
+  "allowed_client.created": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.updated": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.toggled": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.secret_generated": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.deleted": { allowedClientId: "c1", clientName: "Test Client" },
+  "allowed_client.linked": { allowedClientId: "c1", clientName: "Test Client" },
   "org_settings.updated": { field: "defaultTimezone", old: "UTC", new: "Asia/Dubai" },
   "settings.catalog_cleared": { list: "matter_type", removed: 8 },
 

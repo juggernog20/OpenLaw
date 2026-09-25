@@ -205,6 +205,7 @@
   --height-section-header: 38px; /* settings-card header strip (ST1/ST4 mocks) */
   --height-compare-card: 32rem; /* comparison reader's minimum document-card height (DOC3) */
   --width-settings-card: 45rem; /* settings-card max width (ST1/ST4 mocks) */
+  --width-consent-card: 520px; /* consent card, DES-092 MC5 */
   /* The portal's centered column. Widened from the I5–I7 mocks' 55rem
      when the home, the form, and the request detail gained a side
      column (`--grid-template-columns-portal-split`): the main column

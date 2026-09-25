@@ -436,3 +436,41 @@ describe("the request budget (TECH-032)", () => {
     expect(harness.mailer.messagesTo(email)).toHaveLength(0);
   });
 });
+
+it.each(["legal", "business"] as const)(
+  "returns a magic-link session to the %s login with the exact OAuth query",
+  async (group) => {
+    const email = `oauth-${group}@acme.example`;
+    const callbackURL = `${group === "business" ? "/portal/login" : "/auth/login"}?client_id=claude&state=a%2fb&sig=signed%2Bvalue&exp=123&ba_iat=100&ba_param=scope`;
+    const sent = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/magic-link",
+      payload: { email, group, callbackURL },
+    });
+    expect(sent.statusCode, sent.body).toBe(202);
+    const link = linkFrom(harness.mailer.messagesTo(email).at(-1)!.text);
+    expect(decodeURIComponent(new URL(link).searchParams.get("callbackURL")!)).toBe(callbackURL);
+    const redeemed = await redeem(link);
+    expect(redeemed.statusCode, redeemed.body).toBe(302);
+    expect(
+      new URL(redeemed.headers.location!, harness.app.baseUrl).pathname +
+        new URL(redeemed.headers.location!, harness.app.baseUrl).search,
+    ).toBe(callbackURL);
+    expect(sessionCookies(redeemed)).not.toBeNull();
+  },
+);
+
+it.each([
+  "https://evil.example/auth/login?sig=x",
+  "//evil.example/auth/login?sig=x",
+  "/auth/login/evil?sig=x",
+  "/auth/login?sig=x#fragment",
+  "/portal",
+])("refuses an arbitrary magic-link callback %s", async (callbackURL) => {
+  const sent = await harness.app.inject({
+    method: "POST",
+    url: "/api/v1/auth/magic-link",
+    payload: { email: "callback@acme.example", callbackURL },
+  });
+  expect(sent.statusCode, sent.body).toBe(400);
+});

@@ -9,8 +9,9 @@
  */
 
 import { useState, type FormEvent } from "react";
-import { Link, redirect, useLoaderData } from "react-router";
+import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
+import { oauthAuthorizeReturn } from "../lib/oauth-return";
 import { authClient } from "../lib/auth-client";
 import { currentUser, useSignOut } from "../lib/session";
 import { networkError } from "../lib/messages";
@@ -22,7 +23,10 @@ import { Label } from "../components/ui/label";
 import { PageTitle } from "../components/page-title";
 import { BackupCodes, TotpQr } from "../components/two-factor";
 
-export async function enrollLoader() {
+export async function enrollLoader({ request }: LoaderFunctionArgs) {
+  const params = new URL(request.url).searchParams;
+  const query = params.get("oauth_query") ?? "";
+  const oauthReturn = oauthAuthorizeReturn(query);
   const user = await currentUser({ allowTwoFactorSetup: true, allowEmailSetup: true });
   if (!user) return redirect("/auth/login");
   const { data } = await authClient.getSession();
@@ -30,11 +34,12 @@ export async function enrollLoader() {
   const accounts = await authClient.listAccounts();
   if (accounts.error || !accounts.data)
     throw new Error("The account's sign-in methods could not be read.");
+  const loginUrl = `${user.role === "business_user" ? "/portal/login" : "/auth/login"}${oauthReturn ? `?${query}` : ""}`;
   return {
     twoFactorEnabled: data.user.twoFactorEnabled === true,
     required: user.twoFactorRequired,
-    applicationUrl: user.role === "business_user" ? "/portal" : "/",
-    loginUrl: user.role === "business_user" ? "/portal/login" : "/auth/login",
+    applicationUrl: oauthReturn ? loginUrl : user.role === "business_user" ? "/portal" : "/",
+    loginUrl,
     hasPassword: accounts.data.some((account) => account.providerId === "credential"),
   };
 }
