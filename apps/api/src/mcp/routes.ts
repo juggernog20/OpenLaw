@@ -91,7 +91,7 @@ export function mcpRoutes(
             body.method === "resources/read" && typeof body.params?.uri === "string"
               ? resolveResource(tools, body.params.uri)
               : body.method === "prompts/get" && typeof body.params?.name === "string"
-                ? promptResource(tools, body.params.name, body.params.arguments)
+                ? promptResource(tools, context.grant, body.params.name, body.params.arguments)
                 : undefined;
           const tool =
             body.method === "tools/call"

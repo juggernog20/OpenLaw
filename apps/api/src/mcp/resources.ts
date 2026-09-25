@@ -211,8 +211,8 @@ export function resolveRecordResource(tools: readonly ToolDefinition[], record: 
     knowledge: "knowledge",
   };
   const input = record.trim();
-  const short = /^(contract|matter|request|entity|knowledge)\s+(\S+)$/.exec(input);
-  const uri = short ? `openlaw://${kinds[short[1]!]}/${short[2]}` : input;
+  const short = /^(contract|matter|request|entity|knowledge)\s+(\S+)$/i.exec(input);
+  const uri = short ? `openlaw://${kinds[short[1]!.toLowerCase()]}/${short[2]}` : input;
   const matched = resolveResource(tools, uri);
   return matched && "field" in matched.definition ? { ...matched, uri } : undefined;
 }

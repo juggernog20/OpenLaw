@@ -321,6 +321,7 @@ it("summarizes either address form through the resource templates, with the get 
       for (const address of [
         `openlaw://${record.kind}/${record.address}`,
         `${kind} ${record.address}`,
+        `${kind!.toUpperCase()} ${record.address}`,
       ]) {
         const result = contents(await recordedGet(client, "summarize_record", { record: address }));
         expect(JSON.parse(result.resource.text)).toEqual(expected.structuredContent);

@@ -928,3 +928,31 @@ it("accounts for prompt scope refusals with the embedded resource's OAuth challe
     });
   }
 });
+
+it("does not challenge a Business User for the triage prompt no scope can serve", async () => {
+  const issued = await issue(["contracts"], "read", business);
+  const before = await h.db.select().from(mcpToolCalls);
+  const res = await h.app.inject({
+    method: "POST",
+    url: "/mcp",
+    headers: {
+      authorization: `Bearer ${issued.access_token}`,
+      accept: "application/json, text/event-stream",
+      "mcp-protocol-version": "2025-11-25",
+    },
+    payload: {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "prompts/get",
+      params: { name: "triage_inbox", arguments: {} },
+    },
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  expect(res.headers["www-authenticate"]).toBeUndefined();
+  expect(res.body).toContain("tool_outside_grant");
+  const added = (await h.db.select().from(mcpToolCalls)).filter(
+    (row) => !before.some((old) => old.id === row.id),
+  );
+  expect(added).toHaveLength(1);
+  expect(added[0]).toMatchObject({ tool: "prompt:triage_inbox", outcome: "tool_outside_grant" });
+});
