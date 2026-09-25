@@ -15,7 +15,6 @@ import {
   MATTER_PROGRESSION_GROUPS,
   matters,
   matterStatuses,
-  matterTeam,
   matterTemplateKeyDates,
   matterTemplates,
   matterTemplateTasks,
@@ -37,6 +36,7 @@ import {
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
+import { addToMatterTeam, removeMatterTeamMember } from "../../lib/matter-team.js";
 import { setMatterParent } from "../../lib/matter-relations.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import { FilterOptionsSchema } from "../../lib/record-filters.js";
@@ -44,9 +44,6 @@ import { departmentName, departmentOptions } from "../departments/references.js"
 import { regionOptions } from "../regions/references.js";
 import { createMatter } from "./create.js";
 import {
-  assertAudienceActor,
-  assertEditable,
-  lockedLiveUser,
   lockedMatter,
   MatterEnvelope,
   MatterLifecycleEnvelope,
@@ -60,7 +57,6 @@ import {
   PersonSchema,
   scope,
   selectMatters,
-  selectTeam,
   SeveritySchema,
   toRow,
 } from "./record.js";
@@ -489,35 +485,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const team = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
-        if (current.row.isConfidential) {
-          await assertAudienceActor(
-            tx,
-            current,
-            request.user,
-            "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
-          );
-        }
-        assertEditable(current);
-        const person = await lockedLiveUser(tx, request.body.userId);
-        const inserted = await tx
-          .insert(matterTeam)
-          .values({ matterId: current.row.id, userId: person.id })
-          .onConflictDoNothing()
-          .returning();
-        if (inserted.length === 0) throw httpError(409, "This person is already on the team.");
-        await recordActivity(tx, {
-          entityType: "matter",
-          entityId: current.row.id,
-          actorId: request.user.id,
-          action: "matter.team_added",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: current.row.number,
-            title: current.row.title,
-            member: person.displayName,
-          },
-        });
-        return selectTeam(tx, current.row.id);
+        return addToMatterTeam(tx, current, request.user, request.body.userId);
       });
       return reply.status(201).send({ team });
     },
@@ -539,49 +507,7 @@ export const mattersRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const team = await app.db.transaction(async (tx) => {
         const current = await lockedMatter(tx, request.params.number, request.user);
-        if (current.row.isConfidential) {
-          await assertAudienceActor(
-            tx,
-            current,
-            request.user,
-            "Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.",
-          );
-        }
-        assertEditable(current);
-        if (request.params.userId === current.row.businessOwnerId) {
-          throw httpError(
-            409,
-            "Change the Business Owner before removing this person from the team.",
-          );
-        }
-        const [removed] = await tx
-          .delete(matterTeam)
-          .where(
-            and(
-              eq(matterTeam.matterId, current.row.id),
-              eq(matterTeam.userId, request.params.userId),
-            ),
-          )
-          .returning();
-        if (!removed) throw httpError(404, "This person is not on the matter team.");
-        const [person] = await tx
-          .select({ displayName: users.displayName })
-          .from(users)
-          .where(eq(users.id, request.params.userId))
-          .limit(1);
-        await recordActivity(tx, {
-          entityType: "matter",
-          entityId: current.row.id,
-          actorId: request.user.id,
-          action: "matter.team_removed",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: current.row.number,
-            title: current.row.title,
-            member: person?.displayName ?? request.params.userId,
-          },
-        });
-        return selectTeam(tx, current.row.id);
+        return removeMatterTeamMember(tx, current, request.user, request.params.userId);
       });
       return { team };
     },
