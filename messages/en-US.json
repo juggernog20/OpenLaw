@@ -2660,6 +2660,9 @@
   "connectedClients.disconnect": {
     "defaultMessage": "Disconnect"
   },
+  "connectedClients.disconnectNamed": {
+    "defaultMessage": "Disconnect {client}"
+  },
   "connectedClients.empty": {
     "defaultMessage": "No Client is connected."
   },

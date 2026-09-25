@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * The Connected Clients card of DES-092's MC2: one DsRow per OAuth grant
+ * the signed-in person holds, with Disconnect on the right. The staff
+ * pane and the Portal settings surface mount the same card.
+ */
+
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { toolsetLabel } from "../lib/mcp";
+import { clientInitials } from "./avatar";
 import { SettingsCard } from "./settings-card";
 import { Button } from "./ui/button";
 import { Scope } from "./mcp-scope";
@@ -27,49 +35,51 @@ export function ConnectedClients({
       collapsible
     >
       {grants.length ? (
-        <ul className="flex flex-col gap-4">
+        <ul className="divide-y divide-border-default">
           {grants.map((grant) => (
-            <li key={grant.id} className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="flex size-9 shrink-0 items-center justify-center rounded-button border border-border-default bg-control text-sm font-semibold"
-                >
-                  {grant.clientName.slice(0, 2).toLocaleUpperCase(intl.locale)}
-                </span>
-                <div className="min-w-0">
-                  <p className="break-words text-base font-semibold">{grant.clientName}</p>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                    <span>{grant.toolsets.map((t) => toolsetLabel(intl, t)).join(", ")}</span>
-                    <Scope scope={grant.scope} />
-                    <span className="text-muted">
-                      <FormattedMessage
-                        id="connectedClients.granted"
-                        defaultMessage="Granted {date}"
-                        values={{ date: date(grant.grantedAt) }}
-                      />
-                    </span>
-                    <span className="text-muted">
-                      <FormattedMessage
-                        id="connectedClients.lastUsed"
-                        defaultMessage="Last used {date}"
-                        values={{
-                          date: grant.lastUsedAt
-                            ? date(grant.lastUsedAt)
-                            : intl.formatMessage({
-                                id: "connectedClients.never",
-                                defaultMessage: "Never",
-                              }),
-                        }}
-                      />
-                    </span>
-                  </div>
+            <li key={grant.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+              <span
+                aria-hidden="true"
+                className="flex size-9 shrink-0 items-center justify-center rounded-button border border-border-default bg-control text-sm font-semibold"
+              >
+                {clientInitials(grant.clientName)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="break-words font-medium">{grant.clientName}</p>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                  <span>{grant.toolsets.map((t) => toolsetLabel(intl, t)).join(", ")}</span>
+                  <Scope scope={grant.scope} />
+                  <span className="text-muted">
+                    <FormattedMessage
+                      id="connectedClients.granted"
+                      defaultMessage="Granted {date}"
+                      values={{ date: date(grant.grantedAt) }}
+                    />
+                  </span>
+                  <span className="text-muted">
+                    <FormattedMessage
+                      id="connectedClients.lastUsed"
+                      defaultMessage="Last used {date}"
+                      values={{
+                        date: grant.lastUsedAt
+                          ? date(grant.lastUsedAt)
+                          : intl.formatMessage({
+                              id: "connectedClients.never",
+                              defaultMessage: "Never",
+                            }),
+                      }}
+                    />
+                  </span>
                 </div>
               </div>
               <Button
                 variant="secondary"
                 className="shrink-0"
                 disabled={busy}
+                aria-label={intl.formatMessage(
+                  { id: "connectedClients.disconnectNamed", defaultMessage: "Disconnect {client}" },
+                  { client: grant.clientName },
+                )}
                 onClick={() => onDisconnect(grant)}
               >
                 <FormattedMessage id="connectedClients.disconnect" defaultMessage="Disconnect" />

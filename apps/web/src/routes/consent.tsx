@@ -15,7 +15,7 @@ import { api } from "../lib/api";
 import { toolsetLabel } from "../lib/mcp";
 import { roleLabel } from "../lib/roles";
 import { networkError } from "../lib/messages";
-import { Avatar, initialsOf } from "../components/avatar";
+import { Avatar, clientInitials } from "../components/avatar";
 import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -148,9 +148,7 @@ function Consent({ initial, oauthQuery }: { initial: Facts; oauthQuery: string }
                 aria-hidden="true"
                 className="flex size-10 shrink-0 items-center justify-center rounded-card border border-border-default bg-control text-base font-semibold"
               >
-                {client.name.trim().includes(" ")
-                  ? initialsOf(client.name)
-                  : client.name.slice(0, 2).toUpperCase()}
+                {clientInitials(client.name)}
               </span>
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg font-semibold">

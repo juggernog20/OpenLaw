@@ -18,6 +18,16 @@ export function initialsOf(displayName: string): string {
   return (first + last).toUpperCase();
 }
 
+/**
+ * The glyph for an MCP Client (DES-092): two letters, so "Claude" and
+ * "Claude Desktop" both fill the square. The consent page and the
+ * Connected Clients card draw the same Client, so they share the rule.
+ */
+export function clientInitials(name: string): string {
+  const trimmed = name.trim();
+  return trimmed.includes(" ") ? initialsOf(trimmed) : trimmed.slice(0, 2).toUpperCase();
+}
+
 export function Avatar({
   name,
   image,
