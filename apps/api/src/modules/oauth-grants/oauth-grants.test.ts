@@ -865,3 +865,32 @@ it("offers the same audience-filtered Toolsets for consent and API key requests"
     register.splice(originalLength);
   }
 });
+
+it("accounts for resource scope refusals with the OAuth challenge", async () => {
+  const issued = await issue();
+  const res = await h.app.inject({
+    method: "POST",
+    url: "/mcp",
+    headers: { authorization: `Bearer ${issued.access_token}` },
+    payload: {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "resources/read",
+      params: { uri: "openlaw://matters/M-123" },
+    },
+  });
+  expect(res.statusCode, res.body).toBe(403);
+  expect(res.headers["www-authenticate"]).toContain(
+    'error="insufficient_scope" scope="toolset:matters"',
+  );
+  expect(res.json().result).toMatchObject({
+    isError: true,
+    content: [{ type: "text", text: expect.stringContaining("tool_outside_grant") }],
+  });
+  const rows = await h.db
+    .select()
+    .from(mcpToolCalls)
+    .where(eq(mcpToolCalls.tool, "resource:matters"));
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toMatchObject({ outcome: "tool_outside_grant", clientName: "Test Client" });
+});

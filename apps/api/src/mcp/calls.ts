@@ -55,7 +55,7 @@ async function reserveCall(
         personId: context.user.id,
         credentialId: context.credentialId,
         clientName: context.clientName,
-        tool: /^[a-zA-Z0-9_-]{1,64}$/.test(name) ? name : "unknown_tool",
+        tool: /^(?:(?:resource|prompt):)?[a-zA-Z0-9_-]{1,64}$/.test(name) ? name : "unknown_tool",
         outcome: limited ? "rate_limited" : "pending",
         requestId,
         createdAt: window.now,
@@ -81,32 +81,50 @@ export async function callTool(
   requestId: string,
   active: Environment,
 ) {
+  return recordCall(context, name, requestId, active, async () => {
+    const tool = tools.find((t) => t.name === name);
+    if (!tool) throw new ToolError("unknown_tool", "This Tool is not in the OpenLaw register.");
+    const structuredContent = await runTool(tool, input, context);
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(structuredContent) }],
+      structuredContent,
+    };
+  });
+}
+
+/** Run the registered definition without reserving a second ledger row. */
+export async function runTool(tool: ToolDefinition, input: unknown, context: ToolContext) {
+  const refusal = toolRefusal(tool, context.grant);
+  if (refusal) throw refusal;
+  const parsed = tool.inputSchema.safeParse(input ?? {});
+  if (!parsed.success)
+    throw new ToolError(
+      "invalid_arguments",
+      `${tool.name} arguments do not match its input schema.`,
+    );
+  const output = await withActingUser(context.user, () => tool.run(parsed.data, context));
+  return tool.outputSchema.parse(output);
+}
+
+export async function recordCall<T>(
+  context: ToolContext,
+  name: string,
+  requestId: string,
+  active: Environment,
+  run: () => Promise<T>,
+) {
   const started = performance.now();
   const reservation = await reserveCall(context, name, requestId, active);
   let outcome = "internal_error";
   try {
     if (reservation.refusal) throw reservation.refusal;
-    const tool = tools.find((t) => t.name === name);
-    if (!tool) throw new ToolError("unknown_tool", "This Tool is not in the OpenLaw register.");
-    const refusal = toolRefusal(tool, context.grant);
-    if (refusal) throw refusal;
-    const parsed = tool.inputSchema.safeParse(input ?? {});
-    if (!parsed.success)
-      throw new ToolError(
-        "invalid_arguments",
-        `${tool.name} arguments do not match its input schema.`,
-      );
-    const output = await withActingUser(context.user, () => tool.run(parsed.data, context));
-    const structuredContent = tool.outputSchema.parse(output);
+    const result = await run();
     outcome = "success";
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify(structuredContent) }],
-      structuredContent,
-    };
+    return result;
   } catch (error) {
     outcome = error instanceof ToolError ? error.code : "internal_error";
     return {
-      isError: true,
+      isError: true as const,
       content: [
         {
           type: "text" as const,

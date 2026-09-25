@@ -24,6 +24,7 @@ import type { Environment, AdvancedRuntime } from "../modules/advanced-settings/
 import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
+import { listResources, readResource, resolveResource } from "./resources.js";
 import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 import {
   instructions,
@@ -74,16 +75,23 @@ export function mcpRoutes(
               jsonrpc?: string;
               id?: string | number;
               method?: string;
-              params?: { name?: string; arguments?: unknown };
+              params?: { name?: string; arguments?: unknown; uri?: string };
             }
           | undefined;
         if (
           context.user.via?.kind === "oauth_client" &&
-          body?.method === "tools/call" &&
+          (body?.method === "tools/call" || body?.method === "resources/read") &&
           body.jsonrpc === "2.0" &&
           body.id !== undefined
         ) {
-          const tool = tools.find((t) => t.name === body.params?.name);
+          const resource =
+            body.method === "resources/read" && typeof body.params?.uri === "string"
+              ? resolveResource(tools, body.params.uri)
+              : undefined;
+          const tool =
+            body.method === "tools/call"
+              ? tools.find((t) => t.name === body.params?.name)
+              : resource?.tool;
           if (tool && toolRefusal(tool, context.grant)) {
             const required = [
               ...(tool.toolset === "guide" ? [] : [`toolset:${tool.toolset}`]),
@@ -94,14 +102,17 @@ export function mcpRoutes(
               "WWW-Authenticate",
               `Bearer error="insufficient_scope" scope="${required.join(" ")}" resource_metadata="${metadata}"`,
             );
-            const result = await callTool(
-              tools,
-              tool.name,
-              body.params?.arguments,
-              context,
-              request.id,
-              active,
-            );
+            const result =
+              body.method === "resources/read"
+                ? await readResource(tools, body.params!.uri!, context, request.id, active)
+                : await callTool(
+                    tools,
+                    tool.name,
+                    body.params?.arguments,
+                    context,
+                    request.id,
+                    active,
+                  );
             return reply.code(403).send({ jsonrpc: "2.0", id: body.id, result });
           }
         }
@@ -120,7 +131,16 @@ export function mcpRoutes(
                   era === "modern" ? v >= "2026-07-28" : v < "2026-07-28",
                 ),
                 instructions,
-                capabilities: { tools: {} },
+                capabilities: {
+                  tools: { listChanged: true },
+                  resources: { listChanged: true, subscribe: true },
+                },
+                cacheHints: {
+                  "tools/list": { ttlMs: 300_000, cacheScope: "private" },
+                  "resources/templates/list": { ttlMs: 300_000, cacheScope: "private" },
+                  "resources/list": { ttlMs: 0 },
+                  "resources/read": { ttlMs: 0 },
+                },
               },
             );
             server.server.setRequestHandler("tools/list", async (call) => {
@@ -148,6 +168,32 @@ export function mcpRoutes(
                 page.push(listed);
               }
               return { tools: page, ...(hasMore ? { nextCursor: page.at(-1)!.name } : {}) };
+            });
+            server.server.setRequestHandler("resources/templates/list", async () => ({
+              resourceTemplates: listResources(tools, context.grant, true),
+            }));
+            server.server.setRequestHandler("resources/list", async () => ({
+              resources: listResources(tools, context.grant, false),
+            }));
+            server.server.setRequestHandler("resources/read", async (call) => {
+              try {
+                return await readResource(tools, call.params.uri, context, request.id, active);
+              } catch (error) {
+                request.log.error(
+                  { credentialId: context.credentialId, error: loggable(error) },
+                  "MCP resource read ledger failed.",
+                );
+                return {
+                  contents: [],
+                  isError: true,
+                  content: [
+                    {
+                      type: "text",
+                      text: "internal_error: The resource read could not be recorded.",
+                    },
+                  ],
+                };
+              }
             });
             // Dispatch before schema validation so refused and invalid calls also enter the ledger.
             server.server.setRequestHandler("tools/call", async (call) => {

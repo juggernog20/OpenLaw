@@ -249,7 +249,9 @@ it("enforces the database allowance across simultaneous calls and resets at the 
     );
     results = await Promise.all(
       Array.from({ length: 6 }, (_, index) =>
-        (index % 2 === 0 ? client : replicaClient).callTool({ name: "openlaw_whoami" }),
+        index % 2 === 0
+          ? client.callTool({ name: "openlaw_whoami" })
+          : replicaClient.readResource({ uri: "openlaw://vocabulary" }),
       ),
     );
   } finally {
@@ -276,6 +278,7 @@ it("enforces the database allowance across simultaneous calls and resets at the 
     .limit(6);
   expect(rows.filter((r) => r.outcome === "rate_limited")).toHaveLength(4);
   expect(rows.filter((r) => r.outcome === "success")).toHaveLength(2);
+  expect(rows.filter((r) => r.tool === "resource:vocabulary")).toHaveLength(3);
   const credential = rows[0]!.credentialId;
   await h.db
     .update(mcpToolCalls)
