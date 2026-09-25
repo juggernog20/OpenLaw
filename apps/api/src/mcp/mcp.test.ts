@@ -290,6 +290,42 @@ it("enforces the database allowance across simultaneous calls and resets at the 
   await h.db.update(orgSettings).set({ advancedSettings: null });
 });
 
+it.each([false, true])(
+  "counts prompt gets against the shared Tool allowance in modern era=%s",
+  async (modern) => {
+    const client = await connect(await key(), modern);
+    const before = await h.db.select().from(mcpToolCalls);
+    expect(
+      (
+        await client.getPrompt({
+          name: "summarize_record",
+          arguments: { record: "contract C-999999" },
+        })
+      ).isError,
+    ).toBe(true);
+    expect((await client.callTool({ name: "openlaw_whoami" })).isError).not.toBe(true);
+    const limited = await client.getPrompt({
+      name: "summarize_record",
+      arguments: { record: "contract C-999999" },
+    });
+    expect(limited).toMatchObject({
+      isError: true,
+      messages: [],
+      content: [{ type: "text", text: expect.stringContaining("rate_limited:") }],
+    });
+    const added = (await h.db.select().from(mcpToolCalls)).filter(
+      (row) => !before.some((old) => old.id === row.id),
+    );
+    expect(added).toHaveLength(3);
+    expect(
+      added
+        .filter((row) => row.tool === "prompt:summarize_record")
+        .map((row) => row.outcome)
+        .sort(),
+    ).toEqual(["not_found", "rate_limited"]);
+  },
+);
+
 it("authenticates before parsing a body and challenges GET and DELETE too", async () => {
   for (const method of ["GET", "DELETE"] as const) {
     const response = await h.app.inject({ method, url: "/mcp", cookies: admin });

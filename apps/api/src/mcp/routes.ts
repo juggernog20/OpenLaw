@@ -25,6 +25,7 @@ import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
 import { listResources, readResource, resolveResource } from "./resources.js";
+import { getPrompt, listPrompts, promptResource } from "./prompts.js";
 import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 import {
   instructions,
@@ -80,14 +81,18 @@ export function mcpRoutes(
           | undefined;
         if (
           context.user.via?.kind === "oauth_client" &&
-          (body?.method === "tools/call" || body?.method === "resources/read") &&
+          (body?.method === "tools/call" ||
+            body?.method === "resources/read" ||
+            body?.method === "prompts/get") &&
           body.jsonrpc === "2.0" &&
           body.id !== undefined
         ) {
           const resource =
             body.method === "resources/read" && typeof body.params?.uri === "string"
               ? resolveResource(tools, body.params.uri)
-              : undefined;
+              : body.method === "prompts/get" && typeof body.params?.name === "string"
+                ? promptResource(tools, context.grant, body.params.name, body.params.arguments)
+                : undefined;
           const tool =
             body.method === "tools/call"
               ? tools.find((t) => t.name === body.params?.name)
@@ -105,14 +110,23 @@ export function mcpRoutes(
             const result =
               body.method === "resources/read"
                 ? await readResource(tools, body.params!.uri!, context, request.id, active)
-                : await callTool(
-                    tools,
-                    tool.name,
-                    body.params?.arguments,
-                    context,
-                    request.id,
-                    active,
-                  );
+                : body.method === "prompts/get"
+                  ? await getPrompt(
+                      tools,
+                      body.params!.name!,
+                      body.params?.arguments,
+                      context,
+                      request.id,
+                      active,
+                    )
+                  : await callTool(
+                      tools,
+                      tool.name,
+                      body.params?.arguments,
+                      context,
+                      request.id,
+                      active,
+                    );
             return reply.code(403).send({ jsonrpc: "2.0", id: body.id, result });
           }
         }
@@ -134,12 +148,14 @@ export function mcpRoutes(
                 capabilities: {
                   tools: { listChanged: true },
                   resources: { listChanged: true, subscribe: true },
+                  prompts: { listChanged: true },
                 },
                 cacheHints: {
                   "tools/list": { ttlMs: 300_000, cacheScope: "private" },
                   "resources/templates/list": { ttlMs: 300_000, cacheScope: "private" },
                   "resources/list": { ttlMs: 0 },
                   "resources/read": { ttlMs: 0 },
+                  "prompts/list": { ttlMs: 300_000, cacheScope: "private" },
                 },
               },
             );
@@ -175,6 +191,33 @@ export function mcpRoutes(
             server.server.setRequestHandler("resources/list", async () => ({
               resources: listResources(tools, context.grant, false),
             }));
+            server.server.setRequestHandler("prompts/list", async () => ({
+              prompts: listPrompts(context.grant),
+            }));
+            server.server.setRequestHandler("prompts/get", async (call) => {
+              try {
+                return await getPrompt(
+                  tools,
+                  call.params.name,
+                  call.params.arguments,
+                  context,
+                  request.id,
+                  active,
+                );
+              } catch (error) {
+                request.log.error(
+                  { credentialId: context.credentialId, error: loggable(error) },
+                  "MCP prompt get ledger failed.",
+                );
+                return {
+                  messages: [],
+                  isError: true,
+                  content: [
+                    { type: "text", text: "internal_error: The prompt get could not be recorded." },
+                  ],
+                };
+              }
+            });
             server.server.setRequestHandler("resources/read", async (call) => {
               try {
                 return await readResource(tools, call.params.uri, context, request.id, active);
