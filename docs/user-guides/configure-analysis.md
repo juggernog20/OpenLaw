@@ -38,7 +38,7 @@ For Ollama, `localhost` means the machine or container running each calling proc
 1. Choose the provider and enter its required endpoint. Paste **API key**, or leave it blank when the destination shows **Key saved** or **Key in use**. Ollama does not require a key. Select **Load models**, search if needed, and choose **Model**. Use manual entry when needed.
 2. Select **Save connector**. The key is encrypted and write-only; the saved value is never displayed.
 3. Select **Test connection** and wait for **Connection successful.** The test sends a small fixed prompt to the configured model, without Contract text. It verifies a response from this configuration, not the quality of Contract extraction.
-4. Configure the prompts below, then follow [Contract analysis](contract-analysis.md) on your fictional test Contract. Check the run's Version, model, evidence, and saved values. An automatic run may already have started when the Document's text became ready; wait for it before requesting another.
+4. Configure the prompts below, then follow [Contract analysis](contract-analysis.md) on your fictional test Contract. Check the run's Version, evidence, and saved values. The Contract record does not name the model. The run uses the **Model** saved on the connector when it starts. An automatic run may already have started when the Document's text became ready; wait for it before requesting another.
 
 The **Connected** badge means the connector is saved and enabled, even before a successful test. If testing fails, correct the saved configuration and test again. Turning off **Use AI analysis** also disables **Test connection**; turn it on when ready to test. Saving changes to an existing disabled connector leaves it disabled.
 

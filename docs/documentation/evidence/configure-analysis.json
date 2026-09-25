@@ -1,142 +1,170 @@
 {
   "articleId": "configure-analysis",
-  "contentSha256": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-live",
-  "walkthroughReviewer": "DOC-029 independent live-provider walkthrough agent",
+  "contentSha256": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-live2",
+  "author": "DOC-030 source-review author agent (analysis-live)",
+  "technicalReviewer": "DOC-030 source-review author agent (analysis-live)",
+  "walkthroughReviewer": "DOC-030 independent live-provider walkthrough agent (analysis-live)",
   "reviewerKind": "agent",
-  "author": "DOC-022 author; corrections by DOC-029 live-provider author agent",
-  "technicalReviewer": "DOC-029 live-provider author agent",
-  "verifiedAt": "2026-09-16T17:30:00Z",
+  "verifiedAt": "2026-09-25T15:07:58.256Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/configure-analysis.md",
+    "docs/documentation/batches/DOC-030/analysis-live/technical-review.json",
+    "docs/documentation/batches/DOC-030/analysis-live/walkthrough.json",
+    "docs/documentation/batches/DOC-030/analysis-live/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/analysis-live/fixtures/doc030-live-analysis.txt",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/evidence/configure-analysis.json",
     "docs/documentation/batches/DOC-029/live-provider/technical-review.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43-attempt1.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
-    "docs/user-guides/contract-analysis.md"
+    "docs/decision-records/DECISIONS-CONTRACTS.md",
+    "docs/decision-records/DECISIONS-DESIGN.md",
+    "messages/en-US.json",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/settings-ai-analysis.tsx",
+    "apps/web/src/components/settings-card.tsx",
+    "apps/web/src/components/ai-model-selector.tsx",
+    "apps/web/src/components/ai-saved-key-control.tsx",
+    "apps/web/src/components/ai-key-status.tsx",
+    "apps/web/src/components/ai-answer-style-card.tsx",
+    "apps/web/src/components/ai-prompt-cards.tsx",
+    "apps/web/src/components/field-editor-dialog.tsx",
+    "apps/web/src/components/field-answer-style-select.tsx",
+    "apps/web/src/lib/ai-answer-style.ts",
+    "apps/web/src/lib/ai-connector-config.ts",
+    "apps/web/src/lib/ai-presets.ts",
+    "apps/web/src/lib/core-analysis-labels.ts",
+    "apps/web/src/lib/field-commit.ts",
+    "apps/web/src/lib/field-catalog.ts",
+    "apps/api/src/modules/ai-connector/routes.ts",
+    "apps/api/src/modules/ai-field-prompts/routes.ts",
+    "apps/api/src/modules/contract-analysis/routes.ts",
+    "apps/api/src/modules/contract-analysis/service.ts",
+    "apps/api/src/modules/fields/routes.ts",
+    "apps/api/src/lib/ai/presets.ts",
+    "apps/api/src/lib/ai/saved-keys.ts",
+    "apps/api/src/lib/ai/resolver.ts",
+    "apps/api/src/lib/ai/models.ts",
+    "apps/api/src/lib/ai/http.ts",
+    "apps/api/src/lib/ai/openai-compatible.ts",
+    "apps/api/src/lib/ai/anthropic.ts",
+    "apps/api/src/lib/ai/gemini.ts",
+    "apps/api/src/lib/ai/structured-extraction.ts",
+    "apps/api/src/lib/ai/complete-sources.ts",
+    "apps/api/src/lib/ai-prompts.ts",
+    "apps/api/src/lib/analysis-targets.ts",
+    "apps/api/src/lib/analysis-key-dates.ts",
+    "apps/api/src/lib/conversion-draft.ts",
+    "apps/api/src/lib/custom-fields.ts",
+    "apps/api/src/pipeline/contract-analysis.ts",
+    "apps/api/src/pipeline/automatic-contract-analysis.ts",
+    "packages/shared/src/analysis.ts",
+    "packages/shared/src/ai-destination.ts"
   ],
   "scenarios": [
     {
       "id": "V-C43",
-      "coverage": ["C43"],
+      "coverage": [
+        "C43"
+      ],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
-        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
+        "Owned lab live2 (project openlaw-docs-80ceef9e-live2) built from 067c1646 with the Helix seed, light profile, random seed 7, AI connector unconfigured. The lab was created for steps A01-T01 (seed completed 2026-09-25T14:44:16Z) and recreated for V01-V04 (seed completed 2026-09-25T15:05:23Z). Same app and engine image IDs both times.",
+        "Live provider: OpenRouter (https://openrouter.ai/api/v1), model openai/gpt-oss-120b. The batch owner's key was typed from the environment into the connector form and never logged. Negative checks used an obviously fake key.",
+        "Fictional one-page paper docs/documentation/batches/DOC-030/analysis-live/fixtures/doc030-live-analysis.docx (sha256 d75feebfe1e1cd404afa638af8b18c1a1f2a0c924c1ea4d8277e326b397dc81b) on fictional Vendor Contracts C-35 (first lab) and C-33 (recreated lab)."
       ],
-      "expected": "Test connection succeeds; Load models, search and refresh list the provider's models without saving; Field prompts save on Enter, keep line breaks with Shift+Enter, restore the saved text when cleared, and reset to default; an Analysis run sends the target text to the provider and records Version, model, evidence and Unverified values; refusals and the disabled connector behave as documented; the connector ends enabled. Model accuracy is not claimed.",
-      "actual": "A01 to A16 passed on 3fa407e3 (walkthrough-c43.json round 2). AI analysis is its own Organization link; cards were Provider > Request conversion > Field prompts, Field prompts last with no collapse control, the three switches off. Provider showed OpenRouter and deepseek/deepseek-v4.1-flash with a blank key input and the keep/rotate hint. Test connection showed \"Connection successful.\" in 1.8 s. Load models with the stored key returned 444 models in 229 ms and the button became Refresh models; Search models \"deepseek-v4.1\" left the one matching model; the selection and updatedAt did not change and no save was sent. Enter saved an edited notice-period prompt (asking for the days stated in the paper, without inference) and showed Reset to default; Shift+Enter inserted a line break; clearing the prompt and leaving restored the saved text; maxlength is 2000. Uploading the fictional paper to C-36 started an automatic run without anyone selecting Run analysis; it finished ready on Version 1 with deepseek/deepseek-v4.1-flash in 24 s (21.6 s at the provider; walkthrough-c43-attempt1.json A07). The card read \"Completed Sep 16, 2026, 7:30 PM on Version 1 with deepseek/deepseek-v4.1-flash.\" with Term type, Effective date, Expiry date, Notice period (days) and Value Written and Unverified, Renewal period Invalid, Counterparty Unmatched, and a Price review Key date. A deliberate rerun after the prompt edit showed Running… and finished in 8 to 14 s. The Notice period evidence sparkle opened the doc panel on doc029-live-analysis.docx v1 with \"by giving 45 days' written notice\" highlighted and made no AI call. On C-37, Run analysis was refused: \"This Contract has no primary Document to analyze.\" (409). Turning Use AI analysis off showed Turned off, disabled Test connection and the three switches, hid Run analysis, kept the Unverified values, and a run request answered 409 \"No enabled AI connector is configured.\"; the stored preset, model and key stayed. A Legal Team Member saw no Run analysis while off, was sent to /settings/profile, and got 403 for the connector and prompt APIs. Turning it on passed Test connection again, and the member saw Run analysis again. Load models against a Custom endpoint with a fictional key and a missing path showed \"The provider refused model discovery with HTTP 404.\" and nothing was saved. Reset to default restored the notice-period prompt; the connector ended enabled with no overridden prompt.",
+      "expected": "Configure and test the AI connector, configure a Field prompt, perform an Analysis run, and disable the connector. The configured provider receives the intended input and OpenLaw records its supported output and evidence. Invalid key, model and endpoint, provider refusal and disabling produce the documented behavior. Model accuracy is not claimed.",
+      "actual": "Daniel Okafor, in the browser. Settings > Organization > AI analysis opened /settings/ai-analysis. Cards in order: [\"Personal\",\"Organization\",\"Provider\",\"Answer style\",\"Matter and Contract conversion prompts\",\"Contract analysis prompts\"]; aria-expanded {\"Provider\":\"false\",\"Answer style\":\"false\",\"Matter and Contract conversion prompts\":\"false\",\"Contract analysis prompts\":\"false\"}. The Provider header chip reads \"Not connected\". No Request conversion card. Answer style opened on its own: radios [\"Few word summary\",\"1-2 sentence summary\",\"Full clause text\"], all 3 disabled, \"1-2 sentence summary\" checked, and the card says \"Connect an AI provider to choose an answer style.\" Provider lists [\"Anthropic\",\"OpenAI\",\"Azure OpenAI\",\"Gemini\",\"OpenRouter\",\"Groq\",\"Ollama\",\"Custom endpoint\"]. Per preset: Azure OpenAI: endpoint label \"Deployment endpoint\", Protocol null, Load models 0, Enter model ID manually 0, Model plain text box prefilled \"gpt-5.6-luna\", key required true; Custom endpoint: endpoint label \"Base URL\", Protocol [\"Anthropic Messages\",\"OpenAI-compatible chat completions\",\"Gemini\"], Load models 1, Enter model ID manually 1, Model combobox prefilled \"\", key required true; Ollama: endpoint label null, Protocol null, Load models 1, Enter model ID manually 1, Model combobox prefilled \"llama3.2\", key required false; Groq: endpoint label null, Protocol null, Load models 1, Enter model ID manually 1, Model combobox prefilled \"openai/gpt-oss-120b\", key required true; OpenRouter: endpoint label null, Protocol null, Load models 1, Enter model ID manually 1, Model combobox prefilled \"~openai/gpt-latest\", key required true. \"Output token limit per API call\" slider min 1024, max 262144, value 32768; exact input 32768. At 16384 the warning read \"Below 32,768 tokens, analyses are more likely to fail with incomplete responses, especially with reasoning models. This is a guideline; the tokens needed vary by model and document.\"; at 32768 it was gone. Nothing was saved. Prompts: Opening Answer style left Contract analysis prompts closed. Choosing \"Few word summary\" saved at once (PATCH 200, \"Saved\" shown; stored few_words); choosing \"1-2 sentence summary\" stored sentence again. Descriptions: [\"A few words that name the position, at most 80 characters.\",\"One or two short sentences that state the position, at most 200 characters.\",\"The provision quoted verbatim; short text Fields use a 1-2 sentence summary.\"]. Conversion card hint \"The values every Conversion draft proposes beside the target type's Fields. {module} is replaced with Matter or Contract.\"; prompts [\"Title prompt\",\"Description prompt\",\"Priority prompt\",\"Needed by prompt\",\"Counterparty prompt\"]. Analysis card prompts [\"Term type prompt\",\"Effective date prompt\",\"Expiry date prompt\",\"Renewal period (months) prompt\",\"Notice period (days) prompt\",\"Value prompt\",\"Counterparty prompt\"]; its link \"Contracts → Fields\" points to /settings/contracts/fields. Input \"Notice period (days) prompt\". Enter sent one save (200) and a \"Reset Notice period (days) to default\" link appeared. Shift+Enter added a line break without a save. After typing more text, Escape put back the saved text. Clearing the box and leaving it also put back the saved text. Saves sent during Shift+Enter, Escape and the cleared blur: 0. maxlength 2000. The edited prompt stays for the Analysis run. Overridden before: [\"notice_period_days\"]. Reset to default sent one save (200); the link disappeared and the box shows the built-in prompt \"Extract the notice period for non-renewal or termination.\". Overridden after: []. Catalog Fields: The Contracts → Fields link opened /settings/contracts/fields. Add field: Long text \"DOC-030 analysis-live V-C43 Data location 202609251453\" showed AI prompt and Answer style [\"Organisation default (1-2 sentence summary)\",\"Few word summary\",\"1-2 sentence summary\",\"Full clause text\"]; kept Organisation default. Text \"DOC-030 analysis-live V-C43 Supplier name 202609251453\" showed [\"Organisation default (1-2 sentence summary)\",\"Few word summary\",\"1-2 sentence summary\",\"Full clause text [disabled]\"]; chose Few word summary. Text \"DOC-030 analysis-live V-C43 Unattached 202609251453\" with a prompt (left off the Form on purpose). User \"DOC-030 analysis-live V-C43 Reviewer 202609251453\" showed no AI prompt box and no Answer style. Vendor > Form: Attach Field with Search fields added Rows for [\"DOC-030 analysis-live V-C43 Data location 202609251453\",\"DOC-030 analysis-live V-C43 Supplier name 202609251453\"]. \"DOC-030 analysis-live V-C43 Unattached 202609251453\" has no Row on this Form. Saved keys: Back on OpenRouter the pill read \"Key saved\" with 1 Forget key. Load models worked with the blank key box, and Save connector (200) made it \"Key in use\". Choosing Custom endpoint again with Base URL \"https://openrouter.ai/api/v1/\" (one trailing slash) matched the Custom Saved key: pill \"Key saved\" with Forget key. The dialog read \"Forget the Saved key Forget the Saved key for Custom endpoint at https://openrouter.ai/api/v1? Paste it again if you want to use it later. Cancel Forget key\"; confirming removed the pill. A direct DELETE of the in-use OpenRouter key answered 409 \"This Saved key is in use by the AI connector. Remove the connector or choose another destination before forgetting it.\". Saved keys now: [{\"preset\":\"openrouter\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":true}]. After reload the form shows the saved OpenRouter connector. Corrected step 4 (guide db82673e, recreated lab): Version and evidence: the Notice period sparkle opened the doc panel on \"doc030-live-analysis.docx v1\" with [\"Either party may end this agreement by giving 60 days' written notice.\"] highlighted and made no AI call (0). Evidence sparkles on Overview: [\"View AI evidence for Term type\",\"View AI evidence for Effective date\",\"View AI evidence for Expiry date\",\"View AI evidence for Notice period (days)\",\"View AI evidence for Value\"]. Saved values: Overview shows 5 Unverified markers, Fields 1; the notice row reads \"Notice period (days) Unverified\"; stored notice period 60, effective 2026-04-01, expiry 2027-03-31. No page names the model: openai/gpt-oss-120b and \"gpt-oss\" appear on none of Overview, Fields, Documents, Key dates or History (History reads \"History OpenLaw completed an AI analysis of this contract\"). The API records latestRun.model openai/gpt-oss-120b, equal to the connector's saved Model openai/gpt-oss-120b. Disable: The switch sent POST /ai-connector/disable (200). The chip reads Turned off; the hint reads \"Off since Sep 25. Turn it on to make AI analysis available again.\". Test connection disabled true; Request conversion switches disabled [true,true,true]. Save connector while off answered 200 and the connector stayed off with its key (pill \"Key in use\"). The Answer style radios stayed usable (true), which confirms the author's limitation. On C-35: Run analysis controls 0, Unverified markers still 3. POST /contracts/35/analysis answered 409 \"No enabled AI connector is configured.\". Nadia Haddad (Legal Team Member): Organization group shown 0, AI analysis links 0; /settings/ai-analysis sent her to /settings/profile; GET /ai-connector answered 403. Remove: Before removal: Prepare Matter conversions with AI on, Answer style Full clause text. The dialog read \"Remove the AI connector Saved keys stay on file. You can use them when you reconnect, or use Forget key to delete them. Cancel Remove connector\". Confirming answered 200. The chip reads Not connected, the Request conversion card is gone, Answer style shows \"1-2 sentence summary\" checked and disabled with the connect sentence. The Provider list still shows \"OpenRouter (key saved)\"; Saved keys [{\"preset\":\"openrouter\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":false}]. C-35 still shows 3 Unverified markers. OpenRouter showed \"Key saved\". Saving with a blank key and model openai/gpt-oss-120b answered 200; the pill read \"Key in use\"; the Request conversion switches were [\"false\",\"false\",\"false\"] and Answer style sentence. After a second Remove connector, Forget key on OpenRouter removed the pill and the Provider list reads [\"Anthropic\",\"OpenAI\",\"Azure OpenAI\",\"Gemini\",\"OpenRouter\",\"Groq\",\"Ollama\",\"Custom endpoint\"]. Final state: not configured, no Saved keys. The first walk's step E02 failed against guide 11da3997 because step 4 asked for the model; the batch owner corrected only that sentence and V03 passed it.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43-attempt1.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-live.mjs"
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C43",
-      "coverage": ["C43"],
+      "coverage": [
+        "C43"
+      ],
       "role": "administrator",
       "method": "live-provider-check",
       "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
-        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
+        "Owned lab live2 (project openlaw-docs-80ceef9e-live2) built from 067c1646 with the Helix seed, light profile, random seed 7, AI connector unconfigured. The lab was created for steps A01-T01 (seed completed 2026-09-25T14:44:16Z) and recreated for V01-V04 (seed completed 2026-09-25T15:05:23Z). Same app and engine image IDs both times.",
+        "Live provider: OpenRouter (https://openrouter.ai/api/v1), model openai/gpt-oss-120b. The batch owner's key was typed from the environment into the connector form and never logged. Negative checks used an obviously fake key.",
+        "Fictional one-page paper docs/documentation/batches/DOC-030/analysis-live/fixtures/doc030-live-analysis.docx (sha256 d75feebfe1e1cd404afa638af8b18c1a1f2a0c924c1ea4d8277e326b397dc81b) on fictional Vendor Contracts C-35 (first lab) and C-33 (recreated lab)."
       ],
-      "expected": "Test connection succeeds; Load models, search and refresh list the provider's models without saving; Field prompts save on Enter, keep line breaks with Shift+Enter, restore the saved text when cleared, and reset to default; an Analysis run sends the target text to the provider and records Version, model, evidence and Unverified values; refusals and the disabled connector behave as documented; the connector ends enabled. Model accuracy is not claimed.",
-      "actual": "Live OpenRouter calls: Test connection passed three times (1.3 to 1.8 s). Load models returned 444 models. Analysis runs on C-36 finished ready with openrouter deepseek/deepseek-v4.1-flash: automatic run 21.6 s at the provider, manual runs 12.6 s and 8.1 s. The saved values read back from the Contract were effective 2026-03-01, expiry 2027-02-28, notice 45 days, fixed term and USD 12,000 annually, with a derived notice deadline and a Price review Key date. The input was only the fictional paper (583 extracted characters) and the core prompts. Accuracy is not claimed. The refusal, disable and re-enable results are the same as in the browser-walkthrough record.",
+      "expected": "Configure and test the AI connector, configure a Field prompt, perform an Analysis run, and disable the connector. The configured provider receives the intended input and OpenLaw records its supported output and evidence. Invalid key, model and endpoint, provider refusal and disabling produce the documented behavior. Model accuracy is not claimed.",
+      "actual": "Real OpenRouter calls with openai/gpt-oss-120b. Load models answered 502 and the pane showed \"The provider refused model discovery with HTTP 404.\" under the Model control. The connector is still not configured and no Saved key exists. OpenRouter prefilled Model \"~openai/gpt-latest\". Load models was disabled until the key was pasted, then enabled. OpenRouter returned 458 models (truncated false) and the button became Refresh models; the placeholder read \"Search models\". Typing \"gpt-oss-120b\" narrowed the list to [\"OpenAI: gpt-oss-120b · openai/gpt-oss-120b\",\"OpenAI: gpt-oss-120b (batch) · openai/gpt-oss-120b:batch\"]. Leaving the box without choosing put back \"~openai/gpt-latest\". Choosing the option stored \"openai/gpt-oss-120b\"; Refresh models kept \"openai/gpt-oss-120b\". Enter model ID manually turned the combobox into a plain box and offered Choose from list, which turned the list back on. The connector is still not configured and no Saved key exists, so loading with a pasted key stored nothing. Save connector answered 200 and showed Saved. The API key box is empty again. The chip reads Connected, Use AI analysis is on, the pill beside API key reads \"Key in use\" with no Forget key, and the Provider option reads \"OpenRouter (key saved)\". A Request conversion card appeared with three switches off ({\"matter-preparation\":\"false\",\"contract-preparation\":\"false\",\"contract-conversion-analysis\":\"false\"}). Test connection answered 200 in 4432 ms and showed \"Connection successful.\". Stored: preset openrouter, model openai/gpt-oss-120b, key stored, output limit 32768. The Answer style radios are now enabled. Invalid model: With the key box blank beside \"Key in use\", Save connector answered 200 and kept the Saved key (Saved keys: 1). Test connection answered 502 in 183 ms and showed \"The connection test failed. The provider refused the request with HTTP 400.\". Pasting the key again, choosing openai/gpt-oss-120b from the list and saving answered 200. There is still one Saved key (OpenRouter, in use). Test connection answered 200 in 1445 ms: \"Connection successful.\". Invalid key: Custom endpoint with Base URL https://openrouter.ai/api/v1 showed no key pill before saving. After Save connector (200) the pill read \"Key in use\". Test connection answered 502 in 189 ms and showed \"The connection test failed. The provider refused the request with HTTP 401.\". Saved keys now: [{\"preset\":\"openrouter\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":false},{\"preset\":\"custom\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":true}]. Provider list: [\"Anthropic\",\"OpenAI\",\"Azure OpenAI\",\"Gemini\",\"OpenRouter (key saved)\",\"Groq\",\"Ollama\",\"Custom endpoint (key saved)\"]. Analysis run 1: C-35 \"DOC-030 analysis-live V-C43 202609251453\" (Vendor). After the primary Document upload, an automatic run finished ready on Version 1 with openrouter openai/gpt-oss-120b; provider time 31944 ms, upload to finish 33991 ms, text truncated false. Running… seen on first load: false. Outcome written [\"term_type\",\"effective_date\",\"expiry_date\",\"notice_period_days\",\"value\",\"our_position\",\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"doc_030_analysis_live_v_c43_supplier_name_202609251453\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"], kept [], unsupported [\"renewal_period_months\",\"liability_cap\",\"governing_law\",\"jurisdiction\"], invalid []. Our Fields in the outcome: {\"location\":{\"slug\":\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"in\":[\"written\"]},\"supplier\":{\"slug\":\"doc_030_analysis_live_v_c43_supplier_name_202609251453\",\"in\":[\"written\"]},\"unattached\":{\"slug\":\"doc_030_analysis_live_v_c43_unattached_202609251453\",\"in\":[]}}; the unattached Field appears in no list. Fields page: 3 Unverified markers and evidence sparkles [\"View AI evidence for Our position\",\"View AI evidence for DOC-030 analysis-live V-C43 Data location 202609251453\",\"View AI evidence for DOC-030 analysis-live V-C43 Supplier name 202609251453\"]. Saved values read back: {\"effectiveDate\":\"2026-04-01\",\"expiryDate\":\"2027-03-31\",\"noticePeriodDays\":60,\"termType\":\"fixed\",\"noticeDeadline\":\"2027-01-30\",\"value\":{\"amount\":1800000,\"currency\":\"USD\",\"cadence\":\"annually\"},\"custom\":{\"location\":\"Data stored in EU data centres; deleted within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null},\"aiUnverified\":[\"value\",\"term_type\",\"expiry_date\",\"our_position\",\"effective_date\",\"notice_period_days\",\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"doc_030_analysis_live_v_c43_supplier_name_202609251453\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"]}. Accuracy is not claimed. Run 2: After choosing Few word summary, the Field editor for \"DOC-030 analysis-live V-C43 Data location 202609251453\" offered \"Organisation default (Few word summary)\". Before the rerun the written custom values were unchanged since the first run: {\"location\":\"Data stored in EU data centres; deleted within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null}. Run analysis showed Running… (true); the manual run finished ready on Version 1 with openrouter openai/gpt-oss-120b in 53316 ms at the provider. Outcome written [\"term_type\",\"effective_date\",\"expiry_date\",\"notice_period_days\",\"value\",\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"doc_030_analysis_live_v_c43_supplier_name_202609251453\"], kept [\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"], unsupported [\"renewal_period_months\",\"liability_cap\",\"governing_law\",\"jurisdiction\",\"our_position\"], invalid []. Custom values after: {\"location\":\"Store in EU data centres; delete within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null}. Unverified markers on Fields: 3. The Organization default was put back to 1-2 sentence summary. Accuracy is not claimed. Recreated lab: On the recreated lab (seed 2026-09-25T15:05:23.931Z), OpenRouter with a pasted key listed 458 models. Choosing openai/gpt-oss-120b and Save connector (200) gave chip Connected and pill \"Key in use\". Test connection answered 200 in 5042 ms: \"Connection successful.\". Saved Model: openai/gpt-oss-120b. Run 3: C-33 \"DOC-030 analysis-live V-C43 re-walk 202609251506\" (Vendor). After the upload an automatic run finished ready on Version 1 with openrouter openai/gpt-oss-120b; provider time 60380 ms, upload to finish 78885 ms, truncated false. Outcome written [\"term_type\",\"effective_date\",\"expiry_date\",\"notice_period_days\",\"value\",\"our_position\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"], kept [], unsupported [\"renewal_period_months\",\"liability_cap\",\"governing_law\",\"jurisdiction\"], invalid []. Saved values: {\"effectiveDate\":\"2026-04-01\",\"expiryDate\":\"2027-03-31\",\"noticePeriodDays\":60,\"termType\":\"fixed\",\"noticeDeadline\":\"2027-01-30\",\"value\":{\"amount\":18000,\"currency\":\"USD\",\"cadence\":\"annually\"},\"aiUnverified\":[\"value\",\"term_type\",\"expiry_date\",\"our_position\",\"effective_date\",\"notice_period_days\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"]}. Accuracy is not claimed. Totals: 3 Analysis runs, 6 connection tests, 8 model listings.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43-attempt1.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-live.mjs"
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C43",
-      "coverage": ["C43"],
+      "coverage": [
+        "C43"
+      ],
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
-        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
-        "Operator responsibility was performed with deployment tools on the owned lab and the signed-out formal documentation reader, not through an app role."
+        "Owned lab live2 (project openlaw-docs-80ceef9e-live2) built from 067c1646 with the Helix seed, light profile, random seed 7, AI connector unconfigured. The lab was created for steps A01-T01 (seed completed 2026-09-25T14:44:16Z) and recreated for V01-V04 (seed completed 2026-09-25T15:05:23Z). Same app and engine image IDs both times.",
+        "Live provider: OpenRouter (https://openrouter.ai/api/v1), model openai/gpt-oss-120b. The batch owner's key was typed from the environment into the connector form and never logged. Negative checks used an obviously fake key.",
+        "Fictional one-page paper docs/documentation/batches/DOC-030/analysis-live/fixtures/doc030-live-analysis.docx (sha256 d75feebfe1e1cd404afa638af8b18c1a1f2a0c924c1ea4d8277e326b397dc81b) on fictional Vendor Contracts C-35 (first lab) and C-33 (recreated lab).",
+        "Operator responsibility performed on the owned lab and the signed-out formal documentation reader, not through an app role."
       ],
-      "expected": "The operator can follow the article to the deployment guidance for outbound provider access and credential-key retention.",
-      "actual": "OB02 passed. Signed out, the operator opened /documentation/configure-analysis in the formal reader and followed its deployment configuration link to /documentation/deployment-configuration. That page says to allow outbound provider traffic from both the app and worker, and its \"Preserve and rotate encryption keys\" section says OPENLAW_SECRET_KEY encrypts the AI-provider key. The reader serves the committed article bytes of 3fa407e3, so this proves the operator link and its target, not the reviewed wording. Operator container actions are in operator-observations.json.",
+      "expected": "The operator can follow the guide to the deployment guidance for outbound provider access and the encryption key, and the Ollama preset's localhost is the calling container's own.",
+      "actual": "Signed out, /documentation/configure-analysis linked \"deployment configuration\" to /documentation/deployment-configuration. That page says to allow outbound provider traffic from both the app and worker and has \"Preserve and rotate encryption keys\", which names OPENLAW_SECRET_KEY. The reader serves the committed article bytes of 067c1646, so this proves the operator link and target, not the reviewed wording. Ollama shows no Base URL control. Load models answered 502 and showed \"The provider model list could not be reached or read.\". The app container has no service on its own localhost:11434, so the operator must provide a reachable service or a Custom endpoint, as the guide says.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.mjs"
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.mjs"
       ]
     },
     {
       "id": "V-C43",
-      "coverage": ["C43"],
+      "coverage": [
+        "C43"
+      ],
       "role": "operator",
       "method": "live-provider-check",
       "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with an OpenRouter AI connector and model deepseek/deepseek-v4.1-flash. The user entered the API key; the agent never read, entered or saved it.",
-        "Fictional Contract C-36 \"DOC-029 live analysis\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-analysis.docx (sha256 30093f0a5f9a551010892c918ff0c5902049120089262c2d3f332e6337f7385c), and C-37 \"DOC-029 live analysis no paper\" with no Document. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
-        "Operator responsibility was performed with container tools on the owned lab, not through an app role."
+        "Owned lab live2 (project openlaw-docs-80ceef9e-live2) built from 067c1646 with the Helix seed, light profile, random seed 7, AI connector unconfigured. The lab was created for steps A01-T01 (seed completed 2026-09-25T14:44:16Z) and recreated for V01-V04 (seed completed 2026-09-25T15:05:23Z). Same app and engine image IDs both times.",
+        "Live provider: OpenRouter (https://openrouter.ai/api/v1), model openai/gpt-oss-120b. The batch owner's key was typed from the environment into the connector form and never logged. Negative checks used an obviously fake key.",
+        "Fictional one-page paper docs/documentation/batches/DOC-030/analysis-live/fixtures/doc030-live-analysis.docx (sha256 d75feebfe1e1cd404afa638af8b18c1a1f2a0c924c1ea4d8277e326b397dc81b) on fictional Vendor Contracts C-35 (first lab) and C-33 (recreated lab).",
+        "Operator actions ran with docker compose -p openlaw-docs-80ceef9e-live2 only."
       ],
-      "expected": "Both the app and worker reach the AI provider, share the credential encryption key, and do not log the API key.",
-      "actual": "O01, O02, O04 and O05 passed. The app and worker set the same non-empty OPENLAW_SECRET_KEY (compared by hash equality; no value or hash printed) and no AI credential is an environment variable. The app reached OpenRouter for Test connection and Load models. The worker reached OpenRouter: its log has \"contract analysis finished\" for each run (15:30:01Z, 15:30:18Z, 15:32:39Z, and later runs on C-38), and each run finished ready with the configured model. No proxy variable is set. The logs contain no 'sk-or-' or bearer text. Source inspection confirms that Load models and the probe run in the app, extraction runs in the worker, and the switch changes only disabledAt.",
+      "expected": "Both the app and worker reach the provider, share the credential encryption key, keep the output limit and the Saved key across a restart, and do not log the key.",
+      "actual": "App env names 32, worker 28. OPENLAW_SECRET_KEY is set and equal in both (compared by hash inside the script; no value or hash recorded). Provider-credential variables: []; proxy variables: []. The app answered the connection tests and model listings, so it reached openrouter.ai. The worker log has 2 \"contract analysis finished\" lines ([\"2026-09-25T15:00:01.197Z\",\"2026-09-25T15:01:06.949Z\"]), and the lab database holds these runs: [\"automatic:ready:openai/gpt-oss-120b\",\"manual:ready:openai/gpt-oss-120b\"]. The key string and the OpenRouter key prefix occur 0 times in the app log (7653 lines) and the worker log (253 lines). Saving 30,720 showed the below-32,768 warning. docker compose restart of app and worker took 12387 ms to answer again. The pane then showed 30720 and chip \"Turned off\" (still off, as left). Turning Use AI analysis on and selecting Test connection answered 200 in 2791 ms: \"Connection successful.\", so the Saved key decrypts after the restart. 32,768 was saved back; the connector is enabled.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json"
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/analysis-live/walkthrough.mjs"
       ]
-    }
-  ],
-  "notes": [
-    {
-      "kind": "product-bug",
-      "issue": "#887",
-      "text": "Escape in a Field prompt saved the discarded text (A06, both rounds). The handler reverts the draft and then blurs the input, and the blur handler saves the stale draft (apps/web/src/components/ai-field-prompts-card.tsx). The agent restored the prompt with Reset to default. The author removed the Escape sentence from the article, so this is not a scenario failure."
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study. Model accuracy is not claimed.",
-    "The walkthrough ran against article bytes that still had the sentence \"Escape restores the saved text.\" The author then removed only that sentence (issue #887), which gives the recorded hash a2e55ab5.... The removal takes a claim away and adds no step, so the walkthrough still covers every step in these bytes.",
-    "Invalid key, invalid model and provider refusal were not tested live, because the user's key cannot be re-entered without the user. The live failure cases were a Load models refusal (HTTP 404) against a missing endpoint path with a fictional key (not saved), the no-primary-Document refusal, and the disabled connector.",
-    "Catalog Fields with AI prompts, Request conversion switches and the other presets were not exercised live. The switches were only seen off and disabled while the connector was off.",
-    "Side effects on the lab: a re-run of the reviewer script uploaded a second, non-primary copy of doc029-live-analysis.docx to C-36. The signing paper on C-38 and its executed copy were also sent to OpenRouter by automatic runs, because the connector was enabled.",
-    "Reviewer script errors are kept in walkthrough-c43-attempt1.json: A08 read no result rows and A10 found no evidence button because of wrong locators. Round 2 corrected both. The automatic-run observation comes from round 1 A07, because round 2 reused C-36.",
-    "The connector ended enabled with OpenRouter and deepseek/deepseek-v4.1-flash, the key stored, and no prompt overridden."
+    "Independent agent walkthrough by a different agent from the author; not a human user study. Model accuracy is not claimed. The two runs on the same paper saved different Value amounts (1800000 and 18000 minor units); the guide makes no accuracy claim and a later supported answer may replace an Unverified value.",
+    "The Contract record does not show the run's model (V03); the guide now says so. The model was checked through the API (latestRun.model) against the connector's saved Model.",
+    "The app shows no per-value Invalid outcome; all three runs had invalid []. A value that fails validation after repair can be observed only as an unchanged value (author's limitation, not contradicted).",
+    "The Answer style radios stay usable while Use AI analysis is off (F01), as the author's limitation says.",
+    "Anthropic, OpenAI, Azure OpenAI, Gemini, Groq and Ollama were checked for their form controls only. Ollama Load models failed from the app container's own localhost, as the guide describes. No account for the other providers was used.",
+    "Provider refusal was shown as HTTP 400 (invalid model), 401 (fake key) and 404 (missing endpoint path). No timeout or rate-limit refusal was produced.",
+    "Removing a Field's prompt before a later run was not exercised, to stay within five Analysis runs.",
+    "Reviewer script errors are kept under earlierAttempts in walkthrough.json (page reload on the landing page, radio check()). They were fixed and re-run; none was a guide or product failure.",
+    "The lab live2 was destroyed after the walk, with the connector removed and the Saved key forgotten."
   ],
-  "previousEvidence": "docs/documentation/batches/dev-integration/previous-configure-analysis.json",
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+  "previousEvidence": {
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "a2e55ab56de071da73c1bafdec80f4af47690939fbe80f88eb2971a5ebe4e431",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "Round 3 reviewed 3fa407e3 to 432dba3a. No file on the AI provider path changed from 3fa407e3 to 432dba3a. git diff --quiet reports no change for apps/api/src/modules/ai-connector, ai-field-prompts, contract-analysis, apps/api/src/lib, apps/api/src/pipeline, apps/worker, packages/shared/src/analysis.ts, packages/db, ai-model-selector.tsx and ai-field-prompts-card.tsx. The API changes are in email-settings and org only. In apps/web, settings-ai-analysis.tsx changed only the Provider card intro text, which the article does not quote, and moved the key reuse check into lib/ai-connector-config.ts as canReuseAiKey. I compared the old and new code. Both require hasApiKey, the same preset and protocol, a saved base URL, and equal normalized base URLs, so the rule in Disable, rotate, or remove is unchanged. Two status messages in en-US.json now say AI features instead of Contract analysis. The article does not quote them. The live provider check on 3fa407e3 (V-C43, walkthrough-c43.json) used a real OpenRouter connector with deepseek/deepseek-v4.1-flash. It covered Test connection success, Load models, search and refresh with 444 models, Field prompt save, line break, restore and reset, an automatic Analysis run and a deliberate rerun with Version, model, evidence and Unverified values, the evidence panel, the no-primary-Document refusal, turning the connector off and on, the Legal Team Member view, and a Load models refusal from a missing Custom endpoint path. On 57e77e38 round 2 (walkthrough-r2-1.json) re-ran 18 credential-free steps and all passed: page and card order, presets and forms, save refusals, API refusals, Load models against a closed endpoint, a fictional Custom connector with a failing test, the turned-off state, the changed-destination key rule, Field prompts, the Contracts to Fields link, Remove connector, the Legal Team Member refusal, the signed-out help link, and operator checks of the shared OPENLAW_SECRET_KEY and key-free logs. It could not re-run the live provider steps. Those steps run only code that did not change, so I judge the article compatible. The article contentSha256 a2e55ab5 still matches its evidence. Known issue #887 remains and the article still makes no Escape claim. From 57e77e38 to 432dba3a only welcome.tsx and its test changed, which the article does not describe.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/live-provider/walkthrough/walkthrough-c43.json",
-        "sha256": "a12a6c69558c97bce7f5feb88b38c4e4ae237d7091b0780fa2116035bdcaffdb"
-      },
-      {
-        "path": "batches/DOC-029/live-provider/technical-review-r2.json",
-        "sha256": "1858967f9ef1e5da131e68ffb8863810c705d3e6be90173924035e9bc25667c0"
-      },
-      {
-        "path": "batches/DOC-029/live-provider/walkthrough-r2-1.json",
-        "sha256": "935e3d26434a3f57fad90b7e596d5682afe5e7753fddf1cf4d93cbe776383083"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T17:30:00Z"
+  },
+  "copyOnlyReview": null,
+  "compatibilityReview": null
 }

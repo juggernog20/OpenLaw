@@ -17,7 +17,7 @@
       "articleId": "deployment-configuration",
       "scenario": ["V-C45", "V-C45-advanced-settings", "V-M40-LAN", "V-M41-PUBLIC"],
       "contentSha256Before": "4aac5cc67a960ec02db974c5ae4bebe1aecae538dba7fd08f4138c7821bc8c99",
-      "contentSha256": "3f8cb58bd4dd3ab55bab00834a7523d022ca3967c12d70de3c3f14228664ecb6",
+      "contentSha256": "db82804288801ddce5a9a70e536e62d2093a780d450e0bb62bdbf09c236105de",
       "sources": [
         "CONTEXT.md",
         "docs/documentation/EDITORIAL.md",
@@ -155,6 +155,27 @@
           "before": "Maximum size of one upload, default 100 MB.",
           "after": "In MiB, default 100; a set value pins File uploads. Storage variables in .env pin the matching Document storage fields.",
           "source": "apps/api/src/lib/uploads.ts MEGABYTE = 1024 * 1024; config.ts sections"
+        },
+        {
+          "claim": "System status heartbeat rows",
+          "before": "Only No recent heartbeat is described for a stopped process.",
+          "after": "A worker that stops cleanly removes its own row instead.",
+          "source": "apps/worker/src/index.ts (stopHeartbeat on shutdown); operator walkthrough.json",
+          "correctedBy": "DOC-030 batch owner, from the operator walkthrough notes of 2026-09-25"
+        },
+        {
+          "claim": "Trusted proxy log check",
+          "before": "Every recorded line should show a browser address.",
+          "after": "Ignore the 127.0.0.1 lines from the container health check.",
+          "source": "compose.yml (app healthcheck fetches http://127.0.0.1:3000/readyz every 30s)",
+          "correctedBy": "DOC-030 batch owner, from the operator walkthrough notes of 2026-09-25"
+        },
+        {
+          "claim": "Storage under a wrong OPENLAW_SECRET_KEY",
+          "before": "Storage becomes the local driver.",
+          "after": "Storage uses STORAGE_DRIVER from .env, or the local driver when it is unset.",
+          "source": "apps/api/src/lib/storage/config.ts (read(env, \"STORAGE_DRIVER\") ?? DEFAULT_STORAGE_DRIVER)",
+          "correctedBy": "DOC-030 batch owner, from the operator walkthrough notes of 2026-09-25"
         }
       ],
       "confirmed": [

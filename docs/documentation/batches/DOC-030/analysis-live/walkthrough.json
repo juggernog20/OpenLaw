@@ -1,0 +1,2151 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-030",
+  "group": "analysis-live",
+  "issue": 1157,
+  "walkthroughReviewer": "DOC-030 independent live-provider walkthrough agent (analysis-live)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "environment": "openlaw-docs-80ceef9e-live2",
+  "lab": "live2",
+  "appUrl": "http://127.0.0.1:43320",
+  "mailUrl": "http://127.0.0.1:48440",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-25T14:43:58.708Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-25T14:44:16.069Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHash": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
+  "provider": {
+    "name": "OpenRouter",
+    "preset": "openrouter",
+    "baseUrl": "https://openrouter.ai/api/v1",
+    "model": "openai/gpt-oss-120b"
+  },
+  "note": "Sanitized. No API key, cookie or sign-in link is recorded. The real key was typed from the environment; the negative check used an obviously fake key.",
+  "fixture": {
+    "file": "docs/documentation/batches/DOC-030/analysis-live/fixtures/doc030-live-analysis.docx",
+    "sha256": "d75feebfe1e1cd404afa638af8b18c1a1f2a0c924c1ea4d8277e326b397dc81b",
+    "text": "docs/documentation/batches/DOC-030/analysis-live/fixtures/doc030-live-analysis.txt",
+    "pages": 1
+  },
+  "providerCalls": [
+    {
+      "at": "2026-09-25T14:55:00.861Z",
+      "kind": "model listing",
+      "label": "custom endpoint, missing path, fake key",
+      "button": "Load models",
+      "status": 502,
+      "ms": 320,
+      "models": null,
+      "truncated": null,
+      "detail": "The provider refused model discovery with HTTP 404."
+    },
+    {
+      "at": "2026-09-25T14:55:01.083Z",
+      "kind": "model listing",
+      "label": "ollama preset, app container localhost",
+      "button": "Load models",
+      "status": 502,
+      "ms": 48,
+      "models": null,
+      "truncated": null,
+      "detail": "The provider model list could not be reached or read."
+    },
+    {
+      "at": "2026-09-25T14:55:01.346Z",
+      "kind": "model listing",
+      "label": "openrouter, pasted key",
+      "button": "Load models",
+      "status": 200,
+      "ms": 142,
+      "models": 458,
+      "truncated": false,
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T14:55:02.071Z",
+      "kind": "model listing",
+      "label": "openrouter, Refresh models",
+      "button": "Refresh models",
+      "status": 200,
+      "ms": 103,
+      "models": 458,
+      "truncated": false,
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T14:55:12.808Z",
+      "kind": "model listing",
+      "label": "openrouter before save",
+      "button": "Load models",
+      "status": 200,
+      "ms": 643,
+      "models": 458,
+      "truncated": false,
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T14:55:17.390Z",
+      "kind": "connection test",
+      "label": "first test after save",
+      "status": 200,
+      "ms": 4432,
+      "shown": "Connection successful.",
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T14:55:17.890Z",
+      "kind": "connection test",
+      "label": "invalid model",
+      "status": 502,
+      "ms": 183,
+      "shown": "The connection test failed. The provider refused the request with HTTP 400.",
+      "detail": "The connection test failed. The provider refused the request with HTTP 400."
+    },
+    {
+      "at": "2026-09-25T14:55:18.267Z",
+      "kind": "model listing",
+      "label": "openrouter rotate",
+      "button": "Load models",
+      "status": 200,
+      "ms": 248,
+      "models": 458,
+      "truncated": false,
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T14:55:19.835Z",
+      "kind": "connection test",
+      "label": "after rotation",
+      "status": 200,
+      "ms": 1445,
+      "shown": "Connection successful.",
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T14:55:20.243Z",
+      "kind": "connection test",
+      "label": "custom endpoint, fake key",
+      "status": 502,
+      "ms": 189,
+      "shown": "The connection test failed. The provider refused the request with HTTP 401.",
+      "detail": "The connection test failed. The provider refused the request with HTTP 401."
+    },
+    {
+      "at": "2026-09-25T14:55:20.624Z",
+      "kind": "model listing",
+      "label": "openrouter with Saved key",
+      "button": "Load models",
+      "status": 200,
+      "ms": 248,
+      "models": 458,
+      "truncated": false,
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T15:00:02.679Z",
+      "kind": "analysis run",
+      "label": "automatic",
+      "trigger": "automatic",
+      "state": "ready",
+      "preset": "openrouter",
+      "model": "openai/gpt-oss-120b",
+      "versionNumber": 1,
+      "truncated": false,
+      "providerMs": 31944,
+      "startedAt": "2026-09-25T14:59:29.250Z",
+      "finishedAt": "2026-09-25T15:00:01.194Z",
+      "failure": null,
+      "outcome": {
+        "written": [
+          "term_type",
+          "effective_date",
+          "expiry_date",
+          "notice_period_days",
+          "value",
+          "our_position",
+          "doc_030_analysis_live_v_c43_data_location_202609251453",
+          "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+          "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+        ],
+        "kept": [],
+        "unsupported": [
+          "renewal_period_months",
+          "liability_cap",
+          "governing_law",
+          "jurisdiction"
+        ],
+        "invalid": [],
+        "unmatched": "Northwind Fictional Services LLC",
+        "results": [
+          {
+            "slug": "term_type",
+            "value": "fixed",
+            "evidence": "This agreement has a fixed term.",
+            "outcome": "written"
+          },
+          {
+            "slug": "effective_date",
+            "value": "2026-04-01",
+            "evidence": "This agreement starts on 1 April 2026.",
+            "outcome": "written"
+          },
+          {
+            "slug": "expiry_date",
+            "value": "2027-03-31",
+            "evidence": "It ends on 31 March 2027.",
+            "outcome": "written"
+          },
+          {
+            "slug": "renewal_period_months",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "notice_period_days",
+            "value": 60,
+            "evidence": "by giving 60 days' written notice.",
+            "outcome": "written"
+          },
+          {
+            "slug": "value",
+            "value": {
+              "amount": 1800000,
+              "cadence": "annually",
+              "currency": "USD"
+            },
+            "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+            "outcome": "written"
+          },
+          {
+            "slug": "counterparties",
+            "value": "Northwind Fictional Services LLC",
+            "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+            "outcome": "unmatched"
+          },
+          {
+            "slug": "liability_cap",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "governing_law",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "jurisdiction",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "our_position",
+            "value": "Customer",
+            "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+            "outcome": "written"
+          },
+          {
+            "slug": "doc_030_analysis_live_v_c43_data_location_202609251453",
+            "value": "Data stored in EU data centres; deleted within 30 days after agreement ends.",
+            "evidence": "stores all Helix data only in data centres in the European Union and deletes that data within 30 days after this agreement ends.",
+            "outcome": "written"
+          },
+          {
+            "slug": "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+            "value": "Northwind Fictional Services LLC",
+            "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+            "outcome": "written"
+          },
+          {
+            "slug": "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db",
+            "value": {
+              "date": "2027-01-01",
+              "note": null,
+              "label": "Price review"
+            },
+            "evidence": "The parties review the fees on 1 January 2027.",
+            "outcome": "written"
+          }
+        ]
+      },
+      "uploadToFinishMs": 33991
+    },
+    {
+      "at": "2026-09-25T15:01:08.012Z",
+      "kind": "analysis run",
+      "label": "manual after Answer style change",
+      "trigger": "manual",
+      "state": "ready",
+      "preset": "openrouter",
+      "model": "openai/gpt-oss-120b",
+      "versionNumber": 1,
+      "truncated": false,
+      "providerMs": 53316,
+      "startedAt": "2026-09-25T15:00:13.621Z",
+      "finishedAt": "2026-09-25T15:01:06.937Z",
+      "failure": null,
+      "outcome": {
+        "written": [
+          "term_type",
+          "effective_date",
+          "expiry_date",
+          "notice_period_days",
+          "value",
+          "doc_030_analysis_live_v_c43_data_location_202609251453",
+          "doc_030_analysis_live_v_c43_supplier_name_202609251453"
+        ],
+        "kept": [
+          "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+        ],
+        "unsupported": [
+          "renewal_period_months",
+          "liability_cap",
+          "governing_law",
+          "jurisdiction",
+          "our_position"
+        ],
+        "invalid": [],
+        "unmatched": "Helix Software Ltd and Northwind Fictional Services LLC",
+        "results": [
+          {
+            "slug": "term_type",
+            "value": "fixed",
+            "evidence": "This agreement has a fixed term.",
+            "outcome": "written"
+          },
+          {
+            "slug": "effective_date",
+            "value": "2026-04-01",
+            "evidence": "This agreement starts on 1 April 2026.",
+            "outcome": "written"
+          },
+          {
+            "slug": "expiry_date",
+            "value": "2027-03-31",
+            "evidence": "It ends on 31 March 2027.",
+            "outcome": "written"
+          },
+          {
+            "slug": "renewal_period_months",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "notice_period_days",
+            "value": 60,
+            "evidence": "Either party may end this agreement by giving 60 days' written notice.",
+            "outcome": "written"
+          },
+          {
+            "slug": "value",
+            "value": {
+              "amount": 18000,
+              "cadence": "annually",
+              "currency": "USD"
+            },
+            "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+            "outcome": "written"
+          },
+          {
+            "slug": "counterparties",
+            "value": "Helix Software Ltd and Northwind Fictional Services LLC",
+            "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+            "outcome": "unmatched"
+          },
+          {
+            "slug": "liability_cap",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "governing_law",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "jurisdiction",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "our_position",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "doc_030_analysis_live_v_c43_data_location_202609251453",
+            "value": "Store in EU data centres; delete within 30 days after agreement ends.",
+            "evidence": "Northwind Fictional Services LLC stores all Helix data only in data centres in the European Union and deletes that data within 30 days after this agreement ends.",
+            "outcome": "written"
+          },
+          {
+            "slug": "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+            "value": "Northwind Fictional Services LLC",
+            "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+            "outcome": "written"
+          },
+          {
+            "slug": "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db",
+            "value": {
+              "date": "2027-01-01",
+              "note": null,
+              "label": "Price review"
+            },
+            "evidence": "The parties review the fees on 1 January 2027.",
+            "outcome": "kept"
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-09-25T15:02:04.657Z",
+      "kind": "connection test",
+      "label": "after app and worker restart",
+      "status": 200,
+      "ms": 2791,
+      "shown": "Connection successful.",
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T15:06:21.138Z",
+      "kind": "model listing",
+      "label": "re-walk: openrouter before save",
+      "button": "Load models",
+      "status": 200,
+      "ms": 683,
+      "models": 458,
+      "truncated": false,
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T15:06:26.465Z",
+      "kind": "connection test",
+      "label": "re-walk: test after save",
+      "status": 200,
+      "ms": 5042,
+      "shown": "Connection successful.",
+      "detail": null
+    },
+    {
+      "at": "2026-09-25T15:07:45.448Z",
+      "kind": "analysis run",
+      "label": "re-walk automatic (run 3 of 5)",
+      "trigger": "automatic",
+      "state": "ready",
+      "preset": "openrouter",
+      "model": "openai/gpt-oss-120b",
+      "versionNumber": 1,
+      "truncated": false,
+      "providerMs": 60380,
+      "startedAt": "2026-09-25T15:06:43.798Z",
+      "finishedAt": "2026-09-25T15:07:44.178Z",
+      "failure": null,
+      "outcome": {
+        "written": [
+          "term_type",
+          "effective_date",
+          "expiry_date",
+          "notice_period_days",
+          "value",
+          "our_position",
+          "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+        ],
+        "kept": [],
+        "unsupported": [
+          "renewal_period_months",
+          "liability_cap",
+          "governing_law",
+          "jurisdiction"
+        ],
+        "invalid": [],
+        "unmatched": "Northwind Fictional Services LLC",
+        "results": [
+          {
+            "slug": "term_type",
+            "value": "fixed",
+            "evidence": "This agreement has a fixed term.",
+            "outcome": "written"
+          },
+          {
+            "slug": "effective_date",
+            "value": "2026-04-01",
+            "evidence": "This agreement starts on 1 April 2026.",
+            "outcome": "written"
+          },
+          {
+            "slug": "expiry_date",
+            "value": "2027-03-31",
+            "evidence": "It ends on 31 March 2027.",
+            "outcome": "written"
+          },
+          {
+            "slug": "renewal_period_months",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "notice_period_days",
+            "value": 60,
+            "evidence": "Either party may end this agreement by giving 60 days' written notice.",
+            "outcome": "written"
+          },
+          {
+            "slug": "value",
+            "value": {
+              "amount": 18000,
+              "cadence": "annually",
+              "currency": "USD"
+            },
+            "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+            "outcome": "written"
+          },
+          {
+            "slug": "counterparties",
+            "value": "Northwind Fictional Services LLC",
+            "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+            "outcome": "unmatched"
+          },
+          {
+            "slug": "liability_cap",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "governing_law",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "jurisdiction",
+            "value": null,
+            "evidence": "",
+            "outcome": "unsupported"
+          },
+          {
+            "slug": "our_position",
+            "value": "Customer",
+            "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+            "outcome": "written"
+          },
+          {
+            "slug": "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db",
+            "value": {
+              "date": "2027-01-01",
+              "note": null,
+              "label": "Price review"
+            },
+            "evidence": "The parties review the fees on 1 January 2027.",
+            "outcome": "written"
+          }
+        ]
+      },
+      "uploadToFinishMs": 78885
+    }
+  ],
+  "records": [
+    {
+      "kind": "contract field",
+      "name": "DOC-030 analysis-live V-C43 Data location 202609251453",
+      "type": "Long text",
+      "at": "2026-09-25T14:56:30.358Z"
+    },
+    {
+      "kind": "contract field",
+      "name": "DOC-030 analysis-live V-C43 Supplier name 202609251453",
+      "type": "Text",
+      "at": "2026-09-25T14:56:30.807Z"
+    },
+    {
+      "kind": "contract field",
+      "name": "DOC-030 analysis-live V-C43 Unattached 202609251453",
+      "type": "Text",
+      "at": "2026-09-25T14:56:31.240Z"
+    },
+    {
+      "kind": "contract field",
+      "name": "DOC-030 analysis-live V-C43 Reviewer 202609251453",
+      "type": "User",
+      "at": "2026-09-25T14:56:31.356Z"
+    },
+    {
+      "kind": "contract",
+      "name": "DOC-030 analysis-live V-C43 202609251453",
+      "number": "C-35",
+      "at": "2026-09-25T14:59:28.659Z"
+    },
+    {
+      "kind": "primary document",
+      "name": "doc030-live-analysis.docx",
+      "contract": "C-35",
+      "at": "2026-09-25T14:59:28.689Z"
+    },
+    {
+      "kind": "contract",
+      "name": "DOC-030 analysis-live V-C43 re-walk 202609251506",
+      "number": "C-33",
+      "lab": "live2 (recreated)",
+      "at": "2026-09-25T15:06:26.513Z"
+    },
+    {
+      "kind": "primary document",
+      "name": "doc030-live-analysis.docx",
+      "contract": "C-33",
+      "lab": "live2 (recreated)",
+      "at": "2026-09-25T15:06:26.563Z"
+    }
+  ],
+  "steps": [
+    {
+      "id": "A01",
+      "section": "A",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis",
+      "action": "Before you start: Settings > Organization > AI analysis is its own entry; Provider starts closed with Not connected; three closed cards below; Answer style disabled until a connector is saved",
+      "expected": "AI analysis link in the Organization group; Provider card closed with Not connected; Answer style, Matter and Contract conversion prompts, Contract analysis prompts closed; no Request conversion card; Answer style radios disabled with the connect sentence.",
+      "startedAt": "2026-09-25T14:53:42.154Z",
+      "finishedAt": "2026-09-25T14:53:42.664Z",
+      "actual": "Settings > Organization > AI analysis opened /settings/ai-analysis. Cards in order: [\"Personal\",\"Organization\",\"Provider\",\"Answer style\",\"Matter and Contract conversion prompts\",\"Contract analysis prompts\"]; aria-expanded {\"Provider\":\"false\",\"Answer style\":\"false\",\"Matter and Contract conversion prompts\":\"false\",\"Contract analysis prompts\":\"false\"}. The Provider header chip reads \"Not connected\". No Request conversion card. Answer style opened on its own: radios [\"Few word summary\",\"1-2 sentence summary\",\"Full clause text\"], all 3 disabled, \"1-2 sentence summary\" checked, and the card says \"Connect an AI provider to choose an answer style.\"",
+      "result": "pass"
+    },
+    {
+      "id": "A02",
+      "section": "A",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Choose the provider configuration: Provider list, per-preset controls (Deployment endpoint, Protocol and Base URL, Ollama without Base URL or key), Azure manual model entry",
+      "expected": "Eight providers; Azure shows Deployment endpoint and a manual model box with no Load models; Custom endpoint shows Protocol with three choices and Base URL; Ollama has no Base URL and needs no key.",
+      "startedAt": "2026-09-25T14:53:42.664Z",
+      "finishedAt": "2026-09-25T14:53:44.189Z",
+      "actual": "Provider lists [\"Anthropic\",\"OpenAI\",\"Azure OpenAI\",\"Gemini\",\"OpenRouter\",\"Groq\",\"Ollama\",\"Custom endpoint\"]. Per preset: Azure OpenAI: endpoint label \"Deployment endpoint\", Protocol null, Load models 0, Enter model ID manually 0, Model plain text box prefilled \"gpt-5.6-luna\", key required true; Custom endpoint: endpoint label \"Base URL\", Protocol [\"Anthropic Messages\",\"OpenAI-compatible chat completions\",\"Gemini\"], Load models 1, Enter model ID manually 1, Model combobox prefilled \"\", key required true; Ollama: endpoint label null, Protocol null, Load models 1, Enter model ID manually 1, Model combobox prefilled \"llama3.2\", key required false; Groq: endpoint label null, Protocol null, Load models 1, Enter model ID manually 1, Model combobox prefilled \"openai/gpt-oss-120b\", key required true; OpenRouter: endpoint label null, Protocol null, Load models 1, Enter model ID manually 1, Model combobox prefilled \"~openai/gpt-latest\", key required true.",
+      "result": "pass"
+    },
+    {
+      "id": "A03",
+      "section": "A",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Output token limit: slider and exact input, default 32,768, range 1,024 to 262,144, warning below 32,768",
+      "expected": "The slider and the exact input show 32768; min 1024, max 262144; typing 16384 shows the warning; 32768 removes it.",
+      "startedAt": "2026-09-25T14:53:44.189Z",
+      "finishedAt": "2026-09-25T14:53:44.327Z",
+      "actual": "\"Output token limit per API call\" slider min 1024, max 262144, value 32768; exact input 32768. At 16384 the warning read \"Below 32,768 tokens, analyses are more likely to fail with incomplete responses, especially with reasoning models. This is a guideline; the tokens needed vary by model and document.\"; at 32768 it was gone. Nothing was saved.",
+      "result": "pass"
+    },
+    {
+      "id": "B01",
+      "section": "B",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Invalid endpoint: Custom endpoint, OpenAI-compatible, a missing path on the provider host, an obviously fake key; Load models",
+      "expected": "Load models shows the refusal, for example 'The provider refused model discovery with HTTP 404.'; nothing is saved and the fake key is not stored.",
+      "startedAt": "2026-09-25T14:55:00.349Z",
+      "finishedAt": "2026-09-25T14:55:00.881Z",
+      "actual": "Load models answered 502 and the pane showed \"The provider refused model discovery with HTTP 404.\" under the Model control. The connector is still not configured and no Saved key exists.",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:00.861Z",
+          "kind": "model listing",
+          "label": "custom endpoint, missing path, fake key",
+          "button": "Load models",
+          "status": 502,
+          "ms": 320,
+          "models": null,
+          "truncated": null,
+          "detail": "The provider refused model discovery with HTTP 404."
+        }
+      ]
+    },
+    {
+      "id": "B02",
+      "section": "B",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Provider card (Ollama)",
+      "action": "Ollama localhost: with the preset's fixed http://localhost:11434/v1, Load models runs in the app container, where no Ollama service listens",
+      "expected": "No Base URL control and no key needed; Load models fails, which is the documented 'localhost means the machine or container running each calling process'.",
+      "startedAt": "2026-09-25T14:55:00.881Z",
+      "finishedAt": "2026-09-25T14:55:01.087Z",
+      "actual": "Ollama shows no Base URL control. Load models answered 502 and showed \"The provider model list could not be reached or read.\". The app container has no service on its own localhost:11434, so the operator must provide a reachable service or a Custom endpoint, as the guide says.",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:01.083Z",
+          "kind": "model listing",
+          "label": "ollama preset, app container localhost",
+          "button": "Load models",
+          "status": 502,
+          "ms": 48,
+          "models": null,
+          "truncated": null,
+          "detail": "The provider model list could not be reached or read."
+        }
+      ]
+    },
+    {
+      "id": "B03",
+      "section": "B",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "OpenRouter with a pasted key: Load models, type to narrow, leave the box without choosing, choose from the list, Refresh models, manual entry toggle; nothing saved",
+      "expected": "The list loads; typing narrows it; leaving restores the earlier model; choosing stores the exact provider ID; Refresh keeps it; Enter model ID manually and Choose from list toggle; no connector and no Saved key are written.",
+      "startedAt": "2026-09-25T14:55:01.087Z",
+      "finishedAt": "2026-09-25T14:55:02.150Z",
+      "actual": "OpenRouter prefilled Model \"~openai/gpt-latest\". Load models was disabled until the key was pasted, then enabled. OpenRouter returned 458 models (truncated false) and the button became Refresh models; the placeholder read \"Search models\". Typing \"gpt-oss-120b\" narrowed the list to [\"OpenAI: gpt-oss-120b · openai/gpt-oss-120b\",\"OpenAI: gpt-oss-120b (batch) · openai/gpt-oss-120b:batch\"]. Leaving the box without choosing put back \"~openai/gpt-latest\". Choosing the option stored \"openai/gpt-oss-120b\"; Refresh models kept \"openai/gpt-oss-120b\". Enter model ID manually turned the combobox into a plain box and offered Choose from list, which turned the list back on. The connector is still not configured and no Saved key exists, so loading with a pasted key stored nothing.",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:01.346Z",
+          "kind": "model listing",
+          "label": "openrouter, pasted key",
+          "button": "Load models",
+          "status": 200,
+          "ms": 142,
+          "models": 458,
+          "truncated": false,
+          "detail": null
+        },
+        {
+          "at": "2026-09-25T14:55:02.071Z",
+          "kind": "model listing",
+          "label": "openrouter, Refresh models",
+          "button": "Refresh models",
+          "status": 200,
+          "ms": 103,
+          "models": 458,
+          "truncated": false,
+          "detail": null
+        }
+      ],
+      "listing": {
+        "models": 458,
+        "truncated": false,
+        "selectedListed": true
+      }
+    },
+    {
+      "id": "C01",
+      "section": "C",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Save and test, steps 1-3: OpenRouter, paste API key, Load models, choose Model, Save connector, Test connection",
+      "expected": "Save turns the chip to Connected, clears the key box, shows Key in use with no Forget key and (key saved) in the list; Request conversion appears with three switches off; Answer style becomes available; Test connection shows 'Connection successful.'",
+      "startedAt": "2026-09-25T14:55:11.998Z",
+      "finishedAt": "2026-09-25T14:55:17.439Z",
+      "actual": "Save connector answered 200 and showed Saved. The API key box is empty again. The chip reads Connected, Use AI analysis is on, the pill beside API key reads \"Key in use\" with no Forget key, and the Provider option reads \"OpenRouter (key saved)\". A Request conversion card appeared with three switches off ({\"matter-preparation\":\"false\",\"contract-preparation\":\"false\",\"contract-conversion-analysis\":\"false\"}). Test connection answered 200 in 4432 ms and showed \"Connection successful.\". Stored: preset openrouter, model openai/gpt-oss-120b, key stored, output limit 32768. The Answer style radios are now enabled.",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:12.808Z",
+          "kind": "model listing",
+          "label": "openrouter before save",
+          "button": "Load models",
+          "status": 200,
+          "ms": 643,
+          "models": 458,
+          "truncated": false,
+          "detail": null
+        },
+        {
+          "at": "2026-09-25T14:55:17.390Z",
+          "kind": "connection test",
+          "label": "first test after save",
+          "status": 200,
+          "ms": 4432,
+          "shown": "Connection successful.",
+          "detail": null
+        }
+      ],
+      "connector": {
+        "configured": true,
+        "enabled": true,
+        "preset": "openrouter",
+        "protocol": "openai_chat_completions",
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "model": "openai/gpt-oss-120b",
+        "hasApiKey": true,
+        "maxOutputTokens": 32768,
+        "answerStyle": "sentence",
+        "switches": [
+          false,
+          false,
+          false
+        ],
+        "savedKeys": [
+          {
+            "preset": "openrouter",
+            "protocol": "openai_chat_completions",
+            "baseUrl": "https://openrouter.ai/api/v1",
+            "inUse": true
+          }
+        ],
+        "disabled": false,
+        "updatedAt": "2026-09-25T14:55:12.927Z"
+      }
+    },
+    {
+      "id": "C02",
+      "section": "C",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Negative: invalid model. Enter model ID manually with a model that does not exist, leave the key blank (Key in use), Save connector, Test connection",
+      "expected": "The save keeps the Saved key; the test shows 'The connection test failed.' followed by the provider message.",
+      "startedAt": "2026-09-25T14:55:17.440Z",
+      "finishedAt": "2026-09-25T14:55:17.897Z",
+      "actual": "With the key box blank beside \"Key in use\", Save connector answered 200 and kept the Saved key (Saved keys: 1). Test connection answered 502 in 183 ms and showed \"The connection test failed. The provider refused the request with HTTP 400.\".",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:17.890Z",
+          "kind": "connection test",
+          "label": "invalid model",
+          "status": 502,
+          "ms": 183,
+          "shown": "The connection test failed. The provider refused the request with HTTP 400.",
+          "detail": "The connection test failed. The provider refused the request with HTTP 400."
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "section": "C",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Rotate: choose the destination, paste a new API key, choose the valid model again, Save connector, test while enabled",
+      "expected": "Saving replaces only that destination's key; the test passes again.",
+      "startedAt": "2026-09-25T14:55:17.898Z",
+      "finishedAt": "2026-09-25T14:55:19.845Z",
+      "actual": "Pasting the key again, choosing openai/gpt-oss-120b from the list and saving answered 200. There is still one Saved key (OpenRouter, in use). Test connection answered 200 in 1445 ms: \"Connection successful.\".",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:18.267Z",
+          "kind": "model listing",
+          "label": "openrouter rotate",
+          "button": "Load models",
+          "status": 200,
+          "ms": 248,
+          "models": 458,
+          "truncated": false,
+          "detail": null
+        },
+        {
+          "at": "2026-09-25T14:55:19.835Z",
+          "kind": "connection test",
+          "label": "after rotation",
+          "status": 200,
+          "ms": 1445,
+          "shown": "Connection successful.",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "section": "C",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Negative: invalid key. Custom endpoint, OpenAI-compatible, the provider's own base URL, an obviously fake key, manual model; Save connector; Test connection",
+      "expected": "The Custom destination gets its own Saved key (Key in use); the test shows 'The connection test failed.' with the provider's refusal; the OpenRouter key stays saved.",
+      "startedAt": "2026-09-25T14:55:19.845Z",
+      "finishedAt": "2026-09-25T14:55:20.263Z",
+      "actual": "Custom endpoint with Base URL https://openrouter.ai/api/v1 showed no key pill before saving. After Save connector (200) the pill read \"Key in use\". Test connection answered 502 in 189 ms and showed \"The connection test failed. The provider refused the request with HTTP 401.\". Saved keys now: [{\"preset\":\"openrouter\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":false},{\"preset\":\"custom\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":true}]. Provider list: [\"Anthropic\",\"OpenAI\",\"Azure OpenAI\",\"Gemini\",\"OpenRouter (key saved)\",\"Groq\",\"Ollama\",\"Custom endpoint (key saved)\"].",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:20.243Z",
+          "kind": "connection test",
+          "label": "custom endpoint, fake key",
+          "status": 502,
+          "ms": 189,
+          "shown": "The connection test failed. The provider refused the request with HTTP 401.",
+          "detail": "The connection test failed. The provider refused the request with HTTP 401."
+        }
+      ]
+    },
+    {
+      "id": "C05",
+      "section": "C",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Switch back: OpenRouter shows (key saved) and Key saved with Forget key; leave the key blank and Save connector; then Forget key on the Custom destination (matched with a trailing slash)",
+      "expected": "Returning to OpenRouter reuses its Saved key; it becomes Key in use; the Custom destination's key shows Key saved with Forget key; confirming 'Forget the Saved key' deletes only that key.",
+      "startedAt": "2026-09-25T14:55:20.264Z",
+      "finishedAt": "2026-09-25T14:55:20.992Z",
+      "actual": "Back on OpenRouter the pill read \"Key saved\" with 1 Forget key. Load models worked with the blank key box, and Save connector (200) made it \"Key in use\". Choosing Custom endpoint again with Base URL \"https://openrouter.ai/api/v1/\" (one trailing slash) matched the Custom Saved key: pill \"Key saved\" with Forget key. The dialog read \"Forget the Saved key Forget the Saved key for Custom endpoint at https://openrouter.ai/api/v1? Paste it again if you want to use it later. Cancel Forget key\"; confirming removed the pill. A direct DELETE of the in-use OpenRouter key answered 409 \"This Saved key is in use by the AI connector. Remove the connector or choose another destination before forgetting it.\". Saved keys now: [{\"preset\":\"openrouter\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":true}]. After reload the form shows the saved OpenRouter connector.",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T14:55:20.624Z",
+          "kind": "model listing",
+          "label": "openrouter with Saved key",
+          "button": "Load models",
+          "status": 200,
+          "ms": 248,
+          "models": 458,
+          "truncated": false,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "id": "D01",
+      "section": "D",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/fields",
+      "action": "Add a catalog Field to Analysis, steps 1-2: follow Contracts > Fields; Add field for Long text and Text with AI prompt and Answer style; User has no AI prompt",
+      "expected": "The link opens Contracts > Fields. Text and Long text show AI prompt and Answer style with 'Organisation default (1-2 sentence summary)'; Full clause text is disabled for Text; User shows no AI prompt.",
+      "startedAt": "2026-09-25T14:56:29.956Z",
+      "finishedAt": "2026-09-25T14:56:31.356Z",
+      "actual": "The Contracts → Fields link opened /settings/contracts/fields. Add field: Long text \"DOC-030 analysis-live V-C43 Data location 202609251453\" showed AI prompt and Answer style [\"Organisation default (1-2 sentence summary)\",\"Few word summary\",\"1-2 sentence summary\",\"Full clause text\"]; kept Organisation default. Text \"DOC-030 analysis-live V-C43 Supplier name 202609251453\" showed [\"Organisation default (1-2 sentence summary)\",\"Few word summary\",\"1-2 sentence summary\",\"Full clause text [disabled]\"]; chose Few word summary. Text \"DOC-030 analysis-live V-C43 Unattached 202609251453\" with a prompt (left off the Form on purpose). User \"DOC-030 analysis-live V-C43 Reviewer 202609251453\" showed no AI prompt box and no Answer style.",
+      "result": "pass"
+    },
+    {
+      "id": "D02",
+      "section": "D",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/<Vendor>/form",
+      "action": "Add a catalog Field to Analysis, step 3: open the Vendor Type's Form tab, Attach Field, choose the Field so the Form has a Row for it",
+      "expected": "Attach Field lists the new Fields; choosing one adds its Row.",
+      "startedAt": "2026-09-25T14:56:31.357Z",
+      "finishedAt": "2026-09-25T14:56:32.436Z",
+      "actual": "Vendor > Form: Attach Field with Search fields added Rows for [\"DOC-030 analysis-live V-C43 Data location 202609251453\",\"DOC-030 analysis-live V-C43 Supplier name 202609251453\"]. \"DOC-030 analysis-live V-C43 Unattached 202609251453\" has no Row on this Form.",
+      "result": "pass"
+    },
+    {
+      "id": "P01",
+      "section": "P",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis cards",
+      "action": "Choose the answer style and edit prompts: each card opens on its own; Answer style saves on choice; conversion prompts list; seven analysis prompts; Contracts > Fields link",
+      "expected": "Answer style radios save immediately with a save result; conversion card has Title, Description, Priority, Needed by, Counterparty and the {module} hint; the analysis card has seven prompts and a Contracts > Fields link.",
+      "startedAt": "2026-09-25T14:58:30.174Z",
+      "finishedAt": "2026-09-25T14:58:30.554Z",
+      "actual": "Opening Answer style left Contract analysis prompts closed. Choosing \"Few word summary\" saved at once (PATCH 200, \"Saved\" shown; stored few_words); choosing \"1-2 sentence summary\" stored sentence again. Descriptions: [\"A few words that name the position, at most 80 characters.\",\"One or two short sentences that state the position, at most 200 characters.\",\"The provision quoted verbatim; short text Fields use a 1-2 sentence summary.\"]. Conversion card hint \"The values every Conversion draft proposes beside the target type's Fields. {module} is replaced with Matter or Contract.\"; prompts [\"Title prompt\",\"Description prompt\",\"Priority prompt\",\"Needed by prompt\",\"Counterparty prompt\"]. Analysis card prompts [\"Term type prompt\",\"Effective date prompt\",\"Expiry date prompt\",\"Renewal period (months) prompt\",\"Notice period (days) prompt\",\"Value prompt\",\"Counterparty prompt\"]; its link \"Contracts → Fields\" points to /settings/contracts/fields.",
+      "result": "pass"
+    },
+    {
+      "id": "P02",
+      "section": "P",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Contract analysis prompts",
+      "action": "Edit the notice-period prompt: Enter saves; Shift+Enter adds a line break; Escape restores the saved text; clearing and leaving restores the saved text; 2,000 characters",
+      "expected": "Enter sends one save and shows Reset to default; Shift+Enter adds a line break without saving; Escape puts back the saved text without saving; a cleared prompt comes back on leaving.",
+      "startedAt": "2026-09-25T14:58:30.554Z",
+      "finishedAt": "2026-09-25T14:58:34.038Z",
+      "actual": "Input \"Notice period (days) prompt\". Enter sent one save (200) and a \"Reset Notice period (days) to default\" link appeared. Shift+Enter added a line break without a save. After typing more text, Escape put back the saved text. Clearing the box and leaving it also put back the saved text. Saves sent during Shift+Enter, Escape and the cleared blur: 0. maxlength 2000. The edited prompt stays for the Analysis run.",
+      "result": "pass"
+    },
+    {
+      "id": "E01",
+      "section": "E",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/contracts/<n>/fields",
+      "action": "Save and test, step 4 and Add a catalog Field, step 4: a fictional Vendor Contract gets its primary Document; wait for the automatic Analysis run; read the values",
+      "expected": "Without anyone selecting Run analysis, an automatic run reads the primary Document's current Version, calls OpenRouter with the configured model, and writes supported values with Unverified markers; only attached Fields with a prompt are asked for.",
+      "startedAt": "2026-09-25T14:59:28.629Z",
+      "finishedAt": "2026-09-25T15:00:03.380Z",
+      "actual": "C-35 \"DOC-030 analysis-live V-C43 202609251453\" (Vendor). After the primary Document upload, an automatic run finished ready on Version 1 with openrouter openai/gpt-oss-120b; provider time 31944 ms, upload to finish 33991 ms, text truncated false. Running… seen on first load: false. Outcome written [\"term_type\",\"effective_date\",\"expiry_date\",\"notice_period_days\",\"value\",\"our_position\",\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"doc_030_analysis_live_v_c43_supplier_name_202609251453\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"], kept [], unsupported [\"renewal_period_months\",\"liability_cap\",\"governing_law\",\"jurisdiction\"], invalid []. Our Fields in the outcome: {\"location\":{\"slug\":\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"in\":[\"written\"]},\"supplier\":{\"slug\":\"doc_030_analysis_live_v_c43_supplier_name_202609251453\",\"in\":[\"written\"]},\"unattached\":{\"slug\":\"doc_030_analysis_live_v_c43_unattached_202609251453\",\"in\":[]}}; the unattached Field appears in no list. Fields page: 3 Unverified markers and evidence sparkles [\"View AI evidence for Our position\",\"View AI evidence for DOC-030 analysis-live V-C43 Data location 202609251453\",\"View AI evidence for DOC-030 analysis-live V-C43 Supplier name 202609251453\"]. Saved values read back: {\"effectiveDate\":\"2026-04-01\",\"expiryDate\":\"2027-03-31\",\"noticePeriodDays\":60,\"termType\":\"fixed\",\"noticeDeadline\":\"2027-01-30\",\"value\":{\"amount\":1800000,\"currency\":\"USD\",\"cadence\":\"annually\"},\"custom\":{\"location\":\"Data stored in EU data centres; deleted within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null},\"aiUnverified\":[\"value\",\"term_type\",\"expiry_date\",\"our_position\",\"effective_date\",\"notice_period_days\",\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"doc_030_analysis_live_v_c43_supplier_name_202609251453\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"]}. Accuracy is not claimed.",
+      "result": "pass",
+      "contract": "C-35",
+      "run": {
+        "trigger": "automatic",
+        "state": "ready",
+        "preset": "openrouter",
+        "model": "openai/gpt-oss-120b",
+        "versionNumber": 1,
+        "truncated": false,
+        "providerMs": 31944,
+        "startedAt": "2026-09-25T14:59:29.250Z",
+        "finishedAt": "2026-09-25T15:00:01.194Z",
+        "failure": null,
+        "outcome": {
+          "written": [
+            "term_type",
+            "effective_date",
+            "expiry_date",
+            "notice_period_days",
+            "value",
+            "our_position",
+            "doc_030_analysis_live_v_c43_data_location_202609251453",
+            "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+            "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+          ],
+          "kept": [],
+          "unsupported": [
+            "renewal_period_months",
+            "liability_cap",
+            "governing_law",
+            "jurisdiction"
+          ],
+          "invalid": [],
+          "unmatched": "Northwind Fictional Services LLC",
+          "results": [
+            {
+              "slug": "term_type",
+              "value": "fixed",
+              "evidence": "This agreement has a fixed term.",
+              "outcome": "written"
+            },
+            {
+              "slug": "effective_date",
+              "value": "2026-04-01",
+              "evidence": "This agreement starts on 1 April 2026.",
+              "outcome": "written"
+            },
+            {
+              "slug": "expiry_date",
+              "value": "2027-03-31",
+              "evidence": "It ends on 31 March 2027.",
+              "outcome": "written"
+            },
+            {
+              "slug": "renewal_period_months",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "notice_period_days",
+              "value": 60,
+              "evidence": "by giving 60 days' written notice.",
+              "outcome": "written"
+            },
+            {
+              "slug": "value",
+              "value": {
+                "amount": 1800000,
+                "cadence": "annually",
+                "currency": "USD"
+              },
+              "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+              "outcome": "written"
+            },
+            {
+              "slug": "counterparties",
+              "value": "Northwind Fictional Services LLC",
+              "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+              "outcome": "unmatched"
+            },
+            {
+              "slug": "liability_cap",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "governing_law",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "jurisdiction",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "our_position",
+              "value": "Customer",
+              "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+              "outcome": "written"
+            },
+            {
+              "slug": "doc_030_analysis_live_v_c43_data_location_202609251453",
+              "value": "Data stored in EU data centres; deleted within 30 days after agreement ends.",
+              "evidence": "stores all Helix data only in data centres in the European Union and deletes that data within 30 days after this agreement ends.",
+              "outcome": "written"
+            },
+            {
+              "slug": "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+              "value": "Northwind Fictional Services LLC",
+              "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+              "outcome": "written"
+            },
+            {
+              "slug": "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db",
+              "value": {
+                "date": "2027-01-01",
+                "note": null,
+                "label": "Price review"
+              },
+              "evidence": "The parties review the fees on 1 January 2027.",
+              "outcome": "written"
+            }
+          ]
+        },
+        "uploadToFinishMs": 33991
+      },
+      "customFieldOutcome": {
+        "location": {
+          "slug": "doc_030_analysis_live_v_c43_data_location_202609251453",
+          "in": [
+            "written"
+          ]
+        },
+        "supplier": {
+          "slug": "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+          "in": [
+            "written"
+          ]
+        },
+        "unattached": {
+          "slug": "doc_030_analysis_live_v_c43_unattached_202609251453",
+          "in": []
+        }
+      },
+      "savedValues": {
+        "effectiveDate": "2026-04-01",
+        "expiryDate": "2027-03-31",
+        "noticePeriodDays": 60,
+        "termType": "fixed",
+        "noticeDeadline": "2027-01-30",
+        "value": {
+          "amount": 1800000,
+          "currency": "USD",
+          "cadence": "annually"
+        },
+        "custom": {
+          "location": "Data stored in EU data centres; deleted within 30 days after agreement ends.",
+          "supplier": "Northwind Fictional Services LLC",
+          "unattached": null
+        },
+        "aiUnverified": [
+          "value",
+          "term_type",
+          "expiry_date",
+          "our_position",
+          "effective_date",
+          "notice_period_days",
+          "doc_030_analysis_live_v_c43_data_location_202609251453",
+          "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+          "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+        ]
+      }
+    },
+    {
+      "id": "E02",
+      "section": "E",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/<n> Overview, Fields, History",
+      "action": "Save and test, step 4: check the run's Version, model, evidence and saved values in the browser",
+      "expected": "The browser shows which Document Version the run read (evidence), the model, and the saved values with Unverified markers.",
+      "startedAt": "2026-09-25T15:00:03.381Z",
+      "finishedAt": "2026-09-25T15:00:12.584Z",
+      "actual": "Check did not complete: Guide step 4 says \"Check the run's Version, model, evidence, and saved values.\" The evidence sparkle for Notice period opened the doc panel (\"doc030-live-analysis.docx v1 doc030-live-analysis.docx Download Page 1 of 1 100% 1 of 1 FICTIONAL SUPPLY AGREEMENT (DOC-030 live analysis test paper) This agree\") with highlighted [\"by giving 60 days' written notice.\"] and made no AI call, so Version and evidence can be checked. But no page shows the run's model: openai/gpt-oss-120b appears on none of Overview, Fields, Documents or the History panel. History shows only \"History OpenLaw completed an AI analysis of this contract this minute Daniel Okafor made doc030-live-analysis\". The run's model is recorded (API latestRun.model openai/gpt-oss-120b) but the browser does not display it at this build.",
+      "result": "fail",
+      "modelShownOn": [],
+      "failureKind": "doc-error",
+      "supersededBy": "V03",
+      "note": "Guide failure against 11da3997. The batch owner corrected step 4 (guide db82673e); V03 re-walked the corrected step on the recreated live2 lab and passed."
+    },
+    {
+      "id": "E03",
+      "section": "E",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis and /contracts/<n>/fields",
+      "action": "Answer style applies to the next run: set the Organization default to Few word summary, check the Field editor default and that written values keep their form, then select Run analysis",
+      "expected": "The Field editor shows 'Organisation default (Few word summary)'; the written Long text value is unchanged before the rerun; the manual run shows Running…, finishes with the model, and may replace the Unverified value.",
+      "startedAt": "2026-09-25T15:00:12.585Z",
+      "finishedAt": "2026-09-25T15:01:08.822Z",
+      "actual": "After choosing Few word summary, the Field editor for \"DOC-030 analysis-live V-C43 Data location 202609251453\" offered \"Organisation default (Few word summary)\". Before the rerun the written custom values were unchanged since the first run: {\"location\":\"Data stored in EU data centres; deleted within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null}. Run analysis showed Running… (true); the manual run finished ready on Version 1 with openrouter openai/gpt-oss-120b in 53316 ms at the provider. Outcome written [\"term_type\",\"effective_date\",\"expiry_date\",\"notice_period_days\",\"value\",\"doc_030_analysis_live_v_c43_data_location_202609251453\",\"doc_030_analysis_live_v_c43_supplier_name_202609251453\"], kept [\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"], unsupported [\"renewal_period_months\",\"liability_cap\",\"governing_law\",\"jurisdiction\",\"our_position\"], invalid []. Custom values after: {\"location\":\"Store in EU data centres; delete within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null}. Unverified markers on Fields: 3. The Organization default was put back to 1-2 sentence summary. Accuracy is not claimed.",
+      "result": "pass",
+      "run": {
+        "trigger": "manual",
+        "state": "ready",
+        "preset": "openrouter",
+        "model": "openai/gpt-oss-120b",
+        "versionNumber": 1,
+        "truncated": false,
+        "providerMs": 53316,
+        "startedAt": "2026-09-25T15:00:13.621Z",
+        "finishedAt": "2026-09-25T15:01:06.937Z",
+        "failure": null,
+        "outcome": {
+          "written": [
+            "term_type",
+            "effective_date",
+            "expiry_date",
+            "notice_period_days",
+            "value",
+            "doc_030_analysis_live_v_c43_data_location_202609251453",
+            "doc_030_analysis_live_v_c43_supplier_name_202609251453"
+          ],
+          "kept": [
+            "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+          ],
+          "unsupported": [
+            "renewal_period_months",
+            "liability_cap",
+            "governing_law",
+            "jurisdiction",
+            "our_position"
+          ],
+          "invalid": [],
+          "unmatched": "Helix Software Ltd and Northwind Fictional Services LLC",
+          "results": [
+            {
+              "slug": "term_type",
+              "value": "fixed",
+              "evidence": "This agreement has a fixed term.",
+              "outcome": "written"
+            },
+            {
+              "slug": "effective_date",
+              "value": "2026-04-01",
+              "evidence": "This agreement starts on 1 April 2026.",
+              "outcome": "written"
+            },
+            {
+              "slug": "expiry_date",
+              "value": "2027-03-31",
+              "evidence": "It ends on 31 March 2027.",
+              "outcome": "written"
+            },
+            {
+              "slug": "renewal_period_months",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "notice_period_days",
+              "value": 60,
+              "evidence": "Either party may end this agreement by giving 60 days' written notice.",
+              "outcome": "written"
+            },
+            {
+              "slug": "value",
+              "value": {
+                "amount": 18000,
+                "cadence": "annually",
+                "currency": "USD"
+              },
+              "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+              "outcome": "written"
+            },
+            {
+              "slug": "counterparties",
+              "value": "Helix Software Ltd and Northwind Fictional Services LLC",
+              "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+              "outcome": "unmatched"
+            },
+            {
+              "slug": "liability_cap",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "governing_law",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "jurisdiction",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "our_position",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "doc_030_analysis_live_v_c43_data_location_202609251453",
+              "value": "Store in EU data centres; delete within 30 days after agreement ends.",
+              "evidence": "Northwind Fictional Services LLC stores all Helix data only in data centres in the European Union and deletes that data within 30 days after this agreement ends.",
+              "outcome": "written"
+            },
+            {
+              "slug": "doc_030_analysis_live_v_c43_supplier_name_202609251453",
+              "value": "Northwind Fictional Services LLC",
+              "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+              "outcome": "written"
+            },
+            {
+              "slug": "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db",
+              "value": {
+                "date": "2027-01-01",
+                "note": null,
+                "label": "Price review"
+              },
+              "evidence": "The parties review the fees on 1 January 2027.",
+              "outcome": "kept"
+            }
+          ]
+        }
+      },
+      "customBefore": "{\"location\":\"Data stored in EU data centres; deleted within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null}",
+      "customAfter": "{\"location\":\"Store in EU data centres; delete within 30 days after agreement ends.\",\"supplier\":\"Northwind Fictional Services LLC\",\"unattached\":null}"
+    },
+    {
+      "id": "F01",
+      "section": "F",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis and /contracts/<n>/fields",
+      "action": "Disable: turn off Use AI analysis; Test connection and the three switches become unavailable; saving a disabled connector keeps it disabled; the Contract keeps its Unverified values and offers no Run analysis",
+      "expected": "Chip Turned off; Test connection and switches disabled; Save connector leaves it off; Run analysis absent; Unverified values stay; a run request is refused with 'No enabled AI connector is configured.'",
+      "startedAt": "2026-09-25T15:01:31.309Z",
+      "finishedAt": "2026-09-25T15:01:32.356Z",
+      "actual": "The switch sent POST /ai-connector/disable (200). The chip reads Turned off; the hint reads \"Off since Sep 25. Turn it on to make AI analysis available again.\". Test connection disabled true; Request conversion switches disabled [true,true,true]. Save connector while off answered 200 and the connector stayed off with its key (pill \"Key in use\"). The Answer style radios stayed usable (true), which confirms the author's limitation. On C-35: Run analysis controls 0, Unverified markers still 3. POST /contracts/35/analysis answered 409 \"No enabled AI connector is configured.\".",
+      "result": "pass"
+    },
+    {
+      "id": "F02",
+      "section": "F",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis (Legal Team Member)",
+      "action": "If it fails, Settings is unavailable: a Legal Team Member cannot open or change this configuration",
+      "expected": "Nadia Haddad has no AI analysis link and /settings/ai-analysis sends her to /settings/profile; the connector API answers 403.",
+      "startedAt": "2026-09-25T15:01:32.357Z",
+      "finishedAt": "2026-09-25T15:01:33.430Z",
+      "actual": "Nadia Haddad (Legal Team Member): Organization group shown 0, AI analysis links 0; /settings/ai-analysis sent her to /settings/profile; GET /ai-connector answered 403.",
+      "result": "pass"
+    },
+    {
+      "id": "O01",
+      "section": "O",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "operator",
+      "method": "live-provider-check",
+      "page": "docker compose -p openlaw-docs-80ceef9e-live2",
+      "action": "Before you start: the operator allows both the app and its worker to reach the provider; credentials are runtime Settings encrypted with the shared key",
+      "expected": "App and worker share one non-empty OPENLAW_SECRET_KEY; no provider credential or proxy is an environment variable; the app reached OpenRouter (test, listing) and the worker ran the Analysis runs; logs hold no key.",
+      "startedAt": "2026-09-25T15:01:48.763Z",
+      "finishedAt": "2026-09-25T15:01:49.002Z",
+      "actual": "App env names 32, worker 28. OPENLAW_SECRET_KEY is set and equal in both (compared by hash inside the script; no value or hash recorded). Provider-credential variables: []; proxy variables: []. The app answered the connection tests and model listings, so it reached openrouter.ai. The worker log has 2 \"contract analysis finished\" lines ([\"2026-09-25T15:00:01.197Z\",\"2026-09-25T15:01:06.949Z\"]), and the lab database holds these runs: [\"automatic:ready:openai/gpt-oss-120b\",\"manual:ready:openai/gpt-oss-120b\"]. The key string and the OpenRouter key prefix occur 0 times in the app log (7653 lines) and the worker log (253 lines).",
+      "result": "pass"
+    },
+    {
+      "id": "O02",
+      "section": "O",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "operator",
+      "method": "live-provider-check",
+      "page": "docker compose -p openlaw-docs-80ceef9e-live2 restart app worker; /settings/ai-analysis",
+      "action": "Output token limit persists across restarts: save 30,720 (warning shown), restart app and worker, re-read the pane, turn the connector on and test",
+      "expected": "After the restart the pane shows 30,720 and the Saved key still decrypts: Test connection passes; then 32,768 is restored.",
+      "startedAt": "2026-09-25T15:01:49.003Z",
+      "finishedAt": "2026-09-25T15:02:04.740Z",
+      "actual": "Saving 30,720 showed the below-32,768 warning. docker compose restart of app and worker took 12387 ms to answer again. The pane then showed 30720 and chip \"Turned off\" (still off, as left). Turning Use AI analysis on and selecting Test connection answered 200 in 2791 ms: \"Connection successful.\", so the Saved key decrypts after the restart. 32,768 was saved back; the connector is enabled.",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T15:02:04.657Z",
+          "kind": "connection test",
+          "label": "after app and worker restart",
+          "status": 200,
+          "ms": 2791,
+          "shown": "Connection successful.",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "id": "O03",
+      "section": "O",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "page": "/documentation/configure-analysis (signed out)",
+      "action": "Operator guidance: signed out, open the formal reader for this guide and follow its deployment configuration link to the outbound access and encryption key sections",
+      "expected": "The link opens deployment-configuration with outbound provider traffic from both the app and worker and 'Preserve and rotate encryption keys'.",
+      "startedAt": "2026-09-25T15:02:04.741Z",
+      "finishedAt": "2026-09-25T15:02:05.133Z",
+      "actual": "Signed out, /documentation/configure-analysis linked \"deployment configuration\" to /documentation/deployment-configuration. That page says to allow outbound provider traffic from both the app and worker and has \"Preserve and rotate encryption keys\", which names OPENLAW_SECRET_KEY. The reader serves the committed article bytes of 067c1646, so this proves the operator link and target, not the reviewed wording.",
+      "result": "pass"
+    },
+    {
+      "id": "R01",
+      "section": "R",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis",
+      "action": "Remove connector: turn one Request conversion switch on and choose Full clause text first; Remove connector and confirm",
+      "expected": "The dialog says Saved keys stay on file; after removal the chip reads Not connected, the Request conversion card is gone, Answer style is back to 1-2 sentence summary and disabled, and OpenRouter still shows (key saved); the Contract keeps its Unverified values.",
+      "startedAt": "2026-09-25T15:02:11.993Z",
+      "finishedAt": "2026-09-25T15:02:13.203Z",
+      "actual": "Before removal: Prepare Matter conversions with AI on, Answer style Full clause text. The dialog read \"Remove the AI connector Saved keys stay on file. You can use them when you reconnect, or use Forget key to delete them. Cancel Remove connector\". Confirming answered 200. The chip reads Not connected, the Request conversion card is gone, Answer style shows \"1-2 sentence summary\" checked and disabled with the connect sentence. The Provider list still shows \"OpenRouter (key saved)\"; Saved keys [{\"preset\":\"openrouter\",\"protocol\":\"openai_chat_completions\",\"baseUrl\":\"https://openrouter.ai/api/v1\",\"inUse\":false}]. C-35 still shows 3 Unverified markers.",
+      "result": "pass"
+    },
+    {
+      "id": "R02",
+      "section": "R",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis",
+      "action": "Reconnect with the Saved key, check the switches start off; then Remove connector again and Forget key for OpenRouter",
+      "expected": "Choosing OpenRouter shows Key saved; saving with a blank key reconnects (Key in use); the three switches are off; after a second removal Forget key deletes the OpenRouter key and the suffix disappears.",
+      "startedAt": "2026-09-25T15:02:13.204Z",
+      "finishedAt": "2026-09-25T15:02:13.770Z",
+      "actual": "OpenRouter showed \"Key saved\". Saving with a blank key and model openai/gpt-oss-120b answered 200; the pill read \"Key in use\"; the Request conversion switches were [\"false\",\"false\",\"false\"] and Answer style sentence. After a second Remove connector, Forget key on OpenRouter removed the pill and the Provider list reads [\"Anthropic\",\"OpenAI\",\"Azure OpenAI\",\"Gemini\",\"OpenRouter\",\"Groq\",\"Ollama\",\"Custom endpoint\"]. Final state: not configured, no Saved keys.",
+      "result": "pass"
+    },
+    {
+      "id": "T01",
+      "section": "T",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Contract analysis prompts",
+      "action": "Reset to default on the overridden notice-period prompt",
+      "expected": "Reset to default restores that one built-in prompt; the link disappears; no other prompt is overridden.",
+      "startedAt": "2026-09-25T15:02:29.863Z",
+      "finishedAt": "2026-09-25T15:02:30.094Z",
+      "actual": "Overridden before: [\"notice_period_days\"]. Reset to default sent one save (200); the link disappeared and the box shows the built-in prompt \"Extract the notice period for non-renewal or termination.\". Overridden after: [].",
+      "result": "pass"
+    },
+    {
+      "id": "V01",
+      "section": "V",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Re-walk setup, Save and test steps 1-3 on the recreated lab: OpenRouter, paste API key, Load models, choose Model, Save connector, Test connection",
+      "expected": "Connected, Key in use, 'Connection successful.'",
+      "startedAt": "2026-09-25T15:06:20.087Z",
+      "finishedAt": "2026-09-25T15:06:26.477Z",
+      "actual": "On the recreated lab (seed 2026-09-25T15:05:23.931Z), OpenRouter with a pasted key listed 458 models. Choosing openai/gpt-oss-120b and Save connector (200) gave chip Connected and pill \"Key in use\". Test connection answered 200 in 5042 ms: \"Connection successful.\". Saved Model: openai/gpt-oss-120b.",
+      "result": "pass",
+      "providerCalls": [
+        {
+          "at": "2026-09-25T15:06:21.138Z",
+          "kind": "model listing",
+          "label": "re-walk: openrouter before save",
+          "button": "Load models",
+          "status": 200,
+          "ms": 683,
+          "models": 458,
+          "truncated": false,
+          "detail": null
+        },
+        {
+          "at": "2026-09-25T15:06:26.465Z",
+          "kind": "connection test",
+          "label": "re-walk: test after save",
+          "status": 200,
+          "ms": 5042,
+          "shown": "Connection successful.",
+          "detail": null
+        }
+      ]
+    },
+    {
+      "id": "V02",
+      "section": "V",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/contracts/<n>/fields",
+      "action": "Save and test, step 4 (run 3 of 5): a fictional Vendor Contract gets the one-page paper as its primary Document; wait for the automatic Analysis run",
+      "expected": "An automatic run finishes ready on Version 1 with the connector's model and writes supported values with Unverified markers.",
+      "startedAt": "2026-09-25T15:06:26.478Z",
+      "finishedAt": "2026-09-25T15:07:45.482Z",
+      "actual": "C-33 \"DOC-030 analysis-live V-C43 re-walk 202609251506\" (Vendor). After the upload an automatic run finished ready on Version 1 with openrouter openai/gpt-oss-120b; provider time 60380 ms, upload to finish 78885 ms, truncated false. Outcome written [\"term_type\",\"effective_date\",\"expiry_date\",\"notice_period_days\",\"value\",\"our_position\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"], kept [], unsupported [\"renewal_period_months\",\"liability_cap\",\"governing_law\",\"jurisdiction\"], invalid []. Saved values: {\"effectiveDate\":\"2026-04-01\",\"expiryDate\":\"2027-03-31\",\"noticePeriodDays\":60,\"termType\":\"fixed\",\"noticeDeadline\":\"2027-01-30\",\"value\":{\"amount\":18000,\"currency\":\"USD\",\"cadence\":\"annually\"},\"aiUnverified\":[\"value\",\"term_type\",\"expiry_date\",\"our_position\",\"effective_date\",\"notice_period_days\",\"key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db\"]}. Accuracy is not claimed.",
+      "result": "pass",
+      "run": {
+        "trigger": "automatic",
+        "state": "ready",
+        "preset": "openrouter",
+        "model": "openai/gpt-oss-120b",
+        "versionNumber": 1,
+        "truncated": false,
+        "providerMs": 60380,
+        "startedAt": "2026-09-25T15:06:43.798Z",
+        "finishedAt": "2026-09-25T15:07:44.178Z",
+        "failure": null,
+        "outcome": {
+          "written": [
+            "term_type",
+            "effective_date",
+            "expiry_date",
+            "notice_period_days",
+            "value",
+            "our_position",
+            "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+          ],
+          "kept": [],
+          "unsupported": [
+            "renewal_period_months",
+            "liability_cap",
+            "governing_law",
+            "jurisdiction"
+          ],
+          "invalid": [],
+          "unmatched": "Northwind Fictional Services LLC",
+          "results": [
+            {
+              "slug": "term_type",
+              "value": "fixed",
+              "evidence": "This agreement has a fixed term.",
+              "outcome": "written"
+            },
+            {
+              "slug": "effective_date",
+              "value": "2026-04-01",
+              "evidence": "This agreement starts on 1 April 2026.",
+              "outcome": "written"
+            },
+            {
+              "slug": "expiry_date",
+              "value": "2027-03-31",
+              "evidence": "It ends on 31 March 2027.",
+              "outcome": "written"
+            },
+            {
+              "slug": "renewal_period_months",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "notice_period_days",
+              "value": 60,
+              "evidence": "Either party may end this agreement by giving 60 days' written notice.",
+              "outcome": "written"
+            },
+            {
+              "slug": "value",
+              "value": {
+                "amount": 18000,
+                "cadence": "annually",
+                "currency": "USD"
+              },
+              "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+              "outcome": "written"
+            },
+            {
+              "slug": "counterparties",
+              "value": "Northwind Fictional Services LLC",
+              "evidence": "Parties: Helix Software Ltd and Northwind Fictional Services LLC.",
+              "outcome": "unmatched"
+            },
+            {
+              "slug": "liability_cap",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "governing_law",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "jurisdiction",
+              "value": null,
+              "evidence": "",
+              "outcome": "unsupported"
+            },
+            {
+              "slug": "our_position",
+              "value": "Customer",
+              "evidence": "Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.",
+              "outcome": "written"
+            },
+            {
+              "slug": "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db",
+              "value": {
+                "date": "2027-01-01",
+                "note": null,
+                "label": "Price review"
+              },
+              "evidence": "The parties review the fees on 1 January 2027.",
+              "outcome": "written"
+            }
+          ]
+        },
+        "uploadToFinishMs": 78885
+      },
+      "savedValues": {
+        "effectiveDate": "2026-04-01",
+        "expiryDate": "2027-03-31",
+        "noticePeriodDays": 60,
+        "termType": "fixed",
+        "noticeDeadline": "2027-01-30",
+        "value": {
+          "amount": 18000,
+          "currency": "USD",
+          "cadence": "annually"
+        },
+        "aiUnverified": [
+          "value",
+          "term_type",
+          "expiry_date",
+          "our_position",
+          "effective_date",
+          "notice_period_days",
+          "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
+        ]
+      }
+    },
+    {
+      "id": "V03",
+      "section": "V",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/<n> Overview, Fields, Documents, History",
+      "action": "Corrected step 4: check the run's Version, evidence and saved values; the Contract record does not name the model; the run used the Model saved on the connector",
+      "expected": "The evidence sparkle opens the cited Document Version with the quote highlighted and no AI call; saved values carry Unverified markers; no page names the model; latestRun.model equals the connector's saved Model.",
+      "startedAt": "2026-09-25T15:07:45.484Z",
+      "finishedAt": "2026-09-25T15:07:57.338Z",
+      "actual": "Version and evidence: the Notice period sparkle opened the doc panel on \"doc030-live-analysis.docx v1\" with [\"Either party may end this agreement by giving 60 days' written notice.\"] highlighted and made no AI call (0). Evidence sparkles on Overview: [\"View AI evidence for Term type\",\"View AI evidence for Effective date\",\"View AI evidence for Expiry date\",\"View AI evidence for Notice period (days)\",\"View AI evidence for Value\"]. Saved values: Overview shows 5 Unverified markers, Fields 1; the notice row reads \"Notice period (days) Unverified\"; stored notice period 60, effective 2026-04-01, expiry 2027-03-31. No page names the model: openai/gpt-oss-120b and \"gpt-oss\" appear on none of Overview, Fields, Documents, Key dates or History (History reads \"History OpenLaw completed an AI analysis of this contract\"). The API records latestRun.model openai/gpt-oss-120b, equal to the connector's saved Model openai/gpt-oss-120b.",
+      "result": "pass"
+    },
+    {
+      "id": "V04",
+      "section": "V",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis",
+      "action": "Clean-up through the guide: Remove connector and confirm; then Forget key for OpenRouter",
+      "expected": "Chip Not connected; Forget key deletes the Saved key; no Saved keys remain.",
+      "startedAt": "2026-09-25T15:07:57.340Z",
+      "finishedAt": "2026-09-25T15:07:58.256Z",
+      "actual": "Remove connector and confirm gave chip Not connected. OpenRouter then showed \"Key saved\"; Forget key and confirm removed it. Final state: not configured, no Saved keys.",
+      "result": "pass"
+    }
+  ],
+  "runs": [
+    {
+      "startedAt": "2026-09-25T14:53:41.779Z",
+      "sections": [
+        "A"
+      ],
+      "finishedAt": "2026-09-25T14:53:44.328Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:53:49.170Z",
+      "sections": [
+        "B"
+      ],
+      "finishedAt": "2026-09-25T14:54:49.656Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:54:59.369Z",
+      "sections": [
+        "B"
+      ],
+      "finishedAt": "2026-09-25T14:55:02.150Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:55:11.600Z",
+      "sections": [
+        "C"
+      ],
+      "finishedAt": "2026-09-25T14:55:20.993Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:55:29.475Z",
+      "sections": [
+        "D"
+      ],
+      "finishedAt": "2026-09-25T14:56:32.436Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:56:47.430Z",
+      "sections": [
+        "P"
+      ],
+      "finishedAt": "2026-09-25T14:56:51.981Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:56:56.927Z",
+      "sections": [
+        "P"
+      ],
+      "finishedAt": "2026-09-25T14:57:57.625Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:58:29.759Z",
+      "sections": [
+        "P"
+      ],
+      "finishedAt": "2026-09-25T14:58:34.040Z"
+    },
+    {
+      "startedAt": "2026-09-25T14:59:27.636Z",
+      "sections": [
+        "E"
+      ],
+      "finishedAt": "2026-09-25T15:01:08.822Z"
+    },
+    {
+      "startedAt": "2026-09-25T15:01:30.303Z",
+      "sections": [
+        "F"
+      ],
+      "finishedAt": "2026-09-25T15:01:33.431Z"
+    },
+    {
+      "startedAt": "2026-09-25T15:01:48.373Z",
+      "sections": [
+        "O"
+      ],
+      "finishedAt": "2026-09-25T15:02:05.134Z"
+    },
+    {
+      "startedAt": "2026-09-25T15:02:10.979Z",
+      "sections": [
+        "R"
+      ],
+      "finishedAt": "2026-09-25T15:02:13.771Z"
+    },
+    {
+      "startedAt": "2026-09-25T15:02:29.451Z",
+      "sections": [
+        "T"
+      ],
+      "finishedAt": "2026-09-25T15:02:30.096Z"
+    },
+    {
+      "startedAt": "2026-09-25T15:06:18.755Z",
+      "sections": [
+        "V"
+      ],
+      "articleHash": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
+      "lab": {
+        "project": "openlaw-docs-80ceef9e-live2",
+        "createdAt": "2026-09-25T15:04:55.084Z",
+        "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+        "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+        "seed": {
+          "status": "complete",
+          "scale": "light",
+          "randomSeed": 7,
+          "startedAt": "2026-09-25T15:05:09.606Z",
+          "ai": "disabled",
+          "signing": "unconfigured",
+          "completedAt": "2026-09-25T15:05:23.931Z"
+        }
+      },
+      "finishedAt": "2026-09-25T15:07:58.260Z"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member (negative check only)",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "operator",
+      "person": "the agent with docker compose -p openlaw-docs-80ceef9e-live2",
+      "entry": "container tools on the owned lab; signed-out formal reader"
+    }
+  ],
+  "initialConnector": {
+    "configured": false,
+    "enabled": false,
+    "preset": null,
+    "protocol": null,
+    "baseUrl": null,
+    "model": null,
+    "hasApiKey": false,
+    "maxOutputTokens": 32768,
+    "answerStyle": "sentence",
+    "switches": [
+      false,
+      false,
+      false
+    ],
+    "savedKeys": [],
+    "disabled": false,
+    "updatedAt": null
+  },
+  "finishedAt": "2026-09-25T15:07:58.260Z",
+  "earlierAttempts": [
+    {
+      "id": "B01",
+      "section": "B",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "Invalid endpoint: Custom endpoint, OpenAI-compatible, a missing path on the provider host, an obviously fake key; Load models",
+      "expected": "Load models shows the refusal, for example 'The provider refused model discovery with HTTP 404.'; nothing is saved and the fake key is not stored.",
+      "startedAt": "2026-09-25T14:53:49.540Z",
+      "finishedAt": "2026-09-25T14:54:09.561Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 20000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Provider', exact: true }) to be visible\u001b[22m ",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T14:54:59.369Z"
+    },
+    {
+      "id": "B02",
+      "section": "B",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Provider card (Ollama)",
+      "action": "Ollama localhost: with the preset's fixed http://localhost:11434/v1, Load models runs in the app container, where no Ollama service listens",
+      "expected": "No Base URL control and no key needed; Load models fails, which is the documented 'localhost means the machine or container running each calling process'.",
+      "startedAt": "2026-09-25T14:54:09.562Z",
+      "finishedAt": "2026-09-25T14:54:29.630Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 20000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Provider', exact: true }) to be visible\u001b[22m ",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T14:54:59.369Z"
+    },
+    {
+      "id": "B03",
+      "section": "B",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "page": "/settings/ai-analysis Provider card",
+      "action": "OpenRouter with a pasted key: Load models, type to narrow, leave the box without choosing, choose from the list, Refresh models, manual entry toggle; nothing saved",
+      "expected": "The list loads; typing narrows it; leaving restores the earlier model; choosing stores the exact provider ID; Refresh keeps it; Enter model ID manually and Choose from list toggle; no connector and no Saved key are written.",
+      "startedAt": "2026-09-25T14:54:29.631Z",
+      "finishedAt": "2026-09-25T14:54:49.655Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 20000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Provider', exact: true }) to be visible\u001b[22m ",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T14:54:59.369Z"
+    },
+    {
+      "id": "D01",
+      "section": "D",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis cards",
+      "action": "Choose the answer style and edit prompts: each card opens on its own; Answer style saves on choice; conversion prompts list; seven analysis prompts; Contracts > Fields link",
+      "expected": "Answer style radios save immediately with a save result; conversion card has Title, Description, Priority, Needed by, Counterparty and the {module} hint; the analysis card has seven prompts and a Contracts > Fields link.",
+      "startedAt": "2026-09-25T14:55:29.871Z",
+      "finishedAt": "2026-09-25T14:55:59.892Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Answer style', exact: true }) to be visible\u001b[22m ",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T15:00:00Z",
+      "note": "Script error (page.reload on the landing page); re-run as section P."
+    },
+    {
+      "id": "D02",
+      "section": "D",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Contract analysis prompts",
+      "action": "Edit the notice-period prompt: Enter saves; Shift+Enter adds a line break; Escape restores the saved text; clearing and leaving restores the saved text; 2,000 characters",
+      "expected": "Enter sends one save and shows Reset to default; Shift+Enter adds a line break without saving; Escape puts back the saved text without saving; a cleared prompt comes back on leaving.",
+      "startedAt": "2026-09-25T14:55:59.892Z",
+      "finishedAt": "2026-09-25T14:56:29.955Z",
+      "actual": "Check did not complete: locator.getAttribute: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Contract analysis prompts', exact: true })\u001b[22m ",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T15:00:00Z",
+      "note": "Script error (page.reload on the landing page); re-run as section P."
+    },
+    {
+      "id": "P01",
+      "section": "P",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis cards",
+      "action": "Choose the answer style and edit prompts: each card opens on its own; Answer style saves on choice; conversion prompts list; seven analysis prompts; Contracts > Fields link",
+      "expected": "Answer style radios save immediately with a save result; conversion card has Title, Description, Priority, Needed by, Counterparty and the {module} hint; the analysis card has seven prompts and a Contracts > Fields link.",
+      "startedAt": "2026-09-25T14:56:48.406Z",
+      "finishedAt": "2026-09-25T14:56:48.635Z",
+      "actual": "Check did not complete: locator.check: Clicking the checkbox did not change its state Call log: \u001b[2m  - waiting for getByRole('radio', { name: 'Few word summary' })\u001b[22m \u001b[2m    - locator resolved to <input type=\"radio\" value=\"few_words\" name=\"answer-style\" id=\"answer-style-few_words\" class=\"mt-0.5 size-3.5 accent-cta-primary\" aria-describedby=\"answer-style-few_words-description\"/>\u001b[22m \u001b[2m  - attempting click action\u001b[22m \u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T14:56:56.927Z"
+    },
+    {
+      "id": "P02",
+      "section": "P",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Contract analysis prompts",
+      "action": "Edit the notice-period prompt: Enter saves; Shift+Enter adds a line break; Escape restores the saved text; clearing and leaving restores the saved text; 2,000 characters",
+      "expected": "Enter sends one save and shows Reset to default; Shift+Enter adds a line break without saving; Escape puts back the saved text without saving; a cleared prompt comes back on leaving.",
+      "startedAt": "2026-09-25T14:56:48.636Z",
+      "finishedAt": "2026-09-25T14:56:51.980Z",
+      "actual": "Input \"Notice period (days) prompt\". Enter sent one save (200) and a \"Reset Notice period (days) to default\" link appeared. Shift+Enter added a line break without a save. After typing more text, Escape put back the saved text. Clearing the box and leaving it also put back the saved text. Saves sent during Shift+Enter, Escape and the cleared blur: 0. maxlength 2000. The edited prompt stays for the Analysis run.",
+      "result": "pass",
+      "supersededAt": "2026-09-25T14:56:56.927Z"
+    },
+    {
+      "id": "P01",
+      "section": "P",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis cards",
+      "action": "Choose the answer style and edit prompts: each card opens on its own; Answer style saves on choice; conversion prompts list; seven analysis prompts; Contracts > Fields link",
+      "expected": "Answer style radios save immediately with a save result; conversion card has Title, Description, Priority, Needed by, Counterparty and the {module} hint; the analysis card has seven prompts and a Contracts > Fields link.",
+      "startedAt": "2026-09-25T14:56:57.298Z",
+      "finishedAt": "2026-09-25T14:57:27.453Z",
+      "actual": "Check did not complete: page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\"",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T14:58:29.758Z"
+    },
+    {
+      "id": "P02",
+      "section": "P",
+      "article": "configure-analysis",
+      "scenario": "V-C43",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis Contract analysis prompts",
+      "action": "Edit the notice-period prompt: Enter saves; Shift+Enter adds a line break; Escape restores the saved text; clearing and leaving restores the saved text; 2,000 characters",
+      "expected": "Enter sends one save and shows Reset to default; Shift+Enter adds a line break without saving; Escape puts back the saved text without saving; a cleared prompt comes back on leaving.",
+      "startedAt": "2026-09-25T14:57:27.454Z",
+      "finishedAt": "2026-09-25T14:57:57.624Z",
+      "actual": "Check did not complete: page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\"",
+      "result": "fail",
+      "failureKind": "product-or-script",
+      "supersededAt": "2026-09-25T14:58:29.759Z"
+    }
+  ],
+  "finalConnector": {
+    "configured": false,
+    "enabled": false,
+    "preset": null,
+    "protocol": null,
+    "baseUrl": null,
+    "model": null,
+    "hasApiKey": false,
+    "maxOutputTokens": 32768,
+    "answerStyle": "sentence",
+    "switches": [
+      false,
+      false,
+      false
+    ],
+    "savedKeys": [],
+    "disabled": false,
+    "updatedAt": null
+  },
+  "summary": {
+    "article": "configure-analysis",
+    "scenario": "V-C43",
+    "articleHash": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
+    "steps": 30,
+    "passed": 29,
+    "failed": [
+      "E02 (superseded by V03)"
+    ],
+    "coverage": {
+      "administrator/browser-walkthrough": [
+        "A01 pass",
+        "A02 pass",
+        "A03 pass",
+        "C05 pass",
+        "D01 pass",
+        "D02 pass",
+        "P01 pass",
+        "P02 pass",
+        "E02 fail superseded by V03",
+        "F01 pass",
+        "F02 pass",
+        "R01 pass",
+        "R02 pass",
+        "T01 pass",
+        "V03 pass",
+        "V04 pass"
+      ],
+      "administrator/live-provider-check": [
+        "B01 pass",
+        "B03 pass",
+        "C01 pass",
+        "C02 pass",
+        "C03 pass",
+        "C04 pass",
+        "E01 pass",
+        "E03 pass",
+        "V01 pass",
+        "V02 pass"
+      ],
+      "operator/browser-walkthrough": [
+        "B02 pass",
+        "O03 pass"
+      ],
+      "operator/live-provider-check": [
+        "O01 pass",
+        "O02 pass"
+      ]
+    },
+    "providerSpend": {
+      "analysisRuns": 3,
+      "connectionTests": 6,
+      "modelListings": 8,
+      "note": "Model listings to OpenRouter and the fake-key and missing-path calls cost no inference. Every Analysis run read the one-page fictional paper (fixtures/doc030-live-analysis.docx)."
+    },
+    "guideFailures": [
+      {
+        "step": "Save and test, step 4",
+        "expected": "The reader can check the run's Version, model, evidence and saved values.",
+        "observed": "Version (doc panel 'doc030-live-analysis.docx v1'), evidence (highlighted quote) and saved values (Unverified markers) are visible. The run's model is not shown anywhere in the browser at 067c1646: not on Overview, Fields, Documents or the History panel, which says only 'OpenLaw completed an AI analysis of this contract'. The run records it (API latestRun.model openai/gpt-oss-120b). DES-075 amendment 2026-09-22 removed the run summary sentence that used to name the model.",
+        "stepId": "E02",
+        "resolved": "Corrected by the batch owner in guide db82673e; V03 passed."
+      }
+    ],
+    "productBugs": [],
+    "confirmedAuthorNotes": [
+      "The Field editor reads 'Organisation default (1-2 sentence summary)' with British spelling (D01), as the author's productBugs entry says.",
+      "The Answer style radios stay usable while Use AI analysis is off (F01), as the author's limitation says.",
+      "No per-value Invalid outcome appears on the Contract; both runs had invalid [] (E01, E03)."
+    ],
+    "observations": [
+      "The two runs returned different Value amounts for the same paper: the automatic run wrote 1800000 (minor units, USD 18,000.00) and the manual rerun replaced that Unverified value with 18000 (USD 180.00). This is model output; the guide claims no accuracy, and a later supported answer replacing an Unverified value is documented behavior.",
+      "Our position was written by the first run and unsupported in the second; the Counterparty stayed unmatched in both (unmatched names differ)."
+    ],
+    "notWalked": [
+      "Removing a Field's prompt and its effect on a later run was not exercised, to stay within five Analysis runs.",
+      "Anthropic, OpenAI, Azure OpenAI, Gemini and Groq were checked for their form controls only; no account for them was used.",
+      "Request conversion switch behaviour beyond on, off, disabled and reset on removal belongs to convert-request.md."
+    ],
+    "articleHashHistory": [
+      {
+        "hash": "11da3997cee465846ff1408833dfcd140ecba07fac5ae17e0e4067495758d408",
+        "steps": "A01-T01 (26 steps), first live2 lab",
+        "result": "E02 failed: step 4 asked for the run's model, which no page shows"
+      },
+      {
+        "hash": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
+        "steps": "V01-V04, recreated live2 lab",
+        "result": "pass; only step 4 of Save and test changed (one line)"
+      }
+    ],
+    "finalResult": "pass at db82673e"
+  }
+}

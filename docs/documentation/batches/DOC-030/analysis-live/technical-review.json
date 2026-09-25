@@ -17,7 +17,7 @@
       "articleId": "configure-analysis",
       "scenario": "V-C43",
       "contentSha256Before": "a9a49e1ccbeb63fe31ed4ca675e6e424aea7a27b7a929fe86423061e1fe18499",
-      "contentSha256": "11da3997cee465846ff1408833dfcd140ecba07fac5ae17e0e4067495758d408",
+      "contentSha256": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
       "sources": [
         "CONTEXT.md (AI connector, Saved key, Answer style, Analysis run, Unverified value, Conversion draft, Row, Field)",
         "docs/documentation/EDITORIAL.md",
@@ -134,6 +134,13 @@
           "before": "The Disable, rotate, or remove section named only Saved keys; the switch reset was in the last section only.",
           "after": "Removal also turns off the three Request conversion switches and sets Answer style back to 1-2 sentence summary.",
           "source": "apps/api/src/modules/ai-connector/routes.ts DELETE /ai-connector deletes the row; readConnector(undefined) answers answerStyle 'sentence' and all switches false"
+        },
+        {
+          "claim": "What the reader checks after a run",
+          "before": "Check the run's Version, model, evidence, and saved values.",
+          "after": "Check the run's Version, evidence, and saved values. The Contract record does not name the model; the run uses the Model saved on the connector when it starts.",
+          "source": "apps/web/src/components/contracts/analysis.tsx and apps/web/src/routes/contract-record.tsx (latestRun.model is never rendered); analysis-live walkthrough.json step E02",
+          "correctedBy": "DOC-030 batch owner, from the analysis-live walkthrough failure of 2026-09-25"
         }
       ],
       "confirmed": [

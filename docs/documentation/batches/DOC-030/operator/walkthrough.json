@@ -23,7 +23,7 @@
       "engine": "openlaw-doc030-cfg-engine:067c1646829df85e62b809ee9157921e867c84e7"
     },
     "builtBy": "scripts/documentation/lab.mjs up from 067c1646 (the work2 lab's images); tagged, not rebuilt",
-    "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c (postgres:16 on this host)"
   },
   "articleHashes": {
     "deployment-configuration": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0"
@@ -223,6 +223,101 @@
       "phase": "lan-setup",
       "startedAt": "2026-09-25T13:55:33.133Z",
       "completedAt": "2026-09-25T13:56:48.009Z"
+    },
+    {
+      "phase": "lan-keys",
+      "startedAt": "2026-09-25T14:06:07.109Z",
+      "completedAt": "2026-09-25T14:06:30.842Z"
+    },
+    {
+      "phase": "lan-keys",
+      "startedAt": "2026-09-25T14:06:48.980Z",
+      "completedAt": "2026-09-25T14:07:07.593Z"
+    },
+    {
+      "phase": "m41-https",
+      "startedAt": "2026-09-25T14:07:15.141Z",
+      "completedAt": "2026-09-25T14:07:18.095Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:07:23.408Z",
+      "completedAt": "2026-09-25T14:07:56.255Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:08:20.395Z",
+      "completedAt": "2026-09-25T14:08:23.989Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:09:07.487Z",
+      "completedAt": "2026-09-25T14:09:40.563Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:09:51.428Z",
+      "completedAt": "2026-09-25T14:09:58.345Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:10:40.789Z",
+      "completedAt": "2026-09-25T14:10:45.840Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:10:54.947Z",
+      "completedAt": "2026-09-25T14:11:04.981Z"
+    },
+    {
+      "phase": "m41-plain",
+      "startedAt": "2026-09-25T14:11:47.745Z",
+      "completedAt": "2026-09-25T14:12:27.858Z"
+    },
+    {
+      "phase": "m41-plain-detail",
+      "startedAt": "2026-09-25T14:12:45.945Z",
+      "completedAt": "2026-09-25T14:13:14.914Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "startedAt": "2026-09-25T14:13:21.206Z",
+      "completedAt": "2026-09-25T14:14:45.907Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "startedAt": "2026-09-25T14:23:52.338Z",
+      "completedAt": "2026-09-25T14:24:00.446Z"
+    },
+    {
+      "phase": "lan-pins",
+      "startedAt": "2026-09-25T14:24:05.367Z",
+      "completedAt": "2026-09-25T14:25:21.579Z"
+    },
+    {
+      "phase": "lan-pins",
+      "startedAt": "2026-09-25T14:45:26.845Z",
+      "completedAt": "2026-09-25T14:47:22.040Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "startedAt": "2026-09-25T14:55:54.708Z",
+      "completedAt": "2026-09-25T14:55:57.001Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "startedAt": "2026-09-25T14:56:06.852Z",
+      "completedAt": "2026-09-25T14:56:11.310Z"
+    },
+    {
+      "phase": "topology",
+      "startedAt": "2026-09-25T14:56:39.161Z",
+      "completedAt": "2026-09-25T14:56:39.447Z"
+    },
+    {
+      "phase": "vendor-lists",
+      "startedAt": "2026-09-25T14:56:39.669Z",
+      "completedAt": "2026-09-25T14:56:47.586Z"
     }
   ],
   "steps": [
@@ -1449,13 +1544,538 @@
       "result": "fail",
       "startedAt": "2026-09-25T13:56:47.968Z",
       "at": "2026-09-25T13:56:48.009Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Administrator at the private origin: Settings → Organization → MCP, read Server address, turn on MCP and Legal Users API keys",
+      "expected": "Server address reads the private origin with /mcp; each change shows Settings saved.",
+      "actual": "Server address reads https://openlaw-cfg.company.example:25716/mcp. Enable MCP turned the title to \"MCP is on\"; the Legal Users API keys switch saved with \"Settings saved.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:06:07.110Z",
+      "at": "2026-09-25T14:06:07.939Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "The Legal Team Member requests a key (Client name Claude Code, Contracts, Read), the Administrator approves it, and the owner reads it once",
+      "expected": "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
+      "actual": "Check did not pass: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('row').filter({ hasText: 'Claude Code' }).filter({ hasText: 'Active' }).first() to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:06:07.941Z",
+      "at": "2026-09-25T14:06:30.796Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "From this machine on the LAN address and on the Tailscale address, connect a Streamable HTTP Client with x-api-key and list Tools; also call openlaw_whoami",
+      "expected": "The Client connects over private HTTPS with certificate verification and lists Tools on both private addresses.",
+      "actual": "Check did not pass: 401 0 401 401",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:06:30.798Z",
+      "at": "2026-09-25T14:06:30.841Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Administrator at the private origin: Settings → Organization → MCP, read Server address, turn on MCP and Legal Users API keys",
+      "expected": "Server address reads the private origin with /mcp; each change shows Settings saved.",
+      "actual": "Check did not pass: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByText('Settings saved.').first() to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:06:48.981Z",
+      "at": "2026-09-25T14:07:05.150Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "The Legal Team Member requests a key (Client name Claude Code, Contracts, Read), the Administrator approves it, and the owner reads it once",
+      "expected": "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
+      "actual": "Request an API key: Client name \"Claude Code\", Toolset Contracts, Scope Read; the dialog said \"(read in the earlier attempt)\". The row read Pending approval; the Administrator selected Approve on the MCP page (approved in the earlier attempt, which then waited for an Active label that the MCP page does not show). The owner's API keys page showed \"Your key is ready\" with the key (67 characters, not recorded); after Done and a reload it did not show again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:05.152Z",
+      "at": "2026-09-25T14:07:07.448Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "From this machine on the LAN address and on the Tailscale address, connect a Streamable HTTP Client with x-api-key and list Tools; also call openlaw_whoami",
+      "expected": "The Client connects over private HTTPS with certificate verification and lists Tools on both private addresses.",
+      "actual": "On 192.168.0.59: initialize and tools/list answered 200 with 7 Tools (openlaw_whoami, openlaw_vocabulary, openlaw_docs_search, openlaw_docs_read, openlaw_form_get, openlaw_contracts_list…). On 100.68.96.37: 200 with the same 7 Tools. openlaw_whoami answered 200: {\"content\":[{\"type\":\"text\",\"text\":\"{\\\"person\\\":{\\\"id\\\":\\\"01a0d850-2d21-7f9d-b559-252d74abbead\\\",\\\"email\\\":\\\"rowan.operator@doc030-cfg.example\\\",\\\"displayName\\\":\\\"Rowan Operator\\\"},\\\"accountType\\\":\\\"le. curl verified the certificate against the fictional CA only.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:07.449Z",
+      "at": "2026-09-25T14:07:07.592Z"
+    },
+    {
+      "phase": "m41-https",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "At the private HTTPS origin: request every discovery path in the forwarding table and an unauthenticated /mcp",
+      "expected": "Discovery returns JSON, not the web app; /mcp without credentials answers 401 with WWW-Authenticate pointing to resource discovery.",
+      "actual": "/.well-known/oauth-authorization-server 200 application/json JSON; /.well-known/oauth-authorization-server/api/auth 200 application/json JSON; /.well-known/openid-configuration 200 application/json JSON; /.well-known/openid-configuration/api/auth 200 application/json JSON; /.well-known/oauth-protected-resource 200 application/json JSON; /.well-known/oauth-protected-resource/mcp 200 application/json JSON; /api/auth/.well-known/openid-configuration 200 application/json JSON; /api/auth/jwks 200 application/json JSON. Unauthenticated POST /mcp: \"HTTP/2 401\" with \"www-authenticate: Bearer resource_metadata=\"https://openlaw-cfg.company.example:25716/.well-known/oauth-protected-resource\" scope=\"toolset:workspace toolset:contracts toolset:matters toolset:tasks toolset:requests toolset:comments toolset:documents toolset:auto-docs toolset:entities toolset:knowledge toolset:people toolset:team toolset:administration write offline_access\"\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:15.141Z",
+      "at": "2026-09-25T14:07:15.263Z"
+    },
+    {
+      "phase": "m41-https",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Turn on Legal Users OAuth Clients at the private HTTPS origin and read the pill beside Server address",
+      "expected": "The switch saves while the authorization server runs; the pill names the failed checks for a private address and does not prove a vendor connection.",
+      "actual": "Legal Users OAuth Clients saved (\"Settings saved.\", switch on). The pill reads \"Not reachable · IPv4 record, Public IPv4 address\". The API resolves the private hostname from inside its container; this deployment has no public address, so the pill warns as the guide says it may.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:15.265Z",
+      "at": "2026-09-25T14:07:18.093Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: /Allow|Approve|Connect|Continue/ }).first()\u001b[22m \u001b[2m    - locator resolved to <button disabled class=\"inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-button text-base transition-[filter,background-color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50 bg-cta-primary font-semibold text-on-cta hover:brightness-95 active:brightness-90 h-8 px-3\">Allow</button>\u001b[22m \u001b[2m  - attempting click action\u001b[22m \u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m \u001b[2m      - element is not enabled\u001b[22m \u001b[2m    - retrying click action\u001b[22m",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:07:23.409Z",
+      "at": "2026-09-25T14:07:56.254Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: page.goto: Navigation to \"https://openlaw-cfg.company.example:25716/settings/api-keys\" is interrupted by another navigation to \"http://127.0.0.1:36529/callback?code=[redacted]&state=[redacted]&iss=https%3A%2F%2Fopenlaw-cfg.company.example%3A25716%2Fapi%2Fauth\" Call log: \u001b[2m  - navigating to \"https://openlaw-cfg.company.example:25716/settings/api-keys\", waiting until \"load\"\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:08:20.396Z",
+      "at": "2026-09-25T14:08:23.987Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for locator('main label').filter({ hasText: /^Contracts$/ }).first()\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:09:07.488Z",
+      "at": "2026-09-25T14:09:40.561Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: 200 200 with 7 Tools 200",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:09:51.428Z",
+      "at": "2026-09-25T14:09:58.344Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Discovery named https://openlaw-cfg.company.example:25716/api/auth/oauth2/authorize and https://openlaw-cfg.company.example:25716/api/auth/oauth2/token. The authorization request with client_id https://claude.ai/oauth/claude-code-client-metadata and redirect http://127.0.0.1:<port>/callback for the signed-in Legal Team Member: no consent page: an existing grant for this Client answered at once (\"ok…\"). After consent the browser returned to the loopback callback with a code; the token exchange with the PKCE verifier answered 200; tools/list with the Bearer token answered 200 with 7 Tools. On API keys the Claude Code grant row was revoked (\"Connected Clients showed \"CC Claude Code Contracts Read Granted Sep 25, 2026 Las\"); the next tools/list answered 401. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:10:40.789Z",
+      "at": "2026-09-25T14:10:45.838Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Discovery named https://openlaw-cfg.company.example:25716/api/auth/oauth2/authorize and https://openlaw-cfg.company.example:25716/api/auth/oauth2/token. The authorization request with client_id https://claude.ai/oauth/claude-code-client-metadata and redirect http://127.0.0.1:<port>/callback for the signed-in Legal Team Member: consent page shown (\"Skip to content openlaw DOC-030 operator Organization CC Claude Code wants to work in OpenLaw as you Published identity https://claude.ai/oauth/claude-code-clie…\"). The browser then returned to the loopback callback with a code; the token exchange with the PKCE verifier answered 200; tools/list with the Bearer token answered 200 with 7 Tools. On API keys the Claude Code grant row was revoked (\"Connected Clients showed \"CC Claude Code Contracts Read Granted Sep 25, 2026 Las\"); the next tools/list answered 401. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:10:54.948Z",
+      "at": "2026-09-25T14:11:04.979Z"
+    },
+    {
+      "phase": "m41-plain",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Plain-HTTP LAN boot: serve http://<LAN IP>:<port> through Caddy on the LAN address, set BASE_URL to it and recreate",
+      "expected": "The app boots; the well-known documents answer 404; API keys still work.",
+      "actual": "BASE_URL=http://192.168.0.59:25717; up and readyz 200. Well-known: /.well-known/oauth-authorization-server 404; /.well-known/oauth-authorization-server/api/auth 404; /.well-known/openid-configuration 404; /.well-known/openid-configuration/api/auth 404; /.well-known/oauth-protected-resource 404; /.well-known/oauth-protected-resource/mcp 404. tools/list with a key issued at the HTTPS origin just before (Client name Plain check) answered over plain HTTP 200 with 7 Tools.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:11:47.746Z",
+      "at": "2026-09-25T14:12:11.133Z"
+    },
+    {
+      "phase": "m41-plain",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "At the plain-HTTP address: read the MCP page, try to turn on Business Users OAuth Clients, and try Add Client",
+      "expected": "The OAuth Clients switches stay off and refuse with failed checks named including HTTPS scheme; Add Client fails.",
+      "actual": "The pill reads \"Not reachable · HTTPS scheme, Public IPv4 address\"; Legal Users OAuth Clients shows aria-checked=true (it was on before the change of address). Turning on Business Users OAuth Clients answered 400 with \"\", and the switch stayed off. Add Client: 400 \"The Client could not be saved. Check the callback URLs and try again.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:12:11.134Z",
+      "at": "2026-09-25T14:12:14.763Z"
+    },
+    {
+      "phase": "m41-plain",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Return to the private HTTPS origin",
+      "expected": "BASE_URL is the private HTTPS origin again and OAuth discovery answers.",
+      "actual": "BASE_URL=https://openlaw-cfg.company.example:25716, up; discovery answered 200; the plain-HTTP Caddy site was removed.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:12:14.765Z",
+      "at": "2026-09-25T14:12:27.857Z"
+    },
+    {
+      "phase": "m41-plain-detail",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Plain-HTTP LAN boot again: read what the page and the API say when Business Users OAuth Clients is turned on",
+      "expected": "The refusal names the failed checks.",
+      "actual": "PATCH answered 400 with detail \"BASE_URL scheme http: prevented the OAuth authorization server from starting. Configure HTTPS and restart before enabling OAuth Clients.\". The page's alert and status texts: [\"Not reachable · HTTPS scheme, Public IPv4 address\"]. Switch after: false. Screenshot plain-http-oauth-refused.png. Afterwards BASE_URL went back to https://openlaw-cfg.company.example:25716.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:12:45.946Z",
+      "at": "2026-09-25T14:13:14.912Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Revoke a test key in API keys (Revoke, then Revoke in Revoke API key) and make the next Client request",
+      "expected": "The row says Revoked and the next request is unauthorized.",
+      "actual": "Check did not pass: page.waitForURL: Timeout 30000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:13:21.207Z",
+      "at": "2026-09-25T14:14:03.575Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Expired key: request, approve and read a second key (Client name Script), call once, then move its expiry into the past (fixture shortcut in the database) and call again",
+      "expected": "The expired key cannot connect.",
+      "actual": "Check did not pass: page.waitForURL: Timeout 30000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:14:03.576Z",
+      "at": "2026-09-25T14:14:45.905Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Revoke a test key in API keys (Revoke, then Revoke in Revoke API key) and make the next Client request",
+      "expected": "The row says Revoked and the next request is unauthorized.",
+      "actual": "Before: tools/list 200. Revoke API key → Revoke; the row reads \"Revoke check Contracts Read Revoked Dec 24, 2026\". The next initialize answered 401.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:23:52.339Z",
+      "at": "2026-09-25T14:23:54.624Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Expired key: request, approve and read a second key (Client name Script), call once, then move its expiry into the past (fixture shortcut in the database) and call again",
+      "expected": "The expired key cannot connect.",
+      "actual": "The Script key listed Tools (200). After its expires_at was set a minute in the past (a database fixture step; the shortest lifetime is one day), the next initialize answered 401. Its row reads \"Script Contracts Read Expired Sep 25, 2026\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:23:54.626Z",
+      "at": "2026-09-25T14:24:00.444Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "MCP pins: MCP_RATE_LIMIT_PER_HOUR=3 with a fresh key, four Tool calls; then MCP_RATE_LIMIT_PER_HOUR=abc and Tool calls until refused",
+      "expected": "A pinned rate limit applies; a value that is not a positive whole number falls back to 600.",
+      "actual": "Check did not pass: page.waitForURL: Timeout 30000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:24:05.368Z",
+      "at": "2026-09-25T14:24:41.751Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set MCP_OAUTH_GRANT_LIFETIME_DAYS=400 and recreate; then set 45 and read Advanced → MCP",
+      "expected": "An out-of-range pinned grant lifetime stops the app at startup; a valid pin shows Deployment configuration · Read only.",
+      "actual": "400: app restarting (Restarting (1) Less than a second ago), log \"throw new Error(\"MCP_OAUTH_GRANT_LIFETIME_DAYS must be a whole number from 1 to 365 days.\");\". 45: Advanced → MCP → OAuth grant lifetime (days) reads \"45 Deployment configuration · Read only\". The pin was removed afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:24:41.752Z",
+      "at": "2026-09-25T14:25:21.577Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "MCP pins: MCP_RATE_LIMIT_PER_HOUR=3 with a fresh key, four Tool calls; then MCP_RATE_LIMIT_PER_HOUR=abc and Tool calls until refused",
+      "expected": "A pinned rate limit applies; a value that is not a positive whole number falls back to 600.",
+      "actual": "With MCP_RATE_LIMIT_PER_HOUR=3: four openlaw_whoami calls gave \"ok\" | \"ok\" | \"ok\" | \"rate_limited: The limit is 3 Tool calls per hour per credential. It resets at 2026-09-25T15:00:00.000Z.\". With MCP_RATE_LIMIT_PER_HOUR=abc: after 597 more successful calls in the hour (3 already counted) the next answered \"The limit is 600 Tool calls per hour per credential. It resets at 2026-09-25T15:00:00.000Z.\". The pin was removed afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:45:26.846Z",
+      "at": "2026-09-25T14:46:30.184Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set MCP_OAUTH_GRANT_LIFETIME_DAYS=400 and recreate; then set 45 and read Advanced → MCP",
+      "expected": "An out-of-range pinned grant lifetime stops the app at startup; a valid pin shows Deployment configuration · Read only.",
+      "actual": "400: app restarting (Restarting (1) Less than a second ago), log \"throw new Error(\"MCP_OAUTH_GRANT_LIFETIME_DAYS must be a whole number from 1 to 365 days.\");\". 45: Advanced → MCP → OAuth grant lifetime (days) reads \"45 Deployment configuration · Read only\". The pin was removed afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:46:30.186Z",
+      "at": "2026-09-25T14:47:22.038Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Withdraw private access: remove the private site from Caddy and try the private origin on both addresses, the direct app port, and the still-valid key",
+      "expected": "The private address no longer answers and the app port stays unreachable from other addresses.",
+      "actual": "Check did not pass: 200 7 7 000 000,000",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:55:54.709Z",
+      "at": "2026-09-25T14:55:57.000Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Withdraw private access: remove the private site from Caddy and try the private origin on both addresses, the direct app port, and the still-valid key",
+      "expected": "The private address no longer answers and the app port stays unreachable from other addresses.",
+      "actual": "While private access was up, the Plain check key listed Tools (200). After removing the private Caddy site: the private origin on 192.168.0.59 failed (curl exit 7: curl: (7) Failed to connect to openlaw-cfg.company.example:25716 after 0 ms: Could not connect to server); on 100.68.96.37 failed (exit 7); the Client request got no connection (curl code 000); the app port on 192.168.0.59 and 100.68.96.37 got no connection (000, 000). Listening sockets on those ports: 127.0.0.1:25710. No public forwarding or tunnel was used at any point.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:56:06.853Z",
+      "at": "2026-09-25T14:56:11.308Z"
+    },
+    {
+      "phase": "topology",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Compare the app and worker containers, and inspect the document engine and Postgres",
+      "expected": "App and worker run the same image with different commands and the same database, file configuration, origin, credential key and Web Push settings; the engine has no database or credential access; Postgres and the engine publish no ports.",
+      "actual": "App and worker image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; commands [\"node\",\"apps/api/dist/index.js\"] and [\"node\",\"apps/worker/dist/index.js\"]. Identical in both (values compared, not recorded): DATABASE_URL, STORAGE_DRIVER, STORAGE_PATH, BASE_URL, OPENLAW_SECRET_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, DOC_ENGINE_URL, AZURE_BLOB_CONTAINER. doc-engine: no variable naming a database, key, secret or relay (its variables include DOC_ENGINE_COMPARE_TIMEOUT_MS, DOC_ENGINE_MAX_CONCURRENT, DOC_ENGINE_MAX_QUEUED); network openlaw-doc030-cfg-1_openlaw-doc-engine; published ports {}. postgres published ports {}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:56:39.162Z",
+      "at": "2026-09-25T14:56:39.445Z"
+    },
+    {
+      "phase": "vendor-lists",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Read the vendor egress sources the guide names (outbound reads only; nothing is exposed)",
+      "expected": "Anthropic's page lists 160.79.104.0/21; OpenAI's chatgpt-connectors.json returns prefixes a scheduled job can apply; Microsoft's managed connector page answers.",
+      "actual": "Anthropic outbound IP page: 200, lists 160.79.104.0/21: true. OpenAI chatgpt-connectors.json: 200, 278 entries, creationTime 2026-09-22T18:18:05.915327. OpenAI egress guidance: 200. Microsoft managed connector outbound addresses: 200, mentions AzureConnectors. Applying these to a firewall in front of a public listener is part of the pending live session: this lab has no public listener.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:56:39.669Z",
+      "at": "2026-09-25T14:56:47.584Z"
     }
   ],
   "fixtureImages": {
-    "relay": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0",
-    "minio": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9",
-    "azurite": "sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1",
-    "extdb": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
-    "proxy": "sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe"
-  }
+    "relay": "axllent/mailpit:v1.30 sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0",
+    "minio": "minio/minio:RELEASE.2025-09-07T16-13-09Z sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9 (already on the host; nothing pulled)",
+    "azurite": "mcr.microsoft.com/azure-storage/azurite:3.36.0 sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1",
+    "extdb": "postgres:16 sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
+    "proxy": "caddy:2-alpine sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe"
+  },
+  "contentSha256History": [
+    {
+      "sha256": "af0ef822f497f373442f33696ced87f33aa23f340d0d97fe3662fc9f9ff307f9",
+      "note": "Bytes at a9f1ffdb when the walk started (the author's technical-review.json names 3f8cb58b, which did not match the file). Walked: first run, origin, uploads, Advanced pages, storage, instance address, engine limits."
+    },
+    {
+      "sha256": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0",
+      "note": "Corrected at b167dba0 after this walk and operator-2 reported the TRUSTED_PROXIES and wrong-key failures. Re-walked: Find the trusted proxy address (phases trusted-proxy, trusted-proxy-note), the private VM .env block (lan-setup set TRUSTED_PROXIES to the gateway after first start), the wrong-key symptoms and recovery-command warning (keys, wrong-key-note), and removing a saved address leaving http://localhost:3000 (instance). All remaining phases ran against these bytes."
+    }
+  ],
+  "finalContentSha256": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0",
+  "effectiveValues": {
+    "note": "Final non-secret .env entries of the installation before teardown. Secrets were set and are not recorded. Variables changed and removed during the walk are in the steps.",
+    "env": {
+      "COMPOSE_PROJECT_NAME": "openlaw-doc030-cfg-1",
+      "COMPOSE_FILE": "compose.yml:compose.operator.yml",
+      "OPENLAW_BUILD_COMMIT": "067c1646829df85e62b809ee9157921e867c84e7",
+      "OPENLAW_BUILD_DIRTY": "false",
+      "PORT": "25710",
+      "BASE_URL": "https://openlaw-cfg.company.example:25716",
+      "TRUSTED_PROXIES": "192.168.96.1 (gateway of openlaw-doc030-cfg-1_openlaw-backend, 192.168.96.0/20)",
+      "OPENLAW_PLAIN_HTTP_HOSTS": "minio,azurite",
+      "STORAGE_DRIVER": "azure-blob",
+      "AZURE_BLOB_CONTAINER": "doc030-env",
+      "AZURE_BLOB_ACCOUNT": "devstoreaccount1",
+      "AZURE_BLOB_ENDPOINT": "http://azurite:10000/devstoreaccount1",
+      "AUTH_SECRET, OPENLAW_SECRET_KEY, AZURE_BLOB_ACCOUNT_KEY": "set, not recorded"
+    },
+    "appSaved": "Document storage S3 reader doc030-app at http://minio:9000, path style, region eu-west-1, keys write-only (saved again after the wrong-key recovery command erased the saved configuration).",
+    "containerLimitsDefault": "app and worker 2 CPUs, 1073741824 bytes, 256 pids; doc-engine 2 CPUs, 4294967296 bytes, 512 pids, /tmp size=2g"
+  },
+  "fileHashes": {
+    "compose.yml (pinned source)": "b5d434e580f637bbcdc5df544345d7f1dee6265d140318033a916e92b20f11d8",
+    "compose.operator.yml": "f3ec8930e4eaa4880555562110fde9ad578f8b2591e35fcab547a9b6a3091f97",
+    ".env.example (pinned source)": "87c811f1f9e6b7809a91542843e68ee91f3a3a9d751f65e1fd19cc1a97d69f62",
+    "fixture compose.yml": "20bef9ecd840f6827b3bcba45c1876f7bf759a575250c4cfc33a2182133feab7",
+    "Caddyfile (final, private site removed)": "e448d53ef441b136b37432d3f48ce73ed1c85ff8608bbeaeb63753b42d2dc29a",
+    "Document doc030-local.pdf (local driver)": "2336bf7ba945ccf8c9c7c4f49aeb9b46f1e6ba88ee2b2fe939a016606415a89a",
+    "Document doc030-s3-app.pdf (app-saved S3)": "3b1f66205f3a6ca456da7cc2d22c0fcbe643ac14493d69e04bc9cf7f482cee50",
+    "Document doc030-azure-env.pdf (azure-blob via .env)": "b6eb54fd56814a5ea6a7993435d55db9263a33699b81cc6370963b1d8ca5f2e3"
+  },
+  "combinations": [
+    {
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "result": "pass",
+      "note": "Against the corrected bytes 97bf7342. At af0ef822 it failed: TRUSTED_PROXIES=127.0.0.1,::1 matched nothing (see guideFailures)."
+    },
+    {
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "result": "pass",
+      "note": "Every part that needs no public exposure."
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "result": "pass",
+      "note": "Every part that needs no public exposure."
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "live-provider-check",
+      "result": "pending",
+      "note": "Needs a public HTTPS IPv4 listener and vendor connections (claude.ai, ChatGPT, Copilot Studio), and the Claude Code binary's own OAuth run. Scheduled for the joint session with the owner and the clients group. No public exposure was allowed here."
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "result": "pending",
+      "note": "As above."
+    }
+  ],
+  "pending": "V-M41-PUBLIC live-provider-check (operator and administrator). No evidence file for deployment-configuration was written.",
+  "guideFailures": [
+    {
+      "bytes": "af0ef822",
+      "step": "Serve the intended origin / private VM .env block: TRUSTED_PROXIES=127.0.0.1,::1 for a proxy on the same host",
+      "expected": "The app reads the client address from X-Forwarded-For through Caddy on the host.",
+      "observed": "Every session recorded 192.168.96.1, the Compose backend gateway; a client-sent X-Forwarded-For was ignored; no warning was logged. Listing the gateway made the app record the client address. Corrected in 97bf7342 and re-walked (pass)."
+    },
+    {
+      "bytes": "af0ef822",
+      "step": "An unreadable saved Advanced configuration stops startup; the recovery command with a wrong key stops with the startup message",
+      "expected": "Startup stops.",
+      "observed": "Walked only against 97bf7342, which already describes the observed behavior: app and worker start, saved values read as default, the recovery command exits 0 and erases every section. Operator-2 reported the failure first."
+    }
+  ],
+  "guideNotes": [
+    "Find the trusted proxy address: the log check also prints 127.0.0.1 lines from the Compose healthcheck (/readyz every 30 s), and a test browser on the proxy host is also 127.0.0.1, so the check is clear only for browsers on other machines.",
+    "Wrong OPENLAW_SECRET_KEY: 'Storage becomes the local driver' holds only when .env sets no driver; here .env pinned azure-blob and storage stayed azure-blob. The first bullet ('fall back to the deployment environment or the default') covers it.",
+    "Lost-key recovery: with STORAGE_DRIVER pinned in .env to another driver and no bucket saved, Document storage hides the S3 fields, so an S3 reader cannot be saved again from the page.",
+    "System status: docker compose stop worker removes the worker row (the page shows only the missing-heartbeat warning); a No recent heartbeat row appears only when the process dies without cleanup (docker compose kill). Right after docker compose restart, the old API row stays Running for up to a minute, marked Restart required when the configuration changed.",
+    "Plain-HTTP LAN boot: turning on an OAuth Clients switch answers 400 with a clear detail, but the page shows no message; only the pill (Not reachable · HTTPS scheme, Public IPv4 address) names the checks.",
+    "The reset script's usage line lists instance|uploads|storage|processing but it accepts mcp (confirms the author's limitation)."
+  ],
+  "productBugs": [
+    "reset-advanced-settings.js run with a wrong OPENLAW_SECRET_KEY exits 0 and replaces the whole saved configuration with an empty one; the correct key cannot recover it (data loss; the corrected guide warns about it).",
+    "Settings → Organization → MCP on a plain-HTTP BASE_URL: PATCH /api/v1/mcp-settings answers 400 'BASE_URL scheme http: prevented the OAuth authorization server from starting...' but the page shows no error; the switch silently stays off (screenshot plain-http-oauth-refused.png).",
+    "The upload refusal says 'That file is over the 1 MB upload limit.' while the limit is 1 MiB (1,048,577 bytes refused, 1,048,576 accepted).",
+    "The API never deletes its runtime_status heartbeat row on shutdown (every past API process row stays for 24 h); the worker deletes its row on a clean stop."
+  ],
+  "limitations": [
+    "Agent walkthrough, not a human operator study. One agent acted as operator and Administrator; the Legal Team Member Rowan Operator was the key owner and the non-administrator for negative checks.",
+    "No new images were built: compose.operator.yml named tags pointing at the images lab.mjs built from 067c1646 (app sha256:506e20d1..., engine sha256:eabde72b...).",
+    "HTTPS used Caddy's internal CA (openlaw-cfg.localhost:25711) and a fictional corporate CA for openlaw-cfg.company.example:25716 on the LAN address 192.168.0.59 and the Tailscale address 100.68.96.37. Port 443 needs root on this host. Internal DNS was replaced by curl --resolve and browser host rules. Host port 3000 belongs to an unrelated service, so PORT was 25710 and the default http://localhost:3000 origin was served through Caddy on [::1]:3000.",
+    "All private-address requests came from this machine. No second device, office network, VPN, firewall rule or IPv6 rule was tested; 'unreachable outside the permitted network' was shown only as connection refused after the private site was withdrawn.",
+    "The API key Client was curl speaking Streamable HTTP with x-api-key (the guide's 'other SDK Clients' path). claude mcp add was not run: the private hostname does not resolve for the Claude Code binary without system DNS changes.",
+    "Claude Code loopback OAuth was driven at the protocol level with Claude Code's published client ID (https://claude.ai/oauth/claude-code-client-metadata), a 127.0.0.1 callback, PKCE and the real consent page; the Claude Code binary's own OAuth run is part of the pending live session.",
+    "The expired-key check moved the key's expires_at into the past in the database; the shortest lifetime is one day.",
+    "Signing, AI analysis and SSO were not configured, so their wrong-key bullets were not observed.",
+    "The host rebooted mid-walk; the fixture containers were started again and no state was lost. Chromium's ERR_NETWORK_CHANGED during Docker network changes caused several failed attempts; each failed attempt stays in the log beside its passing repeat.",
+    "A failed attempt of m41-cc-oauth revoked the Claude Code API key by selecting the wrong row; later key checks used fresh keys (Plain check, Revoke check, Script, Rate check)."
+  ],
+  "teardown": {
+    "at": "2026-09-25T14:58:31.635Z",
+    "actions": "docker compose down -v --remove-orphans for openlaw-doc030-cfg-fx and openlaw-doc030-cfg-1 (containers, networks, named and anonymous volumes); image tags openlaw-doc030-cfg-app and openlaw-doc030-cfg-engine removed (the lab images stay); ~/.cache/openlaw-doc030/operator-cfg removed with its .env, fictional CA and state. No image was pulled."
+  },
+  "counts": {
+    "steps": 132,
+    "pass": 97,
+    "fail": 35,
+    "byScenario": {
+      "V-C45": 63,
+      "V-C45-advanced-settings": 36,
+      "V-M40-LAN": 20,
+      "V-M41-PUBLIC": 13
+    }
+  },
+  "summary": "deployment-configuration is not complete: every combination passed against 97bf7342 except V-M41-PUBLIC live-provider-check (operator and administrator), which is pending the joint live session. No evidence file was written.",
+  "failureNotes": [
+    "proxy: the genuine guide failure at af0ef822 (TRUSTED_PROXIES=127.0.0.1,::1); superseded by trusted-proxy and trusted-proxy-note against 97bf7342.",
+    "keys (mismatched key): failed only on the reviewer's 'storage becomes local' expectation; see wrong-key-note. keys (AUTH_SECRET): the reviewer used a nonexistent /api/v1/auth/me; repeated in auth-secret (pass).",
+    "advanced (restart): the saved values applied (2,097,153 bytes refused 413, 2,097,152 accepted 201); it failed on an extra API row still marked Restart required during the first minute; advanced-restart shows it clears after 60 s. advanced (stop worker): a clean stop removes the worker row; advanced-restart shows No recent heartbeat after docker compose kill.",
+    "All other failed attempts are reviewer-script faults (selectors, a login view, an eager error message, a Docker template) or Chromium ERR_NETWORK_CHANGED during Docker network changes; each has a passing repeat in a later phase: accept, origin-upload, advanced-nav, storage-recheck, instance-link, limits, lan-keys, m41-cc-oauth, lan-revoke, lan-pins, lan-withdraw."
+  ]
 }

@@ -343,7 +343,7 @@ async function newSession(base = ORIGIN) {
 // arrives from the Docker gateway, so this walkthrough spaces its own sign-ins.
 let lastSignIn = 0;
 async function paceSignIn() {
-  const wait = lastSignIn + 4000 - Date.now();
+  const wait = lastSignIn + 6000 - Date.now();
   if (wait > 0) await sleep(wait);
   lastSignIn = Date.now();
 }
@@ -2943,13 +2943,21 @@ async function lanSession(email, password) {
   const context = await b.newContext({ ignoreHTTPSErrors: true, baseURL: LAN_ORIGIN });
   context.on("close", () => b.close().catch(() => {}));
   const page = await context.newPage();
-  await paceSignIn();
-  await page.goto(`${LAN_ORIGIN}/auth/login`);
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30_000 });
-  return { context, page };
+  // Docker network changes during recreation make Chromium abort navigations
+  // (ERR_NETWORK_CHANGED), so the sign-in is retried.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await paceSignIn();
+    try {
+      await page.goto(`${LAN_ORIGIN}/auth/login`);
+      await page.getByLabel("Email").fill(email, { timeout: 15_000 });
+      await page.getByLabel("Password", { exact: true }).fill(password);
+      await page.getByRole("button", { name: "Sign in", exact: true }).click();
+      await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 20_000 });
+      return { context, page };
+    } catch (e) {
+      if (attempt === 2) throw e;
+    }
+  }
 }
 function lanCaddy(extraSites) {
   caddyfile(extraSites);
@@ -3002,7 +3010,9 @@ async function approveKey(clientName) {
     await row.getByRole("button", { name: "Approve" }).click();
     const confirm = page.getByRole("dialog").getByRole("button", { name: "Approve" });
     if (await confirm.count()) await confirm.click();
-    await page.getByRole("row").filter({ hasText: clientName }).filter({ hasText: "Active" }).first().waitFor({ timeout: 15_000 });
+    await page.getByRole("row").filter({ hasText: clientName }).filter({ hasText: "Pending approval" }).first().waitFor({ state: "detached", timeout: 15_000 });
+    await sleep(1000);
+    return (await page.getByRole("row").filter({ hasText: clientName }).allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim()).join(" | ");
   } finally {
     await s.context.close();
   }
@@ -3061,6 +3071,10 @@ phases["lan-setup"] = async () => {
       return `A fictional CA signed a certificate for ${LAN_HOST}. The adapted Caddyfile site binds ${LAN_IP} (LAN) and ${TAILNET_IP} (Tailscale) on port ${LAN_PORT} (443 needs root on this host), uses tls with the certificate files, the three headers, and reverse_proxy 127.0.0.1:${APP_PORT}; "caddy validate" printed "${v.stdout.trim()}". BASE_URL=${LAN_ORIGIN} and up. From this machine, curl with only the fictional CA trusted reached ${LAN_ORIGIN}/readyz on the LAN address: ${lan.stdout.trim().split("\n").at(-1)} (HTTP, verify result), headers ${hdrs.join("; ")}; on the Tailscale address: ${ts.stdout.trim()}. Without the CA, curl refused the certificate (exit ${noCa.code}). The app port on ${LAN_IP}:${APP_PORT} got no connection (${direct}). Hostname resolution used curl --resolve and browser host rules in place of internal DNS.`;
     },
   );
+  await phases["lan-keys"]();
+};
+
+phases["lan-keys"] = async () => {
   await step(
     "V-M40-LAN",
     "administrator",
@@ -3094,13 +3108,20 @@ phases["lan-setup"] = async () => {
     "The Legal Team Member requests a key (Client name Claude Code, Contracts, Read), the Administrator approves it, and the owner reads it once",
     "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
     async () => {
-      const expiry = await requestKey("Claude Code");
-      await approveKey("Claude Code");
+      let expiry, approvedRow;
+      const waiting = psql("select count(*) from api_key_requests where client_name='Claude Code' and status='approved' and sealed_key is not null").stdout.trim();
+      if (waiting === "1") {
+        expiry = "(read in the earlier attempt)";
+        approvedRow = "approved in the earlier attempt, which then waited for an Active label that the MCP page does not show";
+      } else {
+        expiry = await requestKey("Claude Code");
+        approvedRow = await approveKey("Claude Code");
+      }
       const { key, again } = await readKeyOnce();
       state.lanKey = key;
       saveState();
       expect(key.length > 20 && again === 0, `key length ${key.length}, dialog again ${again}`);
-      return `Request an API key: Client name "Claude Code", Toolset Contracts, Scope Read; the dialog said "${expiry}". The row read Pending approval; the Administrator selected Approve on the MCP page and the row became Active. The owner's API keys page showed "Your key is ready" with the key (${key.length} characters, not recorded); after Done and a reload it did not show again.`;
+      return `Request an API key: Client name "Claude Code", Toolset Contracts, Scope Read; the dialog said "${expiry}". The row read Pending approval; the Administrator selected Approve on the MCP page (${approvedRow}). The owner's API keys page showed "Your key is ready" with the key (${key.length} characters, not recorded); after Done and a reload it did not show again.`;
     },
   );
   await step(
@@ -3215,7 +3236,7 @@ phases["m41-cc-oauth"] = async () => {
       const port = server.address().port;
       const redirect = `http://127.0.0.1:${port}/callback`;
       const clientId = "https://claude.ai/oauth/claude-code-client-metadata";
-      const scopes = (meta.scopes_supported ?? []).filter((x) => /mcp|openid|offline/.test(x)).join(" ") || "openid";
+      const scopes = ["toolset:contracts", "offline_access"].filter((x) => (meta.scopes_supported ?? []).includes(x)).join(" ");
       const url = new URL(meta.authorization_endpoint);
       url.search = new URLSearchParams({ response_type: "code", client_id: clientId, redirect_uri: redirect, code_challenge: challenge, code_challenge_method: "S256", scope: scopes, state: "doc030", resource: `${LAN_ORIGIN}/mcp` }).toString();
       const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
@@ -3227,11 +3248,15 @@ phases["m41-cc-oauth"] = async () => {
         await page.waitForLoadState("networkidle").catch(() => {});
         await sleep(1500);
         consentText = (await page.locator("main, body").first().innerText()).replace(/\s+/g, " ").slice(0, 300);
-        const contracts = page.getByLabel("Contracts", { exact: true });
-        if (await contracts.count()) await contracts.check().catch(() => {});
-        const allow = page.getByRole("button", { name: /Allow|Approve|Connect|Continue/ }).first();
-        await allow.click();
-        const code = await Promise.race([got, sleep(30_000).then(() => null)]);
+        const early = await Promise.race([got, sleep(5000).then(() => null)]);
+        let consented = "consent page shown";
+        if (!early) {
+          await page.locator("main label").filter({ hasText: /^Contracts$/ }).first().click();
+          await page.getByRole("radio", { name: "Read only" }).check();
+          await page.getByRole("button", { name: "Allow", exact: true }).click();
+        } else consented = "no consent page: an existing grant for this Client answered at once";
+        state.consented = consented;
+        const code = early ?? (await Promise.race([got, sleep(30_000).then(() => null)]));
         expect(code?.code, `no code at the loopback callback; consent page said: ${consentText}`);
         const tok = curlLan(`-o ${path.join(PRIVATE, "tok.json")} -w '%{http_code}' --data-urlencode grant_type=authorization_code --data-urlencode code=${code.code} --data-urlencode redirect_uri=${redirect} --data-urlencode client_id=${clientId} --data-urlencode code_verifier=${verifier} --data-urlencode resource=${LAN_ORIGIN}/mcp ${meta.token_endpoint}`);
         tokenStatus = tok.stdout.trim();
@@ -3239,20 +3264,23 @@ phases["m41-cc-oauth"] = async () => {
         state.ccTokenLength = token?.length;
         const list = mcpExchange(`authorization: Bearer ${token}`, "tools/list");
         tools = `${list.status} with ${(list.body?.result?.tools ?? []).length} Tools`;
-        await page.goto(`${LAN_ORIGIN}/settings/api-keys`);
-        const row = page.getByRole("row").filter({ hasText: "Claude Code" }).filter({ hasText: /Granted|OAuth|grant/i }).first();
-        await row.waitFor({ timeout: 20_000 });
-        await row.getByRole("button", { name: "Revoke" }).click();
-        await page.getByRole("dialog").getByRole("button", { name: "Revoke" }).click();
+        const p2 = await s.context.newPage();
+        await p2.goto(`${LAN_ORIGIN}/settings/api-keys`);
+        await p2.getByText("Connected Clients").first().waitFor({ timeout: 20_000 });
+        const card = (await p2.locator("main").innerText()).split("Connected Clients")[1]?.split("A Client on")[0]?.replace(/\s+/g, " ").trim() ?? "";
+        await p2.getByRole("button", { name: /Disconnect/ }).first().click();
+        const d = p2.getByRole("dialog");
+        const title = (await d.innerText()).split("\n")[0];
+        await d.getByRole("button").filter({ hasNotText: "Cancel" }).last().click();
         await sleep(1500);
-        revoked = (await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim();
+        revoked = `Connected Clients showed "${card}"; Disconnect opened "${title}" and was confirmed`;
         after = mcpExchange(`authorization: Bearer ${token}`, "tools/list").status;
       } finally {
         server.close();
         await s.context.close();
       }
       expect(tokenStatus === "200" && /^200 /.test(tools) && after === "401", `${tokenStatus} ${tools} ${after}`);
-      return `Discovery named ${meta.authorization_endpoint} and ${meta.token_endpoint}. The authorization request with client_id ${clientId} and redirect ${redirect.replace(/:\d+\//, ":<port>/")} opened a consent page for the signed-in Legal Team Member ("${sanitize(consentText).slice(0, 160)}…"). After consent the browser returned to the loopback callback with a code; the token exchange with the PKCE verifier answered ${tokenStatus}; tools/list with the Bearer token answered ${tools}. On API keys the Claude Code grant row was revoked ("${revoked.slice(0, 80)}"); the next tools/list answered ${after}. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).`;
+      return `Discovery named ${meta.authorization_endpoint} and ${meta.token_endpoint}. The authorization request with client_id ${clientId} and redirect ${redirect.replace(/:\d+\//, ":<port>/")} for the signed-in Legal Team Member: ${state.consented} ("${sanitize(consentText).slice(0, 160)}…"). The browser then returned to the loopback callback with a code; the token exchange with the PKCE verifier answered ${tokenStatus}; tools/list with the Bearer token answered ${tools}. On API keys the Claude Code grant row was revoked ("${revoked.slice(0, 80)}"); the next tools/list answered ${after}. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).`;
     },
   );
 };
@@ -3265,6 +3293,10 @@ phases["m41-plain"] = async () => {
     "Plain-HTTP LAN boot: serve http://<LAN IP>:<port> through Caddy on the LAN address, set BASE_URL to it and recreate",
     "The app boots; the well-known documents answer 404; API keys still work.",
     async () => {
+      await requestKey("Plain check");
+      await approveKey("Plain check");
+      state.plainKey = (await readKeyOnce()).key;
+      saveState();
       lanCaddy(LAN_SITE() + PLAIN_SITE());
       setEnv({ BASE_URL: LAN_PLAIN_ORIGIN });
       expect(up().code === 0, "up failed");
@@ -3277,9 +3309,9 @@ phases["m41-plain"] = async () => {
         "/.well-known/oauth-protected-resource",
         "/.well-known/oauth-protected-resource/mcp",
       ].map((p) => `${p} ${sh(`curl -s -m 10 -o /dev/null -w '%{http_code}' ${LAN_PLAIN_ORIGIN}${p}`).stdout.trim()}`);
-      const list = mcpExchange(keyHeader(), "tools/list", {}, { origin: LAN_PLAIN_ORIGIN });
+      const list = mcpExchange(`x-api-key: ${state.plainKey}`, "tools/list", {}, { origin: LAN_PLAIN_ORIGIN });
       expect(wk.every((l) => l.endsWith(" 404")) && list.status === "200", `${wk.join("; ")} | ${list.status}`);
-      return `BASE_URL=${LAN_PLAIN_ORIGIN}; up and readyz 200. Well-known: ${wk.join("; ")}. tools/list with the API key over plain HTTP answered ${list.status} with ${(list.body?.result?.tools ?? []).length} Tools.`;
+      return `BASE_URL=${LAN_PLAIN_ORIGIN}; up and readyz 200. Well-known: ${wk.join("; ")}. tools/list with a key issued at the HTTPS origin just before (Client name Plain check) answered over plain HTTP ${list.status} with ${(list.body?.result?.tools ?? []).length} Tools.`;
     },
   );
   await step(
@@ -3355,26 +3387,36 @@ phases["lan-revoke"] = async () => {
     "V-M40-LAN",
     "operator",
     "container-operation",
-    "Revoke the test key in API keys (Revoke, then Revoke in Revoke API key) and make the next Client request",
+    "Revoke a test key in API keys (Revoke, then Revoke in Revoke API key) and make the next Client request",
     "The row says Revoked and the next request is unauthorized.",
     async () => {
-      const before = mcpExchange(keyHeader(), "tools/list").status;
+      // The first Claude Code key was revoked by mistake in a failed attempt of m41-cc-oauth, so a
+      // fresh key (Client name Revoke check) is used here.
+      if (!state.revokeKey) {
+        await requestKey("Revoke check");
+        await approveKey("Revoke check");
+        state.revokeKey = (await readKeyOnce()).key;
+        saveState();
+      }
+      const hdr = `x-api-key: ${state.revokeKey}`;
+      const before = mcpExchange(hdr, "tools/list").status;
       const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
       let rowText;
       try {
         const page = s.page;
         await page.goto(`${LAN_ORIGIN}/settings/api-keys`);
-        const row = page.getByRole("row").filter({ hasText: "Claude Code" }).filter({ hasText: "Active" }).first();
+        const row = page.getByRole("row").filter({ hasText: "Revoke check" }).filter({ hasText: "Active" }).first();
         await row.waitFor({ timeout: 20_000 });
         await row.getByRole("button", { name: "Revoke" }).click();
         const d = page.getByRole("dialog").filter({ hasText: "Revoke API key" });
         await d.getByRole("button", { name: "Revoke" }).click();
         await page.getByText("Revoked").first().waitFor({ timeout: 15_000 });
-        rowText = (await page.getByRole("row").filter({ hasText: "Revoked" }).first().innerText()).replace(/\s+/g, " ").trim();
+        await sleep(1000);
+        rowText = (await page.getByRole("row").filter({ hasText: "Revoke check" }).first().innerText()).replace(/\s+/g, " ").trim();
       } finally {
         await s.context.close();
       }
-      const after = mcpExchange(keyHeader(), "tools/list");
+      const after = mcpExchange(hdr, "tools/list");
       expect(before === "200" && after.status === "401", `${before} ${after.status}`);
       return `Before: tools/list ${before}. Revoke API key → Revoke; the row reads "${rowText.slice(0, 120)}". The next initialize answered ${after.status}.`;
     },
@@ -3386,13 +3428,18 @@ phases["lan-revoke"] = async () => {
     "Expired key: request, approve and read a second key (Client name Script), call once, then move its expiry into the past (fixture shortcut in the database) and call again",
     "The expired key cannot connect.",
     async () => {
-      await requestKey("Script");
-      await approveKey("Script");
-      const { key } = await readKeyOnce();
-      state.lanKey2 = key;
-      saveState();
+      if (!state.lanKey2) {
+        await requestKey("Script");
+        await approveKey("Script");
+        state.lanKey2 = (await readKeyOnce()).key;
+        saveState();
+      }
+      const key = state.lanKey2;
+      const scriptKeyId = "(select key_id from api_key_requests where client_name='Script')";
+      // The earlier attempt had already moved the expiry; put it back in the future first.
+      psql(`update api_keys set expires_at = now() + interval '90 days' where id = ${scriptKeyId}`);
       const ok = mcpExchange(`x-api-key: ${key}`, "tools/list").status;
-      const u = psql(`update api_keys set expires_at = now() - interval '1 minute' where id in (select k.id from api_keys k order by k.created_at desc limit 1) returning id`);
+      const u = psql(`update api_keys set expires_at = now() - interval '1 minute' where id = ${scriptKeyId} returning id`);
       const after = mcpExchange(`x-api-key: ${key}`, "tools/list").status;
       const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
       let rowText = "";
@@ -3417,11 +3464,14 @@ phases["lan-pins"] = async () => {
     "MCP pins: MCP_RATE_LIMIT_PER_HOUR=3 with a fresh key, four Tool calls; then MCP_RATE_LIMIT_PER_HOUR=abc and Tool calls until refused",
     "A pinned rate limit applies; a value that is not a positive whole number falls back to 600.",
     async () => {
-      await requestKey("Rate check");
-      await approveKey("Rate check");
-      const { key } = await readKeyOnce();
-      state.lanKey3 = key;
-      saveState();
+      if (!state.lanKey3) {
+        const pendingRate = psql("select count(*) from api_key_requests where client_name='Rate check'").stdout.trim();
+        if (pendingRate === "0") await requestKey("Rate check");
+        await approveKey("Rate check");
+        state.lanKey3 = (await readKeyOnce()).key;
+        saveState();
+      }
+      const key = state.lanKey3;
       setEnv({ MCP_RATE_LIMIT_PER_HOUR: "3" });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
@@ -3493,16 +3543,18 @@ phases["lan-withdraw"] = async () => {
     "Withdraw private access: remove the private site from Caddy and try the private origin on both addresses, the direct app port, and the still-valid key",
     "The private address no longer answers and the app port stays unreachable from other addresses.",
     async () => {
-      const before = mcpExchange(`x-api-key: ${state.lanKey3}`, "tools/list").status;
+      caddyfile(LAN_SITE());
+      await sleep(2000);
+      const before = mcpExchange(`x-api-key: ${state.plainKey}`, "tools/list").status;
       caddyfile("");
       await sleep(2000);
       const lan = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`);
       const ts = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`, { bind: TAILNET_IP });
-      const key = mcpExchange(`x-api-key: ${state.lanKey3}`, "tools/list").status;
+      const key = mcpExchange(`x-api-key: ${state.plainKey}`, "tools/list").status;
       const direct = sh(`curl -s -m 5 -o /dev/null -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz; echo; curl -s -m 5 -o /dev/null -w '%{http_code}' http://${TAILNET_IP}:${APP_PORT}/readyz`).stdout.trim().split("\n");
       const listen = sh(`ss -ltn | grep -E ':(${LAN_PORT}|${APP_PORT})\\b' | awk '{print $4}' | sort -u | tr '\\n' ' '`).stdout.trim();
-      expect(before === "200" && lan.code !== 0 && ts.code !== 0 && /curl exit/.test(key) && direct.every((d) => d === "000"), `${before} ${lan.code} ${ts.code} ${key} ${direct}`);
-      return `While private access was up, the Rate check key listed Tools (${before}). After removing the private Caddy site: the private origin on ${LAN_IP} failed (curl exit ${lan.code}: ${firstLines(lan.stderr, 1)}); on ${TAILNET_IP} failed (exit ${ts.code}); the Client request failed (${key}); the app port on ${LAN_IP} and ${TAILNET_IP} got no connection (${direct.join(", ")}). Listening sockets on those ports: ${listen}. No public forwarding or tunnel was used at any point.`;
+      expect(before === "200" && lan.code !== 0 && ts.code !== 0 && key === "000" && direct.every((d) => d === "000"), `${before} ${lan.code} ${ts.code} ${key} ${direct}`);
+      return `While private access was up, the Plain check key listed Tools (${before}). After removing the private Caddy site: the private origin on ${LAN_IP} failed (curl exit ${lan.code}: ${firstLines(lan.stderr, 1)}); on ${TAILNET_IP} failed (exit ${ts.code}); the Client request got no connection (curl code ${key}); the app port on ${LAN_IP} and ${TAILNET_IP} got no connection (${direct.join(", ")}). Listening sockets on those ports: ${listen}. No public forwarding or tunnel was used at any point.`;
     },
   );
 };
@@ -3600,6 +3652,113 @@ phases.resend = async () => {
   );
 };
 
+phases["m41-plain-detail"] = async () => {
+  await step(
+    "V-M41-PUBLIC",
+    "administrator",
+    "container-operation",
+    "Plain-HTTP LAN boot again: read what the page and the API say when Business Users OAuth Clients is turned on",
+    "The refusal names the failed checks.",
+    async () => {
+      lanCaddy(LAN_SITE() + PLAIN_SITE());
+      setEnv({ BASE_URL: LAN_PLAIN_ORIGIN });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      const b = await chromium.launch({ headless: true });
+      let out;
+      try {
+        const context = await b.newContext({ baseURL: LAN_PLAIN_ORIGIN });
+        const page = await context.newPage();
+        await paceSignIn();
+        await page.goto(`${LAN_PLAIN_ORIGIN}/auth/login`);
+        await page.getByLabel("Email").fill(ADMIN.email);
+        await page.getByLabel("Password", { exact: true }).fill(state.adminPassword);
+        await page.getByRole("button", { name: "Sign in", exact: true }).click();
+        await page.waitForURL((u) => !u.pathname.startsWith("/auth/login"), { timeout: 30_000 });
+        await page.goto(`${LAN_PLAIN_ORIGIN}/settings/mcp`);
+        await page.getByText("Server address").first().waitFor({ timeout: 20_000 });
+        const sw = page.getByRole("switch", { name: "Business Users OAuth Clients" });
+        const answered = page.waitForResponse((r) => r.url().endsWith("/api/v1/mcp-settings") && r.request().method() === "PATCH");
+        await sw.click();
+        const resp = await answered;
+        const body = await resp.json().catch(() => ({}));
+        await sleep(1500);
+        const texts = (await page.locator('[role="alert"], [role="status"]').allInnerTexts()).map((t) => t.trim()).filter(Boolean);
+        await page.screenshot({ path: path.join(here, "plain-http-oauth-refused.png") });
+        out = `PATCH answered ${resp.status()} with detail "${body.detail ?? ""}"${body.checks ? ` and checks ${JSON.stringify(body.checks)}` : ""}. The page's alert and status texts: ${JSON.stringify(texts)}. Switch after: ${await sw.getAttribute("aria-checked")}. Screenshot plain-http-oauth-refused.png.`;
+      } finally {
+        await b.close();
+      }
+      lanCaddy(LAN_SITE());
+      setEnv({ BASE_URL: LAN_ORIGIN });
+      expect(up().code === 0, "up failed");
+      expect((await waitReady()) === 200, "not ready");
+      return `${out} Afterwards BASE_URL went back to ${LAN_ORIGIN}.`;
+    },
+  );
+};
+
+phases.topology = async () => {
+  await step(
+    "V-C45",
+    "operator",
+    "container-operation",
+    "Compare the app and worker containers, and inspect the document engine and Postgres",
+    "App and worker run the same image with different commands and the same database, file configuration, origin, credential key and Web Push settings; the engine has no database or credential access; Postgres and the engine publish no ports.",
+    () => {
+      const id = (svc) => compose(`ps -q ${svc}`).stdout.trim();
+      const inspect = (svc) => JSON.parse(sh(`docker inspect ${id(svc)}`).stdout)[0];
+      const a = inspect("app");
+      const w = inspect("worker");
+      const e = inspect("doc-engine");
+      const p = inspect("postgres");
+      const env = (c) => Object.fromEntries(c.Config.Env.map((x) => [x.slice(0, x.indexOf("=")), x.slice(x.indexOf("=") + 1)]));
+      const ae = env(a);
+      const we = env(w);
+      const ee = env(e);
+      const keys = ["DATABASE_URL", "STORAGE_DRIVER", "STORAGE_PATH", "BASE_URL", "OPENLAW_SECRET_KEY", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "DOC_ENGINE_URL", "AZURE_BLOB_CONTAINER"];
+      const same = keys.filter((k) => (ae[k] ?? "") === (we[k] ?? ""));
+      const engineSecrets = Object.keys(ee).filter((k) => /DATABASE|SECRET|KEY|SMTP|AUTH/.test(k));
+      const nets = Object.keys(e.NetworkSettings.Networks);
+      const ports = (c) => JSON.stringify(c.HostConfig.PortBindings ?? {});
+      expect(a.Image === w.Image && JSON.stringify(a.Config.Cmd) !== JSON.stringify(w.Config.Cmd) && same.length === keys.length && engineSecrets.length === 0 && nets.length === 1 && ports(e) === "{}" && ports(p) === "{}", `${same} ${engineSecrets} ${nets} ${ports(e)} ${ports(p)}`);
+      return `App and worker image ${a.Image}; commands ${JSON.stringify(a.Config.Cmd ?? a.Path)} and ${JSON.stringify(w.Config.Cmd)}. Identical in both (values compared, not recorded): ${same.join(", ")}. doc-engine: no variable naming a database, key, secret or relay (its variables include ${Object.keys(ee).filter((k) => k.startsWith("DOC_ENGINE")).join(", ")}); network ${nets.join(", ")}; published ports ${ports(e)}. postgres published ports ${ports(p)}.`;
+    },
+  );
+};
+
+phases["vendor-lists"] = async () => {
+  await step(
+    "V-M41-PUBLIC",
+    "operator",
+    "container-operation",
+    "Read the vendor egress sources the guide names (outbound reads only; nothing is exposed)",
+    "Anthropic's page lists 160.79.104.0/21; OpenAI's chatgpt-connectors.json returns prefixes a scheduled job can apply; Microsoft's managed connector page answers.",
+    async () => {
+      const get = async (u) => {
+        try {
+          const r = await fetch(u, { signal: AbortSignal.timeout(20_000), headers: { "user-agent": "Mozilla/5.0 doc030-walkthrough" } });
+          return { status: r.status, text: await r.text() };
+        } catch (e) {
+          return { status: `error ${e.cause?.code ?? e.name}`, text: "" };
+        }
+      };
+      const a = await get("https://platform.claude.com/docs/en/api/ip-addresses");
+      const o = await get("https://openai.com/chatgpt-connectors.json");
+      const og = await get("https://developers.openai.com/api/docs/guides/ip-addresses");
+      const m = await get("https://learn.microsoft.com/en-us/connectors/common/outbound-ip-addresses");
+      let prefixes = "not JSON";
+      try {
+        const j = JSON.parse(o.text);
+        const list = j.prefixes ?? j;
+        prefixes = `${Array.isArray(list) ? list.length : Object.keys(list).length} entries${j.creationTime ? `, creationTime ${j.creationTime}` : ""}`;
+      } catch {}
+      const anth = a.text.includes("160.79.104.0/21");
+      return `Anthropic outbound IP page: ${a.status}, lists 160.79.104.0/21: ${anth}. OpenAI chatgpt-connectors.json: ${o.status}, ${prefixes}. OpenAI egress guidance: ${og.status}. Microsoft managed connector outbound addresses: ${m.status}${/AzureConnectors/.test(m.text) ? ", mentions AzureConnectors" : ""}. Applying these to a firewall in front of a public listener is part of the pending live session: this lab has no public listener.`;
+    },
+  );
+};
+
 // PHASES-END
 const name = process.argv[2];
 if (!phases[name]) {
@@ -3612,4 +3771,6 @@ try {
   run.completedAt = new Date().toISOString();
   saveLog();
   await closeBrowser();
+  // Browsers launched by a failed private-origin sign-in are not always closed; exit anyway.
+  setTimeout(() => process.exit(process.exitCode ?? 0), 500).unref();
 }
