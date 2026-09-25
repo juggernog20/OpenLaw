@@ -1,0 +1,2 @@
+ALTER TABLE "org_settings" ADD COLUMN "mcp_legal_oauth_clients_enabled" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "org_settings" ADD COLUMN "mcp_business_oauth_clients_enabled" boolean DEFAULT false NOT NULL;

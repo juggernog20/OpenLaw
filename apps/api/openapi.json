@@ -5024,6 +5024,12 @@
                     "businessApiKeysEnabled": {
                       "type": "boolean"
                     },
+                    "legalOAuthClientsEnabled": {
+                      "type": "boolean"
+                    },
+                    "businessOAuthClientsEnabled": {
+                      "type": "boolean"
+                    },
                     "toolsetCeiling": {
                       "maxItems": 13,
                       "type": "array",
@@ -5054,6 +5060,30 @@
                       "minimum": 1,
                       "maximum": 365
                     },
+                    "reachability": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "enum": ["https", "ipv4", "public_ipv4"]
+                              },
+                              "passed": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["name", "passed"],
+                            "additionalProperties": false
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "serverAddress": {
                       "type": "string"
                     },
@@ -5065,9 +5095,12 @@
                     "enabled",
                     "legalApiKeysEnabled",
                     "businessApiKeysEnabled",
+                    "legalOAuthClientsEnabled",
+                    "businessOAuthClientsEnabled",
                     "toolsetCeiling",
                     "readOnly",
                     "apiKeyLifetimeDays",
+                    "reachability",
                     "serverAddress",
                     "authorizationServerAvailable"
                   ],
@@ -5105,6 +5138,12 @@
                     "type": "boolean"
                   },
                   "businessApiKeysEnabled": {
+                    "type": "boolean"
+                  },
+                  "legalOAuthClientsEnabled": {
+                    "type": "boolean"
+                  },
+                  "businessOAuthClientsEnabled": {
                     "type": "boolean"
                   },
                   "toolsetCeiling": {
@@ -5160,6 +5199,12 @@
                     "businessApiKeysEnabled": {
                       "type": "boolean"
                     },
+                    "legalOAuthClientsEnabled": {
+                      "type": "boolean"
+                    },
+                    "businessOAuthClientsEnabled": {
+                      "type": "boolean"
+                    },
                     "toolsetCeiling": {
                       "maxItems": 13,
                       "type": "array",
@@ -5190,6 +5235,30 @@
                       "minimum": 1,
                       "maximum": 365
                     },
+                    "reachability": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "enum": ["https", "ipv4", "public_ipv4"]
+                              },
+                              "passed": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["name", "passed"],
+                            "additionalProperties": false
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "serverAddress": {
                       "type": "string"
                     },
@@ -5201,13 +5270,83 @@
                     "enabled",
                     "legalApiKeysEnabled",
                     "businessApiKeysEnabled",
+                    "legalOAuthClientsEnabled",
+                    "businessOAuthClientsEnabled",
                     "toolsetCeiling",
                     "readOnly",
                     "apiKeyLifetimeDays",
+                    "reachability",
                     "serverAddress",
                     "authorizationServerAvailable"
                   ],
                   "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "OAuth authorization server unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["urn:openlaw:problem:mcp-oauth-unavailable", "about:blank"],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "reachability": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "enum": ["https", "ipv4", "public_ipv4"]
+                          },
+                          "passed": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": ["name", "passed"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "OAuth authorization server unavailable"
                 }
               }
             }

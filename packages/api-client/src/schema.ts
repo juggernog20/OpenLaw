@@ -10174,6 +10174,8 @@ export interface operations {
             enabled: boolean;
             legalApiKeysEnabled: boolean;
             businessApiKeysEnabled: boolean;
+            legalOAuthClientsEnabled: boolean;
+            businessOAuthClientsEnabled: boolean;
             toolsetCeiling: (
               | "workspace"
               | "contracts"
@@ -10191,6 +10193,13 @@ export interface operations {
             )[];
             readOnly: boolean;
             apiKeyLifetimeDays: number;
+            reachability:
+              | {
+                  /** @enum {string} */
+                  name: "https" | "ipv4" | "public_ipv4";
+                  passed: boolean;
+                }[]
+              | null;
             serverAddress: string;
             authorizationServerAvailable: boolean;
           };
@@ -10220,6 +10229,8 @@ export interface operations {
           enabled?: boolean;
           legalApiKeysEnabled?: boolean;
           businessApiKeysEnabled?: boolean;
+          legalOAuthClientsEnabled?: boolean;
+          businessOAuthClientsEnabled?: boolean;
           toolsetCeiling?: (
             | "workspace"
             | "contracts"
@@ -10251,6 +10262,8 @@ export interface operations {
             enabled: boolean;
             legalApiKeysEnabled: boolean;
             businessApiKeysEnabled: boolean;
+            legalOAuthClientsEnabled: boolean;
+            businessOAuthClientsEnabled: boolean;
             toolsetCeiling: (
               | "workspace"
               | "contracts"
@@ -10268,8 +10281,43 @@ export interface operations {
             )[];
             readOnly: boolean;
             apiKeyLifetimeDays: number;
+            reachability:
+              | {
+                  /** @enum {string} */
+                  name: "https" | "ipv4" | "public_ipv4";
+                  passed: boolean;
+                }[]
+              | null;
             serverAddress: string;
             authorizationServerAvailable: boolean;
+          };
+        };
+      };
+      /** @description OAuth authorization server unavailable */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type: "urn:openlaw:problem:mcp-oauth-unavailable" | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+            reachability?: {
+              /** @enum {string} */
+              name: "https" | "ipv4" | "public_ipv4";
+              passed: boolean;
+            }[];
           };
         };
       };

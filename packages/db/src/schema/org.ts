@@ -135,6 +135,12 @@ export const orgSettings = pgTable(
     mcpEnabled: boolean("mcp_enabled").notNull().default(false),
     mcpLegalApiKeysEnabled: boolean("mcp_legal_api_keys_enabled").notNull().default(false),
     mcpBusinessApiKeysEnabled: boolean("mcp_business_api_keys_enabled").notNull().default(false),
+    mcpLegalOAuthClientsEnabled: boolean("mcp_legal_oauth_clients_enabled")
+      .notNull()
+      .default(false),
+    mcpBusinessOAuthClientsEnabled: boolean("mcp_business_oauth_clients_enabled")
+      .notNull()
+      .default(false),
     mcpToolsetCeiling: jsonb("mcp_toolset_ceiling")
       .$type<McpToolset[]>()
       .notNull()

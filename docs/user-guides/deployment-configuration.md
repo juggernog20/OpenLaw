@@ -216,3 +216,11 @@ To rotate this credential key:
 3. Remove `OPENLAW_SECRET_KEY_PREVIOUS` from `.env` and recreate the containers again. Verify the saved configuration once more, then retain the new key under your recovery policy.
 
 The previous key is accepted for reads during rotation. Keeping it configured indefinitely does not finish retiring it. If the wrong key was supplied, restore the correct key and recreate the app and worker before replacing saved provider credentials. Unreadable saved secrets are retained for recovery; replacing them intentionally writes new values.
+
+## Publicly reachable
+
+OAuth Clients in vendors' clouds need a public HTTPS address with an IPv4 record. Forward `/mcp`, `/.well-known/oauth-*`, `/.well-known/openid-configuration`, `/api/auth/oauth2/*`, `/api/auth/jwks`, and `/auth/consent` through the same instance address, along with the sign-in routes and application assets the consent page uses. Preserve the host and scheme; do not redirect these requests to another host.
+
+Organization → MCP checks HTTPS, IPv4 resolution and whether the IPv4 addresses are public. The status pill names failed checks. These checks do not probe a vendor's connection or verify the proxy and firewall. A warning still allows saving because a proxy may front the API. If the API booted with an HTTP address on a non-loopback host, change `BASE_URL` to HTTPS and restart before turning OAuth Clients on.
+
+Advanced → MCP holds `MCP_OAUTH_GRANT_LIFETIME_DAYS`, default 90 days, allowed range 1 to 365. A deployment value pins it; app saves apply after restart.

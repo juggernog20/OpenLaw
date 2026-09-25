@@ -1198,6 +1198,13 @@
       "when": 1790287919069,
       "tag": "0170_secret_kang",
       "breakpoints": true
+    },
+    {
+      "idx": 171,
+      "version": "7",
+      "when": 1790292480513,
+      "tag": "0171_mcp-oauth-settings",
+      "breakpoints": true
     }
   ]
 }

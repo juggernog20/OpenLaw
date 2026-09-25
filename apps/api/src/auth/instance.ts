@@ -49,6 +49,7 @@ export interface AuthConfig {
    * never should.
    */
   disableRateLimit?: boolean;
+  mcpOAuthGrantLifetimeDays?: number;
   /**
    * The reverse proxies whose forwarded client address is believed
    * (TECH-032), as IP addresses or CIDR ranges. Read from
@@ -352,7 +353,7 @@ export function createAuth(
     },
     plugins: [
       apiKeyPlugin(),
-      ...oauthPlugins(config.baseUrl),
+      ...oauthPlugins(config.baseUrl, config.mcpOAuthGrantLifetimeDays),
       // Owns the users.role column plus ban/impersonation columns. Bans
       // carry no product semantics yet; adminRoles shields administrators
       // from ban/impersonation targeting. The roles map exists to teach

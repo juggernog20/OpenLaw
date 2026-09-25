@@ -8,7 +8,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { Link as RouterLink, redirect, useLoaderData } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { Bot, Clock, Link, Shield, Users, type LucideIcon } from "lucide-react";
-import { MCP_TOOLSETS } from "@openlaw/shared";
+import { MCP_TOOLSETS, MCP_OAUTH_UNAVAILABLE_PROBLEM } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
 import { requireUser } from "../lib/session";
@@ -47,6 +47,31 @@ const errorMessages = defineMessages({
     defaultMessage: "MCP settings could not be saved. Try again.",
   },
 });
+const checkNames = defineMessages({
+  https: { id: "settings.mcp.checkHttps", defaultMessage: "HTTPS scheme" },
+  ipv4: { id: "settings.mcp.checkIpv4", defaultMessage: "IPv4 record" },
+  public_ipv4: { id: "settings.mcp.checkPublicIpv4", defaultMessage: "Public IPv4 address" },
+});
+function OAuthCaption() {
+  return (
+    <div>
+      <FormattedMessage
+        id="settings.mcp.oauthHelp"
+        defaultMessage="OAuth Clients expose /mcp, /.well-known/oauth-*, /.well-known/openid-configuration, /api/auth/oauth2/*, /api/auth/jwks and /auth/consent. See the <note>publicly reachable</note> deployment note."
+        values={{
+          note: (text) => (
+            <RouterLink
+              className="text-link hover:underline"
+              to="/help/deployment-configuration#publicly-reachable"
+            >
+              {text}
+            </RouterLink>
+          ),
+        }}
+      />
+    </div>
+  );
+}
 function PolicyRow({
   icon: Icon,
   title,
@@ -74,6 +99,7 @@ function PolicyRow({
 export function SettingsMcpPage() {
   const loaded = useLoaderData<typeof settingsMcpLoader>();
   const [policy, setPolicy] = useState(loaded);
+  const [refusedChecks, setRefusedChecks] = useState<typeof loaded.reachability>(null);
   const [lifetime, setLifetime] = useState(String(loaded.apiKeyLifetimeDays));
   const [busy, setBusy] = useState(false);
   const saving = useRef(false);
@@ -91,6 +117,13 @@ export function SettingsMcpPage() {
     try {
       const result = await api.PATCH("/api/v1/mcp-settings", { body });
       if (!result.data) {
+        if (
+          result.error?.type === MCP_OAUTH_UNAVAILABLE_PROBLEM &&
+          "reachability" in result.error
+        ) {
+          setRefusedChecks(result.error.reachability ?? null);
+          return;
+        }
         setError(
           intl.formatMessage(
             result.response.status === 401 || result.response.status === 403
@@ -102,6 +135,7 @@ export function SettingsMcpPage() {
         );
         return;
       }
+      setRefusedChecks(null);
       setPolicy({ ...result.data, keys: loaded.keys });
       setSaved(true);
     } catch {
@@ -124,6 +158,12 @@ export function SettingsMcpPage() {
     id: "settings.mcp.lifetime",
     defaultMessage: "API key lifetime (days)",
   });
+  const checks =
+    refusedChecks ??
+    (policy.legalOAuthClientsEnabled || policy.businessOAuthClientsEnabled
+      ? policy.reachability
+      : null);
+  const failed = checks?.filter((check) => !check.passed) ?? [];
   return (
     <>
       <PageTitle title={title} />
@@ -160,7 +200,35 @@ export function SettingsMcpPage() {
             title={
               <FormattedMessage id="settings.mcp.serverAddress" defaultMessage="Server address" />
             }
-            caption={<span className="font-mono">{policy.serverAddress}</span>}
+            caption={
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <span className="font-mono">{policy.serverAddress}</span>
+                {checks && (
+                  <span
+                    role="status"
+                    className={
+                      failed.length
+                        ? "rounded-full bg-status-warning-bg px-2 py-0.5 text-xs text-status-warning-fg"
+                        : "rounded-full bg-status-success-bg px-2 py-0.5 text-xs text-status-success-fg"
+                    }
+                  >
+                    {failed.length ? (
+                      <FormattedMessage
+                        id="settings.mcp.notReachable"
+                        defaultMessage="Not reachable · {checks}"
+                        values={{
+                          checks: failed
+                            .map((check) => intl.formatMessage(checkNames[check.name]))
+                            .join(", "),
+                        }}
+                      />
+                    ) : (
+                      <FormattedMessage id="settings.mcp.reachable" defaultMessage="Reachable" />
+                    )}
+                  </span>
+                )}
+              </span>
+            }
           >
             <Button
               variant="secondary"
@@ -190,12 +258,30 @@ export function SettingsMcpPage() {
             icon={Users}
             title={<FormattedMessage id="settings.mcp.legal" defaultMessage="Legal Users" />}
             caption={
-              <FormattedMessage
-                id="settings.mcp.legalHelp"
-                defaultMessage="Administrators and Legal Team Members. Every Toolset in the ceiling."
-              />
+              <>
+                <FormattedMessage
+                  id="settings.mcp.legalHelp"
+                  defaultMessage="Administrators and Legal Team Members. Every Toolset in the ceiling."
+                />
+                <OAuthCaption />
+              </>
             }
           >
+            <label htmlFor="mcp-legal-oauth-clients">
+              <FormattedMessage id="settings.mcp.oauthClients" defaultMessage="OAuth Clients" />
+            </label>
+            <Switch
+              id="mcp-legal-oauth-clients"
+              checked={policy.legalOAuthClientsEnabled}
+              disabled={busy}
+              aria-label={intl.formatMessage({
+                id: "settings.mcp.legalOAuth",
+                defaultMessage: "Legal Users OAuth Clients",
+              })}
+              onCheckedChange={(legalOAuthClientsEnabled) =>
+                void save({ legalOAuthClientsEnabled })
+              }
+            />
             <label htmlFor="mcp-legal-api-keys">
               <FormattedMessage id="settings.mcp.apiKeys" defaultMessage="API keys" />
             </label>
@@ -214,12 +300,30 @@ export function SettingsMcpPage() {
             icon={Users}
             title={<FormattedMessage id="settings.mcp.business" defaultMessage="Business Users" />}
             caption={
-              <FormattedMessage
-                id="settings.mcp.businessHelp"
-                defaultMessage="Their own Requests, Auto-Docs, portal Knowledge and the records they are on."
-              />
+              <>
+                <FormattedMessage
+                  id="settings.mcp.businessHelp"
+                  defaultMessage="Their own Requests, Auto-Docs, portal Knowledge and the records they are on."
+                />
+                <OAuthCaption />
+              </>
             }
           >
+            <label htmlFor="mcp-business-oauth-clients">
+              <FormattedMessage id="settings.mcp.oauthClients" defaultMessage="OAuth Clients" />
+            </label>
+            <Switch
+              id="mcp-business-oauth-clients"
+              checked={policy.businessOAuthClientsEnabled}
+              disabled={busy}
+              aria-label={intl.formatMessage({
+                id: "settings.mcp.businessOAuth",
+                defaultMessage: "Business Users OAuth Clients",
+              })}
+              onCheckedChange={(businessOAuthClientsEnabled) =>
+                void save({ businessOAuthClientsEnabled })
+              }
+            />
             <label htmlFor="mcp-business-api-keys">
               <FormattedMessage id="settings.mcp.apiKeys" defaultMessage="API keys" />
             </label>

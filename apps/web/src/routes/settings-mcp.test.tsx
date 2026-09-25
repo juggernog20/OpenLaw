@@ -11,6 +11,9 @@ const ADMIN = {
 };
 const initial = {
   enabled: false,
+  legalOAuthClientsEnabled: false,
+  businessOAuthClientsEnabled: false,
+  reachability: null,
   legalApiKeysEnabled: false,
   businessApiKeysEnabled: false,
   toolsetCeiling: [
@@ -63,7 +66,7 @@ it("puts MCP between Integrations and Advanced and saves each control immediatel
     mcp.compareDocumentPosition(within(rail).getByRole("button", { name: "Advanced" })) &
       Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
-  expect(screen.queryByText("OAuth Clients")).not.toBeInTheDocument();
+  expect(screen.getAllByText("OAuth Clients")).toHaveLength(2);
   for (const name of ["Enable MCP", "Legal Users API keys", "Business Users API keys"]) {
     const control = screen.getByRole("switch", { name });
     expect(control).not.toBeChecked();
@@ -153,4 +156,81 @@ it("shows the localized route error when MCP settings cannot load", async () => 
   ).toBeInTheDocument();
   expect(screen.queryByText("MCP settings could not be read.")).not.toBeInTheDocument();
   expect(screen.queryByText("Internal failure detail")).not.toBeInTheDocument();
+});
+
+it.each([true, false])(
+  "shows the address pill only with OAuth Clients enabled (reachable=%s)",
+  async (passed) => {
+    let state = { ...initial, reachability: null as null | { name: string; passed: boolean }[] };
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/mcp-settings") return;
+        if (call.method === "PATCH") {
+          state = { ...state, ...(call.body as object) };
+          state.reachability =
+            state.legalOAuthClientsEnabled || state.businessOAuthClientsEnabled
+              ? [
+                  { name: "https", passed },
+                  { name: "ipv4", passed },
+                  { name: "public_ipv4", passed },
+                ]
+              : null;
+        }
+        return json(200, state);
+      },
+    });
+    const user = userEvent.setup();
+    renderAt("/settings/mcp");
+    const legal = await screen.findByRole("switch", { name: "Legal Users OAuth Clients" });
+    const business = screen.getByRole("switch", { name: "Business Users OAuth Clients" });
+    expect(legal).not.toBeChecked();
+    expect(business).not.toBeChecked();
+    expect(screen.queryByText(/Reachable|Not reachable/)).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "publicly reachable" })[0]).toHaveAttribute(
+      "href",
+      "/help/deployment-configuration#publicly-reachable",
+    );
+    await user.click(legal);
+    const pill = await screen.findByText(passed ? "Reachable" : /Not reachable/);
+    expect(pill.parentElement).toHaveTextContent(initial.serverAddress);
+    if (!passed)
+      expect(pill).toHaveTextContent(
+        "Not reachable · HTTPS scheme, IPv4 record, Public IPv4 address",
+      );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    await user.click(business);
+    await waitFor(() => expect(business).toBeChecked());
+    await user.click(legal);
+    await waitFor(() => expect(legal).not.toBeChecked());
+    expect(pill).toBeInTheDocument();
+    await user.click(business);
+    await waitFor(() => expect(pill).not.toBeInTheDocument());
+  },
+);
+it("keeps refused OAuth toggles off and shows the scheme failure beside the address", async () => {
+  stubApi({
+    signedIn: ADMIN,
+    extra: (call) => {
+      if (call.url.pathname !== "/api/v1/mcp-settings") return;
+      return call.method === "PATCH"
+        ? json(400, {
+            type: "urn:openlaw:problem:mcp-oauth-unavailable",
+            status: 400,
+            title: "BASE_URL scheme http:",
+            reachability: [
+              { name: "https", passed: false },
+              { name: "ipv4", passed: true },
+              { name: "public_ipv4", passed: true },
+            ],
+          })
+        : json(200, initial);
+    },
+  });
+  renderAt("/settings/mcp");
+  const control = await screen.findByRole("switch", { name: "Legal Users OAuth Clients" });
+  await userEvent.setup().click(control);
+  expect(await screen.findByText("Not reachable · HTTPS scheme")).toBeInTheDocument();
+  expect(control).not.toBeChecked();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
