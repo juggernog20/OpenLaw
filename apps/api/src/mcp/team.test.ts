@@ -265,7 +265,7 @@ it.each(["contract", "matter"] as const)(
     await call(legal, "add", args);
     await call(legal, "add", args, "conflict");
     await call(legal, "add", { ...args, userId: "unknown" }, "validation_error");
-    await call(legal, "remove", { ...args, userId: "unknown" }, "validation_error");
+    await call(legal, "remove", { ...args, userId: "unknown" }, "not_found");
     for (const name of ["add", "remove"]) {
       await call(
         legal,
@@ -315,14 +315,14 @@ it.each(["contract", "matter"] as const)(
     await h.db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, personId));
     try {
       await call(legal, "add", { ...args, number: owner.number }, "validation_error");
-      await call(legal, "remove", args, "validation_error");
-      // The HTTP route can still remove an archived team member.
-      const removed = await h.app.inject({
-        method: "DELETE",
-        url: `/api/v1/${kind}s/${row.number}/team/${personId}`,
-        cookies: legalCookies,
-      });
-      expect(removed.statusCode, removed.body).toBe(200);
+      // A deactivated person can still leave a team, the same as over HTTP.
+      expect((await call(legal, "remove", args)).team).toEqual([]);
+      await call(
+        legal,
+        "remove",
+        { record: kind, number: row.number, email: "daniel@example.com" },
+        "not_found",
+      );
     } finally {
       await h.db.update(users).set({ archivedAt: null }).where(eq(users.id, personId));
     }
