@@ -200,7 +200,8 @@ console.log(
  * upper-cased with its whitespace collapsed, or null if there is none.
  *
  * Comments, quoted strings and dollar-quoted bodies are skipped, so the
- * BEGIN and END of a DO block do not count. Comments here often carry an
+ * BEGIN and END of a DO block do not count. A `$` inside a name, as in
+ * price$usd$, does not open a dollar quote. Comments here often carry an
  * apostrophe, so a quote is only a string when it starts outside one.
  */
 function lastTransactionStatement(text) {
@@ -225,7 +226,7 @@ function lastTransactionStatement(text) {
       }
       current += " ";
       at = end + 1;
-    } else if (dollarTag.test(text.slice(at, at + 64))) {
+    } else if (!/[\w$]/.test(text[at - 1] ?? "") && dollarTag.test(text.slice(at, at + 64))) {
       const tag = text.slice(at, at + 64).match(dollarTag)[0];
       const end = text.indexOf(tag, at + tag.length);
       current += " ";

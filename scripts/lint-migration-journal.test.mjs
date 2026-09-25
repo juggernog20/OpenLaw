@@ -5,8 +5,9 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { URL, fileURLToPath } from "node:url";
 
-const script = new URL("./lint-migration-journal.mjs", import.meta.url).pathname;
+const script = fileURLToPath(new URL("./lint-migration-journal.mjs", import.meta.url));
 
 /**
  * Runs the gate against a repo that holds only the given migrations.
@@ -100,6 +101,14 @@ test("comments, strings and DO blocks do not count as transaction statements", (
     ].join("\n"),
   });
   assert.equal(result.status, 0, result.stderr);
+});
+
+test("a dollar sign inside a name does not hide a trailing COMMIT", () => {
+  const result = lint({
+    "0900_dollar_name": `${preamble}ALTER TABLE "a" ADD COLUMN price$usd$ numeric;--> statement-breakpoint\nCOMMIT;`,
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /0900_dollar_name ends outside a transaction/);
 });
 
 test("a file applied before the rule keeps its trailing COMMIT", () => {
