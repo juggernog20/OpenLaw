@@ -7685,6 +7685,9 @@
   "notifications.push.request.submitted": {
     "defaultMessage": "A new Request arrived"
   },
+  "notifications.push.title": {
+    "defaultMessage": "OpenLaw"
+  },
   "notifications.request.assigned": {
     "defaultMessage": "{actor} assigned you to triage {request}"
   },
