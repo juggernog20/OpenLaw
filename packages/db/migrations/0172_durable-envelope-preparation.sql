@@ -1,3 +1,4 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
 ALTER TABLE "contract_envelopes" DROP CONSTRAINT "contract_envelopes_status_check";--> statement-breakpoint
 ALTER TABLE "contract_envelopes" DROP CONSTRAINT "contract_envelopes_completed_at";--> statement-breakpoint
 DROP INDEX "contract_envelopes_live_idx";--> statement-breakpoint

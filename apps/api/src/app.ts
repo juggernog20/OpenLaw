@@ -193,9 +193,9 @@ export interface AppDeps {
    * what lets the record leave the send affordance out entirely and
    * keeps CTR-013's zero-config manual hand-off working.
    */
+  resolveSigningProvider: SigningResolver;
   /** Development-only until the complete preparation flow is released. */
   signingPreparationEnabled?: boolean;
-  resolveSigningProvider: SigningResolver;
   /** The enabled AI connector, read live before each probe or analysis run. */
   resolveAiProvider: AiResolver;
   /**

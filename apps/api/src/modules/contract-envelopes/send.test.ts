@@ -139,7 +139,7 @@ interface EnvelopeRow {
   documentTitle: string | null;
   documentVersionNumber: number | null;
   sentBy: { id: string; displayName: string; image: string | null };
-  sentAt: string;
+  sentAt: string | null;
   completedAt: string | null;
 }
 
