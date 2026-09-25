@@ -109,7 +109,7 @@ const IdSchema = z.string().min(1).max(64);
  * What a reader can narrow the log by. Every field is optional and every
  * field composes with the rest.
  */
-const FilterSchema = z.object({
+export const AuditFilterSchema = z.object({
   /** One person's entries — "what did this Administrator do?" */
   actorId: IdSchema.optional(),
   /**
@@ -132,7 +132,7 @@ const FilterSchema = z.object({
   q: z.string().min(1).max(200).optional(),
 });
 
-type Filters = z.infer<typeof FilterSchema>;
+type Filters = z.infer<typeof AuditFilterSchema>;
 
 /** The actor as every surface draws them — one face, one rendering
  * (DES-018). */
@@ -152,7 +152,7 @@ const EntityRefSchema = z.object({
 
 type EntityRef = z.infer<typeof EntityRefSchema>;
 
-const AuditEntrySchema = z.object({
+export const AuditEntrySchema = z.object({
   id: z.string(),
   /**
    * The action slug, as plain text rather than as an enum, exactly as
@@ -488,22 +488,22 @@ async function resolveEntityRefs(
   return refs;
 }
 
-/** One row, as the API answers it. The export passes no names: its
- * columns are the row's own, and the id is what it carries. */
-function toEntry(row: EntryRow, refs?: ReadonlyMap<string, EntityRef>) {
+/** One reached row with its actor and resolved record reference. */
+function toEntry(row: EntryRow, refs: ReadonlyMap<string, EntityRef>) {
   return {
     id: row.id,
     action: row.action,
     entityType: row.entityType,
     entityId: row.entityId,
     entityRef:
-      row.entityId === null ? null : (refs?.get(refKey(row.entityType, row.entityId)) ?? null),
+      row.entityId === null ? null : (refs.get(refKey(row.entityType, row.entityId)) ?? null),
     visibility: row.visibility,
     actor:
       row.actor?.id && row.actor.displayName !== null
         ? {
             id: row.actor.id,
             displayName: row.actor.displayName,
+            email: row.actor.email,
             image: row.actor.image,
             archived: row.actor.archivedAt !== null,
           }
@@ -513,6 +513,36 @@ function toEntry(row: EntryRow, refs?: ReadonlyMap<string, EntityRef>) {
     viaKind: row.viaKind,
     viaId: row.viaId,
     viaClientName: row.viaClientName,
+  };
+}
+
+/** The page, export and Administration Tool read the same reached, redacted rows. */
+export async function queryAuditLog(
+  db: Db,
+  user: AuthenticatedUser,
+  filters: Filters,
+  { cursor, limit, before }: { cursor?: string; limit: number; before?: string },
+) {
+  const reach = auditReachScope(db, user);
+  const rows = await selectEntries(
+    db,
+    and(
+      auditPredicate(filters),
+      reach,
+      cursor === undefined ? undefined : olderThan(cursor, reach),
+      before === undefined ? undefined : olderThan(before),
+    ),
+    limit + 1,
+  );
+  const page = rows.slice(0, limit);
+  const refs = await resolveEntityRefs(db, page);
+  return {
+    entries: await redactUnreachedReferences(
+      db,
+      user,
+      page.map((row) => toEntry(row, refs)),
+    ),
+    nextCursor: rows.length > limit ? (page.at(-1)?.id ?? null) : null,
   };
 }
 
@@ -552,7 +582,7 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
           "from a server-fixed page size: pass the previous page's " +
           "`nextCursor` to read further back",
         tags: ["audit-log"],
-        querystring: FilterSchema.extend({
+        querystring: AuditFilterSchema.extend({
           /** The previous page's `nextCursor`. Omit for the first page. */
           cursor: IdSchema.optional(),
         }),
@@ -569,30 +599,7 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { cursor, ...filters } = request.query;
-      const where = and(
-        auditPredicate(filters),
-        auditReachScope(app.db, request.user),
-        cursor === undefined ? undefined : olderThan(cursor, auditReachScope(app.db, request.user)),
-      );
-      // One past the page, which is how the answer knows whether there
-      // is more without counting anything.
-      const rows = await selectEntries(app.db, where, PAGE_SIZE + 1);
-      const page = rows.slice(0, PAGE_SIZE);
-      const refs = await resolveEntityRefs(app.db, page);
-      return {
-        // The far side of a link is stripped for a viewer who does not
-        // reach it, by the helper the record feed shares. The reach
-        // scope above answers for the record the entry hangs off; this
-        // answers for the record its payload names.
-        entries: await redactUnreachedReferences(
-          app.db,
-          request.user,
-          page.map((row) => toEntry(row, refs)),
-        ),
-        // Only when a further row was actually read. A cursor on the
-        // last page would send the client for an empty one.
-        nextCursor: rows.length > PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
-      };
+      return queryAuditLog(app.db, request.user, filters, { cursor, limit: PAGE_SIZE });
     },
   );
 
@@ -638,7 +645,7 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
           "and bounds itself at that entry, so an export never streams " +
           "itself. Administrator-only (SET-002)",
         tags: ["audit-log"],
-        querystring: FilterSchema,
+        querystring: AuditFilterSchema,
         // No 200 schema on purpose: this operation answers `text/csv`,
         // and a response schema here would put the JSON serializer in
         // front of a stream. Refusals still answer a Problem body.
@@ -647,7 +654,6 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const filters = request.query;
-      const where = and(auditPredicate(filters), auditReachScope(app.db, request.user));
 
       // The entry goes down before a byte is streamed, so a reader who
       // disconnects mid-download is still on the record as having asked
@@ -661,30 +667,17 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
         payload: { surface: "audit_log", format: "csv", filters },
       });
 
-      // Bounded above by the export's own entry. That is what makes the
-      // answer exactly "the filtered set as it stood when the export was
-      // taken": this entry is out of it, and so is anything written
-      // while the stream is running.
-      const bounded = and(where, marker ? olderThan(marker.id) : undefined);
-
       async function* rows(): AsyncGenerator<string> {
         yield csvRow(CSV_COLUMNS);
         let cursor: string | undefined;
         try {
           for (;;) {
-            const chunk = await selectEntries(
-              app.db,
-              cursor === undefined ? bounded : and(bounded, olderThan(cursor)),
-              EXPORT_CHUNK,
-            );
-            // The same far-side redaction the list applies, per chunk.
-            const entries = await redactUnreachedReferences(
-              app.db,
-              request.user,
-              chunk.map((row) => toEntry(row)),
-            );
-            for (const [index, row] of chunk.entries()) {
-              const entry = entries[index]!;
+            const chunk = await queryAuditLog(app.db, request.user, filters, {
+              cursor,
+              limit: EXPORT_CHUNK,
+              before: marker?.id,
+            });
+            for (const entry of chunk.entries) {
               yield csvRow([
                 entry.id,
                 entry.createdAt,
@@ -694,16 +687,15 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
                 entry.visibility,
                 entry.actor?.id ?? null,
                 entry.actor?.displayName ?? null,
-                row.actor?.email ?? null,
+                entry.actor?.email ?? null,
                 JSON.stringify(entry.payload),
                 entry.viaKind,
                 entry.viaId,
                 entry.viaClientName,
               ]);
             }
-            if (chunk.length < EXPORT_CHUNK) return;
-            cursor = chunk.at(-1)?.id;
-            if (cursor === undefined) return;
+            if (chunk.nextCursor === null) return;
+            cursor = chunk.nextCursor;
           }
         } catch (error) {
           // The response committed the moment the first chunk went out,

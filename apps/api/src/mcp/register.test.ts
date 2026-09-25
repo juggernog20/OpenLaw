@@ -137,3 +137,24 @@ it.each(["legal_team_member", "business_user"] as const)(
     }
   },
 );
+
+it.each(["administrator", "legal_team_member"] as const)(
+  "lists Administration only for an Administrator with Team and Administration enabled: %s",
+  (role) => {
+    const grant = { role, toolsets: [...MCP_TOOLSETS], scope: "write" as const };
+    expect(toolRegister.filter((tool) => !toolRefusal(tool, grant))).toHaveLength(
+      role === "administrator" ? 41 : 39,
+    );
+    for (const name of ["openlaw_audit_log_query", "openlaw_settings_get"]) {
+      const tool = toolRegister.find((entry) => entry.name === name)!;
+      expect(tool).toMatchObject({
+        toolset: "administration",
+        kind: "read",
+        legalUser: "on",
+        businessUser: "off",
+        annotations: { readOnlyHint: true, openWorldHint: false },
+      });
+      expect(toolRefusal(tool, { ...grant, toolsets: [] })?.code).toBe("tool_outside_grant");
+    }
+  },
+);

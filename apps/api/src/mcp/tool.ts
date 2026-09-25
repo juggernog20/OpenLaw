@@ -3,6 +3,7 @@
  * Transport-independent Tool contracts and named failures for TECH-035's register.
  * Tool modules depend on this leaf without importing the initialized register.
  */
+import type { OrganizationSection } from "../modules/settings/read.js";
 import type { z } from "zod";
 import type { AppDeps } from "../app.js";
 import type { Db, UserRole } from "@openlaw/db";
@@ -24,6 +25,7 @@ export interface ToolContext extends Pick<AppDeps, "notifier" | "jobs" | "resolv
   clientName: string;
   organizationName: string;
   baseUrl: string;
+  readOrganizationSettings?: (section: OrganizationSection) => Promise<Record<string, unknown>>;
   generateAutoDoc?: (id: string, submission: GenerationSubmission) => Promise<unknown>;
   prepareDocumentUpload?: (
     input: z.infer<typeof uploadInput>,

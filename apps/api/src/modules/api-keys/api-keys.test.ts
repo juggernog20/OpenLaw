@@ -521,7 +521,7 @@ it.each(["approve", "deny", "cancel"] as const)(
   },
 );
 
-it("refuses audience-ineligible and empty Toolsets and rechecks the audience at approval", async () => {
+it("refuses audience-ineligible Toolsets and rechecks the audience at approval", async () => {
   const [before] = await h.db.select().from(orgSettings);
   const [owner] = await h.db
     .select()
@@ -538,7 +538,8 @@ it("refuses audience-ineligible and empty Toolsets and rechecks the audience at 
     for (const [cookies, toolsets] of [
       [business, ["tasks"]],
       [business, ["team"]],
-      [admin, ["administration"]],
+      [member, ["administration"]],
+      [business, ["administration"]],
     ] as const) {
       const response = await h.app.inject({
         method: "POST",
