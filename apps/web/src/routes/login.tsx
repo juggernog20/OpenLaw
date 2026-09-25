@@ -5,12 +5,15 @@
 import { useState, type SubmitEvent as FormSubmitEvent } from "react";
 import {
   redirect,
+  redirectDocument,
+  Link,
   useLoaderData,
   useNavigate,
   useSearchParams,
   type LoaderFunctionArgs,
 } from "react-router";
 import { defineMessages, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
+import { oauthAuthorizeReturn } from "../lib/oauth-return";
 import { api } from "../lib/api";
 import { authClient } from "../lib/auth-client";
 import { field } from "../lib/forms";
@@ -30,24 +33,41 @@ const PAGE_TITLES: Record<"login" | "magic" | "magicSent", MessageDescriptor> = 
 });
 
 export async function loginLoader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
   const group: "legal" | "business" =
-    new URL(request.url).pathname === "/portal/login" ? "business" : "legal";
-  if (new URL(request.url).searchParams.get("error") === "INVALID_TOKEN")
+    url.pathname.replace(/\/+$/, "") === "/portal/login" ? "business" : "legal";
+  const oauthReturn = oauthAuthorizeReturn(url.search);
+  const loginURL = `${group === "business" ? "/portal/login" : "/auth/login"}${oauthReturn ? url.search : ""}`;
+  if (url.searchParams.get("error") === "INVALID_TOKEN")
     return redirect(`/auth/link-expired${group === "business" ? "?portal=1" : ""}`);
-  const user = await currentUser();
+  let user;
+  try {
+    user = await currentUser();
+  } catch (error) {
+    if (oauthReturn && error instanceof Response) {
+      const target = error.headers.get("Location");
+      if (target?.startsWith("/auth/two-factor")) {
+        const destination = new URL(target, url.origin);
+        destination.searchParams.set("oauth_query", url.search.slice(1));
+        throw redirect(destination.pathname + destination.search);
+      }
+    }
+    throw error;
+  }
+  if (user && oauthReturn) return redirectDocument(oauthReturn);
   if (user)
     return redirect(user.role === "business_user" || group === "business" ? "/portal" : "/");
   if (await needsSetup()) return redirect("/auth/setup");
   const { data, response } = await api.GET("/api/v1/auth/methods");
   if (!data) throw new Error(`The sign-in methods could not be read (${response.status}).`);
-  return { methods: data, group };
+  return { methods: data, group, oauthReturn, loginURL };
 }
 
 type View =
   "unavailable" | "password" | "sso" | "magic" | "magicSent" | "passwordSetup" | "passwordSent";
 
 export function LoginPage() {
-  const { methods, group } = useLoaderData<typeof loginLoader>() as Exclude<
+  const { methods, group, oauthReturn, loginURL } = useLoaderData<typeof loginLoader>() as Exclude<
     Awaited<ReturnType<typeof loginLoader>>,
     Response
   >;
@@ -110,7 +130,19 @@ export function LoginPage() {
         return;
       }
       if ((res.data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect) {
-        void navigate(group === "business" ? "/auth/two-factor?portal=1" : "/auth/two-factor");
+        const destination = new URL("/auth/two-factor", window.location.origin);
+        if (group === "business") destination.searchParams.set("portal", "1");
+        if (oauthReturn)
+          destination.searchParams.set(
+            "oauth_query",
+            new URL(loginURL, window.location.origin).search.slice(1),
+          );
+        void navigate(destination.pathname + destination.search);
+        return;
+      }
+      if (oauthReturn) {
+        // Re-enter the loader so required second-factor setup keeps its return too.
+        void navigate(loginURL, { replace: true });
         return;
       }
       const signedInUser = (res.data as { user?: { role?: string } } | null)?.user;
@@ -131,7 +163,7 @@ export function LoginPage() {
     setError(null);
     try {
       const { response, error: problem } = await api.POST("/api/v1/auth/magic-link", {
-        body: { email, group },
+        body: { email, group, ...(oauthReturn ? { callbackURL: loginURL } : {}) },
       });
       if (response.status === 202) {
         setView("magicSent");
@@ -173,8 +205,8 @@ export function LoginPage() {
     try {
       const res = await authClient.signIn.sso({
         providerId: methods.ssoProviderId,
-        callbackURL: group === "business" ? "/portal" : "/",
-        errorCallbackURL: `${group === "business" ? "/portal/login" : "/auth/login"}?error=sso`,
+        callbackURL: oauthReturn ? loginURL : group === "business" ? "/portal" : "/",
+        errorCallbackURL: `${loginURL}${oauthReturn ? "&" : "?"}error=sso`,
       });
       if (res.error || !res.data?.url) {
         setBusy(false);
@@ -461,6 +493,21 @@ export function LoginPage() {
               <FormattedMessage id="auth.backToSignIn" defaultMessage="Back to sign-in" />
             </Button>
           </>
+        )}
+        {oauthReturn && (
+          <Link
+            className="text-sm text-link underline"
+            to={`${group === "legal" ? "/portal/login" : "/auth/login"}${new URL(loginURL, window.location.origin).search}`}
+          >
+            {group === "legal" ? (
+              <FormattedMessage
+                id="auth.portalLogin.title"
+                defaultMessage="Business Portal sign-in"
+              />
+            ) : (
+              <FormattedMessage id="auth.legalLogin" defaultMessage="Legal User sign-in" />
+            )}
+          </Link>
         )}
       </CardContent>
     </Card>

@@ -1858,6 +1858,11 @@
                   "group": {
                     "type": "string",
                     "enum": ["legal", "business"]
+                  },
+                  "callbackURL": {
+                    "type": "string",
+                    "maxLength": 16032,
+                    "pattern": "^\\/(?:auth|portal)\\/login\\?[^#\\r\\n]+$"
                   }
                 },
                 "required": ["email"]

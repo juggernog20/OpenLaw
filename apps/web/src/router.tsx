@@ -39,6 +39,7 @@ import { PortalMattersPage, portalMattersLoader } from "./routes/portal-matters"
 import { PortalMatterPage, portalMatterLoader } from "./routes/portal-matter";
 import { Fragment, type ReactNode } from "react";
 import { useParams, type RouteObject } from "react-router";
+import { ConsentPage, consentLoader } from "./routes/consent";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
@@ -727,16 +728,21 @@ export const routes: RouteObject[] = [
   },
   {
     path: "/auth",
-    element: <AuthLayout />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,
     children: [
-      { path: "login", loader: loginLoader, element: <LoginPage key="legal" /> },
-      { path: "two-factor", element: <TwoFactorPage /> },
-      { path: "two-factor/enroll", loader: enrollLoader, element: <TwoFactorEnrollPage /> },
-      { path: "set-password", element: <SetPasswordPage /> },
-      { path: "setup", loader: setupLoader, element: <SetupPage /> },
-      { path: "link-expired", loader: linkExpiredLoader, element: <LinkExpiredPage /> },
+      { path: "consent", loader: consentLoader, element: <ConsentPage /> },
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: "login", loader: loginLoader, element: <LoginPage key="legal" /> },
+          { path: "two-factor", element: <TwoFactorPage /> },
+          { path: "two-factor/enroll", loader: enrollLoader, element: <TwoFactorEnrollPage /> },
+          { path: "set-password", element: <SetPasswordPage /> },
+          { path: "setup", loader: setupLoader, element: <SetupPage /> },
+          { path: "link-expired", loader: linkExpiredLoader, element: <LinkExpiredPage /> },
+        ],
+      },
     ],
   },
   {

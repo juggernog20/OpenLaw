@@ -1421,6 +1421,9 @@
   "auth.field.password": {
     "defaultMessage": "Password"
   },
+  "auth.legalLogin": {
+    "defaultMessage": "Legal User sign-in"
+  },
   "auth.linkExpired.body": {
     "defaultMessage": "The link has expired or was already used. Request a new one from the sign-in page."
   },
@@ -2653,6 +2656,66 @@
   },
   "confidential.markerShort": {
     "defaultMessage": "CONFI"
+  },
+  "consent.allow": {
+    "defaultMessage": "Allow"
+  },
+  "consent.allowedClient": {
+    "defaultMessage": "Allowed Client"
+  },
+  "consent.answerFailed": {
+    "defaultMessage": "Your answer could not be saved. Try again."
+  },
+  "consent.clientDisabled": {
+    "defaultMessage": "This Client is off in the organization's Allowed Clients list."
+  },
+  "consent.clientUnlisted": {
+    "defaultMessage": "This Client is not on the organization's Allowed Clients list."
+  },
+  "consent.disconnect": {
+    "defaultMessage": "You can disconnect {client} later from Settings → API keys."
+  },
+  "consent.disconnectPortal": {
+    "defaultMessage": "You can disconnect {client} later from Portal settings → API keys."
+  },
+  "consent.expired": {
+    "defaultMessage": "This consent request has expired or changed. Start again from your Client."
+  },
+  "consent.groupDisabled": {
+    "defaultMessage": "OAuth Clients are off for your account type."
+  },
+  "consent.mcpDisabled": {
+    "defaultMessage": "MCP is off for this organization."
+  },
+  "consent.pageTitle": {
+    "defaultMessage": "Client consent"
+  },
+  "consent.reach": {
+    "defaultMessage": "This Client can never see or change what you cannot."
+  },
+  "consent.read": {
+    "defaultMessage": "Read only"
+  },
+  "consent.readDescription": {
+    "defaultMessage": "{client} can list and read what you can see."
+  },
+  "consent.scope": {
+    "defaultMessage": "How far {client} may go"
+  },
+  "consent.title": {
+    "defaultMessage": "{client} wants to work in OpenLaw as you"
+  },
+  "consent.toolsets": {
+    "defaultMessage": "What {client} may use"
+  },
+  "consent.wordmark": {
+    "defaultMessage": "openlaw"
+  },
+  "consent.write": {
+    "defaultMessage": "Read and write"
+  },
+  "consent.writeDescription": {
+    "defaultMessage": "{client} can also create and change records, as you. Every change is recorded as you, via {client}."
   },
   "contractMatter.contracts.empty": {
     "defaultMessage": "No Contracts are linked to this Matter."
