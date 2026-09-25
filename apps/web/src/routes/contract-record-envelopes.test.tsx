@@ -1008,6 +1008,7 @@ describe("preparing an unsent Envelope", () => {
     await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     expect(await screen.findByText("Draft — not sent")).toBeInTheDocument();
     expect(screen.getByText("Not sent")).toBeInTheDocument();
+    expect(screen.getByText("Prepared by Nadia Counsel")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
     expect(api.writes[0]).toMatchObject({
       path: "/api/v1/contracts/42/envelopes/prepare",

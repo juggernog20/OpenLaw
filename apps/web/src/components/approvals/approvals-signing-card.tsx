@@ -891,7 +891,7 @@ function EnvelopeRow({
               : intl.formatMessage({ id: "signing.notSent", defaultMessage: "Not sent" })}
           </span>
           <span className="truncate text-xs text-muted">
-            {envelope.preparationState !== null ? (
+            {envelope.preparationState ? (
               <FormattedMessage
                 id="signing.preparedBy"
                 defaultMessage="Prepared by {name}"
