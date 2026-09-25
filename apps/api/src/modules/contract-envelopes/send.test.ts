@@ -48,7 +48,11 @@ import {
 import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
 import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
-import { SigningRefusedError, SigningTimeoutError } from "../../lib/signing/provider.js";
+import {
+  SigningRefusedError,
+  SigningTimeoutError,
+  SigningUnavailableError,
+} from "../../lib/signing/provider.js";
 import { FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import {
   signInCookies,
@@ -533,7 +537,7 @@ describe("the contract status follows a successful send", () => {
     expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
   });
 
-  it("rolls back the status and envelope together and voids the provider send on failure", async () => {
+  it("rolls back the status, voids the provider send, and ends the round on failure", async () => {
     const { contract, versionId } = await readyContract("Send transaction rollback");
     const before = await storedContract(contract.id);
     const idsBefore = new Set(provider().sentEnvelopeIds());
@@ -547,13 +551,19 @@ describe("the contract status follows a successful send", () => {
       notification.mockRestore();
     }
     expect((await storedContract(contract.id)).statusId).toBe(before.statusId);
-    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    // The provider confirmed the void, so the round has a terminal
+    // outcome: it stays on the record as voided and reserves nothing.
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toMatchObject([
+      { status: "voided", reason: "OpenLaw could not record this send." },
+    ]);
     expect(await entriesOn(contract.id)).toEqual([]);
     const produced = provider()
       .sentEnvelopeIds()
       .filter((id) => !idsBefore.has(id));
     expect(produced).toHaveLength(1);
     expect((await provider().readEnvelope(produced[0]!)).status).toBe("voided");
+    const later = await send(as(MEMBER), contract.number, versionId);
+    expect(later.statusCode, later.body).toBe(201);
   });
 
   it("uses the first live configured Signature status and clears an ended date", async () => {
@@ -1241,23 +1251,173 @@ describe("preparation refusals and reservations", () => {
     expect(retry.json().envelopes).toMatchObject([{ status: "sent" }]);
   });
 
-  it("releases a direct send's reservation when the provider never answers", async () => {
+  const sendKeyed = (number: number, documentVersionId: string, idempotencyKey: string) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${number}/envelopes`,
+      cookies: as(MEMBER),
+      payload: { documentVersionId, signers: [...SIGNERS], idempotencyKey },
+    });
+
+  const storedRound = async (contractId: string) => {
+    const rows = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.contractId, contractId));
+    expect(rows).toHaveLength(1);
+    return rows[0]!;
+  };
+
+  it("leaves no row when the stored file cannot be read, and sends on the retry", async () => {
     const { contract, payload } = await ready();
-    const lost = vi
-      .spyOn(provider(), "sendEnvelope")
-      .mockRejectedValueOnce(new SigningTimeoutError("No answer."));
+    const idsBefore = provider().sentEnvelopeIds().length;
+    const unreadable = vi
+      .spyOn(harness.app.storage, "get")
+      .mockRejectedValueOnce(new Error("The disk went away."));
+    try {
+      const response = await send(as(MEMBER), contract.number, payload.documentVersionId);
+      expect(response.statusCode).toBe(500);
+    } finally {
+      unreadable.mockRestore();
+    }
+    expect(provider().sentEnvelopeIds()).toHaveLength(idsBefore);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    const retry = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    expect(retry.statusCode, retry.body).toBe(201);
+  });
+
+  it.each([
+    ["timeout", () => new SigningTimeoutError("The answer was lost.")],
+    ["unavailable", () => new SigningUnavailableError("The connection dropped.")],
+  ])(
+    "keeps a direct send reserved when the provider accepts it and the answer is lost (%s)",
+    async (_, lostAnswer) => {
+      const { contract, payload, prepare } = await ready();
+      const [before] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      const idsBefore = new Set(provider().sentEnvelopeIds());
+      const created = () =>
+        provider()
+          .sentEnvelopeIds()
+          .filter((id) => !idsBefore.has(id));
+      const key = crypto.randomUUID();
+      // The fake really takes the envelope, and only the answer is lost.
+      const original = provider().sendEnvelope.bind(provider());
+      const lost = vi.spyOn(provider(), "sendEnvelope").mockImplementationOnce(async (input) => {
+        await original(input);
+        throw lostAnswer();
+      });
+      let response;
+      try {
+        response = await sendKeyed(contract.number, payload.documentVersionId, key);
+      } finally {
+        lost.mockRestore();
+      }
+      expect(response.statusCode, response.body).toBe(502);
+      expect(response.json().detail).toContain("stays reserved");
+      expect(created()).toHaveLength(1);
+      expect(await provider().readEnvelope(created()[0]!)).toMatchObject({ status: "sent" });
+
+      // The reservation and its recovery evidence are all still there.
+      const intent = await storedRound(contract.id);
+      expect(intent).toMatchObject({
+        status: "preparing",
+        preparationState: "uncertain",
+        providerEnvelopeId: null,
+        sentAt: null,
+        idempotencyKey: key,
+        providerAccountId: "fake-account-0001",
+        providerEnvironment: "demo",
+        documentVersionId: payload.documentVersionId,
+        sentBy: idOf(MEMBER),
+      });
+      expect(intent.providerTransactionId).toBeTruthy();
+      expect(intent.documentId).toBeTruthy();
+      expect(intent.requestFingerprint).toBeTruthy();
+      expect(
+        await harness.db
+          .select()
+          .from(contractEnvelopeSigners)
+          .where(eq(contractEnvelopeSigners.envelopeId, intent.id)),
+      ).toHaveLength(SIGNERS.length);
+
+      // A matching keyed retry answers with the same round and creates nothing.
+      const retry = await sendKeyed(contract.number, payload.documentVersionId, key);
+      expect(retry.statusCode, retry.body).toBe(201);
+      expect(retry.json().envelopes).toMatchObject([
+        { id: intent.id, status: "preparing", preparationState: "uncertain" },
+      ]);
+      // Another direct send and a new preparation are both refused.
+      const again = await send(as(MEMBER), contract.number, payload.documentVersionId);
+      expect(again.statusCode).toBe(409);
+      expect(again.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+      const prepared = await prepare({ idempotencyKey: crypto.randomUUID() });
+      expect(prepared.statusCode).toBe(409);
+      expect(prepared.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+
+      expect(created()).toHaveLength(1);
+      expect(await storedRound(contract.id)).toMatchObject({ id: intent.id, status: "preparing" });
+      expect(await entriesOn(contract.id)).toEqual([]);
+      const [after] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      expect(after!.statusId).toBe(before!.statusId);
+    },
+  );
+
+  it("keeps the provider id and the reservation when a failed send's void is not confirmed", async () => {
+    const { contract, payload, prepare } = await ready();
+    const [before] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+    const idsBefore = new Set(provider().sentEnvelopeIds());
+    const notification = vi
+      .spyOn(harness.app.notifier, "statusChanged")
+      .mockRejectedValueOnce(new Error("Status notification could not be recorded"));
+    const compensation = vi
+      .spyOn(provider(), "voidEnvelope")
+      .mockRejectedValueOnce(new SigningUnavailableError("The provider went away."));
     let response;
     try {
       response = await send(as(MEMBER), contract.number, payload.documentVersionId);
     } finally {
-      lost.mockRestore();
+      notification.mockRestore();
+      compensation.mockRestore();
     }
-    // The default path has no recovery for an uncertain round yet, so the
-    // sender is told to check at the provider rather than being blocked.
-    expect(response.statusCode).toBe(502);
-    expect(response.json().detail).toContain("check at the provider");
-    expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+    expect(response.statusCode, response.body).toBe(500);
+    const created = provider()
+      .sentEnvelopeIds()
+      .filter((id) => !idsBefore.has(id));
+    expect(created).toHaveLength(1);
+    expect(await provider().readEnvelope(created[0]!)).toMatchObject({ status: "sent" });
+
+    const kept = await storedRound(contract.id);
+    expect(kept).toMatchObject({
+      status: "preparing",
+      preparationState: "uncertain",
+      providerEnvelopeId: created[0],
+      sentAt: null,
+      completedAt: null,
+      providerAccountId: "fake-account-0001",
+      documentVersionId: payload.documentVersionId,
+    });
+    expect(kept.providerTransactionId).toBeTruthy();
+
+    const again = await send(as(MEMBER), contract.number, payload.documentVersionId);
+    expect(again.statusCode).toBe(409);
+    expect(again.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+    const prepared = await prepare({ idempotencyKey: crypto.randomUUID() });
+    expect(prepared.statusCode).toBe(409);
+    expect(prepared.json().type).toBe(ENVELOPE_LIVE_PROBLEM_TYPE);
+    expect(
+      provider()
+        .sentEnvelopeIds()
+        .filter((id) => !idsBefore.has(id)),
+    ).toHaveLength(1);
     expect(await entriesOn(contract.id)).toEqual([]);
+    const [after] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
+    expect(after!.statusId).toBe(before!.statusId);
   });
 
   it("records a confirmed refusal without keeping the live reservation", async () => {

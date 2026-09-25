@@ -37,16 +37,20 @@
  *
  * - A preparation that the provider accepts becomes `draft`, with the
  *   provider's id, and records no Activity and moves no Stage. One the
- *   provider refuses becomes `preparation_failed`. One that never heard
- *   back stays `preparing` with an `uncertain` creation, reserved for the
- *   recovery slice, and a matching retry reuses it rather than creating
- *   a second draft.
+ *   provider refuses becomes `preparation_failed`.
  * - A direct send that the provider accepts becomes `sent` in one
- *   transaction with its `envelope.sent` entry and the Stage move. Any
- *   failure removes the reservation, so a direct send that does not land
- *   leaves no row, as it did before preparations existed. An envelope
- *   the provider took but the record could not keep is **voided at the
- *   provider** before the refusal is raised.
+ *   transaction with its `envelope.sent` entry and the Stage move. One
+ *   the provider refuses leaves no row, because no envelope exists.
+ * - Either operation that never hears a clear answer stays `preparing`
+ *   with an `uncertain` creation, and keeps the reservation (#1170
+ *   section 2). A matching retry answers with that round rather than
+ *   creating another, and every other send or preparation is refused
+ *   until the recovery slice settles it.
+ * - An envelope the provider took but the record could not keep is
+ *   **voided at the provider** before the refusal is raised. Its
+ *   provider id is kept first. Only a void the provider confirms ends
+ *   the round, as `voided`; an unconfirmed void leaves it reserved and
+ *   uncertain, with that id, for recovery.
  *
  * **An idempotency key names one request.** A preparation requires one;
  * a direct send may carry one. A matching retry answers with the round
@@ -598,6 +602,9 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     };
   }
 
+  /** The reason a compensating void gives the provider and the record. */
+  const UNRECORDED_SEND_REASON = "OpenLaw could not record this send.";
+
   /** The typed refusal a second send answers with (TECH-020). One
    * function, because the route raises it twice — once before dialling
    * the provider, and once under the lock for the send that raced it. */
@@ -620,7 +627,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    */
   function sendFailure(
     error: unknown,
-    unanswered: "unverified" | "reserved" | "released" = "unverified",
+    unanswered: "unverified" | "reserved" = "unverified",
   ): unknown {
     if (error instanceof SigningRefusedError) {
       // The provider's own words stay in the log. A driver builds this
@@ -646,23 +653,30 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     // The two ambiguous ones. A refusal means the provider said no and
     // no envelope exists; these two mean we never heard back. Before
     // anything was created (the account check) that is harmless. After
-    // the create call, the provider may hold the envelope: a preparation
-    // keeps its reservation for the recovery slice, and a direct send
-    // has released its own, so the sentence tells a person to check at
-    // the provider before sending again.
+    // the create call, the provider may hold the envelope, so the round
+    // stays reserved until its outcome is known, for a send and a
+    // preparation alike.
     if (error instanceof SigningTimeoutError || error instanceof SigningUnavailableError) {
-      const detail =
+      return httpError(
+        502,
         unanswered === "unverified"
           ? "The provider account could not be verified. No envelope was created. Try again."
-          : unanswered === "reserved"
-            ? "The provider did not confirm the draft. The Envelope stays reserved until its " +
-              "outcome is known."
-            : error instanceof SigningTimeoutError
-              ? "The provider did not answer in time. It may still have taken the envelope — " +
-                "check at the provider before you send again."
-              : "The provider could not be reached. It may still have taken the envelope — " +
-                "check at the provider before you send again.";
-      return httpError(502, detail, { expose: true });
+          : "The provider did not confirm the envelope. It stays reserved on this contract " +
+              "until its outcome is known.",
+        { expose: true },
+      );
+    }
+    // Any other failure of the create call is just as unclear about what
+    // the provider holds, so it answers the same way. Its own words go
+    // to the log.
+    if (unanswered === "reserved") {
+      app.log.error({ err: error }, "signing: envelope creation ended without an answer");
+      return httpError(
+        502,
+        "The provider did not confirm the envelope. It stays reserved on this contract " +
+          "until its outcome is known.",
+        { expose: true },
+      );
     }
     return error;
   }
@@ -802,10 +816,14 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               "has no e-signature connector, and with another when the " +
               "contract already has a live envelope (preparing, draft, or " +
               "sent) — two envelopes must never race for one signature. The " +
-              "live envelope is reserved before the provider is called; a " +
-              "send the provider refuses or never answers leaves no row, and " +
-              "an envelope the provider took but the record could not keep " +
-              "is voided again before the refusal is raised. Appends one " +
+              "live envelope is reserved before the provider is called. A " +
+              "send the provider refuses leaves no row. A send with no clear " +
+              "answer stays reserved as an uncertain preparing envelope, and " +
+              "a matching idempotent retry answers with it rather than " +
+              "sending again. An envelope the provider took but the record " +
+              "could not keep is voided again before the refusal is raised; " +
+              "if the provider does not confirm that void, the envelope stays " +
+              "reserved with its provider id. Appends one " +
               "envelope.sent entry on the contract at the working-team tier " +
               "(DD-017). Member+: a Contributor who reaches the record is " +
               "refused 403 rather than 404, because they can already see it. " +
@@ -1043,11 +1061,11 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         const envelopeId = reservation.envelope.id;
         const transactionId = reservation.envelope.providerTransactionId!;
 
-        // Nothing reached the provider, or the provider said no. A
-        // preparation keeps the round on the record as a confirmed
-        // failure. A direct send leaves no row behind, as it did before
-        // preparations existed: the sender asked for a send, and a failed
-        // preparation is not something they started.
+        // Confirmed noncreation: nothing reached the provider, or the
+        // provider said no. Only this releases a reservation before its
+        // outcome is terminal. A preparation keeps the round on the record
+        // as a confirmed failure. A direct send leaves no row, because no
+        // envelope exists and the sender asked for a send, not a draft.
         const failCreation = () =>
           preparing
             ? app.db
@@ -1061,7 +1079,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
             : app.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, envelopeId));
 
         // The stream is opened before the provider is dialled, so a
-        // storage failure is a failure to create and nothing else.
+        // storage failure is confirmed noncreation and nothing else.
         let document: Readable;
         try {
           document = await app.storage.get(fileRef);
@@ -1092,21 +1110,16 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
             await failCreation();
             throw sendFailure(error);
           }
-          // We never heard back, so the provider may hold the envelope. A
-          // preparation stays reserved and uncertain for the recovery
-          // slice, which can look it up by its transaction id. A direct
-          // send releases its reservation: nothing on the default path
-          // can settle an uncertain round yet, and a kept one would block
-          // this Contract and connector removal with no way out.
-          if (preparing) {
-            await app.db
-              .update(contractEnvelopes)
-              .set({ preparationState: "uncertain" })
-              .where(eq(contractEnvelopes.id, envelopeId));
-            throw sendFailure(error, "reserved");
-          }
-          await failCreation();
-          throw sendFailure(error, "released");
+          // Anything else means we never heard a clear answer, so the
+          // provider may hold the envelope. Both operations keep the
+          // reservation, with its transaction id, account, source, and
+          // signers, as recoverable uncertainty (#1170 section 2). Releasing
+          // it would let a second round go out beside one that may exist.
+          await app.db
+            .update(contractEnvelopes)
+            .set({ preparationState: "uncertain" })
+            .where(eq(contractEnvelopes.id, envelopeId));
+          throw sendFailure(error, "reserved");
         }
 
         if (preparing) {
@@ -1230,28 +1243,58 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
             };
           });
         } catch (error) {
-          // The compensating void. It is attempted, not guaranteed: the
-          // provider may be exactly what has just gone away. A failure to
-          // take the envelope back is logged and swallowed, because the
-          // caller's refusal is the more useful answer and re-throwing
-          // this one would replace a sentence they can act on with one
-          // they cannot.
-          await signing
-            .voidEnvelope(sent.providerEnvelopeId, "OpenLaw could not record this send.")
-            .catch((voidError: unknown) => {
+          // The provider holds a sent envelope, and the record could not
+          // say so. Its id is kept on the reservation first, so a crash
+          // from here on still leaves the record able to name it.
+          await app.db
+            .update(contractEnvelopes)
+            .set({ providerEnvelopeId: sent.providerEnvelopeId, preparationState: "uncertain" })
+            .where(eq(contractEnvelopes.id, envelopeId))
+            .catch((keepError: unknown) => {
               request.log.error(
-                { err: voidError, providerEnvelopeId: sent.providerEnvelopeId },
-                "signing: could not void an envelope whose record failed to commit",
+                { err: keepError, envelopeId, providerEnvelopeId: sent.providerEnvelopeId },
+                "signing: could not keep the provider id of a send whose record failed",
               );
             });
-          // The reservation goes with the send it held the place for, so
-          // a send that did not land leaves no row, as before.
-          await failCreation().catch((releaseError: unknown) => {
-            request.log.error(
-              { err: releaseError, envelopeId },
-              "signing: could not release the reservation of a failed send",
+          // The compensating void. It is attempted, not guaranteed: the
+          // provider may be exactly what has just gone away. Only a void
+          // the provider confirms is a terminal outcome, and only that
+          // releases the reservation, as a voided round. Otherwise the
+          // round stays reserved and uncertain, with its provider id, for
+          // recovery. Either way the caller gets the original failure,
+          // which is the sentence they can act on.
+          const voided = await signing
+            .voidEnvelope(sent.providerEnvelopeId, UNRECORDED_SEND_REASON)
+            .then(
+              () => true,
+              (voidError: unknown) => {
+                request.log.error(
+                  { err: voidError, providerEnvelopeId: sent.providerEnvelopeId },
+                  "signing: could not void an envelope whose record failed to commit",
+                );
+                return false;
+              },
             );
-          });
+          if (voided) {
+            const now = new Date();
+            await app.db
+              .update(contractEnvelopes)
+              .set({
+                status: "voided",
+                providerEnvelopeId: sent.providerEnvelopeId,
+                preparationState: "created",
+                reason: UNRECORDED_SEND_REASON,
+                sentAt: now,
+                completedAt: now,
+              })
+              .where(eq(contractEnvelopes.id, envelopeId))
+              .catch((endError: unknown) => {
+                request.log.error(
+                  { err: endError, envelopeId },
+                  "signing: could not record the compensating void of a failed send",
+                );
+              });
+          }
           throw error;
         }
 
