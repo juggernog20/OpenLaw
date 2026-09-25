@@ -28,6 +28,7 @@ import {
 } from "./provider.js";
 import {
   buildEnvelopeDefinition,
+  buildSenderViewRequest,
   buildJwtAssertion,
   checkedBaseUri,
   createDocuSignProvider,
@@ -324,7 +325,13 @@ describe("the envelope payload", () => {
       transactionId: "durable-transaction",
     };
     const draft = buildEnvelopeDefinition(input, Buffer.from("paper"), true);
-    expect(draft).toMatchObject({ status: "created", transactionId: "durable-transaction" });
+    expect(draft).toMatchObject({
+      status: "created",
+      transactionId: "durable-transaction",
+      emailSubject: "Draft",
+      messageLock: "true",
+      recipientsLock: "true",
+    });
     expect((draft.recipients as { signers: unknown[] }).signers).toEqual([
       { recipientId: "1", routingOrder: "1", name: "Signer", email: "signer@example.test" },
     ]);
@@ -486,6 +493,18 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
         const envelope = envelopes.get(decodeURIComponent(id ?? ""));
         if (!envelope) {
           sendJson(response, 404, { errorCode: "ENVELOPE_DOES_NOT_EXIST" });
+          return;
+        }
+        if (tail.join("/") === "views/sender" && request.method === "POST") {
+          if (envelope.status !== "created") {
+            sendJson(response, 400, { errorCode: "ENVELOPE_INVALID_STATUS" });
+            return;
+          }
+          const body = JSON.parse((await readBody(request)).toString("utf8"));
+          expect(body).toEqual(buildSenderViewRequest(body.returnUrl));
+          sendJson(response, 201, {
+            url: `https://demo.docusign.net/opaque?return=${encodeURIComponent(body.returnUrl)}`,
+          });
           return;
         }
         if (tail.join("/") === "documents/combined") {
@@ -784,5 +803,28 @@ describe("the DocuSign driver's own answers", () => {
     } finally {
       await stub.close();
     }
+  });
+});
+
+it("requests envelope-scoped Tagger with documented restrictions and ordinary fields", () => {
+  expect(
+    buildSenderViewRequest("https://openlaw.example/api/v1/signing/return?state=opaque"),
+  ).toEqual({
+    viewAccess: "envelope",
+    returnUrl: "https://openlaw.example/api/v1/signing/return?state=opaque",
+    settings: {
+      startingScreen: "Tagger",
+      sendButtonAction: "send",
+      showBackButton: "false",
+      showHeaderActions: "false",
+      showDiscardAction: "true",
+      recipientSettings: { showEditRecipients: "false" },
+      documentSettings: {
+        showEditDocuments: "false",
+        showEditDocumentVisibility: "false",
+        showEditPages: "false",
+      },
+      taggerSettings: { paletteSections: "default" },
+    },
   });
 });

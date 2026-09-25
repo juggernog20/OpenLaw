@@ -178,3 +178,17 @@ export async function prepareContractEnvelope(
     .catch(() => undefined);
   return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
 }
+
+/** Launch URLs live only in this call and are used immediately in this tab. */
+export async function launchContractEnvelope(
+  envelopeId: string,
+): Promise<string | null | undefined> {
+  const result = await api
+    .POST("/api/v1/envelopes/{envelopeId}/launch", {
+      params: { path: { envelopeId } },
+    })
+    .catch(() => undefined);
+  if (!result?.data) return (await problem(result)).detail;
+  window.location.assign(result.data.url);
+  return null;
+}

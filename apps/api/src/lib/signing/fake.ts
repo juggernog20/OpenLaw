@@ -137,6 +137,16 @@ export class FakeSigningProvider implements SigningProvider {
 
   private readonly preparations = new Map<string, string>();
 
+  readonly launches: { providerEnvelopeId: string; returnUrl: string }[] = [];
+
+  async launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string> {
+    this.requireReachable();
+    const envelope = this.require(providerEnvelopeId);
+    if (envelope.status !== "draft") throw new SigningRefusedError("Only a draft can be edited.");
+    this.launches.push({ providerEnvelopeId, returnUrl });
+    return `https://demo.docusign.net/sender/${this.launches.length}`;
+  }
+
   async prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope> {
     const held = this.preparations.get(input.transactionId);
     if (held) {
@@ -253,6 +263,10 @@ export class FakeSigningProvider implements SigningProvider {
   }
 
   // Test controls that stand in for signer actions
+
+  sendDraft(providerEnvelopeId: string): void {
+    this.require(providerEnvelopeId).status = "sent";
+  }
 
   /** Signs the envelope, as its last signer would. */
   complete(providerEnvelopeId: string): void {

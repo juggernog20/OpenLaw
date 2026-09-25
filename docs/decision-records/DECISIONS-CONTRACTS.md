@@ -686,3 +686,23 @@ An approval request grants the current primary Document only as far as that Docu
 
 3. A currency Field stores an ISO currency code, so it uses choice operators. This supersedes #1068's proposed numeric operators for currency; numeric comparisons apply only to number Fields. Select values compare option labels, user and Entity values compare stored IDs, and Me resolves to the viewer. Text uses escaped case-insensitive matching. Date Fields compare ISO calendar dates under DOC-009's relative-date rule.
 4. Search reads each module's `custom_fields` by slug. An absent key is the only empty value, including when the type never attached the Field. Stored false and zero are present. Negative contains and exclusion operators also match absent keys. Record reach is the only Field read gate; no Field-level visibility rule is introduced into staff search. The existing Contracts GIN index remains, Matters and Entities scan reached rows, and M44 adds no index or migration.
+
+### CTR-013 addendum, 2026-09-26, #1172. launch and authenticated return
+
+With the preparation feature switch enabled, Continue to DocuSign first prepares the
+Envelope, then separately authorizes a fresh Sender View on its durable provider ID.
+The browser stays in one tab. A failed launch leaves the draft reserved; it never
+falls back to immediate sending. The preparer, reached Legal Owner, or reached
+Administrator may open the draft, while current source reach, archival, and provider
+account identity are checked again.
+
+A return is navigation, not send evidence. A two-hour, unpredictable state binds the
+launch to the OpenLaw user, Envelope, provider account and environment. The database
+stores its hash; a session-only HttpOnly cookie carries it through sign-in to a
+protected, one-time confirmation POST. Browser events and provider IDs confer no
+authority. The return destination is always that Contract's Signatures tab.
+
+Only a provider read or verified notification confirms sending and records sent
+Activity without attributing the provider's shared identity to a browser user. This
+transition does not move the Contract Stage. A delayed or failed check leaves a
+visible waiting state and keeps the outstanding Envelope reserved.

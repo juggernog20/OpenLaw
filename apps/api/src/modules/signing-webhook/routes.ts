@@ -168,6 +168,7 @@ export const signingWebhookRoutes: FastifyPluginAsync = async (app) => {
         provider,
         providerEnvelopeId: delivery.providerEnvelopeId,
         status: delivery.status,
+        ...(delivery.sentAt !== undefined ? { sentAt: delivery.sentAt } : {}),
         ...(delivery.reason !== undefined ? { reason: delivery.reason } : {}),
         ...(delivery.completedAt !== undefined ? { completedAt: delivery.completedAt } : {}),
         // No actor: nobody here signed or declined anything. The entry

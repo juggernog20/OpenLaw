@@ -172,6 +172,8 @@ export interface EnvelopeState {
   reason?: string;
   /** When it reached a terminal status, if the provider says. */
   completedAt?: Date;
+  /** Provider-reported send time, when available. */
+  sentAt?: Date;
 }
 
 /** One verified webhook delivery, reduced to what the record needs. */
@@ -180,6 +182,8 @@ export interface WebhookDelivery {
   status: EnvelopeStatus;
   reason?: string;
   completedAt?: Date;
+  /** Provider-reported send time, when available. */
+  sentAt?: Date;
 }
 
 /** What a successful connection test found — the pane shows it, so an
@@ -225,6 +229,9 @@ export interface SigningProvider {
    * take the envelope as described.
    */
   prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope>;
+
+  /** Issues a fresh browser editing session for an existing draft. */
+  launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string>;
 
   /**
    * Sends one document to its signers and answers the provider's id

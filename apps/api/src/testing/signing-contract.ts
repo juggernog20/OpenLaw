@@ -147,6 +147,30 @@ export function describeSigningContract(
       ).rejects.toBeInstanceOf(SigningRefusedError);
     });
 
+    it("opens fresh sessions on the same draft and refuses a sent Envelope", async () => {
+      const provider = held().provider;
+      const draft = await provider.prepareEnvelope({
+        document: document(),
+        fileName: "paper.pdf",
+        subject: "Place fields",
+        signers: SIGNERS,
+        transactionId: "launch-contract",
+      });
+      const first = await provider.launchEnvelope(
+        draft.providerEnvelopeId,
+        "https://openlaw.example/return?state=one",
+      );
+      const second = await provider.launchEnvelope(
+        draft.providerEnvelopeId,
+        "https://openlaw.example/return?state=two",
+      );
+      expect(first).not.toBe(second);
+      expect((await provider.readEnvelope(draft.providerEnvelopeId)).status).toBe("draft");
+      await expect(
+        provider.launchEnvelope(await send(provider), "https://openlaw.example/return"),
+      ).rejects.toBeInstanceOf(SigningRefusedError);
+    });
+
     it("mints a distinct id per envelope", async () => {
       const first = await send(held().provider);
       const second = await send(held().provider);

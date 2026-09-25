@@ -74,15 +74,24 @@ import {
   and,
   asc,
   contractEnvelopes,
+  envelopeLaunches,
   eq,
   gt,
-  isNull,
+  inArray,
+  ne,
   or,
   sql,
   type Db,
   type SigningProviderKey,
 } from "@openlaw/db";
 import { requestExecutedCopy } from "../lib/signing/completion.js";
+import {
+  checkEnvelopeStatus,
+  CREATION_READ_GRACE_MINUTES,
+  LAUNCH_LIFETIME_MINUTES,
+  LAUNCH_RETURN_GRACE_MINUTES,
+  reconciliationDue,
+} from "../lib/signing/status-check.js";
 import {
   isTerminalSigningError,
   SigningConfigError,
@@ -118,10 +127,47 @@ export const RECONCILIATION_REFUSAL_LIMIT = 5;
  * has a durable 15-minute minimum between provider calls. */
 export const RECONCILIATION_SWEEP_CRON = "*/5 * * * *";
 
-const reconciliationDue = () =>
+/**
+ * Which drafts the sweep asks about (#1170 §7, #1172).
+ *
+ * Two bounded graces, each one read interval long, and no lock:
+ *
+ * - Not one created less than `CREATION_READ_GRACE_MINUTES` ago. Its
+ *   creation response is the evidence that it is a draft, and its first
+ *   launch usually follows within moments, so a read now would learn
+ *   nothing while spending the allowance the first return needs. Once the
+ *   grace passes the draft is polled whether or not anybody launched it:
+ *   a preparation can be sent through the provider account with no
+ *   browser session, and in Polling mode nothing else would learn it.
+ * - Not one launched less than `LAUNCH_RETURN_GRACE_MINUTES` ago with its
+ *   correlation still unconsumed. The return usually arrives inside the
+ *   interval and spends the first eligible read itself. An unconsumed
+ *   correlation is not proof that the editor is open — a sender can send
+ *   and close the browser, or the return can be lost — so once the grace
+ *   passes the draft is polled however long the correlation stays valid.
+ *
+ * Neither a correlation's existence nor the confirmation flag decides
+ * whether a live draft is ever polled; only the clock does. A later
+ * launch may therefore find the allowance already spent by a poll, and
+ * its return then waits for the next allowed check, which #1170 §7 allows.
+ *
+ * A `sent` row is never deferred: a verified notification may have moved
+ * it while a correlation was still open, and its completion polling must
+ * carry on.
+ */
+const pollableDraft = () =>
   or(
-    isNull(contractEnvelopes.nextReconcileAt),
-    sql`${contractEnvelopes.nextReconcileAt} <= clock_timestamp()`,
+    ne(contractEnvelopes.status, "draft"),
+    and(
+      sql`${contractEnvelopes.createdAt} <= clock_timestamp() - make_interval(mins => ${CREATION_READ_GRACE_MINUTES})`,
+      sql`not exists (
+        select 1 from ${envelopeLaunches}
+        where ${envelopeLaunches.envelopeId} = ${contractEnvelopes.id}
+          and ${envelopeLaunches.consumedAt} is null
+          and ${envelopeLaunches.expiresAt} - make_interval(mins => ${LAUNCH_LIFETIME_MINUTES})
+              > clock_timestamp() - make_interval(mins => ${LAUNCH_RETURN_GRACE_MINUTES})
+      )`,
+    ),
   );
 
 /** What the sweep is built from: the rows, the connector, somewhere to
@@ -185,6 +231,7 @@ interface LiveEnvelope {
   id: string;
   provider: SigningProviderKey;
   providerEnvelopeId: string | null;
+  status: string;
 }
 
 /**
@@ -231,6 +278,7 @@ export async function runReconciliationSweep(
       .select({
         id: contractEnvelopes.id,
         provider: contractEnvelopes.provider,
+        status: contractEnvelopes.status,
         providerEnvelopeId: contractEnvelopes.providerEnvelopeId,
       })
       .from(contractEnvelopes)
@@ -239,8 +287,9 @@ export async function runReconciliationSweep(
           // The only status anything can move out of. An ending is an
           // ending (see `transitions.ts`), so a finished envelope has
           // nothing left for this sweep to learn.
-          eq(contractEnvelopes.status, "sent"),
+          inArray(contractEnvelopes.status, ["draft", "sent"]),
           reconciliationDue(),
+          pollableDraft(),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
         ),
       )
@@ -298,25 +347,11 @@ export async function runReconciliationSweep(
         continue;
       }
 
-      // Claim before calling the provider. A concurrent or restarted worker
-      // must respect the same limit even if this process dies during the call.
-      // Five extra minutes cover the bounded authentication and status requests.
-      const [claimed] = await deps.db
-        .update(contractEnvelopes)
-        .set({ nextReconcileAt: sql`clock_timestamp() + interval '20 minutes'` })
-        .where(
-          and(
-            eq(contractEnvelopes.id, envelope.id),
-            eq(contractEnvelopes.status, "sent"),
-            reconciliationDue(),
-          ),
-        )
-        .returning({ id: contractEnvelopes.id });
-      if (!claimed) continue;
-
       let state: EnvelopeState;
       try {
-        state = await signing.readEnvelope(envelope.providerEnvelopeId);
+        const checked = await checkEnvelopeStatus(deps.db, signing, envelope.id);
+        if (!checked) continue;
+        state = checked;
         unreachable = 0;
       } catch (error) {
         // The taxonomy's own split, and the whole of this sweep's
@@ -369,18 +404,15 @@ export async function runReconciliationSweep(
           return summary;
         }
         continue;
-      } finally {
-        // Start the full gap after the attempt, including authentication and
-        // provider delays. Failed attempts also consume the interval.
-        await deps.db
-          .update(contractEnvelopes)
-          .set({ nextReconcileAt: sql`clock_timestamp() + interval '15 minutes'` })
-          .where(eq(contractEnvelopes.id, envelope.id));
       }
 
       // Still out. The record already says so, and the funnel is for
       // changes.
-      if (state.status === "sent") {
+      if (state.status === envelope.status) {
+        await deps.db
+          .update(contractEnvelopes)
+          .set({ confirmationPending: false })
+          .where(eq(contractEnvelopes.id, envelope.id));
         summary.live += 1;
         continue;
       }
@@ -392,6 +424,7 @@ export async function runReconciliationSweep(
         provider: envelope.provider,
         providerEnvelopeId: envelope.providerEnvelopeId,
         status: state.status,
+        ...(state.sentAt !== undefined ? { sentAt: state.sentAt } : {}),
         ...(state.reason !== undefined ? { reason: state.reason } : {}),
         ...(state.completedAt !== undefined ? { completedAt: state.completedAt } : {}),
       });
