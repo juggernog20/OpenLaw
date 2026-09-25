@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+/**
+ * DD-029 resource addresses reuse the matching Tool's grant, reach and result.
+ * TECH-035 puts each read through one call reservation without recording its address.
+ */
 import { z } from "zod";
 import type { Resource, ResourceTemplateType } from "@modelcontextprotocol/server";
 import { documentVersions, eq } from "@openlaw/db";
