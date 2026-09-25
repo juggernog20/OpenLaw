@@ -73,6 +73,21 @@ export async function linkPublishedClient(db: Executor, clientId: string) {
   });
 }
 
+/**
+ * A direct POST authorize carries its parameters in the form body. The consent
+ * endpoint re-dispatches authorize with the original query and its own body, and
+ * the provider reads the query there. Follow the same rule.
+ */
+function authorizeParams(ctx: {
+  method?: string;
+  query?: Record<string, unknown>;
+  body?: Record<string, unknown>;
+}) {
+  const body = ctx.method === "POST" ? ctx.body : undefined;
+  const source = typeof body?.client_id === "string" ? body : ctx.query;
+  return { clientId: source?.client_id, redirect: source?.redirect_uri };
+}
+
 /** 1.7.5 has no client-disable endpoint. This server-only plugin extension uses its adapter. */
 export function allowedClientsPlugin(db: Executor) {
   return {
@@ -109,8 +124,7 @@ export function allowedClientsPlugin(db: Executor) {
                 });
               return;
             }
-            const clientId = ctx.query?.client_id;
-            const redirect = ctx.query?.redirect_uri;
+            const { clientId, redirect } = authorizeParams(ctx);
             const client =
               typeof clientId === "string" ? await findAllowedClient(db, clientId) : undefined;
             if (!client?.enabled)
@@ -132,7 +146,7 @@ export function allowedClientsPlugin(db: Executor) {
             ctx.path === "/oauth2/register" || ctx.path === "/oauth2/authorize",
           handler: createAuthMiddleware(async (ctx) => {
             if (ctx.path === "/oauth2/authorize") {
-              const clientId = ctx.query?.client_id;
+              const { clientId } = authorizeParams(ctx);
               if (typeof clientId !== "string" || ctx.context.returned instanceof APIError) return;
               const client = await findAllowedClient(db, clientId);
               if (!client?.enabled)
@@ -161,7 +175,7 @@ export function allowedClientsPlugin(db: Executor) {
             const [row] = await db
               .insert(allowedClients)
               .values({
-                name: result.client_name || "Registered Client",
+                name: (result.client_name || "Registered Client").slice(0, 200),
                 kind: "registered",
                 clientId: result.client_id,
                 callbackUrls: result.redirect_uris ?? [],

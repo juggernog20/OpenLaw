@@ -106,6 +106,33 @@ it("refuses a disabled published identity before fetching, including a cached co
     ).toBe(true);
   await h.app.inject({ method: "PATCH", url: path, cookies, payload: { enabled: true } });
   expect((await authorize(connection, redirects[connection]![0]!)).statusCode).toBe(302);
+  // The toggle rewrote the ChatGPT row. The section state keeps the seed order.
+  const state = await h.app.inject({ url: "/api/v1/mcp-settings", cookies });
+  expect(
+    state
+      .json()
+      .allowedClients.map((r: { name: string }) => r.name)
+      .slice(0, 4),
+  ).toEqual(["Claude", "Claude Code", "ChatGPT", "Microsoft 365 Copilot"]);
+});
+it("admits a POST authorize request from the form body", async () => {
+  const result = await h.app.inject({
+    method: "POST",
+    url: "/api/auth/oauth2/authorize",
+    cookies,
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    payload: new URLSearchParams({
+      client_id: claude,
+      redirect_uri: redirects[claude]![0]!,
+      response_type: "code",
+      scope: "toolset:contracts offline_access",
+      code_challenge: "a".repeat(43),
+      code_challenge_method: "S256",
+      state: "test-state",
+    }).toString(),
+  });
+  expect(result.statusCode, result.body).toBe(302);
+  expect(new URL(result.headers.location!, h.app.baseUrl).pathname).toBe("/auth/consent");
 });
 it.each([
   [claude, "https://attacker.example/callback"],

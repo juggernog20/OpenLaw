@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { allowedClients, allowedClientLinks, eq, asc, type Transaction } from "@openlaw/db";
+import {
+  allowedClients,
+  allowedClientLinks,
+  eq,
+  asc,
+  type Executor,
+  type Transaction,
+} from "@openlaw/db";
 import { fromNodeHeaders } from "better-auth/node";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -28,6 +35,14 @@ export const serializeAllowedClient = (row: typeof allowedClients.$inferSelect) 
   secretGeneratedAt: row.secretGeneratedAt?.toISOString() ?? null,
   createdAt: row.createdAt.toISOString(),
 });
+/** Seed order first, then creation order. Postgres moves an updated row without this. */
+export async function listAllowedClients(db: Executor) {
+  const rows = await db
+    .select()
+    .from(allowedClients)
+    .orderBy(asc(allowedClients.createdAt), asc(allowedClients.id));
+  return rows.map(serializeAllowedClient);
+}
 const callback = z
   .string()
   .max(2048)
@@ -90,13 +105,7 @@ export const allowedClientRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: z.array(AllowedClient), default: problemResponse },
       },
     },
-    async () =>
-      (
-        await app.db
-          .select()
-          .from(allowedClients)
-          .orderBy(asc(allowedClients.createdAt), asc(allowedClients.id))
-      ).map(serializeAllowedClient),
+    async () => listAllowedClients(app.db),
   );
   app.post(
     path,

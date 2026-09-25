@@ -5,7 +5,7 @@
  * Each changed field writes an org_settings.updated row at admin_only in
  * the same transaction as the policy update (DD-017).
  */
-import { allowedClients, orgSettings, eq } from "@openlaw/db";
+import { orgSettings, eq } from "@openlaw/db";
 import { MCP_TOOLSETS, MCP_OAUTH_UNAVAILABLE_PROBLEM } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -16,7 +16,7 @@ import { httpError, problemResponse, problemTypeResponse } from "../../lib/probl
 
 import { createReachabilityCheck, Reachability, type ResolveIpv4 } from "./reachability.js";
 
-import { AllowedClient, serializeAllowedClient } from "./allowed-clients.js";
+import { AllowedClient, listAllowedClients } from "./allowed-clients.js";
 
 const lifetimeError = "API key lifetime must be a whole number from 1 to 365 days.";
 const Policy = z.object({
@@ -91,7 +91,7 @@ export function mcpSettingsRoutes(resolveIpv4?: ResolveIpv4): FastifyPluginAsync
         if (!row) throw httpError(500, "Organization settings are unavailable.");
         return {
           ...row,
-          allowedClients: (await app.db.select().from(allowedClients)).map(serializeAllowedClient),
+          allowedClients: await listAllowedClients(app.db),
           serverAddress,
           authorizationServerAvailable: available,
           reachability: await reachability(row),
@@ -165,7 +165,7 @@ export function mcpSettingsRoutes(resolveIpv4?: ResolveIpv4): FastifyPluginAsync
         });
         return {
           ...result,
-          allowedClients: (await app.db.select().from(allowedClients)).map(serializeAllowedClient),
+          allowedClients: await listAllowedClients(app.db),
           reachability: await reachability(result),
         };
       },
