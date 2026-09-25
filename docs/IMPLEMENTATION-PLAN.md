@@ -767,13 +767,15 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - The browser journey and the two `DEPLOYMENT.md` profiles, "LAN only" and "publicly reachable"
   - _Decisions:_ DD-029, TECH-035, SET-014; DD-017, TECH-033, NOT-001 and NOT-005 addenda
 
-- [ ] **M41 — MCP: OAuth Clients**
+- [x] **M41 — MCP: OAuth Clients**, omnibus [#1131](https://github.com/juggernog20/OpenLaw/issues/1131)
       _Demo:_ An Administrator lists ChatGPT as an Allowed Client, a Legal Team Member adds OpenLaw in
       ChatGPT Developer mode, consents to Matters with write, and asks ChatGPT to open a Matter from a Request.
   - The `mcp()`, `jwt()` and `cimd()` plugins; Allowed Clients with both entry kinds
   - The consent page, connected Clients on the API keys pane, and the reachability warning
-  - Claude.ai, ChatGPT and Copilot Studio proven end to end, with one user guide per Client
-  - _Decisions:_ DD-029, TECH-035, SET-014, the DES record for the consent page
+  - Client guides for Claude, ChatGPT and Microsoft 365 Copilot; public vendor connections follow the deployment checklist
+  - A browser journey through sign-in, consent, PKCE, SDK v2 Matter creation, activity attribution and Disconnect; an M40 upgrade rehearsal preserves API keys, requests and settings
+  - _Tickets:_ [#1132](https://github.com/juggernog20/OpenLaw/issues/1132), [#1133](https://github.com/juggernog20/OpenLaw/issues/1133), [#1134](https://github.com/juggernog20/OpenLaw/issues/1134), [#1135](https://github.com/juggernog20/OpenLaw/issues/1135), [#1136](https://github.com/juggernog20/OpenLaw/issues/1136), [#1137](https://github.com/juggernog20/OpenLaw/issues/1137), [#1138](https://github.com/juggernog20/OpenLaw/issues/1138), [#1139](https://github.com/juggernog20/OpenLaw/issues/1139)
+  - _Decisions:_ DD-029, TECH-035, SET-014, DES-092
 
 - [ ] **M42 — MCP: resources, prompts, subscriptions**
       _Demo:_ In Claude Code, attach a Contract as a resource, run the triage prompt on the Inbox, and see

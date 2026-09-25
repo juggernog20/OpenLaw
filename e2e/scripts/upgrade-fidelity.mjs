@@ -285,6 +285,46 @@ async function seed() {
   // DD-023 removed Contributor invites and team tags. Read the baseline's
   // public schema so this seed works on either side of that migration.
   const baselineApi = await get("/api/openapi.json");
+  // Older releases have no MCP routes. The M40 CI baseline always takes this path.
+  let mcp = null;
+  if (baselineApi.paths["/api/v1/mcp-settings"]) {
+    const policy = {
+      enabled: true,
+      legalApiKeysEnabled: true,
+      businessApiKeysEnabled: true,
+      toolsetCeiling: ["matters", "contracts"],
+      readOnly: false,
+      apiKeyLifetimeDays: 37,
+    };
+    await patch("/api/v1/mcp-settings", policy);
+    const active = await post("/api/v1/api-key-requests", {
+      clientName: "Upgrade active Client",
+      toolsets: ["matters"],
+      scope: "write",
+      note: "Keep this key and its request.",
+    });
+    check(typeof active.key === "string", "the M40 baseline did not issue an API key");
+    const revoked = await post("/api/v1/api-key-requests", {
+      clientName: "Upgrade revoked Client",
+      toolsets: ["contracts"],
+      scope: "read",
+    });
+    check(typeof revoked.key === "string", "the M40 baseline did not issue the revoked key");
+    await post(`/api/v1/api-key-requests/${revoked.id}/revoke`);
+    const requests = await get("/api/v1/mcp-settings/api-keys");
+    same(
+      requests.map((row) => row.id).sort(),
+      [active.id, revoked.id].sort(),
+      "M40 seeded requests",
+    );
+    mcp = {
+      policy,
+      requests,
+      activeKey: active.key,
+      revokedKey: revoked.key,
+      activeId: active.id,
+    };
+  }
   const bodyProperties = (path) =>
     baselineApi.paths[path].post.requestBody.content["application/json"].schema.properties;
   const businessInviteRole = bodyProperties("/api/v1/auth/invites").role.enum.includes(
@@ -750,6 +790,7 @@ async function seed() {
   );
 
   return {
+    mcp,
     aiConnector: {
       preset: aiConnector.preset,
       protocol: aiConnector.protocol,
@@ -936,6 +977,59 @@ async function verify(fingerprint) {
   await signInAdmin();
   const me = await get("/api/v1/me");
   check(me.user.email === ADMIN.email, `signed in as ${me.user.email}, seeded ${ADMIN.email}`);
+
+  const mcpPolicy = await get("/api/v1/mcp-settings");
+  for (const field of [
+    "legalOAuthClientsEnabled",
+    "businessOAuthClientsEnabled",
+    "dynamicClientRegistrationEnabled",
+  ]) {
+    same(mcpPolicy[field], false, `OAuth default ${field}`);
+  }
+  const allowed = await get("/api/v1/mcp-settings/allowed-clients");
+  same(
+    allowed
+      .filter((client) => client.seeded)
+      .map((client) => ({ name: client.name, kind: client.kind }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [
+      { name: "ChatGPT", kind: "published" },
+      { name: "Claude", kind: "published" },
+      { name: "Claude Code", kind: "published" },
+      { name: "Microsoft 365 Copilot", kind: "registered" },
+    ],
+    "four seeded Allowed Clients",
+  );
+  if (fingerprint.mcp) {
+    for (const [field, value] of Object.entries(fingerprint.mcp.policy)) {
+      same(mcpPolicy[field], value, `M40 setting ${field}`);
+    }
+    const requests = await get("/api/v1/mcp-settings/api-keys");
+    same(requests, fingerprint.mcp.requests, "M40 API keys and requests");
+    // Credential use happens after the metadata comparison because it updates lastUsedAt.
+    const callWithKey = (key) =>
+      fetch(new URL("/mcp", BASE_URL), {
+        method: "POST",
+        headers: {
+          "x-api-key": key,
+          "content-type": "application/json",
+          accept: "application/json, text/event-stream",
+          "mcp-protocol-version": "2025-11-25",
+        },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
+      });
+    const active = await callWithKey(fingerprint.mcp.activeKey);
+    same(active.status, 200, "M40 active key still authenticates");
+    check(
+      (await active.text()).includes('"openlaw_matter_create"'),
+      "M40 write key lost its Matters Tools",
+    );
+    const revoked = await callWithKey(fingerprint.mcp.revokedKey);
+    same(revoked.status, 401, "M40 revoked key stays refused");
+    await revoked.text();
+    const reread = await get(`/api/v1/api-key-requests/${fingerprint.mcp.activeId}`);
+    check(reread.key === undefined, "M40 key can be collected more than once");
+  }
 
   const aiConnector = (await get("/api/v1/ai-connector")).connector;
   check(aiConnector.configured, "the AI connector is no longer configured after the upgrade");
