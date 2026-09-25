@@ -11,7 +11,8 @@ pinned build. The edition now pins app commit
 `34696f76…3c0d`.
 
 Every check here is an independent agent check. No human user study or human
-proofreading is recorded. The owner took part in one live session, recorded below.
+proofreading is recorded. The owner took part in one live claude.ai session,
+recorded below. 60 of 62 guides are verified.
 
 ## How the batch ran
 
@@ -54,19 +55,57 @@ port.
 
 ## Live providers
 
-<!-- TODO: configure-analysis live OpenRouter result, connect-claude joint session,
-V-M41-PUBLIC. -->
+configure-analysis ran against a real OpenRouter key on its own lab, with the
+model `openai/gpt-oss-120b`. The key came from the owner's saved connector and
+went into no file. Three Analysis runs wrote the expected Fields. The invalid
+key, model and endpoint each produced the documented refusal. The first walk
+failed one step: the guide asked the reader to check the run's model, and no page
+shows it. The step now points at the connector's saved **Model**. The walk is in
+[analysis-live](analysis-live/).
 
-ChatGPT and Microsoft 365 Copilot were not tested. The owner chose to verify Claude
-only in this batch. connect-chatgpt and connect-microsoft-365-copilot stay
-unverified, and V-M41-C60 and V-M41-C61 stay pending.
+connect-claude and the public part of deployment-configuration ran in a joint
+session with the owner, in [claude-live](claude-live/). A lab was exposed through
+Tailscale Funnel with fresh passwords, so the seed password could not sign in.
+claude.ai connected as Nadia Haddad twice (once read and write, once read only),
+as Daniel Okafor and as Jonas Weber. Each connection called `openlaw_whoami`,
+`openlaw_docs_search` and `openlaw_docs_read` as that person, from Anthropic's
+address range. After each Disconnect, the next call got 401.
+
+The session found two guide errors, now fixed:
+
+- claude.ai's custom connector flow has changed. It is now **Add**, **Add custom
+  connector**, Name and MCP server URL, **Continue**, **Use Claude's published
+  identity**, **Add**, then **Connect**. It has no Client ID or secret fields.
+- claude.ai never reached an origin on port 8443, even though every check the
+  guide names passed there. On port 443 it connected. The public profile now says
+  to serve on 443, and connect-claude has a troubleshooting row for claude.ai's
+  "Couldn't reach this address".
+
+One round connected as Nadia again instead of Daniel, because the browser still
+held her OpenLaw session and the consent page skipped sign-in. The guide's "Sign
+in to OpenLaw if asked" is accurate. The walk counts that round as a second
+Legal Team Member round.
+
+A local lab covered what needs no vendor: existing grants refused when MCP, an
+account group or the Client is turned off, a Client removed mid-flow, and Claude
+Code's loopback callbacks. The Claude Code CLI round was not run, by owner
+decision.
+
+The Funnel first failed for about two hours. Tailscale's relays closed every
+connection without contacting the node, after the node's control connection had
+reset. It recovered without a change on this machine. Tailscale is the likely
+place to report it.
+
+ChatGPT and Microsoft 365 Copilot were not tested. The owner chose to verify
+Claude only in this batch. connect-chatgpt and connect-microsoft-365-copilot stay
+in **review** under DOC-031, with V-M41-C60 and V-M41-C61 pending. They keep the
+development warning "Documentation review is pending" until DOC-031 lands.
 
 ## Scenario registry
 
 Each scenario whose every role and method passed in the new evidence now records
-DOC-030 acceptance. The earlier records credited DOC-025.
-
-<!-- TODO: final counts. -->
+DOC-030 acceptance. The earlier records credited DOC-025. 66 of 68 scenarios
+pass. V-M41-C60 and V-M41-C61 wait for DOC-031.
 
 ## Publication checks
 
@@ -120,6 +159,10 @@ most serious first:
 - On a plain-HTTP LAN origin, Copy in "Your key is ready" and the Client secret
   dialog throws, and "Copy failed" never shows.
 - The personal API keys table has no Last used column (SET-014).
+- Past three magic-link requests per address in 15 minutes, the app sends no
+  mail but still shows "Check your email". The owner read it as an expired link.
+- On a plain-HTTP instance, turning on
+  OAuth Clients gets a 400 and the page shows no error.
 
 Smaller copy and layout defects: the Key date dialog shows only the organization
 lead times; the Convert dialog no longer names answers that stay on the Request;
@@ -136,5 +179,8 @@ server; raw Term type values in the Portal; two different notices for removed
 search conditions; History prints "someone" for register Holdings; the column
 resize strip is 4px wide; entry numbers are padded in one place only; the Field
 archive dialog counts records as types; the worker reads settings before the app
-finishes migrating and restarts once. A large profile photo broke Settings >
+finishes migrating and restarts once; the upload refusal says 1 MB for a 1 MiB
+limit; the API never removes its heartbeat row; the Contract record never names
+the model an Analysis ran; the MCP reachability pill fails when the app resolves
+its own hostname through a private resolver. A large profile photo broke Settings >
 Profile, and dev fixed it after the pinned commit (`7abd2a8f`).

@@ -3849,8 +3849,11 @@ phases["r2-status"] = async () => {
       await sleep(75_000);
       const s = await signIn(ORIGIN, ADMIN.email, state.adminPassword);
       try {
-        await s.page.goto(`${ORIGIN}/settings/system-status`);
-        await s.page.getByRole("button", { name: "Refresh" }).waitFor({ timeout: 20_000 });
+        for (let i = 0; i < 3; i++) {
+          await s.page.goto(`${ORIGIN}/settings/system-status`).catch(() => {});
+          if (await s.page.getByRole("button", { name: "Refresh" }).waitFor({ timeout: 20_000 }).then(() => true, () => false)) break;
+        }
+        await s.page.screenshot({ path: path.join(PRIVATE, "r2-status.png") });
         const down = await statusRows(s.page);
         compose("start worker");
         await sleep(20_000);

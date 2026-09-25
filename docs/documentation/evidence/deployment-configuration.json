@@ -1,98 +1,300 @@
 {
   "articleId": "deployment-configuration",
-  "contentSha256": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622",
-  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-  "buildId": "app and worker sha256:a181fb27601cc1e489775358322e22d6df032e71b1049fb793ea3d27dc0cf455 (openlaw-local:57e77e386be31b2a319f7143dd54d00123e65efe); engine sha256:20442984d67650d438966b9f82d267ea9c0297c3368dd782f061e959323a3a9f (openlaw-engine-local:57e77e386be31b2a319f7143dd54d00123e65efe); postgres:16 sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2. Built by install.md's docker compose build app doc-engine; application digest of the source revision e5f5a270db6aa319151e8ad6a8dc6fa09fbeb400aa71d92453ed50a7182118f1.",
-  "environment": "doc029r2-opinst2 (installation); doc029r2-opinst2-fx (relay, storage, database, public-style and private proxy fixtures)",
-  "author": "Codex integration author; round 2 corrections by DOC-029r2 source-review author agent (operator-install)",
-  "technicalReviewer": "DOC-029r2 source-review author agent (operator-install)",
-  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (operator-install, round 2)",
+  "contentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app and worker sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e (built by scripts/documentation/lab.mjs from 067c1646; tagged for these projects, not rebuilt); postgres:16 sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
+  "environment": "openlaw-doc030-cfg-1 with openlaw-doc030-cfg-fx (round 1), openlaw-doc030-cfg-2 with openlaw-doc030-cfg-fx2 (round 2, corrected steps); public live session on openlaw-docs-80ceef9e-claudelive (claude-live walker)",
+  "author": "DOC-030 source-review author agent (operator)",
+  "technicalReviewer": "DOC-030 source-review author agent (operator)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (operator)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T19:01:46Z",
+  "verifiedAt": "2026-09-25T21:07:50.791Z",
   "status": "pass",
   "sources": [
+    "docs/user-guides/deployment-configuration.md",
+    "docs/documentation/batches/DOC-030/operator/technical-review.json",
+    "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+    "docs/documentation/batches/DOC-030/operator/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/v-m41-public.json",
+    "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+    "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/lib.mjs",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/reference.md",
     "compose.yml",
-    "Dockerfile",
     ".env.example",
     "docs/DEPLOYMENT.md",
-    "packages/db/src/migration-journal.ts",
-    "packages/db/src/schema/org.ts",
+    "docs/user-guides/install.md",
+    "docs/decision-records/DECISIONS-SETTINGS.md (SET-013, SET-014)",
+    "apps/api/src/modules/advanced-settings/config.ts",
+    "apps/api/src/modules/advanced-settings/routes.ts",
+    "apps/api/src/reset-advanced-settings.ts",
+    "apps/api/src/index.ts",
     "apps/api/src/app.ts",
-    "apps/api/src/auth/instance.ts",
+    "apps/api/src/lib/uploads.ts",
+    "apps/api/src/lib/doc-engine/config.ts",
+    "apps/api/src/lib/notifications/vapid.ts",
     "apps/api/src/lib/mailer.ts",
-    "apps/api/src/lib/storage/config.ts",
-    "apps/api/src/modules/email-settings/config.ts",
-    "apps/api/src/modules/email-settings/routes.ts",
     "apps/api/src/modules/auth/routes.ts",
-    "apps/api/src/modules/auth/authentication-policy-routes.ts",
-    "apps/api/src/modules/onboarding/routes.ts",
-    "apps/api/src/pipeline/pg-boss.ts",
-    "apps/api/src/pipeline/text-extraction.ts",
-    "apps/web/src/routes/login.tsx",
-    "apps/web/src/routes/welcome.tsx",
+    "apps/api/src/auth/oauth.ts",
+    "apps/api/src/auth/discovery.ts",
+    "apps/api/src/auth/guards.ts",
+    "apps/api/src/mcp/calls.ts",
+    "apps/api/src/modules/mcp-settings/reachability.ts",
+    "apps/worker/src/index.ts",
+    "packages/db/src/rewrap.ts",
+    "packages/db/src/schema/api-keys.ts",
+    "services/doc-engine/src/server.ts",
+    "apps/web/src/routes/settings-advanced.tsx",
     "apps/web/src/routes/settings.tsx",
-    "e2e/scripts/upgrade-fidelity.mjs",
-    "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/routes/login.tsx",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
       "id": "V-C45",
-      "coverage": ["C45"],
+      "coverage": [
+        "C45"
+      ],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "Disposable Compose project doc029r2-opinst2 installed from an empty directory with install.md at 57e77e38, app port 23320.",
-        "Owned fixtures in doc029r2-opinst2-fx: Mailpit relay, MinIO, Azurite, a separate postgres:16, caddy:2-alpine for https://openlaw-r2.localhost:23321, and a private Caddy site for openlaw-r2.company.example:23327 on 172.17.0.1 with a fictional CA.",
-        "Fictional Administrator Avery Morgan, Legal Team Member Rowan Operator, and fictional test invitees."
+        "Disposable installation openlaw-doc030-cfg-1 made from a git archive of 067c1646 with install.md's .env commands and compose.operator.yml naming the lab.mjs images (app sha256:506e20d1…, engine sha256:eabde72b…), app on 127.0.0.1:25710, Caddy on the host serving https://openlaw-cfg.localhost:25711; owned fixtures openlaw-doc030-cfg-fx (Mailpit relay stand-in, MinIO, Azurite, a separate postgres:16, Caddy).",
+        "Fresh installation openlaw-doc030-cfg-2 from the same images and steps (app 127.0.0.1:25730, proxy https://openlaw-cfg.localhost:25731 also bound on the LAN address) with fixtures openlaw-doc030-cfg-fx2, for the steps corrected in 01f46836.",
+        "Fictional Administrator Avery Morgan and Legal Team Member Rowan Operator (key owner and non-administrator), signed in with passwords in isolated Playwright Chromium contexts."
       ],
       "expected": "Each claimed configuration path is demonstrated with actual requests/files and recorded effective values excluding secrets. Wrong origin, limits, unavailable storage/engine, and mismatched encryption keys fail as documented and recover after correction.",
-      "actual": "Followed deployment-configuration.md (bytes e50a783f) as an operator on a disposable installation doc029r2-opinst2 built from 57e77e38 with install.md's own commands, with owned fixtures in doc029r2-opinst2-fx (Mailpit relay, MinIO, Azurite, a separate postgres:16, and Caddy). Apply and limits: after adding MAX_UPLOAD_MB=1, docker compose restart app left the container value empty and a 1.1 MB upload was accepted; up -d --no-build --pull never applied it, a 1.1 MB upload was refused 413 \"That file is over the 1 MB upload limit.\" and a 200 KB upload was accepted; MAX_UPLOAD_MB=ten started normally and accepted 1.1 MB. config --quiet printed nothing. App and worker ran the same image with different commands and identical DATABASE_URL, STORAGE_PATH, BASE_URL, DOC_ENGINE_URL and key (compared, not recorded); doc-engine had no database or key variables and joined only its own network; postgres and doc-engine published no ports; DOC_ENGINE_URL was http://doc-engine:8080 and the engine /tmp was a 2g tmpfs. Origin: browser sign-in through https://openlaw-r2.localhost:23321 worked; sign-in with a foreign Origin and with the direct address as Origin answered 403; upload and download through the proxy matched; a record frame for the Contract arrived on /api/events through the proxy 21 ms after a second person's comment. Storage: local wrote to the shared volume seen by app and worker; s3 (bucket created first, MinIO path style) and azure-blob (container created first, Azurite endpoint) each took new writes, kept every earlier store readable, and processed a PDF in the worker; STORAGE_DRIVER=s3 without S3_BUCKET stopped startup with \"Set S3_BUCKET when STORAGE_DRIVER is s3.\"; a wrong S3_ENDPOINT left /readyz 200 while the s3 Document download answered 500 and local still downloaded; correcting it and returning new writes to local kept all four Documents readable. Engine: DOC_ENGINE_TIMEOUT_MS=420001 and DOC_ENGINE_COMPARE_TIMEOUT_MS=840001 each stopped app and worker startup with the documented bound; with doc-engine stopped /readyz stayed 200 and a PDF stayed pending for 60 s; after start a new PDF reached ready. Database: an external postgres:16 URL migrated a fresh database (needsSetup true, 138 migration rows) and took a new Administrator that did not exist in the bundled database while the bundled service kept running; an unresolvable host stopped readiness with ENOTFOUND; removing DATABASE_URL returned the bundled records with nothing transferred. Email: the saved wizard relay delivered a test email; SMTP_URL and SMTP_FROM pinned the source to env even with an unreachable host (app relay save 409, test 502, saved relay received nothing). With SMTP_URL set to the working relay and SMTP_FROM unset: the test email answered 502 \"The test email could not be sent. SMTP is not configured \u2014 save a relay first.\"; /auth/login and /portal/login showed neither Set up or reset your password nor Email me a sign-in link; POST /api/v1/auth/magic-link answered 403 and POST /api/v1/auth/password-setup answered 503; Settings -> Users -> Invite user answered 201 with no error, listed the person as Invited before and after reload, and sent nothing (#889); on a fresh database the Outbound email step showed \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\" with no Send test email button, Continue disabled, and completion refused 409. The relay received no email in this state. Setting both values delivered an invitation from SMTP_FROM with a link on BASE_URL that set a password; removing the override restored the saved relay, and the sign-in page offered both links again. No email Settings page exists after the wizard. Keys: rotation with OPENLAW_SECRET_KEY_PREVIOUS logged \"Stored credentials resealed under the key in use: smtp_url (1).\" and the stored relay delivered, again after removing the previous key; a wrong valid key kept records readable but left the saved relay unusable, and restoring the key recovered delivery without re-entering the relay; a blank key failed Compose interpolation and a short key stopped app and worker; a new AUTH_SECRET turned an existing session into 401. Private VM: Compose 5.5.1; a plain loopback mapping kept the all-interfaces mapping while ports: !override left only 127.0.0.1; with compose.private.yml appended, BASE_URL set to the private origin and PORT=3000, restart left the old BASE_URL and up applied it to app and worker; the app listened only on 127.0.0.1:23320 and was unreachable on 172.17.0.1 and the LAN address; the adapted Caddyfile validated, served HTTPS on the private bind with the three headers and a fictional corporate CA, and refused a client without that CA; sign-in worked at the private origin, the old origin answered 403, / served the web app and /api/auth/sso/callback answered from the API on the same origin; new invitation, password-setup and sign-in emails linked to the private origin while the earlier invitation still linked to the old origin; upload, download, processing and a live-update record frame worked through the private proxy. Two failed attempts stay in the log with passing repeats: a lost browser answer on an invitation (the app sent it) and a sign-in rate-limit hit caused by the checker.",
+      "actual": "Followed deployment-configuration.md as an operator. Apply: after MAX_UPLOAD_MB=1 in .env, docker compose restart app left the container value empty and 1,048,577 bytes were accepted; up -d --no-build --pull never applied it: 1,048,576 bytes 201, 1,048,577 bytes 413 \"That file is over the 1 MB upload limit.\"; MAX_UPLOAD_MB=ten started normally with the 100 MiB default. config --quiet printed nothing. SETUP_TOKEN: unset, each restart printed a new token; set, the log said setup asks for SETUP_TOKEN and the earlier printed token was refused; ignored once a user existed. Origin: docker compose port app 3000 printed 127.0.0.1:25710, APP_BIND=0.0.0.0 printed 0.0.0.0:25710 and removing it returned to loopback; the LAN and Tailscale addresses got no connection on the app port; a compose.private.yml overlay resolved to 127.0.0.1:3000 ignoring PORT and APP_BIND; foreign Origin and direct-address sign-in answered 403; upload, download, worker text extraction and a live-update record frame worked through Caddy. Trusted proxies (corrected section, fresh install): docker network inspect printed 192.168.240.1 192.168.240.0/20; with 127.0.0.1,::1 the log check showed only the gateway besides the 127.0.0.1 health-check lines (/readyz), no warning, and four wrong passwords from one client made another client's sign-in answer 429; with the gateway listed the other lines showed the browser's LAN address 192.168.0.59 and the second client signed in (200); TRUSTED_PROXIES=proxy.internal stopped the app with \"invalid IP address\". Storage: local on the shared openlaw-files volume in app and worker; azure-blob through .env (container created first) took new writes, processed in the worker, while the app-saved S3 and local Documents stayed readable; with MinIO stopped /readyz stayed 200, the S3 download answered 500 and the storage test 502, and all recovered on start; STORAGE_DRIVER=s3 without S3_BUCKET stopped startup with \"Set S3_BUCKET when STORAGE_DRIVER is s3.\" Engine: DOC_ENGINE_TIMEOUT_MS=420001 and DOC_ENGINE_COMPARE_TIMEOUT_MS=840001 each made app and worker restart with the bound in the log, and docker compose run --rm ran the recovery command meanwhile; default limits read 2 CPUs/1g/256 (app, worker) and 2/4g/512 with /tmp 2g (engine), and APP_MEM_LIMIT=1536m and DOC_ENGINE_TMPFS_SIZE=1g applied after up; 12 concurrent OCR calls got 2 refusals 503 Retry-After 5, and with MAX_CONCURRENT=1 MAX_QUEUED=1 five got 3; with the engine stopped /readyz stayed 200, a PDF stayed pending 45 s and the processing test answered 502, then processing completed after start. Database: an external postgres:16 migrated (172 rows, needsSetup true) while the bundled one kept running; its wizard email step with SMTP_URL and no SMTP_FROM warned, had no Send test email and completion answered 409; an unresolvable host stopped the app with ENOTFOUND; removing DATABASE_URL returned the bundled records. Email: SMTP_URL without SMTP_FROM refused the test (502), hid both email links on /auth/login and /portal/login, Send invite and Resend invite answered 409 \"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\" with no Invited row and no mail; both set delivered an invitation from SMTP_FROM on BASE_URL; an unreachable env relay kept source env; removing both restored the wizard relay. Keys: rotation logged \"Stored credentials resealed under the key in use: smtp_url (1), vapid_private_key (1), advanced_settings (1).\" and the relay and S3 store kept working after removing the previous key; a wrong key let app and worker start, saved Advanced values read as Default, the relay test said \"SMTP is not configured — save a relay first.\", the log named the unreadable columns and device notifications; storage stayed on STORAGE_DRIVER=azure-blob from .env in round 1 and fell back to local with no STORAGE_DRIVER in round 2, where the saved-bucket Document answered 500 until the key was restored; the recovery command under the wrong key exited 0 and erased every section; a new AUTH_SECRET turned an open session into 401. VAPID: one key alone stopped app and worker with \"VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be set together.\", both pinned the served public key for app and worker, none returned the stored pair. Recovery: a saved wrong address locked sign-in (403); BASE_URL in .env pinned it back; the recovery command for instance printed no values, wrote an Audit log entry, and removing BASE_URL then gave http://localhost:3000.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-2.json",
-        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-2.mjs",
-        "docs/documentation/batches/DOC-029/operator-install/r2-2-setup-through-proxy.png",
-        "docs/documentation/batches/DOC-029/operator-install/r2-2-invite-without-smtp-from.png",
-        "docs/documentation/batches/DOC-029/operator-install/r2-2-wizard-email-without-smtp-from.png",
-        "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
+        "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator/walkthrough.mjs"
       ],
-      "verifiedAt": "2026-09-16T19:01:46Z"
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-C45-advanced-settings",
+      "coverage": [
+        "C45"
+      ],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Disposable installation openlaw-doc030-cfg-1 made from a git archive of 067c1646 with install.md's .env commands and compose.operator.yml naming the lab.mjs images (app sha256:506e20d1…, engine sha256:eabde72b…), app on 127.0.0.1:25710, Caddy on the host serving https://openlaw-cfg.localhost:25711; owned fixtures openlaw-doc030-cfg-fx (Mailpit relay stand-in, MinIO, Azurite, a separate postgres:16, Caddy).",
+        "Fresh installation openlaw-doc030-cfg-2 from the same images and steps (app 127.0.0.1:25730, proxy https://openlaw-cfg.localhost:25731 also bound on the LAN address) with fixtures openlaw-doc030-cfg-fx2, for the steps corrected in 01f46836.",
+        "Fictional Administrator Avery Morgan and Legal Team Member Rowan Operator (key owner and non-administrator), signed in with passwords in isolated Playwright Chromium contexts."
+      ],
+      "expected": "Saved settings apply after both services restart; pending or mismatched configuration is visible in System status. No credentials are exposed. A non-administrator cannot read or change Advanced configuration. Invalid values and stale edits are refused. Existing storage locations cannot be replaced.",
+      "actual": "Settings → Advanced lists Outbound email, Authentication, Audit log, Instance address, File uploads, Document storage, Document processing, MCP, System status. With BASE_URL and DOC_ENGINE_URL set, Application address and Document service address showed \"Deployment configuration · Read only\"; File uploads with MAX_UPLOAD_MB=1 had no Save and the all-locked note. Document processing: Test connection passed; timeouts 240000/500000 saved with \"Settings saved. Restart the API and worker to apply changes.\", \"Active: 300000\" and the pending warning; 420001 was refused with the bound. File uploads 2 and MCP 500/30 saved with Active: lines. A second tab's stale save showed \"These settings changed in another session. Reload the page before saving.\" With MAX_UPLOAD_MB=ten pinned, an MCP save showed \"The upload limit must be a whole number from 1 to 10,240 MiB.\" Instance address at the default origin: a path and a public plain-http address were refused with their reasons; the HTTPS address saved with \"Active: http://localhost:3000\". Document storage: http://minio:9000 was refused until OPENLAW_PLAIN_HTTP_HOSTS listed minio; Save stayed disabled until Test connection passed and again after an edit; after Save both credential fields were blank password fields whose help reads \"Credential configured. Leave blank to keep it.\"; bucket and endpoint read \"Saved in OpenLaw · Read only\"; a blank-credential test passed. System status showed Restart required before and Running/Current after restart; a cleanly stopped worker (fresh install) left only the API row and the missing-heartbeat warning, a killed worker showed \"No recent heartbeat\". The Legal Team Member saw no Advanced group and every Advanced address led to /settings/profile.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator/walkthrough.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-C45-advanced-settings",
+      "coverage": [
+        "C45"
+      ],
+      "role": "administrator",
+      "method": "container-operation",
+      "prerequisites": [
+        "Disposable installation openlaw-doc030-cfg-1 made from a git archive of 067c1646 with install.md's .env commands and compose.operator.yml naming the lab.mjs images (app sha256:506e20d1…, engine sha256:eabde72b…), app on 127.0.0.1:25710, Caddy on the host serving https://openlaw-cfg.localhost:25711; owned fixtures openlaw-doc030-cfg-fx (Mailpit relay stand-in, MinIO, Azurite, a separate postgres:16, Caddy).",
+        "Fresh installation openlaw-doc030-cfg-2 from the same images and steps (app 127.0.0.1:25730, proxy https://openlaw-cfg.localhost:25731 also bound on the LAN address) with fixtures openlaw-doc030-cfg-fx2, for the steps corrected in 01f46836.",
+        "Fictional Administrator Avery Morgan and Legal Team Member Rowan Operator (key owner and non-administrator), signed in with passwords in isolated Playwright Chromium contexts."
+      ],
+      "expected": "Saved settings apply after both services restart; pending or mismatched configuration is visible in System status. No credentials are exposed. A non-administrator cannot read or change Advanced configuration. Invalid values and stale edits are refused. Existing storage locations cannot be replaced.",
+      "actual": "docker compose restart app worker applied the saved values: 2,097,153 bytes 413, 2,097,152 bytes 201, no pending restart on any page, and System status Running/Current for both after a minute. The saved S3 store took new writes under s3: while the local Document still read; the API refused a different bucket (\"An existing storage location cannot be changed or removed here...\") and a different pinned MAX_UPLOAD_MB (\"MAX_UPLOAD_MB is managed by the deployment environment...\"); the API state carried no credential values; a storage save 630 s after its test answered 409 \"Test this storage configuration successfully before saving it.\" and passed after a new test. Instance address saves: http://10.20.30.40:8443 and http://minio:8443 (listed) accepted, http://openlaw-internal:8443 refused; the host change wrote Audit log entries advanced.BASE_URL.host and the process log line \"advanced settings endpoint host changed\"; after restart the saved address was the origin and a sign-in link email pointed to it. Each save wrote an Audit log entry without values. The API answered 403 to the Legal Team Member for advanced-settings and system-status.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator/walkthrough.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-M40-LAN",
+      "coverage": [
+        "C45"
+      ],
+      "role": "operator",
+      "method": "container-operation",
+      "prerequisites": [
+        "Disposable installation openlaw-doc030-cfg-1 made from a git archive of 067c1646 with install.md's .env commands and compose.operator.yml naming the lab.mjs images (app sha256:506e20d1…, engine sha256:eabde72b…), app on 127.0.0.1:25710, Caddy on the host serving https://openlaw-cfg.localhost:25711; owned fixtures openlaw-doc030-cfg-fx (Mailpit relay stand-in, MinIO, Azurite, a separate postgres:16, Caddy).",
+        "Private HTTPS origin https://openlaw-cfg.company.example:25716 served by Caddy bound on this host's LAN address 192.168.0.59 and Tailscale address 100.68.96.37 with a fictional corporate CA certificate; internal DNS replaced by curl --resolve and browser host rules. No public forwarding or tunnel.",
+        "Fictional Administrator Avery Morgan and Legal Team Member Rowan Operator (key owner and non-administrator), signed in with passwords in isolated Playwright Chromium contexts."
+      ],
+      "expected": "MCP accepts an approved key only while the private address is reachable; no public forwarding is needed. An expired or revoked key cannot connect.",
+      "actual": "Adapted the private VM Caddyfile (bind, tls with the certificate, the three headers, reverse_proxy 127.0.0.1); caddy validate printed \"Valid configuration\". With BASE_URL at the private origin, curl trusting only the fictional CA got 200 on the LAN and Tailscale addresses; without the CA it refused the certificate; the app port stayed unreachable on both. A Streamable HTTP Client (curl, x-api-key) listed 7 Tools on both addresses and openlaw_whoami returned Rowan Operator. MCP_RATE_LIMIT_PER_HOUR=3 refused the fourth call (\"The limit is 3 Tool calls per hour per credential...\"); abc fell back to 600 (refused after 600 calls); MCP_OAUTH_GRANT_LIFETIME_DAYS=400 stopped the app; 45 showed \"Deployment configuration · Read only\". Withdrawing the private Caddy site made both private addresses refuse connections and the Client request fail while the app kept running on loopback only.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator/walkthrough.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-M40-LAN",
+      "coverage": [
+        "C45"
+      ],
+      "role": "administrator",
+      "method": "container-operation",
+      "prerequisites": [
+        "Disposable installation openlaw-doc030-cfg-1 made from a git archive of 067c1646 with install.md's .env commands and compose.operator.yml naming the lab.mjs images (app sha256:506e20d1…, engine sha256:eabde72b…), app on 127.0.0.1:25710, Caddy on the host serving https://openlaw-cfg.localhost:25711; owned fixtures openlaw-doc030-cfg-fx (Mailpit relay stand-in, MinIO, Azurite, a separate postgres:16, Caddy).",
+        "Private HTTPS origin https://openlaw-cfg.company.example:25716 served by Caddy bound on this host's LAN address 192.168.0.59 and Tailscale address 100.68.96.37 with a fictional corporate CA certificate; internal DNS replaced by curl --resolve and browser host rules. No public forwarding or tunnel.",
+        "Fictional Administrator Avery Morgan and Legal Team Member Rowan Operator (key owner and non-administrator), signed in with passwords in isolated Playwright Chromium contexts."
+      ],
+      "expected": "MCP accepts an approved key only while the private address is reachable; no public forwarding is needed. An expired or revoked key cannot connect.",
+      "actual": "At the private origin, Settings → Organization → MCP showed Server address https://openlaw-cfg.company.example:25716/mcp; Enable MCP and Legal Users API keys saved. Rowan's request (Client name Claude Code, Contracts, Read) was Pending approval, the Administrator approved it on the MCP page, and \"Your key is ready\" showed once and not after reload. A revoked key (Revoke API key → Revoke, row Revoked) and a key whose expiry was moved into the past (row Expired) each got 401 on the next initialize.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator/walkthrough.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "operator",
+      "method": "container-operation",
+      "prerequisites": [
+        "Disposable installation openlaw-doc030-cfg-1 made from a git archive of 067c1646 with install.md's .env commands and compose.operator.yml naming the lab.mjs images (app sha256:506e20d1…, engine sha256:eabde72b…), app on 127.0.0.1:25710, Caddy on the host serving https://openlaw-cfg.localhost:25711; owned fixtures openlaw-doc030-cfg-fx (Mailpit relay stand-in, MinIO, Azurite, a separate postgres:16, Caddy).",
+        "Private HTTPS origin https://openlaw-cfg.company.example:25716 served by Caddy bound on this host's LAN address 192.168.0.59 and Tailscale address 100.68.96.37 with a fictional corporate CA certificate; internal DNS replaced by curl --resolve and browser host rules. No public forwarding or tunnel.",
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Plain-HTTP LAN boots with working keys, unavailable OAuth toggles and 404 discovery documents. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "Private HTTPS origin (this walker): all eight discovery paths answered 200 application/json; unauthenticated POST /mcp answered 401 with WWW-Authenticate Bearer resource_metadata=<origin>/.well-known/oauth-protected-resource. Plain-HTTP LAN boot at http://192.168.0.59:25717: the six well-known paths answered 404 and an API key listed 7 Tools. The vendor egress sources the guide names answered (Anthropic page lists 160.79.104.0/21; chatgpt-connectors.json has 278 prefixes). Public origin (observed by DOC-030 independent live-provider walkthrough agent (claude-live)): Publicly reachable steps 1-2 on the lab's Compose project: BASE_URL set to the HTTPS origin with no subpath in .env; docker compose config --quiet printed nothing; up -d --no-build --pull never recreated app and worker, both with the new BASE_URL. TRUSTED_PROXIES set to the backend gateway 192.168.208.1 from docker network inspect; the start log had no TRUSTED_PROXIES warning. docker compose port app 3000 printed 127.0.0.1:43330; postgres and doc-engine publish nothing. From outside: /readyz 200 with a verified certificate; all six well-known paths and /api/auth/jwks 200 application/json with issuer <origin>/api/auth and resource <origin>/mcp; unauthenticated POST /mcp 401 with WWW-Authenticate Bearer resource_metadata=\"<origin>/.well-known/oauth-protected-resource\"; /auth/login, /auth/consent and /portal/login returned the app. Ingress ports 443 (while only 8443 was funnelled), 43330, 48450, 5432 and 5901 and the host LAN address :43330 got no connection. Repeated on the 443 origin after the move with the same results.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/v-m41-public.json",
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "administrator",
+      "method": "container-operation",
+      "prerequisites": [
+        "Disposable installation openlaw-doc030-cfg-1 made from a git archive of 067c1646 with install.md's .env commands and compose.operator.yml naming the lab.mjs images (app sha256:506e20d1…, engine sha256:eabde72b…), app on 127.0.0.1:25710, Caddy on the host serving https://openlaw-cfg.localhost:25711; owned fixtures openlaw-doc030-cfg-fx (Mailpit relay stand-in, MinIO, Azurite, a separate postgres:16, Caddy).",
+        "Private HTTPS origin https://openlaw-cfg.company.example:25716 served by Caddy bound on this host's LAN address 192.168.0.59 and Tailscale address 100.68.96.37 with a fictional corporate CA certificate; internal DNS replaced by curl --resolve and browser host rules. No public forwarding or tunnel.",
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address.",
+        "Daniel Okafor signs in with the lab password at the public origin in Playwright Chromium, pinned to a public Funnel ingress address."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Plain-HTTP LAN boots with working keys, unavailable OAuth toggles and 404 discovery documents. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "Private HTTPS origin (this walker): Legal Users OAuth Clients saved with the pill \"Not reachable · IPv4 record, Public IPv4 address\". Claude Code loopback OAuth at the protocol level with its published client ID and a 127.0.0.1 callback: consent page, PKCE token exchange 200, tools/list 200 with 7 Tools, Disconnect, then 401. Plain-HTTP LAN: the pill read \"Not reachable · HTTPS scheme, Public IPv4 address\"; turning on Business Users OAuth Clients answered 400 \"BASE_URL scheme http: prevented the OAuth authorization server from starting...\" and stayed off; Add Client answered 400. Public origin (observed by the claude-live walker): Publicly reachable step 5 and configure-mcp Enable OAuth Clients: Server address read https://omarchy.tail0a8904.ts.net:8443/mcp, later https://omarchy.tail0a8904.ts.net/mcp. Enable MCP, Legal Users OAuth Clients and Business Users OAuth Clients each saved with PATCH 200. The pill read \"Not reachable · Public IPv4 address\": the API container resolves the hostname through the host's Tailscale MagicDNS to 100.68.96.37 (100.64.0.0/10), while public resolvers return the Funnel addresses. The switches still saved, as the guide says. Allowed Clients: Claude, Claude Code, ChatGPT and Microsoft 365 Copilot enabled.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/operator/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/v-m41-public.json",
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "operator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address.",
+        "The batch owner's claude.ai account, driven by the coordinator and the person; observations relayed by the coordinator."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Plain-HTTP LAN boots with working keys, unavailable OAuth toggles and 404 discovery documents. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "Observed by DOC-030 independent live-provider walkthrough agent (claude-live) with the batch owner's claude.ai account, not by this walker. On :8443 claude.ai's Add custom connector check said \"Couldn't reach this address\" and the app log showed no request, while public relay requests on 8443 returned 200 (guide failure above). On 443, requests arrived from 160.79.106.x, inside the guide's Anthropic range 160.79.104.0/21: POST /mcp 401, then /.well-known/oauth-protected-resource and /.well-known/oauth-authorization-server/api/auth 200, the browser's authorize → /auth/login → /auth/consent, POST /api/auth/oauth2/token 200 and POST /mcp 200. The API fetched Claude's published identity (oauth_clients row for https://claude.ai/oauth/mcp-oauth-client-metadata). Three roles consented, called openlaw_whoami, openlaw_docs_search and openlaw_docs_read, and after Disconnect every /mcp call got 401 and the refresh 400. The claude-live record marks this row failed because the guide then led to the unreachable :8443 origin; the guide at 01f46836 now says to serve on 443 with no port in BASE_URL, which is the configuration that connected, so the row passes against the current bytes.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/v-m41-public.json",
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
+    },
+    {
+      "id": "V-M41-PUBLIC",
+      "coverage": [
+        "C45"
+      ],
+      "role": "administrator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, app image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine image sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z. Every seeded password account moved to one fresh random password through POST /api/auth/change-password before exposure; the seed password then signed in no one.",
+        "Public origin through Tailscale Funnel on this host (TLS terminated by Tailscale with a Let's Encrypt certificate for omarchy.tail0a8904.ts.net; public A records 176.58.90.46, .63, .145). First https://omarchy.tail0a8904.ts.net:8443 → 127.0.0.1:43330, then, after claude.ai could not reach 8443, https://omarchy.tail0a8904.ts.net (443) → 127.0.0.1:43330. Outside checks were pinned to a public Funnel ingress address.",
+        "The batch owner's claude.ai account; Daniel Okafor consented as himself in round 2."
+      ],
+      "expected": "Discovery returns JSON and vendor connections complete consent. The pill names failed checks but does not prove a vendor connection. Plain-HTTP LAN boots with working keys, unavailable OAuth toggles and 404 discovery documents. Private endpoints remain unreachable outside the permitted network.",
+      "actual": "Observed by the claude-live walker. Daniel Okafor connected claude.ai on the 443 origin: grant with 11 Toolsets and write (Team and Administration are not offered, no Tools at this commit); tool calls openlaw_whoami, openlaw_docs_search, openlaw_docs_read as Daniel via Claude; Claude answered \"OpenLaw has you signed in as Daniel Okafor (daniel.okafor@helix.example), an Administrator at Helix Software Group.\" Disconnect at 19:20:59Z; the next four /mcp calls from Anthropic got 401. The pill beside Server address did not predict the 8443 failure and read Not reachable on the working 443 origin, as the guide warns (a pill does not prove vendor reachability). Fails with the operator row because the guide as written led to the unreachable 8443 origin. As for the operator row, the 8443 guide failure is corrected in 01f46836, and the 443 configuration the guide now prescribes connected.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/v-m41-public.json",
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ],
+      "verifiedAt": "2026-09-25T21:07:50.791Z"
     }
   ],
-  "authorEvidence": [],
   "limitations": [
-    "Independent agent container-operation walkthrough by a different agent from the source-review author; not a human operator study and not feature-owner approval.",
-    "HTTPS on the public-style path used Caddy's internal CA for openlaw-r2.localhost, accepted only in the reviewer's browser context. Public certificate issuance, the short automatic-HTTPS example on a real public hostname, and DNS-01 were not tested.",
-    "The private VM path used a fictional CA and the placeholder hostname openlaw-r2.company.example:23327 bound to the host bridge address 172.17.0.1, resolved by browser and Node mappings instead of internal DNS. Host port 3000 was in use by an unrelated service, so the loopback mapping and proxy upstream were changed together to 23320 as the article allows. VPN routing, firewall and IPv6 rules, corporate CA trust on employee devices, and access from a real second device were not tested.",
-    "No OIDC provider was configured. /api/auth/sso/callback answered from the API on the private origin, but an SSO return was not tested. Signing Polling and Webhook modes, AI provider traffic, and outbound firewall rules for providers were not exercised.",
-    "The live-update checks proved that a named record frame for the Contract arrived through each proxy. The comment text did not appear in the visible Contract page within 10 s, so on-screen rendering is not claimed.",
-    "The SMTP relay was an owned Mailpit container without authentication. S3 and Azure used MinIO and Azurite with explicit keys; provider identity-based credentials were not tested.",
-    "Known issue #889 is open: an invitation reports success when SMTP_FROM is unset. The run confirmed the behavior the article describes.",
-    "With SMTP_URL set and SMTP_FROM unset, POST /api/v1/auth/password-setup answers 503 with title Internal server error and no detail. The article does not quote a message for this refusal, and the sign-in page hides the entry point in that state.",
-    "Two attempts failed for reasons outside the article and passed on repeat: a browser answer lost on this shared host (the app had sent the invitation) and a sign-in rate-limit hit caused by the checker's own rapid sign-ins. Both stay in walkthrough-r2-2.json.",
-    "The round 1 record for this article (appCommit 67dbe788, bytes b661e8eb) was blocked and had no top-level verifiedAt. Its older DOC-023 independent records and docs/documentation/batches/dev-integration/previous-deployment-configuration.json cover earlier builds and bytes only, so this record does not rely on them.",
-    "No full-suite acceptance, human proofreading or publication is claimed."
+    "Independent agent walkthroughs, not a human operator study. This walker did not write the guide.",
+    "V-M41-PUBLIC live-provider-check rows rest on the claude-live walker's session with the batch owner's claude.ai account (claude-live/v-m41-public.json); this walker did not expose anything publicly. Only claude.ai was connected: ChatGPT and Microsoft 365 Copilot were not tested (owner decision), nor Claude Desktop or Cowork.",
+    "Not walked: the scheduled vendor allowlist refresh (no firewall in front of a public listener; the source pages were only read), and the negative check that a cross-host redirect or blocked protocol path prevents the hosted connection.",
+    "Private access was tested only from this machine through its LAN and Tailscale addresses, with a fictional CA and resolver overrides instead of internal DNS. No second device, VPN, firewall or IPv6 rule was tested; 'unreachable outside the permitted network' was shown as refused connections after withdrawal and, for the public lab, by the claude-live walker's outside port checks.",
+    "The API key Client was curl speaking Streamable HTTP; claude mcp add was not run. Claude Code loopback OAuth was driven at the protocol level with Claude Code's published client ID; the Claude Code binary was not run.",
+    "Port 443 needs root on this host and 127.0.0.1:3000 belongs to an unrelated service, so the private origin used :25716 and the default http://localhost:3000 origin was served through Caddy on [::1].",
+    "The expired-key check moved expires_at into the past in the database (shortest lifetime is one day). Signing, AI and SSO were not configured, so their wrong-key symptoms were not observed.",
+    "Host workarounds, not article steps: Docker address pools were exhausted, so round 2's engine network was created with an explicit subnet; the host rebooted during round 1 and the fixtures were started again.",
+    "Failed attempts caused by the reviewer's scripts or by Chromium ERR_NETWORK_CHANGED stay in walkthrough.json beside their passing repeats; failureNotes lists them.",
+    "Product bugs recorded in walkthrough.json: the recovery command under a wrong key erases every section; the plain-HTTP OAuth refusal shows no message on the page; the upload refusal says MB for a MiB limit; the API never deletes its heartbeat row."
   ],
   "previousEvidence": {
-    "appCommit": "67dbe788c73641a02218e2c0a0cbcdd5a0682a87",
-    "contentSha256": "b661e8eb9077609e5b06974d96043e80c95db5fa5ecca9d7bc779396ec605468",
-    "verifiedAt": null
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
     "contentSha256": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. It mentions the welcome wizard only for the email relay, and AUTH_SECRET protecting enrolled two-factor material. Neither depends on where the wizard goes after the Authentication step.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T19:01:46Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

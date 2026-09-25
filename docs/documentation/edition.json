@@ -9,7 +9,7 @@
     "testedAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
     "reviewer": "DOC-030 independent walkthrough and compatibility reviewer agents (one seat per article group, independent of the source-review authors)",
-    "reviewedAt": "2026-09-25T10:26:49.432Z",
-    "summary": "DOC-030 (#1157) re-verifies the suite against labs built from 067c1646. Each guide whose text or underlying behavior changed received a source review, then an independent agent walkthrough for every required role and method on that build. Guides the app-diff triage left unchanged carry a compatibility review with replayed DOC-029 scripts. This summary is provisional until the batch closes; articles without passing evidence receive no credit."
+    "reviewedAt": "2026-09-25T21:10:28.264Z",
+    "summary": "DOC-030 (#1157) re-verified the suite against labs built from 067c1646. Each guide whose text or underlying behavior changed received a source review and an independent agent walkthrough for every required role and method on that build. Seven guides the app-diff triage left unchanged carry a compatibility review with replayed DOC-029 scripts. configure-analysis used a live OpenRouter key, and connect-claude and the public deployment profile used a live claude.ai session with the owner. 60 of 62 guides pass. connect-chatgpt and connect-microsoft-365-copilot await live vendor sessions under DOC-031 and receive no credit."
   }
 }

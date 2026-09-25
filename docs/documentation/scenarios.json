@@ -1158,8 +1158,8 @@
       "requiredMethods": ["container-operation"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
       }
     },
@@ -1519,7 +1519,12 @@
         "A non-administrator cannot read or change Advanced configuration. Invalid values and stale edits are refused. Existing storage locations cannot be replaced."
       ],
       "requiredMethods": ["browser-walkthrough", "container-operation"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+      }
     },
     {
       "id": "V-M40-MCP",
@@ -1580,7 +1585,12 @@
       ],
       "negativeChecks": ["An expired or revoked key cannot connect."],
       "requiredMethods": ["container-operation"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+      }
     },
     {
       "id": "V-M41-C59",
@@ -1711,7 +1721,12 @@
         "Private endpoints remain unreachable outside the permitted network."
       ],
       "requiredMethods": ["container-operation", "live-provider-check"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+      }
     }
   ]
 }

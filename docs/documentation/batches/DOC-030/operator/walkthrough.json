@@ -8,7 +8,9 @@
   "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
   "projects": [
     "openlaw-doc030-cfg-1",
-    "openlaw-doc030-cfg-fx"
+    "openlaw-doc030-cfg-fx",
+    "openlaw-doc030-cfg-2",
+    "openlaw-doc030-cfg-fx2"
   ],
   "origin": "https://openlaw-cfg.localhost:25711",
   "privateOrigin": "https://openlaw-cfg.company.example:25716",
@@ -337,7 +339,17 @@
     {
       "phase": "r2-trusted",
       "startedAt": "2026-09-25T20:42:41.579Z",
-      "completedAt": null
+      "completedAt": "2026-09-25T20:53:21.455Z"
+    },
+    {
+      "phase": "r2-status",
+      "startedAt": "2026-09-25T21:03:23.765Z",
+      "completedAt": "2026-09-25T21:05:04.213Z"
+    },
+    {
+      "phase": "r2-wrongkey",
+      "startedAt": "2026-09-25T21:05:09.098Z",
+      "completedAt": "2026-09-25T21:06:07.731Z"
     }
   ],
   "steps": [
@@ -2092,6 +2104,42 @@
       "result": "pass",
       "startedAt": "2026-09-25T20:42:41.781Z",
       "at": "2026-09-25T20:48:02.310Z"
+    },
+    {
+      "phase": "r2-trusted",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set TRUSTED_PROXIES to the gateway, up -d --no-build --pull never, sign in again from the LAN-side browser and run the log check",
+      "expected": "Ignoring the 127.0.0.1 lines, the other lines show the browser's address.",
+      "actual": "TRUSTED_PROXIES=192.168.240.1. The log check printed: 10× \"remoteAddress\":\"127.0.0.1\"; 15× \"remoteAddress\":\"192.168.0.59\". Ignoring the 127.0.0.1 health-check lines, every other line is the browser's address 192.168.0.59.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:48:02.312Z",
+      "at": "2026-09-25T20:53:21.453Z"
+    },
+    {
+      "phase": "r2-status",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "System status (corrected text, fresh installation): docker compose stop worker, wait over a minute, Refresh; then start it",
+      "expected": "A cleanly stopped worker removes its own row; the page warns that a heartbeat is missing; after start the worker is Running and Current.",
+      "actual": "75 s after docker compose stop worker, Refresh showed only: API Running Current 1:04 AM (no Worker row), with \"An API or worker heartbeat is missing. Check that both services are running.\" After docker compose start worker and Refresh: API Running Current 1:05 AM | Worker Running Current 1:04 AM.",
+      "result": "pass",
+      "startedAt": "2026-09-25T21:03:23.767Z",
+      "at": "2026-09-25T21:05:04.211Z"
+    },
+    {
+      "phase": "r2-wrongkey",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Wrong key with no STORAGE_DRIVER in .env (corrected text, fresh installation): save an S3 store in Document storage, restart, upload; then set a different OPENLAW_SECRET_KEY and recreate",
+      "expected": "Storage uses the local driver because .env sets no STORAGE_DRIVER; the Document stored only in the app-saved bucket fails to download; the correct key restores it.",
+      "actual": ".env sets no STORAGE_DRIVER. Document storage saved S3-compatible storage for bucket doc030-r2 (Test connection passed, Save, restart); a new PDF was stored under s3: and downloaded. With a different OPENLAW_SECRET_KEY and up: readyz 200; System status reports storage driver local; Store new documents in shows local with source default; the S3 Document's download answered 500; start log \"No configured key opens these stored credentials: smtp_url (1), vapid_private_key (1), advanced_settings (1). They are left as they are, so they are still recov\". With the correct key restored and up, the S3 Document downloaded with identical bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T21:05:09.098Z",
+      "at": "2026-09-25T21:06:07.729Z"
     }
   ],
   "fixtureImages": {
@@ -2109,9 +2157,13 @@
     {
       "sha256": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0",
       "note": "Corrected at b167dba0 after this walk and operator-2 reported the TRUSTED_PROXIES and wrong-key failures. Re-walked: Find the trusted proxy address (phases trusted-proxy, trusted-proxy-note), the private VM .env block (lan-setup set TRUSTED_PROXIES to the gateway after first start), the wrong-key symptoms and recovery-command warning (keys, wrong-key-note), and removing a saved address leaving http://localhost:3000 (instance). All remaining phases ran against these bytes."
+    },
+    {
+      "sha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
+      "note": "Owner corrections after the live session (recorded in operator/technical-review.json). Re-walked on a fresh installation openlaw-doc030-cfg-2 from the same images (phases r2-*): worker clean stop removes its System status row (r2-status), the trusted-proxy log check ignoring the 127.0.0.1 health-check lines (r2-trusted), wrong-key storage falls back to STORAGE_DRIVER from .env or local (r2-wrongkey; the .env-set case is from round 1). Publicly reachable step 1 (serve on 443, no port in BASE_URL) rests on the claude-live observation."
     }
   ],
-  "finalContentSha256": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0",
+  "finalContentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
   "effectiveValues": {
     "note": "Final non-secret .env entries of the installation before teardown. Secrets were set and are not recorded. Variables changed and removed during the walk are in the steps.",
     "env": {
@@ -2192,18 +2244,18 @@
       "scenario": "V-M41-PUBLIC",
       "role": "operator",
       "method": "live-provider-check",
-      "result": "pending",
-      "note": "Needs a public HTTPS IPv4 listener and vendor connections (claude.ai, ChatGPT, Copilot Studio), and the Claude Code binary's own OAuth run. Scheduled for the joint session with the owner and the clients group. No public exposure was allowed here."
+      "result": "pass",
+      "note": "From the claude-live walker's session (claude-live/v-m41-public.json): on 443 claude.ai connected and three roles consented; its failure on :8443 is the guide failure fixed in 01f46836. ChatGPT and Copilot not tested (owner decision)."
     },
     {
       "scenario": "V-M41-PUBLIC",
       "role": "administrator",
       "method": "live-provider-check",
-      "result": "pending",
-      "note": "As above."
+      "result": "pass",
+      "note": "From the claude-live walker's session (claude-live/v-m41-public.json): on 443 claude.ai connected and three roles consented; its failure on :8443 is the guide failure fixed in 01f46836. ChatGPT and Copilot not tested (owner decision)."
     }
   ],
-  "pending": "V-M41-PUBLIC live-provider-check (operator and administrator). No evidence file for deployment-configuration was written.",
+  "pending": null,
   "guideFailures": [
     {
       "bytes": "af0ef822",
@@ -2216,13 +2268,17 @@
       "step": "An unreadable saved Advanced configuration stops startup; the recovery command with a wrong key stops with the startup message",
       "expected": "Startup stops.",
       "observed": "Walked only against 97bf7342, which already describes the observed behavior: app and worker start, saved values read as default, the recovery command exits 0 and erases every section. Operator-2 reported the failure first."
+    },
+    {
+      "bytes": "97bf7342 / db828042",
+      "step": "Publicly reachable, step 1",
+      "expected": "Any public HTTPS origin that passes the guide's checks serves claude.ai.",
+      "observed": "Observed by DOC-030 independent live-provider walkthrough agent (claude-live): an origin on :8443 passed every guide check, but claude.ai said \"Couldn't reach this address\"; on 443 it connected. Corrected in 01f46836 (serve on 443, no port in BASE_URL)."
     }
   ],
   "guideNotes": [
-    "Find the trusted proxy address: the log check also prints 127.0.0.1 lines from the Compose healthcheck (/readyz every 30 s), and a test browser on the proxy host is also 127.0.0.1, so the check is clear only for browsers on other machines.",
-    "Wrong OPENLAW_SECRET_KEY: 'Storage becomes the local driver' holds only when .env sets no driver; here .env pinned azure-blob and storage stayed azure-blob. The first bullet ('fall back to the deployment environment or the default') covers it.",
+    "Fixed in 01f46836 and re-walked: the log-check health-check lines, the wrong-key storage fallback, and the cleanly stopped worker's row.",
     "Lost-key recovery: with STORAGE_DRIVER pinned in .env to another driver and no bucket saved, Document storage hides the S3 fields, so an S3 reader cannot be saved again from the page.",
-    "System status: docker compose stop worker removes the worker row (the page shows only the missing-heartbeat warning); a No recent heartbeat row appears only when the process dies without cleanup (docker compose kill). Right after docker compose restart, the old API row stays Running for up to a minute, marked Restart required when the configuration changed.",
     "Plain-HTTP LAN boot: turning on an OAuth Clients switch answers 400 with a clear detail, but the page shows no message; only the pill (Not reachable · HTTPS scheme, Public IPv4 address) names the checks.",
     "The reset script's usage line lists instance|uploads|storage|processing but it accepts mcp (confirms the author's limitation)."
   ],
@@ -2249,21 +2305,31 @@
     "actions": "docker compose down -v --remove-orphans for openlaw-doc030-cfg-fx and openlaw-doc030-cfg-1 (containers, networks, named and anonymous volumes); image tags openlaw-doc030-cfg-app and openlaw-doc030-cfg-engine removed (the lab images stay); ~/.cache/openlaw-doc030/operator-cfg removed with its .env, fictional CA and state. No image was pulled."
   },
   "counts": {
-    "steps": 132,
-    "pass": 97,
-    "fail": 35,
-    "byScenario": {
-      "V-C45": 63,
-      "V-C45-advanced-settings": 36,
-      "V-M40-LAN": 20,
-      "V-M41-PUBLIC": 13
-    }
+    "steps": 149,
+    "pass": 108,
+    "fail": 41
   },
-  "summary": "deployment-configuration is not complete: every combination passed against 97bf7342 except V-M41-PUBLIC live-provider-check (operator and administrator), which is pending the joint live session. No evidence file was written.",
+  "summary": "deployment-configuration passes every required role × method pair against 01f46836. The live-provider-check rows rest on the claude-live walker's claude.ai session. Evidence written to docs/documentation/evidence/deployment-configuration.json.",
   "failureNotes": [
     "proxy: the genuine guide failure at af0ef822 (TRUSTED_PROXIES=127.0.0.1,::1); superseded by trusted-proxy and trusted-proxy-note against 97bf7342.",
     "keys (mismatched key): failed only on the reviewer's 'storage becomes local' expectation; see wrong-key-note. keys (AUTH_SECRET): the reviewer used a nonexistent /api/v1/auth/me; repeated in auth-secret (pass).",
     "advanced (restart): the saved values applied (2,097,153 bytes refused 413, 2,097,152 accepted 201); it failed on an extra API row still marked Restart required during the first minute; advanced-restart shows it clears after 60 s. advanced (stop worker): a clean stop removes the worker row; advanced-restart shows No recent heartbeat after docker compose kill.",
     "All other failed attempts are reviewer-script faults (selectors, a login view, an eager error message, a Docker template) or Chromium ERR_NETWORK_CHANGED during Docker network changes; each has a passing repeat in a later phase: accept, origin-upload, advanced-nav, storage-recheck, instance-link, limits, lan-keys, m41-cc-oauth, lan-revoke, lan-pins, lan-withdraw."
-  ]
+  ],
+  "round2": {
+    "lab": "openlaw-doc030-cfg-2 (installation, app 127.0.0.1:25730, proxy https://openlaw-cfg.localhost:25731) and openlaw-doc030-cfg-fx2 (Caddy, MinIO, Azurite, Mailpit, postgres:16)",
+    "images": "app and worker sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e (same lab.mjs images, tagged, not rebuilt)",
+    "hostWorkaround": "Docker's default address pools were exhausted on this host, so the reviewer created openlaw-doc030-cfg-2_openlaw-doc-engine with an explicit subnet 10.241.91.0/24 (internal, Compose labels). Not an article step.",
+    "effectiveValues": {
+      "TRUSTED_PROXIES": "192.168.240.1 (gateway of 192.168.240.0/20)",
+      "BASE_URL": "https://openlaw-cfg.localhost:25731",
+      "PORT": "25730",
+      "STORAGE_DRIVER": "unset",
+      "OPENLAW_PLAIN_HTTP_HOSTS": "minio"
+    }
+  },
+  "teardown2": {
+    "at": "2026-09-25T21:08:15.814Z",
+    "actions": "docker compose down -v --remove-orphans for openlaw-doc030-cfg-fx2 and openlaw-doc030-cfg-2 (the pre-created engine network included); image tags openlaw-doc030-cfg-app and openlaw-doc030-cfg-engine removed; ~/.cache/openlaw-doc030/operator-cfg removed."
+  }
 }
