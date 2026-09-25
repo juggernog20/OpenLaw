@@ -1884,3 +1884,32 @@ stable identity with `private_key_jwt` and a validated RSA JWKS document. The
 server advertises `private_key_jwt` through the provider's built-in discovery.
 These tests verify protocol behavior, not a live vendor sign-in. Live Claude
 Code and Copilot Studio journeys remain part of the milestone runtime handoff.
+
+### Addendum (2026-09-25, #1135): consent and live OAuth grants
+
+The consent page reads `GET /api/v1/oauth-grants/consent?oauth_query=...` and
+answers through `POST /api/v1/oauth-grants/consent`. The query is the page's own
+signed query string. A server-only endpoint lets the provider's query hook verify
+its signature and its 600-second expiry without recording consent. Invalid or
+expired queries return `expired_query` with no choices. The other refusal codes
+are `mcp_disabled`, `group_disabled`, `client_unlisted` and `client_disabled`.
+Facts include the organization, Allowed Client, person, usable requested Toolsets
+within the ceiling, and whether write is offered.
+
+Allow takes `accept: true`, a nonempty `toolsets` array and `scope`. The grant,
+provider consent and audit commit together. The provider server API receives the
+person's session headers, the accepted OAuth scope subset, `oauth_query`, and a
+Request so it can resume authorization. Deny takes `accept: false` and returns
+the provider's `access_denied` redirect. Both answers return `url`. The raw plugin
+consent route is blocked so it cannot bypass these checks.
+
+Tokens resolve to `OAuthGrant` by subject and Allowed Client on every request.
+The token's scopes also bound access, so re-consent cannot widen an older token.
+The same live-person read, current switches, ceiling and read-only switch apply
+to MCP calls and signed uploads. A refused Tool call records the M40 error and
+returns HTTP 403 with the required OAuth scopes in `WWW-Authenticate`.
+
+A missing token-request `resource` defaults to the instance's `/mcp` resource.
+This keeps the parameter optional while issuing an audience-bound JWT. Refresh
+tokens retain the grant's absolute expiry through rotation. An expired grant
+requires new consent even when better-auth remembers the previous consent.

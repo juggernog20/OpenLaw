@@ -2808,6 +2808,22 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: apiKeyValues,
   },
+  "oauth_grant.granted": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.oauthGrant.granted",
+      defaultMessage: "{actor} connected Client {client}",
+    }),
+    values: apiKeyValues,
+  },
+  "oauth_grant.revoked": {
+    icon: Settings,
+    message: defineMessage({
+      id: "activity.oauthGrant.revoked",
+      defaultMessage: "{actor} revoked the OAuth grant for {client}",
+    }),
+    values: apiKeyValues,
+  },
   "allowed_client.created": {
     icon: Settings,
     message: defineMessage({

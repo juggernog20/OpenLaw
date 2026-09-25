@@ -75,6 +75,18 @@ const ENVELOPE_ENDING = {
  * sample here.
  */
 const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
+  "oauth_grant.granted": {
+    oauthGrantId: "g1",
+    personId: "u1",
+    allowedClientId: "c1",
+    clientName: "Client",
+  },
+  "oauth_grant.revoked": {
+    oauthGrantId: "g1",
+    personId: "u1",
+    allowedClientId: "c1",
+    clientName: "Client",
+  },
   "api_key.requested": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
   "api_key.minted": { requestId: "r1", requesterId: "u1", clientName: "Research script" },
   "api_key.approved": { requestId: "r1", requesterId: "u1", clientName: "Research script" },

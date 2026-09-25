@@ -15,7 +15,7 @@ export function transactionalOAuth(auth: Auth, tx: Transaction) {
     database: authAdapter(tx),
     plugins: [
       ...auth.options.plugins.filter(
-        (p) => !["jwt", "oauth-provider", "cimd", "allowed-clients"].includes(p.id),
+        (p) => !["jwt", "oauth-provider", "cimd", "allowed-clients", "oauth-grants"].includes(p.id),
       ),
       ...oauthPlugins(String(auth.options.baseURL), lifetimeDays, tx),
     ],

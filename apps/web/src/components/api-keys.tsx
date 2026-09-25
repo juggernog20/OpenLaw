@@ -19,7 +19,25 @@ import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 
 type State =
   paths["/api/v1/api-key-requests"]["get"]["responses"][200]["content"]["application/json"];
-type KeyRow = State["requests"][number];
+type OAuthGrantRow =
+  paths["/api/v1/mcp-settings/oauth-grants"]["get"]["responses"][200]["content"]["application/json"][number];
+type KeyRow = State["requests"][number] & { oauthGrant?: boolean; grantedAt?: string };
+function asCredential(row: OAuthGrantRow): KeyRow {
+  return {
+    ...row,
+    oauthGrant: true,
+    requesterId: row.personId,
+    status: "active",
+    note: null,
+    decisionNote: null,
+    decidedAt: row.grantedAt,
+    approvedBy: null,
+    createdAt: row.grantedAt,
+    expiresAt: null,
+    lastUsedAt: row.lastUsedAt,
+    keyAvailable: false,
+  };
+}
 type Action = "approve" | "deny" | "cancel" | "revoke";
 const actions = defineMessages({
   approve: { id: "apiKeys.approve", defaultMessage: "Approve" },
@@ -42,16 +60,20 @@ const statuses = defineMessages({
 export function ApiKeys({
   initial,
   organization = false,
+  initialGrants = [],
 }: {
   initial: State;
   organization?: boolean;
+  initialGrants?: OAuthGrantRow[];
 }) {
   const intl = useIntl();
   const [state, setState] = useState(initial);
+  const [grants, setGrants] = useState(initialGrants);
   const [loadedRequests, setLoadedRequests] = useState(initial.requests);
   if (loadedRequests !== initial.requests) {
     setLoadedRequests(initial.requests);
     setState(initial);
+    setGrants(initialGrants);
   }
   const [requesting, setRequesting] = useState(false);
   const [ready, setReady] = useState<KeyRow>();
@@ -77,6 +99,9 @@ export function ApiKeys({
       const { data, error } = await api.GET("/api/v1/mcp-settings/api-keys");
       if (!data) throw new Error(error?.detail ?? fail());
       setState((s) => ({ ...s, requests: data }));
+      const { data: currentGrants } = await api.GET("/api/v1/mcp-settings/oauth-grants");
+      if (!currentGrants) throw new Error(fail());
+      setGrants(currentGrants);
     } else {
       const { data, error } = await api.GET("/api/v1/api-key-requests");
       if (!data) throw new Error(error?.detail ?? fail());
@@ -140,6 +165,12 @@ export function ApiKeys({
     if (!decision) return;
     void mutate(async () => {
       const params = { path: { id: decision.row.id } };
+      if (decision.row.oauthGrant) {
+        const { data, error } = await api.POST("/api/v1/oauth-grants/{id}/revoke", { params });
+        if (!data) throw new Error(error?.detail ?? fail());
+        setDecision(undefined);
+        return;
+      }
       const result =
         decision.action === "approve"
           ? await api.POST("/api/v1/api-key-requests/{id}/approve", { params, body: { note } })
@@ -196,6 +227,11 @@ export function ApiKeys({
               </th>
               {organization && (
                 <th className="p-3 text-start">
+                  <FormattedMessage id="apiKeys.granted" defaultMessage="Granted" />
+                </th>
+              )}
+              {organization && (
+                <th className="p-3 text-start">
                   <FormattedMessage id="apiKeys.lastUsed" defaultMessage="Last used" />
                 </th>
               )}
@@ -235,6 +271,7 @@ export function ApiKeys({
                     <p className="mt-1 text-sm text-muted">{row.decisionNote}</p>
                   )}
                 </td>
+                {organization && <td className="p-3">{date(row.grantedAt ?? row.decidedAt)}</td>}
                 {organization && <td className="p-3">{date(row.lastUsedAt)}</td>}
                 <td className="p-3">{date(row.expiresAt)}</td>
                 <td className="p-3">
@@ -298,13 +335,33 @@ export function ApiKeys({
             {table(state.requests.filter((r) => r.status === "pending"))}
           </SettingsCard>
           <SettingsCard
-            title={<FormattedMessage id="apiKeys.activeTitle" defaultMessage="Active keys" />}
+            title={
+              <FormattedMessage
+                id="apiKeys.activeCredentialsTitle"
+                defaultMessage="Active keys and grants"
+              />
+            }
+            actions={
+              <span className="text-xs text-muted">
+                <FormattedMessage
+                  id="apiKeys.credentialCounts"
+                  defaultMessage="{keys, plural, one {# key} other {# keys}} · {grants, plural, one {# grant} other {# grants}}"
+                  values={{
+                    keys: state.requests.filter((r) => r.status === "active").length,
+                    grants: grants.length,
+                  }}
+                />
+              </span>
+            }
             className="max-w-none"
             flush
             collapsible
             defaultOpen={false}
           >
-            {table(state.requests.filter((r) => r.status === "active"))}
+            {table([
+              ...state.requests.filter((r) => r.status === "active"),
+              ...grants.map(asCredential),
+            ])}
           </SettingsCard>
         </>
       ) : (
@@ -450,7 +507,14 @@ export function ApiKeys({
         <DialogContent aria-describedby={undefined}>
           <DialogTitle>
             {decision?.action === "revoke" ? (
-              <FormattedMessage id="apiKeys.revokeTitle" defaultMessage="Revoke API key" />
+              decision.row.oauthGrant ? (
+                <FormattedMessage
+                  id="apiKeys.revokeGrantTitle"
+                  defaultMessage="Revoke OAuth grant"
+                />
+              ) : (
+                <FormattedMessage id="apiKeys.revokeTitle" defaultMessage="Revoke API key" />
+              )
             ) : (
               decision && <FormattedMessage {...actions[decision.action]} />
             )}
@@ -463,10 +527,17 @@ export function ApiKeys({
               )}
               {decision.action === "revoke" && (
                 <p>
-                  <FormattedMessage
-                    id="apiKeys.revokeWarning"
-                    defaultMessage="This Client will lose access immediately. You will need a new request for another key."
-                  />
+                  {decision.row.oauthGrant ? (
+                    <FormattedMessage
+                      id="apiKeys.revokeGrantWarning"
+                      defaultMessage="This Client will lose access immediately. A new consent is needed to connect again."
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="apiKeys.revokeWarning"
+                      defaultMessage="This Client will lose access immediately. You will need a new request for another key."
+                    />
+                  )}
                 </p>
               )}
               {error && (

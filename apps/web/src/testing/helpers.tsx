@@ -385,6 +385,7 @@ export function stubApi(state: ApiState) {
   return stubFetch((call) => {
     const fromExtra = state.extra?.(call);
     if (fromExtra) return fromExtra;
+    if (call.url.pathname === "/api/v1/mcp-settings/oauth-grants") return json(200, []);
     if (call.url.pathname === "/api/v1/mcp-settings/api-keys") return json(200, []);
     if (call.url.pathname === "/api/v1/inbox/unassigned-contracts" && call.method === "GET")
       return json(200, { total: 0, contracts: [], nextCursor: null });

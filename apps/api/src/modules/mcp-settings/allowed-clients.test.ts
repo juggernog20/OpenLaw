@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { createHash } from "node:crypto";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { activityLog, oauthClients, oauthConsents, eq } from "@openlaw/db";
+import { activityLog, oauthClients, oauthConsents, orgSettings, eq } from "@openlaw/db";
 import {
   startHarness,
   signInCookies,
@@ -15,6 +15,7 @@ const url = "/api/v1/mcp-settings/allowed-clients";
 beforeAll(async () => {
   h = await startHarness();
   await h.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
+  await h.db.update(orgSettings).set({ mcpEnabled: true, mcpLegalOAuthClientsEnabled: true });
   cookies = await signInCookies(h.app, TEST_ADMIN.email, TEST_ADMIN.password);
 });
 afterAll(async () => {
@@ -73,10 +74,12 @@ it("creates, edits, generates and rotates once-shown secrets, toggles and delete
     expect(authorize.statusCode, authorize.body).toBe(302);
     const consent = await h.app.inject({
       method: "POST",
-      url: "/api/auth/oauth2/consent",
+      url: "/api/v1/oauth-grants/consent",
       cookies,
       payload: {
         accept: true,
+        toolsets: ["contracts"],
+        scope: "read",
         oauth_query: new URL(authorize.headers.location!, h.app.baseUrl).search.slice(1),
       },
     });

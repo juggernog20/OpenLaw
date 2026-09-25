@@ -638,6 +638,12 @@
   "activity.notificationPreference.unknownState": {
     "defaultMessage": "on or off"
   },
+  "activity.oauthGrant.granted": {
+    "defaultMessage": "{actor} connected Client {client}"
+  },
+  "activity.oauthGrant.revoked": {
+    "defaultMessage": "{actor} revoked the OAuth grant for {client}"
+  },
   "activity.older": {
     "defaultMessage": "Show older"
   },
@@ -932,8 +938,8 @@
   "apiKeys.active": {
     "defaultMessage": "Active"
   },
-  "apiKeys.activeTitle": {
-    "defaultMessage": "Active keys"
+  "apiKeys.activeCredentialsTitle": {
+    "defaultMessage": "Active keys and grants"
   },
   "apiKeys.approve": {
     "defaultMessage": "Approve"
@@ -962,6 +968,9 @@
   "apiKeys.copyFailed": {
     "defaultMessage": "Copy failed. Select and copy the key before closing this dialog."
   },
+  "apiKeys.credentialCounts": {
+    "defaultMessage": "{keys, plural, one {# key} other {# keys}} · {grants, plural, one {# grant} other {# grants}}"
+  },
   "apiKeys.denied": {
     "defaultMessage": "Denied"
   },
@@ -985,6 +994,9 @@
   },
   "apiKeys.failed": {
     "defaultMessage": "API keys could not be updated. Try again."
+  },
+  "apiKeys.granted": {
+    "defaultMessage": "Granted"
   },
   "apiKeys.guide": {
     "defaultMessage": "Connect a headless Client"
@@ -1039,6 +1051,12 @@
   },
   "apiKeys.revoke": {
     "defaultMessage": "Revoke"
+  },
+  "apiKeys.revokeGrantTitle": {
+    "defaultMessage": "Revoke OAuth grant"
+  },
+  "apiKeys.revokeGrantWarning": {
+    "defaultMessage": "This Client will lose access immediately. A new consent is needed to connect again."
   },
   "apiKeys.revokeTitle": {
     "defaultMessage": "Revoke API key"
