@@ -28667,7 +28667,7 @@ export interface operations {
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */
-              sourceState?: "available" | "changed" | "unavailable";
+              sourceState: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -28781,7 +28781,7 @@ export interface operations {
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */
-              sourceState?: "available" | "changed" | "unavailable";
+              sourceState: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -28922,7 +28922,7 @@ export interface operations {
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */
-              sourceState?: "available" | "changed" | "unavailable";
+              sourceState: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -29051,7 +29051,7 @@ export interface operations {
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */
-              sourceState?: "available" | "changed" | "unavailable";
+              sourceState: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";

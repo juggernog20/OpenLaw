@@ -249,7 +249,7 @@ const EnvelopeSchema = z.object({
   subject: z.string().nullable(),
   documentVersionId: z.string().nullable(),
   documentId: z.string().nullable(),
-  sourceState: z.enum(["available", "changed", "unavailable"]).optional(),
+  sourceState: z.enum(["available", "changed", "unavailable"]),
   /** When it reached a terminal status; NULL while it is out. */
   completedAt: z.iso.datetime().nullable(),
   /**

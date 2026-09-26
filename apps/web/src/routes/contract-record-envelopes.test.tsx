@@ -163,6 +163,7 @@ function envelopeRow(overrides: Record<string, unknown> = {}) {
     signers: SIGNERS,
     documentTitle: "Acme MSA",
     documentVersionNumber: 2,
+    sourceState: "available",
     reason: null,
     sentBy: { id: "u2", displayName: "Nadia Counsel", image: null },
     sentAt: "2026-08-10T00:00:00.000Z",

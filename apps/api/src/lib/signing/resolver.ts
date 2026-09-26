@@ -8,7 +8,7 @@
  * Candidate credentials can be tested before the settings transaction saves them.
  */
 
-import { and, eq, isNull, signingConnectors, type Db } from "@openlaw/db";
+import { eq, signingConnectors, type Db } from "@openlaw/db";
 import { createDocuSignProvider, type DocuSignConfig } from "./docusign.js";
 import type { SigningProvider } from "./provider.js";
 
@@ -44,17 +44,17 @@ export function createSigningResolver(
     const [row] = await db
       .select()
       .from(signingConnectors)
-      .where(
-        and(
-          eq(signingConnectors.provider, "docusign"),
-          purpose === undefined ? isNull(signingConnectors.disabledAt) : undefined,
-        ),
-      )
+      .where(eq(signingConnectors.provider, "docusign"))
       .limit(1);
     if (!row) {
       cached = null;
       return null;
     }
+    // A disabled row refuses new sends and launches but keeps its driver.
+    // Accounting and Webhook calls still reuse the token it holds, so a
+    // Signatures page read while the connector is off does not make the
+    // next sweep mint a new one.
+    if (purpose === undefined && row.disabledAt) return null;
     // A delivery is answered only by a connector that asked for one.
     // Polling keeps the secret it was configured with, so the mode is
     // checked beside it. Neither an old secret nor a mode change alone

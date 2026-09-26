@@ -752,7 +752,7 @@ export function SignaturesCard({
         !live.scheduled &&
         !live.externallyRestored &&
         !frozen &&
-        (!live.sourceState || live.sourceState === "available") &&
+        live.sourceState === "available" &&
         signing.signingConfigured &&
         (viewerRole === "administrator" || viewerRole === "legal_team_member") &&
         (viewerRole === "administrator" || live.sentBy.id === viewerId || ownerId === viewerId) && (

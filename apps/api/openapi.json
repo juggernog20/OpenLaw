@@ -58479,6 +58479,7 @@
                           "subject",
                           "documentVersionId",
                           "documentId",
+                          "sourceState",
                           "completedAt",
                           "executedFetch",
                           "executedCopy"
@@ -58882,6 +58883,7 @@
                           "subject",
                           "documentVersionId",
                           "documentId",
+                          "sourceState",
                           "completedAt",
                           "executedFetch",
                           "executedCopy"
@@ -59342,6 +59344,7 @@
                           "subject",
                           "documentVersionId",
                           "documentId",
+                          "sourceState",
                           "completedAt",
                           "executedFetch",
                           "executedCopy"
@@ -59756,6 +59759,7 @@
                           "subject",
                           "documentVersionId",
                           "documentId",
+                          "sourceState",
                           "completedAt",
                           "executedFetch",
                           "executedCopy"

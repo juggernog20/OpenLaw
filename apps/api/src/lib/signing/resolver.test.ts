@@ -177,7 +177,13 @@ describe("the signing resolver", () => {
       .where(eq(signingConnectors.provider, "docusign"));
     expect(await resolve()).toBeNull();
 
-    expect(await resolve("accounting")).not.toBeNull();
+    const accounting = await resolve("accounting");
+    expect(accounting).not.toBeNull();
+    // A refused default read while the row is off keeps the driver, so
+    // the sweep and Webhook deliveries reuse the token it already holds.
+    expect(await resolve()).toBeNull();
+    expect(await resolve("accounting")).toBe(accounting);
+    expect(built).toHaveLength(2);
 
     // Turning it back on builds from the credentials the row kept —
     // which is the difference from deleting it.
