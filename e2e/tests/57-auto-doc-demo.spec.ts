@@ -191,7 +191,8 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
       fields
         .getByRole("listitem")
         .filter({ has: page.getByRole("button", { name: "Edit Jurisdiction", exact: true }) })
-        .getByText("Single select", { exact: true }),
+        .getByText("Single select", { exact: true })
+        .first(),
     ).toBeVisible();
     const signingEntity = await addField("signing_entity", "Signing Entity", "entity");
     await signingEntity
