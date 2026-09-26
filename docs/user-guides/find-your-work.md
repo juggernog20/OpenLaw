@@ -12,15 +12,21 @@ Use Home to find work that needs your attention. These steps apply to Administra
 
 Home omits sections with no matching work. **Welcome to OpenLaw** means nothing currently matches its sections. Use the app navigation to browse work you can reach.
 
-| Section                  | What it helps you find                                                                                   |
-| ------------------------ | -------------------------------------------------------------------------------------------------------- |
-| Approvals waiting on you | Your pending Contract Approval requests. Available to Administrators and Legal Team Members.             |
-| Tasks assigned to you    | Your open Tasks on reachable Contracts and Matters.                                                      |
-| Dates approaching        | Upcoming Key dates, Contract term expiries, and renewal notice deadlines on your work.                   |
-| Entity obligations       | Due Obligations within your permitted Entity access. Available to Administrators and Legal Team Members. |
-| Inbox                    | Requests awaiting disposition. Available to Administrators and Legal Team Members.                       |
-| Your contracts           | Contracts for which you are the Owner.                                                                   |
-| Your matters             | Matters for which you are the Matter Manager.                                                            |
+Home shows its sections in this order. **Inbox** and **Entity obligations** come first.
+
+| Section                  | What it helps you find                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| Inbox                    | Requests with the status New or Read. Both still wait for a decision, and **View all** counts both. |
+| Entity obligations       | Open Obligations assigned to you on Entities you can reach, with overdue Obligations first.         |
+| Approvals waiting on you | Your pending Contract Approval requests.                                                            |
+| Tasks assigned to you    | Your open Tasks on reachable Contracts and Matters.                                                 |
+| Dates approaching        | Upcoming Key dates, Contract term expiries, and renewal notice deadlines on your work.              |
+| Your contracts           | Contracts for which you are the Owner.                                                              |
+| Your matters             | Matters for which you are the Matter Manager.                                                       |
+
+A New Request becomes Read when an Administrator or Legal Team Member opens it. It stays in **Inbox** until someone converts, resolves, or declines it.
+
+For an Administrator, **Entity obligations** also lists Obligations marked **Unassigned** and Obligations whose assignee cannot reach the Entity. An assignee cannot reach a Confidential Entity without a Grant on it, even when the assignee is an Administrator. The Administrator who views Home also needs a Grant to see a Confidential Entity's Obligations.
 
 Home is a personal summary. Use a module's list to browse other reachable records. A Business User's access to one record does not grant access to its parent or related records.
 
@@ -40,8 +46,8 @@ Task due dates belong to Tasks. They do not become Key dates and do not feed **D
 ## Use keyboard navigation and Help
 
 - Press `?` outside a text field to open **Keyboard shortcuts**.
-- Press `Escape` to close a menu or dialog.
-- Press `/` outside a text field to focus record search.
+- Press `Escape` to close a menu, a dialog, or the search list.
+- Press `/` outside a text field to focus record search. If you have saved or recent searches, the empty box opens a list with **Saved** and **Recent** groups and **Advanced search…**. Select an entry to run that search at once.
 - Use `Tab` to move between controls and `Enter` to activate a focused link or button.
 
 Typing in a field keeps these characters in that field. **Help** in the header opens product instructions. Its search searches guides. The header's record search searches work you can reach. See [Search, filter, and save views](search-and-views.md).

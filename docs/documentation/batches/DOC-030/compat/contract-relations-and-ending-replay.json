@@ -1,0 +1,432 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-030",
+  "set": "compat",
+  "issues": [745, 747],
+  "walkthroughReviewer": "DOC-030 compatibility reviewer (compat)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "labProject": "openlaw-docs-80ceef9e-compatcmp",
+  "containerImages": [],
+  "appUrl": "http://127.0.0.1:43345",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1280x1800 CSS px",
+  "articles": {
+    "terms-and-renewals": {
+      "path": "docs/user-guides/terms-and-renewals.md",
+      "contentSha256": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec"
+    },
+    "contract-tasks-and-dates": {
+      "path": "docs/user-guides/contract-tasks-and-dates.md",
+      "contentSha256": "74eda32981658e4f1dd2c7ed3f69b846c143753fd84baa782bc01885df9574bb"
+    },
+    "contract-relations-and-ending": {
+      "path": "docs/user-guides/contract-relations-and-ending.md",
+      "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475"
+    }
+  },
+  "fixtures": {
+    "fixtures/doc029-services-agreement.pdf": "9dbada2f034570cab8616d8ad03c3cbee86a9a1f3da4b0a141598261e830f597",
+    "fixtures/doc029-renewal-amendment.pdf": "8ab068abcb8f33bb423203c954c2304f055d69942cf77af3f867e5bd2a1c2dbe"
+  },
+  "selection": {
+    "articles": ["C20"],
+    "roles": ["legal_team_member", "administrator"]
+  },
+  "startedAt": "2026-09-25T10:11:10.460Z",
+  "stamp": 1790331070459,
+  "steps": [
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Prepare separate Contracts for relations, the confidentiality prompt in both directions, a restricted target, the Matter links, and ending and archiving; and two open Matters",
+      "expected": "Prerequisite records exist for this role",
+      "actual": "Open Contracts A=C-39, B=C-40, C=C-41, E=C-42, F=C-43, H=C-44, J=C-45; Confidential D=C-46, G=C-47, I=C-48; open Matters M1=M-21, M2=M-22. Priya Raman is on none of their teams.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:11:12.474Z",
+      "at": "2026-09-25T10:11:13.054Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Set parent: Cancel leaves no parent; Set parent places A under B; B lists A under Children; choosing A as B's parent is refused as a cycle",
+      "expected": "Parent relation saves; Cancel changes nothing; a parent choice that creates a cycle is refused",
+      "actual": "Cancel left C-39 with no parent. The picker showed \"Set parentC-40DOC-030 compat contracts-b C20 B legal_team_member 1790331070459CancelSet parent\"; Set parent saved. C-39: \"Related contractsAdd linkParentC-40 DOC-030 compat contracts-b C20 B legal_team_member 1790331070459DraftRemove parent\". C-40: \"Related contractsSet parentAdd linkChildrenC-39 DOC-030 compat contracts-b C20 A legal_team_member 1790331070459Draft\". Choosing C-39 as C-40's parent was refused: \"That contract already sits under this one. Pick another parent.\"; C-40 still has no parent.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:11:13.055Z",
+      "at": "2026-09-25T10:11:18.584Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Add link Related, Renews and Amends from A to C; check direction on both records; a duplicate Renews is refused; the picker does not offer A itself",
+      "expected": "Typed links save with the stated direction; self-links and duplicates are refused",
+      "actual": "Related, Renews and Amends answered 201, 201, 201. C-39: \"Related contractsAdd linkParentC-40 DOC-030 compat contracts-b C20 B legal_team_member 1790331070459DraftRemove parentRelatedC-41 DOC-030 compat contracts-b C20 C legal_team_member 1790331070459DraftRemove linkRenewsC-41 DOC-030 compat contracts-b C20 C legal_team_member 1790331070459DraftRemove linkAmendsC-41 DOC-030 compat contracts-b C20 C legal_team_member 1790331070459DraftRemove link\". C-41: \"Related contractsSet parentAdd linkRelatedC-39 DOC-030 compat contracts-b C20 A legal_team_member 1790331070459DraftRemove linkRenewed byC-39 DOC-030 compat contracts-b C20 A legal_team_member 1790331070459DraftRemove linkAmended byC-39 DOC-030 compat contracts-b C20 A legal_team_member 1790331070459DraftRemove link\". A second Renews answered 409: \"These two contracts are already linked that way.\". In C-39's own picker a title search found C-40, and a search for C-39's own title offered: \"No contracts to link.\" (not C-39 itself); a direct self-link write answered 409.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:11:18.585Z",
+      "at": "2026-09-25T10:11:33.312Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Remove link on the Related row removes only that relationship; Remove parent clears the parent; both records still exist",
+      "expected": "Removal affects only the chosen relationship",
+      "actual": "Links before: amends,related,renews; after Remove link on the Related row: amends,renews (3 rows had named C-41). Remove parent cleared the parent. C-39 now reads \"Related contractsSet parentAdd linkRenewsC-41 DOC-030 compat contracts-b C20 C legal_team_member 1790331070459DraftRemove linkAmendsC-41 DOC-030 compat contracts-b C20 C legal_team_member 1790331070459DraftRemove link\"; C-40 and C-41 still exist.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:11:33.313Z",
+      "at": "2026-09-25T10:11:38.160Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking Confidential D to open E: the prompt names E and Flag as confidential sets E's flag",
+      "expected": "The prompt names the Contract that is not yet Confidential and sets only that flag",
+      "actual": "Prompt: \"Flag as confidential?C-46 is confidential but C-42 is not. Flag C-42 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set C-42 Confidential; C-46 stays Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:11:38.161Z",
+      "at": "2026-09-25T10:11:40.728Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking open F to Confidential G: the prompt names F (this Contract) and accepting sets F's flag",
+      "expected": "The flagged Contract can be this Contract",
+      "actual": "Prompt: \"Flag as confidential?C-47 is confidential but C-43 is not. Flag C-43 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set this Contract C-43 Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:11:40.728Z",
+      "at": "2026-09-25T10:11:43.388Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "No, leave it open after linking open H to Confidential I changes nothing; a reader without access to I sees Restricted contract on H and cannot open I",
+      "expected": "The link does not change either flag or grant access; the restricted target does not leak its details",
+      "actual": "Prompt: \"Flag as confidential?C-48 is confidential but C-44 is not. Flag C-44 as confidential too?No, leave it openFlag as confidential\". No, leave it open kept C-44 open and C-48 Confidential; the link exists. Priya Raman's C-44 card: \"Related contractsSet parentAdd linkRelatedRestricted contract\" with no link to C-48; a direct read of C-48 answered 404; the relations read does not include its title.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:11:43.388Z",
+      "at": "2026-09-25T10:12:02.346Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Link to Matter: search, inspect the M- reference, Link; the card then offers Unlink and no Link to Matter; Unlink before moving to another Matter; a confidentiality mismatch warns without changing flags",
+      "expected": "One Matter at a time; the mismatch advice changes neither flag",
+      "actual": "C-45 search offered \"M-21 DOC-030 compat contracts-b C20 M1 legal_team_member 1790331070459\"; Link answered 201; the card then showed 1 Unlink and 0 Link to Matter buttons. A second link to M-22 answered 409. After Unlink, the Contract linked to M-22 (201). Confidential C-46 -> open M-21: the dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link, \"Confidentiality differsC-46 and M-21 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record.Leave them as they are\"; Leave them as they are kept C-46 Confidential and M-21 open.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:12:02.347Z",
+      "at": "2026-09-25T10:12:09.212Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "End: use the Stage control to choose Expired (Ended); check Status and History; the Contract remains editable; the default Contracts view excludes it until Filter -> Show ended; reopen with Active and History keeps the Expired change",
+      "expected": "Ending records the lifecycle change without freezing the record; the ended filter reveals it; reopening is another recorded change",
+      "actual": "Stage control -> Expired set Status Expired (stage ended); a Description edit then saved (200). History showed \"Nadia Haddad changed the statusDraft → Expiredthis minute\". The Contracts list (view \"Default view; previously selected My commercial desk\") did not list C-45 after paging; Filter -> Show ended (\"Filter1\") listed it. Choosing Active reopened it (Active); History still shows the Expired change and the Active change.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:12:09.212Z",
+      "at": "2026-09-25T10:12:21.303Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Archive from Contract actions: Archived marker and read-only message; Status unchanged; linked Contract and Matter are not archived and the Matter's Linked Contracts omits it; find it with Show archived plus Show ended; Restore from Contract actions and from the known C- address",
+      "expected": "Archiving is separate from ending; restore re-enables editing and keeps the Status",
+      "actual": "Related link to C-41 (201); Status Expired. Archive showed the Archived marker and \"This contract is archived — it is out of the contract list. Restore it to edit.\"; Title was not editable; Status stayed Expired. C-41 and M-22 were not archived; Before archiving M-22's Linked Contracts listed C-45; while archived it read \"Linked Contracts0New contractLink ContractNo Contracts are linked to this Matter.\". List filter started as \"Filter\"; Show archived alone (\"Filter1\") did not list the Ended record; with Show ended too (\"Filter2\") it did. Restore from Contract actions removed the marker and re-enabled editing; Status still Expired, so the default view still excludes it. Archived again (200), the known /contracts/45 address offered Restore (1) and restored it. Afterwards the reviewer cleared its list filters (\"Filter\" before) and re-selected view \"My commercial desk\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:12:21.304Z",
+      "at": "2026-09-25T10:12:52.521Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Prepare separate Contracts for relations, the confidentiality prompt in both directions, a restricted target, the Matter links, and ending and archiving; and two open Matters",
+      "expected": "Prerequisite records exist for this role",
+      "actual": "Open Contracts A=C-49, B=C-50, C=C-51, E=C-52, F=C-53, H=C-54, J=C-55; Confidential D=C-56, G=C-57, I=C-58; open Matters M1=M-23, M2=M-24. Priya Raman is on none of their teams.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:12:52.522Z",
+      "at": "2026-09-25T10:12:52.765Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Set parent: Cancel leaves no parent; Set parent places A under B; B lists A under Children; choosing A as B's parent is refused as a cycle",
+      "expected": "Parent relation saves; Cancel changes nothing; a parent choice that creates a cycle is refused",
+      "actual": "Cancel left C-49 with no parent. The picker showed \"Set parentC-50DOC-030 compat contracts-b C20 B administrator 1790331070459CancelSet parent\"; Set parent saved. C-49: \"Related contractsAdd linkParentC-50 DOC-030 compat contracts-b C20 B administrator 1790331070459DraftRemove parent\". C-50: \"Related contractsSet parentAdd linkChildrenC-49 DOC-030 compat contracts-b C20 A administrator 1790331070459Draft\". Choosing C-49 as C-50's parent was refused: \"That contract already sits under this one. Pick another parent.\"; C-50 still has no parent.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:12:52.766Z",
+      "at": "2026-09-25T10:12:58.148Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Add link Related, Renews and Amends from A to C; check direction on both records; a duplicate Renews is refused; the picker does not offer A itself",
+      "expected": "Typed links save with the stated direction; self-links and duplicates are refused",
+      "actual": "Related, Renews and Amends answered 201, 201, 201. C-49: \"Related contractsAdd linkParentC-50 DOC-030 compat contracts-b C20 B administrator 1790331070459DraftRemove parentRelatedC-51 DOC-030 compat contracts-b C20 C administrator 1790331070459DraftRemove linkRenewsC-51 DOC-030 compat contracts-b C20 C administrator 1790331070459DraftRemove linkAmendsC-51 DOC-030 compat contracts-b C20 C administrator 1790331070459DraftRemove link\". C-51: \"Related contractsSet parentAdd linkRelatedC-49 DOC-030 compat contracts-b C20 A administrator 1790331070459DraftRemove linkRenewed byC-49 DOC-030 compat contracts-b C20 A administrator 1790331070459DraftRemove linkAmended byC-49 DOC-030 compat contracts-b C20 A administrator 1790331070459DraftRemove link\". A second Renews answered 409: \"These two contracts are already linked that way.\". In C-49's own picker a title search found C-50, and a search for C-49's own title offered: \"No contracts to link.\" (not C-49 itself); a direct self-link write answered 409.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:12:58.150Z",
+      "at": "2026-09-25T10:13:12.803Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Remove link on the Related row removes only that relationship; Remove parent clears the parent; both records still exist",
+      "expected": "Removal affects only the chosen relationship",
+      "actual": "Links before: amends,related,renews; after Remove link on the Related row: amends,renews (3 rows had named C-51). Remove parent cleared the parent. C-49 now reads \"Related contractsSet parentAdd linkRenewsC-51 DOC-030 compat contracts-b C20 C administrator 1790331070459DraftRemove linkAmendsC-51 DOC-030 compat contracts-b C20 C administrator 1790331070459DraftRemove link\"; C-50 and C-51 still exist.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:13:12.804Z",
+      "at": "2026-09-25T10:13:17.604Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking Confidential D to open E: the prompt names E and Flag as confidential sets E's flag",
+      "expected": "The prompt names the Contract that is not yet Confidential and sets only that flag",
+      "actual": "Prompt: \"Flag as confidential?C-56 is confidential but C-52 is not. Flag C-52 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set C-52 Confidential; C-56 stays Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:13:17.605Z",
+      "at": "2026-09-25T10:13:20.140Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Flag as confidential? after linking open F to Confidential G: the prompt names F (this Contract) and accepting sets F's flag",
+      "expected": "The flagged Contract can be this Contract",
+      "actual": "Prompt: \"Flag as confidential?C-57 is confidential but C-53 is not. Flag C-53 as confidential too?No, leave it openFlag as confidential\". Flag as confidential (200) set this Contract C-53 Confidential.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:13:20.141Z",
+      "at": "2026-09-25T10:13:22.668Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "No, leave it open after linking open H to Confidential I changes nothing; a reader without access to I sees Restricted contract on H and cannot open I",
+      "expected": "The link does not change either flag or grant access; the restricted target does not leak its details",
+      "actual": "Prompt: \"Flag as confidential?C-58 is confidential but C-54 is not. Flag C-54 as confidential too?No, leave it openFlag as confidential\". No, leave it open kept C-54 open and C-58 Confidential; the link exists. Priya Raman's C-54 card: \"Related contractsSet parentAdd linkRelatedRestricted contract\" with no link to C-58; a direct read of C-58 answered 404; the relations read does not include its title.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:13:22.668Z",
+      "at": "2026-09-25T10:13:41.385Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Link to Matter: search, inspect the M- reference, Link; the card then offers Unlink and no Link to Matter; Unlink before moving to another Matter; a confidentiality mismatch warns without changing flags",
+      "expected": "One Matter at a time; the mismatch advice changes neither flag",
+      "actual": "C-55 search offered \"M-23 DOC-030 compat contracts-b C20 M1 administrator 1790331070459\"; Link answered 201; the card then showed 1 Unlink and 0 Link to Matter buttons. A second link to M-24 answered 409. After Unlink, the Contract linked to M-24 (201). Confidential C-56 -> open M-23: the dialog warned \"These records have different Confidential flags. Linking will not change either one.\"; after Link, \"Confidentiality differsC-56 and M-23 keep independent Confidential flags. Consider aligning them if that matches the work. This suggestion changes neither record.Leave them as they are\"; Leave them as they are kept C-56 Confidential and M-23 open.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:13:41.386Z",
+      "at": "2026-09-25T10:13:48.062Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "End: use the Stage control to choose Expired (Ended); check Status and History; the Contract remains editable; the default Contracts view excludes it until Filter -> Show ended; reopen with Active and History keeps the Expired change",
+      "expected": "Ending records the lifecycle change without freezing the record; the ended filter reveals it; reopening is another recorded change",
+      "actual": "Stage control -> Expired set Status Expired (stage ended); a Description edit then saved (200). History showed \"Daniel Okafor changed the statusDraft → Expiredthis minute\". The Contracts list (view \"Default view; previously selected Default view\") did not list C-55 after paging; Filter -> Show ended (\"Filter1\") listed it. Choosing Active reopened it (Active); History still shows the Expired change and the Active change.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:13:48.062Z",
+      "at": "2026-09-25T10:13:58.986Z"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Archive from Contract actions: Archived marker and read-only message; Status unchanged; linked Contract and Matter are not archived and the Matter's Linked Contracts omits it; find it with Show archived plus Show ended; Restore from Contract actions and from the known C- address",
+      "expected": "Archiving is separate from ending; restore re-enables editing and keeps the Status",
+      "actual": "Related link to C-51 (201); Status Expired. Archive showed the Archived marker and \"This contract is archived — it is out of the contract list. Restore it to edit.\"; Title was not editable; Status stayed Expired. C-51 and M-24 were not archived; Before archiving M-24's Linked Contracts listed C-55; while archived it read \"Linked Contracts0New contractLink ContractNo Contracts are linked to this Matter.\". List filter started as \"Filter\"; Show archived alone (\"Filter1\") did not list the Ended record; with Show ended too (\"Filter2\") it did. Restore from Contract actions removed the marker and re-enabled editing; Status still Expired, so the default view still excludes it. Archived again (200), the known /contracts/55 address offered Restore (1) and restored it. Afterwards the reviewer cleared its list filters (\"Filter\" before) and re-selected view \"Default view\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:13:58.987Z",
+      "at": "2026-09-25T10:14:24.060Z"
+    }
+  ],
+  "records": [
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "A",
+      "reference": "C-39"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "B",
+      "reference": "C-40"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "C",
+      "reference": "C-41"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "E",
+      "reference": "C-42"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "F",
+      "reference": "C-43"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "H",
+      "reference": "C-44"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "J",
+      "reference": "C-45"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "D",
+      "reference": "C-46"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "G",
+      "reference": "C-47"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "I",
+      "reference": "C-48"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "M1",
+      "reference": "M-21"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "legal_team_member",
+      "purpose": "M2",
+      "reference": "M-22"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "A",
+      "reference": "C-49"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "B",
+      "reference": "C-50"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "C",
+      "reference": "C-51"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "E",
+      "reference": "C-52"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "F",
+      "reference": "C-53"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "H",
+      "reference": "C-54"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "J",
+      "reference": "C-55"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "D",
+      "reference": "C-56"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "G",
+      "reference": "C-57"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "I",
+      "reference": "C-58"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "M1",
+      "reference": "M-23"
+    },
+    {
+      "article": "contract-relations-and-ending",
+      "role": "administrator",
+      "purpose": "M2",
+      "reference": "M-24"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:14:24.062Z",
+  "summary": {
+    "total": 20,
+    "pass": 20,
+    "fail": 0
+  }
+}

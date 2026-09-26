@@ -1,0 +1,31 @@
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 1 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 2 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 3 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 4 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 5 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 6 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 7 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 8 for Jonas Weber failed; retrying
+sign-in link budget spent for Jonas Weber; waiting 60 s
+magic link attempt 9 for Jonas Weber failed; retrying
+[contract-stages/legal_team_member] PASS Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History
+[contract-stages/legal_team_member] PASS Move backwards and skip Stages
+[contract-stages/legal_team_member] PASS Negative: renaming a Status does not change its Stage
+[contract-stages/legal_team_member] PASS Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override
+[contract-stages/legal_team_member] PASS Ended Contracts stay editable
+[contract-stages/legal_team_member] PASS Negative: archived records and Business Users get no Status control; Restore brings it back
+[contract-stages/administrator] PASS Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History
+[contract-stages/administrator] PASS Move backwards and skip Stages
+[contract-stages/administrator] PASS Negative: renaming a Status does not change its Stage
+[contract-stages/administrator] PASS Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override
+[contract-stages/administrator] PASS Ended Contracts stay editable
+[contract-stages/administrator] PASS Negative: archived records and Business Users get no Status control; Restore brings it back
+steps 12, failed 0; cleanup status DOC-030 compat contracts-a renamed by administrator 1790331153427: 200, group DOC-030 compat contracts-a sign-off 1790331153427: 200, type DOC-030 compat contracts-a Required type 1790331070483: 200, type DOC-030 compat contracts-a Required type 1790331153427: 200, field DOC-030 compat contracts-a Required number 1790331070483: 200, field DOC-030 compat contracts-a Notes 1790331070483: 200, field DOC-030 compat contracts-a Required number 1790331153427: 200, field DOC-030 compat contracts-a Notes 1790331153427: 200

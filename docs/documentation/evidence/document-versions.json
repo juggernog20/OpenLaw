@@ -1,103 +1,109 @@
 {
   "articleId": "document-versions",
-  "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (documents)",
-  "technicalReviewer": "DOC-029 source-review author agent (documents)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (documents, round 1)",
+  "contentSha256": "52f85938179cb5abdade19f51ae795ad842c600ce94fc62524f78f417f0af444",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (documents)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:44:43.089Z",
+  "technicalReviewer": "DOC-030 source-review author agent (documents)",
+  "author": "DOC-030 source-review author agent (documents)",
+  "verifiedAt": "2026-09-25T11:29:05.839Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/document-versions.md",
+    "docs/documentation/batches/DOC-030/documents/technical-review.json",
+    "docs/documentation/batches/DOC-030/documents/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/documents/walkthrough.json",
+    "docs/documentation/batches/DOC-030/documents/lib.mjs",
+    "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/batches/DOC-029/documents/technical-review.json",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-001 addenda, DOC-007 status, DOC-015 and its Knowledge addendum)",
+    "messages/en-US.json",
     "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/documents/batch-dialog.tsx",
+    "apps/web/src/components/documents/create-attachments.tsx",
+    "apps/web/src/components/documents/document-filter-bar.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/lib/documents.ts",
     "apps/web/src/components/portal/documents-section.tsx",
-    "apps/api/src/modules/portal/documents.ts",
-    "apps/api/src/modules/documents/routes.ts",
     "apps/web/src/components/comments/comment-attachments.tsx",
-    "apps/web/src/components/comments/attachment-preview.tsx",
     "apps/web/src/components/confidential-toggle.tsx",
     "apps/web/src/routes/contract-record.tsx",
     "apps/web/src/routes/matter-record.tsx",
-    "apps/api/src/modules/comments/routes.ts",
-    "docs/decision-records/DECISIONS.md",
-    "docs/decision-records/DECISIONS-DOCUMENTS.md",
-    "docs/documentation/batches/DOC-029/documents/technical-review.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+    "apps/web/src/routes/knowledge-record.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/settings-document-types.tsx",
+    "apps/web/src/router.tsx",
+    "apps/web/src/components/documents-settings-tabs.tsx",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/modules/documents/service.ts",
+    "apps/api/src/modules/documents/upload-service.ts",
+    "apps/api/src/lib/document-versions.ts",
+    "apps/api/src/modules/portal/documents.ts",
+    "packages/db/src/schema/knowledge-items.ts",
+    "packages/db/migrations/0160_document_types.sql"
   ],
   "scenarios": [
-    {
-      "id": "V-C26",
-      "coverage": ["C26"],
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab.",
-        "Walkthrough-created Contracts, Matters and Entities named \"DOC-029 documents ...\", with Jonas Weber on the Contract team; reviewer-built fixtures in docs/documentation/batches/DOC-029/documents/fixtures.",
-        "Comment attachments posted through the API as fixture setup; named browser-network fixtures for the refused upload."
-      ],
-      "expected": "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible. Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance.",
-      "actual": "14 recorded browser steps passed for this role. Upload with one file created a v1 Document named from its filename; Kind offered the six hand-set kinds and no Generated redline; several files opened the bulk import dialog. Edit details renamed the Document without touching the chain. Add version raised it to v2 and the expanded v1 opened as version 1 and downloaded its original bytes with note, kind and uploader kept. The same file uploaded again made a separate chain. The Kind correction changed the kind only. Mark as executed copy pinned v1, a v3 upload left the pin on v1, and Unmark cleared it. Make primary moved the Primary mark. A Matter had no Kind control, Kind column, Make primary or executed-copy item, and an Entity row had no Primary mark or designation items. An archived Contract had no Upload and refused a direct upload with 409 until restored. A refused Version upload showed its message and left the chain unchanged. A Legal only attachment filed as a Confidential New Document with the switch preselected, a preview's File to Contract appended a New Version with its note, and a Matter attachment filed through File to Matter with no Kind and the switch label \"Confidential — restrict to the contract team\".",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
-      ]
-    },
     {
       "id": "V-C26",
       "coverage": ["C26"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in its own browser context on the work documentation lab.",
-        "Walkthrough-created Contracts, Matters and Entities named \"DOC-029 documents ...\", with Jonas Weber on the Contract team; reviewer-built fixtures in docs/documentation/batches/DOC-029/documents/fixtures.",
-        "Comment attachments posted through the API as fixture setup; named browser-network fixtures for the refused upload."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Daniel Okafor (Administrator) signs in with a password in an isolated Playwright Chromium context.",
+        "Run stamp 09251116: Daniel Okafor added the Matter type \"DOC-030 documents Matter type 09251116\" and Entity type \"DOC-030 documents Entity type 09251116\" in the browser under Settings, Documents; the run archived both at its end. Fixtures through the lab API: a Contract (Amara Nwosu on its team), a Matter, Entities, a Knowledge Item, comments with PDF and Word attachments, and one Word Comparison of v1 to v2 exported as a Generated redline. Files: DOC-029 documents fixtures doc029-draft-v1.docx, doc029-draft-v2.docx, doc029-bulk-a/b.txt, doc029-services-text.pdf."
       ],
       "expected": "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible. Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance.",
-      "actual": "14 recorded browser steps passed for this role. Upload with one file created a v1 Document named from its filename; Kind offered the six hand-set kinds and no Generated redline; several files opened the bulk import dialog. Edit details renamed the Document without touching the chain. Add version raised it to v2 and the expanded v1 opened as version 1 and downloaded its original bytes with note, kind and uploader kept. The same file uploaded again made a separate chain. The Kind correction changed the kind only. Mark as executed copy pinned v1, a v3 upload left the pin on v1, and Unmark cleared it. Make primary moved the Primary mark. A Matter had no Kind control, Kind column, Make primary or executed-copy item, and an Entity row had no Primary mark or designation items. An archived Contract had no Upload and refused a direct upload with 409 until restored. A refused Version upload showed its message and left the chain unchanged. A Legal only attachment filed as a Confidential New Document with the switch preselected, a preview's File to Contract appended a New Version with its note, and a Matter attachment filed through File to Matter with no Kind and the switch label \"Confidential — restrict to the contract team\".",
+      "actual": "22 browser steps passed. Profile menu (Daniel Okafor) -> Settings -> Documents opened /settings/documents/matters with tabs Matters, Contracts, Entities. The Contracts tab listed Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment (6 fixed-row lock labels) plus types other agents added. The Entities tab held 0 active types at this moment (read-back). Entity \"DOC-030 documents empty-list Entity 09251116 Ltd\": Upload document showed Choose files and Note but no Type (count 0). After Upload the row \"doc029-bulk-a.txt\" v1 had cells [\"doc029-bulk-a.txt\",\"—\",\"v1\",\"Sep 25\",\"Uploaded by Daniel Okafor DO\",\"\"]; the Type cell read \"—\" with no select (0 \"Type of version 1\" controls). Add type, New type name \"DOC-030 documents Matter type 09251116\", Save added the row on the Matters tab (read-back active in the matter list). The run archives it after the last role (see addedDocumentTypes). Add type, New type name \"DOC-030 documents Entity type 09251116\", Save added the row on the Entities tab (read-back active in the entity list). The run archives it after the last role (see addedDocumentTypes). Upload document had Choose files, Type and Note. Type started on \"No type\" and offered 8 options: No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012; no Generated redline. After Upload one row \"doc029-draft-v1.docx\" (from the filename) showed v1, the Primary mark and Type \"Draft · ours\"; read-back isPrimary true, note \"DOC-030 round one note\". Two chosen files opened the \"Import 2 files\" dialog instead of the composer. Cancel closed it; the Contract still held one Document. Actions -> Edit details -> Save stored the name \"DOC-030 Admin supply draft 09251116\" and a description. Read-back: still one Version, v1, Type Draft · ours. Add version showed Choose file, Type (started on \"No type\") and Note. After Upload the row read v2 and v2's Type read \"No type\" (v1 was Draft · ours; not copied). The arrow \"Show the 1 earlier version of DOC-030 Admin supply draft 09251116\" sits to the right of the name (x 339 > 97). It listed doc029-draft-v1.docx; selecting it opened the reader \"DOC-030 Admin supply draft 09251116, version 1\" (v1 chip visible); Download returned the original v1 bytes (SHA-256 match). v1 kept its note, type, filename and uploader. The same file uploaded again made a second Document \"doc029-draft-v1.docx\" at v1 (not Primary: true); \"DOC-030 Admin supply draft 09251116\" still had two Versions. \"Type of version 2 of DOC-030 Admin supply draft 09251116\" offered No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012 (no Generated redline). Choosing Redline · theirs saved (read-back type Redline · theirs, kind redline_theirs); id, number, note, filename, uploader and pin were unchanged and the download answered 200. Choosing No type cleared it (read-back null). Still two Versions. Actions for version 1 -> Mark as executed copy set the pin on v1 (earlier row read \"doc029-draft-v1.docx Note: DOC-030 round one note No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DOC-030 access Admin document type 09251012 v1 Executed Sep 25 Uploaded by Daniel Okafor DO\"). Choosing Executed in v2's Type column left the pin on v1. Correcting v1's type to Draft · theirs left it on v1. A v3 upload left it on v1. Unmark as executed copy on v1 cleared it (read-back no pinned Version). \"DOC-030 Admin supply draft 09251116\" carried the Primary mark and its Actions had no Make primary (Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive, Delete). Make primary on \"doc029-draft-v1.docx\" moved the mark there; Make primary on \"DOC-030 Admin supply draft 09251116\" moved it back. Fixture: Word Comparison v1 -> v2 (mode word) exported as v4 (kind generated_redline). The Documents row for \"DOC-030 Admin supply draft 09251116\" now reads [\"DOC-030 Admin supply draft 09251116 Primary Compares v1 and v2 Description: DOC-030 fictional description\",\"Generated redline\",\"v4\",\"Sep 25\",\"Uploaded by Daniel Okafor DO\",\"\"]: Type \"Generated redline\" as a plain label with no \"Type of version 4\" select. A direct correction attempt answered 409 (\"A generated redline's kind records how it was made.\"); the Version read back unchanged (type null, kind generated_redline). Matter M-114: Upload document showed Type starting on \"No type\" with 2 options (No type, DOC-030 documents Matter type 09251116), none of the Contract types. Uploaded with \"DOC-030 documents Matter type 09251116\"; the column headers read Name, Type, Version, Modified, Uploaded by, Actions and v1's Type read \"DOC-030 documents Matter type 09251116\". Choosing No type in the column saved (read-back null). No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive, Delete. Entity \"DOC-030 documents Admin versions Entity 09251116 Ltd\": Upload document showed Type starting on \"No type\" with No type, DOC-030 documents Entity type 09251116. The upload read back with \"DOC-030 documents Entity type 09251116\" and the column showed it. No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive, Delete. Knowledge Item \"DOC-030 documents Admin Knowledge 09251116\" (Knowledge type Article): Upload document had no Type (count 0). The first upload read back isPrimary true. The Type column rendered a select \"Type of version 1 of doc029-services-text.pdf\" showing \"Article\" with options [\"No type\",\"Article\"]. Choosing No type showed \"That version already has this type.\" and the Version kept \"Article\" (read-back type Article, unchanged). Sending the Knowledge type id directly answered 400 (\"Pick a document type from this record's list.\"). Matches the guide (\"offers a choice, but OpenLaw refuses the change\"); recorded as a product bug. C-332: live, v1's Type was a select. With the Document archived (Show archived on) its Type cell was a plain label ([\"doc029-bulk-a.txt Primary Archived\",\"Draft · ours\",\"v1\",\"Sep 25\",\"Uploaded by Daniel Okafor DO\",\"\"]), no select. With the Contract archived the section had no Upload button and no Type select; a direct upload answered 409 (\"This contract is archived. Restore it before uploading.\") and a direct type correction answered 409. After restore, Upload and the Type select returned; the chain still had one Version typed Draft · ours. With a browser-network fixture answering 413 for the Version upload, Add version stayed open with \"DOC-030 fixture: this file is larger than the upload limit.\". The chain still had 4 Versions with identical ids, numbers, types, notes and pin. The attachment offered File to Contract. File attachment opened with Destination \"New Document\" (options New Document / New Version on an existing Document), the switch \"Confidential — restrict to the contract team\" already on, and Type starting on \"No type\" with the Contract list. File created \"DOC-030 Admin filed paper 09251116\" (Confidential, one Version, Type Draft · theirs) and the comment read \"Filed to DOC-030 Admin filed paper 09251116, version 1\". Selecting the attachment name opened its preview with File to Contract. New Version on an existing Document, Document \"DOC-030 Admin supply draft 09251116\" and a Note appended v5 with that note; the comment read \"Filed to DOC-030 Admin supply draft 09251116, version 5\". The Matter attachment offered File to Matter. File attachment showed Type starting on \"No type\" with No type, DOC-030 documents Matter type 09251116, and the switch \"Confidential — restrict to the matter team\". File created \"DOC-030 Admin matter filed 09251116\" typed \"DOC-030 documents Matter type 09251116\". Amara Nwosu (Business User, on the C-331 team) opened /portal/contracts/331: the Documents section listed \"DOC-030 Admin supply draft 09251116\" with no select and no \"Type of version\" control. A direct correction of v1 answered 403; v1 kept \"Draft · theirs\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/documents/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/documents/lib.mjs",
+        "docs/documentation/batches/DOC-030/documents/administrator-generated-redline-type.png",
+        "docs/documentation/batches/DOC-030/documents/administrator-knowledge-type-refused.png"
+      ]
+    },
+    {
+      "id": "V-C26",
+      "coverage": ["C26"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Nadia Haddad (Legal Team Member) signs in with a password in an isolated Playwright Chromium context.",
+        "Run stamp 09251116: Daniel Okafor added the Matter type \"DOC-030 documents Matter type 09251116\" and Entity type \"DOC-030 documents Entity type 09251116\" in the browser under Settings, Documents; the run archived both at its end. Fixtures through the lab API: a Contract (Amara Nwosu on its team), a Matter, Entities, a Knowledge Item, comments with PDF and Word attachments, and one Word Comparison of v1 to v2 exported as a Generated redline. Files: DOC-029 documents fixtures doc029-draft-v1.docx, doc029-draft-v2.docx, doc029-bulk-a/b.txt, doc029-services-text.pdf."
+      ],
+      "expected": "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible. Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance.",
+      "actual": "19 browser steps passed. Nadia's Settings rail listed Profile, Appearance, Notifications, API keys, View Business Portal with no Documents. Opening /settings/documents/matters landed on /settings/profile. Upload document had Choose files, Type and Note. Type started on \"No type\" and offered 8 options: No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012; no Generated redline. After Upload one row \"doc029-draft-v1.docx\" (from the filename) showed v1, the Primary mark and Type \"Draft · ours\"; read-back isPrimary true, note \"DOC-030 round one note\". Two chosen files opened the \"Import 2 files\" dialog instead of the composer. Cancel closed it; the Contract still held one Document. Actions -> Edit details -> Save stored the name \"DOC-030 Legal supply draft 09251116\" and a description. Read-back: still one Version, v1, Type Draft · ours. Add version showed Choose file, Type (started on \"No type\") and Note. After Upload the row read v2 and v2's Type read \"No type\" (v1 was Draft · ours; not copied). The arrow \"Show the 1 earlier version of DOC-030 Legal supply draft 09251116\" sits to the right of the name (x 332 > 97). It listed doc029-draft-v1.docx; selecting it opened the reader \"DOC-030 Legal supply draft 09251116, version 1\" (v1 chip visible); Download returned the original v1 bytes (SHA-256 match). v1 kept its note, type, filename and uploader. The same file uploaded again made a second Document \"doc029-draft-v1.docx\" at v1 (not Primary: true); \"DOC-030 Legal supply draft 09251116\" still had two Versions. \"Type of version 2 of DOC-030 Legal supply draft 09251116\" offered No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012 (no Generated redline). Choosing Redline · theirs saved (read-back type Redline · theirs, kind redline_theirs); id, number, note, filename, uploader and pin were unchanged and the download answered 200. Choosing No type cleared it (read-back null). Still two Versions. Actions for version 1 -> Mark as executed copy set the pin on v1 (earlier row read \"doc029-draft-v1.docx Note: DOC-030 round one note No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DOC-030 access Admin document type 09251012 v1 Executed Sep 25 Uploaded by Nadia Haddad NH\"). Choosing Executed in v2's Type column left the pin on v1. Correcting v1's type to Draft · theirs left it on v1. A v3 upload left it on v1. Unmark as executed copy on v1 cleared it (read-back no pinned Version). \"DOC-030 Legal supply draft 09251116\" carried the Primary mark and its Actions had no Make primary (Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive). Make primary on \"doc029-draft-v1.docx\" moved the mark there; Make primary on \"DOC-030 Legal supply draft 09251116\" moved it back. Fixture: Word Comparison v1 -> v2 (mode word) exported as v4 (kind generated_redline). The Documents row for \"DOC-030 Legal supply draft 09251116\" now reads [\"DOC-030 Legal supply draft 09251116 Primary Compares v1 and v2 Description: DOC-030 fictional description\",\"Generated redline\",\"v4\",\"Sep 25\",\"Uploaded by Nadia Haddad NH\",\"\"]: Type \"Generated redline\" as a plain label with no \"Type of version 4\" select. A direct correction attempt answered 409 (\"A generated redline's kind records how it was made.\"); the Version read back unchanged (type null, kind generated_redline). Matter M-126: Upload document showed Type starting on \"No type\" with 5 options (No type, DOC-030 admin-config V-C38 Board resolution renamed 0925112134, DOC-030 admin-config V-C38 Board resolution renamed 0925112257, DOC-030 documents Matter type 09251116, DOC-030 documents-2 Matter type 09251124), none of the Contract types. Uploaded with \"DOC-030 documents Matter type 09251116\"; the column headers read Name, Type, Version, Modified, Uploaded by, Actions and v1's Type read \"DOC-030 documents Matter type 09251116\". Choosing No type in the column saved (read-back null). No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive. Entity \"DOC-030 documents Legal versions Entity 09251116 Ltd\": Upload document showed Type starting on \"No type\" with No type, DOC-030 documents Entity type 09251116. The upload read back with \"DOC-030 documents Entity type 09251116\" and the column showed it. No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive. Knowledge Item \"DOC-030 documents Legal Knowledge 09251116\" (Knowledge type Precedent): Upload document had no Type (count 0). The first upload read back isPrimary true. The Type column rendered a select \"Type of version 1 of doc029-services-text.pdf\" showing \"Precedent\" with options [\"No type\",\"Precedent\"]. Choosing No type showed \"That version already has this type.\" and the Version kept \"Precedent\" (read-back type Precedent, unchanged). Sending the Knowledge type id directly answered 400 (\"Pick a document type from this record's list.\"). Matches the guide (\"offers a choice, but OpenLaw refuses the change\"); recorded as a product bug. C-361: live, v1's Type was a select. With the Document archived (Show archived on) its Type cell was a plain label ([\"doc029-bulk-a.txt Primary Archived\",\"Draft · ours\",\"v1\",\"Sep 25\",\"Uploaded by Nadia Haddad NH\",\"\"]), no select. With the Contract archived the section had no Upload button and no Type select; a direct upload answered 409 (\"This contract is archived. Restore it before uploading.\") and a direct type correction answered 409. After restore, Upload and the Type select returned; the chain still had one Version typed Draft · ours. With a browser-network fixture answering 413 for the Version upload, Add version stayed open with \"DOC-030 fixture: this file is larger than the upload limit.\". The chain still had 4 Versions with identical ids, numbers, types, notes and pin. The attachment offered File to Contract. File attachment opened with Destination \"New Document\" (options New Document / New Version on an existing Document), the switch \"Confidential — restrict to the contract team\" already on, and Type starting on \"No type\" with the Contract list. File created \"DOC-030 Legal filed paper 09251116\" (Confidential, one Version, Type Draft · theirs) and the comment read \"Filed to DOC-030 Legal filed paper 09251116, version 1\". Selecting the attachment name opened its preview with File to Contract. New Version on an existing Document, Document \"DOC-030 Legal supply draft 09251116\" and a Note appended v5 with that note; the comment read \"Filed to DOC-030 Legal supply draft 09251116, version 5\". The Matter attachment offered File to Matter. File attachment showed Type starting on \"No type\" with No type, DOC-030 admin-config V-C38 Board resolution renamed 0925112134, DOC-030 admin-config V-C38 Board resolution renamed 0925112257, DOC-030 documents Matter type 09251116, DOC-030 documents-2 Matter type 09251124, and the switch \"Confidential — restrict to the matter team\". File created \"DOC-030 Legal matter filed 09251116\" typed \"DOC-030 documents Matter type 09251116\". Amara Nwosu (Business User, on the C-360 team) opened /portal/contracts/360: the Documents section listed \"DOC-030 Legal supply draft 09251116\" with no select and no \"Type of version\" control. A direct correction of v1 answered 403; v1 kept \"Draft · theirs\".",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/documents/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/documents/lib.mjs",
+        "docs/documentation/batches/DOC-030/documents/legal_team_member-generated-redline-type.png",
+        "docs/documentation/batches/DOC-030/documents/legal_team_member-knowledge-type-refused.png"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the article author and the source reviewer; not a human user study and not feature-owner approval.",
-    "API calls created fictional records, comment attachments and team membership as fixture setup and read results back; the credited actions used the browser controls the article names.",
-    "The refused upload used a browser-network fixture answering 413; the deployment's real upload limit was not reached.",
-    "Generated redline was confirmed absent from Upload and Kind correction choices; a Comparison export was not created, so correcting a Generated redline Version was not attempted.",
-    "Business User Portal claims (Add version on the Primary Document, no designation, kind, folder, archive, delete or filing controls, 403 for each attempt) are recorded as supplementary business_user steps in the same log; V-C26 does not require that role.",
-    "The shared work lab was used by other agents at the same time; only records named DOC-029 documents ... were created. One Administrator record page showed \"Something went wrong.\" once during an earlier run and loaded after Reload; the final run recorded no such error."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named DOC-030 documents were created. The two Document types this run added were archived at its end; archive keeps their labels on the Versions that carry them. Types other agents added appeared in the Contract and Matter pickers and are not credited.",
+    "The Generated redline check used a Word Comparison of v1 to v2 requested and exported through the lab API as fixture setup; the browser checked the resulting Type cell. The guide's Comparison export steps belong to compare-versions.md.",
+    "A Version generated by an Auto-Doc was not exercised: the seed has no Auto-Doc generations. Source (documents-card.tsx TypeCell readOnly for source generated; routes.ts 409) shows it is read-only.",
+    "The failed upload used a controlled 413 browser response; the lab's real upload limit was not reached. The refused type corrections (archived record, Generated redline, Knowledge Item, Business User) are real server answers.",
+    "Insufficient access used Amara Nwosu, a seeded Business User on the Contract team, in the Portal. The lab has no Contributor account, so the Contributor refusal the API documents was not exercised.",
+    "Confirmed the author's product bug: on a Knowledge Item the Type column renders a select (No type plus the item's Knowledge type) and every choice is refused. Choosing No type shows \"That version already has this type.\"; the Knowledge type id sent directly answers 400 \"Pick a document type from this record's list.\" The guide describes this behavior, so it is not a guide failure.",
+    "The Portal still labels its Contract upload control Kind (author limitation); this guide does not describe Portal controls and it was not checked.",
+    "The Entity empty-list check ran only in the Administrator pass, before the run added its Entity type; the Legal pass ran after it, so it saw a non-empty Entity list."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "e7d0286c6eefad20fd0e0a08df2dc6c530d5c3fa517e1b65e17e9f338e5f147d",
-    "verifiedAt": "2026-09-07T21:37:46.034Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
+    "verifiedAt": "2026-09-16T15:44:43.089Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "02498deb1a3a46714abedf92a9254975a58ff58a84973258cd9c8178f792dc14",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/documents.json",
-        "sha256": "3129c2786313b928fdd642e565cda91ea74a4bd3467b1839b0dfcec7d3ee8b7a"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

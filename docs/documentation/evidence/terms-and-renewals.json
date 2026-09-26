@@ -1,31 +1,23 @@
 {
   "articleId": "terms-and-renewals",
-  "contentSha256": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (contracts-b)",
-  "technicalReviewer": "DOC-029 source-review author agent (contracts-b)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (contracts-b, round 1)",
+  "contentSha256": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (shared-files)",
+  "technicalReviewer": "DOC-030 source-review author agent (shared-files)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (signing-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:50:47.487Z",
+  "verifiedAt": "2026-09-25T11:50:28.438Z",
   "status": "pass",
   "sources": [
-    "CONTEXT.md",
-    "apps/web/src/routes/contract-record.tsx",
-    "apps/web/src/components/date-picker.tsx",
-    "apps/web/src/components/contracts/confirm-renewal-dialog.tsx",
-    "apps/web/src/components/contracts/create-contract-dialog.tsx",
-    "apps/web/src/components/contracts/key-dates-card.tsx",
-    "apps/api/src/modules/contracts/routes.ts",
-    "apps/web/src/lib/contracts.ts",
-    "apps/web/src/lib/roles.ts",
-    "apps/web/src/components/contracts/renewal-banner.tsx",
-    "apps/web/src/components/contracts/term-timeline-card.tsx",
-    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "docs/user-guides/terms-and-renewals.md",
+    "docs/documentation/batches/DOC-030/shared-files/technical-review.json",
+    "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/signing-2/api.mjs",
     "apps/web/src/components/documents/documents-card.tsx",
-    "apps/api/src/modules/contracts/create.ts",
-    "apps/api/src/modules/contract-key-dates/routes.ts"
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)"
   ],
   "scenarios": [
     {
@@ -34,18 +26,17 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in the shared work lab.",
-        "A reviewer-created Confidential NDA Contract with Entity, Counterparty, value, High priority and risk, the other staff role and a Business User on the team; a second Auto-renewing Contract whose expiry had passed.",
-        "Fictional PDF fixtures in docs/documentation/batches/DOC-029/contracts-b/fixtures."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; AI disabled; Signing unconfigured.",
+        "Nadia Haddad (Legal Team Member) signs in with a password in an isolated Playwright Chromium context; Daniel Okafor (Administrator) is the second staff session. It makes the competing expiry write through the lab API and the competing confirmation in its own browser context.",
+        "Fixtures made through the API for this run: an NDA Contract named \"DOC-030 signing-2 V-C18 <role> <stamp>\" with an Entity, a Counterparty, a GBP value, High priority and risk, the Confidential flag, and the other staff role and Business User Karim Aziz on the team; a Task due 2026-12-01; and a second Auto-renewing NDA Contract whose expiry is five days in the past. Every guide step runs in the browser."
       ],
-      "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines.",
-      "actual": "16 recorded steps passed for this role. Four separate PATCH commits answered 200. Renewal period (months) was absent on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; the record's notice deadline is 2027-01-01 (Jan 31, 2027 minus 30 days). Term timeline: \"Term timelineInitial termFeb 1 – Jan 31, 2027Jan 1, 2027Notice deadline Jan 1, 2027TodayFeb 1Jan 31, 2027Initial termNotice deadline\". Key dates rows: \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\", each with 0 row action buttons. Term type Auto-renewing and Renewal period 1 month saved (PATCH 200, 200); expiry still 2027-01-31. Evergreen saved; expiry null, renewal period null; Expiry date picker absent; effective date kept 2026-02-01; Key dates now lists: no derived term rows. Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. The Contract is Auto-renewing again: expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01. A Task due 2026-12-01 was added. Key dates still reads \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\" and lists no Task row; the record's notice deadline stays 2027-01-01. Renew opened \"Confirm renewal\" with Confirm the roll checked, \"The term currently runs to Jan 31, 2027.\", proposed New expiry date 2027-02-28, and no Paper as amendment option (no primary Document). Entering 2027-01-31 and selecting Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31. Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027Renewal notice deadline — 30 days before expiryDerived\"); Approvals & signing shows 1 renewal row \"Term advanced to Feb 28, 2027From Jan 31, 2027NHNadia HaddadSep 16\"; Overview \"Last renewalSep 16\"; Status stays Draft (draft). Dialog proposed 2027-03-28; Daniel Okafor moved expiry to 2027-04-30 through the API; Confirm renewal answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1. Both dialogs proposed 2027-05-30 / 2027-05-30. Nadia Haddad's Confirm renewal answered 200; Daniel Okafor's answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll). Before a Document existed the dialog had no Paper as amendment (previous step). Uploaded doc029-services-agreement.pdf as the primary Document and marked it executed; after reload Paper as amendment -> File the amendment moved to /contracts/262/documents and opened Add version with Kind \"Amendment\". After upload: v1 draft_ours executed=true; v2 amendment executed=false. Mark as executed copy on version 2 gave: v1 draft_ours executed=false; v2 amendment executed=true. Expiry still 2027-05-30; relations {\"parentChain\":[],\"children\":[],\"links\":[]}. Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-262 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 legal_team_member 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-263 (/contracts/263). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty legal_team_member 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Ravi Menon. Related contracts on C-263: \"Related contractsAdd linkParentC-262 DOC-029 contracts-b C18 legal_team_member 1789573440047DraftRemove parent\". C-262 still expires 2027-05-30. New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-262 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 legal_team_member 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-264 (/contracts/264). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty legal_team_member 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Ravi Menon. Related contracts on C-264: \"Related contractsSet parentAdd linkRenewsC-262 DOC-029 contracts-b C18 legal_team_member 1789573440047DraftRemove link\". C-262 still expires 2027-05-30. C-265 Auto-renewing, 12 months, expiry 2026-09-11: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-11; Cancel left expiry 2026-09-11 (no automatic advance). Archived C-262: Approvals showed 0 Renew buttons and a renewal POST answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused or re-read; Task due dates are not substituted for Contract deadlines.",
+      "actual": "16 steps passed on C-470. The Overview Contract card follows the NDA Form: Term type, Effective date, Expiry date, Renewal period (months) and Notice period (days) appear in Form order, with Needed by after Value. Term type offered Fixed term, Auto-renewing and Evergreen. Fixed term with 2026-02-01 to 2027-01-31 and 30 days saved in four separate saves; Renewal period (months) was read-only with no value; notice deadline 2027-01-01. Term timeline drew the initial term and the notice deadline; Key dates showed \"Current term expires\" Jan 31, 2027 and \"Renewal notice deadline — 30 days before expiry\" Jan 1, 2027, both Derived, with no row actions. Auto-renewing took 1 month. Evergreen cleared expiry and renewal period and removed the Expiry date picker. Auto-renewing -> Fixed term cleared the renewal period and kept expiry. Negative: a Task due 2026-12-01 did not change either deadline and is not a Key date row. Renew opened \"Confirm renewal\" with Confirm the roll checked and proposed 2027-02-28; no Paper as amendment without a primary Document; a new date equal to the current expiry showed \"A roll moves the term forward. Pick a date after the current expiry.\" Confirm renewal moved expiry to 2027-02-28, notice deadline to 2027-01-29, added one \"Term advanced to Feb 28, 2027\" row and Last renewal, and left the Status at Draft. Stale: Daniel Okafor moved the expiry to 2027-04-30; Confirm renewal answered 409 \"This contract's expiry has already moved. Read the record again before confirming the roll.\"; the dialog re-read Apr 30, 2027; reopening proposed 2027-05-30. Competing: two dialogs both proposed 2027-05-30; the first answered 200 and the second 409; 2 renewal rows. Paper as amendment (after the first Document upload and a reload) -> File the amendment opened Add version on /documents with Type \"Amendment\"; the new v2 was not pinned until Mark as executed copy moved the pin from v1; no new Contract; expiry unchanged. Create child contract and New successor contract made C-473 (Parent C-470) and C-476 (Renews C-470) with Entity, Counterparty, value and term carried over; Legal Owner, team, Status (Draft), Priority (medium), Risk and Confidential were not. The past-expiry fixture showed \"Renewal date passed — pending confirmation.\" with Review renewal, and the expiry did not advance. Archived: 0 Renew buttons, renewal write 409; after Restore both renewal rows remain.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/contracts-b/c18-r1.mjs",
-        "docs/documentation/batches/DOC-029/contracts-b/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/signing-2/api.mjs"
       ]
     },
     {
@@ -54,54 +45,34 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-in fictional role in the shared work lab.",
-        "A reviewer-created Confidential NDA Contract with Entity, Counterparty, value, High priority and risk, the other staff role and a Business User on the team; a second Auto-renewing Contract whose expiry had passed.",
-        "Fictional PDF fixtures in docs/documentation/batches/DOC-029/contracts-b/fixtures."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; AI disabled; Signing unconfigured.",
+        "Daniel Okafor (Administrator) signs in with a password in an isolated Playwright Chromium context; Nadia Haddad (Legal Team Member) is the second staff session. It makes the competing expiry write through the lab API and the competing confirmation in its own browser context.",
+        "Fixtures made through the API for this run: an NDA Contract named \"DOC-030 signing-2 V-C18 <role> <stamp>\" with an Entity, a Counterparty, a GBP value, High priority and risk, the Confidential flag, and the other staff role and Business User Karim Aziz on the team; a Task due 2026-12-01; and a second Auto-renewing NDA Contract whose expiry is five days in the past. Every guide step runs in the browser."
       ],
-      "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines.",
-      "actual": "16 recorded steps passed for this role. Four separate PATCH commits answered 200. Renewal period (months) was absent on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; the record's notice deadline is 2027-01-01 (Jan 31, 2027 minus 30 days). Term timeline: \"Term timelineInitial termFeb 1 – Jan 31, 2027Jan 1, 2027Notice deadline Jan 1, 2027TodayFeb 1Jan 31, 2027Initial termNotice deadline\". Key dates rows: \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\", each with 0 row action buttons. Term type Auto-renewing and Renewal period 1 month saved (PATCH 200, 200); expiry still 2027-01-31. Evergreen saved; expiry null, renewal period null; Expiry date picker absent; effective date kept 2026-02-01; Key dates now lists: no derived term rows. Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. The Contract is Auto-renewing again: expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01. A Task due 2026-12-01 was added. Key dates still reads \"Jan 31, 2027Current term expiresDerived\" and \"Jan 1, 2027Renewal notice deadline — 30 days before expiryDerived\" and lists no Task row; the record's notice deadline stays 2027-01-01. Renew opened \"Confirm renewal\" with Confirm the roll checked, \"The term currently runs to Jan 31, 2027.\", proposed New expiry date 2027-02-28, and no Paper as amendment option (no primary Document). Entering 2027-01-31 and selecting Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31. Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027Renewal notice deadline — 30 days before expiryDerived\"); Approvals & signing shows 1 renewal row \"Term advanced to Feb 28, 2027From Jan 31, 2027DODaniel OkaforSep 16\"; Overview \"Last renewalSep 16\"; Status stays Draft (draft). Dialog proposed 2027-03-28; Nadia Haddad moved expiry to 2027-04-30 through the API; Confirm renewal answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1. Both dialogs proposed 2027-05-30 / 2027-05-30. Daniel Okafor's Confirm renewal answered 200; Nadia Haddad's answered 409 with \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll). Before a Document existed the dialog had no Paper as amendment (previous step). Uploaded doc029-services-agreement.pdf as the primary Document and marked it executed; after reload Paper as amendment -> File the amendment moved to /contracts/280/documents and opened Add version with Kind \"Amendment\". After upload: v1 draft_ours executed=true; v2 amendment executed=false. Mark as executed copy on version 2 gave: v1 draft_ours executed=false; v2 amendment executed=true. Expiry still 2027-05-30; relations {\"parentChain\":[],\"children\":[],\"links\":[]}. Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-280 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 administrator 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-281 (/contracts/281). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty administrator 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Ravi Menon. Related contracts on C-281: \"Related contractsAdd linkParentC-280 DOC-029 contracts-b C18 administrator 1789573440047DraftRemove parent\". C-280 still expires 2027-05-30. New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-280 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-029 contracts-b C18 administrator 1789573440047\", Contract type NDA, Owner Unassigned; Title edited and Create answered 201 for C-282 (/contracts/282). Copied: entity Helix Software Ltd, counterparty DOC-029 contracts-b Counterparty administrator 1789573440047, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not copied: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Ravi Menon. Related contracts on C-282: \"Related contractsSet parentAdd linkRenewsC-280 DOC-029 contracts-b C18 administrator 1789573440047DraftRemove link\". C-280 still expires 2027-05-30. C-283 Auto-renewing, 12 months, expiry 2026-09-11: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-11; Cancel left expiry 2026-09-11 (no automatic advance). Archived C-280: Approvals showed 0 Renew buttons and a renewal POST answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "expected": "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action. Invalid or stale dates are refused or re-read; Task due dates are not substituted for Contract deadlines.",
+      "actual": "16 steps passed on C-479 with the same results: the Contract card term Rows in NDA Form order; Fixed term dates and 30-day notice saved one at a time (notice deadline 2027-01-01); derived Key dates rows with no actions; Auto-renewing 1 month; Evergreen cleared expiry and renewal period; Fixed term cleared the renewal period; the Task did not feed the deadlines. Renew defaulted to Confirm the roll (proposal 2027-02-28), refused a date on the current expiry, and offered no Paper as amendment without a primary Document. Confirm renewal moved expiry to 2027-02-28 and the notice deadline to 2027-01-29, added the renewal row and Last renewal, and left Status Draft. Stale confirmation after Nadia Haddad's expiry change answered 409 and the dialog re-read Apr 30, 2027; competing confirmations answered 200 then 409 with 2 renewal rows. File the amendment opened Add version with Type \"Amendment\"; v2 was pinned only after Mark as executed copy, which replaced v1's pin. Child C-480 (Parent) and successor C-481 (Renews) carried Entity, Counterparty, value and term, not Legal Owner, team, Status, Priority, Risk or Confidential. The passed-expiry banner and Review renewal appeared without an automatic advance. Archived: no Renew, write 409; Restore kept 2 rows.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/contracts-b/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/contracts-b/c18-r1.mjs",
-        "docs/documentation/batches/DOC-029/contracts-b/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/signing-2/api.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
-    "Prerequisite records and some supporting actions used the acting or other staff role's API session: record creation, team changes, the competing expiry write, archiving before the C18 and C19 read-only checks, and the extra Tasks and Key dates for the ordering and Next deadline checks. The actions each article instructs were done in the browser.",
-    "The partial-save case used a reviewer route that answered one comment POST with 503; it proves the dialog's handling, not a real storage outage.",
-    "Reminder email delivery and timing were not exercised; notifications.md owns those rules. Only the saved lead times and recipient selection were checked.",
-    "The shared work lab also carried other agents' records; list, Home and calendar checks searched for this run's own DOC-029 contracts-b records.",
-    "The technical source review is recorded in docs/documentation/batches/DOC-029/contracts-b/technical-review.json.",
-    "The renewal checks used fictional term dates in 2026 and 2027; the passed-date banner used an expiry 5 days before the run date."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named DOC-030 signing-2 were created (C-470, C-473, C-476, C-477, C-479 to C-482 in the final run; earlier development runs left more). No organisation setting was changed.",
+    "work2 runs with AI disabled, so no analysis-written date and no Unverified marker could be shown. The guide only points to Contract analysis for that case.",
+    "The guide says to reload after uploading the first Document before reopening Renew. In this run Paper as amendment appeared already after in-app section navigation; the walk also reloaded as the guide says, and the option was offered.",
+    "The case where the primary Document is outside the loaded Documents list (5bb8398e) was not set up. The guide does not describe it.",
+    "Notification recipients for Key date reminders were not checked here; the guide links to Notifications for them.",
+    "The final run (2026-09-25T11:45:50.727Z to 2026-09-25T11:50:28.438Z) passed all 50 steps. It logged 3 page reloads in \"retries\": each time the app showed \"Something went wrong. The page could not load.\" because Chromium aborted in-flight API reads with net::ERR_NETWORK_CHANGED while other agents changed container networks on the host. One reload loaded the page each time. walkthrough-attempt1.json and walkthrough-attempt2.json are earlier full runs of the same script; each had one step fail on the same network abort before the reload helper covered that wait. No guide step failed in any run."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "d5af58d3f6934b6b5730e8e100c31ffc21e08640347b82750c9b39c24b085c6e",
-    "verifiedAt": "2026-09-07T13:51:32.114Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "d983f5c33254ca98c261ad00ccb66242a4861a64f75965d9c66c00c13018e085",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-b)) found the article compatible: I inspected the app diff 3fa407e3..57e77e38 and found only Settings, sign-in, first-run and archived-user styling changes, none in the Contract record surfaces this article describes. I replayed the round 1 V-C18 (term fields, derived Key dates, Renew dialog routes, stale and competing confirmations, banner, archived refusal) walkthrough for Legal Team Member and Administrator on lab openlaw-docs-41255c61-work2 built from 57e77e38, and every step passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/contracts-b.json",
-        "sha256": "7122687e213dbfc245ed3fb3d669dc2960da017bb61e7772a7169d2b7eac6d57"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:50:47.487Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

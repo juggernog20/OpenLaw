@@ -110,7 +110,7 @@ One of _our own_ corporate entities — a subsidiary, holding company, or branch
 _Avoid_: company, organisation, party, counterparty, subsidiary
 
 **Holding**:
-A directional ownership fact between two Entities, recording the percentage one Entity owns of the other. Holdings form the ownership graph; they do not make either Entity a child record [ENT-003].
+A directional ownership fact recording the percentage one owner holds of an Entity. The owner is another Entity or an individual, recorded by name only, with no Entity or user account. Holdings form the ownership graph; they do not make either party a child record. Where an Entity keeps a share register, its owner Holdings are projected from it, marked From register and read-only [ENT-003, ENT-011, DES-088].
 _Avoid_: parent link, ownership relation, shareholding record
 
 **Share class**:
@@ -159,7 +159,7 @@ Former account type, removed by DD-023. Existing accounts become Business Users 
 _Avoid_: collaborator, guest, external user
 
 **Business User**:
-An employee who uses the Portal to submit Requests and work on non-archived Contracts and Matters they are on the team for. They read business Fields, add Documents and Versions, including primary Contract Document Versions, post Full Thread replies, and add existing people to non-Confidential record teams. Record Fields remain managed by Legal [DD-026]. Team membership is their only record grant [DD-023, DD-024].
+An employee who uses the Portal to submit Requests and work on non-archived Contracts and Matters they are on the team for. They read Fields whose Rows have Visible on Portal on, add Documents and Versions, including primary Contract Document Versions, post Full Thread replies, and add existing people to non-Confidential record teams. Record Fields remain managed by Legal [DD-026, DD-028]. Team membership is their only record grant [DD-023, DD-024].
 _Avoid_: requester (that is a role on a specific Request), end user, customer
 
 **Member+**:
@@ -266,7 +266,7 @@ An opt-in per-record flag that hides a Matter, Contract, or Document from everyo
 _Avoid_: private, restricted, sensitive, secret
 
 **Grant**:
-An explicit named-user exception that lets one Legal Team Member reach one Confidential Entity. Administrators need no Grant, and a Grant gives no wider role or team membership [ENT-004].
+An explicit named-user exception that lets one Legal Team Member or Administrator reach one Confidential Entity. Administrators need a Grant too. The person who creates an Entity receives one, and grantees manage the list. A Grant gives no wider role or team membership [ENT-004, amended 2026-09-10].
 _Avoid_: Entity team, access role, permission group
 
 **Visibility tier**:
@@ -315,7 +315,7 @@ The first Administrator's guided configuration at `/welcome`. Its nine steps inc
 _Avoid_: installation wizard, integrations step
 
 **Start blank**:
-The Review step's action that removes the seeded catalog so an organization begins with its own vocabulary. It hard-deletes every seed row that is only vocabulary: the non-protected matter types, contract types, entity types, officer roles, knowledge types, request types, and statuses. It keeps the rows the application needs, the `other` type rows and the protected statuses, and it keeps the default Fields and the reminder offsets. It is refused once onboarding is complete, once a user-created row exists, or once a removable row is in use. It records the Review acknowledgement and one activity-log row per emptied list [SET-004].
+The Review step's action that removes the seeded catalog so an organization begins with its own vocabulary. It hard-deletes every seed row that is only vocabulary: the non-protected matter types, contract types, entity types, officer roles, knowledge types, request types, and statuses. It keeps the rows the application needs, the `other` type rows, the Default type for Matters and Contracts, and the protected statuses, and it keeps the default Fields and the reminder offsets. It is refused once onboarding is complete, once a user-created row exists, or once a removable row is in use. It records the Review acknowledgement and one activity-log row per emptied list [SET-004, DD-028].
 _Avoid_: reset, factory reset, wipe the instance, archive the seeds
 
 **Default Field**:
@@ -323,7 +323,7 @@ A Field that a migration seeded, marked `is_system_default`. Today these are gov
 _Avoid_: system field, built-in field, protected field, intake default (the former `__intake_*` rows, retired by DD-028)
 
 **Setup checklist**:
-The Administrator-only card above Organization in Settings → Organization → General. It lists currently unfinished onboarding steps and disappears when none remain. Each row links to its Settings pane, except Email, which has no pane and is plain text, and Review seeded types, which has a Mark as reviewed action. Completion follows current configuration, so a later removal can bring a row back without reopening the wizard. The card calls the wizard's Your organization step Organization and its Outbound email step Email to fit the Settings context. It expands Review to Review seeded types because the card has no surrounding wizard to explain what to review. All other step labels match [SET-004].
+The Administrator-only card above Organization in Settings → Organization → General. It lists currently unfinished onboarding steps and disappears when none remain. Each row links to its Settings pane, with Email opening Settings → Advanced → Outbound email. Review seeded types has no pane; it has a Mark as reviewed action instead. Completion follows current configuration, so a later removal can bring a row back without reopening the wizard. The card calls the wizard's Your organization step Organization and its Outbound email step Email to fit the Settings context. It expands Review to Review seeded types because the card has no surrounding wizard to explain what to review. All other step labels match [SET-004].
 _Avoid_: onboarding dashboard, skip history, restart setup
 
 **Type**:
@@ -400,7 +400,7 @@ An Administrator-configured label and absolute `http` or `https` web address in 
 _Avoid_: help link, FAQ link, self-service link, knowledge link (a Knowledge item is its own thing, and M28's)
 
 **Approver group**:
-An Administrator-managed template naming a reusable set of approvers — "Commercial sign-off" = GC plus CFO. Members must be Member+ users. Applying a group copies its members onto the Contract at apply time, so a later edit or archive never changes an approval already requested [CTR-012].
+An Administrator-managed template naming a reusable set of approvers — "Commercial sign-off" = GC plus CFO. Members may be any active user, including Business Users. Applying a group copies its members onto the Contract at apply time, so a later edit or archive never changes an approval already requested [CTR-012].
 _Avoid_: approval group, approver team, sign-off rule
 
 **Signing connector**:
@@ -436,7 +436,7 @@ The one Document a Knowledge Item pins as its main Document. Its current Version
 _Avoid_: primary file, attachment, executed pin
 
 **Approval request**:
-One named person's sign-off on one Contract. A Member+ user asks; the named approver alone answers, with an approval or a rejection and an optional note; and the answer is final. Requests run in parallel — there are no chains and no order — and at most one is pending per approver per Contract. Asking again after a rejection makes a new request rather than reopening the old one. The requester, the Contract's Owner, or an Administrator cancels a pending one, which deletes it and leaves the activity entry as the record that it was made [CTR-012].
+One named person's sign-off on one Contract. A Member+ user asks; the named approver, who may be any active user, alone answers, with an approval or a rejection and an optional note; and the answer is final. Requests run in parallel — there are no chains and no order — and at most one is pending per approver per Contract. Asking again after a rejection makes a new request rather than reopening the old one. The requester, the Contract's Legal Owner, or an Administrator cancels a pending one, which deletes it and leaves the activity entry as the record that it was made [CTR-012].
 _Avoid_: approval task, sign-off item, approval step, reviewer
 
 ### MCP

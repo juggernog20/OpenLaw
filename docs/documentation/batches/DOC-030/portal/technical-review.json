@@ -1,0 +1,322 @@
+{
+  "batch": "DOC-030",
+  "group": "portal",
+  "reviewer": "DOC-030 source-review author agent (portal)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:26:31Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousWalkthroughBuild": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "previousCompatibilityTarget": "432dba3a835863091791fbac429a6a66777bdc40",
+    "lastArticleEdit": "9ecf7199"
+  },
+  "method": "source-inspection",
+  "note": "Source review only. No walkthrough was run; an independent agent performs the browser walkthrough. Catalog status is unchanged. M39 (DD-028) moved the Portal Request form onto the destination type's Form, so every form claim was rechecked against the Intake tree read.",
+  "articles": [
+    {
+      "articleId": "submit-request",
+      "scenario": ["V-C09"],
+      "contentSha256Before": "b8d0fd0ea07ee60c3c010d8a425193543158bf95e7cd606e52c3a1354d9af74b",
+      "contentSha256": "c563d0fa9c8f17b1ba97b117516abc056c1266a980c1861f71bfd21b75a61f67",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/submit-request.json",
+        "docs/documentation/batches/DOC-029/portal/technical-review.json",
+        "docs/decision-records/DECISIONS.md (DD-028 and its built addendum 2026-09-22)",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-001, INT-002 addenda)",
+        "messages/en-US.json",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/intake/form-fields.tsx",
+        "apps/web/src/components/intake/counterparties-input.tsx",
+        "apps/web/src/components/counterparty-picker.tsx",
+        "apps/web/src/components/custom-field-control.tsx",
+        "apps/web/src/components/department-picker.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/components/portal/my-requests.tsx",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/lib/portal-entities.ts",
+        "apps/web/src/lib/contracts.ts",
+        "apps/web/src/lib/requests.ts",
+        "apps/web/src/lib/requester-status.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/portal/counterparties.ts",
+        "apps/api/src/lib/intake-form.ts",
+        "apps/api/src/lib/type-form-routes.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "packages/shared/src/form-builtins.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/requests/convert-form.ts",
+        "e2e/tests/61-m39-type-form.spec.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Order of the form controls",
+          "before": "Steps 2 to 4 put Title and Description first, Attachments second, then Department, Urgency and additional questions.",
+          "after": "Steps 2 to 6 follow the built order under About your request: Title, Department, Urgency, the destination Form's visible Intake Rows (Description among them when it is on the Form), and Attachments last.",
+          "source": "apps/web/src/routes/portal-request-form.tsx fieldOrder ['basic:title','basic:department','basic:urgency', ...visibleRows, 'basic:attachments']; DD-028 built addendum ('Title, Department and Urgency are the fixed Request basics, with Attachments last. Description is a configurable built-in Intake Row')."
+        },
+        {
+          "claim": "Department is always required",
+          "before": "Department is required.",
+          "after": "When the list has Departments, Department is required.",
+          "source": "portal-request-form.tsx required={departments.length > 0}; service.ts submitRequest refuses 'Choose a Department.' only when a live Department exists (commit 5f50973a, #896)."
+        },
+        {
+          "claim": "Confirmation shows the R- reference",
+          "before": "Keep the confirmation open until the attachments finish uploading. Note the Request's R- reference and check whether any file failed.",
+          "after": "The confirmation reads 'Thanks! Your request has been submitted to legal.' Keep it open while 'Attaching your files…' shows. If a file failed, the confirmation names the file and the R- reference. Open request shows the R- reference on the meta line.",
+          "source": "portal-request-form.tsx Confirmation: portal.form.confirmationHeading and confirmationBody carry no reference; only portal.form.attachmentsFailed and attachmentsMovedToThread interpolate {reference}; portal-request.tsx portal.request.meta '{reference} · {requestType} · Submitted {submitted}'. Changed in adc4f954."
+        },
+        {
+          "claim": "Overflow message",
+          "before": "If you exceed the limit, the form keeps only the files that fit; check the list before submitting.",
+          "after": "The form keeps only the files that fit and shows 'A request carries at most 20 files.'",
+          "source": "apps/web/src/components/intake/form-fields.tsx AttachmentsField, portal.form.attachmentsTooMany."
+        },
+        {
+          "claim": "Type-specific deflection links on the form",
+          "before": "Only the Portal home Before you submit guidance was mentioned.",
+          "after": "The form can show its own Before you submit links beside the questions.",
+          "source": "portal-request-form.tsx aside DeflectionPanel links={intakeLinks}; portal/routes.ts GET /portal/request-types/:slug returns per-type intakeLinks."
+        },
+        {
+          "claim": "Entity question label and choices",
+          "before": "an Entity is one of your organization's own entities.",
+          "after": "Our entity, or another question about one of your organization's own entities, lists only the entities an Administrator lists on the Portal.",
+          "source": "apps/api/src/lib/intake-form.ts labels.entity = 'Our entity'; portal-request-form.tsx loads readPortalEntityOptions (apps/web/src/lib/portal-entities.ts; Portal-listed Entity in CONTEXT.md, ENT-010)."
+        },
+        {
+          "claim": "Counterparties picker behavior",
+          "before": "Counterparties uses the registry picker.",
+          "after": "Search for an existing Counterparty or select Add new with the typed name; the first is marked Primary.",
+          "source": "apps/web/src/components/intake/counterparties-input.tsx (addNewLabel, intake.counterparties.primary on index 0); counterparty-picker.tsx counterparty.picker.addNew 'Add new \"{name}\"'."
+        },
+        {
+          "claim": "Person questions",
+          "before": "Not mentioned.",
+          "after": "A question that asks for a person offers only Not set in the Portal and is never required.",
+          "source": "portal-request-form.tsx passes no people to CustomFieldControl (select with only 'Not set'); intake-form.ts readFormFields drops isRequired for user Rows at intake; type-form-routes.ts refuses a required user Row On intake form."
+        },
+        {
+          "claim": "New Request state in Your requests",
+          "before": "Check Your requests, then open the Request.",
+          "after": "A new Request shows Open and 'Legal Owner: Not assigned yet'.",
+          "source": "apps/web/src/lib/requester-status.ts (new -> Open); request-owner.tsx portal.request.owner 'Legal Owner: {name}', portal.request.unassigned."
+        },
+        {
+          "claim": "Hourly limits",
+          "before": "Not mentioned.",
+          "after": "At most 20 Requests in one hour; at most 256 MB of Request files in one hour.",
+          "source": "apps/api/src/modules/requests/service.ts MAX_REQUESTS_PER_HOUR = 20 and its 429 sentence; apps/api/src/modules/requests/routes.ts MAX_REQUEST_ATTACHMENT_BYTES_PER_HOUR = 256 MB and its 429 sentence (added in 4eb35881)."
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Portal home heading, request type cards linking to /portal/new/<slug>, Before you submit panel and Your requests.",
+          "source": "apps/web/src/routes/portal.tsx; deflection-panel.tsx portal.deflection.heading"
+        },
+        {
+          "claim": "Department starts with the user's own Department when it is live; with no live Departments the form shows portal.form.noDepartments and submits with none.",
+          "source": "portal-request-form.tsx initial departmentId; messages/en-US.json portal.form.noDepartments; service.ts submitRequest"
+        },
+        {
+          "claim": "Urgency defaults to Medium with Low, Medium, High, Critical.",
+          "source": "portal-request-form.tsx useState('medium'); lib/contracts.ts severityLabel"
+        },
+        {
+          "claim": "Required questions carry an asterisk and a missing answer shows 'Fill ... first' plus '<field> is required.' and sends nothing.",
+          "source": "components/intake/form-fields.tsx Field; portal-request-form.tsx submit(); portal.form.missingRequired, portal.form.fieldRequired"
+        },
+        {
+          "claim": "Up to 20 files, Choose files, drop zone, per-file Remove.",
+          "source": "form-fields.tsx AttachmentsField; lib/requests.ts MAX_REQUEST_ATTACHMENTS = 20; requests/routes.ts MAX_REQUEST_ATTACHMENTS = 20"
+        },
+        {
+          "claim": "Submit request button; Open request link on the confirmation.",
+          "source": "messages/en-US.json portal.form.submit, portal.form.confirmationOpen"
+        },
+        {
+          "claim": "The Request exists before uploads; a failed file is named and does not undo the Request; a disposition race links to #portal-request-composer on the same Request.",
+          "source": "portal-request-form.tsx submit() and Confirmation; lib/requests.ts attachToRequest"
+        },
+        {
+          "claim": "A Branch hides and un-requires its children; answers stay in the form while hidden; only visible Intake Rows are submitted; the API refuses answers outside the visible set.",
+          "source": "packages/shared/src/form-evaluator.ts evaluateForm; portal-request-form.tsx visibleFields; service.ts submitRequest; e2e/tests/61-m39-type-form.spec.ts Term type Fixed and Evergreen"
+        },
+        {
+          "claim": "Touchpoint derivation Intake, Creation, Record and the three switch names; On intake form forces Visible on Portal.",
+          "source": "form-evaluator.ts formRowTouchpoint; type-form-routes.ts validate(); DD-028.2; CONTEXT.md Row, Touchpoint"
+        },
+        {
+          "claim": "Description is a configurable Intake Row seeded on; Value is one Row with amount, currency and cadence.",
+          "source": "type-form-routes.ts seedTypeForm onIntakeForm for description; intake-form.ts intakeRowKeys('value'); portal-request-form.tsx ValueField"
+        },
+        {
+          "claim": "Department carries to the new record at conversion and Legal cannot change it on the Request.",
+          "source": "apps/api/src/modules/requests/convert-form.ts defaults owning_department or department = request.departmentId; no Request Department write route exists"
+        },
+        {
+          "claim": "Unknown or archived form slug returns to /portal; a submission error shows the server detail or 'The request could not be submitted.' without a confirmation.",
+          "source": "portal-request-form.tsx portalRequestFormLoader and submit()"
+        },
+        {
+          "claim": "Submitted answers have no Portal edit control; a Contract or Matter exists only after conversion.",
+          "source": "apps/web/src/routes/portal-request.tsx"
+        }
+      ],
+      "limitations": [
+        "The confirmation no longer shows the R- reference unless a file fails. The walkthrough should read the reference from Open request or Your requests.",
+        "An Administrator can place the built-in Department Row on the intake Form. The Portal then shows a second Department question beside the fixed Department basic. The guide does not describe that configuration. Commit db7d9f0e fills the Row from the basic answer on the MCP path only; I did not settle how the Portal reconciles two answers.",
+        "The V-C09 prerequisite 'An active request type with required Fields' now means required Intake Rows on the destination type's Form. Since DD-028 the request type itself carries no Fields.",
+        "The 256 MB and 20-Request hourly limits come from source constants; no walkthrough has exercised them."
+      ]
+    },
+    {
+      "articleId": "follow-request",
+      "scenario": ["V-C10"],
+      "contentSha256Before": "0c573cf4fc05fd3fc4d80de13065a85aca323e13bf408e9bf02b73d732d38dd7",
+      "contentSha256": "257a2a24c146025cca08e77a3071d6fe1a3a9c59c2fe4dddc4c6d820a17999ae",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/follow-request.json",
+        "docs/documentation/batches/DOC-029/portal/technical-review.json",
+        "docs/decision-records/DECISIONS.md (DD-028.4, DD-028.5, DD-028.8)",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-001 M20/5 and M20/7 addenda)",
+        "messages/en-US.json",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/portal/my-requests.tsx",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/web/src/components/activity/activity-applet.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/lib/requester-status.ts",
+        "apps/web/src/lib/requests.ts",
+        "packages/shared/src/index.ts (isOpenRequestStatus)",
+        "packages/shared/src/form-evaluator.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/read.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/api/src/modules/portal/record-work.ts",
+        "apps/api/src/lib/custom-fields.ts",
+        "apps/api/src/modules/comments/audience.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Owner label",
+          "before": "Read its status and Owner. The same owner appears under Your requests. ... The Request's Owner is its current triage assignee.",
+          "after": "The Request page shows a Legal Owner card and Your requests shows 'Legal Owner: <name>'. The Request's Legal Owner is its current triage assignee and does not automatically become the Contract Legal Owner or Matter Manager.",
+          "source": "apps/web/src/components/portal/request-owner.tsx portal.request.legalOwner 'Legal Owner' and portal.request.owner 'Legal Owner: {name}' (adc4f954); convert.ts sets managerId to the converting user."
+        },
+        {
+          "claim": "Read status",
+          "before": "Status table listed Open, Resolved, Declined.",
+          "after": "Adds Read: a Legal Team Member or Administrator opened the Request in the Inbox and Legal has not decided it. Open now means nobody in Legal has opened it in the Inbox. Replies are allowed while Read too.",
+          "source": "apps/web/src/lib/requester-status.ts 'read {Read}'; portal-request.tsx bannerRead 'Your request has been opened by the Legal team.'; request-detail.ts POST /requests/:number/read sets new to read; inbox-request.tsx calls it on open (cdcff1e1); isOpenRequestStatus covers new and read."
+        },
+        {
+          "claim": "Where the decline reason appears",
+          "before": "Read the reason shown beneath the status.",
+          "after": "Read the reason in the status banner.",
+          "source": "portal-request.tsx StatusBanner appends declinedReason after 'Legal declined this request.'"
+        },
+        {
+          "claim": "R- reference and list row contents",
+          "before": "Open it and check the title and R- reference.",
+          "after": "Your requests rows show R- reference, title, request type, age, Legal Owner and status; the Request page meta line shows the R- reference, request type and submission date.",
+          "source": "my-requests.tsx row; portal-request.tsx portal.request.meta."
+        },
+        {
+          "claim": "History applet",
+          "before": "Not mentioned.",
+          "after": "History in the applet bar lists the shared conversation activity.",
+          "source": "record-shell.tsx applets [conversation, history]; activity-applet.tsx 'History'; portal/applets.ts GET /portal/activity answers only Full Thread comment actions for a Request, because progress is false for requests (146c954a)."
+        },
+        {
+          "claim": "Portal record Fields and Branches",
+          "before": "The live record shows Fields whose Rows have Visible on Portal on. A Branch can hide an empty Row; a stored value remains readable when its Branch no longer holds ...",
+          "after": "The record's Fields card lists each Field whose Row has Visible on Portal on. A Field without a value shows Not recorded.",
+          "source": "portal/record-work.ts projectCustomFields('business_user', ...) filters on visibleOnPortal only; components/portal/record-work.tsx draws every projected Field with 'Not recorded' for an empty value and calls no Form evaluator. See productBugs."
+        },
+        {
+          "claim": "Conversation attachment action",
+          "before": "Select an attachment to download it.",
+          "after": "Select an attachment's filename to preview it, or select its download control to save it.",
+          "source": "comment-attachments.tsx filename button opens a preview; a separate link is labelled 'Download {filename}'. Resolves the DOC-029 walkthrough observation."
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Your requests excludes converted Requests and lists only the session user's own.",
+          "source": "apps/api/src/modules/requests/service.ts listMyRequests where requesterId = user and status <> converted"
+        },
+        {
+          "claim": "Another user's Request answers 404 and the page returns to /portal.",
+          "source": "read.ts readMyRequest scoped by requesterId; portal-request.tsx loader redirect on 404"
+        },
+        {
+          "claim": "A converted Request redirects to /portal/contracts/<n> or /portal/matters/<n> while the record is not archived and the user is in Portal scope; otherwise 404 to the Portal home. An archived destination shows the archived notice with no applets and no attachments.",
+          "source": "read.ts readMyRequest; portal-request.tsx recordArchived; messages portal.request.archivedRecord"
+        },
+        {
+          "claim": "Original request card on the record.",
+          "source": "components/portal/record-work.tsx portal.record.originalRequest"
+        },
+        {
+          "claim": "Conversion records the Requester as Business Owner with a team row.",
+          "source": "CONTEXT.md Business Owner (DD-023)"
+        },
+        {
+          "claim": "Comments, Show older, New comment, Attach files, and Comment disabled with empty text; the conversation read error text.",
+          "source": "comment-applet.tsx comments.applet, comments.older, comments.composer, comments.post disabled={busy || draft.trim() === ''}; comment-attachments.tsx comments.attachments.add"
+        },
+        {
+          "claim": "Attach new files to a reply appears on non-open statuses and targets #portal-request-composer.",
+          "source": "portal-request.tsx StatusBanner !isOpenRequestStatus; comment-applet.tsx hash portal-request-composer"
+        },
+        {
+          "claim": "The Portal posts Full Thread only, with no audience choice; Legal Only and Working Team stay hidden.",
+          "source": "comment-applet.tsx tier fieldset only when tiers.length > 1; INT-001 M20/7 addendum; portal/applets.ts full_thread filter"
+        },
+        {
+          "claim": "What you submitted shows the description (when it is not a Form answer), attachments with download links, Department or No Department, Urgency, and answered Rows labelled by the current Intake Rows.",
+          "source": "portal-request.tsx; read.ts readIntakeForm(includeArchived)"
+        },
+        {
+          "claim": "Clearing triage assignment shows Not assigned yet.",
+          "source": "request-owner.tsx portal.request.unassigned"
+        }
+      ],
+      "limitations": [
+        "V-C10 'follow the Request through disposition' now passes through Read when a Legal Team Member opens it in the Inbox. The walkthrough should expect Read, not Open, after Legal opens the Request page.",
+        "History on a Request lists only Full Thread comment activity; I did not check its exact entry wording.",
+        "The email and notification sentences were not rechecked against the M38 and M43 changes; the notifications guide owns them."
+      ]
+    }
+  ],
+  "productBugs": [
+    {
+      "file": "apps/web/src/components/portal/record-work.tsx (and apps/api/src/modules/portal/record-work.ts)",
+      "symptom": "The Portal record Fields card draws every Field whose Row has Visible on Portal on, including an empty Row under a false Branch, which reads 'Not recorded'. No Form evaluator runs on the Portal record.",
+      "contradicts": "DD-028.4 ('The record page draws such a Row only when it holds a value') and DD-028.5 (the Portal record calls the shared evaluator); CONTEXT.md Branch."
+    }
+  ],
+  "sharedFileRequests": [],
+  "sharedFileNotes": [
+    "docs/user-guides/triage-requests.md line 18 needed the Portal label **Legal Owner** instead of **Owner**. The inbox group's working copy already says **Legal Owner**, so no request is raised."
+  ],
+  "statusChange": null
+}

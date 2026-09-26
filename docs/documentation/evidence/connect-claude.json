@@ -1,0 +1,187 @@
+{
+  "articleId": "connect-claude",
+  "contentSha256": "50532b15c33c8fef038024c3e928be6771c1567346568febbd897731da9bc3d1",
+  "environment": "openlaw-docs-80ceef9e-claudelive; openlaw-docs-80ceef9e-claudelocal",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent live-provider walkthrough agent (claude-live)",
+  "reviewerKind": "agent",
+  "technicalReviewer": "DOC-030 source-review author agent (clients)",
+  "author": "DOC-030 source-review author agent (clients)",
+  "verifiedAt": "2026-09-25T20:48:17.618Z",
+  "status": "pass",
+  "sources": [
+    "docs/user-guides/connect-claude.md",
+    "docs/documentation/batches/DOC-030/clients/technical-review.json",
+    "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+    "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/lib.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-operator.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-outside.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/phase-passwords.mjs",
+    "docs/documentation/batches/DOC-030/claude-live/overlay-subnets.json",
+    "docs/documentation/batches/DOC-030/operator/walkthrough.json (V-M41-PUBLIC plain-HTTP LAN rows)",
+    "docs/documentation/batches/DOC-030/operator/plain-http-oauth-refused.png",
+    "apps/web/src/routes/consent.tsx",
+    "apps/api/src/modules/oauth-grants/routes.ts",
+    "apps/api/src/auth/oauth.ts",
+    "apps/api/src/auth/oauth-grants.ts",
+    "apps/api/src/auth/allowed-clients.ts",
+    "apps/api/src/mcp/auth.ts",
+    "apps/api/src/mcp/register.ts",
+    "apps/api/src/mcp/guide.ts",
+    "apps/web/src/components/connected-clients.tsx",
+    "apps/web/src/routes/login.tsx",
+    "apps/web/src/components/portal/portal-shell.tsx",
+    "apps/web/src/routes/portal-settings.tsx",
+    "docs/decision-records/DECISIONS.md (DD-029)"
+  ],
+  "scenarios": [
+    {
+      "id": "V-M41-C59",
+      "coverage": ["C59"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Public lab openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z; Publicly reachable profile through Tailscale Funnel, https://omarchy.tail0a8904.ts.net (443) after :8443 proved unreachable for claude.ai. Every seeded password account moved to one fresh random password before exposure.",
+        "Local lab openlaw-docs-80ceef9e-claudelocal (claudelocal), same commit and images, loopback Instance address http://127.0.0.1:43340 (OAuth for development), never exposed; Compose started with overlay-subnets.json (fixed subnets and public DNS for app and worker, because Docker's address pools on this host were exhausted).",
+        "Nadia Haddad (Legal Team Member), password sign-in in an isolated Playwright Chromium context; this agent played the Client's protocol legs (authorization request, PKCE exchange as a public client, /mcp calls)."
+      ],
+      "expected": "The Client acts as the signed-in person within the selected Toolsets, scope and record access. Disconnect removes the grant and the next call is unauthorized. Allow stays disabled without a Toolset and scope; Read and write is absent when the organization is read-only. An expired consent link requires a fresh connection; disabled Clients and account groups are refused.",
+      "actual": "Signed out, Claude's authorization request (client_id https://claude.ai/oauth/mcp-oauth-client-metadata, redirect https://claude.ai/api/mcp/auth_callback) went to /auth/login, which offered Business Portal sign-in; after Sign in the consent page read \"Claude wants to work in OpenLaw as you\", Published identity https://claude.ai/oauth/mcp-oauth-client-metadata, Allowed Client, Nadia Haddad · Legal team member · nadia.haddad@helix.example, \"What Claude may use\", \"Nothing is selected for you.\", 11 Toolset checkboxes with no Guide checkbox, \"How far Claude may go\" with Read only and Read and write, \"This Client can never see or change what you cannot.\" Allow stayed disabled with nothing, with a Toolset only and with Read only only; enabled with both. Claude Code's identity showed \"Claude Code wants to work in OpenLaw as you\" and \"What Claude Code may use\". With the organization Read-only, only Read only was offered; a request without write also offered only Read only. An altered link and a link reopened after more than ten minutes showed \"This consent request has expired or changed. Start again from your Client.\" with no actions. Claude turned off mid-flow showed \"This Client is off in the organization's Allowed Clients list.\" with Deny alone; a new request got HTTP 400 \"Client is not on the enabled Allowed Clients list.\" Legal Users OAuth Clients off showed \"OAuth Clients are off for your account type.\" with Deny alone. A registered Client deleted mid-flow showed \"This Client is not on the organization's Allowed Clients list.\" with Deny alone. On the local lab an existing Claude grant, made on the consent page and exchanged with PKCE, got 401 with MCP off, with Legal Users OAuth Clients off and with Claude off, and 200 when each came back. Claude Code callbacks http://localhost:<port>/callback and http://127.0.0.1:<port>/callback completed consent, the loopback return and a PKCE exchange (tools/list 200); a non-loopback and a wrong-path callback were refused with \"Callback URL is not allowed for this Client.\" Connecting again with prompt=consent showed the page and the new choices replaced the grant (workspace/read → contracts/write). Connected Clients (Settings → Personal → API keys) listed Claude with Toolsets, Write or Read, Granted and Last used; Disconnect → \"Revoke OAuth grant · This Client will lose access immediately. A new consent is needed to connect again.\" → Revoke left \"No Client is connected.\" Help /help/connect-claude matched the article openlaw_docs_read returns (81 of 81 sentences).",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-C59",
+      "coverage": ["C59"],
+      "role": "legal_team_member",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "Public lab openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z; Publicly reachable profile through Tailscale Funnel, https://omarchy.tail0a8904.ts.net (443) after :8443 proved unreachable for claude.ai. Every seeded password account moved to one fresh random password before exposure.",
+        "The batch owner's claude.ai account (custom connector OpenLaw DOC-030); the person did sign-in and consent; the coordinator relayed what Claude answered. Server side read by this agent: oauth_grants, oauth_consents, mcp_tool_calls and the app request log."
+      ],
+      "expected": "The Client acts as the signed-in person within the selected Toolsets, scope and record access. Disconnect removes the grant and the next call is unauthorized. Allow stays disabled without a Toolset and scope; Read and write is absent when the organization is read-only. An expired consent link requires a fresh connection; disabled Clients and account groups are refused.",
+      "actual": "The batch owner connected claude.ai (custom connector on the 443 origin) as Nadia Haddad. Requests came from Anthropic's range 160.79.106.x; the API fetched Claude's published identity. Round 1: grant with 11 Toolsets and write, as chosen on the consent page. Claude answered \"OpenLaw says you're Nadia Haddad (nadia.haddad@helix.example), a Legal Team Member at Helix Software Group. The connection has write scope and all twelve Toolsets enabled…\" and read the guide. mcp_tool_calls: openlaw_whoami, openlaw_docs_search, openlaw_docs_read, success, as Nadia Haddad via Claude. After Disconnect in her browser, Claude's three /mcp calls got 401 and the refresh 400; the person saw \"Authentication required to use this tool\" with Connect. A second connection chose Read only: the same grant row now held read, and Claude answered \"This connection has read-only scope…\"; Disconnect again, and Sign out other devices ended her browser sessions.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-C59",
+      "coverage": ["C59"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Public lab openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z; Publicly reachable profile through Tailscale Funnel, https://omarchy.tail0a8904.ts.net (443) after :8443 proved unreachable for claude.ai. Every seeded password account moved to one fresh random password before exposure.",
+        "Local lab openlaw-docs-80ceef9e-claudelocal (claudelocal), same commit and images, loopback Instance address http://127.0.0.1:43340 (OAuth for development), never exposed; Compose started with overlay-subnets.json (fixed subnets and public DNS for app and worker, because Docker's address pools on this host were exhausted).",
+        "Daniel Okafor (Administrator), password sign-in in an isolated Playwright Chromium context; this agent played the Client's protocol legs (authorization request, PKCE exchange as a public client, /mcp calls)."
+      ],
+      "expected": "The Client acts as the signed-in person within the selected Toolsets, scope and record access. Disconnect removes the grant and the next call is unauthorized. Allow stays disabled without a Toolset and scope; Read and write is absent when the organization is read-only. An expired consent link requires a fresh connection; disabled Clients and account groups are refused.",
+      "actual": "Daniel Okafor enabled MCP and both groups' OAuth Clients in Settings → Organization → MCP; Claude and Claude Code enabled. Signed out, Claude's authorization request went to /auth/login; after Sign in the consent page showed the same heading, identity, Allowed Client pill and \"Daniel Okafor · Administrator · daniel.okafor@helix.example\"; 11 Toolsets (Team and Administration have no Tools at this commit and are not offered); the Allow gate held. MCP off mid-flow showed \"MCP is off for this organization.\" with Deny alone. A link reopened after more than ten minutes showed the expired message with no actions. On the local lab his existing grant got 401 with MCP off, with Legal Users OAuth Clients off and with Claude off, and 200 again after. Connected Clients listed Claude · 11 Toolsets · Write; Disconnect → Revoke removed the row. Help matched the Guide article (81 of 81).",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-C59",
+      "coverage": ["C59"],
+      "role": "administrator",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "Public lab openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z; Publicly reachable profile through Tailscale Funnel, https://omarchy.tail0a8904.ts.net (443) after :8443 proved unreachable for claude.ai. Every seeded password account moved to one fresh random password before exposure.",
+        "The batch owner's claude.ai account (custom connector OpenLaw DOC-030); the person did sign-in and consent; the coordinator relayed what Claude answered. Server side read by this agent: oauth_grants, oauth_consents, mcp_tool_calls and the app request log."
+      ],
+      "expected": "The Client acts as the signed-in person within the selected Toolsets, scope and record access. Disconnect removes the grant and the next call is unauthorized. Allow stays disabled without a Toolset and scope; Read and write is absent when the organization is read-only. An expired consent link requires a fresh connection; disabled Clients and account groups are refused.",
+      "actual": "The batch owner connected claude.ai as Daniel Okafor on the 443 origin. Grant: 11 Toolsets and write. Claude answered \"OpenLaw has you signed in as Daniel Okafor (daniel.okafor@helix.example), an Administrator at Helix Software Group. The connection has read and write scope and all 12 Toolsets enabled…\" and read the guide (\"OpenLaw marks it unverified\"). Tool calls whoami, docs_search, docs_read as Daniel via Claude. After Disconnect at 19:20:59Z the next four /mcp calls from Anthropic got 401; the person saw \"Authentication required to use this tool\".",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-C59",
+      "coverage": ["C59"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Public lab openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z; Publicly reachable profile through Tailscale Funnel, https://omarchy.tail0a8904.ts.net (443) after :8443 proved unreachable for claude.ai. Every seeded password account moved to one fresh random password before exposure.",
+        "Local lab openlaw-docs-80ceef9e-claudelocal (claudelocal), same commit and images, loopback Instance address http://127.0.0.1:43340 (OAuth for development), never exposed; Compose started with overlay-subnets.json (fixed subnets and public DNS for app and worker, because Docker's address pools on this host were exhausted).",
+        "Jonas Weber (Business User), Business Portal sign-in with a fresh magic link from the lab Mailpit in an isolated Playwright Chromium context; this agent played the Client's protocol legs (authorization request, PKCE exchange as a public client, /mcp calls)."
+      ],
+      "expected": "The Client acts as the signed-in person within the selected Toolsets, scope and record access. Disconnect removes the grant and the next call is unauthorized. Allow stays disabled without a Toolset and scope; Read and write is absent when the organization is read-only. An expired consent link requires a fresh connection; disabled Clients and account groups are refused.",
+      "actual": "Signed out, Claude's authorization request went to /auth/login; Business Portal sign-in → /portal/login with the same query → Email me a sign-in link → Send link → the magic link returned to the consent page with \"Jonas Weber · Business user\". Offered 9 Toolsets (Workspace, Contracts, Matters, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge): the requested ones inside the ceiling that have Business User Tools. The Allow gate held. Business Users OAuth Clients off showed \"OAuth Clients are off for your account type.\" with Deny alone. A link reopened after more than ten minutes showed the expired message. On the local lab his existing grant got 401 with MCP off, with Business Users OAuth Clients off and with Claude off, 200 while only Legal Users were off, and 200 again after. In the Portal: Notification settings → API keys → Connected Clients listed Claude · 9 Toolsets · Write · Granted · Last used; Disconnect → Revoke OAuth grant → Revoke left \"No Client is connected.\"",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-C59",
+      "coverage": ["C59"],
+      "role": "business_user",
+      "method": "live-provider-check",
+      "prerequisites": [
+        "Public lab openlaw-docs-80ceef9e-claudelive (claudelive) built by lab.mjs from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T14:46:45Z to 14:47:16Z; Publicly reachable profile through Tailscale Funnel, https://omarchy.tail0a8904.ts.net (443) after :8443 proved unreachable for claude.ai. Every seeded password account moved to one fresh random password before exposure.",
+        "The batch owner's claude.ai account (custom connector OpenLaw DOC-030); the person did sign-in and consent; the coordinator relayed what Claude answered. Server side read by this agent: oauth_grants, oauth_consents, mcp_tool_calls and the app request log."
+      ],
+      "expected": "The Client acts as the signed-in person within the selected Toolsets, scope and record access. Disconnect removes the grant and the next call is unauthorized. Allow stays disabled without a Toolset and scope; Read and write is absent when the organization is read-only. An expired consent link requires a fresh connection; disabled Clients and account groups are refused.",
+      "actual": "The batch owner signed in as Jonas Weber with a fresh magic link and connected claude.ai on the 443 origin. Grant: the 9 offered Toolsets and write. Claude answered \"OpenLaw says you're Jonas Weber (jonas.weber@helix.example), a Business User at Helix Software Group. The connection has write scope and every Toolset enabled: guide, workspace, requests, auto-docs, entities, comments, contracts, matters, documents and knowledge.\" Tool calls whoami, docs_search, docs_read as Jonas via Claude. After Disconnect in the Portal at 20:23:08Z, the next two /mcp calls got 401 and the refresh 400; the person saw \"Authentication required to use this tool\" with Connect.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/claude-live/walkthrough.json",
+        "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+        "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+      ]
+    }
+  ],
+  "limitations": [
+    "Independent agent walkthrough, not a human user study. The live-provider rows rest on the batch owner's own claude.ai session as relayed by the coordinator, and on this agent's server-side reads.",
+    "Claude Code CLI live connection not run: the batch owner skipped it. Its consent page, published identity and both loopback callback forms were walked in the browser with this agent playing the Client's protocol legs.",
+    "LAN only over a trusted private HTTPS address with a corporate CA for Claude Code was not walked.",
+    "Claude Desktop and Cowork were not connected; the guide says they use the same remote connection.",
+    "The lab served the guide at the pinned commit (bundle contentSha256 b8107eb0…) in Help and openlaw_docs_read; the Help and Guide parity check compares those two. The repository guide 50532b15 differs in wording that this walk checked step by step (walkthrough.json conclusion).",
+    "The plain-HTTP LAN claim (no OAuth) rests on the operator walker's V-M41-PUBLIC rows and plain-http-oauth-refused.png, not on this walk.",
+    "Claude's add-connector messages for an unreachable :8443 address (\"Couldn't reach this address\", \"No server responded at this URL\") are from the batch owner's screenshots as reported by the coordinator.",
+    "The Instance-address pill read \"Not reachable · Public IPv4 address\" on the public lab because the API resolved the Funnel hostname through the host's Tailscale MagicDNS; the guide says the pill does not prove vendor reachability.",
+    "Reconnecting a Client with a live grant and no prompt=consent reuses the remembered consent without a page; Claude's requests carry prompt=consent and then show the page, as the guide describes."
+  ],
+  "previousEvidence": null,
+  "copyOnlyReview": null,
+  "compatibilityReview": null
+}

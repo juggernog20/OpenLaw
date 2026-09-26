@@ -1,0 +1,436 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-030",
+  "group": "documents",
+  "set": "compat",
+  "replayOf": "docs/documentation/batches/DOC-029/documents/walkthrough-r1.mjs",
+  "walkthroughReviewer": "DOC-030 compatibility reviewer (compat)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "lab": {
+    "summary": "compatcmp: http://127.0.0.1:43345; source 067c1646829df85e62b809ee9157921e867c84e7; seed complete",
+    "project": "openlaw-docs-80ceef9e-compatcmp",
+    "images": {
+      "app": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+      "worker": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+      "doc-engine": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    }
+  },
+  "appUrl": "http://127.0.0.1:43345",
+  "mailUrl": "http://127.0.0.1:48455",
+  "browser": "Playwright 1.63.0 Chromium, headless, one browser context per identity",
+  "articleHashes": {
+    "document-versions": "52f85938179cb5abdade19f51ae795ad842c600ce94fc62524f78f417f0af444",
+    "document-folders": "827703e03b632fcbcf3286aaf0f1d36b6470986afc290fd84e17767ac5eb81c3",
+    "document-previews": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
+    "document-repository": "136781c9af2801bb4a743ffa84972fea28040ca2e7e535cee124a7c80524e13e",
+    "archive-and-delete-documents": "5ddced602dd598518d23d7927a1204ef9fd2d3486697527b279ac9cfcebd7ece"
+  },
+  "fixtures": [
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-broken.docx",
+      "sha256": "3a65b1b9a930629c38caec11baed28a56c569c38bde0038b2f4f706587b2611e"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-a.txt",
+      "sha256": "c0dbc1f2090728af690515624fde1ce37d172b484369ff01bca40a5a4a038749"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-b.txt",
+      "sha256": "a3686c10a2d63e59d8e601e9a58c7eea07eddb39b88f1a3ed8b6df5d59b9c916"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-c.txt",
+      "sha256": "342c505925518d24e3503bdf2a7afe209e6ced5595047b831f151f274467ffdb"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-d.txt",
+      "sha256": "b7336358ec54ea046d5c273a35ce5ca5d6e0540885838d5e6ee2e765e5cb8fc8"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bundle.zip",
+      "sha256": "5c019d5a25f221f1737c271c26f3ad74f86b0ea5dceb9859d9437904e7e94abb"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-deck.pptx",
+      "sha256": "27bb27ee1a181b1415a36e9fefb95b1e50316312f6b74884afdbcab03ba8c2eb"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-draft-v1.docx",
+      "sha256": "7ef62e21080b131fe52983809b9c4120003179cf4bad2616abe23ef5b559f24d"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-draft-v2.docx",
+      "sha256": "a48db865f959bb77e4dd8c954cec865721c3e80422c5dd0211cd34fe7757181a"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-message.eml",
+      "sha256": "3b06dcfa36dba6f9a590944b4b72e933e5b8e0cff579876ec66f62c0c56ff966"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-scan.pdf",
+      "sha256": "bc1dad800ab8e67121dbf0f05c6eed62c592f2706ca50435f1752ffd34f8dd96"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-schedule.csv",
+      "sha256": "438b5f30d7bd6c963a345a71a705f6fa9b9248fb5db4bee7f85482ae8576dbc4"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-services-text.pdf",
+      "sha256": "dac0eda00e4fb895be58fed622322e660f7a47c8a73f4ab9e8a2a6886d7f09b4"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-stamp.png",
+      "sha256": "c4d6267a51844dbc5c4ebb6ffdbcc72b0182cf897c06b0639af9b671b6a54460"
+    }
+  ],
+  "sections": ["previews", "portal"],
+  "roles": ["administrator", "legal_team_member"],
+  "stamp": "788866",
+  "startedAt": "2026-09-25T10:23:09.372Z",
+  "finishedAt": "2026-09-25T10:23:54.882Z",
+  "records": [
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-030 compat documents Admin previews Contract 788866",
+      "ref": "C-63"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-030 compat documents Legal previews Contract 788866",
+      "ref": "C-64"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-030 compat documents Portal Contract 788866",
+      "ref": "C-65"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-030 compat documents Portal not on team 788866",
+      "ref": "C-66"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "knowledge_item",
+      "name": "DOC-030 compat documents Portal Knowledge 788866",
+      "ref": "01a0d817-af64-72b5-9c42-6b25293ff09f"
+    },
+    {
+      "role": "business_user",
+      "kind": "request",
+      "name": "DOC-030 compat documents Portal request 788866",
+      "ref": "R-16"
+    }
+  ],
+  "steps": [
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document",
+      "expected": "The reader shows the title and v1, the PDF controls work, Download returns the original bytes, and Close returns to the record",
+      "actual": "Selecting \"admin-doc029-services-text.pdf\" opened the reader \"admin-doc029-services-text.pdf, version 1\" with the v1 chip and Page 1 of 2. Previous page, Next page, Zoom out, Zoom in and Find in document were present; Next page reached Page 2 of 2 and Previous page returned. Find for a word in the text layer read \"1 of 2\". Download returned the uploaded bytes (SHA-256 match). Close the document closed the reader.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:10.487Z",
+      "at": "2026-09-25T10:23:12.478Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version",
+      "expected": "Both open in the PDF reader after preparation and download the original bytes; the chain stays at one Version",
+      "actual": "admin-doc029-draft-v1.docx: rendition ready, PDF reader pages shown, download matched the uploaded file; admin-doc029-deck.pptx: rendition ready, PDF reader pages shown, download matched the uploaded file. Each chain still had one Version.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:12.479Z",
+      "at": "2026-09-25T10:23:15.619Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it",
+      "expected": "Reader Find reports no match, text read-back source is OCR, and global search lists the Document",
+      "actual": "The scan opened as Page 1 of 1 in the reader and Find in document for \"Marrowbridge\" read \"No matches\". The text read-back became ready from source ocr and contained the word. Global search for \"Marrowbridge\" listed \"admin-doc029-scan.pdf\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:15.620Z",
+      "at": "2026-09-25T10:23:17.277Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads",
+      "expected": "Image inline; email headers and 2 attachments; no remote image request; PDF attachment opens; DOCX attachment is a download",
+      "actual": "The PNG drew as an inline image. The EML reader showed From, To, Subject, Date, the sandboxed \"Message body\" text and \"2 attachments\"; the body's remote image (src \"\") made no request to the remote host. The PDF attachment opened in a preview with \"Back to the message\"; the Word attachment was a download link and returned its bytes. Reading the email created no new Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:17.278Z",
+      "at": "2026-09-25T10:23:19.836Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: other formats download from the name; a reader link shows the download-only card",
+      "expected": "CSV and ZIP names download directly; a reader link to one shows the card",
+      "actual": "Selecting \"admin-doc029-schedule.csv\" and \"admin-doc029-bundle.zip\" downloaded the original files (SHA-256 match) without opening a reader (0 -> 0 panels). Opening the CSV through a reader link showed \"This file type does not open here. Download it to read it.\" with Download.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:19.837Z",
+      "at": "2026-09-25T10:23:20.690Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable",
+      "expected": "The pending message shows and Download returns the uploaded file",
+      "actual": "With a browser-network fixture holding the rendition read at pending, the reader showed \"Preparing this document for reading…\" and Download returned the uploaded Word file (SHA-256 match).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:20.691Z",
+      "at": "2026-09-25T10:23:21.601Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Failed previews: the failure message, Download of the original, and recovery by adding a readable Version",
+      "expected": "A damaged Word file shows the failure card and downloads; a new Version renders while the failed Version stays in the chain",
+      "actual": "The malformed Word container reached rendition state failed. The reader showed \"This file could not be prepared for reading here. Download it to read it.\" and Download returned the original bytes. Add version with a readable Word file made v2 (rendition ready), which opened in the PDF reader; expanding the chain and selecting the v1 filename still showed the failure card for v1.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:21.601Z",
+      "at": "2026-09-25T10:23:27.420Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Read a managed Document steps 1-4 (PDF): name opens the reader; v… indicator; Previous page, Next page, Zoom out, Zoom in, Find in document; Download; Close the document",
+      "expected": "The reader shows the title and v1, the PDF controls work, Download returns the original bytes, and Close returns to the record",
+      "actual": "Selecting \"legal-doc029-services-text.pdf\" opened the reader \"legal-doc029-services-text.pdf, version 1\" with the v1 chip and Page 1 of 2. Previous page, Next page, Zoom out, Zoom in and Find in document were present; Next page reached Page 2 of 2 and Previous page returned. Find for a word in the text layer read \"1 of 2\". Download returned the uploaded bytes (SHA-256 match). Close the document closed the reader.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:28.128Z",
+      "at": "2026-09-25T10:23:30.199Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: Word and PowerPoint render as a PDF rendition; Download stays the uploaded file; a preview is not a new Version",
+      "expected": "Both open in the PDF reader after preparation and download the original bytes; the chain stays at one Version",
+      "actual": "legal-doc029-draft-v1.docx: rendition ready, PDF reader pages shown, download matched the uploaded file; legal-doc029-deck.pptx: rendition ready, PDF reader pages shown, download matched the uploaded file. Each chain still had one Version.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:30.199Z",
+      "at": "2026-09-25T10:23:33.405Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Processing, scans: an image-only PDF stays a scan; Find has no match; OCR text arrives in the background; global search finds it",
+      "expected": "Reader Find reports no match, text read-back source is OCR, and global search lists the Document",
+      "actual": "The scan opened as Page 1 of 1 in the reader and Find in document for \"Marrowbridge\" read \"No matches\". The text read-back became ready from source ocr and contained the word. Global search for \"Marrowbridge\" listed \"legal-doc029-scan.pdf\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:33.406Z",
+      "at": "2026-09-25T10:23:35.126Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: PNG shows inline; EML shows headers, body and attachment list without remote images; a PDF attachment previews; a Word attachment downloads",
+      "expected": "Image inline; email headers and 2 attachments; no remote image request; PDF attachment opens; DOCX attachment is a download",
+      "actual": "The PNG drew as an inline image. The EML reader showed From, To, Subject, Date, the sandboxed \"Message body\" text and \"2 attachments\"; the body's remote image (src \"\") made no request to the remote host. The PDF attachment opened in a preview with \"Back to the message\"; the Word attachment was a download link and returned its bytes. Reading the email created no new Documents.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:35.127Z",
+      "at": "2026-09-25T10:23:37.805Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Supported reading surfaces: other formats download from the name; a reader link shows the download-only card",
+      "expected": "CSV and ZIP names download directly; a reader link to one shows the card",
+      "actual": "Selecting \"legal-doc029-schedule.csv\" and \"legal-doc029-bundle.zip\" downloaded the original files (SHA-256 match) without opening a reader (0 -> 0 panels). Opening the CSV through a reader link showed \"This file type does not open here. Download it to read it.\" with Download.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:37.806Z",
+      "at": "2026-09-25T10:23:38.670Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Processing: Preparing this document for reading… while conversion is pending; the stored original is already downloadable",
+      "expected": "The pending message shows and Download returns the uploaded file",
+      "actual": "With a browser-network fixture holding the rendition read at pending, the reader showed \"Preparing this document for reading…\" and Download returned the uploaded Word file (SHA-256 match).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:38.670Z",
+      "at": "2026-09-25T10:23:39.583Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Failed previews: the failure message, Download of the original, and recovery by adding a readable Version",
+      "expected": "A damaged Word file shows the failure card and downloads; a new Version renders while the failed Version stays in the chain",
+      "actual": "The malformed Word container reached rendition state failed. The reader showed \"This file could not be prepared for reading here. Download it to read it.\" and Download returned the original bytes. Add version with a readable Word file made v2 (rendition ready), which opened in the PDF reader; expanding the chain and selecting the v1 filename still showed the failure card for v1.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:39.584Z",
+      "at": "2026-09-25T10:23:45.319Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: Documents section, select a name to read the current Version, download beside it",
+      "expected": "The reader opens the current Version and the download returns its bytes",
+      "actual": "On the Portal Contract, selecting \"portal-chain-v1.pdf\" opened the reader \"portal-chain-v1.pdf, version 2\" with the v2 chip and the converted pages. The download button beside it (\"Download portal-chain-v1.pdf, version 2\") returned the uploaded Word bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:48.130Z",
+      "at": "2026-09-25T10:23:49.201Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: … earlier versions lists earlier Versions; a filename reads that Version",
+      "expected": "The earlier Version opens in the reader and downloads",
+      "actual": "\"1 earlier version\" listed portal-chain-v1.pdf; selecting it opened \"portal-chain-v1.pdf, version 1\" in the reader, and its download returned the v1 bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:49.202Z",
+      "at": "2026-09-25T10:23:49.478Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: archived Documents and records outside your audience are not listed",
+      "expected": "The archived Document is absent; a Contract without team membership is not found",
+      "actual": "The archived \"portal-archived.txt\" was not in the Portal Documents list. A Contract without the Business User on its team showed \"Contract not found\" (read 404).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:49.479Z",
+      "at": "2026-09-25T10:23:49.599Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: on your own Request, select a file under Attachments to download it",
+      "expected": "The Request attachment downloads with its original bytes",
+      "actual": "On R-16, the Attachments file portal-request-attachment.csv downloaded with its original bytes; no Document reader opened (0 reader controls).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:49.600Z",
+      "at": "2026-09-25T10:23:49.744Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: a comment attachment name opens its preview with Download; Preview unavailable appears for a file with no preview",
+      "expected": "The PDF previews and downloads; a ZIP shows the unavailable message with Download; no filing action",
+      "actual": "In Comments, selecting portal-thread.pdf opened its preview (PDF pages) and Download returned the bytes. portal-thread.docx also opened as a converted preview and Download returned the original Word bytes. portal-thread.zip showed \"Preview unavailable. You can download the original file.\" and Download returned the ZIP bytes. No File to Contract action was offered to the Business User.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:49.744Z",
+      "at": "2026-09-25T10:23:52.539Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Read files in the Business Portal: Knowledge lists the primary Document first with Download beside each file and no preview or Version picker; an archived item is no longer available",
+      "expected": "Primary first; downloads return bytes; no reader; archived item unavailable",
+      "actual": "The Portal Knowledge page listed portal-knowledge-primary.pdf Download | portal-knowledge-first.txt Download: the primary Document first although it was uploaded second. Download returned its bytes; file names were plain text, not reader buttons. After Legal archived the item, the same address landed on /portal (\"What do you need from Legal? Help with this page NDA request…\") with no files.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:52.540Z",
+      "at": "2026-09-25T10:23:53.287Z"
+    },
+    {
+      "article": "document-previews",
+      "scenario": "V-C28",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: the Portal does not grant access to the staff Documents repository",
+      "expected": "The staff repository address and its read are refused",
+      "actual": "Opening /documents as the Business User landed on /portal; the repository read answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:53.287Z",
+      "at": "2026-09-25T10:23:53.874Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: Business Users on the team upload Documents and add Versions in the Portal, including a new Version of the primary Document",
+      "expected": "Upload documents creates a Document; Add version appends to the primary Document",
+      "actual": "Add version on the Primary Document \"portal-chain-v1.pdf\" opened Upload documents with Add as preset to that Document (New version of it); the upload appended v3. Upload documents with two files created two Documents at the record root (read-back by Legal).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:53.875Z",
+      "at": "2026-09-25T10:23:54.486Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start and Recover: Business Users cannot change designations, kinds or folders, archive or delete, and get no filing action",
+      "expected": "The Portal shows no such controls and the staff seams refuse them",
+      "actual": "The Portal Documents section offered none of Make primary, Mark as executed copy, Move to folder, Archive, Delete, New folder or Edit details. Direct attempts were refused: {\"primary\":403,\"kind\":403,\"executed\":403,\"folder\":403,\"archive\":403,\"delete\":403}. The Document stayed live and Primary.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:54.487Z",
+      "at": "2026-09-25T10:23:54.579Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: Business Users upload several files at the record root but cannot create folders, move Documents or import a folder structure",
+      "expected": "No folder controls or folder picker in the Portal; folder and move seams refuse",
+      "actual": "Upload documents in the Portal offered Add as, a file drop zone, Kind and Note but no Choose folder or New folder. The folder create seam answered 403 and moving a Document into a folder answered 403; the staff folder read answered 403. The two-file Portal upload in the previous step landed at the record root.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:54.579Z",
+      "at": "2026-09-25T10:23:54.711Z"
+    },
+    {
+      "article": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Before you start: Business Users cannot archive, restore or delete; they have no managed-Document deletion controls",
+      "expected": "No archive, restore or delete controls; the seams refuse",
+      "actual": "The Portal Documents section had no Archive, Restore, Delete or Show archived control. Restore answered 403, archive 403, delete 403; the archived Document stayed archived.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:23:54.711Z",
+      "at": "2026-09-25T10:23:54.872Z"
+    }
+  ],
+  "screenshots": [
+    "scratch (not committed): r1-legal-failed-preview.png",
+    "scratch (not committed): r1-business-portal-preview-unavailable.png"
+  ]
+}

@@ -1,6 +1,6 @@
 # Install OpenLaw
 
-Start a new OpenLaw instance, check its services, and hand its address to the person creating the first Administrator. Use [Upgrade a populated instance](upgrade.md) for an existing installation.
+Start a new OpenLaw instance, check its services, and hand its address and setup token to the person creating the first Administrator. Use [Upgrade a populated instance](upgrade.md) for an existing installation.
 
 ## Before you start
 
@@ -8,7 +8,7 @@ Use a Linux host with Git, OpenSSL, and [Docker Engine with the Compose plugin](
 
 Prepare a browser-facing hostname and TLS reverse proxy for a team deployment. The hostname can be private to the office network and VPN; public internet access is not required. For a private installation, follow [Deploy on a private VM](deployment-configuration.md#deploy-on-a-private-vm) to arrange DNS, certificates, and restricted port bindings before you start the stack. You also need an SMTP relay for invitations, sign-in links, and the welcome wizard. Creating the initial Administrator account does not send email, but the welcome wizard cannot finish until outbound email is configured. Choose an unused app port and an installation directory that will stay in place. The Compose project name identifies the installation's database and file volumes: keep it stable across restarts and upgrades.
 
-This documentation candidate uses a committed source build, not an assumed published release. Its application revision is `57e77e386be31b2a319f7143dd54d00123e65efe`. The commands below build that revision and give its app and document-engine images their own tags. Do not substitute a moving branch or `latest` tag when reproducing this edition.
+This documentation candidate uses a committed source build, not an assumed published release. Its application revision is `067c1646829df85e62b809ee9157921e867c84e7`. The commands below build that revision and give its app and document-engine images their own tags. Do not substitute a moving branch or `latest` tag when reproducing this edition.
 
 ## Prepare the source and configuration
 
@@ -17,7 +17,7 @@ This documentation candidate uses a committed source build, not an assumed publi
    ```bash
    git clone https://github.com/juggernog20/OpenLaw.git openlaw
    cd openlaw
-   git checkout --detach 57e77e386be31b2a319f7143dd54d00123e65efe
+   git checkout --detach 067c1646829df85e62b809ee9157921e867c84e7
    ```
 
 2. Copy the example environment file. If `.env` already exists, inspect the existing installation before proceeding; do not replace its keys.
@@ -35,16 +35,20 @@ This documentation candidate uses a committed source build, not an assumed publi
 
    The grouped commands refuse to overwrite an existing `.env` and stop before changing its keys.
 
-3. Edit `.env` with your chosen origin, port, and project name. The following are example values; replace the hostname before using them for a team. Add each setting once, rather than leaving duplicate entries:
+3. Edit `.env` with your chosen origin, port, project name, and proxy address. The following are example values; replace the hostname before using them for a team. Add each setting once, rather than leaving duplicate entries:
 
    ```dotenv
    COMPOSE_PROJECT_NAME=openlaw
    COMPOSE_FILE=compose.yml:compose.operator.yml
-   OPENLAW_BUILD_COMMIT=57e77e386be31b2a319f7143dd54d00123e65efe
+   OPENLAW_BUILD_COMMIT=067c1646829df85e62b809ee9157921e867c84e7
    OPENLAW_BUILD_DIRTY=false
    BASE_URL=https://legal.example.com
    PORT=3000
    ```
+
+   Leave `TRUSTED_PROXIES` out for now. Its value is an address that Docker assigns when the stack first starts, so you set it in [Build and start](#build-and-start).
+
+   You can also add `SETUP_TOKEN` with a value of your choice. The first Administrator enters that token on the setup screen. If you leave it out, the app makes a new token each time it starts while the instance has no users.
 
 4. Create `compose.operator.yml` beside `compose.yml`:
 
@@ -62,7 +66,7 @@ This documentation candidate uses a committed source build, not an assumed publi
 
 Run the remaining commands from this installation directory. Compose reads the project and file list from `.env`. An exported shell variable takes precedence over `.env`; remove unintended deployment overrides from your shell before starting.
 
-For a private VM, add the private Compose overlay and set the internal HTTPS origin as described in [private deployment](deployment-configuration.md#deploy-on-a-private-vm) before running the following commands. The base Compose file otherwise publishes the app port on all host interfaces.
+For a private VM, set the internal HTTPS origin as described in [private deployment](deployment-configuration.md#deploy-on-a-private-vm) before running the following commands. The base Compose file publishes the app port only on the host's `127.0.0.1`, so a proxy on the same host can reach it and other hosts cannot. A proxy in a container or on another host needs `APP_BIND`; see [Serve the intended origin](deployment-configuration.md#serve-the-intended-origin).
 
 ## Build and start
 
@@ -92,7 +96,29 @@ For a private VM, add the private Compose overlay and set the internal HTTPS ori
 
    A successful response means the API can reach its database. Also check that the worker is running and that the document engine becomes healthy. Readiness alone does not test email, storage writes, processing, or external providers.
 
-4. Configure the reverse proxy using [the proxy requirements](deployment-configuration.md#serve-the-intended-origin). Open the intended HTTPS address, check that it reaches **Set up OpenLaw**, and create the initial account by following [first-run setup](first-run.md). Complete this before inviting the team to the address.
+4. Name the reverse proxy in `TRUSTED_PROXIES`. The app reads the client address from `X-Forwarded-For` only on requests from a listed address. A proxy on the same host reaches the app from the gateway of the app's Compose network, not from `127.0.0.1`. Read that gateway. Replace the first `openlaw` with your `COMPOSE_PROJECT_NAME`:
+
+   ```bash
+   docker network inspect openlaw_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'
+   ```
+
+   Add `TRUSTED_PROXIES` with the gateway address to `.env`, for example `TRUSTED_PROXIES=172.18.0.1`, then apply it:
+
+   ```bash
+   docker compose up -d --no-build --pull never
+   ```
+
+   Without the list, the app logs a warning at start, and every client behind the proxy shares one sign-in rate-limit bucket. A value that does not match the proxy, such as `127.0.0.1`, has the same effect with no warning. [Find the trusted proxy address](deployment-configuration.md#find-the-trusted-proxy-address) covers a proxy on another host and how to check the value.
+
+5. Read the setup token. If you set `SETUP_TOKEN`, the token is that value. Otherwise the app prints the token in its log after "First-run setup is open. Paste this setup token into the setup screen:":
+
+   ```bash
+   docker compose logs app
+   ```
+
+   A restart replaces a printed token, so read the log again after each restart. The app prints no token once a user exists. Keep the token private until the first Administrator exists.
+
+6. Configure the reverse proxy using [the proxy requirements](deployment-configuration.md#serve-the-intended-origin). Open the intended HTTPS address, check that it reaches **Set up OpenLaw**, and create the initial account with the setup token by following [first-run setup](first-run.md). Complete this before inviting the team to the address. Then check that the app records the browser's address, not the gateway, as described in [Find the trusted proxy address](deployment-configuration.md#find-the-trusted-proxy-address).
 
 For a disposable local check, set `BASE_URL` to the exact local address you will open, including its port. A local HTTP check does not establish a TLS deployment trusted by employee devices. Build and download time depend on the host and cache; check elapsed time on your host rather than assuming installation always finishes within an hour.
 

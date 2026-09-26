@@ -1,21 +1,55 @@
 {
   "articleId": "notifications",
-  "contentSha256": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (conversations, round 2)",
+  "contentSha256": "83f09bea287b1c4a5a5000f18afe413f157e200c1383cbcf9d6add136a24f9d2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (conversations)",
+  "technicalReviewer": "DOC-030 source-review author agent (conversations)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (conversations)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (conversations)",
-  "technicalReviewer": "DOC-029 source-review author agent (conversations)",
-  "verifiedAt": "2026-09-16T16:00:39Z",
+  "verifiedAt": "2026-09-25T11:11:32.845Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/notifications.md",
+    "docs/documentation/batches/DOC-030/conversations/technical-review.json",
+    "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
     "CONTEXT.md",
-    "docs/decision-records/DECISIONS-NOTIFICATIONS.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
     "docs/documentation/batches/DOC-029/conversations/technical-review.json",
-    "docs/documentation/batches/DOC-029/conversations/walkthrough-r2.json"
+    "docs/decision-records/DECISIONS-NOTIFICATIONS.md",
+    "apps/web/src/components/notification-bell.tsx",
+    "apps/web/src/lib/notifications.ts",
+    "apps/web/src/components/notification-preferences.tsx",
+    "apps/web/src/components/notification-devices.tsx",
+    "apps/web/src/components/my-reminder-lead-times.tsx",
+    "apps/web/src/components/portal/notification-preferences.ts",
+    "apps/web/src/components/portal/portal-shell.tsx",
+    "apps/web/src/components/key-date-reminder-fields.tsx",
+    "apps/web/src/notification-worker.ts",
+    "apps/web/src/routes/settings-notifications.tsx",
+    "apps/web/src/routes/portal-settings.tsx",
+    "apps/web/src/routes/settings-reminders.tsx",
+    "apps/web/src/routes/settings.tsx",
+    "apps/api/src/lib/notifications/catalog.ts",
+    "apps/api/src/lib/notifications/preferences.ts",
+    "apps/api/src/lib/notifications/audience.ts",
+    "apps/api/src/lib/notifications/notifier.ts",
+    "apps/api/src/lib/notifications/email.ts",
+    "apps/api/src/lib/notifications/comment-email.ts",
+    "apps/api/src/lib/notifications/offsets.ts",
+    "apps/api/src/lib/notifications/vapid.ts",
+    "apps/api/src/lib/email-layout.ts",
+    "apps/api/src/lib/key-date-reminders.ts",
+    "apps/api/src/pipeline/morning-round.ts",
+    "apps/api/src/pipeline/notification-email.ts",
+    "apps/api/src/modules/notifications/routes.ts",
+    "apps/api/src/modules/notifications/subscriptions.test.ts",
+    "apps/api/src/modules/notifications/comment-emails.test.ts",
+    "packages/db/src/schema/notifications.ts",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
@@ -24,17 +58,19 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional accounts on the shared work documentation lab (openlaw-docs-41255c61-work), each in its own headless browser context.",
-        "Reviewer fixtures named DOC-029 conversations * 205399: Jonas Weber's Requests R-134 to R-138, R-134 converted to Contract C-312 and R-135 to Matter M-172, with Nadia Haddad added to both teams. Events were raised by posting comments, uploads, and a status change through the API as the acting role.",
-        "Three fresh fictional Legal Team Member accounts invited for the morning round checks."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z); app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e.",
+        "Playwright 1.63.0 Chromium, one isolated browser context per identity; staff by password, Business Users by fresh magic links read from the work2 Mailpit and never stored.",
+        "Fresh Legal Team Members DOC-030 conversations Legal Own List, Legal Los Angeles and Legal No Date Bell (stamp 040441) on the team of C-55; Nadia Haddad (seed) as the second actor."
       ],
-      "expected": "Links open permitted records and each preference affects its documented channel/event group. Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained.",
-      "actual": "11 recorded steps passed for this role on 3fa407e3. Nadia's header read Notifications, 88 unread with badge 9+; the panel marked items Unread, and closing it left the count at 88. Selecting the Daniel Okafor mentioned you item opened /contracts/312 and the item lost its Unread marker. Show older grew the list from 25 to 50; Mark all read took unread to 0 and then disappeared. Profile menu, Settings, Personal, Notifications showed the five groups and five Briefing switches with the table's initial choices. Assigned to you Email off gave a mention item and no mail; Email on gave one You were mentioned mail; In-app off gave neither; each choice survived a reload, and the mention raised no second comment item. An aborted save showed The change could not be saved. Try again. and the switch kept its value. A new Request item opened /inbox/138. The Add a key date dialog listed Global reminders and This date will remind, refused 731, did not offer Jonas Weber, and saved one recipient. A morning round served the America/New_York accounts: Dates approaching In-app off removed the date items and kept the briefing, and the Pacific/Honolulu account before 08:00 got nothing. The briefing named all three Key dates. After the selected recipient left the team, Edit key date offered Use the usual audience, and choosing it cleared the selection.",
+      "expected": "Bell badge, unread dots, destinations, Your approvals, Show older, preferences with In-app, Email and Push, failed saves, New requests, own reminder lead times, device notification states, comment emails and reminder timing behave as the guide says.",
+      "actual": "18 recorded browser steps passed for this role. The header read Notifications, N unread with badge 9+; opening changed nothing; selecting a mention opened /contracts/55 and cleared that one item. A Contract Approval sat under Your approvals with Review (to /contracts/55/approvals) and Earlier below; Mark all read cleared the rest, left the approval counted (badge 1) and the foot read \"Mark all read leaves Your approvals in place.\"; answering removed it. Show older loaded more. Settings > Personal > Notifications showed In-app, Email and Push with the documented initial choices (no Email for Dates approaching; Email only for Knowledge items) and the Briefing caption. Assigned to you Email off gave a bell item and no mail, Email on gave mail, In-app off gave neither, each kept after reload. A blocked save showed \"The change could not be saved. Try again.\" and reverted. A new Request opened /inbox/84. Reminder lead times: turning off the default copied the organization list, 731 was refused, 3 was added, the last entry could not be removed, turning the default back on cleared the list. The approved API key item opened /settings/api-keys. Mention emails carried the words with \"Nadia Haddad · Full Thread\", cut with … and Read the full comment, no attachment, and the notification settings footer; Legal Only showed that tier, a Task comment none; a delete before the send left no words and an edit that landed before the send was included. At the 11:00 UTC round Legal Own List got the three-day and five-day Key dates only, Legal Los Angeles nothing, and Legal No Date Bell no date items and a briefing without Dates. The Devices card reached Turn on for this browser, Show details in notifications and the blocked message.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r2.mjs",
-        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/conversations/lib.mjs",
+        "docs/documentation/batches/DOC-030/conversations/fixtures.json",
+        "docs/documentation/batches/DOC-030/conversations/technical-review.json"
       ]
     },
     {
@@ -43,17 +79,19 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional accounts on the shared work documentation lab (openlaw-docs-41255c61-work), each in its own headless browser context.",
-        "Reviewer fixtures named DOC-029 conversations * 205399: Jonas Weber's Requests R-134 to R-138, R-134 converted to Contract C-312 and R-135 to Matter M-172, with Nadia Haddad added to both teams. Events were raised by posting comments, uploads, and a status change through the API as the acting role.",
-        "One fresh fictional Administrator account invited for the morning round checks."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z); app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e.",
+        "Playwright 1.63.0 Chromium, one isolated browser context per identity; staff by password, Business Users by fresh magic links read from the work2 Mailpit and never stored.",
+        "Fresh Administrator DOC-030 conversations Admin 040441, Legal Owner of C-55; Daniel Okafor (seed) for fixtures."
       ],
-      "expected": "Links open permitted records and each preference affects its documented channel/event group. Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained.",
-      "actual": "5 recorded steps passed for this role on 3fa407e3. As the Owner of C-312, Daniel had Activity on your records In-app on and Email off. Nadia's comment gave him a bell item and no New comment on mail; with Email on it gave one mail; his own comment gave nothing; the item opened /contracts/312. A blocked bell read showed Notifications could not be read. Close this and open it again., and reopening listed 25 items. A blocked older page showed The older notifications could not be read. Try again. with 25 rows kept, and the retry loaded 50. His settings matched the table. Fresh accounts started with the documented choices. The fresh Administrator with Briefing Dates Email off got a briefing without a Dates section but kept both Key date bell items. Your daily briefing is ready opened Home, and a second round on the same local day sent no mail and no new items.",
+      "expected": "Activity on your records follows its switches; bell failures recover; API key requests offer Approve and Deny in Your approvals and API key items open the documented pages; comment words can be turned off for the organization; the briefing and its bell summary work.",
+      "actual": "9 recorded browser steps passed for this role. Initial switches matched the table. Nadia's comment gave a commented-on item and no mail with Email off, New comment mail with Email on, nothing for his own comment; the item opened /contracts/55. A blocked read showed \"Notifications could not be read. Close this and open it again.\" and a blocked older page \"The older notifications could not be read. Try again.\"; both recovered. Your approvals listed \"... requested an API key for Claude\" with Deny and Approve; Approve activated it, Deny denied the Business User's request, and the handled item opened /settings/mcp. His bell and the Contract History read \"DOC-030 conversations Legal Own List 040441, via Claude, commented\". With Include comment words in email off, the mention email had no words; the switch was restored. His briefing email had Tasks and Dates (five-day and seven-day Key dates) and Your daily briefing is ready opened Home.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r2.mjs",
-        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/conversations/lib.mjs",
+        "docs/documentation/batches/DOC-030/conversations/fixtures.json",
+        "docs/documentation/batches/DOC-030/conversations/technical-review.json"
       ]
     },
     {
@@ -62,56 +100,37 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional accounts on the shared work documentation lab (openlaw-docs-41255c61-work), each in its own headless browser context.",
-        "Reviewer fixtures named DOC-029 conversations * 205399: Jonas Weber's Requests R-134 to R-138, R-134 converted to Contract C-312 and R-135 to Matter M-172, with Nadia Haddad added to both teams. Events were raised by posting comments, uploads, and a status change through the API as the acting role.",
-        "Jonas Weber signed in with a fresh Portal magic link from the lab Mailpit. Amara Nwosu, a second Business User who did not raise the Request, was added to the C-312 team for comparison and removed afterwards."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z); app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e.",
+        "Playwright 1.63.0 Chromium, one isolated browser context per identity; staff by password, Business Users by fresh magic links read from the work2 Mailpit and never stored.",
+        "Fresh Business User DOC-030 conversations Business 040441, requester and Business Owner of C-55 (from R-32) with open Request R-33; Amara Nwosu (seed) as a team member who did not raise the Request."
       ],
-      "expected": "Links open permitted records and each preference affects its documented channel/event group. Portal preferences expose only supported groups; disabled email, unavailable records, and timing/timezone limits are explained.",
-      "actual": "13 recorded steps passed for this role on 3fa407e3. The receipt item opened /portal/requests/138. Notification settings, reached from the Portal header, offered only Request updates, Assigned to you, and Activity on your records, with Activity Email off and no Briefing. Request updates Email off kept the reply item with no mail, Email on sent Legal replied on mail, and In-app off stopped both. A Contract Team mention gave one comment.mentioned item and You were mentioned mail; Legal Only comments gave no item. Round 1 corrected paragraph: with Request updates Email on and Activity on your records Email off, Nadia's shared comment on C-312 (converted from Jonas's R-134) gave Jonas one request.replied item, the bell text Nadia Haddad replied on your request DOC-029 conversations Contract 205399, and one Legal replied on R-134 mail; the item opened /portal/contracts/312. With Request updates Email turned off in Notification settings, the next shared comment kept the item and sent no mail. Amara, on the team but not the Requester, got a contract.team_added item and You were added to mail, then comment.posted for the same comment with no mail. With her Activity Email on she got New comment on mail, and with In-app off she got neither. Two uploads and a status change gave her document.added and contract.status_changed items. An aborted save kept the earlier value. While Jonas was off the team his Portal bell returned no C-312 items; after restore they returned. Jonas received no date reminders or briefing from the morning rounds.",
+      "expected": "The Portal bell opens Requests and converted records; Portal settings expose only the four groups with three channels; each switch affects its channel; converted-record replies use Request updates; Your approvals opens the Portal review page; API key decisions reach the Portal bell; access loss removes items; date reminders and one daily summary arrive.",
+      "actual": "11 recorded browser steps passed for this role. The receipt item linked /portal/requests/84 and \"Nadia Haddad replied on your request ...\" opened /portal/contracts/55. The header link Notification settings showed How we tell you about your work with Request updates, Assigned to you, Activity on your records and Dates approaching by In-app, Email and Push (Activity Email and Push off, the rest on), no Briefing and no Reminder lead times. Request updates Email off gave a bell item and no mail, on gave Legal replied on mail, In-app off gave neither. On the converted Contract he got request.replied and Legal replied on mail with Activity Email off, and no mail with Request updates Email off; Amara got comment.posted. A mention gave one item and You were mentioned mail; Legal Only gave nothing. A Contract Approval appeared under Your approvals and Review opened /portal/approvals/{id}; cancelling removed it. The API key denial read \"Your API key request was denied. Open API keys to read the note.\" and opened /portal/settings/api-keys. A blocked save showed the error and reverted. Off the team, his C-55 items were gone and returned after restore. His Legal replied on email carried the words with no tier, and no email carried Legal Only words. The morning round gave Portal items for the five-day and seven-day Key dates and one email \"2 dates on your contracts\" linking to Portal records, with no staff briefing.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r2.json",
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r2.mjs",
-        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/conversations/r2-portal-bell-converted-contract-reply.png",
-        "docs/documentation/batches/DOC-029/conversations/r2-portal-notification-settings.png"
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/conversations/lib.mjs",
+        "docs/documentation/batches/DOC-030/conversations/fixtures.json",
+        "docs/documentation/batches/DOC-030/conversations/technical-review.json"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study and not feature-owner approval.",
-    "Mail absence was observed after the pg-boss queue settled plus a 4 s quiet window, paired with positive deliveries through the same worker. This bounds the lab relay, not a real mailbox, spam filter, or delivery retry.",
-    "Morning rounds were queued as notification.morning-round jobs instead of waiting for the hourly cron. The worker ran them with its real clock and rules. Timezones were America/New_York (after 08:00) and Pacific/Honolulu (before 08:00) at the run time; UTC fallback for a person with no saved timezone was not exercised.",
-    "Not produced in this lab: Entity and Obligation reminders, Contract notice deadline and expiry reminders, Knowledge-only briefings, Approvals, Document Versions and signature events, Matter conversion notifications in the Portal, generated Contracts, and a duplicate email from a delivery retry.",
-    "The Portal gear icon in the header was selected by its accessible name, Notification settings. The Administrator lead-time procedure is in the reminders guide and was not repeated here.",
-    "Contributor behaviour is not a required role for V-C08 and was not re-run in round 2.",
-    "The work lab is shared with other DOC-029 agents. Records created are named DOC-029 conversations * 205399. Nadia Haddad's unread notifications were marked read by the Mark all read step. Amara Nwosu was removed from C-312 afterwards; preference switches changed during checks were restored.",
-    "Round 1 (walkthrough-r1.json) failed this article on the converted-record Requester routing (doc-error). Round 2 re-ran the whole article and checked the corrected paragraph directly."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study.",
+    "The work2 lab is shared with other DOC-030 agents. Only records and accounts named DOC-030 conversations (stamp 040441) were created. Script and fixture problems during the walk are kept in the log as superseded entries with their passing reruns.",
+    "Device notifications: Chromium in new headless mode with the permission granted reached Devices, Turn on for this browser, and Show details in notifications (saved off, then restored); pushManager.subscribe failed with \"Registration failed - permission denied\", so \"Notifications are on for this browser.\", the browser list, Revoke, and receiving or selecting a device notification were not reached. Without the permission the card showed the Chrome blocked message. Push delivery timing for date reminders was not observable.",
+    "The finished Conversion draft item was not produced; the lab's AI connector is disabled.",
+    "An edit made before the send: the worker sends within milliseconds, so five of six edits sent right after posting arrived with the original words; the sixth carried the revised words.",
+    "Organization settings changed and restored: MCP with Legal and Business API keys (off, restored off), Include comment words in email (on, restored on).",
+    "Author product bugs confirmed: the Portal Assigned to you row text does not name Contract Approval requests or API key decisions; the Key date dialog shows only the organization list to a person with their own lead times. The guide states both.",
+    "Knowledge items, Intake and Obligations briefing sections and a second morning round on the same day were not exercised."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "7f0a7503cf875f644ef8642f7d5d6ac0c67e335c319d023faff93a30cd42f294",
-    "verifiedAt": "2026-09-07T08:53:41.841Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (conversations)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38, and no bell, preference, briefing, morning round or Key date code changed. I replayed the round 2 V-C08 walkthrough for all three roles on the work2 lab, and all 29 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/conversations.json",
-        "sha256": "58d5e06a8606776ccfff26c3ff93a53767a63f764127de4cf688fe84b265824d"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T16:00:39Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

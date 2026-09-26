@@ -89,13 +89,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "contentSha256": "42b5a0bcdbce561a30d998a493cdacac31e89c3abfb8f53d9175fff5c95076a3",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 compatibility reviewer (compat)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (matters)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and found no change to the Status strip, close, reopen, archive, restore or Matters filters; the changes are archived-person styling, sign-in branding, first-run and Settings list rows. I replayed the round 1 V-C23 walkthrough on the work2 lab as Administrator and Legal Team Member, and all 16 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-25T11:14:39.367Z",
+    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of matter-record.tsx, matters/routes.ts, the new matters/service.ts, matters.tsx and lib/activity.ts. The Status strip, close and reopen dialogs, Opened and Closed facts, archive and restore actions and the Show closed and Show archived filters did not change; the lifecycle rules moved into the service unchanged. I replayed the DOC-029 V-C23 script for both roles on lab compatcmp built from 067c1646; all 16 steps passed (the Legal Team Member after two load-related page waits, rerun with no script change). Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (matters)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and found no change to the Status strip, close, reopen, archive, restore or Matters filters; the changes are archived-person styling, sign-in branding, first-run and Settings list rows. I replayed the round 1 V-C23 walkthrough on the work2 lab as Administrator and Legal Team Member, and all 16 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/matters.json",
@@ -104,6 +104,46 @@
       {
         "path": "batches/DOC-029/compat-r3/review.json",
         "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      },
+      {
+        "path": "batches/DOC-030/compat/compat.json",
+        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
+      },
+      {
+        "path": "batches/DOC-030/compat/matter-status-and-archive-replay.mjs",
+        "sha256": "db5b8c3c40d4e5bb8fd3032f6e8def790490cd70fa100362282a2c383b99e83f"
+      },
+      {
+        "path": "batches/DOC-030/compat/matter-status-and-archive-replay/lib.mjs",
+        "sha256": "81e0c9681a602d16464f5b17f20d4986004e27480207a05d517dc6f83f5df6bb"
+      },
+      {
+        "path": "batches/DOC-030/compat/matter-status-and-archive-replay/status-archive.mjs",
+        "sha256": "f7e7be21403db43ed8671efb08d7bb385cb7d899363429002e5664f7b5c43f39"
+      },
+      {
+        "path": "batches/DOC-030/compat/matter-status-and-archive-replay.json",
+        "sha256": "73a5ec0fc8c44fea35202f01392a6396576b2ec2a896cab31bfb97a89bfff7a3"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/matter-status-and-archive-compatcmp-run1.log",
+        "sha256": "a97e73709a334c76e5bd82cb8d32f99ce1bf0e2d393f5952b3ab0e03480bc5a0"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/matter-status-and-archive-compatcmp-run2-ltm.log",
+        "sha256": "98fa3f245f3d185240db7b8447add1c4481f74597da61b51f1d0271474dd1c0b"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/matter-status-and-archive-compatcmp-run3-ltm.log",
+        "sha256": "a253a8f13499c7270f96ed8f72d72965e5a12931a050a979ffe839ce70b7337b"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/matter-status-and-archive-work2-attempt.json",
+        "sha256": "c145fbe4676e968b445293c702dda315e30cfa8621fc01c92b5300ec421e8f25"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/matter-status-and-archive-work2-attempt.log",
+        "sha256": "895c9f550725a36f38192069c8d427979a2f53858ab5e100c6dc9f8a31b07726"
       }
     ]
   }

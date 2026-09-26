@@ -4,3 +4,13 @@ dist/
 pnpm-lock.yaml
 designs/
 *.pen
+
+# DOC-030 publication evidence binds these files by sha256
+# (docs/documentation/evidence/publication.json). They stay byte for byte
+# as the publication check ran them.
+docs/documentation/batches/DOC-030/publication/help.json
+docs/documentation/batches/DOC-030/publication/help.mjs
+docs/documentation/batches/DOC-030/publication/offline-reachable.json
+docs/documentation/batches/DOC-030/publication/offline-standalone.json
+docs/documentation/batches/DOC-030/publication/offline.mjs
+docs/documentation/batches/DOC-030/publication/overlay-subnets.json

@@ -1,0 +1,173 @@
+{
+  "stamp": "09251012",
+  "ids": {
+    "daniel": "01a0d801-d66f-78a5-aa9a-ead5afd877c7",
+    "nadia": "01a0d801-d66d-79e8-b77d-30ed0d6b420c",
+    "priya": "01a0d801-d66e-72d7-81c6-2149eb10ca67",
+    "jonas": "01a0d801-d9c1-78fb-a8cf-d9b83d0492d6",
+    "amara": "01a0d801-d9c4-7edb-a42b-02d3b336204e",
+    "ravi": "01a0d801-d93d-7e55-bad4-f21d6d6de62e"
+  },
+  "types": {
+    "nda": "019ff1f5-301d-7795-a5af-e4339c76d4ce",
+    "commercial": "019ff2bc-41c7-767f-83a6-85e36c70b0ba",
+    "sales": "01a0d801-fa22-75f8-b725-59e54a6d62ce"
+  },
+  "form": {
+    "typeA": {
+      "id": "01a0d80d-cf99-7016-87ea-f3d7101c4c9a",
+      "name": "DOC-030 access Form type 09251012"
+    },
+    "typeB": {
+      "id": "01a0d80d-cfa8-7953-a53b-9bbb39c4411e",
+      "name": "DOC-030 access Second type 09251012"
+    },
+    "visible": {
+      "id": "01a0d80d-cf57-7b02-9c81-d9f43f787cd8",
+      "key": "doc_030_access_visible_field_09251012",
+      "name": "DOC-030 access Visible field 09251012"
+    },
+    "hidden": {
+      "id": "01a0d80d-cf65-7bbe-89ba-c5d6f449fc4f",
+      "key": "doc_030_access_hidden_field_09251012",
+      "name": "DOC-030 access Hidden field 09251012"
+    },
+    "gate": {
+      "id": "01a0d80d-cf73-7e22-9a67-74072dae5786",
+      "key": "doc_030_access_gate_09251012",
+      "name": "DOC-030 access Gate 09251012"
+    },
+    "branch": {
+      "id": "01a0d80d-cf7f-7928-8fac-770961964b11",
+      "key": "doc_030_access_branch_field_09251012",
+      "name": "DOC-030 access Branch field 09251012"
+    }
+  },
+  "docType": {
+    "id": "01a0d80f-9b7a-7baf-920a-fce65e451a65",
+    "name": "DOC-030 access Admin document type 09251012"
+  },
+  "co": {
+    "number": 68,
+    "id": "01a0d80f-9b8d-7f87-93d2-6cdfe654530d",
+    "title": "DOC-030 access open contract 09251012"
+  },
+  "mo": {
+    "number": 32,
+    "id": "01a0d80f-9baa-78ba-9a68-9ebd658e934c",
+    "title": "DOC-030 access open matter 09251012"
+  },
+  "cc": {
+    "number": 69,
+    "id": "01a0d80f-9bc1-7a64-9e2f-a4de58c25e5b",
+    "title": "DOC-030 access confidential contract 09251012"
+  },
+  "mc": {
+    "number": 33,
+    "id": "01a0d80f-9be4-7302-aa78-f70c4c74b018",
+    "title": "DOC-030 access confidential matter 09251012"
+  },
+  "parent": {
+    "number": 70,
+    "id": "01a0d80f-9c07-76fc-9db5-8f012a208198",
+    "title": "DOC-030 access confidential parent contract 09251012"
+  },
+  "child": {
+    "number": 71,
+    "id": "01a0d80f-9c47-7fb9-996f-951f6f6cde84",
+    "title": "DOC-030 access child contract 09251012"
+  },
+  "coDocs": {
+    "baseline": "01a0d80f-9c6d-7df6-b8f9-ec0ee5676439",
+    "note": "01a0d80f-9c83-7f26-bc73-3baf6e8c814f"
+  },
+  "entity": {
+    "id": "01a0d80f-9d0b-7cc4-b911-b9919966f250",
+    "name": "DOC-030 access confidential entity Ltd 09251012"
+  },
+  "approvals": {
+    "open": {
+      "number": 72,
+      "id": "01a0d80f-9d2b-7db7-a18f-0235acc2c833",
+      "title": "DOC-030 access approval contract 09251012",
+      "doc": "01a0d80f-9d4e-78c2-be26-cf7dbc5a15e3",
+      "approvalId": "01a0d80f-9e01-7ee9-bf37-cfd3675c2fd8"
+    },
+    "confidentialPaper": {
+      "number": 73,
+      "id": "01a0d80f-9d74-7411-8d6e-681e593b7485",
+      "title": "DOC-030 access confidential paper approval contract 09251012",
+      "doc": "01a0d80f-9d8d-7d43-8034-abbfa79c0df7",
+      "approvalId": "01a0d80f-9e22-7c35-9bff-9ed9d33dc3e9"
+    },
+    "withdraw": {
+      "number": 74,
+      "id": "01a0d80f-9ddf-7fba-a1ce-36e59cf856c5",
+      "title": "DOC-030 access withdrawn approval contract 09251012",
+      "approvalId": "01a0d80f-9e3a-7197-aabb-f8f25b5bb5d7"
+    }
+  },
+  "jonasConverted": {
+    "request": 34,
+    "number": 75,
+    "title": "DOC-030 access Jonas converted contract 09251012"
+  },
+  "raviConverted": {
+    "request": 35,
+    "number": 76,
+    "title": "DOC-030 access Ravi converted contract 09251012"
+  },
+  "raviPrimary": {
+    "id": "01a0d80f-a080-712e-8c2b-11085a2527a5",
+    "v1": "01a0d80f-a080-712e-8c2b-110984310bfc"
+  },
+  "mr": {
+    "number": 34,
+    "id": "01a0d80f-a17c-7b04-94de-35d012d0dcd2",
+    "title": "DOC-030 access Ravi matter 09251012"
+  },
+  "mx": {
+    "number": 35,
+    "id": "01a0d80f-a19d-75a8-8403-946478f37c3c",
+    "title": "DOC-030 access comparable matter 09251012"
+  },
+  "dm": {
+    "number": 36,
+    "id": "01a0d80f-a1b1-796f-bf8f-2b96dd42ab06",
+    "title": "DOC-030 access document paging matter 09251012"
+  },
+  "paging": [
+    77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
+    101, 102
+  ],
+  "createdAt": "2026-09-25T10:15:02.601Z",
+  "archivedJ": {
+    "number": 103,
+    "title": "DOC-030 access archived team contract 09251012"
+  },
+  "jonasPrimary": {
+    "id": "01a0d810-038d-7ab9-8fbc-3fc3a0ee5d1f"
+  },
+  "entity2": {
+    "id": "01a0d810-0401-7260-a2a2-f7dc73daf10b",
+    "name": "DOC-030 access second confidential entity Ltd 09251012"
+  },
+  "cr2": {
+    "number": 104,
+    "title": "DOC-030 access Ravi second type contract 09251012"
+  },
+  "raviApprovals": {
+    "approve": {
+      "number": 105,
+      "title": "DOC-030 access Ravi approve approval contract 09251012",
+      "doc": "01a0d810-04c8-7316-8553-81c9391bf17a",
+      "approvalId": "01a0d810-04f3-7081-b98f-9fb4fd64e9e3"
+    },
+    "reject": {
+      "number": 106,
+      "title": "DOC-030 access Ravi reject approval contract 09251012",
+      "doc": "01a0d810-0536-764c-b1ee-7bd2689f6a60",
+      "approvalId": "01a0d810-0555-743d-88e9-3131fa5b3547"
+    }
+  }
+}

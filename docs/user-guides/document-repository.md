@@ -18,7 +18,7 @@ The repository is a flat view. Uploads and folder management start on the [ownin
 
 Kind, uploader, format, and dates describe the current Version. A Counterparty filter follows its Contract relationship; it does not create Counterparties on Matters or Entities. Knowledge and Auto-Doc Documents have no Document folders. Knowledge Folders organize items instead.
 
-Use [saved views and list controls](search-and-views.md) for reusable layouts. For words inside an earlier Version or an OCR'd scan, use global search; repository filters are not a complete search of every historical Version's contents.
+Use [saved views and list controls](search-and-views.md) for reusable layouts. For words inside a Document's latest Version, including an OCR'd scan, use global search. Search reads only the latest Version of each Document, and repository filters do not search file contents. To read an earlier Version, open the owning record's Documents tab and expand the Document's chain.
 
 ## Open the matching paper
 

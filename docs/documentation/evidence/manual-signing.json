@@ -1,29 +1,24 @@
 {
   "articleId": "manual-signing",
-  "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (contracts-a)",
-  "technicalReviewer": "DOC-029 source-review author agent (contracts-a)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (contracts-a, round 1)",
+  "contentSha256": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (shared-files)",
+  "technicalReviewer": "DOC-030 source-review author agent (shared-files)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (signing-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:40:06.333Z",
+  "verifiedAt": "2026-09-25T11:50:28.438Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/manual-signing.md",
-    "CONTEXT.md",
-    "messages/en-US.json",
-    "apps/web/src/components/documents/documents-card.tsx",
-    "apps/web/src/lib/documents.ts",
-    "apps/web/src/routes/contract-record.tsx",
-    "apps/web/src/components/approvals/approvals-signing-card.tsx",
-    "apps/api/src/modules/documents/routes.ts",
-    "packages/db/migrations/0009_contract_statuses.sql",
+    "docs/documentation/batches/DOC-030/shared-files/technical-review.json",
+    "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/signing-2/api.mjs",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
     "docs/user-guides/document-versions.md",
-    "docs/documentation/batches/DOC-029/contracts-a/technical-review.json",
-    "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"
+    "CONTEXT.md"
   ],
   "scenarios": [
     {
@@ -32,18 +27,17 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Contract with an uploaded fictional executed PDF; no Signing connector.",
-        "No Signing connector in the lab (signingConfigured false).",
-        "Reviewer-generated fictional one-page PDFs (draft, executed, later round) built at run time; their bytes were compared by SHA-256 and are not retained.",
-        "Contract created through the acting role's API session with Jonas Weber on its team."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; AI disabled; Signing unconfigured.",
+        "Nadia Haddad (Legal Team Member) signs in with a password in an isolated Playwright Chromium context. Karim Aziz, a seeded Business User on the Contract team, signs in to the Portal with a fresh magic link read from the work2 Mailpit.",
+        "Fixture made through the API for this run: an MSA Contract named \"DOC-030 signing-2 V-C17-manual <role> <stamp>\" in Draft, owned by Nadia Haddad (Legal Team Member), with Karim Aziz on the team. Every guide step then runs in the browser; the fictional PDFs are generated in memory."
       ],
-      "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version kind alone does not set the Executed pin; unsupported users cannot perform the legal action.",
-      "actual": "8 recorded steps passed for this role in the final run (2026-09-16T15:36:17.424Z to 2026-09-16T15:37:24.795Z). Step 1: Stage control to the Signature Status Out for signature without a Signing connector: Status Out for signature (Stage signature). Signing configured: false; Envelopes: 0; Send for signature controls: 0. Step 2: Documents; no Document yet, so upload the first Document; then Add version with the executed file and Kind Executed: Upload filed doc029-contracts-a-legal_team_member-draft.pdf as the first Document (1 Document). Add version filed doc029-contracts-a-legal_team_member-executed.pdf as Version 2 (kind executed). Row: \"doc029-contracts-a-legal_team_member-draft.pdf Primary Draft · ours Draft · theirs Redline · theirs Redline · ours Amendment Executed v2 Sep 16 Uploaded by Nadia Haddad NH\". Step 3: read or download the uploaded Document Version and check it is the executed copy: Selecting the Document name opened the reader for version 2: \"doc029-contracts-a-legal_team_member-draft.pdf v2 Compare doc029-contracts-a-legal_team_member-executed.pdf Download Page 1 of 1 100% DOC-029 contracts-a legal_team_member executed 1789572933571 signe\". Its Download link saved doc029-contracts-a-legal_team_member-executed.pdf, whose SHA-256 matches the uploaded executed file (9d0a7d838a6006b7…). Negative: the Executed kind alone does not set the executed designation: Version kinds [\"1:draft_ours\",\"2:executed\"]; isExecuted all false. Row shows \"doc029-contracts-a-legal_team_member-draft.pdf Primary Draft · ours Draft · theirs Redline · theirs Redline · ours Amendment Executed v2 Sep 16 Uploaded by Nadia Haddad NH\" with the Kind column Executed and no executed designation in the Version cell. Step 4: Document actions > Mark as executed copy; check the designation and primary Document; the Status does not change: Mark as executed copy set Version 2 executed; the row showed it without a reload. Row: \"doc029-contracts-a-legal_team_member-draft.pdf Primary | Version cell: v2 Executed\". Primary true. Contract Status still Out for signature. Correct the wrong selection and a later round: Add version keeps the chain; the earlier Version keeps the designation; Unmark and mark again through that Version's own actions: Version 3 (doc029-contracts-a-legal_team_member-later.pdf) is current while Version 2 kept the designation. Version 2's own actions offered [\"Compare with previous\",\"Unmark as executed copy\"]; Unmark as executed copy cleared it; then [\"Compare with previous\",\"Mark as executed copy\"]; Mark as executed copy restored it. Version 2 still downloads the executed bytes. Step 5: Stage control to Active; check Status and Activity; no Envelope row: Status Active. History: \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad pinned version 2 of doc029-contracts-a-legal_team_member-draft.pdf as the executed copy this minute Nadia Haddad cleared the executed copy of doc029-contracts-a-legal_team_member-draft.pdf this minute Nadia Haddad added version 3 of doc029-contracts-a-legal_team_member-draft.\". Envelopes: 0. Negative: unsupported users cannot perform the legal action; an archived record offers no legal actions: Jonas Weber in the Portal (\"Your Contracts DOC-029 contracts-a legal_team_member C17 1789572933571 C-192 Overview Counterparty Not recorded Stage Ac\") had 0 executed-copy controls; his direct designation answered 403. Archived C-192: 0 Document action menus; clearing the designation answered 409. After Restore Version 2 is still designated.",
+      "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version's Executed type alone does not set the Executed pin; unsupported users cannot perform the legal action.",
+      "actual": "9 steps passed on C-467. Stage control listed 10 Statuses; Out for signature saved with no gate, 0 Send for signature controls, signingConfigured false, 0 Envelopes. Documents: Upload document's Type started on \"No type\"; the draft became the only Document; Actions -> Add version with Type \"Executed\" added v2 (Type column \"Executed\"). The reader opened \"..., version 2\" and Download matched the executed file's SHA-256. Negative: after that upload v1 and v2 had isExecuted false and the Version cell read \"v2\" with no Executed mark. Actions -> Mark as executed copy set the pin on v2 (Version cell \"v2 Executed\"); a second Document was uploaded and the contract paper kept \"Primary\"; Status stayed Out for signature. Add version for v3 left the pin on v2; Mark as executed copy on the head moved it to v3; \"Show the 2 earlier versions\" -> v2's own actions offered Mark / Unmark as executed copy, which moved, cleared and restored the pin on v2. Stage control to Active saved with no Soft gate (no approvals); History lists the status change and the pin events; 0 Envelopes. Negative: Karim Aziz saw 0 executed-copy controls in the Portal and his direct write answered 403; the archived Contract showed 0 Document action menus and a clear answered 409; after Restore v2 is still pinned.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/contracts-a/r1-c17-executed-designation.png"
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/signing-2/api.mjs"
       ]
     },
     {
@@ -52,54 +46,34 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Contract with an uploaded fictional executed PDF; no Signing connector.",
-        "No Signing connector in the lab (signingConfigured false).",
-        "Reviewer-generated fictional one-page PDFs (draft, executed, later round) built at run time; their bytes were compared by SHA-256 and are not retained.",
-        "Contract created through the acting role's API session with Jonas Weber on its team."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; AI disabled; Signing unconfigured.",
+        "Daniel Okafor (Administrator) signs in with a password in an isolated Playwright Chromium context. Karim Aziz, a seeded Business User on the Contract team, signs in to the Portal with a fresh magic link read from the work2 Mailpit.",
+        "Fixture made through the API for this run: an MSA Contract named \"DOC-030 signing-2 V-C17-manual <role> <stamp>\" in Draft, owned by Daniel Okafor (Administrator), with Karim Aziz on the team. Every guide step then runs in the browser; the fictional PDFs are generated in memory."
       ],
-      "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version kind alone does not set the Executed pin; unsupported users cannot perform the legal action.",
-      "actual": "8 recorded steps passed for this role in the final run (2026-09-16T15:38:05.616Z to 2026-09-16T15:38:12.555Z). Step 1: Stage control to the Signature Status Out for signature without a Signing connector: Status Out for signature (Stage signature). Signing configured: false; Envelopes: 0; Send for signature controls: 0. Step 2: Documents; no Document yet, so upload the first Document; then Add version with the executed file and Kind Executed: Upload filed doc029-contracts-a-administrator-draft.pdf as the first Document (1 Document). Add version filed doc029-contracts-a-administrator-executed.pdf as Version 2 (kind executed). Row: \"doc029-contracts-a-administrator-draft.pdf Primary Draft · ours Draft · theirs Redline · theirs Redline · ours Amendment Executed v2 Sep 16 Uploaded by Daniel Okafor DO\". Step 3: read or download the uploaded Document Version and check it is the executed copy: Selecting the Document name opened the reader for version 2: \"doc029-contracts-a-administrator-draft.pdf v2 Compare doc029-contracts-a-administrator-executed.pdf Download Page 1 of 1 100% DOC-029 contracts-a administrator executed 1789572933571 signed by both pa\". Its Download link saved doc029-contracts-a-administrator-executed.pdf, whose SHA-256 matches the uploaded executed file (5f4f33a99347ea53…). Negative: the Executed kind alone does not set the executed designation: Version kinds [\"1:draft_ours\",\"2:executed\"]; isExecuted all false. Row shows \"doc029-contracts-a-administrator-draft.pdf Primary Draft · ours Draft · theirs Redline · theirs Redline · ours Amendment Executed v2 Sep 16 Uploaded by Daniel Okafor DO\" with the Kind column Executed and no executed designation in the Version cell. Step 4: Document actions > Mark as executed copy; check the designation and primary Document; the Status does not change: Mark as executed copy set Version 2 executed; the row showed it without a reload. Row: \"doc029-contracts-a-administrator-draft.pdf Primary | Version cell: v2 Executed\". Primary true. Contract Status still Out for signature. Correct the wrong selection and a later round: Add version keeps the chain; the earlier Version keeps the designation; Unmark and mark again through that Version's own actions: Version 3 (doc029-contracts-a-administrator-later.pdf) is current while Version 2 kept the designation. Version 2's own actions offered [\"Compare with previous\",\"Unmark as executed copy\"]; Unmark as executed copy cleared it; then [\"Compare with previous\",\"Mark as executed copy\"]; Mark as executed copy restored it. Version 2 still downloads the executed bytes. Step 5: Stage control to Active; check Status and Activity; no Envelope row: Status Active. History: \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor pinned version 2 of doc029-contracts-a-administrator-draft.pdf as the executed copy this minute Daniel Okafor cleared the executed copy of doc029-contracts-a-administrator-draft.pdf this minute Daniel Okafor added version 3 of doc029-contracts-a-administrator-draft.pdf this\". Envelopes: 0. Negative: unsupported users cannot perform the legal action; an archived record offers no legal actions: Jonas Weber in the Portal (\"Your Contracts DOC-029 contracts-a administrator C17 1789572933571 C-211 Overview Counterparty Not recorded Stage Active\") had 0 executed-copy controls; his direct designation answered 403. Archived C-211: 0 Document action menus; clearing the designation answered 409. After Restore Version 2 is still designated.",
+      "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version's Executed type alone does not set the Executed pin; unsupported users cannot perform the legal action.",
+      "actual": "9 steps passed on C-478 with the same results as the Legal Team Member: Out for signature with no connector (0 Envelopes, no Send for signature); first Upload then Add version with Type \"Executed\" on the same Document; download SHA-256 match; the Executed type left isExecuted false on v1 and v2 and the Version cell read \"v2\"; Mark as executed copy pinned v2 (\"v2 Executed\"); the paper kept Primary beside a second Document; v3 upload kept the pin on v2; marking v3 moved it; v2's own actions moved it back, unmarked and re-marked it; Active saved with no gate and History shows the pin and status events; the Document actions menu also offered Delete for the Administrator. Negative: Karim Aziz had 0 executed-copy controls and his write answered 403; archived: 0 action menus, clear answered 409; after Restore v2 is still pinned.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/contracts-a/r1-c17-executed-designation.png"
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/signing-2/api.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by an agent that did not write the guide; not a human user study and not the feature owner's approval.",
-    "Run on the shared work lab (openlaw-docs-41255c61-work), which other DOC-029 groups used at the same time. Only records named DOC-029 contracts-a were created; the fixture Contract type, Fields, Contract Status and Approver group were archived after the run.",
-    "Setup API calls created some prerequisites and API readbacks confirmed saved values and refusals; the article steps themselves were performed in the browser. See the observations in walkthrough-r1.json.",
-    "Contributor is a former account type (DD-023). Business User refusals used Jonas Weber through a new Portal magic link.",
-    "Browser contexts were 1280x900 CSS px; the Status menu had 11 options and all were reachable. Issue #768 (crowded menu) is not claimed fixed.",
-    "A failed upload was not induced.",
-    "Recording a withdrawn or declined hand-off in a conversation was not exercised."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named DOC-030 signing-2 were created (C-467 and C-478 in the final run; earlier development runs left more). No organisation setting was changed.",
+    "The Business User negative check used Karim Aziz, a seeded Business User, not Jonas Weber, to keep the shared sign-in link budget free.",
+    "No Approval was requested on the fixture Contracts, so no Soft gate opened on the move to Active. The gate itself is covered by contract-approvals.",
+    "The reader did not render the executed PDF's text within 60 s for the Legal Team Member in the final run; it did for the Administrator. The guide says read or download, and the download's SHA-256 matched in both runs.",
+    "The withdrawn or declined hand-off paragraph has no app control of its own; the walk confirmed only that manual hand-off creates no Envelope row.",
+    "The final run (2026-09-25T11:45:50.727Z to 2026-09-25T11:50:28.438Z) passed all 50 steps. It logged 3 page reloads in \"retries\": each time the app showed \"Something went wrong. The page could not load.\" because Chromium aborted in-flight API reads with net::ERR_NETWORK_CHANGED while other agents changed container networks on the host. One reload loaded the page each time. walkthrough-attempt1.json and walkthrough-attempt2.json are earlier full runs of the same script; each had one step fail on the same network abort before the reload helper covered that wait. No guide step failed in any run."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "2415ba7d5c22ff900dd3b3fd67a5012f86fd276dfc4eb7f299e59e3419e3d5ae",
-    "verifiedAt": "2026-09-07T13:44:06.138Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-a)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff; Document Version upload, executed designation and the Stage control are unchanged. Replayed the round 1 V-C17-manual walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 16 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/contracts-a.json",
-        "sha256": "d3f55e90c80b20890b67d07c3d321fa5dc3376df94341715e4f76e570b9cc953"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:40:06.333Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

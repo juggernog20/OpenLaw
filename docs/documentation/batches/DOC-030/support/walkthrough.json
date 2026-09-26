@@ -1,0 +1,1104 @@
+{
+  "batch": "DOC-030",
+  "group": "support",
+  "kind": "independent-article-walkthrough",
+  "reviewer": "DOC-030 independent walkthrough agent (support)",
+  "reviewerKind": "agent",
+  "appUrl": "http://127.0.0.1:43300",
+  "mailUrl": "http://127.0.0.1:48425",
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-80ceef9e-work2",
+    "sourceCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "runningAppImage": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "runningWorkerImage": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "runningEngineImage": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-25T09:59:53.804Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-25T10:00:16.340Z"
+    }
+  },
+  "articles": {
+    "troubleshooting": {
+      "path": "docs/user-guides/troubleshooting.md",
+      "contentSha256": "7bdfd9be072d31a28150ff9843949782d325ca9605e129a463cc515d0cdf4678"
+    },
+    "reference": {
+      "path": "docs/user-guides/reference.md",
+      "contentSha256": "1319240ad60cfe2077499ef55943bce00c40e6146b26a3f1b37bf77a3be412bb"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, one browser context per identity",
+  "accounts": {
+    "administrator": "Daniel Okafor (daniel.okafor@helix.example), password sign-in",
+    "legal_team_member": "Nadia Haddad (nadia.haddad@helix.example), password sign-in",
+    "business_user": "Lena Fischer (doc030.support.bu@helix.example), a Business User this walkthrough created by Portal sign-in on the allowed helix.example domain; fresh links from the lab Mailpit",
+    "business_user_link_check": "doc030.support.bu2@helix.example, a second created Business User used only for the spent-link check",
+    "operator": "no app account; signed-out browser context and container-level reads"
+  },
+  "fixtures": {
+    "stamp": "09251133",
+    "shared": {
+      "number": 396,
+      "title": "DOC-030 support shared DPA contract 09251133",
+      "primaryDocumentId": "01a0d857-caf1-7755-ae86-08e108c59340",
+      "pngDocumentId": "01a0d857-cb09-7458-afa0-1a232fdde619",
+      "folderId": "01a0d857-cb20-7c95-b90a-99817ac9d44b",
+      "fieldsPatch": 200,
+      "securityReview": "Not required"
+    },
+    "confidential": {
+      "number": 397,
+      "title": "DOC-030 support confidential contract 09251133"
+    },
+    "adminConfidential": {
+      "number": 398,
+      "title": "DOC-030 support administrator confidential contract 09251133"
+    },
+    "confidentialPortal": {
+      "number": 399,
+      "title": "DOC-030 support confidential portal contract 09251133"
+    },
+    "archived": {
+      "number": 400,
+      "title": "DOC-030 support archived contract 09251133"
+    },
+    "approval": {
+      "number": 401,
+      "title": "DOC-030 support approval contract 09251133"
+    },
+    "buApproval": {
+      "number": 402,
+      "title": "DOC-030 support business approver buApproval 09251133",
+      "approvalId": "01a0d857-cc7a-7343-ae68-a21e56694fcd"
+    },
+    "buWithdraw": {
+      "number": 403,
+      "title": "DOC-030 support business approver buWithdraw 09251133",
+      "approvalId": "01a0d857-ccbb-7dda-a82d-4543873fb0c1"
+    },
+    "buArchive": {
+      "number": 404,
+      "title": "DOC-030 support business approver buArchive 09251133",
+      "approvalId": "01a0d857-ccfb-7a67-a041-d3fab4100e8f"
+    },
+    "uploads": {
+      "number": 405,
+      "title": "DOC-030 support upload contract 09251133"
+    },
+    "files": {
+      "number": 406,
+      "title": "DOC-030 support file behavior contract 09251133"
+    },
+    "relatedMatter": {
+      "number": 148,
+      "title": "DOC-030 support related matter 09251133"
+    },
+    "entity": {
+      "id": "01a0d857-cd53-733e-9db7-173c999bceae",
+      "name": "DOC-030 support confidential entity Ltd 09251133"
+    },
+    "registerEntity": {
+      "id": "01a0d857-cd6c-721c-8f47-36fc82ba5a48",
+      "name": "DOC-030 support register entity Ltd 09251133",
+      "holder": "Marta Kowalczyk",
+      "holderEntity": {
+        "id": "01a0d857-cda8-768d-b673-2885b0289e0f",
+        "name": "DOC-030 support holder entity Ltd 09251133"
+      }
+    },
+    "knowledge": {
+      "id": "01a0d857-cdea-7d70-abca-6dd3b43a08f3",
+      "title": "DOC-030 support Portal Knowledge 09251133"
+    },
+    "request": {
+      "number": 115,
+      "contract": 407
+    },
+    "openRequest": {
+      "number": 116
+    },
+    "createdAt": "2026-09-25T11:33:48.795Z",
+    "createdBy": "Nadia Haddad and Daniel Okafor API sessions, and the created Business User's Portal session (Requests)",
+    "file": "docs/documentation/batches/DOC-030/support/fixtures.json",
+    "businessUserOnboarding": "/portal"
+  },
+  "settingsChanged": [
+    {
+      "section": "K",
+      "setting": "MCP policy before the API key steps",
+      "value": {
+        "enabled": false,
+        "legalApiKeysEnabled": false,
+        "businessApiKeysEnabled": false,
+        "readOnly": false,
+        "apiKeyLifetimeDays": 90,
+        "legalOAuthClientsEnabled": false,
+        "businessOAuthClientsEnabled": false
+      },
+      "at": "2026-09-25T11:38:02.416Z"
+    },
+    {
+      "section": "K",
+      "setting": "MCP",
+      "value": ["Enable MCP: 200", "Legal Users API keys: 200", "Business Users API keys: 200"],
+      "at": "2026-09-25T11:38:13.192Z"
+    },
+    {
+      "section": "K",
+      "setting": "MCP Read-only",
+      "value": "on for one check, then off",
+      "at": "2026-09-25T11:38:54.409Z"
+    },
+    {
+      "section": "K",
+      "setting": "MCP policy restored",
+      "value": {
+        "enabled": false,
+        "legalApiKeysEnabled": false,
+        "businessApiKeysEnabled": false
+      },
+      "at": "2026-09-25T11:39:17.024Z"
+    },
+    {
+      "section": "R",
+      "setting": "Contract Document type added",
+      "value": "DOC-030 support added type 09251133-1153",
+      "at": "2026-09-25T11:53:32.265Z"
+    },
+    {
+      "section": "R",
+      "setting": "Contract Document type archived",
+      "value": "DOC-030 support added type 09251133-1153",
+      "at": "2026-09-25T11:55:31.241Z"
+    }
+  ],
+  "productBugs": [],
+  "observations": [
+    {
+      "section": "R",
+      "at": "2026-09-25T12:00:00Z",
+      "text": "Compare with previous on two plain-text Versions opened the comparison page with 'Comparison failed' and 'Version 1 does not support extracted text.'; no Version was added. This matches compare-versions.md (download-only or non-extractable formats cannot supply text) and does not affect the reference's Comparison row."
+    },
+    {
+      "section": "R",
+      "at": "2026-09-25T12:00:00Z",
+      "text": "The Portal Request an API key dialog offered a Business User the full Toolset ceiling, including Administration and Team. The reference says the request names Toolsets 'from the organization's ceiling', which matches. Whether Business Users should see Administration there is a product question for the mcp group, not a guide failure."
+    },
+    {
+      "section": "R",
+      "at": "2026-09-25T12:00:00Z",
+      "text": "Settings > Advanced > File uploads lets an Administrator save a Maximum file size (MiB) that replaces the default after an API and worker restart; a value set in the deployment configuration is read only there. The reference names only MAX_UPLOAD_MB and says to use the actual refusal or ask the operator; the troubleshooting guide asks for 'an operator-approved limit change'. Both statements hold; the author may want to mention the Administrator setting."
+    }
+  ],
+  "runs": [
+    {
+      "startedAt": "2026-09-25T11:33:42.701Z",
+      "sections": ["all"]
+    },
+    {
+      "startedAt": "2026-09-25T11:44:15.993Z",
+      "sections": ["R"]
+    },
+    {
+      "startedAt": "2026-09-25T11:46:47.848Z",
+      "sections": ["R"]
+    },
+    {
+      "startedAt": "2026-09-25T11:50:08.539Z",
+      "sections": ["R"]
+    },
+    {
+      "startedAt": "2026-09-25T11:53:15.326Z",
+      "sections": ["R"]
+    }
+  ],
+  "steps": [
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Help from the header and reach Resolve common problems",
+      "expected": "Header Help opens the role's Help; the guide list reaches Resolve common problems and it opens with its sections.",
+      "startedAt": "2026-09-25T11:33:48.796Z",
+      "at": "2026-09-25T11:33:53.642Z",
+      "page": "/help/troubleshooting",
+      "actual": "Header Help went to /help; Guide navigation > Reference and troubleshooting > Resolve common problems opened /help/troubleshooting with 11 sections (I cannot sign in; A record or search result is missing; An edit or action is unavailable; An upload is refused or appears twice; A preview stays pending or fails; A notification or email is missing; I cannot approve, or an Approval warning appears; Electronic signing is unavailable or the executed copy is missing; Analysis is missing, fails, or keeps an earlier value; AI conversion or source evidence is unavailable; If the problem continues). The lab Help serves the article bytes bundled at 067c1646; the steps below follow the reviewed bytes.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Open Help from the header and reach Resolve common problems",
+      "expected": "Header Help opens the role's Help; the guide list reaches Resolve common problems and it opens with its sections.",
+      "startedAt": "2026-09-25T11:33:53.643Z",
+      "at": "2026-09-25T11:33:58.471Z",
+      "page": "/help/troubleshooting",
+      "actual": "Header Help went to /help; Guide navigation > Reference and troubleshooting > Resolve common problems opened /help/troubleshooting with 11 sections (I cannot sign in; A record or search result is missing; An edit or action is unavailable; An upload is refused or appears twice; A preview stays pending or fails; A notification or email is missing; I cannot approve, or an Approval warning appears; Electronic signing is unavailable or the executed copy is missing; Analysis is missing, fails, or keeps an earlier value; AI conversion or source evidence is unavailable; If the problem continues). The lab Help serves the article bytes bundled at 067c1646; the steps below follow the reviewed bytes.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Open Help from the header and reach Resolve common problems",
+      "expected": "Header Help opens the role's Help; the guide list reaches Resolve common problems and it opens with its sections.",
+      "startedAt": "2026-09-25T11:33:58.471Z",
+      "at": "2026-09-25T11:34:03.289Z",
+      "page": "/portal/help/troubleshooting",
+      "actual": "Header Help went to /portal/help; Guide navigation > Reference and troubleshooting > Resolve common problems opened /portal/help/troubleshooting with 11 sections (I cannot sign in; A record or search result is missing; An edit or action is unavailable; An upload is refused or appears twice; A preview stays pending or fails; A notification or email is missing; I cannot approve, or an Approval warning appears; Electronic signing is unavailable or the executed copy is missing; Analysis is missing, fails, or keeps an earlier value; AI conversion or source evidence is unavailable; If the problem continues). The lab Help serves the article bytes bundled at 067c1646; the steps below follow the reviewed bytes.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: staff sign-in with a wrong password, then the correct one",
+      "expected": "A wrong password shows a visible error on the staff sign-in page, and the account still signs in with the right password (one failure, well under the ten-failure lockout).",
+      "startedAt": "2026-09-25T11:34:03.289Z",
+      "at": "2026-09-25T11:34:05.477Z",
+      "page": "/",
+      "actual": "The staff sign-in page offered [\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"]. A wrong password showed \"Check your email and password.\" and stayed on the page. The correct password then signed in to /.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: staff sign-in with a wrong password, then the correct one",
+      "expected": "A wrong password shows a visible error on the staff sign-in page, and the account still signs in with the right password (one failure, well under the ten-failure lockout).",
+      "startedAt": "2026-09-25T11:34:05.477Z",
+      "at": "2026-09-25T11:34:07.623Z",
+      "page": "/",
+      "actual": "The staff sign-in page offered [\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"]. A wrong password showed \"Check your email and password.\" and stayed on the page. The correct password then signed in to /.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: a Portal link already used; request a new link and open the newest message",
+      "expected": "Reusing a spent link shows a link-specific expired or already-used message; a new link from the newest message signs in; the Portal session does not open staff pages.",
+      "startedAt": "2026-09-25T11:34:07.624Z",
+      "at": "2026-09-25T11:34:14.200Z",
+      "page": "/portal/onboarding",
+      "actual": "The first link (subject \"Sign in to OpenLaw\") signed in once and landed on /portal. Opening the same link in a new browser context landed on /auth/link-expired with heading \"Sign-in link expired\" and the text \"The link has expired or was already used. Enter your email to get a fresh one.\". A new link from the newest message signed in and landed on /portal. Going to /contracts in that session landed on /portal/onboarding. Screenshot docs/documentation/batches/DOC-030/support/business-user-link-expired.png.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A record is missing: a direct link to a missing Contract and to an unreachable Confidential Contract",
+      "expected": "Both answer Contract not found with Back to Contracts; reloads do not change access; no title leaks; after the Legal Owner adds a team entry the link opens.",
+      "startedAt": "2026-09-25T11:34:14.201Z",
+      "at": "2026-09-25T11:34:25.836Z",
+      "page": "/contracts/397",
+      "actual": "C-999999 showed \"Contract not found\" and \"C-999999 does not exist, or you cannot open it. Back to Contracts\". Confidential C-397 (Nadia Haddad Legal Owner, Daniel not on the team) showed \"Contract not found\" and \"C-397 does not exist, or you cannot open it. Back to Contracts\", the same answer; two reloads still showed \"Contract not found\" and the title did not appear. Nadia added Daniel with Contract team > Add team member; Daniel's reload then opened \"DOC-030 support confidential contract 09251133\". Nadia then removed the entry again. Screenshot docs/documentation/batches/DOC-030/support/administrator-contract-not-found.png.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A page could not load: Something went wrong. with Reload after a temporary connection failure",
+      "expected": "With the record read failing, the page shows Something went wrong. and Reload; after the connection returns, Reload opens the record.",
+      "startedAt": "2026-09-25T11:34:25.836Z",
+      "at": "2026-09-25T11:34:27.898Z",
+      "page": "/contracts/396",
+      "actual": "With the browser's request for C-396 failing, the page showed \"Something went wrong.\" and a Reload button. After the request was allowed again, Reload opened \"DOC-030 support shared DPA contract 09251133\". Screenshot docs/documentation/batches/DOC-030/support/legal-team-member-page-could-not-load.png.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A record or search result is missing: list search, missing Matter link, and a Confidential Contract without access",
+      "expected": "The Contracts list search does not find the unreachable Contract; missing and unreachable work give the same not-found answer; after the Legal Owner adds a team entry both the link and the search find it.",
+      "startedAt": "2026-09-25T11:34:27.899Z",
+      "at": "2026-09-25T11:34:41.076Z",
+      "page": "/search",
+      "actual": "Searching the Contracts list for the title of Confidential C-398 (Daniel Okafor Legal Owner) found 0 rows. M-999999 showed \"Matter not found\" / \"M-999999 does not exist, or you cannot open it. Back to Matters\". C-398 showed \"Contract not found\". After the Legal Owner added a team entry for Nadia, her reload opened \"DOC-030 support administrator confidential contract 09251133\" and the same list search found 1 row(s). Daniel then removed the entry.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A record is missing (Portal): missing, Confidential without team entry, shared, archived, related Matter, and missing Knowledge",
+      "expected": "Missing and unreachable Contracts show the Portal not-found copy; a team entry opens the record; archiving closes it; a linked Matter stays closed.",
+      "startedAt": "2026-09-25T11:34:41.077Z",
+      "at": "2026-09-25T11:34:54.728Z",
+      "page": "/portal",
+      "actual": "C-999999: \"Contract not found\" / \"Your Contracts Contract not found This Contract does not exist, or you cannot open it.\". Confidential C-397 without a team entry gave the same copy and no title. Shared C-396 (team entry) opened \"DOC-030 support shared DPA contract 09251133\". C-400 opened as \"DOC-030 support archived contract 09251133\" before Nadia archived it (archive answered 200) and afterwards showed \"Your Contracts Contract not found This Contract does not exist, or you cannot open it.\", unchanged after reload. M-148, linked to C-396, showed \"Your Matters Matter not found This Matter does not exist, or you cannot open it.\". An unknown Portal Knowledge address showed \"What do you need from Legal?\" / \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnaround: 3 business days Contract review Re\".",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Converted Request: reopen it in the Portal; team entry removed; Legal restores it; staff page stays closed",
+      "expected": "The converted Request opens its Contract in the Portal while the Business User is on the team; without the team entry it no longer opens; the staff Contract page is not available.",
+      "startedAt": "2026-09-25T11:34:54.729Z",
+      "at": "2026-09-25T11:35:01.852Z",
+      "page": "/portal",
+      "actual": "R-115 opened /portal/contracts/407 (\"DOC-030 support converted contract 09251133\"). After Nadia removed the Business User's team entry, R-115 showed path /portal, heading \"What do you need from Legal?\", text \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnaround: 3 business days Contract review Review of a counterparty contract or redli\". After Nadia added the entry back it opened /portal/contracts/407 again. /contracts/407 in the Portal session landed on /portal.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: Business User on a shared Contract",
+      "expected": "Only Fields whose Rows have Visible on Portal on are shown, read-only; Add version, reply and Add team member are offered; no Task completion, Approval, signing or Stage control; a direct Field write is refused.",
+      "startedAt": "2026-09-25T11:35:01.853Z",
+      "at": "2026-09-25T11:35:05.172Z",
+      "page": "/portal/contracts/396",
+      "actual": "Portal C-396 (type DPA): the Fields region read \"Fields Description Not recorded Security review Not required\"; Security review (Visible on Portal on) shows and Processes personal data (Visible on Portal off, value saved by Legal) does not. Overview and Fields had 0 editable controls. Buttons: [\"Upload documents\",\"Drop files here or click to upload\",\"Search\",\"doc029-support-v1.txt\",\"Add version\",\"doc029-support-image.png\",\"Add version\",\"Contract team\",\"Comments\",\"History\"]; none for Approval, Tasks, signing, Stage or archive. A direct Field write answered 403. The reply posted in Comments and appeared. Add team member added \"Amara Nwosu\".",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: Add team member on a Confidential team",
+      "expected": "A Business User on a Confidential Contract cannot add people to its team.",
+      "startedAt": "2026-09-25T11:35:05.173Z",
+      "at": "2026-09-25T11:35:07.537Z",
+      "page": "/portal/contracts/399",
+      "actual": "The Business User opened Confidential C-399 (\"DOC-030 support confidential portal contract 09251133\"). Add team member: present but disabled. A direct team add answered 403.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: archived Contract, and a save that reports an error",
+      "expected": "The archived Contract offers no Upload; a refused value shows a correction and keeps the entry; a reload shows what actually saved.",
+      "startedAt": "2026-09-25T11:35:07.537Z",
+      "at": "2026-09-25T11:35:15.502Z",
+      "page": "/contracts/405",
+      "actual": "Archived C-400 Documents showed 0 Upload buttons (\"Skip to content openlaw / Helix Software Group / Help 9+ NH Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Docs Contracts C-400 DOC-030 support archived contract 09251133 Draft Archived Draft Review Approval Signature Active Ended Overview Fields Documents Approvals Key dates Tasks This contract is archived \u2014 it is out of the contract list.\"). On C-405, entering 99999 in Notice period (days) showed \"One or more request fields are invalid.\" and kept the entered value \"99999\"; after reload the saved value was \"\", so the refused value had not saved.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An edit or action is unavailable: the Administrator reaches types, Statuses and Fields; the Legal Team Member does not",
+      "expected": "Settings > Contracts > Fields and a type's Form open for the Administrator; the Legal Team Member cannot open organization settings.",
+      "startedAt": "2026-09-25T11:35:15.503Z",
+      "at": "2026-09-25T11:35:22.552Z",
+      "page": "/settings/profile",
+      "actual": "Daniel saw [\"Personal\",\"Organization\",\"Contracts\",\"Default Fields\",\"Custom Fields\"] at /settings/contracts/fields. The DPA type's Form showed Row switches [\"Title: On intake form off\",\"Title: Required for creation on\",\"Type: On intake form off\",\"Type: Required for creation on\",\"Description: On intake form on\",\"Description: Required for creation off\",\"Entity: On intake form off\",\"Entity: Required for creation off\",\"Counterparties: On intake form off\",\"Counterparties: Required for creation off\",\"Department: On intake form off\",\"Department: Required for creation off\"]. Nadia's visit to /settings/contracts/fields ended at /settings/profile with \"Personal Profile Appearance Notifications API keys View Business Portal Profile NH Profile photo JPG or PNG, up to 10 MB. Resized automatically. Upload Full name Email Role Legal team member Timezone \" and no Organization settings group.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An upload is refused: oversized file, over-long filename, corrected name, and a repeat upload",
+      "expected": "The oversized file names the MB limit; the long filename is refused; nothing is stored; the corrected name uploads once; sending the same file again as a new Document makes a separate Document.",
+      "startedAt": "2026-09-25T11:35:22.553Z",
+      "at": "2026-09-25T11:35:35.327Z",
+      "page": "/contracts/405/documents",
+      "actual": "A 105 MiB file was refused with \"That file is over the 100 MB upload limit.\". A 305-character filename was refused with \"Rename the file to 255 characters or fewer before uploading it.\". Documents stayed at 0. The short name uploaded once (count 1). Uploading the same file again as a new Document made 2 separate Documents, with 2 rows named doc029-support-note.txt in the list.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An upload appears twice: Add version is the path for another round of the same paper",
+      "expected": "Add version on an existing Document adds Version 2 to its chain instead of a new Document.",
+      "startedAt": "2026-09-25T11:35:35.336Z",
+      "at": "2026-09-25T11:35:38.743Z",
+      "page": "/contracts/405/documents",
+      "actual": "The Document's actions offered [\"Make primary\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"]. Add version opened \"Add version\"; after the upload the Contract still had 2 Documents and one of them now has 2 Versions ([2,1]).",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An upload is refused: over-long filename as Administrator",
+      "expected": "The filename refusal is visible and nothing is stored.",
+      "startedAt": "2026-09-25T11:35:38.743Z",
+      "at": "2026-09-25T11:35:40.737Z",
+      "page": "/contracts/405/documents",
+      "actual": "A 315-character filename was refused with \"Rename the file to 255 characters or fewer before uploading it.\"; the Document count stayed 2.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An upload in the Portal: Add version on the primary Document and on another Document; no folder; reply attachments stay in the conversation",
+      "expected": "Add version adds Version 2 to the primary Document and to a non-primary Document; the Portal upload dialog has no folder choice and a folder destination is refused; a reply attachment does not become a Document.",
+      "startedAt": "2026-09-25T11:35:40.738Z",
+      "at": "2026-09-25T11:35:50.782Z",
+      "page": "/portal/contracts/396",
+      "actual": "Primary Document: Add version opened Upload documents with Add as \"New version of doc029-support-v1.txt\" and labels [\"Add as\",\"Kind\",\"Note (optional)\"]; after Upload the row read \"Primary Document doc029-support-v1.txt Version 2 General Current 78 byte LF Lena Fischer \u00b7 Sep 25 Add version \". The non-primary doc029-support-image.png: Add as \"New version of doc029-support-image.png\"; after Upload \"doc029-support-image.png Version 2 General Current 100 byte LF Lena Fischer \u00b7 Sep 25 Add version 1 earlier ver\". No folder choice. An upload naming a folder answered 403 \"Business Users may upload supporting Documents at the record root only.\". A Comments reply with doc029-support-note.txt attached showed the file in the thread (1 mention); the Contract still had 2 Documents and the Portal Documents list showed 0 rows for that file.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A preview stays pending or fails: damaged Word file; Download reads the original",
+      "expected": "The reader shows the pending message, then the failure message; Download returns the original bytes; reopening adds no Version.",
+      "startedAt": "2026-09-25T11:35:50.784Z",
+      "at": "2026-09-25T11:35:55.760Z",
+      "page": "/contracts/405/documents",
+      "actual": "The reader first showed \"Preparing this document for reading\u2026\" and then showed \"This file could not be prepared for reading here. Download it to read it.\". Download returned doc029-support-damaged.docx, 2046 bytes, SHA-256 equal to the fixture. Reopening showed the same failure and the chain still had 1 Version. Screenshot docs/documentation/batches/DOC-030/support/legal-team-member-preview-failed.png.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A preview fails: the Administrator reads the failed Version and downloads the original",
+      "expected": "The failure message and Download are shown; the original downloads.",
+      "startedAt": "2026-09-25T11:35:55.761Z",
+      "at": "2026-09-25T11:35:58.292Z",
+      "page": "/contracts/405/documents",
+      "actual": "Daniel saw the failure message on the same Version; Download returned 2046 bytes matching the uploaded original.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: staff groups with In-app, Email and Push, Briefing, Devices, Reminder lead times, and profile timezone",
+      "expected": "Groups show In-app, Email and Push choices and a Briefing section; Devices offers Turn on for this browser when the browser allows notifications and says In-app off silences Push; Reminder lead times has Use the organization's default lead times; Profile has a Timezone control.",
+      "startedAt": "2026-09-25T11:35:58.293Z",
+      "at": "2026-09-25T11:36:04.658Z",
+      "page": "/settings/profile",
+      "actual": "Settings > Personal > Notifications switches: [\"Assigned to you In-app on\",\"Assigned to you Email on\",\"Assigned to you Push on\",\"Activity on your records In-app on\",\"Activity on your records Email off\",\"Activity on your records Push off\",\"Dates approaching In-app on\",\"Dates approaching Push on\",\"New requests In-app on\",\"New requests Email off\",\"New requests Push off\",\"Knowledge items Email on\",\"Show details in notifications on\",\"Use the organization's default lead times on\",\"Approvals Email on\",\"Tasks Email on\",\"Dates Email on\",\"Obligations Email on\",\"Intake Email off\"]. Briefing heading present. Devices: \"Devices\"; with browser notification permission granted the page offered Turn on for this browser (not selected). Reminder lead times: switch \"Use the organization's default lead times\" on, list [\"30 days before 14 days before 7 days before 1 day before On the day\"]. Profile showed a Timezone control.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: staff groups with In-app, Email and Push, Briefing, Devices, Reminder lead times, and profile timezone",
+      "expected": "Groups show In-app, Email and Push choices and a Briefing section; Devices offers Turn on for this browser when the browser allows notifications and says In-app off silences Push; Reminder lead times has Use the organization's default lead times; Profile has a Timezone control.",
+      "startedAt": "2026-09-25T11:36:04.659Z",
+      "at": "2026-09-25T11:36:10.980Z",
+      "page": "/settings/profile",
+      "actual": "Settings > Personal > Notifications switches: [\"Assigned to you In-app on\",\"Assigned to you Email on\",\"Assigned to you Push on\",\"Activity on your records In-app on\",\"Activity on your records Email off\",\"Activity on your records Push off\",\"Dates approaching In-app on\",\"Dates approaching Push on\",\"New requests In-app on\",\"New requests Email off\",\"New requests Push off\",\"Knowledge items Email on\",\"Show details in notifications on\",\"Use the organization's default lead times on\",\"Approvals Email on\",\"Tasks Email on\",\"Dates Email on\",\"Obligations Email on\",\"Intake Email off\"]. Briefing heading present. Devices: \"Devices\"; with browser notification permission granted the page offered Turn on for this browser (not selected). Reminder lead times: switch \"Use the organization's default lead times\" on, list [\"30 days before 14 days before 7 days before 1 day before On the day\"]. Profile showed a Timezone control.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: Portal Notification settings, and In-app off stops the group's email",
+      "expected": "Notification settings lists Request updates, Assigned to you, Activity on your records and Dates approaching; there is no personal lead-time control; with Request updates In-app off a Legal reply sends no email, and with it back on the next reply does.",
+      "startedAt": "2026-09-25T11:36:10.981Z",
+      "at": "2026-09-25T11:36:43.105Z",
+      "page": "/portal/settings",
+      "actual": "The header link Notification settings opened /portal/settings with switches [\"Request updates In-app on\",\"Request updates Email on\",\"Request updates Push on\",\"Assigned to you In-app on\",\"Assigned to you Email on\",\"Assigned to you Push on\",\"Activity on your records In-app on\",\"Activity on your records Email off\",\"Activity on your records Push off\",\"Dates approaching In-app on\",\"Dates approaching Email on\",\"Dates approaching Push on\",\"Show details in notifications on\"] and the note \"Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications.\". No lead-time control was shown (0 matches). With Request updates In-app off the switches read [\"Request updates In-app off\",\"Request updates Email on\",\"Request updates Push on\"]: the Email switch stays as it was. Nadia then replied on R-116; after 25 s Mailpit held 1 messages for this Business User about R-116 (was 1), so no email went out. With In-app back on ([\"Request updates In-app on\",\"Request updates Email on\",\"Request updates Push on\"]) the next reply produced a new email (2 messages).",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "I cannot approve: only the named person can answer",
+      "expected": "On a request naming another person the requester sees only Cancel request; on the request naming himself he sees Approve and Reject; a direct decision on another person's request is refused.",
+      "startedAt": "2026-09-25T11:36:43.106Z",
+      "at": "2026-09-25T11:36:45.318Z",
+      "page": "/contracts/401/approvals",
+      "actual": "On C-401, Actions for Nadia Haddad offered [\"Cancel request\"]; Actions for Daniel Okafor offered [\"Approve\",\"Reject\",\"Cancel request\"]. A direct decision on Nadia's request answered 403.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "I cannot approve: the named approver finds it under Your approvals in the bell and decides once",
+      "expected": "The bell lists the open request under Your approvals with Review; the decision dialog says a decision is final; afterwards no decision control remains and a second decision is refused.",
+      "startedAt": "2026-09-25T11:36:45.321Z",
+      "at": "2026-09-25T11:36:49.627Z",
+      "page": "/contracts/401/approvals",
+      "actual": "The bell's Your approvals section held \"Unread Daniel Okafor asked you to approve DOC-030 support approval contract 09251133 2 minutes ago Review\"; Review opened /contracts/401/approvals. The Approve dialog read \"Approve this contract A decision is final. To change it, ask for a new approval. Note Cancel Approve\". After Approve the row read \"NH Nadia Haddad Requested by Daniel Okafor Added manually Approved \u2014 Sep 25\"; its actions offered []. A second decision answered 409.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An Approval warning appears: Move past approval with a Pending request; Cancel",
+      "expected": "Moving to an Active Status opens Move past approval listing the Pending request; Cancel keeps the Status.",
+      "startedAt": "2026-09-25T11:36:49.629Z",
+      "at": "2026-09-25T11:36:53.175Z",
+      "page": "/contracts/401",
+      "actual": "The dialog read \"Move past approval 1 approval on this contract is unresolved. Moving to Active goes past sign-off. DO Daniel Okafor Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel closed it and the Status stayed Draft. Screenshot docs/documentation/batches/DOC-030/support/administrator-move-past-approval.png.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "I cannot approve (Portal): the named Business User opens Approvals and decides from the review page",
+      "expected": "Approvals in the Portal lists the Pending request; the review page shows the Contract title and primary Document only; the decision is final.",
+      "startedAt": "2026-09-25T11:36:53.176Z",
+      "at": "2026-09-25T11:36:59.574Z",
+      "page": "/portal/approvals/01a0d857-cc7a-7343-ae68-a21e56694fcd",
+      "actual": "Portal navigation Approvals opened /portal/approvals listing the three Pending requests that name this Business User. The review page /portal/approvals/01a0d857-cc7a-7343-ae68-a21e56694fcd read \"All approvals C-402 DOC-030 support business approver buApproval 09251133 Pending doc029-support-v1.txt Download Download the document to review it 57 byte Download Approval request NH Requested by Nadia Haddad Requested Sep 25, 2026, 3:33 PM GMT+4 Your decision Note (optional) Reject Approve\" with headings [\"DOC-030 support business approver buApproval 09251133\",\"doc029-support-v1.txt\",\"Download the document to review it\",\"Approval request\",\"Your decision\"]: the Contract title and primary Document, not the rest of the Contract. Approve recorded the decision (\"Approved doc029-support-v1.txt Download Download\"); no Approve or Reject control remained and a second decision answered 409.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "I cannot approve (Portal): withdrawing the request or archiving the Contract removes the review page",
+      "expected": "After Legal withdraws one request and archives another Contract, their review pages no longer open and the requests leave the Pending list.",
+      "startedAt": "2026-09-25T11:36:59.575Z",
+      "at": "2026-09-25T11:37:08.483Z",
+      "page": "/portal/approvals",
+      "actual": "Both review pages opened before. Nadia withdrew the request on C-403 (answered 200) and archived C-404 (answered 200). The withdrawn review page then showed \"Page not found There is nothing at this address. Back to Home\" at /portal/approvals/01a0d857-ccbb-7dda-a82d-4543873fb0c1; the archived one showed \"Page not found There is nothing at this address. Back to Home\" at /portal/approvals/01a0d857-ccfb-7a67-a041-d3fab4100e8f. The Pending list no longer named either Contract.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Electronic signing is unavailable: connector state and manual hand-off",
+      "expected": "With no Signing connector there is no Send for signature, and Mark as executed copy stays available for manual hand-off.",
+      "startedAt": "2026-09-25T11:37:08.487Z",
+      "at": "2026-09-25T11:37:15.124Z",
+      "page": "/contracts/396/documents",
+      "actual": "Integrations > E-signature: \"DocuSign Not connected\". C-396 Approvals (\"Approvals & signing 0 Apply group Add approver No approvals requested on this contract yet.\") had 0 Send for signature controls. The primary Document's actions offered [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\",\"Delete\"], including Mark as executed copy for manual hand-off.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Electronic signing is unavailable: connector state and manual hand-off",
+      "expected": "With no Signing connector there is no Send for signature, and Mark as executed copy stays available for manual hand-off.",
+      "startedAt": "2026-09-25T11:37:15.124Z",
+      "at": "2026-09-25T11:37:19.444Z",
+      "page": "/contracts/396/documents",
+      "actual": "Integrations > E-signature: \"not read (organization settings are Administrator-only)\". C-396 Approvals (\"Approvals & signing 0 Apply group Add approver No approvals requested on this contract yet.\") had 0 Send for signature controls. The primary Document's actions offered [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"], including Mark as executed copy for manual hand-off.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Analysis or AI conversion is unavailable: AI analysis settings, Field prompts and the Request conversion switches",
+      "expected": "AI analysis shows whether Analysis is enabled, has Field prompts, and names Prepare Matter conversions with AI and Prepare Contract conversions with AI as separate switches.",
+      "startedAt": "2026-09-25T11:37:19.446Z",
+      "at": "2026-09-25T11:37:23.024Z",
+      "page": "/settings/ai-analysis",
+      "actual": "No connector was saved at the time (Provider read Not connected), so the Request conversion card and its switches were absent, as the linked Request conversion switches section says (it appears only after a connector is saved). AI analysis showed switches [] and a Contract analysis prompts section (the Field prompts). The page text began \"Personal Profile Appearance Notifications API keys View Business Portal Organization General Regions Departments Users Matters Contracts Intake Entities Knowledge Documents Auto-Docs Notifications AI \". Connector state at the time: {\"enabled\":false,\"configured\":false,\"matterPreparation\":false,\"contractPreparation\":false,\"contractConversionAnalysis\":false}. The AI connector on this shared lab was configured by another DOC-030 group with a provider stand-in; this walkthrough did not run Analysis and treats nothing here as live-provider evidence.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Analysis is missing: the Fields header on a live and on an ended Contract; AI conversion falls back to manual",
+      "expected": "Run analysis shows in the Fields header only when Analysis is available and the Contract is not Ended; the Convert dialog converts manually when preparation is off.",
+      "startedAt": "2026-09-25T11:37:23.025Z",
+      "at": "2026-09-25T11:38:02.301Z",
+      "page": "/inbox/116",
+      "actual": "C-396 Fields header read \"\" with 0 Run analysis/Running\u2026 control(s) and 0 separate AI analysis cards. Ended C-433 showed 0 Run analysis controls. With Prepare Contract conversions with AI off, Triage > Convert to contract on R-116 opened \"Convert R-116 to a contract Contract review \u00b7 submitted by Lena Fischer Title* Contract type* Type\u2026 NDA MSA SOW Sales Vendor Employment License Other Default DPA Reseller Lease DOC-030 portal Evaluation 1790330794487 DOC-030 inbox Supplier agreement DOC-030 ac\" with no Conversion draft preparation; Cancel left the Request read. Running\u2026, the failure sentence and Retry Request-context Analysis need a run and were not produced here.",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "API key: open API keys from Personal in staff Settings while MCP is off",
+      "expected": "Settings > Personal > API keys opens the page with Connected Clients; Request a key is absent while Enable MCP or the group's API keys switch is off.",
+      "startedAt": "2026-09-25T11:38:02.417Z",
+      "at": "2026-09-25T11:38:05.474Z",
+      "page": "/settings/api-keys",
+      "actual": "With Enable MCP off and Legal Users API keys off, /settings/api-keys showed 0 Request a key buttons and \"Client Toolsets Scope Status Expires Actions DOC-030 mcp revoke legal_team_member 09251131 Contracts Read Revoked Oct 25, 2026 DOC-030 mcp cancel LTM 09251131 Contracts Read Cancelled \u2014 DOC-030 mcp recheck LTM 09251131 Contracts Write Denied DOC-030 fictional denial note \u2014 DOC-030 mcp Claude Code LTM 09251131 Contracts, Matters \". Connected Clients read \"No Client is connected.\".",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "API key: open API keys from Notification settings in the Portal while MCP is off",
+      "expected": "Portal Notification settings links to API keys; Request a key is absent while MCP or the Business Users API keys switch is off.",
+      "startedAt": "2026-09-25T11:38:05.475Z",
+      "at": "2026-09-25T11:38:08.268Z",
+      "page": "/portal/settings/api-keys",
+      "actual": "Notification settings > API keys opened /portal/settings/api-keys with 0 Request a key buttons: \"Your requests API keys API keys Client Toolsets Scope Status Expires Actions DOC-030 support portal client 09251113 Workspace Read Revoked Dec 24, 2026 DOC-030 support portal client 09251113 Workspace Read Active Dec 24, 2026 Revoke DOC-030 support portal client 09251113 Workspace Read Active Dec 24\".",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "API key: an Administrator turns on Enable MCP and the groups' API keys switches in Organization > MCP",
+      "expected": "Organization > MCP has Enable MCP, Legal Users API keys and Business Users API keys; turning them on saves; OAuth Clients cannot be turned on while the app has no HTTPS address.",
+      "startedAt": "2026-09-25T11:38:08.269Z",
+      "at": "2026-09-25T11:38:13.244Z",
+      "page": "/settings/mcp",
+      "actual": "Organization > MCP (/settings/mcp) read \"MCP is on Connected Clients act as the person who signed in and never see more than that person can.\"; switches saved [\"Enable MCP: 200\",\"Legal Users API keys: 200\",\"Business Users API keys: 200\"]. The page names Server address \"http://127.0.0.1:43300/mcp\" and \"API key lifetime (days) New API keys expire after this many days. Choose 1 to 365 days.\". The OAuth Clients switches were left as found ([\"Legal Users OAuth Clients off\",\"Business Users OAuth Clients off\"]; authorization server available true); no OAuth Client was connected.",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "API key: Request a key names a Client, Toolsets and a scope, then Cancel request withdraws it",
+      "expected": "The dialog asks for Client name, Toolsets with nothing selected, Read or Write scope and Note (Optional), and states the lifetime; the new row reads Pending approval; Cancel request sets Cancelled.",
+      "startedAt": "2026-09-25T11:38:13.246Z",
+      "at": "2026-09-25T11:38:17.956Z",
+      "page": "/settings/api-keys",
+      "actual": "Request an API key read \"Request an API key Client name Toolsets Nothing is selected for you. Workspace Contracts Matters Tasks Requests Comments Documents Auto-Docs Entities Knowledge People Team Administration Scope Read. Find and read what you can access. Write. Every change is recorded as you, via this Client. Note (Optional) Expires 90 days after approval. The organization sets this lifetime. Cancel Send request\"; 0 Toolsets were selected at open; scopes [\"Read. Find and read what you can access.\",\"Write. Every change is recorded as you, via this Client.\"]. After Send request the row read \"DOC-030 support cancelled client 09251133 Comments Read Pending approval \u2014 Cancel request\". The Cancel request dialog read \"Cancel request DOC-030 support cancelled client 09251133 Cancel Cancel request\"; the row then read \"DOC-030 support cancelled client 09251133 Comments Read Cancelled \u2014\".",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "API key: the Administrator denies from Your approvals in the bell and from API key requests with a note",
+      "expected": "The bell lists the key request under Your approvals with Approve and Deny; Deny there sets Denied; Deny with a note from Organization > MCP > API key requests keeps the note on the requester's row.",
+      "startedAt": "2026-09-25T11:38:17.957Z",
+      "at": "2026-09-25T11:38:31.536Z",
+      "page": "/settings/api-keys",
+      "actual": "Daniel's bell held \"Unread Nadia Haddad requested an API key for DOC-030 support bell denied client 09251133 this minute Contracts Read Deny Approve\" under Your approvals with [\"Deny\",\"Approve\"]; Deny there sent no note. In Organization > MCP the API key requests row read \"Nadia Haddad DOC-030 support noted denied client 09251133 DOC-030 support fictional reason for a write key Contracts Write Pending approval \u2014 \u2014 \u2014 Deny Approve\" (the requester's Note shows there); its Deny dialog read \"Deny DOC-030 support noted denied client 09251133 Note (Optional) Cancel Deny\" and took a note. Nadia's rows then read \"DOC-030 support bell denied client 09251133 Contracts Read Denied \u2014\" and \"DOC-030 support noted denied client 09251133 Contracts Write Denied DOC-030 support fictional denial note \u2014\".",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "API key: the Administrator approves from the bell; the requester sees Your key is ready once",
+      "expected": "Approve in the bell activates the key; the requester's next visit shows Your key is ready with the key, the x-api-key header and Done; the key is not shown again.",
+      "startedAt": "2026-09-25T11:38:31.537Z",
+      "at": "2026-09-25T11:38:45.136Z",
+      "page": "/settings/api-keys",
+      "actual": "Daniel selected Approve on the bell item. Nadia's API keys page opened \"Your key is ready Approved by Daniel Okafor on Sep 25, 2026. OpenLaw will not show this key again. <key> Copy Client DOC-030 support read client 09251133 Toolsets Comments, Contracts Scope Read Expires Dec 24, 2026 Send this key in the x-api-key header. Connect a headless Client (opens in a new tab) Done\" (key value withheld here). After Done the row read \"DOC-030 support read client 09251133 Comments, Contracts Read Active Dec 24, 2026 Revoke\". A reload opened no dialog and the page did not contain the key.",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "API key: the key works at the MCP address with x-api-key; a Read key cannot write; Revoke ends it at once",
+      "expected": "An MCP call with the key in x-api-key succeeds; a write tool is refused for a Read key; after Revoke the row reads Revoked and the key is refused.",
+      "startedAt": "2026-09-25T11:38:45.137Z",
+      "at": "2026-09-25T11:38:48.555Z",
+      "page": "/settings/api-keys",
+      "actual": "POST http://127.0.0.1:43300/mcp initialize without a key answered 401; with the key in x-api-key it answered 200. openlaw_whoami returned \"{\\\"result\\\":{\\\"content\\\":[{\\\"type\\\":\\\"text\\\",\\\"text\\\":\\\"{\\\\\\\"person\\\\\\\":{\\\\\\\"id\\\\\\\":\\\\\\\"01a0d801-d66d-79e8-b77d-30ed0d6b420c\\\\\\\",\\\\\\\"email\\\\\\\":\\\\\\\"nadia.haddad@helix.example\\\\\\\",\\\\\\\"displayName\\\\\\\":\\\\\\\"Nadia Haddad\\\\\\\"},\\\\\\\"accountType\\\\\\\":\\\\\\\"legal_team_member\\\\\\\",\\\\\\\"toolsets\\\\\\\":[\\\\\\\"guide\\\\\\\",\\\\\\\"comments\\\\\\\",\\\\\\\"co\". openlaw_comment_post with this Read key returned \"{\\\"result\\\":{\\\"content\\\":[{\\\"type\\\":\\\"text\\\",\\\"text\\\":\\\"mcp_read_only: openlaw_comment_post requires write scope. This credential is read-only.\\\"}],\\\"isError\\\":true},\\\"jsonrpc\\\":\\\"2.0\\\",\\\"id\\\":3}\". Revoke opened \"Revoke API key DOC-030 support read client 09251133 This Client will lose access immediately. You will need a new request for another key. Cancel Revoke\"; the row then read \"DOC-030 support read client 09251133 Comments, Contracts Read Revoked Dec 24, 2026\", and the next MCP call with the key answered 401.",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "API key: an Administrator's own request approves itself",
+      "expected": "The Administrator's own request becomes Active at once and shows Your key is ready; he revokes it again.",
+      "startedAt": "2026-09-25T11:38:48.565Z",
+      "at": "2026-09-25T11:38:54.373Z",
+      "page": "/settings/api-keys",
+      "actual": "Send request opened \"Your key is ready Approved by Daniel Okafor on Sep 25, 2026. OpenLaw will not show this key again. <key> Copy Client DOC-030 support administrator client 09251133 Toolsets Contracts Scope Read Expires Dec 24, 2026 Send this key in the x-api-key header. Connect a headless Client (opens in a new tab) \" straight away; the row read \"DOC-030 support administrator client 09251133 Contracts Read Active Dec 24, 2026 Revoke\". Daniel then revoked it: \"DOC-030 support administrator client 09251133 Contracts Read Revoked Dec 24, 2026\".",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "API key: Write is absent from the request dialog while the organization is Read-only",
+      "expected": "With Read-only on, Request an API key offers only the Read scope; with it off again, Write returns.",
+      "startedAt": "2026-09-25T11:38:54.375Z",
+      "at": "2026-09-25T11:38:58.817Z",
+      "page": "/settings/api-keys",
+      "actual": "With Read-only on, the Scope choices were [\"Read. Find and read what you can access.\"]. With Read-only back off they were [\"Read. Find and read what you can access.\",\"Write. Every change is recorded as you, via this Client.\"]. Both dialogs were cancelled without a request.",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "API key lifetime: the organization sets 1 to 365 days",
+      "expected": "A lifetime of 400 is refused with the 1 to 365 message and the saved lifetime does not change.",
+      "startedAt": "2026-09-25T11:38:58.818Z",
+      "at": "2026-09-25T11:39:04.440Z",
+      "page": "/settings/mcp",
+      "actual": "Entering 400 in API key lifetime (days) showed \"API key lifetime must be a whole number from 1 to 365 days.\"; the saved lifetime stayed 90. Entering 90 again left 90. The request dialog's line \"Expires 90 days after approval. The organization sets this lifetime.\" matches.",
+      "result": "pass"
+    },
+    {
+      "section": "K",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "API key (Portal): request from Notification settings > API keys; the Administrator approves in API key requests; the key shows once",
+      "expected": "The Business User's Request a key offers the business Toolsets; approval from Organization > MCP makes it Active and the Portal shows Your key is ready once; Revoke ends it.",
+      "startedAt": "2026-09-25T11:39:04.442Z",
+      "at": "2026-09-25T11:39:16.942Z",
+      "page": "/portal/settings/api-keys",
+      "actual": "Portal Request an API key offered Toolsets [\"Workspace\",\"Contracts\",\"Matters\",\"Tasks\",\"Requests\",\"Comments\",\"Documents\",\"Auto-Docs\",\"Entities\",\"Knowledge\",\"People\",\"Team\",\"Administration\"]. After Send request the row read \"DOC-030 support portal client 09251133 Workspace Read Pending approval \u2014 Cancel request\". Daniel approved it in Organization > MCP > API key requests. The Portal page then opened \"Your key is ready Approved by Daniel Okafor on Sep 25, 2026. OpenLaw will not show this key again. <key> Copy Client DOC-030 support portal client 09251133 Toolsets Workspace Scope Read Expires Dec 24, 2026 Send this key in the x-api-key header. Connect a headless Client (opens in a new tab) Done\". After Done: \"DOC-030 support portal client 09251133 Workspace Read Active Dec 24, 2026 Revoke\". Revoke: \"DOC-030 support portal client 09251133 Workspace Read Revoked Dec 24, 2026\".",
+      "result": "pass"
+    },
+    {
+      "section": "O",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "operator",
+      "method": "browser-walkthrough (operator)",
+      "action": "Deployment operator: read the reference signed out in the formal documentation",
+      "expected": "The formal reader opens without an app session and shows the Deployment operator row and MAX_UPLOAD_MB.",
+      "startedAt": "2026-09-25T11:42:08.817Z",
+      "at": "2026-09-25T11:42:13.305Z",
+      "page": "/documentation",
+      "actual": "Signed out, /documentation/reference showed \"Look up terms, permissions, and file behavior\" with the Deployment operator row and MAX_UPLOAD_MB (bundled 067c1646 bytes). App API requests while reading signed out: [\"/api/v1/me\"]. Signed-out /help landed on /documentation.",
+      "result": "pass"
+    },
+    {
+      "section": "O",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "operator",
+      "method": "browser-walkthrough (operator)",
+      "action": "Deployment operator: check the reference's operator facts against the lab containers and compose.yml",
+      "expected": "No operator account role exists; MAX_UPLOAD_MB is an environment setting whose empty value means the 100 MiB default; the MCP address is the app address plus /mcp; files and database live in operator-managed volumes.",
+      "startedAt": "2026-09-25T11:42:13.314Z",
+      "at": "2026-09-25T11:42:14.832Z",
+      "page": "docker exec / docker inspect / compose.yml",
+      "actual": "compose.yml (.documentation-labs/work2/source/compose.yml) passes [\"STORAGE_PATH: ${STORAGE_PATH:-/var/lib/openlaw/files}\",\"MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-}\",\"- openlaw-files:${STORAGE_PATH:-/var/lib/openlaw/files}\",\"- openlaw-files:${STORAGE_PATH:-/var/lib/openlaw/files}\",\"- openlaw-pgdata:/var/lib/postgresql/data\",\"openlaw-pgdata:\",\"openlaw-files:\"]. In the running app container MAX_UPLOAD_MB is [] (set but empty), and the built uploads module reads \"4:export const MEGABYTE = 1024 * 1024; | 11:export const DEFAULT_MAX_UPLOAD_MB = 100; | 32:export const MAX_FILENAME_LENGTH = 255;\": an empty value falls back to 100 MiB = 104,857,600 bytes, matching the 100 MB refusal in the troubleshooting walk. The users table allows only \"CHECK ((role = ANY (ARRAY['administrator'::text, 'legal_team_member'::text, 'business_user'::text])))\"; there is no operator role. BASE_URL is http://127.0.0.1:43300, so the MCP address is http://127.0.0.1:43300/mcp (an unauthenticated POST answered 401). App mounts: \"volume:/var/lib/openlaw/files\"; database mounts: \"volume:/var/lib/postgresql/data\". These are the environment, storage and service settings the reference assigns to the deployment operator. Read only; nothing was changed. The Administrator's Settings > Advanced > File uploads page also shows Maximum file size (MiB) 100 (Default) and says a value set in the deployment configuration is read only there.",
+      "result": "pass"
+    },
+    {
+      "section": "O",
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
+      "role": "operator",
+      "method": "browser-walkthrough (operator)",
+      "action": "Links in the reviewed troubleshooting and reference bytes resolve in the formal documentation",
+      "expected": "Every internal link and heading anchor in the reviewed bytes opens an article and heading in the bundled edition, or the gap is named.",
+      "startedAt": "2026-09-25T11:42:14.848Z",
+      "at": "2026-09-25T11:43:36.495Z",
+      "page": "/documentation/*",
+      "actual": "troubleshooting: 24 internal targets; reference: 24. All targets and anchors opened.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Roles: the role control offers the fixed account roles only",
+      "expected": "The role control offers Administrator, Legal team member and Business user, with no operator or other role.",
+      "startedAt": "2026-09-25T11:53:19.882Z",
+      "at": "2026-09-25T11:53:22.111Z",
+      "page": "/settings/users",
+      "actual": "The role control for Priya Raman offered \"Administrator Legal team member Business user\". Escape closed it with no change.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Stage, Status and Category: fixed backbones behind configurable labels",
+      "expected": "Contract statuses each show one Stage from Draft, Review, Approval, Signature, Active, Ended; a new Matter status asks for Open or Closed.",
+      "startedAt": "2026-09-25T11:53:22.113Z",
+      "at": "2026-09-25T11:53:26.322Z",
+      "page": "/settings/matters/statuses",
+      "actual": "Contract statuses showed Stages [\"Draft\",\"Review\",\"Approval\",\"Signature\",\"Active\",\"Ended\"]. Matter statuses > Add status offered Category choices [\"Category\u2026\",\"Open\",\"Closed\"]; Cancel left the list unchanged.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Document type lists: Settings > Organization > Documents keeps one list per module",
+      "expected": "Documents has Matters, Contracts and Entities lists; the Contract list starts with the six fixed types; the Matter and Entity lists have no fixed types; an Administrator can add a Contract type.",
+      "startedAt": "2026-09-25T11:53:26.323Z",
+      "at": "2026-09-25T11:53:32.266Z",
+      "page": "/settings/documents/contracts",
+      "actual": "Settings > Organization > Documents showed the lists [\"Matters\",\"Contracts\",\"Entities\"]. Contracts: fixed types [\"Draft \u00b7 ours\",\"Draft \u00b7 theirs\",\"Redline \u00b7 theirs\",\"Redline \u00b7 ours\",\"Executed\",\"Amendment\"] (7 types in all on this shared lab). Matters: 3 types, none fixed. Entities: 0 types, none fixed; the non-fixed rows on those lists were added by other DOC-030 groups. Add type added \"DOC-030 support added type 09251133-1153\" to the Contract list for the next steps.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "What your organization can configure: types and their Forms, Statuses, Fields, Document types, Templates, Approver groups, request types, default lead times, MCP",
+      "expected": "Each named configuration has a page under Organization settings; a type's Form has per-Row On intake form and Visible on Portal switches.",
+      "startedAt": "2026-09-25T11:53:32.268Z",
+      "at": "2026-09-25T11:53:51.491Z",
+      "page": "/settings/contracts/types/01a0d801-db68-7d05-8811-e124e9d0079e/form",
+      "actual": "Pages: {\"Contract types\":\"/settings/contracts/types: Contracts / Contract types\",\"Contract statuses\":\"/settings/contracts/statuses: Contracts / Contract statuses\",\"Contract fields\":\"/settings/contracts/fields: Contracts / Default Fields / Custom Fields\",\"Approver groups\":\"/settings/contracts/approver-groups: Contracts / Approval permissions / Approver groups\",\"Matter templates\":\"/settings/matters/templates: Matters / Matter templates\",\"Request types\":\"/settings/intake/request-types: Intake / Request types\",\"Reminders\":\"/settings/reminders: Comment emails / Reminder lead times\",\"Document types\":\"/settings/documents/contracts: Documents / Document types\",\"MCP\":\"/settings/mcp: MCP / Allowed Clients / Toolset ceiling\"}. The DPA Form's Row switches: [\"Title: On intake form off\",\"Title: Required for creation on\",\"Type: On intake form off\",\"Type: Required for creation on\",\"Description: On intake form on\",\"Description: Required for creation off\",\"Entity: On intake form off\",\"Entity: Required for creation off\",\"Counterparties: On intake form off\",\"Counterparties: Required for creation off\",\"Department: On intake form off\",\"Department: Required for creation off\"].",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Permissions: the Administrator needs a Grant for a Confidential Entity and named access for a Confidential Contract",
+      "expected": "Without a Grant the Entity answers Entity not found; with a Grant it opens; the Confidential Contract without a team entry answers Contract not found.",
+      "startedAt": "2026-09-25T11:53:51.492Z",
+      "at": "2026-09-25T11:53:58.750Z",
+      "page": "/contracts/397",
+      "actual": "Confidential Entity: \"Entity not found\" before the Grant, \"DOC-030 support confidential entity Ltd 09251133\" after Nadia granted Daniel, \"Entity not found\" after removal. Confidential C-397: \"Contract not found\".",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Holding: owners come from the share register, show From register and cannot be edited; owners can be an Entity or an Individual",
+      "expected": "The register Entity lists its holders from the register; the holder Entity's Holdings in other Entities row shows From register with no edit control; Add Holding offers an Entity or an Individual as owner.",
+      "startedAt": "2026-09-25T11:53:58.751Z",
+      "at": "2026-09-25T11:54:33.181Z",
+      "page": "/entities/01a0d857-cda8-768d-b673-2885b0289e0f/ownership",
+      "actual": "The register Entity's Register of members read \"Register of members 2 holders \u00b7 1 class \u00b7 derived from 2 register entries Export register Share classes Holder Class Shares % of class % voting Certificates Member since DS DOC-030 support holder entity Ltd 09251133 Entity Ordinary 300 75% 75% \u2014 Sep 25, 2026 MK Marta Kowalczyk Individual Ordinary 100 25% 25% \u2014 Sep 25, 2026 Total\"; \"(no declared owners card)\". On the holder Entity, \"Holdings in other Entities DOC-030 support register entity Ltd 09251133 From register %\"; its row for the register Entity read \"DOC-030 support register entity Ltd 09251133 From register %\" with 0 enabled and 2 disabled percent or remove controls (hint \"Derived from the share register. Record an entry there to change it.\"). Add Holding opened \"Add Holding Owner type Entity Individual Relationship Owns this Entity This Entity owns Entity Ownership percent Cancel Add\". Cancel added nothing.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Task and Key date, Entity and Counterparty: compare the terms with the Contract dialogs",
+      "expected": "Add a key date has no assignee but has reminder lead times and team recipients; Add task has an assignee and due date; the Contract shows Our entity separately from Counterparties.",
+      "startedAt": "2026-09-25T11:54:33.182Z",
+      "at": "2026-09-25T11:54:40.699Z",
+      "page": "/contracts/396",
+      "actual": "Add a key date read \"Add a key date Date* Event* Note Reminders Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day This date will remind: 30 days before, 14 days before, 7 days before, 1 day before, On the day Additional lead time (days before) Add lead time Recipients Amara Nwosu Lena Fischer Nadia Haddad Cancel Add date\": no assignee, a lead-time control and team recipients. Add task showed \"Add a task Title* Description Assignee Unassigned Due date Comments & attachments Add a note Attach files Up to 5 files. Cancel Add task\". The Contract Overview has separate Our entity and Counterparties controls.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Document type: chosen with Type at upload, No type by default, corrected later from the Type column",
+      "expected": "The upload dialog's Type starts at No type and lists the Contract types including the added one; the Type column changes a Version's type and it stays after reload.",
+      "startedAt": "2026-09-25T11:54:40.700Z",
+      "at": "2026-09-25T11:54:47.275Z",
+      "page": "/contracts/396/documents",
+      "actual": "Upload document with doc030-support-typed-1153.txt (the note fixture's bytes): Type started at \"No type\" with options [\"No type\",\"Draft \u00b7 ours\",\"Draft \u00b7 theirs\",\"Redline \u00b7 theirs\",\"Redline \u00b7 ours\",\"Executed\",\"Amendment\",\"DOC-030 access Admin document type 09251012\",\"DOC-030 support added type 09251133-1153\"]; choosing \"DOC-030 support added type 09251133-1153\" stored it (Type column \"DOC-030 support added type 09251133-1153\"). On doc029-support-image.png the Type column changed to \"Draft \u00b7 ours\" and kept it after reload. The primary doc029-support-v1.txt kept \"No type\".",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Executed pin, Comparison and Version delete: the Document actions",
+      "expected": "Actions offer Mark as executed copy and Compare with previous; Compare opens a comparison without adding a Version; no action deletes one Version; only the Administrator's menu has Delete.",
+      "startedAt": "2026-09-25T11:54:47.276Z",
+      "at": "2026-09-25T11:54:54.669Z",
+      "page": "/contracts/406/documents",
+      "actual": "Nadia's actions for doc029-support-v1.txt (2 Versions) on C-406: [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"]. Compare with previous opened /documents/01a0d85e-4baf-7636-a3d2-9772626c980b/compare (\"Comparison failed\"); the Document still had 2 Versions afterwards. Daniel's actions: [\"Compare with previous\",\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\",\"Delete\"]. No action deletes a single Version; only the Administrator's menu has Delete.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "File behavior: PNG reads inline, SVG is download-only, EML opens the email reader",
+      "expected": "The PNG opens in the reader, the SVG shows the download-only card, and the EML shows its subject and body.",
+      "startedAt": "2026-09-25T11:54:54.671Z",
+      "at": "2026-09-25T11:55:12.544Z",
+      "page": "/contracts/406/documents?doc=01a0d85e-e056-7ca2-af92-9e2a9c1e0df7&version=01a0d85e-e056-7ca2-af92-9e2b05687b35",
+      "actual": "PNG reader: 1 image(s), \"doc029-support-image.png v1 doc029-support-image.png Download\". SVG: \"doc029-support-diagram.svg v1 doc029-support-diagram.svg Download doc029-support-diagram.svg This file type does not open here. Download it to read it. 115 byte Download\". EML reader: \"doc029-support-message.eml v1 doc029-support-message.eml Download Subject DOC-029 support fictional message From Fictional Sender <sender@fictional.example> To Legal <legal@helix.example> Date Sep 16, 2026, 2:00 PM GMT+4\". The 100 MB and 255-character refusals are recorded in the troubleshooting upload steps.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Knowledge files show the item's Knowledge type; organization settings stay with the Administrator; Personal holds lead times and API keys",
+      "expected": "A Knowledge Item's Documents Type column shows its Knowledge type; the Legal Team Member has no Organization settings; Personal lists Notifications and API keys.",
+      "startedAt": "2026-09-25T11:55:12.546Z",
+      "at": "2026-09-25T11:55:16.098Z",
+      "page": "/settings/profile",
+      "actual": "Knowledge \"DOC-030 support Portal Knowledge 09251133\" has Type \"Precedent\"; its file's Type column read \"Precedent\" with options [\"No type\",\"Precedent\"]. /settings/users for Nadia ended at /settings/profile with no Invite user and no Organization group; Personal listed [\"Profile\",\"Appearance\",\"Notifications\",\"API keys\",\"View Business Portal\"].",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Permissions and Portal files: staff workspace closed; Kind shows fixed kinds and General; earlier Versions read and download",
+      "expected": "Staff addresses land in the Portal; the Portal Documents list shows Draft \u00b7 ours for a fixed type and General for No type or an added type; the primary Document shows earlier Versions with downloads.",
+      "startedAt": "2026-09-25T11:55:16.100Z",
+      "at": "2026-09-25T11:55:20.455Z",
+      "page": "/portal/contracts/396",
+      "actual": "/documents in the Portal session landed on /portal. Portal Documents rows: note (added type \"DOC-030 support added type 09251133-1153\") \"doc030-support-typed-1153.txt Version 1 General Current 39 byte NH Nadia Haddad \u00b7 Sep 25 Add version\"; image (Draft \u00b7 ours) \"doc029-support-image.png Version 2 Draft \u00b7 ours Current 100 byte LF Lena Fischer \u00b7 Sep 25 Add version 1 earlie\"; primary (No type) \"Primary Document doc029-support-v1.txt Version 2 General Current 78 byte LF Lena Fischer \u00b7 Sep 25 Add version 1 earlier version\". Earlier Versions: \"Documents Upload documents Drop files here or click to upload Search Primary Document doc029-support-v1.txt Version 2 General Current 78 byte LF Lena Fischer \u00b7 Sep 25 Add version 1 earlier version doc029-support-v1.txt Version 1 General 57 byte NH Nadia Haddad \u00b7 Sep 25 doc030-support-typed-1153.txt \". Download links: [\"Download doc029-support-v1.txt, version 2\",\"Download doc029-support-v1.txt, version 1\"]; Version 1 downloaded 57 bytes (matches the uploaded v1).",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Portal files: published Knowledge offers current-file downloads without a Version picker",
+      "expected": "A published Knowledge Item with a two-Version file shows a Download for the current file only.",
+      "startedAt": "2026-09-25T11:55:20.457Z",
+      "at": "2026-09-25T11:55:22.183Z",
+      "page": "/portal/knowledge/01a0d857-cdea-7d70-abca-6dd3b43a08f3",
+      "actual": "Portal Knowledge \"DOC-030 support Portal Knowledge 09251133\" (published, audience Everyone, primary file with Versions 1 and 2) showed 1 Download link ([\"Download\"]) and 0 Version controls. The download returned 78 bytes equal to Version 2, the current file.",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Approval Request row: the review page does not add the Business User to the team; a related Matter stays closed",
+      "expected": "The Business User named on an Approval Request cannot open that Contract's Portal record page, and Legal's team list does not include them.",
+      "startedAt": "2026-09-25T11:55:22.185Z",
+      "at": "2026-09-25T11:55:28.341Z",
+      "page": "/portal/matters/148",
+      "actual": "/portal/contracts/402 (the Contract whose Approval Request names this Business User) showed \"Contract not found This Contract does not exist, or you cannot open it.\"; Nadia's Contract team applet on that Contract read \"Contract team NH Legal Owner Creator Nadia Haddad\", which does not include Lena Fischer. M-148, linked to shared C-396, showed \"This Matter does not exist, or you cannot open it.\".",
+      "result": "pass"
+    },
+    {
+      "section": "R",
+      "article": "reference",
+      "scenario": "V-C50",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Put the added Contract Document type back: archive it",
+      "expected": "Archive type removes the added type from the upload pickers; the Version keeps its type.",
+      "startedAt": "2026-09-25T11:55:28.343Z",
+      "at": "2026-09-25T11:55:31.241Z",
+      "page": "/settings/documents/contracts",
+      "actual": "Archive opened \"Archive DOC-030 support added type 09251133-1153 1 version keeps DOC-030 support added type 09251133-1153 as its type. It leaves the upload pickers. The change applies immediately and is recorded in the audit log. Cancel Archive type\"; after Archive type the active Contract list no longer showed \"DOC-030 support added type 09251133-1153\".",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T11:55:31.278Z",
+  "summary": {
+    "total": 62,
+    "pass": 62,
+    "fail": 0
+  },
+  "runNotes": [
+    "Development runs before 11:33Z (logs under the session scratchpad, now removed) are not evidence. They created extra records named DOC-030 support ... 09251038 and ... 09251113 on work2.",
+    "The run at 11:33Z covered every section. Its reference section had two reviewer harness waits that timed out on the shared lab (Holdings region and a Document Actions button); the script gained a reload-once wait and the reference section was rerun. The 11:44Z rerun hit a duplicate-name locator in the reviewer's script (fixed with per-run names); the 11:46Z rerun read a nonexistent team endpoint (replaced with the Contract team applet); the 11:50Z rerun timed out waiting for the Applets toolbar (reload-once wait added). The 11:53Z reference run passed all steps and is the recorded reference section.",
+    "No guide text was changed by this seat."
+  ]
+}

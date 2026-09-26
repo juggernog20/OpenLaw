@@ -1,0 +1,350 @@
+{
+  "batch": "DOC-030",
+  "group": "mcp",
+  "reviewer": "DOC-030 source-review author agent (mcp)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:24:19Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": null,
+    "note": "No DOC-029 evidence exists for either article. Compared against the last guide edit; source changes from d3534911 to HEAD touch no MCP source (66808d38 only edits notification-worker.ts and messages).",
+    "lastArticleEdit": "d3534911"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "configure-mcp",
+      "scenario": ["V-M40-MCP", "V-M41-MCP"],
+      "contentSha256Before": "cabb80d5f67102ef7111c182ae62ff969a0cd611b1dd5f2fc1ee26f691761a11",
+      "contentSha256": "0db986245a7bc89d795e0f798185f48e24f46fb49b20521a19853270d000e297",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135, #1138 addenda)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/web/src/components/allowed-clients.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/settings-card.tsx",
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/web/src/routes/settings-tool-calls.tsx",
+        "apps/web/src/components/audit-settings-tabs.tsx",
+        "apps/web/src/routes/settings-advanced.tsx",
+        "apps/web/src/routes/consent.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/lib/mcp.ts",
+        "apps/api/src/modules/mcp-settings/routes.ts",
+        "apps/api/src/modules/mcp-settings/reachability.ts",
+        "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/auth/discovery.ts",
+        "apps/api/src/auth/allowed-clients.ts",
+        "apps/api/src/auth/oauth-grants.ts",
+        "apps/api/src/mcp/auth.ts",
+        "apps/api/src/mcp/routes.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/calls.ts",
+        "packages/db/migrations/0163_mcp-settings.sql",
+        "packages/db/migrations/0171_m41-oauth-clients.sql",
+        "packages/shared/src/mcp.ts",
+        "e2e/tests/62-m40-mcp.spec.ts",
+        "e2e/tests/63-m41-oauth.spec.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Enable API keys step 1, master switch label",
+          "before": "Turn on Enable MCP. The card changes to MCP is on.",
+          "after": "Turn on the switch beside MCP is off; the title changes to MCP is on. Enable MCP is only the switch's accessible name, not visible text.",
+          "source": "apps/web/src/routes/settings-mcp.tsx (settings.mcp.masterState, aria-label settings.mcp.enable)"
+        },
+        {
+          "claim": "Who can open the section",
+          "before": "You must be an Administrator.",
+          "after": "Adds that other roles do not see the Organization group and that the MCP address sends a Legal Team Member to Profile, for the V-M40-MCP 'only Administrators' result.",
+          "source": "apps/web/src/routes/settings.tsx ORGANIZATION_GROUP; settings-mcp.tsx settingsMcpLoader redirect"
+        },
+        {
+          "claim": "Toolset ceiling default",
+          "before": "Expand Toolset ceiling and select the Toolsets the organization permits.",
+          "after": "All 13 Toolsets start selected; clear the ones not permitted. A key request can choose only from this set.",
+          "source": "packages/db/migrations/0163_mcp-settings.sql mcp_toolset_ceiling default; api-keys.tsx request form lists state.policy.toolsetCeiling"
+        },
+        {
+          "claim": "Read-only effect on the request form",
+          "before": "Read-only also blocks writes from an existing key.",
+          "after": "Adds that the key request form hides the Write choice while Read-only is on.",
+          "source": "apps/web/src/components/api-keys.tsx (!state.policy.readOnly guards the Write radio)"
+        },
+        {
+          "claim": "When the reachability pill shows",
+          "before": "Check the pill beside Server address.",
+          "after": "The pill appears only while an OAuth Clients switch is on, or after a refused enable.",
+          "source": "settings-mcp.tsx checks = refusedChecks ?? (OAuth on ? reachability : null); mcp-settings/routes.ts reachability()"
+        },
+        {
+          "claim": "Allowed Clients card state",
+          "before": "Expand Allowed Clients.",
+          "after": "In the Allowed Clients card (it starts open; only Toolset ceiling and Active keys and grants start collapsed).",
+          "source": "allowed-clients.tsx SettingsCard collapsible without defaultOpen; settings-card.tsx defaultOpen = true"
+        },
+        {
+          "claim": "Public IPv4 address check",
+          "before": "private, loopback, link-local, shared or multicast/reserved",
+          "after": "private, loopback, link-local, shared, 0.0.0.0/8, or 224 and above",
+          "source": "apps/api/src/modules/mcp-settings/reachability.ts publicIpv4"
+        },
+        {
+          "claim": "Loopback hosts that keep the authorization server",
+          "before": "HTTP on localhost, 127.0.0.1 or [::1]",
+          "after": "HTTP on localhost, a 127.x.x.x address or [::1]",
+          "source": "apps/api/src/auth/oauth.ts authorizationServerAvailable (127.0.0.0/8)"
+        },
+        {
+          "claim": "Plain-HTTP LAN address, what the Administrator sees",
+          "before": "The OAuth Clients switches refuse to turn on and the pill names the failed checks.",
+          "after": "The switches stay off, the pill shows the failed checks, and Add Client and Generate secret also fail.",
+          "source": "mcp-settings/routes.ts PATCH 400 with reachability; mcp-settings/allowed-clients.ts POST and /secret refuse without the authorization server; settings-mcp.tsx setRefusedChecks"
+        },
+        {
+          "claim": "Restart wording",
+          "before": "app and worker restart",
+          "after": "API and worker restart, matching the Advanced page text",
+          "source": "settings-advanced.tsx settings.advanced.restartHelp and saved message"
+        },
+        {
+          "claim": "Consent choices",
+          "before": "narrow the requested Toolsets and choose Read only or Read and write",
+          "after": "choose from the requested Toolsets and pick Read only or, when requested and allowed, Read and write",
+          "source": "oauth-grants/routes.ts facts writeOffered; consent.tsx consent.read / consent.write"
+        },
+        {
+          "claim": "Generate and rotate entry point",
+          "before": "select Generate secret in Edit Client; select Rotate secret",
+          "after": "select Edit, then Generate secret or Rotate secret; the editor closes without saving callbacks",
+          "source": "allowed-clients.tsx (secret button lives in the Edit Client dialog and calls setEditing(undefined))"
+        },
+        {
+          "claim": "Template caption and fixed callbacks",
+          "before": "two fixed callbacks",
+          "after": "caption No secret generated; the two fixed callbacks are read-only in the editor",
+          "source": "allowed-clients.tsx caption() and readOnly for seeded index < 2; 0171 seed"
+        },
+        {
+          "claim": "Callback URL rule",
+          "before": "(not stated)",
+          "after": "Use HTTPS, or HTTP only on a loopback host.",
+          "source": "mcp-settings/allowed-clients.ts callback refine"
+        },
+        {
+          "claim": "Add Client flow",
+          "before": "Save, then in the editor select Generate secret",
+          "after": "After Save the editor stays open as Edit Client, then Generate secret",
+          "source": "allowed-clients.tsx save() setEditing(result.data)"
+        },
+        {
+          "claim": "What Delete Client removes",
+          "before": "deletion stops their access",
+          "after": "Deletion removes the entry and its grants, and stops their access",
+          "source": "0171 oauth_grants.allowed_client_id FK ON DELETE cascade; allowed-clients.ts DELETE disables the protocol client"
+        },
+        {
+          "claim": "Dynamic client registration",
+          "before": "Turning it on lets a Client register itself and adds an enabled registered client marked Registered by the Client.",
+          "after": "While on, each self-registration adds an enabled registered client captioned Registered by the Client. Turning it off refuses new registrations but does not remove or turn off existing entries.",
+          "source": "apps/api/src/auth/allowed-clients.ts register hooks; oauth.ts discovery strips registration_endpoint"
+        },
+        {
+          "claim": "Approval can fail on current policy",
+          "before": "(not stated)",
+          "after": "Approval re-checks MCP, the group switch, the ceiling and Read-only. The card dialog names the reason; the bell shows The request could not be handled. Try again.",
+          "source": "api-keys/routes.ts approve() assertPolicy; api-keys.tsx decide error; notification-bell.tsx notifications.approvalError"
+        },
+        {
+          "claim": "Revoke dialogs",
+          "before": "An OAuth grant opens Revoke OAuth grant",
+          "after": "A key opens Revoke API key and a grant opens Revoke OAuth grant; select Revoke",
+          "source": "api-keys.tsx apiKeys.revokeTitle / apiKeys.revokeGrantTitle"
+        },
+        {
+          "claim": "Where people disconnect their own Clients",
+          "before": "Connected Clients from Personal Settings or Portal Settings",
+          "after": "Connected Clients on their own API keys pane in Settings or the Portal",
+          "source": "api-keys.tsx renders ConnectedClients on the personal pane; settings-api-keys.tsx PortalApiKeysPage"
+        },
+        {
+          "claim": "Tool calls labels",
+          "before": "time, person, Client, Tool, outcome, and duration, with date filtering and export",
+          "after": "When, Person, Client, Tool, Outcome, Duration; From and To filters; Export CSV",
+          "source": "apps/web/src/routes/settings-tool-calls.tsx"
+        },
+        {
+          "claim": "Rate limit location and label",
+          "before": "Settings → Advanced → MCP; defaults to 600 per credential; environment-pinned value",
+          "after": "Settings → Organization → Advanced → MCP, Calls per hour per credential, default 600; a deployment value shows Read only",
+          "source": "settings.tsx mcp-limits; settings-advanced.tsx labels and settings.advanced.readOnly; advanced-settings/config.ts defaults"
+        },
+        {
+          "claim": "Private deployment and Claude Code OAuth",
+          "before": "Claude Code can also use loopback OAuth callbacks from that network when the authorization server is available.",
+          "after": "Adds that the API must still reach claude.ai to fetch Claude Code's published identity.",
+          "source": "DD-029 #1138 addendum; apps/api/src/auth/oauth.ts cimd fetchClientMetadataResource"
+        }
+      ],
+      "confirmed": [
+        "Rail position after Integrations and before Advanced (settings.tsx; SET-014).",
+        "MCP, both groups' OAuth Clients and API keys switches and dynamic registration default off (migrations 0163 and 0171).",
+        "Copy address copies the /mcp Server address built from BASE_URL (mcp-settings/routes.ts serverAddress; settings-mcp.tsx).",
+        "Legal Users covers Administrators and Legal Team Members; Business Users row is separate (settings.mcp.legalHelp; api-keys/routes.ts readPolicy).",
+        "Guide Tools are always in the grant (mcp/auth.ts toolsets ['guide', ...]; register.ts toolRefusal).",
+        "API key lifetime 1 to 365, default 90, saves on blur or Enter, applies at approval (settings-mcp.tsx saveLifetime; api-keys/routes.ts approve lifetimeDays).",
+        "Each change saves at once, shows Settings saved., and writes org_settings.updated at admin_only (mcp-settings/routes.ts; settings-mcp.tsx).",
+        "Switch-off, ceiling removal and Read-only apply to the next request for keys and grants (mcp/auth.ts readCredentialContext; auth/oauth-grants.ts liveOAuthGrantFor; oauthContext).",
+        "Reachability: three named checks, 30-second cache, advisory while the authorization server runs; IPv6-only host fails IPv4 record (reachability.ts).",
+        "Plain-HTTP LAN: authorization server absent, PATCH returns mcp-oauth-unavailable with checks, six well-known aliases return 404 (oauth.ts; discovery.ts; e2e 63 pill assertion).",
+        "Four seeded Allowed Clients, three published identities with metadata URL captions, not editable, Copilot template with Teams and vscode.dev callbacks plus an empty slot (0171 seed; allowed-clients.ts PATCH refusals).",
+        "Your Client secret is ready dialog, Copy, Done, not shown again, rotation invalidates the old secret and keeps grants (allowed-clients.tsx; TECH-035 #1134 addendum; allowed-clients.test.ts).",
+        "Delete Client only for non-seeded registered entries (allowed-clients.tsx; allowed-clients.ts DELETE).",
+        "Your approvals in the bell with Deny and Approve, Mark all read leaves approvals, handled request leaves the group (notification-bell.tsx; api-keys/routes.ts handleApprovalItems).",
+        "API key requests card with Approve and Deny and Note (Optional); Active keys and grants collapsed with counts and the eight named columns (api-keys.tsx).",
+        "Administrator's own request self-approves and returns the key once (api-keys/routes.ts POST).",
+        "Tool calls in the last day links to /settings/audit-log/tool-calls?range=last-day (settings-mcp.tsx).",
+        "Rate-limit refusal names the limit and reset time (mcp/calls.ts).",
+        "OAuth grant lifetime (days) 1 to 365, default 90, bound at boot, existing grants keep expiry through refresh (app.ts oauthGrantRoutes(grantLifetimeDays); oauth-grants.ts after-hook; TECH-035 #1138 addendum).",
+        "Writes carry via attribution in History (e2e 63 'via ${clientName}')."
+      ],
+      "limitations": [
+        "Source inspection only. V-M40-MCP and V-M41-MCP still need the independent browser walkthrough.",
+        "The negative check 'an expired key cannot connect' cannot be produced in a walkthrough from the UI: the shortest API key lifetime is 1 day and the shortest grant lifetime is 1 day. The code refuses expired keys and grants with 401 (mcp/auth.ts, auth/oauth-grants.ts). The walkthrough needs a clock change or a database edit on the disposable lab, or must record the check as source-only.",
+        "V-M41-MCP 'new grants use the lifetime after restart' needs a real OAuth consent. The walkthrough can observe the new grant's Expires date in Active keys and grants after restarting the API and worker.",
+        "The guide says rotation keeps grants and invalidates the old secret. The Rotate secret path calls better-auth rotateClientSecret; allowed-clients.test.ts covers the new secret, and TECH-035 records that rotation keeps consent rows. I did not read the better-auth package source.",
+        "When Add Client or Generate secret fail on a plain-HTTP LAN address, the UI shows the generic 'The Client could not be saved. Check the callback URLs and try again.' or 'The Client secret could not be generated. Try again.' The API detail 'Configure HTTPS before ...' is not shown. The guide states the failure without quoting the message.",
+        "The walkthrough needs an HTTPS or loopback BASE_URL for the OAuth steps and a plain-HTTP LAN BASE_URL for the refusal check, so V-M41-MCP needs two lab network profiles."
+      ]
+    },
+    {
+      "articleId": "connect-headless-client",
+      "scenario": ["V-M40-CLIENT"],
+      "contentSha256Before": "30a497a2af010b3cfa3781ed6b85d06771caaae844da19cd53c29191b0e7101a",
+      "contentSha256": "962c2db4f05be7dcc300ecdf257abd07ac6ff37e1fe68635a46490726fd912ab",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135, #1138 addenda)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-api-keys.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/web/src/components/mcp-scope.tsx",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/auth/api-keys.ts",
+        "apps/api/src/mcp/auth.ts",
+        "apps/api/src/mcp/routes.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/guide.ts",
+        "apps/api/src/mcp/calls.ts",
+        "e2e/tests/62-m40-mcp.spec.ts",
+        "https://code.claude.com/docs/en/mcp (vendor page, read for the header expansion claim only)"
+      ],
+      "corrections": [
+        {
+          "claim": "Before you start, approval timing",
+          "before": "Allow time for approval before the five-minute connection steps below.",
+          "after": "An Administrator must approve your key request before you can connect.",
+          "source": "api-keys/routes.ts (non-Administrator requests stay pending)"
+        },
+        {
+          "claim": "Request dialog name",
+          "before": "Select Request a key. Enter ... Client name.",
+          "after": "Adds that the Request an API key dialog opens.",
+          "source": "api-keys.tsx apiKeys.requestTitle; e2e 62"
+        },
+        {
+          "claim": "Toolsets and scope choices",
+          "before": "Select the Toolsets you need. Choose Read or Write.",
+          "after": "The Toolsets list shows only the organization ceiling; Write is absent while the organization is read-only.",
+          "source": "api-keys.tsx state.policy.toolsetCeiling.map and !state.policy.readOnly"
+        },
+        {
+          "claim": "Who approves and row states",
+          "before": "Ask an Administrator to open the bell ... Approve. Row says Pending approval.",
+          "after": "Approval from Your approvals or the MCP settings; rows say Pending approval, Active, or Denied with the note.",
+          "source": "api-keys.tsx statuses and decisionNote; notification-bell.tsx; settings-mcp.tsx API key requests card"
+        },
+        {
+          "claim": "Closing the once-shown dialog",
+          "before": "(not stated)",
+          "after": "A click outside does not close it; Esc does.",
+          "source": "api-keys.tsx ApiKeyReadyDialog onInteractOutside preventDefault"
+        },
+        {
+          "claim": "Business User entry path",
+          "before": "from API keys in Portal Settings, if Business Users API keys is on",
+          "after": "Select the Notification settings gear in the Portal header, then API keys. Request a key appears only if API keys are on for Business Users.",
+          "source": "portal-shell.tsx portal.settings.link; portal-settings.tsx API keys link; api-keys.tsx requestAction"
+        },
+        {
+          "claim": "Cancel a pending request",
+          "before": "You can cancel a pending request from your API keys pane.",
+          "after": "Select Cancel request on its row and confirm.",
+          "source": "api-keys.tsx actions.cancel"
+        },
+        {
+          "claim": "Denied request",
+          "before": "(no row)",
+          "after": "New troubleshooting row: read the note; a denial is final; send a new request.",
+          "source": "api-keys.tsx Denied status; DD-029 paragraph 5"
+        },
+        {
+          "claim": "Revoke confirmation",
+          "before": "select Revoke on its row, and confirm",
+          "after": "In Revoke API key, select Revoke; the row then says Revoked",
+          "source": "api-keys.tsx apiKeys.revokeTitle; api-keys/routes.ts present status"
+        }
+      ],
+      "confirmed": [
+        "Settings → Personal → API keys exists for staff; Business Users are redirected to /portal/settings/api-keys (settings.tsx; settings-api-keys.tsx).",
+        "Client name free text, Note (Optional), expiry fact, Send request disabled until name, a Toolset and a scope are set (api-keys.tsx).",
+        "Nothing is selected for you (apiKeys.nothingSelected).",
+        "Your key is ready shows the key once with Copy and Done; later reads return no key (api-keys/routes.ts GET /:id clears sealedKey; e2e 62 reread).",
+        "Administrator's own request approves itself (api-keys/routes.ts).",
+        "Keys authenticate with x-api-key or Authorization: Bearer on /mcp; cookies do not; ol_ prefix (mcp/auth.ts; auth/api-keys.ts).",
+        "OpenLaw serves Streamable HTTP at /mcp with POST, GET and DELETE, stateless (mcp/routes.ts).",
+        "Guide Tools openlaw_whoami, openlaw_docs_search and openlaw_docs_read exist and are always granted; with Contracts selected the list includes openlaw_contracts_list (register.ts; guide.ts; e2e 62).",
+        "Unauthorized after expiry, revocation, MCP off or group switch off (mcp/auth.ts readCredentialContext).",
+        "A Tool outside the grant or a write on a read credential is refused and hidden from tools/list (register.ts toolRefusal; mcp/routes.ts).",
+        "Rate limit refusal names the limit and reset time (mcp/calls.ts).",
+        "Revoke takes effect on the next request (api-keys/routes.ts revoke disables the key; mcp/auth.ts).",
+        "The key-ready dialog links to this guide in a new tab (api-keys.tsx; e2e 62)."
+      ],
+      "limitations": [
+        "Source inspection only. V-M40-CLIENT still needs the independent walkthrough.",
+        "The Claude Code, Claude Cowork and Claude Desktop steps describe vendor software. I could not check them against OpenLaw source. Claude Code's MCP page documents ${VAR} expansion for MCP configuration files but does not say whether a header added with claude mcp add --header expands at connect time. The walkthrough must confirm that openlaw connects with the single-quoted header.",
+        "The mcp-remote@0.14.3 bridge arguments (--header, --transport http-only, --header-file) are vendor behavior and are unverified here.",
+        "The negative check 'an expired key cannot connect' needs a clock change or database edit on the lab, because the shortest key lifetime is 1 day. Revocation can be walked through.",
+        "The guide does not quote the Client-side error text for Unauthorized, because each Client words the 401 differently. OpenLaw returns 401 'Authentication required.' with a WWW-Authenticate challenge."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/components/api-keys.tsx: the personal API keys table has no Last used column (Owner, Granted and Last used render only when organization is true). SET-014 says the person's keys show name, Toolsets, scope, expiry, last used and revoke."
+  ],
+  "sharedFileRequests": [
+    "docs/documentation/scenarios.json: V-M40-MCP, V-M41-MCP and V-M40-CLIENT acceptance must point at the new content hashes after the independent walkthrough records its result."
+  ],
+  "statusChange": null
+}

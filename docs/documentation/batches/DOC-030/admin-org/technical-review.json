@@ -1,0 +1,288 @@
+{
+  "batch": "DOC-030",
+  "group": "admin-org",
+  "reviewer": "DOC-030 source-review author agent (admin-org)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:25:35Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "lastArticleEdit": {
+      "organisation-and-users": "a4e0f117",
+      "authentication-and-email": "8fd2ca38"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "organisation-and-users",
+      "scenario": ["V-C36"],
+      "contentSha256Before": "ed614b9dab718a7545a21fd403f6396808d2ec2b5394175e86f045bd955ba99a",
+      "contentSha256": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-005 and its 2026-09-18 invite addendum)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (M43/3 logo copy addendum)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-093)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-users.tsx",
+        "apps/web/src/lib/roles.ts",
+        "apps/web/src/lib/organization-branding.ts",
+        "apps/web/src/components/shell/app-header.tsx",
+        "apps/web/src/components/portal/portal-brand.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/api/src/modules/users/routes.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/lib/email-logo.ts",
+        "apps/api/src/lib/email-layout.ts",
+        "apps/api/src/pipeline/notification-email.ts",
+        "apps/api/src/lib/mailer.ts",
+        "docs/user-guides/create-contract.md",
+        "docs/user-guides/create-matter.md",
+        "docs/user-guides/contract-tasks-and-dates.md",
+        "docs/user-guides/entity-obligations.md",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Invite step 4, what activates an invited row",
+          "before": "The row becomes Active after the colleague sets a password or signs in through SSO. A magic-link sign-in alone does not activate the row; it stays Invited with Resend invite and Revoke invite. Do not use Revoke invite for a colleague who already works in OpenLaw.",
+          "after": "The first sign-in by any method, including a sign-in link, changes the row to Active.",
+          "source": "apps/api/src/modules/users/routes.ts statusOf (lastActiveAt); apps/api/src/auth/instance.ts session create hook stamps lastActiveAt before a session is issued (e28d2109)"
+        },
+        {
+          "claim": "Invite step 3, the invitation email",
+          "before": "The recipient follows the email link to set a password.",
+          "after": "The recipient gets a Set password email link, which expires in 1 hour.",
+          "source": "apps/api/src/auth/instance.ts sendResetPassword (action label Set password, 'The link expires in 1 hour')"
+        },
+        {
+          "claim": "Refusals on an existing address",
+          "before": "Invitations for already activated accounts are rejected; OpenLaw refuses a different role and a Business User's address.",
+          "after": "Quotes 'This user has already activated their account.' (any account that has signed in, which covers Business Users) and 'This user already exists with a different role.' for a pending address.",
+          "source": "apps/api/src/modules/auth/routes.ts POST /auth/invites"
+        },
+        {
+          "claim": "Invite refusal without a mailer",
+          "before": "If Send invite or Resend invite reports that OpenLaw cannot send email, configure outbound email first.",
+          "after": "Quotes 'The invite was not sent: this instance cannot send email.' and names both remedies the message gives (Settings → Advanced → Outbound email, or SMTP_URL and SMTP_FROM together).",
+          "source": "apps/api/src/modules/auth/routes.ts requireInviteMailer (6297f09a, 62309a85); SET-005 addendum 2026-09-18"
+        },
+        {
+          "claim": "Business User is not an invitation choice",
+          "before": "they are not a fourth staff-invitation choice",
+          "after": "they are not a third choice in the invitation form (the form offers two roles)",
+          "source": "apps/web/src/routes/settings-users.tsx INVITE_ROLES"
+        },
+        {
+          "claim": "Promoting a Business User",
+          "before": "If the row reads Invited, the account has never set a password or signed in through the identity provider.",
+          "after": "A Business User account normally exists because the person signed in, so the row stays Active. Invited appears only for an account that has never signed in; any first sign-in returns it to Active.",
+          "source": "apps/api/src/modules/users/routes.ts statusOf; apps/api/src/auth/instance.ts user create hook (JIT Business Users) and session create hook"
+        },
+        {
+          "claim": "Where Sign out user is",
+          "before": "Use the row's Sign out user action.",
+          "after": "Select the row's … button (accessible name 'More actions for {email}') and choose Sign out user. Own row has no Archive action and no … button.",
+          "source": "apps/web/src/routes/settings-users.tsx row DropdownMenu (settings.users.moreActions)"
+        },
+        {
+          "claim": "Last-Administrator refusals",
+          "before": "OpenLaw prevents removing the last active Administrator through archival or demotion.",
+          "after": "Quotes 'You cannot archive the last Administrator.' and 'You cannot demote the last Administrator.'",
+          "source": "apps/api/src/modules/users/routes.ts archive and role routes"
+        },
+        {
+          "claim": "Logo readability check",
+          "before": "The API also checks that the image can be read and has no more than 16 million pixels.",
+          "after": "OpenLaw refuses an unreadable image or one over 16 million pixels and shows 'The logo must be a readable PNG, JPEG, WebP or SVG with no more than 16 million pixels.'",
+          "source": "apps/api/src/modules/org/routes.ts PATCH /org/general; apps/api/src/lib/email-logo.ts"
+        },
+        {
+          "claim": "Which emails carry the logo, and logo removal",
+          "before": "Approval email headers also show your logo. Removing the logo restores the OpenLaw mark.",
+          "after": "Every email uses the shared layout, whose header shows the organization name (or OpenLaw) and logo (or the OpenLaw mark): invitations, sign-in links, test emails and notifications. The General pane has no remove control; upload a replacement.",
+          "source": "apps/api/src/lib/email-layout.ts renderEmailLayout; callers in auth/instance.ts, email-settings/routes.ts, pipeline/notification-email.ts; DES-093 decision 1; settings-general.tsx (Upload only)"
+        },
+        {
+          "claim": "Name and logo in the signed-in header",
+          "before": "(not stated)",
+          "after": "The name and logo also appear in the staff app header and the Portal header.",
+          "source": "apps/web/src/components/shell/app-header.tsx and apps/web/src/components/portal/portal-brand.tsx (2c028604)"
+        },
+        {
+          "claim": "Who can open these panes",
+          "before": "Organization Settings require an Administrator.",
+          "after": "Adds: a Legal Team Member lands on Profile; a Business User is sent to the Portal.",
+          "source": "settings-general.tsx and settings-users.tsx loaders redirect to /settings/profile; settings.tsx settingsLoader redirects business_user to /"
+        },
+        {
+          "claim": "Reassignment vocabulary",
+          "before": "Contract Owner; Matter Manager and Participants; Task assignments; Obligation responsibility",
+          "after": "Legal Owner; Matter Manager and Matter team; Task assignees; Obligation assignees",
+          "source": "messages/en-US.json (Legal Owner, Matter Manager); CONTEXT.md Matter Manager entry; create-matter.md, contract-tasks-and-dates.md, entity-obligations.md"
+        },
+        {
+          "claim": "Show archived availability",
+          "before": "Turn on Show archived.",
+          "after": "Adds that the switch appears once at least one account is archived.",
+          "source": "apps/web/src/routes/settings-users.tsx hasArchived"
+        }
+      ],
+      "confirmed": [
+        "General: Organization name saves on Enter or blur, Escape restores; Upload with the 5 MB and type refusal text; Default timezone; Default locale offers English (United States) only (settings-general.tsx).",
+        "Sign-in pages show the saved name and logo, or OpenLaw with no name (auth-layout.tsx).",
+        "Invite user dialog: Display name, Email, Role radios Legal team member and Administrator, Send invite; the new row reads Invited (settings-users.tsx).",
+        "Re-inviting a pending address with the same role resends and returns the same row; the client never adds a duplicate (auth/routes.ts, settings-users.tsx onInvited).",
+        "Resend invite and Revoke invite appear only on Invited rows; revoke removes the row (settings-users.tsx, auth/routes.ts).",
+        "Role control on Active rows only, offers Administrator, Legal team member and Business user; the role applies on the next request without re-sign-in (users/routes.ts PATCH role summary).",
+        "Self-archive refused with 'You cannot archive yourself.'; own row has no Archive (users/routes.ts, settings-users.tsx).",
+        "Archive revokes sessions in the same transaction and the session create hook refuses archived users; Restore leaves revoked sessions revoked (users/routes.ts, auth/instance.ts).",
+        "Archiving does not reassign any records (users/routes.ts archive route touches only archivedAt and sessions).",
+        "Unauthorized administration: every users route uses requireRole('administrator'); the web loaders redirect non-Administrators."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough that the scenario requires against 067c1646.",
+        "The prose changes alter results and labels, so the DOC-029 walkthrough evidence at 57e77e38 cannot be kept as a copy-only review.",
+        "There is no UI control to remove a saved logo. The API accepts logo: null, but the walkthrough cannot exercise removal from the General pane.",
+        "The row status Invited after promoting a Business User is now an edge case: it needs a Business User row with no sign-in stamp. A walkthrough will normally see the row stay Active."
+      ]
+    },
+    {
+      "articleId": "authentication-and-email",
+      "scenario": ["V-C37"],
+      "contentSha256Before": "ac1c3153a826c98369abbe4a5056974bc20e0b52b90cf696ca406c1bf587523f",
+      "contentSha256": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS.md (DD-010)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-005 addendum)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008, TECH-011, M43/3 addendum)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-093)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-authentication.tsx",
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/routes/settings-email.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/routes/settings-advanced.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/lib/mailer.ts",
+        "apps/api/src/lib/email-layout.ts",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "apps/api/src/index.ts",
+        "compose.yml",
+        "docs/user-guides/deployment-configuration.md",
+        "docs/user-guides/first-run.md",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Who can get a sign-in link",
+          "before": "Existing active accounts ... This includes Business Users invited individually.",
+          "after": "Any account that is not archived, including a pending staff invitation and a Business User whose domain is no longer listed. There is no Business User invitation. The link expires in 5 minutes, works once, and activates a pending invitation.",
+          "source": "apps/api/src/modules/auth/routes.ts POST /auth/magic-link (user ? !archivedAt : domain allowed); auth/instance.ts magicLink expiresIn 300 and session create hook; INVITABLE_ROLES"
+        },
+        {
+          "claim": "Sign-in links without email",
+          "before": "(not stated)",
+          "after": "The sign-in pages do not offer Email me a sign-in link when outbound email is not configured.",
+          "source": "apps/web/src/routes/login.tsx magicLinkOffered"
+        },
+        {
+          "claim": "Business User on the staff sign-in page",
+          "before": "(not stated)",
+          "after": "A Business User who signs in on the staff page lands in the Portal.",
+          "source": "apps/web/src/routes/login.tsx post-sign-in navigate by role; auth/routes.ts magic-link portal callback (8fd2ca38)"
+        },
+        {
+          "claim": "SSO switch hint",
+          "before": "(not stated)",
+          "after": "Quotes the help tooltip 'Configure an identity provider below to enable single sign-on.' (moved from visible text into the label tooltip).",
+          "source": "apps/web/src/components/authentication-options.tsx"
+        },
+        {
+          "claim": "SSO callback address",
+          "before": "Use the app's configured public address for the callback.",
+          "after": "The callback uses the Application address under Settings → Advanced → Instance address, or BASE_URL when the deployment sets it; after a change, restart API and worker and update the IdP redirect URL.",
+          "source": "apps/api/src/modules/advanced-settings/config.ts (BASE_URL section, pinnedKeys); apps/api/src/index.ts baseUrl; settings-advanced.tsx instanceHelp (27e05ca3)"
+        },
+        {
+          "claim": "Empty allowed-domain list",
+          "before": "(not stated)",
+          "after": "Quotes 'No domains allowed yet. New users must be invited individually.' and states that no new Business User can then be created because Invite user offers staff roles only.",
+          "source": "settings-authentication.tsx settings.auth.noDomains; settings-users.tsx INVITE_ROLES; instance.ts user create hook"
+        },
+        {
+          "claim": "Test email result",
+          "before": "Select Send test email, then check the inbox.",
+          "after": "Adds the notice 'Test email sent to …', the subject OpenLaw test email, and the body headline Outbound email works with Sent through and From.",
+          "source": "apps/api/src/modules/email-settings/routes.ts test route (renderEmailLayout facts); settings-email.tsx welcome.email.testSent"
+        },
+        {
+          "claim": "Settings Outbound email pane",
+          "before": "Replace relay ... Cancel keeps the current relay.",
+          "after": "Adds the Sender line and that the Settings pane has no Clear relay (the wizard alone offers it).",
+          "source": "apps/web/src/routes/settings-email.tsx"
+        },
+        {
+          "claim": "Environment precedence display",
+          "before": "The relay settings in both the wizard and Settings are read-only.",
+          "after": "The wizard shows the environment source and sender with no relay form and no Send test email. Settings shows 'Managed by your deployment configuration...' and offers only Send test email, which is the way to test an environment relay. With SMTP_URL but no SMTP_FROM both show the incomplete warning and Settings disables Send test email.",
+          "source": "apps/web/src/routes/welcome.tsx email step; apps/web/src/routes/settings-email.tsx"
+        },
+        {
+          "claim": "BASE_URL ownership",
+          "before": "The operator must apply SMTP_URL, SMTP_FROM, and public BASE_URL consistently to the app and worker.",
+          "after": "SMTP stays with the operator. The instance address can be saved as Application address in Settings → Advanced → Instance address; a BASE_URL set by the deployment wins and the field shows Deployment configuration and Read only; a saved value applies after API and worker restart.",
+          "source": "apps/api/src/modules/advanced-settings/config.ts pinnedKeys/effectiveEnvironment; settings-advanced.tsx sourceDeployment, readOnly, saved notice"
+        }
+      ],
+      "confirmed": [
+        "Settings → Advanced → Authentication path; Advanced is a collapsible group holding Outbound email, Authentication, Audit log, Instance address and others (settings.tsx).",
+        "Two cards Legal User Authentication and Business Portal Authentication with switches Email and password, Email magic link, Single sign-on (SSO), Require two-factor authentication; changes save on toggle (settings-authentication.tsx, authentication-options.tsx).",
+        "An empty policy is refused with 'Enable at least one sign-in method.' (authentication-policy-routes.ts).",
+        "Administrator emergency password sign-in when Email and password is off, only with a password; 2FA still applies (instance.ts assertPasswordSignIn and session create hook; settings.auth.adminRecovery).",
+        "Required 2FA gates every session through readTwoFactorPolicy regardless of method; two-factor-policy.ts unchanged since 57e77e38.",
+        "Identity provider card labels Provider ID, Issuer URL, Email domain, Client ID, Client secret, Register provider, Save provider; secret blank keeps it (now a label tooltip); callback path /sso/callback under /api/auth (settings-authentication.tsx, instance.ts sso redirectURI).",
+        "Allowed email domains with Add and a Remove {domain} control; domain checked before issuing a link to an unknown address and again at JIT creation for magic link, password setup and SSO (auth/routes.ts, authentication-policy-routes.ts, instance.ts user create hook).",
+        "Turning off Email magic link stops links already sent: the session create hook refuses /magic-link/verify when the role's method is off (instance.ts).",
+        "Wizard email step labels SMTP server, Port, Connection security (STARTTLS, TLS, None; port follows 587/465/25), Authentication (Username and password, None), SMTP username, SMTP password, Sender name (optional), Sender email, Save relay, Send test email, Replace relay, Keep current relay, Clear relay (smtp-settings-fields.tsx, welcome.tsx).",
+        "The wizard email step has no Set up later, Continue is disabled until email is configured, and finish() routes to the email step while unconfigured (welcome.tsx).",
+        "Environment SMTP_URL wins over the stored relay; SMTP_URL without SMTP_FROM leaves the mailer unconfigured (mailer.ts envPinnedMailer).",
+        "Authentication Settings do not configure signing or AI providers."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough that the scenario requires against 067c1646.",
+        "The prose changes alter results and labels, so the DOC-029 walkthrough evidence at 57e77e38 cannot be kept as a copy-only review.",
+        "SAML: the app has no SAML setup; the scenario's SAML fixture cannot be exercised. The guide says so.",
+        "I did not settle the exact on-screen message after someone opens a sign-in link whose method was turned off. The session hook returns false and better-auth chooses the error redirect; the guide states only that the link stops working.",
+        "A per-address and per-client rate limit now applies to sign-in link and password setup requests ('Too many sign-in link requests. Try again later.'). The guide does not describe it; a walkthrough that requests many links in a row may hit it."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/routes/settings-authentication.tsx settings.auth.noDomains: the empty Allowed email domains list says 'New users must be invited individually.' There is no way to invite a Business User: Invite user offers Legal team member and Administrator only (settings-users.tsx INVITE_ROLES, auth/routes.ts INVITABLE_ROLES). A new Business User can only arrive through an allowed domain (DD-010 as revised by INT-001). The copy points Administrators at a control that does not exist.",
+    "apps/web/src/routes/welcome.tsx welcome.portal.empty: the wizard's empty domain list still says 'No domains allowed yet. Magic-link sign-in is unavailable.' Since 8fd2ca38, existing accounts get sign-in links with an empty list; only new Portal accounts are blocked. The Settings pane copy was changed, the wizard copy was not."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/first-run.md step 5 (Business-user portal): 'The list also governs each new sign-in link, so narrowing it later affects people who signed in before.' is stale since 8fd2ca38. The list now governs only new Portal accounts; existing accounts keep getting links.",
+    "docs/documentation/edition.json: the publication content hashes for organisation-and-users and authentication-and-email must change to the new article hashes.",
+    "docs/documentation/scenarios.json: V-C36 and V-C37 acceptance points at evidence for older content hashes and needs updating after the independent walkthrough at 067c1646."
+  ],
+  "statusChange": null
+}

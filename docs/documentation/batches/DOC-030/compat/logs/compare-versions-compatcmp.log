@@ -1,0 +1,25 @@
+setup: administrator API: Contract C-35 with a download-only primary placeholder and four supporting Documents: Word v1 thirty/monthly, v2 sixty/quarterly, v3 ninety/annually; PDF v1 / Word v2; TXT v1 / PDF v2; malformed PDF v1 / PDF v2.
+[compare-versions/administrator] PASS Choose the Versions: Compare with previous, Preparing comparison, then Changes
+[compare-versions/administrator] PASS Pair control, change list, Previous change and Next change
+[compare-versions/administrator] PASS The Document reader offers Compare with the change count
+[compare-versions/administrator] PASS Export a Word Comparison as a Generated redline
+[compare-versions/administrator] PASS A text Comparison (PDF against Word)
+[compare-versions/administrator] PASS If the Comparison fails: reason, Download links, no retry, corrected new Version
+[compare-versions/administrator] PASS Archiving keeps Comparisons readable and blocks new Generated redlines until restored
+[compare-versions/administrator] PASS Close comparison returns to the owning record
+[compare-versions/administrator] PASS Only Administrators and Legal Team Members open Comparisons
+setup: legal_team_member API: Contract C-36 with a download-only primary placeholder and four supporting Documents: Word v1 thirty/monthly, v2 sixty/quarterly, v3 ninety/annually; PDF v1 / Word v2; TXT v1 / PDF v2; malformed PDF v1 / PDF v2.
+[compare-versions/legal_team_member] PASS Choose the Versions: Compare with previous, Preparing comparison, then Changes
+[compare-versions/legal_team_member] PASS Pair control, change list, Previous change and Next change
+[compare-versions/legal_team_member] PASS The Document reader offers Compare with the change count
+[compare-versions/legal_team_member] PASS Export a Word Comparison as a Generated redline
+[compare-versions/legal_team_member] PASS A text Comparison (PDF against Word)
+[compare-versions/legal_team_member] PASS If the Comparison fails: reason, Download links, no retry, corrected new Version
+[compare-versions/legal_team_member] PASS Archiving keeps Comparisons readable and blocks new Generated redlines until restored
+[compare-versions/legal_team_member] PASS Close comparison returns to the owning record
+[compare-versions/legal_team_member] PASS Only Administrators and Legal Team Members open Comparisons
+setup: administrator API: Contract C-37 with a placeholder primary and a two-Version Word Document that has never been compared.
+[compare-versions/administrator] PASS Archiving does not stop comparing existing Versions (new pair on an archived Document)
+setup: legal_team_member API: Contract C-38 with a placeholder primary and a two-Version Word Document that has never been compared.
+[compare-versions/legal_team_member] PASS Archiving does not stop comparing existing Versions (new pair on an archived Document)
+Error response from daemon: Container 2f80a5bfe5c04ff32f510733dede49764330b0c259cd8821d85a6d532fbe454d is not paused

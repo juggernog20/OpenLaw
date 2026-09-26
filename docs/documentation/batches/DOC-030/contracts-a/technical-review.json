@@ -1,0 +1,416 @@
+{
+  "batch": "DOC-030",
+  "group": "contracts-a",
+  "reviewer": "DOC-030 source-review author agent (contracts-a)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:27:32Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdit": {
+      "create-contract": "271ad53a",
+      "contract-approvals": "588dc3f0",
+      "approver-groups": "588dc3f0"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "create-contract",
+      "scenario": ["V-C14"],
+      "contentSha256Before": "03312dbb68c6eb5eb2f40872e81a05cee0a89037455abf70ec925a4d620cec4f",
+      "contentSha256": "f2e0f8f483189190429de4313ffbac136c0df54aa0b90e203c1906d67fc239db",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS.md (DD-028 and its built addendum)",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-026; 2026-09-17 default groups amendment; 2026-09-18 security review H1)",
+        "messages/en-US.json",
+        "apps/web/src/routes/contracts.tsx",
+        "apps/web/src/components/contracts/create-contract-dialog.tsx",
+        "apps/web/src/components/type-form/creation-rows.tsx",
+        "apps/web/src/components/type-form/model.ts",
+        "apps/web/src/components/type-form/record-rows.tsx",
+        "apps/web/src/components/type-form/needed-by-field.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/confidential-toggle.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/contracts/value-field.tsx",
+        "apps/web/src/components/department-picker.tsx",
+        "apps/web/src/components/counterparty-picker.tsx",
+        "apps/web/src/components/tasks/assignee-picker.tsx",
+        "apps/web/src/components/contracts/team-applet.tsx",
+        "apps/web/src/components/record-team-applet.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "packages/shared/src/form-builtins.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/api/src/lib/creation-form.ts",
+        "apps/api/src/lib/type-form-routes.ts",
+        "apps/api/src/modules/auto-docs/generations.ts",
+        "apps/api/src/modules/auto-docs/create-contract.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Create dialog order",
+          "before": "Step 2 put Legal Owner after the Form Rows; step 3 put Confidential before the Matter search.",
+          "after": "Steps follow the dialog: Title, Contract type (Default type preselected), Legal Owner, Matter, the Form's Intake and Creation Rows, the Confidential switch, Documents, Create.",
+          "source": "create-contract-dialog.tsx render order; contractTypes.find(isDefault) seed (DD-028.7)"
+        },
+        {
+          "claim": "Creation Rows can include built-ins",
+          "before": "Complete the shown Intake and Creation Rows from its Form.",
+          "after": "The Rows can include built-in Rows such as Entity and Counterparties as well as the type's Fields.",
+          "source": "creation-rows.tsx creationKeys; type-form/model.ts LABELS (entity = Entity); DD-028.3"
+        },
+        {
+          "claim": "Confidential control label",
+          "before": "Set Confidential.",
+          "after": "Turn on Confidential — restrict to the contract team.",
+          "source": "confidential-toggle.tsx contracts.confidential.field"
+        },
+        {
+          "claim": "Attachments in the create dialog",
+          "before": "Not described.",
+          "after": "Optional Attach documents under Documents, Document type when files are added; after a failed upload the dialog shows Record created. Some documents could not be uploaded. with Retry failed uploads and Continue, and the Contract already exists.",
+          "source": "create-attachments.tsx (upload after create, retry, finish)"
+        },
+        {
+          "claim": "Overview Contract card contents",
+          "before": "Built-in Rows are Title, Contract type, Legal Owner, Business Owner, Department, Priority and Risk; Our entity is chosen with the owners.",
+          "after": "The card draws every built-in Row of the type Form in Form order (Title, Contract type, then Description, Our entity, Counterparties, Department, Region, Priority, Risk, term Rows, Value, Needed by as the Form holds them); a Row under a false Branch shows only while it holds a value; Legal Owner, Business Owner, Days remaining, Last renewal and the Confidential switch follow the Rows.",
+          "source": "contract-record.tsx formControls + RecordRows then RecordPersonField x2, ReadOnlyField x2, ConfidentialToggle (8fffa64e, M39); shared recordFormRows"
+        },
+        {
+          "claim": "Who may change owners on a Confidential Contract",
+          "before": "Not stated.",
+          "after": "On a Confidential Contract only an Administrator, the creator, or the Legal Owner can change the Legal Owner or name a Business Owner.",
+          "source": "contracts/service.ts assertMayChangeTeam for managerId and businessOwnerId; record.ts assertMayChangeTeam; DECISIONS-CONTRACTS 2026-09-18 H1 (7f1573c5)"
+        },
+        {
+          "claim": "Business Owner membership row",
+          "before": "Change or clear the assignment before removing their membership.",
+          "after": "Adds that the Business Owner's membership row has no remove control while they hold the seat; the API refuses the removal with 409.",
+          "source": "record-team-applet.tsx onRemove undefined for businessOwnerId; contracts/routes.ts team DELETE 409 (3425a746)"
+        },
+        {
+          "claim": "Counterparty create offer",
+          "before": "Inspect the offered create action.",
+          "after": "The list offers Create \"name\" with the typed name.",
+          "source": "counterparty-picker.tsx counterparty.picker.create"
+        },
+        {
+          "claim": "Create refusals",
+          "before": "Blank required answers prevent creation.",
+          "after": "Names the dialog errors Name the contract. and Pick a contract type., says a blank required Row is named in the error, the dialog creates nothing while it shows an error, and archived Contract types are not offered.",
+          "source": "create-contract-dialog.tsx submit(); lib/creation-form.ts Fill {rows}; contracts/routes.ts options excludes archived types; create.ts live-type check"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Create contract appears only for Member+; the create route is requireMember.",
+          "source": "contracts.tsx canEdit; contracts/routes.ts POST /contracts"
+        },
+        {
+          "claim": "Legal Owner starts on the viewer when Member+, offers Member+ people and Unassigned.",
+          "source": "create-contract-dialog.tsx managerId seed and owners filter"
+        },
+        {
+          "claim": "Matter search help: nothing else flows across the link.",
+          "source": "contracts.form.matterHelp"
+        },
+        {
+          "claim": "App opens the new Contract after Create; Cancel creates nothing.",
+          "source": "contracts.tsx onCreated navigate(contractPath)"
+        },
+        {
+          "claim": "Draft seed Status, chosen Legal Owner, creator team row, type default people join the team; C- number stable.",
+          "source": "create.ts DRAFT_STATUS_SLUG, managerId, contractTeam insert, contractTypeDefaultPeople loop"
+        },
+        {
+          "claim": "Legal Owner offers live Member+; Business Owner offers any live person.",
+          "source": "contract-record.tsx ownerOptions and users; service.ts lockedUser OWNER_ROLES / USER_ROLES"
+        },
+        {
+          "claim": "Our entity offers Not known yet; archived Entities refused.",
+          "source": "contract-record.tsx entity control; service.ts signing entity check"
+        },
+        {
+          "claim": "Department and Region save on change; No Department and No Region clear; Regions under Settings > Regions.",
+          "source": "department-picker.tsx; contract-record.tsx region select; settings.tsx regions section"
+        },
+        {
+          "claim": "Description saves on leave, Escape reverts; clearing removes it.",
+          "source": "contract-record.tsx description AutoResizeTextarea; commitText"
+        },
+        {
+          "claim": "Value: Amount, Currency, Frequency, Other needs Custom cadence; group commits together; empty amount removes the value.",
+          "source": "value-field.tsx parse/commit"
+        },
+        {
+          "claim": "Counterparties: first is primary, Make primary, removal unlinks only.",
+          "source": "contract-record.tsx CounterpartiesField; create.ts isPrimary index 0"
+        },
+        {
+          "claim": "Contract team applet: Add team member, Person, Add; Legal Owner, Business Owner, Creator statements; Business Owner automatically joins the team.",
+          "source": "record-team-applet.tsx; team-applet.tsx; service.ts addContractTeamMember"
+        },
+        {
+          "claim": "Fields tab commit rules: text on blur or Enter, choices immediately, Escape reverts, long text Enter is a newline.",
+          "source": "contract-record.tsx CustomFieldRow onKeyDown"
+        },
+        {
+          "claim": "Change contract type dialog with Change type and Cancel when required Fields are missing.",
+          "source": "contract-record.tsx pickType and RetypeDialog"
+        },
+        {
+          "claim": "Archived note says restore to edit; read-only note for non-Member+; Auto-Doc Generation can create a Contract.",
+          "source": "contract-record.tsx archivedNote/readOnlyNote; auto-docs/generations.ts prepareContractDestination; auto-docs/create-contract.ts"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. The V-C14 browser walkthrough must be rerun against this content hash; the changes alter actions and results, so DOC-029 walkthrough evidence cannot be retained.",
+        "Which built-in Rows the Overview and create dialog draw depends on the lab's type Form. New and seeded types carry every built-in Row; the walkthrough should record the Form it used.",
+        "The Business Owner picker offers every active person from the options read, including Business Users; this was read from code, not exercised."
+      ]
+    },
+    {
+      "articleId": "contract-approvals",
+      "scenario": ["V-C16"],
+      "contentSha256Before": "3c6920ded398b61e9d0c067d19f5c4929594cb9279e08c597b6ae293fb443fbf",
+      "contentSha256": "45c6f9161c459b95c3205a6e0d4dac5a25d9f5dec2740cf480663ac18f1b6241",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-012; 2026-09-17 default groups and business approvers; 2026-09-18 security review H6)",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/portal-approvals.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/api/src/modules/contract-approvals/routes.ts",
+        "apps/api/src/modules/portal/approvals.ts",
+        "apps/api/src/lib/approvers.ts",
+        "apps/api/src/lib/approval-access.ts",
+        "apps/api/src/lib/soft-gate.ts",
+        "apps/api/src/lib/notifications/approvals.ts",
+        "apps/api/src/lib/notifications/notifier.ts",
+        "packages/db/src/schema/auth.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Picker on a Confidential Contract",
+          "before": "The picker offers all active users, including Business Users.",
+          "after": "On a Confidential Contract it offers only staff who can already open the Contract, plus Business Users.",
+          "source": "approvals-signing-card.tsx candidates filter"
+        },
+        {
+          "claim": "Confidential primary Document",
+          "before": "Not stated.",
+          "after": "A staff approver outside a Confidential primary Document's audience is refused by name; a Business approver is not refused but sees no Document unless already in its audience.",
+          "source": "contract-approvals/routes.ts primaryDocumentIsConfidential + assertInAudience; portal/approvals.ts primaryDocument documentAudienceScope; DECISIONS-CONTRACTS 2026-09-18 H6"
+        },
+        {
+          "claim": "When Apply group appears",
+          "before": "If an Administrator has configured groups.",
+          "after": "When a live group exists or the Contract has a default group; the dialog's own submit is Apply group.",
+          "source": "approvals-signing-card.tsx (approverGroups.length > 0 || approvalDefault?.groupId); ApplyGroupDialog submit label (879fbae2)"
+        },
+        {
+          "claim": "Default group in the Apply dialog",
+          "before": "Not stated.",
+          "after": "The dialog starts on the Contract's inherited default; under Administrators only a Legal Team Member is locked with Only an administrator can choose a different group.; an archived default shows Default group unavailable — contact an administrator.",
+          "source": "approvals-signing-card.tsx ApplyGroupDialog locked/defaultUnavailable; contract-approvals/routes.ts canOverrideDefaultGroup and 403"
+        },
+        {
+          "claim": "Where staff find their requests",
+          "before": "Not stated.",
+          "after": "With in-app notifications on, a request made by someone else is pinned under Your approvals in the bell with Review, until decided or cancelled.",
+          "source": "notification-bell.tsx notifications.yourApprovals/notifications.review; notifier.ts approvalKind and inApp choice; notifications/approvals.ts handleApprovalItems (7dd7e7fa)"
+        },
+        {
+          "claim": "Decision dialog",
+          "before": "Add a Note and confirm the decision.",
+          "after": "The dialog says a decision is final; select Approve or Reject in the dialog. Other people see no Approve or Reject action.",
+          "source": "approvals-signing-card.tsx DecisionDialog and canDecide"
+        },
+        {
+          "claim": "Cancel request confirmation",
+          "before": "Not stated.",
+          "after": "Cancel request takes effect at once, without a confirmation.",
+          "source": "approvals-signing-card.tsx onCancel runs cancelContractApproval directly"
+        },
+        {
+          "claim": "Portal approval page",
+          "before": "Open Approvals in the Legal portal; enter an optional note.",
+          "after": "Select Approvals in the Portal navigation bar; page Your approvals; Note (optional); No document attached case; decisions save at once without a confirmation. The packet shows only the Contract title and primary Document. Also resolves the access group's shared-file request about the 'Legal portal' wording.",
+          "source": "portal-nav.tsx portal.navigation.approvals (/portal/approvals); portal-approvals.tsx; portal/approvals.ts; CONTEXT.md Portal"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Approvals tab holds the Approvals & signing card with Add approver; Approvers; Request approvals; everyone asked at once in any order.",
+          "source": "approvals-signing-card.tsx; contract-record.tsx tab"
+        },
+        {
+          "claim": "Every active user (Administrator, Legal Team Member, Business User) can approve; archived people are refused.",
+          "source": "approvers.ts APPROVER_ROLES; auth.ts USER_ROLES"
+        },
+        {
+          "claim": "A person with a pending request is not offered again; the API refuses a duplicate.",
+          "source": "approvals-signing-card.tsx pendingApprovers; routes.ts pending check"
+        },
+        {
+          "claim": "Group apply is a snapshot; later edits leave requests unchanged.",
+          "source": "approvals.groupSnapshot; routes.ts applyApproverGroup"
+        },
+        {
+          "claim": "Only the named approver can decide (403); a decision is final (409); a re-request adds a new row.",
+          "source": "contract-approvals/routes.ts decide handler"
+        },
+        {
+          "claim": "Cancel request: requester, Legal Owner or Administrator; pending only; deletes the row and records the activity.",
+          "source": "approvals-signing-card.tsx canCancel; routes.ts mayCancel and approval.cancelled"
+        },
+        {
+          "claim": "Soft gate: Move past approval, Cancel, Move anyway; Pending or Rejected rows count; override recorded.",
+          "source": "soft-gate.ts crossesApprovalGate/unresolvedApprovals; contract-record.tsx soft gate dialog"
+        },
+        {
+          "claim": "No sequential chain or threshold rules.",
+          "source": "CTR-012; routes.ts"
+        },
+        {
+          "claim": "Portal: Pending and Completed tabs, search by Contract title or requester, Download, packet excludes team membership, comments, Fields and other Documents; withdrawal or archive removes access.",
+          "source": "portal-approvals.tsx; portal/approvals.ts archivedAt filters; DECISIONS-CONTRACTS 2026-09-17"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. The V-C16 browser walkthrough must be rerun against this content hash.",
+        "The pinned Your approvals item depends on the approver's in-app notification preference and is never created for the requester's own request; the walkthrough should use a second actor as requester."
+      ]
+    },
+    {
+      "articleId": "approver-groups",
+      "scenario": ["V-C55"],
+      "contentSha256Before": "0cbede41cb7246fc1ec6849697a308e5217ea54acf95f33f5cc0fae60e46a4b0",
+      "contentSha256": "c0f132517840b0fd75f56250e1ed446326f13fd62027aef4577305ae37d4d88d",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-012; 2026-09-17 default groups and business approvers; 2026-09-18 security review H6)",
+        "messages/en-US.json",
+        "apps/web/src/routes/settings-approver-groups.tsx",
+        "apps/web/src/components/approval-default-settings.tsx",
+        "apps/web/src/routes/settings-contract-type-editor.tsx",
+        "apps/web/src/components/type-editor-sections.tsx",
+        "apps/web/src/components/type-form/messages.ts",
+        "apps/web/src/components/contracts-settings-tabs.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/api/src/modules/approver-groups/routes.ts",
+        "apps/api/src/modules/contract-approvals/routes.ts",
+        "apps/api/src/modules/contract-types/approval-defaults.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/lib/approvers.ts",
+        "apps/web/src/components/portal/portal-nav.tsx"
+      ],
+      "corrections": [
+        {
+          "claim": "Where the type default is set",
+          "before": "Open a type and choose its Default approver group below People.",
+          "after": "Open a type, select its Approval defaults tab, and in the Default approver group card choose the Approver group or No default group; the choice saves on select.",
+          "source": "type-editor-sections.tsx tabs Details, Form, People, Approval defaults; approval-default-settings.tsx ContractTypeApprovalDefault"
+        },
+        {
+          "claim": "Approval permissions control",
+          "before": "In Settings → Contracts → Approver groups → Approval permissions, choose who may override.",
+          "after": "The Approval permissions card on the Approver groups page asks Who can override a default approver group? and saves on select.",
+          "source": "approval-default-settings.tsx ApprovalOverridePolicy; settings-approver-groups.tsx"
+        },
+        {
+          "claim": "Archived default group",
+          "before": "An Administrator can select another group when requesting approval.",
+          "after": "The type card shows the group with (archived); on an inheriting Contract the Apply dialog shows Default group unavailable — contact an administrator; anyone allowed to override may choose another group, and under Administrators only a Legal Team Member must ask an Administrator.",
+          "source": "approval-default-settings.tsx archived option; approvals-signing-card.tsx ApplyGroupDialog; contract-approvals/routes.ts override 403 then archived 409"
+        },
+        {
+          "claim": "Page access",
+          "before": "Sign in as an Administrator.",
+          "after": "Adds that anyone else who opens the page address goes to their profile settings.",
+          "source": "settings-approver-groups.tsx loader redirect('/settings/profile'); approver-groups routes SET-002 gate"
+        },
+        {
+          "claim": "Apply dialog default and Confidential Document",
+          "before": "Not stated.",
+          "after": "The dialog starts on the Contract's default group; staff approvers must also be in a Confidential primary Document's audience; a refused apply creates no request.",
+          "source": "approvals-signing-card.tsx ApplyGroupDialog seed; contract-approvals/routes.ts primaryDocumentIsConfidential"
+        },
+        {
+          "claim": "Re-typed Contracts keep their default",
+          "before": "Existing Contracts and active requests remain unchanged.",
+          "after": "Adds re-typed Contracts to the unchanged list.",
+          "source": "only contracts/create.ts writes defaultApproverGroupId; DECISIONS-CONTRACTS 2026-09-17"
+        },
+        {
+          "claim": "Portal term",
+          "before": "Business Users receive their requests in the Legal portal.",
+          "after": "Business Users receive their requests under Approvals in the Portal navigation bar. Resolves the access group's shared-file request about the 'Legal portal' wording.",
+          "source": "portal-nav.tsx portal.navigation.approvals; CONTEXT.md Portal"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Path: profile menu Settings, Contracts, Approver groups tab.",
+          "source": "contracts-settings-tabs.tsx; user menu"
+        },
+        {
+          "claim": "Add group opens Add approver group with Name, Description, Members; submit Add group; edit submit Save; Edit control per row.",
+          "source": "settings-approver-groups.tsx"
+        },
+        {
+          "claim": "Members may be any active user including Business Users; archived saved members show Can no longer approve.",
+          "source": "settings-approver-groups.tsx eligiblePeople; approver-groups/routes.ts; approvers.ts"
+        },
+        {
+          "claim": "Groups list in name order.",
+          "source": "approver-groups routes and options orderBy name"
+        },
+        {
+          "claim": "Apply skips archived members and pending members; refuses an archived group, an empty group, and an all-pending group; staff outside a Confidential Contract's audience refuse the whole apply.",
+          "source": "contract-approvals/routes.ts applyApproverGroup"
+        },
+        {
+          "claim": "Edit saves name/description then members; member-list failure message.",
+          "source": "settings-approver-groups.tsx The member list could not be saved."
+        },
+        {
+          "claim": "Archive dialog Archive group, no replacement; Show archived and Restore.",
+          "source": "settings-approver-groups.tsx; list-editor.tsx"
+        },
+        {
+          "claim": "New Contracts inherit the type default; no default starts an approval; initial override setting Legal team members and administrators; Administrators only restricts applying a different group; API enforces it.",
+          "source": "contracts/create.ts defaultApproverGroupId; approval-defaults.ts; contract-approvals/routes.ts 403"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. The V-C55 browser walkthrough must be rerun against this content hash.",
+        "The V-C55 registry negative check expects non-Member+ selections to be refused. Since 588dc3f0 and the CTR-012 2026-09-17 amendment, any active user may be a member, and only archived people are refused. The walkthrough should check the archived-person refusal and the Administrator-only page gate instead."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [
+    {
+      "file": "CONTEXT.md",
+      "request": "Approver group still says 'Members must be Member+ users', and Approval request says 'the Contract's Owner' cancels. Since the CTR-012 2026-09-17 amendment, members and approvers may be any active user including Business Users, and the canceller is the Legal Owner."
+    },
+    {
+      "file": "docs/documentation/scenarios.json",
+      "request": "V-C55 negative check 'Non-Member+ selections ... are refused' no longer matches CTR-012 (2026-09-17). Replace it with the archived-member refusal and the Administrator-only settings gate."
+    }
+  ],
+  "statusChange": null
+}

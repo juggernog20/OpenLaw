@@ -80,13 +80,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 compatibility reviewer (compat)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-a)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff; the Stage pipeline, Soft gate and History are unchanged, and only the Settings add row for a Status changed. Replayed the round 1 V-C15 walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 12 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-25T11:14:39.367Z",
+    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of contract-record.tsx, contracts/service.ts, contracts/record.ts, contracts/routes.ts and contract-statuses/routes.ts. stage-pipeline.tsx, soft-gate.ts and activity-applet.tsx did not change. The status move now sits in contracts/service.ts and still applies the Soft gate with overrideSoftGate, so no statement in the guide changed. I replayed the DOC-029 V-C15 script for Legal Team Member and Administrator on lab compatcmp built from 067c1646; all 12 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-a)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff; the Stage pipeline, Soft gate and History are unchanged, and only the Settings add row for a Status changed. Replayed the round 1 V-C15 walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 12 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/contracts-a.json",
@@ -95,6 +95,22 @@
       {
         "path": "batches/DOC-029/compat-r3/review.json",
         "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      },
+      {
+        "path": "batches/DOC-030/compat/compat.json",
+        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-stages-replay.mjs",
+        "sha256": "051ccc9a4bbbac714845e7072d78fc5899914485fca3cfb01dd13f146ddc1723"
+      },
+      {
+        "path": "batches/DOC-030/compat/contract-stages-replay.json",
+        "sha256": "70ce2e084f6a660a9215687e94fbaaa9fb4c8d03507bd469412fecd30efce16d"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/contract-stages-compatcmp.log",
+        "sha256": "d4771a52ca5bf038bb8efff92e70c91d24d2180656e5e7732555ab2a926e3cdb"
       }
     ]
   }

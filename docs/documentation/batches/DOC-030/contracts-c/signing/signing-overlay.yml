@@ -1,0 +1,22 @@
+# DOC-030 contracts-c (copy of DOC-029 signing-standin/fixture/signing-overlay.yml): extra Compose file applied on top of the lab's own
+# compose.yml + overlay.json. It points the app and worker at the local stand-in
+# (DOCUSIGN_BASE_URL + SIGNING_STANDIN, the pair config.ts requires) and adds the
+# stand-in on the lab's backend network with no published port.
+services:
+  app:
+    environment:
+      DOCUSIGN_BASE_URL: http://signing-standin:8129
+      SIGNING_STANDIN: "true"
+  worker:
+    environment:
+      DOCUSIGN_BASE_URL: http://signing-standin:8129
+      SIGNING_STANDIN: "true"
+  signing-standin:
+    image: ${STANDIN_IMAGE:?set STANDIN_IMAGE to the lab app image}
+    command: ["node", "/fixture/server.mjs"]
+    user: "1000:1000"
+    volumes:
+      - ${STANDIN_SERVER:?set STANDIN_SERVER to the absolute path of server.mjs}:/fixture/server.mjs:ro
+    networks:
+      - openlaw-backend
+    restart: "no"

@@ -33,7 +33,7 @@ The app does not advance expiry automatically. Confirmation changes the term wit
 
 The same **Renew** dialog offers other routes:
 
-- **Paper as amendment** opens the existing primary Document's **Add version** flow with an Amendment kind. File the paper there. Amendment is a kind, not an executed designation. If this Document Version should be the chain's executed copy, [mark it explicitly](manual-signing.md). Marking it replaces any existing executed designation in that Document chain. This choice creates no new Contract and does not itself advance expiry. The option is absent without a primary Document. If you just uploaded the first Document, reload the record before reopening **Renew**.
+- **Paper as amendment** opens the existing primary Document's **Add version** flow with **Type** set to **Amendment**. File the paper there. Amendment is a Document type, not an executed designation. If this Document Version should be the chain's executed copy, [mark it explicitly](manual-signing.md). Marking it replaces any existing executed designation in that Document chain. This choice creates no new Contract and does not itself advance expiry. The option is absent without a primary Document. If you just uploaded the first Document, reload the record before reopening **Renew**.
 - **Create child contract** opens the create dialog for a new Contract parented to this one.
 - **New successor contract** opens the create dialog for a new Contract linked as renewing this predecessor.
 

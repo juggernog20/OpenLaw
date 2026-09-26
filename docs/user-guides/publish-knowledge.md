@@ -6,21 +6,23 @@ Choose when a Knowledge Item becomes available to Portal readers, and withdraw i
 
 Sign in as a Legal Team Member or Administrator and open the [Knowledge Item](create-knowledge.md). Both roles can publish; there is no separate curator approval step. Review the guidance and every Document, including supporting files, before changing availability.
 
-| Item condition                    | Staff Knowledge access                                                               | Business Portal access                                                            |
-| --------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Draft                             | Legal Team Members and Administrators                                                | Unavailable                                                                       |
-| Published, Legal Only             | Legal Team Members and Administrators                                                | Unavailable                                                                       |
-| Published, Everyone, not archived | Legal Team Members and Administrators                                                | Signed-in Portal readers can read guidance and download current Document Versions |
-| Archived                          | Legal Team Members and Administrators can open a saved staff link to read or restore | Unavailable                                                                       |
+| Item condition                    | Staff Knowledge access                                                               | Business Portal access                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Draft                             | Legal Team Members and Administrators                                                | Unavailable                                                                                                      |
+| Published, Legal Only             | Legal Team Members and Administrators                                                | Unavailable                                                                                                      |
+| Published, Everyone, not archived | Legal Team Members and Administrators                                                | Signed-in Portal readers can read guidance and download current Document Versions, except Confidential Documents |
+| Archived                          | Legal Team Members and Administrators can open a saved staff link to read or restore | Unavailable                                                                                                      |
 
 **Everyone** still requires a Portal session; it does not create an anonymous public page. Business Users have no staff Knowledge authoring access. Organization Knowledge and OpenLaw product **Help** have separate content and search.
+
+A Document marked Confidential stays off the Portal, even on an item published for **Everyone**. Its download address answers as if the item were unavailable. On the staff record, only Administrators can open it. A Legal Team Member cannot, even the one who uploaded it. To keep one file on an item internal, ask an Administrator to open that Document's **Actions** menu and select **Mark confidential**. The row then shows the **CONFI** lock marker. **Clear confidential mark** returns the file to the Portal.
 
 ## Publish and check the Portal
 
 1. Set **Audience** to **Everyone** if the item is intended for Portal readers, or keep **Legal Only** for the legal team's library.
 2. Open **Knowledge Item actions** and select **Publish**. The **Draft** marker disappears. A live published item with **Everyone** shows **On the portal**.
-3. Publishing alone gives readers no way to reach the item. Ask an Administrator to open **Settings**, **Intake**, **Deflection links** and select **Add link**. The link needs **Target** set to **Knowledge item**, this item chosen, a reader-facing **Label**, and **Placement** set to **Portal home** or one [request type](request-forms.md).
-4. In a separate signed-in Business Portal session, open that deflection link under **Before you submit**. Check the title, guidance, and current downloads for both primary and supporting Documents. The [Portal reading guide](portal-knowledge.md) explains this view.
+3. Publishing alone gives readers no way to reach the item. Ask an Administrator to open **Settings**, **Intake**, **Deflection links** and select **Add link**. The link needs **Target** set to **Knowledge item**, this item chosen, a reader-facing **Label**, and **Placement** set to **Portal home** or one [request type](request-forms.md). The **Knowledge item** list offers only live items published for **Everyone**, so publish first.
+4. In a separate signed-in Business Portal session, open that deflection link under **Before you submit**. Check the title, guidance, and current downloads for both primary and supporting Documents. A Confidential Document is not listed. The [Portal reading guide](portal-knowledge.md) explains this view.
 
 Portal readers see the primary Document first and guidance after the files. They cannot browse the staff Knowledge library, edit the item, or choose earlier Versions. A new Document Version or a guidance edit becomes available on the published item without another Publish action. Files previously downloaded to a computer remain there and do not update automatically.
 
@@ -47,6 +49,6 @@ Naming a replacement records the relationship; it does not redirect the old Port
 
 ## Check a missing item or file
 
-Confirm the item is not archived, its audience is **Everyone**, and it is published. Then check the deflection link's **Placement** and the reader's Portal sign-in. These conditions apply to supporting Documents as well as the primary Document; saving a direct download address does not bypass them.
+Confirm the item is not archived, its audience is **Everyone**, and it is published. Then check the deflection link's **Placement** and the reader's Portal sign-in. These conditions apply to supporting Documents as well as the primary Document; saving a direct download address does not bypass them. If one file is missing but the others show, ask an Administrator to check whether that Document's row shows the **CONFI** marker. A Legal Team Member does not see a Confidential Knowledge Document at all. An [MCP Client](configure-mcp.md) that works for a Business User reads Knowledge through the same checks.
 
 If a publication or audience change fails, read the message, reload the record, and check the saved state before retrying. If the item opens but a current file fails, follow [Document recovery](document-previews.md). An archived replacement cannot be selected. The **Replaced by** list refreshes whenever you open the archive dialog. If a replacement becomes unavailable while the dialog is open, the error explains why.

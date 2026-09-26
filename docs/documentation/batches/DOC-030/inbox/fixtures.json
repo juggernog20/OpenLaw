@@ -1,0 +1,306 @@
+{
+  "note": "Fixture identifiers for the DOC-030 inbox walkthrough. No credentials.",
+  "lab": "http://127.0.0.1:43300",
+  "createdAt": "2026-09-25T10:07:10.264Z",
+  "contractType": {
+    "id": "01a0d808-1655-70ee-a87e-9f7658980a08",
+    "name": "DOC-030 inbox Supplier agreement",
+    "form": [
+      {
+        "rowRef": "title",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "contract_type",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "description",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "entity",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "counterparties",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "owning_department",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "region",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "priority",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "risk",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "term_type",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "effective_date",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "expiry_date",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "renewal_period_months",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "notice_period_days",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "value",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "needed_by",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_inbox_supplier_name",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_inbox_budget_note",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_inbox_contracting_entity",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_inbox_cost_centre",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_030_inbox_contract_summary",
+        "onIntakeForm": false,
+        "isRequired": false
+      }
+    ]
+  },
+  "matterType": {
+    "id": "01a0d808-1674-7723-9b38-ea15321e30f3",
+    "name": "DOC-030 inbox Advisory",
+    "form": [
+      {
+        "rowRef": "title",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "matter_type",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "description",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "department",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "region",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "priority",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "risk",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "needed_by",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_inbox_adviser_name",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_inbox_matter_entity",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_030_inbox_matter_cost_centre",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_030_inbox_region_choice",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_030_inbox_engagement_summary",
+        "onIntakeForm": false,
+        "isRequired": false
+      }
+    ]
+  },
+  "requestTypes": {
+    "contract": {
+      "id": "01a0d808-7c87-782e-9282-7d9d37833244",
+      "name": "DOC-030 inbox Supplier contract request"
+    },
+    "matter": {
+      "id": "01a0d808-7c9c-7be1-a3f9-c0eba47ccaf8",
+      "name": "DOC-030 inbox Advisory matter request"
+    }
+  },
+  "fields": {
+    "carry": {
+      "id": "01a0d808-7b3d-706c-83e3-c0d0d3f6e5e5",
+      "slug": "doc_030_inbox_supplier_name",
+      "name": "DOC-030 inbox Supplier name",
+      "type": "text"
+    },
+    "stay": {
+      "id": "01a0d808-7b5e-7297-978c-f556c48a70f3",
+      "slug": "doc_030_inbox_budget_note",
+      "name": "DOC-030 inbox Budget note",
+      "type": "text"
+    },
+    "required": {
+      "id": "01a0d808-7b7e-70a5-b9aa-7010320e6087",
+      "slug": "doc_030_inbox_cost_centre",
+      "name": "DOC-030 inbox Cost centre",
+      "type": "text"
+    },
+    "entity": {
+      "id": "01a0d808-7ba1-72de-b33b-ba0b0d6ee788",
+      "slug": "doc_030_inbox_contracting_entity",
+      "name": "DOC-030 inbox Contracting entity",
+      "type": "entity"
+    },
+    "recordC": {
+      "id": "01a0d808-7bbd-78cd-bdfe-d7cee40d3749",
+      "slug": "doc_030_inbox_contract_summary",
+      "name": "DOC-030 inbox Contract summary",
+      "type": "text"
+    },
+    "mCarry": {
+      "id": "01a0d808-7bd7-72f5-b386-92a532d13933",
+      "slug": "doc_030_inbox_adviser_name",
+      "name": "DOC-030 inbox Adviser name",
+      "type": "text"
+    },
+    "mRequired": {
+      "id": "01a0d808-7bf3-791b-94af-ddc45c08e86e",
+      "slug": "doc_030_inbox_matter_cost_centre",
+      "name": "DOC-030 inbox Matter cost centre",
+      "type": "text"
+    },
+    "mEntity": {
+      "id": "01a0d808-7c09-74e5-860b-15611168200d",
+      "slug": "doc_030_inbox_matter_entity",
+      "name": "DOC-030 inbox Matter entity",
+      "type": "entity"
+    },
+    "choice": {
+      "id": "01a0d808-7c1f-7e98-853e-b29e84b8e6b7",
+      "slug": "doc_030_inbox_region_choice",
+      "name": "DOC-030 inbox Region choice",
+      "type": "single_select"
+    },
+    "record": {
+      "id": "01a0d808-7c37-7c64-935f-a0df865d77dc",
+      "slug": "doc_030_inbox_engagement_summary",
+      "name": "DOC-030 inbox Engagement summary",
+      "type": "text"
+    }
+  },
+  "entities": {
+    "live": {
+      "id": "01a0d808-7cf7-702e-b748-7c5586e85852",
+      "name": "DOC-030 inbox Live Holdings Ltd"
+    },
+    "old": {
+      "id": "01a0d808-7d09-7cf1-a8e7-5af0e7f2cc22",
+      "name": "DOC-030 inbox Old Holdings Ltd"
+    }
+  },
+  "templates": {
+    "good": {
+      "id": "01a0d808-7d43-75c5-9d06-66eaa100fb4c",
+      "name": "DOC-030 inbox Advisory template"
+    },
+    "stale": {
+      "id": "01a0d808-7d77-7b66-9761-546163f9dd31",
+      "name": "DOC-030 inbox Stale template"
+    }
+  },
+  "contractTypeDefaultPerson": "Priya Raman",
+  "departments": [
+    {
+      "id": "01a0d801-fa39-7e8e-8cf7-5a47e0c20a2b",
+      "name": "Engineering"
+    },
+    {
+      "id": "01a0d801-fa51-70a8-a493-c0328bbf0dfd",
+      "name": "Finance"
+    },
+    {
+      "id": "01a0d801-fa5b-79cf-8b13-ecdbdf5b8992",
+      "name": "Marketing"
+    },
+    {
+      "id": "01a0d801-fa45-7b33-9c43-f161d62006bd",
+      "name": "People"
+    },
+    {
+      "id": "01a0d801-fa2c-76bc-81b4-c1a7a2783f18",
+      "name": "Procurement"
+    },
+    {
+      "id": "01a0d801-fa22-75f8-b725-59e54a6d62ce",
+      "name": "Sales"
+    }
+  ]
+}

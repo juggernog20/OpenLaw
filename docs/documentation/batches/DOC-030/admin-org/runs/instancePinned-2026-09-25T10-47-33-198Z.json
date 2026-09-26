@@ -1,0 +1,34 @@
+{
+  "section": "instancePinned",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2",
+  "labProject": "openlaw-docs-80ceef9e-auth2",
+  "appUrl": "http://127.0.0.1:43310",
+  "mailUrl": "http://127.0.0.1:48435",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "base lab environment (BASE_URL set by the deployment)",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:47:33.200Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Instance address set by the deployment: Application address shows Deployment configuration and Read only; the SSO callback uses it",
+      "expected": "Deployment configuration; Read only; active BASE_URL; callback on it",
+      "startedAt": "2026-09-25T10:47:34.547Z",
+      "finishedAt": "2026-09-25T10:47:37.398Z",
+      "actual": "Settings, Advanced, Instance address showed \"Application address Deployment configuration · Read only\" (field value http://127.0.0.1:43310, read-only true). Save provider then showed the callback http://127.0.0.1:43310/api/auth/sso/callback.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:47:37.416Z"
+}

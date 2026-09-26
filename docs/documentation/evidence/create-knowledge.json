@@ -1,26 +1,28 @@
 {
   "articleId": "create-knowledge",
-  "contentSha256": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-entities",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (knowledge, round 1)",
+  "contentSha256": "31863d786a429f225bfe0df5d4c70cc005efd11ffc006abdfd7d65d8e3900c3a",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (shared-files)",
+  "technicalReviewer": "DOC-030 source-review author agent (shared-files)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (documents-2)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author agent; corrections by DOC-029 source-review author agent (knowledge)",
-  "technicalReviewer": "DOC-029 source-review author agent (knowledge)",
-  "verifiedAt": "2026-09-16T15:28:24.654Z",
+  "verifiedAt": "2026-09-25T13:30:47.511Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/create-knowledge.md",
-    "docs/documentation/batches/DOC-029/knowledge/technical-review.json",
-    "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-    "docs/decision-records/DECISIONS-KNOWLEDGE.md",
-    "apps/web/src/routes/knowledge.tsx",
-    "apps/web/src/routes/knowledge-record.tsx",
+    "docs/documentation/batches/DOC-030/shared-files/technical-review.json",
+    "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/documents-2/lib.mjs",
     "apps/web/src/components/documents/create-attachments.tsx",
-    "apps/web/src/components/documents/documents-card.tsx",
-    "apps/api/src/modules/knowledge/routes.ts",
-    "apps/api/src/modules/documents/routes.ts"
+    "apps/web/src/routes/knowledge.tsx",
+    "apps/web/src/lib/documents.ts",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+    "docs/decision-records/DECISIONS-KNOWLEDGE.md (KNW-004 built addendum 2026-09-18)",
+    "docs/user-guides/publish-knowledge.md",
+    "git show 7f1573c5"
   ],
   "scenarios": [
     {
@@ -29,18 +31,15 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared seeded entities lab openlaw-docs-41255c61-entities built from 3fa407e3, with the seeded Knowledge types and folders.",
-        "Reviewer fixtures from docs/documentation/batches/DOC-029/knowledge/fixtures/build-fixtures.py (fictional PDF and DOCX files), copied under run-specific DOC-029 knowledge names.",
-        "Nadia Haddad signed in with the seed password in her own browser context."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z.",
+        "Seeded Knowledge types (Template, Precedent, Playbook, Article) and folders. An archived Knowledge type fixture created by the Administrator through the lab API and deleted at the end. Fictional PDF and DOCX files from the DOC-029 knowledge fixtures, copied under run-specific names."
       ],
-      "expected": "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice. Unavailable/archived references and insufficient role permissions have supported outcomes.",
-      "actual": "20 recorded steps passed as Nadia Haddad. Knowledge opened from the navigation. Add folder made a top-level folder and a child under the selected folder. New from files started Folder at Library or at the selected folder; choosing two PDFs, Type Precedent and Create drafts opened the first item and listed the second, each a Draft, Legal Only item named after its file with its own primary Document. Title saved on Enter and on leaving the field, Type and Folder saved on change, and all survived a reload. New Knowledge Item with Attach documents and Document kind: with the upload request dropped by the reviewer's browser, the item existed and the dialog offered Retry failed uploads and Continue; Retry uploaded the file, which became primary automatically, and Continue opened the item with no Document. Add guidance and Preview saved the source on blur and rendered heading, emphasis, list, code and link; a raw <b> tag was not rendered as HTML; Edit and a reload kept the source. Upload added a second Document; Set as primary (absent on the primary row) moved the Primary mark and the Primary document control; Open preview opened the current Version 1; Add version on the supporting Document made Version 2 on that chain only. Archiving the primary Document removed its row, chose no replacement and kept its Version and designation; Show archived and Restore returned it. The Documents section had no New folder control, and a Choose folder import placed its file at the item root. A folder listed its descendants; Type, State, Audience, Author and Format each narrowed the list and Clear filters restored it. Rename or move selected folder excluded the folder and its child from Parent folder and saved a rename and a move. Move up and Move down changed the saved sibling order and back. Delete selected folder said nothing is deleted and moved the child folder and its item to the parent. No Manage types… link was offered to the Legal Team Member. A DOC-029 archived Knowledge type was absent from the record and both create dialogs. Archiving an item disabled Title, Type, Folder, Audience and guidance, removed Upload, and a direct upload answered 409; the saved address reopened it and Restore made it editable.",
+      "expected": "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice. Negative checks: Unavailable/archived references have supported outcomes. A Business User cannot author or browse the staff Knowledge library.",
+      "actual": "19 browser steps passed as Nadia Haddad (Legal Team Member) in an isolated Playwright Chromium context. (1) The navigation link Knowledge opened /knowledge with New, the All Knowledge folder entry and the Knowledge items region as Nadia Haddad. (2) Add folder with All Knowledge selected saved \"DOC-030 documents-2 Legal 09251315 parent\" with no parent. With that folder selected, Add folder saved \"DOC-030 documents-2 Legal 09251315 child\" under it (read-back). (3) With All Knowledge selected, New from files showed Folder \"Library\". With \"DOC-030 documents-2 Legal 09251315 parent\" selected it started at \"DOC-030 documents-2 Legal 09251315 parent\". (4) Create drafts opened \"DOC-030 documents-2 Legal 09251315 policy A.pdf\" with the Draft marker, Audience Legal Only, Type Precedent, the parent folder and its file under Primary document. The Knowledge breadcrumb returned to the list, and the parent folder listed both items. Each was a draft with one Document of its own as primary (read-back). (5) Enter saved \"DOC-030 documents-2 Legal 09251315 policy A renamed\". Moving focus to Type saved \"DOC-030 documents-2 Legal 09251315 policy A reviewed\". Type Playbook and Folder \"DOC-030 documents-2 Legal 09251315 child\" saved on change. After a reload Title, Type and Folder showed the saved values. (6) New Knowledge Item took Title, Type Article, Folder and one file through Attach documents. The dialog offered no Document type or Document kind control (counts 0/0); it read \"New Knowledge Item Title* Type* Template Precedent Playbook Article Checklist Note DOC-030 admin-config V-C38 Knowledge probe type 09251115 DOC-030 admin-config V-C38 Knowledge probe type 09251116 DOC\". The browser dropped the first upload request: the dialog read \"Record created. Some documents could not be uploaded.\" with Retry failed uploads and Continue, and the item already existed with no Document. Retry failed uploads uploaded the file and opened the item: Draft marker, Audience Legal Only, \"DOC-030 documents-2 … (7) With the upload request dropped, Continue closed the dialog and opened \"DOC-030 documents-2 Legal 09251315 continue\": a Draft item with no Document (read-back). (8) Add guidance opened the editor; its help read \"Guidance Preview Guidance Use Preview to see how your guidance will appear to readers.\" and named no Markdown rules. Preview saved the source on blur and rendered the heading, bold and italic text, a two-item list, inline code and the link. The raw <b> tag did not become a bold element. Edit showed the source again; the source was still there after a reload. (9) Upload, Choose files and Upload added \"DOC-030 documents-2 Legal 09251315 supporting checklist.pdf\" as a second Document at v1 (Type controls in Upload document: 0). \"DOC-030 documents-2 Legal 09251315 playbook.docx\", the first Document, kept the primary designation. (10) The primary row's Actions menu offered no Set as primary. On \"DOC-030 documents-2 Legal 09251315 supporting checklist.pdf\", Actions, Set as primary put the Primary mark on that row (\"DOC-030 documents-2 Legal 09251315 supporting checklist.pdf Primary No type Article v1 Sep 25 Uploaded by Nadia Haddad N\"), and the Primary document control changed to that title. (11) Open preview opened the reader labelled \"DOC-030 documents-2 Legal 09251315 supporting checklist.pdf, version 1\", the current Version; Close the document shut it. Add version on the supporting DOCX made Version 2 on that Document only; the primary PDF kept one Version and its designation (read-back). (12) Archive took \"DOC-030 documents-2 Legal 09251315 supporting checklist.pdf\" out of the ordinary Documents list; the supporting DOCX did not get the Primary mark. With archived rows included it kept its one Version and primary designation. Show archived and Restore returned it with the Primary mark, and the Primary document control named it after a reload. (13) The item's Documents section had no New folder button. Upload, Choose folder on a folder holding one file in a subfolder offered Import 1 file, and the import placed \"DOC-030 documents-2 Legal 09251315 folder pick.pdf\" at the item root with no Document folder, beside the other Documents (3 in the flat list; a folder read on the item answered 404). (14) Type, State, Audience, Author and Format were each offered. The parent folder listed the item in its child folder as well as its own items; the child folder listed only its item. Type Precedent dropped the Playbook item. State Published hid the drafts. Author Nadia Haddad kept the PDF item; Format Word dropped it and Format PDF brought it back. Audience Everyone hid that Legal Only item. Clear filters and reselecting the folder brought all items back. (15) In Rename or move folder for the parent folder, Parent folder offered 32 choices including \"DOC-030 documents-2 Legal 09251315 target\" but not the folder itself or its child. Save folder renamed it to \"DOC-030 documents-2 Legal 09251315 parent renamed\". Moving the child folder under \"DOC-030 documents-2 Legal 09251315 target\" kept its item in it, and the target folder listed that item. (16) The target folder was at sibling position 30. Move up saved position 29; Move down saved position 30 again (2 click(s)). Moving an item by its Folder field was shown in the Start with files step 4 check. (17) The dialog read \"Delete the DOC-030 documents-2 Legal 09251315 target folder? Its folders and items move to the parent folder. Nothing is deleted. Cancel Delete folder\". Delete folder removed the folder. Its child folder became top-level, and \"DOC-030 documents-2 Legal 09251315 policy A reviewed\" stayed in that child folder with its one Document (read-back). (18) No Manage types… link was beside Type for the Legal Team Member. The archived Knowledge type \"DOC-030 documents-2 retired Knowledge type 09251315\" was absent from the record Type control, the New Knowledge Item dialog and the New from files dialog; Playbook was offered in all three. (19) Knowledge Item actions, Archive opened \"Archive Knowledge Item\" (\"Archive Knowledge Item Optionally point readers to the Knowledge Item that replaces this one. Replaced by No replacement Cancel Archive\"); Archive marked the item Archived and disabled Title, Type, Folder, Audience and the guidance editor ({\"knowledge-record-title\":true,\"knowledge-record-type\":true,\"knowledge-record-folder\":true,\"knowledge-record-audience\":true,\"guidanceEditor\":true}). Upload disappeared, and a second-actor direct upload answered 409 (Restore this Knowledge Item before adding Documents.). Restore cleared Archived and made the fields and Upload available again. Business User negative check, Jonas Weber through a fresh Portal magic link: /knowledge sent Jonas to /portal; a staff Knowledge record address sent him to /portal. The staff Knowledge list, record and create requests answered [403,403,403].",
       "result": "pass",
-      "startedAt": "2026-09-16T15:24:52.932Z",
-      "completedAt": "2026-09-16T15:26:10.557Z",
       "evidence": [
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
       ]
     },
     {
@@ -49,92 +48,29 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared seeded entities lab openlaw-docs-41255c61-entities built from 3fa407e3, with the seeded Knowledge types and folders.",
-        "Reviewer fixtures from docs/documentation/batches/DOC-029/knowledge/fixtures/build-fixtures.py (fictional PDF and DOCX files), copied under run-specific DOC-029 knowledge names.",
-        "Daniel Okafor signed in with the seed password in his own browser context; he also created and archived the DOC-029 Knowledge type fixture through the API and deleted it afterwards."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z.",
+        "Seeded Knowledge types (Template, Precedent, Playbook, Article) and folders. An archived Knowledge type fixture created by the Administrator through the lab API and deleted at the end. Fictional PDF and DOCX files from the DOC-029 knowledge fixtures, copied under run-specific names."
       ],
-      "expected": "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice. Unavailable/archived references and insufficient role permissions have supported outcomes.",
-      "actual": "19 recorded steps passed as Daniel Okafor. Knowledge opened from the navigation. Add folder made a top-level folder and a child under the selected folder. New from files started Folder at Library or at the selected folder; choosing two PDFs, Type Precedent and Create drafts opened the first item and listed the second, each a Draft, Legal Only item named after its file with its own primary Document. Title saved on Enter and on leaving the field, Type and Folder saved on change, and all survived a reload. New Knowledge Item with Attach documents and Document kind: with the upload request dropped by the reviewer's browser, the item existed and the dialog offered Retry failed uploads and Continue; Retry uploaded the file, which became primary automatically, and Continue opened the item with no Document. Add guidance and Preview saved the source on blur and rendered heading, emphasis, list, code and link; a raw <b> tag was not rendered as HTML; Edit and a reload kept the source. Upload added a second Document; Set as primary (absent on the primary row) moved the Primary mark and the Primary document control; Open preview opened the current Version 1; Add version on the supporting Document made Version 2 on that chain only. Archiving the primary Document removed its row, chose no replacement and kept its Version and designation; Show archived and Restore returned it. The Documents section had no New folder control, and a Choose folder import placed its file at the item root. A folder listed its descendants; Type, State, Audience, Author and Format each narrowed the list and Clear filters restored it. Rename or move selected folder excluded the folder and its child from Parent folder and saved a rename and a move. Move up and Move down changed the saved sibling order and back. Delete selected folder said nothing is deleted and moved the child folder and its item to the parent. Manage types… was beside Type and opened /settings/knowledge/types. A DOC-029 archived Knowledge type was absent from the record and both create dialogs. Archiving an item disabled Title, Type, Folder, Audience and guidance, removed Upload, and a direct upload answered 409; the saved address reopened it and Restore made it editable.",
+      "expected": "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice. Negative checks: Unavailable/archived references have supported outcomes. A Business User cannot author or browse the staff Knowledge library.",
+      "actual": "20 browser steps passed as Daniel Okafor (Administrator) in an isolated Playwright Chromium context. (1) The navigation link Knowledge opened /knowledge with New, the All Knowledge folder entry and the Knowledge items region as Daniel Okafor. (2) Add folder with All Knowledge selected saved \"DOC-030 documents-2 Admin 09251315 parent\" with no parent. With that folder selected, Add folder saved \"DOC-030 documents-2 Admin 09251315 child\" under it (read-back). (3) With All Knowledge selected, New from files showed Folder \"Library\". With \"DOC-030 documents-2 Admin 09251315 parent\" selected it started at \"DOC-030 documents-2 Admin 09251315 parent\". (4) Create drafts opened \"DOC-030 documents-2 Admin 09251315 policy A.pdf\" with the Draft marker, Audience Legal Only, Type Precedent, the parent folder and its file under Primary document. The Knowledge breadcrumb returned to the list, and the parent folder listed both items. Each was a draft with one Document of its own as primary (read-back). (5) Enter saved \"DOC-030 documents-2 Admin 09251315 policy A renamed\". Moving focus to Type saved \"DOC-030 documents-2 Admin 09251315 policy A reviewed\". Type Playbook and Folder \"DOC-030 documents-2 Admin 09251315 child\" saved on change. After a reload Title, Type and Folder showed the saved values. (6) New Knowledge Item took Title, Type Article, Folder and one file through Attach documents. The dialog offered no Document type or Document kind control (counts 0/0); it read \"New Knowledge Item Title* Type* Template Precedent Playbook Article Checklist Note DOC-030 admin-config V-C38 Knowledge probe type 09251115 DOC-030 admin-config V-C38 Knowledge probe type 09251116 DOC\". The browser dropped the first upload request: the dialog read \"Record created. Some documents could not be uploaded.\" with Retry failed uploads and Continue, and the item already existed with no Document. Retry failed uploads uploaded the file and opened the item: Draft marker, Audience Legal Only, \"DOC-030 documents-2 … (7) With the upload request dropped, Continue closed the dialog and opened \"DOC-030 documents-2 Admin 09251315 continue\": a Draft item with no Document (read-back). (8) Add guidance opened the editor; its help read \"Guidance Preview Guidance Use Preview to see how your guidance will appear to readers.\" and named no Markdown rules. Preview saved the source on blur and rendered the heading, bold and italic text, a two-item list, inline code and the link. The raw <b> tag did not become a bold element. Edit showed the source again; the source was still there after a reload. (9) Upload, Choose files and Upload added \"DOC-030 documents-2 Admin 09251315 supporting checklist.pdf\" as a second Document at v1 (Type controls in Upload document: 0). \"DOC-030 documents-2 Admin 09251315 playbook.docx\", the first Document, kept the primary designation. (10) The primary row's Actions menu offered no Set as primary. On \"DOC-030 documents-2 Admin 09251315 supporting checklist.pdf\", Actions, Set as primary put the Primary mark on that row (\"DOC-030 documents-2 Admin 09251315 supporting checklist.pdf Primary No type Article v1 Sep 25 Uploaded by Daniel Okafor \"), and the Primary document control changed to that title. (11) Open preview opened the reader labelled \"DOC-030 documents-2 Admin 09251315 supporting checklist.pdf, version 1\", the current Version; Close the document shut it. Add version on the supporting DOCX made Version 2 on that Document only; the primary PDF kept one Version and its designation (read-back). (12) Archive took \"DOC-030 documents-2 Admin 09251315 supporting checklist.pdf\" out of the ordinary Documents list; the supporting DOCX did not get the Primary mark. With archived rows included it kept its one Version and primary designation. Show archived and Restore returned it with the Primary mark, and the Primary document control named it after a reload. (13) The item's Documents section had no New folder button. Upload, Choose folder on a folder holding one file in a subfolder offered Import 1 file, and the import placed \"DOC-030 documents-2 Admin 09251315 folder pick.pdf\" at the item root with no Document folder, beside the other Documents (3 in the flat list; a folder read on the item answered 404). (14) Type, State, Audience, Author and Format were each offered. The parent folder listed the item in its child folder as well as its own items; the child folder listed only its item. Type Precedent dropped the Playbook item. State Published hid the drafts. Author Daniel Okafor kept the PDF item; Format Word dropped it and Format PDF brought it back. Audience Everyone hid that Legal Only item. Clear filters and reselecting the folder brought all items back. (15) In Rename or move folder for the parent folder, Parent folder offered 30 choices including \"DOC-030 documents-2 Admin 09251315 target\" but not the folder itself or its child. Save folder renamed it to \"DOC-030 documents-2 Admin 09251315 parent renamed\". Moving the child folder under \"DOC-030 documents-2 Admin 09251315 target\" kept its item in it, and the target folder listed that item. (16) The target folder was at sibling position 28. Move up saved position 27; Move down saved position 28 again (2 click(s)). Moving an item by its Folder field was shown in the Start with files step 4 check. (17) The dialog read \"Delete the DOC-030 documents-2 Admin 09251315 target folder? Its folders and items move to the parent folder. Nothing is deleted. Cancel Delete folder\". Delete folder removed the folder. Its child folder became top-level, and \"DOC-030 documents-2 Admin 09251315 policy A reviewed\" stayed in that child folder with its one Document (read-back). (18) Manage types… was beside Type and opened /settings/knowledge/types. The archived Knowledge type \"DOC-030 documents-2 retired Knowledge type 09251315\" was absent from the record Type control, the New Knowledge Item dialog and the New from files dialog; Playbook was offered in all three. (19) Knowledge Item actions, Archive opened \"Archive Knowledge Item\" (\"Archive Knowledge Item Optionally point readers to the Knowledge Item that replaces this one. Replaced by No replacement Cancel Archive\"); Archive marked the item Archived and disabled Title, Type, Folder, Audience and the guidance editor ({\"knowledge-record-title\":true,\"knowledge-record-type\":true,\"knowledge-record-folder\":true,\"knowledge-record-audience\":true,\"guidanceEditor\":true}). Upload disappeared, and a second-actor direct upload answered 409 (Restore this Knowledge Item before adding Documents.). Restore cleared Archived and made the fields and Upload available again. (20) Help search found \"Create and organize Knowledge Items\" by its title. A search for the Knowledge Item title \"DOC-030 documents-2 Admin 09251315 guidance\" answered \"No matching articles\". Business User negative check, Jonas Weber through a fresh Portal magic link: /knowledge sent Jonas to /portal; a staff Knowledge record address sent him to /portal. The staff Knowledge list, record and create requests answered [403,403,403].",
       "result": "pass",
-      "startedAt": "2026-09-16T15:25:27.627Z",
-      "completedAt": "2026-09-16T15:26:02.717Z",
       "evidence": [
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.mjs"
-      ]
-    },
-    {
-      "id": "V-C33",
-      "coverage": ["C33"],
-      "role": "business_user",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Shared seeded entities lab openlaw-docs-41255c61-entities built from 3fa407e3, with the seeded Knowledge types and folders.",
-        "Reviewer fixtures from docs/documentation/batches/DOC-029/knowledge/fixtures/build-fixtures.py (fictional PDF and DOCX files), copied under run-specific DOC-029 knowledge names.",
-        "Ravi Menon and Jonas Weber signed in to the Business Portal with fresh magic links from the lab Mailpit."
-      ],
-      "expected": "Business Users cannot author or browse the staff Knowledge library.",
-      "actual": "Ravi Menon (Business User) signed in to the Business Portal with a fresh magic link; the app root sent him to /portal. /knowledge sent him to /portal, and a Knowledge record address sent him to /portal, with no Knowledge navigation link. The staff Knowledge list, record, Documents and create requests answered [403,403,403,403]. Jonas Weber's Portal session asking for /knowledge ended on /portal.",
-      "result": "pass",
-      "startedAt": "2026-09-16T15:26:04.053Z",
-      "completedAt": "2026-09-16T15:26:10.255Z",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.mjs"
-      ]
-    },
-    {
-      "id": "V-C33",
-      "coverage": ["C33"],
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Shared seeded entities lab openlaw-docs-41255c61-entities built from 3fa407e3, with the seeded Knowledge types and folders.",
-        "Reviewer fixtures from docs/documentation/batches/DOC-029/knowledge/fixtures/build-fixtures.py (fictional PDF and DOCX files), copied under run-specific DOC-029 knowledge names."
-      ],
-      "expected": "Help search does not search Knowledge Items or their files.",
-      "actual": "Help search found the guide \"Create and organize Knowledge Items\" by its title. A search for the Knowledge Item title \"DOC-029 knowledge LTM E48831 guidance\" answered \"No matching articles\".",
-      "result": "pass",
-      "startedAt": "2026-09-16T15:26:10.256Z",
-      "completedAt": "2026-09-16T15:26:10.557Z",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
-    "The entities lab is shared with other DOC-029 agents. Only records named DOC-029 knowledge were created. The archived Knowledge type fixture was created, archived and deleted by the run. Development runs before the recorded run E48831 left further DOC-029 knowledge drafts and folders; they are not credited (see harnessNotes in the walkthrough log).",
-    "The failed-upload outcome was produced by the reviewer's browser dropping the upload request, not by a server refusal.",
-    "Not exercised: the no-active-type message, the reload advice after someone changes types or folders mid-edit, permanent Document deletion, saved views and global search, and preview processing or failure recovery. Those behaviours belong to linked guides or were read from source only.",
-    "The Business User negative check used Business Portal sessions; the seed gives Ravi Menon no password, so a staff sign-in by password was not possible.",
-    "The walkthrough ran on app commit 3fa407e3, which differs from edition.json supportedAppCommit 7f7e917a; the edition re-pin is outside this record."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named \"DOC-030 documents-2 …\" were created. Organization settings changed for the run and put back: Matter Document type list \"DOC-030 documents-2 Matter type 09251315\" (archived at teardown (200)); Knowledge type list \"DOC-030 documents-2 retired Knowledge type 09251315\" (delete answered 204); Matter Document type list \"DOC-030 documents-2 Matter type 09251152\" (archived at teardown (200)). Development runs before the recorded run left more DOC-030 documents-2 records; they are not credited. An earlier full run stopped when the orchestrating session restarted; its Matter type was archived by this run's teardown and its archived Knowledge type fixture was deleted through the lab API before this run finished.",
+    "Failed attachment uploads in New Knowledge Item were produced by the browser dropping the upload request (Playwright route abort). The archived-item upload refusal was checked with a second request through the lab API after the browser hid Upload.",
+    "The Archive Knowledge Item dialog now offers Replaced by with No replacement; the run archived with No replacement. The guide makes no claim about the replacement choice."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "295001ee071b093a3d66f72fb1faf23a81a959d13c08fbaba19e3062a738d34f",
-    "verifiedAt": "2026-09-08T02:40:18.418Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c",
+    "verifiedAt": "2026-09-16T15:28:24.654Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "5e0e6144f49cefdeae01ca7744488350531630d3a2f230e9695e75edb8f85a4c",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (knowledge)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Knowledge folders, type choices, guidance or Knowledge Item Documents. I replayed the round 1 V-C33 walkthrough on the entities2 lab as a Legal Team Member, an Administrator and a Business User, and all 40 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/knowledge.json",
-        "sha256": "8dc569dbe0e6c4f0c1316a20511712b57eb27b45e244216c376ab665c8475900"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

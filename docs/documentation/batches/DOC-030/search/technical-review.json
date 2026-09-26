@@ -1,0 +1,223 @@
+{
+  "batch": "DOC-030",
+  "group": "search",
+  "reviewer": "DOC-030 source-review author agent (search)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:22:53Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousEvidenceAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "previousCompatibilityTarget": "432dba3a835863091791fbac429a6a66777bdc40",
+    "lastArticleEdit": "1e53979b"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "search-and-views",
+      "scenario": ["V-C04"],
+      "contentSha256Before": "e4ba43ae7a2eb169648b165d054a048d9d1125c132aa89ab649733eeaa14633a",
+      "contentSha256": "e68143e10c8c688b6731c7eeaf369d2174cff91a9b6df81e795e0b4f3381bf1a",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/search-and-views.json",
+        "docs/documentation/batches/DOC-029/access/technical-review.json",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-009 addenda M44/1 and M44 close)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-094, DES-046)",
+        "messages/en-US.json",
+        "packages/shared/src/search-question.ts",
+        "packages/shared/src/search-conditions.ts",
+        "packages/shared/src/search-fields.ts",
+        "packages/shared/src/index.ts (LIST_VIEW_SURFACES, MAX_LIST_VIEW_NAME_LENGTH, MAX_LIST_VIEWS_PER_SURFACE)",
+        "apps/web/src/components/shell/search-input.tsx",
+        "apps/web/src/routes/search.tsx",
+        "apps/web/src/components/search/search-result-row.tsx",
+        "apps/web/src/components/search/advanced-search.tsx",
+        "apps/web/src/components/search/advanced-search-dialog.tsx",
+        "apps/web/src/components/search/search-conditions.tsx",
+        "apps/web/src/components/search/condition-definitions.ts",
+        "apps/web/src/components/search/condition-chips.tsx",
+        "apps/web/src/components/search/field-definitions.ts",
+        "apps/web/src/components/search/saved-searches.tsx",
+        "apps/web/src/components/search/recent-search-list.tsx",
+        "apps/web/src/components/search/empty-search-entries.ts",
+        "apps/web/src/components/search/search-question.ts",
+        "apps/web/src/components/search/search-sort.tsx",
+        "apps/web/src/components/table/views-menu.tsx",
+        "apps/web/src/components/table/property-list.tsx",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/table/record-filter-definitions.ts",
+        "apps/web/src/routes/contracts.tsx",
+        "apps/web/src/lib/recent-searches.ts",
+        "apps/web/src/lib/search.ts",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/lib/format.ts",
+        "apps/web/src/lib/contracts.ts",
+        "apps/web/src/lib/list-views.ts",
+        "apps/web/src/lib/table-width-preferences.ts",
+        "apps/api/src/modules/search/service.ts",
+        "apps/api/src/modules/search/conditions.ts",
+        "apps/api/src/modules/search/field-conditions.ts",
+        "apps/api/src/modules/search/relative-dates.ts",
+        "apps/api/src/modules/search/sort.ts",
+        "apps/api/src/modules/list-views/routes.ts",
+        "apps/api/src/lib/record-filters.ts",
+        "packages/db/src/schema/list-views.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Role and prerequisites",
+          "before": "Role sentence in the introduction; no Before you start section.",
+          "after": "Added Before you start (how-to template): Administrator or Legal Team Member; Business Users are sent from the search page to the Portal; reach limits results; Document words are searchable after text processing succeeds.",
+          "source": "apps/web/src/routes/search.tsx searchLoader (business_user redirect to /portal); apps/api/src/modules/search/service.ts memberScope, reachScopes; docs/documentation/templates/how-to.md"
+        },
+        {
+          "claim": "Header search minimum input",
+          "before": "Enter a record number, title, or distinctive words.",
+          "after": "Type at least two characters. The header list shows up to ten results per kind; the results page shows the exact total and 25 rows at a time.",
+          "source": "search-input.tsx MIN_QUERY_LENGTH = 2; service.ts GROUPED_LIMIT = 10; search.tsx PAGE_SIZE = 25 and search.total"
+        },
+        {
+          "claim": "Results-page kind links",
+          "before": "Select a kind to narrow the answer.",
+          "after": "A kind keeps only its own conditions; All returns to every kind and removes every condition.",
+          "source": "apps/web/src/routes/search.tsx QuestionFilters kind links (conditions filtered by kind)"
+        },
+        {
+          "claim": "Document result and earlier Versions",
+          "before": "Earlier Versions remain available from the record's Documents tab.",
+          "after": "Added that search does not read earlier Versions' words, gave the owner line form (C-12 · title), and said a Counterparty result opens the Contract results for that name.",
+          "source": "service.ts document_version_candidates (max version_number only); search-result-row.tsx RowBody owner line and searchResultPath counterparty case"
+        },
+        {
+          "claim": "Where header words go",
+          "before": "Words already typed in the header box carry into the dialog.",
+          "after": "They carry into All of these words; from the results page the dialog opens with the whole question.",
+          "source": "search-input.tsx currentQuestion; advanced-search.tsx AdvancedSearchButton; DES-094 clause 1"
+        },
+        {
+          "claim": "Add condition availability",
+          "before": "Selecting a kind adds its properties to Add condition.",
+          "after": "Add condition is unavailable until a kind is selected, because a condition belongs to one kind.",
+          "source": "search-conditions.tsx (properties filtered by question.kinds; button disabled when none); search-question.ts superRefine 'Choose the condition's kind.'"
+        },
+        {
+          "claim": "Property picker",
+          "before": "Search the list by label or open a kind's group.",
+          "after": "The list groups properties under each selected kind; type in Search properties to narrow it. Groups are headings, not expandable.",
+          "source": "apps/web/src/components/table/property-list.tsx; messages search.properties.search"
+        },
+        {
+          "claim": "Archived Field notice",
+          "before": "Removed from the question with a notice.",
+          "after": "Names the notice: Unavailable Field conditions were removed.",
+          "source": "field-definitions.ts FIELD_NOTICES.removed; search.tsx loader fieldsRemoved"
+        },
+        {
+          "claim": "Before and after",
+          "before": "Only between was described as inclusive.",
+          "after": "Before and after exclude the entered date; N is entered in Number of days.",
+          "source": "conditions.ts (< and > for before/after); search-conditions.tsx search.condition.days"
+        },
+        {
+          "claim": "Relative-date example",
+          "before": "Select Expiry date, choose in the next N days, enter 90.",
+          "after": "Select Contract under Kinds first, then Expiry date; the chip reads Contract Expiry date in the next 90 days.",
+          "source": "search-conditions.tsx; condition-definitions.ts DAY_COUNT_LABELS; messages search.condition.relativeChip"
+        },
+        {
+          "claim": "Show flags",
+          "before": "Show ended, Show closed and Show archived set to Yes include those records.",
+          "after": "Kept, and added that No for Show ended or Show closed leaves those records out, and that under Match any a Show condition set to Yes matches every reachable record of its kind. Advise Match all when combining.",
+          "source": "conditions.ts compile flag branch and conditionScope (or for match any); DOC-009 M44 close clause 3"
+        },
+        {
+          "claim": "Results sort",
+          "before": "Not described (only 'a saved search keeps ... sort').",
+          "after": "New Sort search results section: Relevance default; Newest, Oldest (created date; Documents use latest Version upload time), Expiry soonest (Contracts by expiry, undated Contracts after, other kinds by relevance), Title A to Z.",
+          "source": "apps/web/src/components/search/search-sort.tsx; apps/api/src/modules/search/sort.ts; service.ts created_at columns; DOC-009 M44 close clause 6; DES-094 clause 4"
+        },
+        {
+          "claim": "Reopening a saved search",
+          "before": "Reopen it later from Saved searches in the dialog, or the Saved group in the header.",
+          "after": "The header Saved group runs it at once; selecting it under Saved searches loads it into the dialog without running, and Search runs it.",
+          "source": "search-input.tsx openOption (history entry navigates); saved-searches.tsx select (onChange only)"
+        },
+        {
+          "claim": "Saved search identity after the dialog closes",
+          "before": "Changing an open saved search marks it Modified.",
+          "after": "Modified applies to a search selected under Saved searches in the current dialog. The dialog forgets the selection when it closes, so Save search then saves a new search.",
+          "source": "saved-searches.tsx activeView state inside useSavedSearches; advanced-search.tsx session cleared on close; DES-094 open points"
+        },
+        {
+          "claim": "Recent searches source",
+          "before": "The last five distinct questions you ran from the results page.",
+          "after": "The last five distinct questions that opened the results page.",
+          "source": "search.tsx useEffect recordRecentSearch on every non-empty loaded question; recent-searches.ts LIMIT 5"
+        },
+        {
+          "claim": "Default view marker",
+          "before": "Set as default opens that list with the selected view.",
+          "after": "Added that the menu marks it Opens here.",
+          "source": "views-menu.tsx views.defaultMarker"
+        },
+        {
+          "claim": "Recovery messages",
+          "before": "Generic failure and duplicate-name guidance.",
+          "after": "Named No records match this question., Search could not load (header), Search could not load. Try again. (page), The next results could not be read. Try again., This search could not open. Try again., the duplicate-name refusal You already have a view with that name on this list. (case-insensitive), and the 25-per-list limit.",
+          "source": "search.tsx; search-input.tsx; saved-searches.tsx search.openError; list-views/routes.ts NAME_TAKEN, TOO_MANY; packages/db/src/schema/list-views.ts lower(name) unique index; MAX_LIST_VIEWS_PER_SURFACE = 25"
+        },
+        {
+          "claim": "Archived Field notice in the dialog (walkthrough finding)",
+          "before": "Only Unavailable Field conditions were removed. was named.",
+          "after": "The results page and a saved search run from the header say Unavailable Field conditions were removed. Selecting the saved search under Saved searches in the dialog says Unavailable search conditions were removed.",
+          "source": "messages/en-US.json search.fields.removed and search.saved.conditionsRemoved; apps/web/src/components/search/saved-searches.tsx select; apps/web/src/routes/search.tsx FIELD_NOTICES.removed"
+        }
+      ],
+      "confirmed": [
+        "/ focuses header search outside a text field; header input label Search; See all results; Advanced search… row; sliders button named Advanced search (search-input.tsx, keyboard.ts unchanged since 3fa407e3).",
+        "Seven kinds and labels Contract, Matter, Document, Entity, Counterparty, Request, Knowledge Item (search-result-row.tsx, messages search.kind.*).",
+        "One Document row per Document from its latest Version; PDF opens with find text (searchResultPath find param).",
+        "Words rows labels and 200-character limit; or and leading - are words inside rows (service.ts terms/compileWords after 1e53979b).",
+        "Search in labels; Document contents applies to Documents only; at least one scope needed with words (service.ts kindScope, search-question.ts).",
+        "Removing a kind removes its conditions with Conditions for {kind} were removed.",
+        "Live Fields only for contract, matter and entity (search-fields.ts moduleScope enum).",
+        "Match all and Match any semantics per kind; conditions on different kinds never interact; 20-condition limit.",
+        "Date operators and relative operators with labels; N from 1 to 3650; inclusive ranges; Monday weeks; display timezone sent as timeZone (relative-dates.ts, lib/search.ts resolveTimeZone).",
+        "Header search and questions include ended Contracts and closed Matters and exclude archived by default (searchScopes, conditionScope).",
+        "Preview exact total, up to ten rows, Preview updates as you change the question.; Clear; Search closes the dialog and navigates (advanced-search-dialog.tsx, advanced-search.tsx).",
+        "Condition chips edit and remove; address keeps question in aq (condition-chips.tsx, search-question.ts).",
+        "Saved search stores the whole question; private per user on the server; no default (list-views/routes.ts refuseSearchDefault).",
+        "Save search opens Save this search with Name and Save; menu items Save, Save as…, Rename…, Delete…, Discard unsaved changes; row menu Rename… and Delete…; delete dialog says records are not touched (views-menu.tsx).",
+        "Recent is browser-local per user ID and cleared at sign-out; empty header box shows Saved and Recent and runs an entry; See all results disabled while empty (recent-searches.ts, session.ts, search-input.tsx).",
+        "Contracts list Filter, Owner, Apply, chips, Clear all, Matches any selected value, Includes both dates, Updating…, No contracts match these filters; filter bar change since 3fa407e3 is a refactor to PropertyList only.",
+        "Saved views: Default view, Save as…, Name, Modified, Save, Set as default, Rename…, Delete…, Discard unsaved changes; list behavior unchanged since 3fa407e3 apart from the surface argument."
+      ],
+      "limitations": [
+        "Source inspection only; no lab or browser run. The walkthrough agent should confirm each new claim, in particular the sort orders, the Show-flag Match any behavior and the saved-search reopen flow.",
+        "Rapid-click issue #751 is tracked separately, as the registry says; not inspected here.",
+        "Failed reads can only be produced on a lab by blocking requests in the browser, as DOC-029 did.",
+        "DES-094 open points stand and the guide describes them as built: the saved-search selection ends when the dialog closes; the results page announces dropped Fields but not removed standard properties.",
+        "The header list and the results page parse the same words differently when they contain or or a leading - (see productBugs). The guide does not tell readers to use these as operators anywhere, so no step depends on it."
+      ]
+    }
+  ],
+  "productBugs": [
+    {
+      "file": "apps/api/src/modules/search/service.ts (groupedSearch/flatSearch pass q to websearch_to_tsquery unquoted; querySearch quotes each word via terms())",
+      "symptom": "The header list treats `or` and a leading `-` as operators, but See all results turns the same text into words.all, where they are plain words. Typing `lease -draft` shows header rows without draft, then the results page requires draft.",
+      "contradicts": "DOC-009 M44 close addendum clause 5 (a simple q becomes words.all and should keep its meaning) and clause 2 (words compile through the English full-text parser including alternatives and exclusions), which 1e53979b changed for rows only."
+    }
+  ],
+  "sharedFileRequests": [
+    {
+      "articleId": "document-repository",
+      "file": "docs/user-guides/document-repository.md",
+      "request": "Line 21 says to use global search 'for words inside an earlier Version'. Search reads only each Document's latest Version (service.ts document_version_candidates uses max version_number). Change it to say search covers the latest Version's words, and earlier Versions are opened from the record's Documents tab.",
+      "note": "Not in a DOC-030 group."
+    }
+  ],
+  "statusChange": "none; catalog status left at review for the batch owner"
+}

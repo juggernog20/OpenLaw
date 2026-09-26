@@ -115,13 +115,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 compatibility reviewer (compat)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (live-provider)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff and found no change to the E-signature Settings page, signing connector and webhook routes, reconciliation or executed-copy filing. No live DocuSign credentials exist on round 2 labs, so I replayed only the round 1 credential-free checks (S01 to S13 and the Legal Team Member refusal) on the admin2 lab, and every step passed with the round 1 results. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-25T11:14:39.367Z",
+    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the signing diff. docusign.ts now refuses redirects, accepts only an https account base URI on docusign.net or docusign.com, and bounds response bodies with an idle deadline; its credential, not-found and refusal messages are unchanged. bounded-body.ts is new. contract-envelopes/routes.ts adds the update mode that the live-envelope note now names, which matches the guide's Polling timing and Signature-to-Active rule. settings-e-signature.tsx moved field hints into help icons with the same labels, controls and save rules. The connector, webhook, completion, reconciliation and executed-copy code did not change. The DOC-029 live round used the Demo environment in Polling mode; a Demo account base URI is on docusign.net and passes the new check, and the executed-copy job already applied the same upload ceiling, so the live observation still applies. I replayed the DOC-029 credential-free checks on lab compatcmp built from 067c1646; all 14 passed after reading two hints from their help icons. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (live-provider)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff and found no change to the E-signature Settings page, signing connector and webhook routes, reconciliation or executed-copy filing. No live DocuSign credentials exist on round 2 labs, so I replayed only the round 1 credential-free checks (S01 to S13 and the Legal Team Member refusal) on the admin2 lab, and every step passed with the round 1 results. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/live-provider.json",
@@ -130,6 +130,18 @@
       {
         "path": "batches/DOC-029/compat-r3/review.json",
         "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      },
+      {
+        "path": "batches/DOC-030/compat/compat.json",
+        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
+      },
+      {
+        "path": "batches/DOC-030/compat/configure-signing-replay.mjs",
+        "sha256": "4e58faf66a91151cd392144475d76588f6cd922a7eb94096129d73c0b495bfca"
+      },
+      {
+        "path": "batches/DOC-030/compat/configure-signing-replay.json",
+        "sha256": "7d6e822f4e3addb07d3bcdec51776fa2c053b1dc5397db700e9da4c9009dd8e3"
       }
     ]
   }

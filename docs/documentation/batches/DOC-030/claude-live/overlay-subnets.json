@@ -1,0 +1,13 @@
+{
+  "networks": {
+    "openlaw-backend": { "ipam": { "config": [{ "subnet": "10.231.40.0/24" }] } },
+    "openlaw-doc-engine": {
+      "internal": true,
+      "ipam": { "config": [{ "subnet": "10.231.41.0/24" }] }
+    }
+  },
+  "services": {
+    "app": { "dns": ["1.1.1.1", "9.9.9.9"] },
+    "worker": { "dns": ["1.1.1.1", "9.9.9.9"] }
+  }
+}

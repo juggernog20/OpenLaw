@@ -6,22 +6,22 @@ For browser sign-in and consent, use [Connect Claude](connect-claude.md), [Conne
 
 ## Before you start
 
-You need an OpenLaw account, your Client installed and signed in, and the Server address from your Administrator. Claude Cowork and Claude Desktop also need Node.js 22 or later on the device, because they connect through a small bridge program. Ask the Administrator to [enable MCP and API keys for your account group](configure-mcp.md#enable-api-keys). Allow time for approval before the five-minute connection steps below.
+You need an OpenLaw account, your Client installed and signed in, and the Server address from your Administrator. Claude Cowork and Claude Desktop also need Node.js 22 or later on the device, because they connect through a small bridge program. Ask the Administrator to [enable MCP and API keys for your account group](configure-mcp.md#enable-api-keys). An Administrator must approve your key request before you can connect.
 
 For a [LAN only deployment](deployment-configuration.md#lan-only), run the Client on a device connected to the office network or VPN. The device must resolve the private hostname and trust its HTTPS certificate. No public address is needed.
 
 ## Request and collect your key
 
 1. Open **Settings → Personal → API keys**.
-2. Select **Request a key**. Enter the name of the app you will connect, such as `Claude Code` or `Claude Cowork`, as the **Client name**. This name appears on activity caused by the key.
-3. Select the Toolsets you need, such as **Contracts**. Choose **Read** to find and read records, or **Write** to allow changes as well. Nothing is selected for you. Guide Tools remain available with every key.
+2. Select **Request a key**. The **Request an API key** dialog opens. Enter the name of the app you will connect, such as `Claude Code` or `Claude Cowork`, as the **Client name**. This name appears on activity caused by the key.
+3. Under **Toolsets**, select the Toolsets you need, such as **Contracts**. The list shows only the Toolsets the organization permits. Under **Scope**, choose **Read** to find and read records, or **Write** to allow changes as well. **Write** is absent while the organization is read-only. Nothing is selected for you. Guide Tools remain available with every key.
 4. Add a **Note (Optional)** to explain your task. Check the expiry, then select **Send request**.
-5. Ask an Administrator to open the bell, find your request under **Your approvals**, and select **Approve**. Your row says **Pending approval** until it is handled.
-6. Return to **API keys** and reload. The **Your key is ready** dialog shows the key once. Select **Copy** and retain it in your approved secret store before selecting **Done**. OpenLaw cannot show it again.
+5. Ask an Administrator to approve the request from **Your approvals** in the bell or from the MCP settings. Your row says **Pending approval** until it is handled. An approved row says **Active**. A denied row says **Denied** and shows any note from the Administrator.
+6. Return to **API keys** and reload. The **Your key is ready** dialog shows the key once. Select **Copy** and retain it in your approved secret store before selecting **Done**. A click outside the dialog does not close it, but Esc does. OpenLaw cannot show the key again.
 
 The form offers only Toolsets within the organization ceiling that have a Tool your account type may run. OAuth consent uses the same rule and also limits the choices to the Toolsets the Client requested. Team and Administration start off in the ceiling. Ask an Administrator to enable one before requesting it. Business Users cannot choose either, and only Administrators can choose Administration. Empty Toolsets are not offered.
 
-An Administrator's own request approves itself. A Business User follows the same request flow from **API keys** in Portal Settings, if Business Users API keys is on. Their available Tools and record access follow their account.
+An Administrator's own request approves itself. A Business User follows the same request flow in the Portal. Select the **Notification settings** gear in the Portal header, then **API keys**. The **Request a key** button appears only if the Administrator turned on API keys for Business Users. Their available Tools and record access follow their account.
 
 ## Connect Claude Code
 
@@ -131,7 +131,8 @@ The claude.ai website and mobile apps reach a custom connector only at a public 
 | What you see                                          | What to check or do                                                                                                                                                                                                                           |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | No Request a key button                               | Ask the Administrator to turn on MCP and API keys for your account group.                                                                                                                                                                     |
-| Pending approval                                      | Ask an Administrator to handle the request in Your approvals or the MCP section. You can cancel a pending request from your API keys pane.                                                                                                    |
+| Pending approval                                      | Ask an Administrator to handle the request in Your approvals or the MCP section. To withdraw it, select **Cancel request** on its row and confirm.                                                                                            |
+| Denied                                                | Read the Administrator's note on the row. A denial is final. Send a new request if you still need a key.                                                                                                                                      |
 | Key dialog closed before you saved it                 | Revoke that key and request another. Reloading cannot recover it.                                                                                                                                                                             |
 | Connection refused, timeout, or certificate error     | Check the address, office network or VPN, private DNS, and certificate trust on the Client device with your deployer.                                                                                                                         |
 | Unauthorized                                          | Check that the environment variable is set in the shell launching Claude Code, or in the `env` block of the Claude Cowork or Claude Desktop entry. Check expiry and revocation, and ask whether MCP or your group's API keys were turned off. |
@@ -140,4 +141,4 @@ The claude.ai website and mobile apps reach a custom connector only at a public 
 | An openlaw configuration already exists               | Run `claude mcp remove --scope user openlaw`, then repeat the add command.                                                                                                                                                                    |
 | Claude Cowork or Claude Desktop does not list openlaw | Check that the JSON is valid and that the app was quit and started again. Open the log for `openlaw` from **Settings → Developer**. An `npx` error means Node.js is absent.                                                                   |
 
-To stop this Client, open **API keys**, select **Revoke** on its row, and confirm. Its next request is refused. Removing a Client configuration alone does not revoke its OpenLaw key.
+To stop this Client, open **API keys** and select **Revoke** on its row. In **Revoke API key**, select **Revoke**. Its next request is refused, and the row says **Revoked**. Removing a Client configuration alone does not revoke its OpenLaw key.

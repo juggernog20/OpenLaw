@@ -1,0 +1,48 @@
+{
+  "section": "wizardIncomplete",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2w",
+  "labProject": "openlaw-docs-80ceef9e-auth2w",
+  "appUrl": "http://127.0.0.1:43311",
+  "mailUrl": "http://127.0.0.1:48436",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "incomplete: SMTP_URL set, SMTP_FROM empty (overlay-mail-incomplete.json); wizard open; stored relay saved",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:21:42.314Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/welcome",
+      "action": "Deployment precedence: SMTP_URL without SMTP_FROM prevents delivery even though a complete relay is saved in the app; the wizard shows the warning",
+      "expected": "Warning; no relay form; no Send test email; Continue unavailable; an invitation is refused",
+      "startedAt": "2026-09-25T10:21:43.005Z",
+      "finishedAt": "2026-09-25T10:21:47.338Z",
+      "actual": "Opening Settings sent the Administrator to /welcome (email setup is required while the wizard is open). The Outbound email step read \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\" Its buttons were [\"Back\",\"Continue\"]; Continue was disabled. GET /api/v1/email-settings answered {\"source\":\"env\",\"fromAddress\":null}. An invitation through the invite route answered 409 (\"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\") and Mailpit received 0 messages.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/welcome",
+      "action": "When outbound email is not configured, the sign-in pages do not offer Email me a sign-in link",
+      "expected": "No Email me a sign-in link on the staff or Portal page",
+      "startedAt": "2026-09-25T10:21:47.338Z",
+      "finishedAt": "2026-09-25T10:21:49.924Z",
+      "actual": "With Email magic link on in both groups ({\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}) and emailConfigured false, the pages offered {\"/auth/login\":[\"Sign in\"],\"/portal/login\":[\"Sign in\"]}.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:21:49.931Z"
+}

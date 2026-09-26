@@ -75,7 +75,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.entry"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "find-your-work",
@@ -101,7 +101,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["search", "lists"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "personal-settings",
@@ -127,7 +127,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["access"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "comments-and-activity",
@@ -140,7 +140,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["comments", "activity"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "notifications",
@@ -153,7 +153,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P0",
       "contexts": ["notifications"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "submit-request",
@@ -166,7 +166,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.home", "portal.form"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "follow-request",
@@ -179,7 +179,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.request"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "portal-knowledge",
@@ -205,7 +205,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "convert-request",
@@ -218,7 +218,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["inbox.convert"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "create-contract",
@@ -231,7 +231,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.list", "contracts.overview"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contract-stages",
@@ -309,7 +309,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.tasks", "contracts.dates"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contract-relations-and-ending",
@@ -335,7 +335,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.analysis"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "create-matter",
@@ -348,7 +348,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["matters.list", "matters.overview"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "matter-status-and-archive",
@@ -374,7 +374,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["matters.tasks", "matters.dates", "matters.relations"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "contributor-guide",
@@ -387,7 +387,7 @@
       "destinations": ["portal-help", "formal"],
       "priority": "P0",
       "contexts": ["portal.records"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "document-versions",
@@ -400,7 +400,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["documents.versions", "comments.files"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "document-folders",
@@ -504,7 +504,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["knowledge.publishing"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "first-run",
@@ -517,7 +517,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["setup", "welcome"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "organisation-and-users",
@@ -530,7 +530,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.general", "settings.users"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "authentication-and-email",
@@ -543,7 +543,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.authentication", "settings.email"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "types-statuses-fields",
@@ -556,7 +556,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.taxonomies"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "matter-templates",
@@ -582,7 +582,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.intake"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "reminders-and-audit",
@@ -595,7 +595,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.reminders", "settings.audit"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "configure-signing",
@@ -621,7 +621,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.analysis"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "install",
@@ -647,7 +647,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.advanced"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "upgrade",
@@ -712,7 +712,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P1",
       "contexts": ["reference"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "versions-and-support",
@@ -790,7 +790,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["auto-docs.template"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "configure-mcp",
@@ -803,7 +803,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.mcp"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "connect-headless-client",
@@ -816,7 +816,7 @@
       "destinations": ["staff-help", "formal", "portal-help"],
       "priority": "P1",
       "contexts": ["settings.api-keys"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "connect-claude",
@@ -829,7 +829,7 @@
       "destinations": ["staff-help", "formal", "portal-help"],
       "priority": "P1",
       "contexts": ["settings.api-keys"],
-      "status": "review"
+      "status": "verified"
     },
     {
       "id": "connect-chatgpt",

@@ -1,0 +1,62 @@
+{
+  "section": "settingsStored",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2w",
+  "labProject": "openlaw-docs-80ceef9e-auth2w",
+  "appUrl": "http://127.0.0.1:43311",
+  "mailUrl": "http://127.0.0.1:48436",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "stored again: environment override removed, app and worker recreated (overlay-mail-stored.json)",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:43:10.759Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/email",
+      "action": "Return to a stored relay: remove the environment override and restart; Settings shows the app relay and a test arrives from the stored sender",
+      "expected": "No Managed message; Sender line names the stored relay; test mail from stored-relay@helix.example",
+      "startedAt": "2026-09-25T10:43:12.446Z",
+      "finishedAt": "2026-09-25T10:43:13.975Z",
+      "actual": "After the override was removed and app and worker were recreated, the pane read \"Outbound email Sender: \"DOC-030 Stored\" <stored-relay@helix.example> Send test email Replace relay\". Send test email showed \"Test email sent to doc030-wiz-admin@helix.example. Check your inbox.\" and the message came from DOC-030 Stored <stored-relay@helix.example>.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/email",
+      "action": "Settings, Advanced, Outbound email: Replace relay opens the same form empty; Cancel keeps the current relay; no Clear relay; a replacement applies to the next email without a restart",
+      "expected": "Buttons Send test email and Replace relay; empty form; Cancel; saved change used by the next test",
+      "startedAt": "2026-09-25T10:43:13.976Z",
+      "finishedAt": "2026-09-25T10:43:17.341Z",
+      "actual": "Pane buttons were [\"Send test email\",\"Replace relay\"] (no Clear relay). Replace relay opened an empty form {\"host\":\"\",\"senderEmail\":\"\",\"senderName\":\"\",\"username\":\"\"}; Cancel kept {\"source\":\"app\",\"fromAddress\":\"\\\"DOC-030 Stored\\\" <stored-relay@helix.example>\"}. SMTP server mailpit:1025 was refused ({\"match\":null,\"alerts\":[\"One or more request fields are invalid.\"]}) and the relay stayed. A replacement with Sender name \"DOC-030 Stored Replacement\" showed \"Relay saved. The next email this instance sends will use it.\", and the next test arrived from \"DOC-030 Stored Replacement\" with no restart. The original relay was saved again.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/users",
+      "action": "If OpenLaw cannot send email and the deployment does not set it, the not-sent message names Settings, Advanced, Outbound email; saving a relay there fixes it",
+      "expected": "\"The invite was not sent: this instance cannot send email. Set up outbound email in Settings → Advanced → Outbound email.\"; after Save relay the resend arrives",
+      "startedAt": "2026-09-25T10:43:17.342Z",
+      "finishedAt": "2026-09-25T10:43:19.824Z",
+      "actual": "With no relay saved and no environment relay, Send invite showed \"The invite was not sent: this instance cannot send email. Set up outbound email in Settings → Advanced → Outbound email.\". Settings, Advanced, Outbound email showed the relay form; Save relay showed \"Relay saved. The next email this instance sends will use it.\" and the pane then read \"Outbound email Relay saved. The next email this instance sends will use it. Sender: \"DOC-030 Stored\" <stored-relay@helix\". Resend invite on the pending row showed \"Saved\" and \"Set your OpenLaw password\" arrived from stored-relay@helix.example.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:43:19.833Z"
+}

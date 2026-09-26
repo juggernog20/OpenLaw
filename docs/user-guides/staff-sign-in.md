@@ -4,16 +4,16 @@ Use these steps for an Administrator or Legal Team Member account. Ask your Admi
 
 ## Accept a password invitation
 
-1. Open your invitation email and follow its set-password link.
+1. Open the invitation email, **Set your OpenLaw password**, and select **Set password**. The link expires in one hour.
 2. Enter **New password** with at least eight characters.
 3. Enter the same value in **Confirm password**.
 4. Select **Set password**.
 5. Wait for **Password set**, then select **Sign in**.
 6. Enter your **Email** and **Password**, then select **Sign in**.
 
-Check your name in the header. Your role and record access determine the work you can open. An Administrator may first see organization setup if it is unfinished.
+Open your name menu, which is your photo or initials at the right of the header. The menu shows your name and email. On a wide window, the header also shows your organization's name, and its logo if the Administrator saved one. Your role and record access determine the work you can open. An Administrator may first see organization setup if it is unfinished.
 
-If the passwords do not match, correct them and try again. If the link has expired, was already used, or is missing part of its address, ask the Administrator for a fresh invitation. A successful activation consumes the invitation link. Use the sign-in page for later visits.
+If the page shows **The passwords do not match.**, correct them and try again. If it shows **This link has expired or was already used. Ask for a new one.**, ask the Administrator for a fresh invitation. If it shows **This link is not valid. Ask for a new invitation or password reset.**, the browser opened only part of the link. Select **Set password** in the email again, or copy the complete link. A successful activation consumes the invitation link. Use the sign-in page for later visits.
 
 ## Use your organization's sign-in method
 
@@ -21,7 +21,9 @@ If the page offers **Continue with single sign-on**, select it and complete your
 
 **Administrator sign-in** opens the password form when the organization does not allow password sign-in for staff. Only an Administrator can sign in with a password in that case. A Legal Team Member who tries it sees **Password sign-in is disabled for this account.** and must use a method that the page offers.
 
-If **Email me a sign-in link** is available, you can request a link with your work email. Follow the newest email within five minutes. It works once. This option depends on the organization's authentication settings and email delivery.
+If **Email me a sign-in link** is available, select it, enter your work **Email**, and select **Send link**. **Check your email** appears whether or not the address is eligible. Select **Sign in** in the newest email within five minutes. The link works once. You can request three links for one email address in 15 minutes. Another request shows **Too many sign-in link requests. Try again later.** This option depends on the organization's authentication settings and email delivery.
+
+An expired or used link opens **Sign-in link expired**. While sign-in links are on and OpenLaw can send email, the page shows **Email** and **Send link**. Enter your email and select **Send link** to get a new link. Otherwise the page shows only **Back to sign-in**. Select it and use another sign-in method. If the sign-in page shows **This sign-in link could not be used. Request a new link or contact your administrator.**, OpenLaw refused the sign-in itself. For example, sign-in links may be off for your role, or your account may be archived. Ask your Administrator.
 
 ## Turn on two-factor authentication
 
@@ -48,7 +50,7 @@ If your organization requires two-factor authentication, OpenLaw opens **Two-fac
 
 If you cannot use the authenticator, select **Use a backup code**, enter an unused **Backup code**, and select **Verify**. A code that already worked cannot be reused.
 
-For a wrong code, check that you used the current code for this OpenLaw account and try again. If the challenge no longer works, select **Sign out** and sign in again. Follow any wait time shown after repeated failures. If you have neither your authenticator nor an unused backup code, contact your Administrator.
+A wrong code shows **Wrong code. Try again, or restart sign-in.** Check that you used the current code for this OpenLaw account and try again. If the challenge no longer works, select **Sign out** and sign in again. After 10 wrong codes, the page shows **Too many attempts. Wait 15 minutes, then try again.** Wait before you try again. If you have neither your authenticator nor an unused backup code, contact your Administrator.
 
 To replace the authenticator while signed in, open Profile and select **Re-enroll**. Confirm your password, complete the new enrollment, and keep the new backup codes. Re-enroll turns off the old authenticator first. If you close the dialog before you confirm a new code, two-factor stays off. **Turn off two-factor** also requires your password and removes the extra challenge from password sign-in. If your organization requires two-factor, Profile shows **Required by your organization** instead of these controls.
 
@@ -56,6 +58,8 @@ To replace the authenticator while signed in, open Profile and select **Re-enrol
 
 Open your name menu and select **Sign out** to end the current session. To end sessions on other devices while keeping this one, use **Settings** → **Profile** → **Sign out other devices**.
 
-If an expired or revoked session sends you to sign-in, sign in again with the configured method. If access still fails, ask the Administrator to check your account. For an incorrect password, check the email and password you entered.
+If an expired or revoked session sends you to sign-in, sign in again with the configured method. If access still fails, ask the Administrator to check your account.
 
-If you forgot your password, select **Set up or reset your password** below the password form. Enter **Email**, then select **Send password setup link**. **Check your email** does not confirm that the address is eligible. Follow the email's link within one hour and set a new password. This option appears only when OpenLaw can send email. Ask for help if you cannot recover access.
+A wrong email or password shows **Check your email and password.** Check both and try again. After 10 wrong passwords for one email address in 15 minutes, OpenLaw closes password sign-in for that address. The page then shows **Too many attempts. Wait 15 minutes, then try again.** Even the correct password does not work until 15 minutes after the first wrong one. A successful sign-in before the limit resets the count.
+
+If you forgot your password, select **Set up or reset your password** below the password form. Enter **Email**, then select **Send password setup link**. **Check your email** appears whether or not the address is eligible. Select **Set password** in the email within one hour and set a new password. A new password set this way signs out every session on your account, on every device. You can request three setup emails for one email address in 15 minutes. Another request shows **Too many password setup requests. Try again later.** This option appears only when OpenLaw can send email. Ask for help if you cannot recover access.

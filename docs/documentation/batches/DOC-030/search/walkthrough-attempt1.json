@@ -1,0 +1,1027 @@
+{
+  "batch": "DOC-030",
+  "group": "search",
+  "article": "search-and-views",
+  "scenario": "V-C04",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (search)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-80ceef9e-work2",
+    "appUrl": "http://127.0.0.1:43300",
+    "mailUrl": "http://127.0.0.1:48425",
+    "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "snapshotDigest": "8e7d1c7d78204793c72240cb94a1b3c12437da5ea3d6079d9e89f06b85619d4b",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-25T09:59:53.804Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-25T10:00:16.340Z"
+    }
+  },
+  "runningImages": {
+    "app": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "worker": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "doc-engine": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+  },
+  "guideSha256": "f7331694a7dfe8eee145358839727704bc42a2ccefdacdeacfa89bd8224aa0ac",
+  "browser": "Playwright 1.63.0 Chromium, headless, 1440x900, Europe/London, one isolated context per account or device",
+  "startedAt": "2026-09-25T11:13:01.324Z",
+  "fixtures": {
+    "stamp": 1790331205958,
+    "prefix": "DOC-030 search V-C04 1790331205958",
+    "indexed": {
+      "v1": true,
+      "v2": true,
+      "v1GoneAfterV2": true
+    },
+    "created": [
+      "Contracts C-60 (Charlie, expiry +200 d), C-61 (Alpha, expiry +30 d), C-62 (Delta, no expiry), C-63 (Golf, exclusion word only), C-64 (Holder, owns the Document), Confidential C-65; Matter M-29 (Bravo); Document \"DOC-030 search V-C04 1790331205958 Echo.pdf\" v1 and v2 on C-64; contract Field \"DOC-030 search V-C04 1790331205958 reference\"",
+      "administrator account doc030.search.admin.1790331205958@helix.example (DOC-030 search Administrator 5958)",
+      "legal_team_member account doc030.search.member.1790331205958@helix.example (DOC-030 search Legal Team Member 5958)"
+    ],
+    "accounts": {
+      "administrator": {
+        "email": "doc030.search.admin.1790331205958@helix.example",
+        "displayName": "DOC-030 search Administrator 5958"
+      },
+      "legal_team_member": {
+        "email": "doc030.search.member.1790331205958@helix.example",
+        "displayName": "DOC-030 search Legal Team Member 5958"
+      }
+    }
+  },
+  "finishedAt": "2026-09-25T11:19:29.083Z",
+  "summary": {
+    "total": 85,
+    "passed": 83,
+    "failed": 2
+  },
+  "guideFailures": [
+    {
+      "role": "administrator",
+      "note": "Opening a saved search whose Field was archived shows \"Unavailable search conditions were removed.\" in the dialog, not the notice the guide names. The results page shows the guide's notice."
+    },
+    {
+      "role": "legal_team_member",
+      "note": "Opening a saved search whose Field was archived shows \"Unavailable search conditions were removed.\" in the dialog, not the notice the guide names. The results page shows the guide's notice."
+    }
+  ],
+  "productBugs": [
+    {
+      "role": "administrator",
+      "summary": "The header list treats `or` and a leading `-` as operators; See all results turns the same text into All of these words, where they are plain words.",
+      "reproduction": "Type \"<word> -<other>\" in the header search box: the list shows Alpha, Bravo, Delta, Echo. Select See all results: the page shows Charlie. Type \"<word> or <other>\": header Charlie, Golf, Delta, Alpha, Bravo, Echo, page Charlie.",
+      "source": "apps/api/src/modules/search/service.ts: groupedSearch passes q to websearch_to_tsquery; querySearch quotes each word via terms()."
+    },
+    {
+      "role": "legal_team_member",
+      "summary": "The header list treats `or` and a leading `-` as operators; See all results turns the same text into All of these words, where they are plain words.",
+      "reproduction": "Type \"<word> -<other>\" in the header search box: the list shows Alpha, Bravo, Delta, Echo. Select See all results: the page shows Charlie. Type \"<word> or <other>\": header Charlie, Golf, Delta, Alpha, Bravo, Echo, page Charlie.",
+      "source": "apps/api/src/modules/search/service.ts: groupedSearch passes q to websearch_to_tsquery; querySearch quotes each word via terms()."
+    }
+  ],
+  "steps": [
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Search across your work, steps 1-2: / focuses Search; two characters open the header list",
+      "page": "/",
+      "expected": "/ outside a text field focuses the header Search box; one character opens no list; the unique word lists the reachable Contracts, the Matter and the Document grouped by kind, never the Confidential Contract",
+      "actual": "/ focused Search true; list after one character false; groups Contract: Delta,Alpha,Charlie; Matter: Bravo; Document: Echo; Document option \"DOC-030 search V-C04 1790331205958 Echo.pdf C-64 · DOC-030 search V-C04 1790331205958 Holder\"; Confidential listed false",
+      "result": "pass",
+      "at": "2026-09-25T11:13:06.413Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Search across your work, step 3: See all results opens the results page",
+      "page": "/search",
+      "expected": "The results page shows the exact match total above the rows and the Document row names its owning record as C-n · title; the match is in the Document although the owner title lacks the word; the sort starts at Relevance",
+      "actual": "URL /search?q=quiredbcafjfi; heading \"Search results for “quiredbcafjfi”\"; total \"5 matches\" with 5 rows (Delta,Bravo,Alpha,Charlie,Echo); Document row \"DOC-030 search V-C04 1790331205958 Echo.pdf C-64 · DOC-030 search V-C04 1790331205958 Holder clause names quiredbcafjfi and frostdbcafjfi inside this Docum\"; sort control \"Sort: Relevance\"",
+      "result": "pass",
+      "at": "2026-09-25T11:13:06.602Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Search across your work, step 4: a kind narrows and All returns",
+      "page": "/search",
+      "expected": "Document keeps only Document rows; All returns every kind",
+      "actual": "Document: 1 rows (Echo); All: 5 rows (Delta,Bravo,Alpha,Charlie,Echo); URL /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp…",
+      "result": "pass",
+      "at": "2026-09-25T11:13:09.712Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Document result opens the latest Version with the reader's find control",
+      "page": "/contracts/64/documents",
+      "expected": "Opening the Document result goes to the owning record's Documents with the latest Version and the search text in find",
+      "actual": "Opened /contracts/64/documents; version param is latest (v2) true; find param \"the search word\"; a find input holds the word true",
+      "result": "pass",
+      "at": "2026-09-25T11:13:14.221Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Each Document appears once from its latest Version; earlier Versions' words are not searched",
+      "page": "/search",
+      "expected": "A word only in version 1 finds nothing; a word only in version 2 finds the one Document row",
+      "actual": "Version 1 word: No matches true; version 2 word: 1 row(s) (Echo)",
+      "result": "pass",
+      "at": "2026-09-25T11:13:14.524Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Header list shows up to ten per kind; results page shows the exact total and 25 rows at a time; Show more",
+      "page": "/search",
+      "expected": "No kind group exceeds ten rows; the results page total exceeds the header rows; 25 rows then Show more adds the next page",
+      "actual": "Header groups: Contract 2, Matter 2, Document 10, Entity 10, Knowledge Item 5; results total \"148 matches\"; first page 25 rows; Show more visible true; after Show more 50 rows",
+      "result": "pass",
+      "at": "2026-09-25T11:13:19.804Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "A Counterparty result opens the Contract results for that Counterparty's name",
+      "page": "/search",
+      "expected": "Selecting the Counterparty goes to the results page for its name with the Contract kind selected",
+      "actual": "Option \"Counterparty Northwind Traders Ltd\"; URL q=\"Northwind Traders Ltd\" kind=contract; Contract kind current page; 2 rows, all Contracts true",
+      "result": "pass",
+      "at": "2026-09-25T11:13:22.904Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Combine words and conditions: the sliders open Advanced search with the header words in All of these words",
+      "page": "dialog",
+      "expected": "Header words carry into All of these words; four Words rows; three Search in boxes checked; seven Kinds; Add condition unavailable with no kind",
+      "actual": "All of these words holds the header word true; rows All of these words true, This exact phrase true, Any of these words true, None of these words true; Search in Titles and numbers true, Record text true, Document contents true; Kinds Contract, Matter, Document, Entity, Counterparty, Request, Knowledge Item; Add condition disabled true; Preview \"5 matches\"",
+      "result": "pass",
+      "at": "2026-09-25T11:13:25.332Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Advanced search… at the foot of the header list opens the dialog",
+      "page": "dialog",
+      "expected": "The foot row opens Advanced search with the typed words",
+      "actual": "Dialog opened true; words carried true",
+      "result": "pass",
+      "at": "2026-09-25T11:13:25.502Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Words rows hold up to 200 characters; or and a leading - inside a row are not operators",
+      "page": "dialog",
+      "expected": "201 characters are refused in the Preview; 'T -X' and 'T or X' in All of these words both require T and X (only Charlie holds both)",
+      "actual": "201 characters refused true; \"T -X\": 1 match (Charlie); \"T or X\": 1 match (Charlie)",
+      "result": "pass",
+      "at": "2026-09-25T11:13:27.971Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Search in: Document contents applies to Documents only; at least one scope with words",
+      "page": "dialog",
+      "expected": "No scope checked names the problem and disables Search; Document contents alone returns only the Document",
+      "actual": "No scope message true; Search disabled true; Document contents only: 1 match (Echo)",
+      "result": "pass",
+      "at": "2026-09-25T11:13:29.395Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Kinds and Add condition: groups per selected kind, Search properties, live Fields",
+      "page": "dialog",
+      "expected": "Selecting a kind enables Add condition and says only selected kinds are searched; the list groups properties under Contract and Matter; the Contract group lists live Fields; Search properties narrows by label",
+      "actual": "Help \"Only selected kinds are searched.\"; Add condition enabled true; groups Contract, Matter; Contract group lists the fixture Field under Fields true; \"Expiry\" narrows to Expiry date",
+      "result": "pass",
+      "at": "2026-09-25T11:13:29.548Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Dates: operators, N from 1 to 3650 in Number of days, Contract Expiry date in the next 90 days",
+      "page": "dialog",
+      "expected": "Date operators include before, after, on, between and the relative set; an invalid N is named in the Preview; with Contract and Matter selected, 90 keeps Alpha (+30 days) and drops Charlie (+200) and Delta (no date), while the Matter Bravo stays because a Contract condition never limits Matters",
+      "actual": "Operators: before, after, on, between, in the last N days, in the next N days, today, this week, this month, this quarter, this year; N=0 \"Relative day count N must be a whole number from 1 to 3650.\"; N=3651 \"Relative day count N must be a whole number from 1 to 3650.\"; N=90 2 matches (Bravo,Alpha)",
+      "result": "pass",
+      "at": "2026-09-25T11:13:32.091Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Match all and Match any apply per kind; a Contract condition never limits Matters",
+      "page": "dialog",
+      "expected": "With a Contract Expiry condition and a Matter Status condition, Contracts are limited only by the Contract condition and the Matter only by the Matter condition",
+      "actual": "Matter Status is any of Awaiting the business (Bravo is Open): Match all 1 match, Match any 1 match",
+      "result": "pass",
+      "at": "2026-09-25T11:13:36.180Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Search runs the question, closes the dialog, and shows chips that agree with the URL and rows",
+      "page": "/search",
+      "expected": "The dialog closes; the address holds the question; a words chip and a chip per condition; the chip reads Contract Expiry date in the next 90 days",
+      "actual": "URL question kinds contract,matter, 2 conditions; condition chips Edit Contract Expiry date in the next 90 days | Edit Matter Status is any of Awaiting the business; words chip true; total \"1 match\", rows Alpha",
+      "result": "pass",
+      "at": "2026-09-25T11:13:38.237Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Advanced on the results page opens the whole question; a condition chip opens its row",
+      "page": "/search",
+      "expected": "Advanced shows the words and conditions of the page's question; selecting a chip opens the dialog focused on that row",
+      "actual": "Whole question in the dialog true; chip edit focused the Contract Expiry date row true",
+      "result": "pass",
+      "at": "2026-09-25T11:13:38.933Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Results-page kinds: a kind keeps only its own conditions; All removes every condition",
+      "page": "/search",
+      "expected": "Contract keeps the Contract condition and drops the Matter one; All clears kinds and conditions",
+      "actual": "Contract link: kinds contract, conditions contract:expiry; All: kinds [], conditions 0",
+      "result": "pass",
+      "at": "2026-09-25T11:13:41.993Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "A chip's remove control runs the question without it; the address keeps the question through reload and Back",
+      "page": "/search",
+      "expected": "Removing the Expiry chip returns all three Contracts; reload keeps the rows; Back restores the condition and its chip",
+      "actual": "After remove: 1 condition(s), rows Delta,Alpha,Charlie; after reload rows Delta,Alpha,Charlie; Back: 2 conditions, chip visible true",
+      "result": "pass",
+      "at": "2026-09-25T11:13:50.167Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Removing a kind removes its conditions, and the dialog says so",
+      "page": "dialog",
+      "expected": "Deselecting Matter removes the Matter Status condition with Conditions for Matter were removed.",
+      "actual": "Notice \"Conditions for Matter were removed.\"; Matter row gone true",
+      "result": "pass",
+      "at": "2026-09-25T11:13:50.267Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Preview shows the exact total and up to ten rows; Clear empties the question; up to 20 conditions",
+      "page": "dialog",
+      "expected": "Clear leaves empty words and Build your search; Contract alone previews ten rows with Showing the first 10 of N; a 21st condition is refused",
+      "actual": "Cleared true; Contract: 263 matches, 10 rows, \"Showing the first 10 of 263 matches\", help line true; 20 rows added 20, 21st refused true",
+      "result": "pass",
+      "at": "2026-09-25T11:13:54.573Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Show ended, Show closed and Show archived; Match any with a Show condition",
+      "page": "dialog",
+      "expected": "Contracts include ended by default (Show ended Yes = default); Show ended No leaves ended out; Show archived Yes adds archived; Match all Status Draft + Show ended Yes = Draft only; Match any = every reachable Contract; Show closed No = open Matters",
+      "actual": "Contract default 263 matches (db 263); Show ended Yes 263 matches; No 252 matches (db not ended 252); Status Draft + Show ended Yes: Match all 222 matches (db Draft 222), Match any 263 matches; Show archived Yes 273 matches (db incl. archived 274); Matters default 89 matches (db 89), Show closed No 82 matches (db open 82)",
+      "result": "fail",
+      "at": "2026-09-25T11:14:06.137Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Recover from an empty answer: No records match this question. and No matches",
+      "page": "/search",
+      "expected": "A conditions-only question with no match says No records match this question.; an unmatched word says No matches",
+      "actual": "Conditions-only empty answer true; words-only empty answer No matches true",
+      "result": "pass",
+      "at": "2026-09-25T11:14:08.055Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Sort search results: Relevance, Newest, Oldest, Expiry soonest, Title; the address keeps the sort",
+      "page": "/search",
+      "expected": "Newest: Echo (latest Version upload), Delta, Bravo, Alpha, Charlie; Oldest the reverse; Expiry soonest: Alpha, Charlie, then Delta (no expiry), then other kinds; Title A to Z: Alpha, Bravo, Charlie, Delta, Echo; reload keeps Oldest",
+      "actual": "newest: Echo,Delta,Bravo,Alpha,Charlie (Sort: Newest); oldest: Charlie,Alpha,Bravo,Delta,Echo (Sort: Oldest); expiry: Alpha,Charlie,Delta,Bravo,Echo (Sort: Expiry soonest); title: Alpha,Bravo,Charlie,Delta,Echo (Sort: Title); relevance: Delta,Bravo,Alpha,Charlie,Echo (Sort: Relevance); after reload \"Sort: Oldest\"",
+      "result": "pass",
+      "at": "2026-09-25T11:14:19.882Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Save and reopen a search, steps 1-2: Save search, Save this search, Name, Save; a duplicate name is refused",
+      "page": "dialog",
+      "expected": "Save this search stores the question with its kinds and sort; the control then names the search; the same name in other letter case is refused",
+      "actual": "Dialog \"Save this search\" true; control shows \"DOC-030 search V-C04 1790331205958 Renewals due A actions\" true; stored kinds contract, sort oldest, words true; duplicate \"You already have a view with that name on this list.\"; stored searches with that name 1",
+      "result": "pass",
+      "at": "2026-09-25T11:14:21.486Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Save and reopen a search, step 3: the empty header box Saved group runs the search at once",
+      "page": "/",
+      "expected": "Focusing the empty box lists Saved and Recent; See all results is unavailable; selecting the saved search opens the results page with its kinds and sort",
+      "actual": "Saved entries DOC-030 search V-C04 1790331205958 Renewals due A\nEnter; Recent entries 5; See all results aria-disabled true; opened /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp… rows Charlie,Alpha,Delta \"Sort: Oldest\"",
+      "result": "pass",
+      "at": "2026-09-25T11:14:26.718Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Save and reopen a search, step 4: Saved searches loads the question without running; Search runs it",
+      "page": "dialog",
+      "expected": "The dialog shows the stored words and kind while the page stays put; Search opens the results",
+      "actual": "Loaded words match true; Contract pressed true; page stayed at / true; after Search /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp… rows Charlie,Alpha,Delta",
+      "result": "pass",
+      "at": "2026-09-25T11:14:31.434Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Changing a selected saved search marks it Modified; Save search replaces it; the menu offers Save as…, Rename…, Delete…, Discard unsaved changes",
+      "page": "dialog",
+      "expected": "Adding a kind shows Modified beside Save search; Save search stores it and clears Modified; Discard unsaved changes restores the stored question",
+      "actual": "Before \"DOC-030 search V-C04 1790331205958 Renewals due A\"; after change \"DOC-030 search V-C04 1790331205958 Renewals due A Modified\", Save search enabled true; menu Save | Save as… | Rename… | Delete… | Discard unsaved changes; after Save \"DOC-030 search V-C04 1790331205958 Renewals due A\", stored kinds contract,matter; Discard restored true",
+      "result": "pass",
+      "at": "2026-09-25T11:14:36.624Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "The dialog forgets the selected saved search when it closes",
+      "page": "dialog",
+      "expected": "After closing and reopening, Save search asks for a new Name instead of replacing",
+      "actual": "Save this search dialog opened true; no active saved search control true",
+      "result": "pass",
+      "at": "2026-09-25T11:14:36.796Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Recent searches lists at most five questions; selecting one restores it; Search runs it",
+      "page": "dialog",
+      "expected": "Up to five Recent searches; selecting restores the question without running; Search opens the results",
+      "actual": "5 recent entries; first \"quiredbcafjfi · Contracts · Sort: Oldest\"; restored words \"quiredbcafjfi\"; page stayed true; after Search /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp…",
+      "result": "pass",
+      "at": "2026-09-25T11:14:38.084Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "A saved search follows the account to another device; Recent lives in this browser only",
+      "page": "/",
+      "expected": "A second browser lists the saved search under Saved and has no Recent group",
+      "actual": "Second browser Saved lists it true; Recent groups 0",
+      "result": "pass",
+      "at": "2026-09-25T11:14:40.233Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Recent entry runs at once; a saved search has no default; signing out clears Recent",
+      "page": "/",
+      "expected": "Selecting a Recent entry in the empty header box opens results; /search opens the empty prompt; after sign-out and sign-in the Recent group is gone",
+      "actual": "Recent entry opened results true; /search prompt true with no rows true; Recent groups after sign-out 0",
+      "result": "pass",
+      "at": "2026-09-25T11:14:47.134Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "A row's menu in Saved searches offers Rename… and Delete…; Delete removes the saved search, not records",
+      "page": "dialog",
+      "expected": "Rename this saved search renames it; Delete this saved search? says records are not touched; the search disappears and the Contracts remain",
+      "actual": "Row menu Rename… | Delete…; rename dialog true, renamed true; delete dialog \"Delete this saved search? DOC-030 search V-C04 1790331205958 Renewals due A 2 is removed. The records it finds are not touched. Cancel Delet\"; gone true; fixture Contracts 6 -> 6",
+      "result": "pass",
+      "at": "2026-09-25T11:14:48.443Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "If a saved search does not load in the dialog, the dialog says so",
+      "page": "dialog",
+      "expected": "With the Field catalog blocked, selecting a saved search holding a Field condition shows This search could not open. Try again.; a retry after recovery loads it",
+      "actual": "Error shown true; retry loaded the Field condition true",
+      "result": "pass",
+      "at": "2026-09-25T11:14:52.778Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Failed reads are not empty answers",
+      "page": "/search",
+      "expected": "A blocked next page keeps the rows with The next results could not be read. Try again. and Show more retries; a blocked search shows Search could not load in the header and Search could not load. Try again. on the page; a retry after recovery works",
+      "actual": "First page 25; next-page error true with 25 rows kept; retry grew to 50; header error true; page error true; recovered true",
+      "result": "pass",
+      "at": "2026-09-25T11:14:56.101Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Search shows only records you can reach",
+      "page": "/contracts",
+      "expected": "The Confidential Contract (reachable by its creator) is absent from header search, questions and a direct link",
+      "actual": "Daniel reaches it true; walker direct link Contract not found true; header API includes it false; question API includes it false",
+      "result": "pass",
+      "at": "2026-09-25T11:14:56.400Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Product check (not a guide step): header list and results page read the same words the same way",
+      "page": "/search",
+      "expected": "The same text gives the same records in the header list and on See all results",
+      "actual": "\"T -X\": header Alpha,Bravo,Delta,Echo; results page Charlie. \"T or X\": header Charlie,Golf,Delta,Alpha,Bravo,Echo; results page Charlie. Consistent false",
+      "result": "pass",
+      "at": "2026-09-25T11:15:04.684Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Filter and sort a list, steps 1-6, with Back and Forward",
+      "page": "/contracts",
+      "expected": "Owner with Apply shows a chip and matching rows; another filter narrows; the Title heading cycles; Back and Forward restore chips and sort; remove and Clear all clear filters; date filters include both dates",
+      "actual": "Count 50 of 257 contracts -> Owner 50 of 64 contracts -> Owner+Status 50 of 58 contracts; chip true; Matches any selected value true; first-page rows owned by Daniel true (25); two chips true; Title ascending -> descending; Back -> ascending, Back -> null with 2 chips, Back -> 1 chips; Forward -> 2 chips, Forward -> ascending; remove Status leaves 1; Clear all leaves 0; Effective date says Includes both dates true",
+      "result": "pass",
+      "at": "2026-09-25T11:15:28.062Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "No contracts match these filters",
+      "page": "/contracts",
+      "expected": "An empty filter answer shows the message; removing filters restores rows",
+      "actual": "Owner Me empty message true; rows after Clear all 50",
+      "result": "pass",
+      "at": "2026-09-25T11:15:32.782Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Save a view, steps 1-6, Modified, Discard unsaved changes, Save, Default view",
+      "page": "/contracts",
+      "expected": "Save as… with a Name stores filters, sort and column order; a change marks Modified; Discard restores; Save replaces; Default view shows the built-in layout; selecting the view restores it",
+      "actual": "Views control \"Default view Modified\"; columns after Move Counterparty later Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline; saved label \"DOC-030 search V-C04 1790331205958 Daniel portfolio A\"; Modified true; Discard restored true; second change Modified true, Save cleared true; Default view built-in true (Reference|Title|Counterparty|Type|Status|Value|Owner|Next deadline); reselected: chip true, sort descending, columns Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline; stored sort {\"key\":\"title\",\"dir\":\"desc\"}; URL /contracts?filters=1&view=01a0d847-25be-7cc7-82c0-be2704800642&owner=0…",
+      "result": "pass",
+      "at": "2026-09-25T11:15:53.677Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Set as default marks Opens here; Rename…; duplicate name refused; the view follows the account",
+      "page": "/contracts",
+      "expected": "Set as default opens the list with the view and the menu marks it Opens here; Rename… changes the name; a name differing only by case is refused; a second browser opens the view",
+      "actual": "Menu entry \"DOC-030 search V-C04 1790331205958 Daniel portfolio A Opens here\"; opens with view true; renamed true; duplicate \"You already have a view with that name on this list.\"; second browser true",
+      "result": "pass",
+      "at": "2026-09-25T11:16:06.337Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "Delete… removes the saved view after confirmation and does not delete records",
+      "page": "/contracts",
+      "expected": "The confirmation says the records are not touched; the view is gone; records remain",
+      "actual": "Dialog \"Delete this view? DOC-030 search V-C04 1790331205958 Daniel portfolio A 2 is removed. The records in it are not touched. Cancel Delete\"; still listed false; contracts 330 -> 330",
+      "result": "pass",
+      "at": "2026-09-25T11:16:09.279Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Search across your work, steps 1-2: / focuses Search; two characters open the header list",
+      "page": "/",
+      "expected": "/ outside a text field focuses the header Search box; one character opens no list; the unique word lists the reachable Contracts, the Matter and the Document grouped by kind, never the Confidential Contract",
+      "actual": "/ focused Search true; list after one character false; groups Contract: Delta,Alpha,Charlie; Matter: Bravo; Document: Echo; Document option \"DOC-030 search V-C04 1790331205958 Echo.pdf C-64 · DOC-030 search V-C04 1790331205958 Holder\"; Confidential listed false",
+      "result": "pass",
+      "at": "2026-09-25T11:16:13.889Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Search across your work, step 3: See all results opens the results page",
+      "page": "/search",
+      "expected": "The results page shows the exact match total above the rows and the Document row names its owning record as C-n · title; the match is in the Document although the owner title lacks the word; the sort starts at Relevance",
+      "actual": "URL /search?q=quiredbcafjfi; heading \"Search results for “quiredbcafjfi”\"; total \"5 matches\" with 4 rows (other,other,other,other); Document row \"\"; sort control \"Sort: Relevance\"",
+      "result": "fail",
+      "at": "2026-09-25T11:16:14.126Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Search across your work, step 4: a kind narrows and All returns",
+      "page": "/search",
+      "expected": "Document keeps only Document rows; All returns every kind",
+      "actual": "Document: 1 rows (Echo); All: 5 rows (Delta,Bravo,Alpha,Charlie,Echo); URL /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp…",
+      "result": "pass",
+      "at": "2026-09-25T11:16:17.261Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Document result opens the latest Version with the reader's find control",
+      "page": "/contracts/64/documents",
+      "expected": "Opening the Document result goes to the owning record's Documents with the latest Version and the search text in find",
+      "actual": "Opened /contracts/64/documents; version param is latest (v2) true; find param \"the search word\"; a find input holds the word true",
+      "result": "pass",
+      "at": "2026-09-25T11:16:21.874Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Each Document appears once from its latest Version; earlier Versions' words are not searched",
+      "page": "/search",
+      "expected": "A word only in version 1 finds nothing; a word only in version 2 finds the one Document row",
+      "actual": "Version 1 word: No matches true; version 2 word: 1 row(s) (Echo)",
+      "result": "pass",
+      "at": "2026-09-25T11:16:22.221Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Header list shows up to ten per kind; results page shows the exact total and 25 rows at a time; Show more",
+      "page": "/search",
+      "expected": "No kind group exceeds ten rows; the results page total exceeds the header rows; 25 rows then Show more adds the next page",
+      "actual": "Header groups: Contract 2, Matter 2, Document 10, Entity 10, Knowledge Item 5; results total \"152 matches\"; first page 25 rows; Show more visible true; after Show more 50 rows",
+      "result": "pass",
+      "at": "2026-09-25T11:16:27.588Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "A Counterparty result opens the Contract results for that Counterparty's name",
+      "page": "/search",
+      "expected": "Selecting the Counterparty goes to the results page for its name with the Contract kind selected",
+      "actual": "Option \"Counterparty Northwind Traders Ltd\"; URL q=\"Northwind Traders Ltd\" kind=contract; Contract kind current page; 2 rows, all Contracts true",
+      "result": "pass",
+      "at": "2026-09-25T11:16:30.677Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Combine words and conditions: the sliders open Advanced search with the header words in All of these words",
+      "page": "dialog",
+      "expected": "Header words carry into All of these words; four Words rows; three Search in boxes checked; seven Kinds; Add condition unavailable with no kind",
+      "actual": "All of these words holds the header word true; rows All of these words true, This exact phrase true, Any of these words true, None of these words true; Search in Titles and numbers true, Record text true, Document contents true; Kinds Contract, Matter, Document, Entity, Counterparty, Request, Knowledge Item; Add condition disabled true; Preview \"5 matches\"",
+      "result": "pass",
+      "at": "2026-09-25T11:16:33.085Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Advanced search… at the foot of the header list opens the dialog",
+      "page": "dialog",
+      "expected": "The foot row opens Advanced search with the typed words",
+      "actual": "Dialog opened true; words carried true",
+      "result": "pass",
+      "at": "2026-09-25T11:16:33.244Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Words rows hold up to 200 characters; or and a leading - inside a row are not operators",
+      "page": "dialog",
+      "expected": "201 characters are refused in the Preview; 'T -X' and 'T or X' in All of these words both require T and X (only Charlie holds both)",
+      "actual": "201 characters refused true; \"T -X\": 1 match (Charlie); \"T or X\": 1 match (Charlie)",
+      "result": "pass",
+      "at": "2026-09-25T11:16:35.715Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Search in: Document contents applies to Documents only; at least one scope with words",
+      "page": "dialog",
+      "expected": "No scope checked names the problem and disables Search; Document contents alone returns only the Document",
+      "actual": "No scope message true; Search disabled true; Document contents only: 1 match (Echo)",
+      "result": "pass",
+      "at": "2026-09-25T11:16:37.203Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Kinds and Add condition: groups per selected kind, Search properties, live Fields",
+      "page": "dialog",
+      "expected": "Selecting a kind enables Add condition and says only selected kinds are searched; the list groups properties under Contract and Matter; the Contract group lists live Fields; Search properties narrows by label",
+      "actual": "Help \"Only selected kinds are searched.\"; Add condition enabled true; groups Contract, Matter; Contract group lists the fixture Field under Fields true; \"Expiry\" narrows to Expiry date",
+      "result": "pass",
+      "at": "2026-09-25T11:16:37.378Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Dates: operators, N from 1 to 3650 in Number of days, Contract Expiry date in the next 90 days",
+      "page": "dialog",
+      "expected": "Date operators include before, after, on, between and the relative set; an invalid N is named in the Preview; with Contract and Matter selected, 90 keeps Alpha (+30 days) and drops Charlie (+200) and Delta (no date), while the Matter Bravo stays because a Contract condition never limits Matters",
+      "actual": "Operators: before, after, on, between, in the last N days, in the next N days, today, this week, this month, this quarter, this year; N=0 \"Relative day count N must be a whole number from 1 to 3650.\"; N=3651 \"Relative day count N must be a whole number from 1 to 3650.\"; N=90 2 matches (Bravo,Alpha)",
+      "result": "pass",
+      "at": "2026-09-25T11:16:39.972Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Match all and Match any apply per kind; a Contract condition never limits Matters",
+      "page": "dialog",
+      "expected": "With a Contract Expiry condition and a Matter Status condition, Contracts are limited only by the Contract condition and the Matter only by the Matter condition",
+      "actual": "Matter Status is any of Awaiting the business (Bravo is Open): Match all 1 match, Match any 1 match",
+      "result": "pass",
+      "at": "2026-09-25T11:16:44.099Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Search runs the question, closes the dialog, and shows chips that agree with the URL and rows",
+      "page": "/search",
+      "expected": "The dialog closes; the address holds the question; a words chip and a chip per condition; the chip reads Contract Expiry date in the next 90 days",
+      "actual": "URL question kinds contract,matter, 2 conditions; condition chips Edit Contract Expiry date in the next 90 days | Edit Matter Status is any of Awaiting the business; words chip true; total \"1 match\", rows Alpha",
+      "result": "pass",
+      "at": "2026-09-25T11:16:46.176Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Advanced on the results page opens the whole question; a condition chip opens its row",
+      "page": "/search",
+      "expected": "Advanced shows the words and conditions of the page's question; selecting a chip opens the dialog focused on that row",
+      "actual": "Whole question in the dialog true; chip edit focused the Contract Expiry date row true",
+      "result": "pass",
+      "at": "2026-09-25T11:16:46.908Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Results-page kinds: a kind keeps only its own conditions; All removes every condition",
+      "page": "/search",
+      "expected": "Contract keeps the Contract condition and drops the Matter one; All clears kinds and conditions",
+      "actual": "Contract link: kinds contract, conditions contract:expiry; All: kinds [], conditions 0",
+      "result": "pass",
+      "at": "2026-09-25T11:16:49.970Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "A chip's remove control runs the question without it; the address keeps the question through reload and Back",
+      "page": "/search",
+      "expected": "Removing the Expiry chip returns all three Contracts; reload keeps the rows; Back restores the condition and its chip",
+      "actual": "After remove: 1 condition(s), rows Delta,Alpha,Charlie; after reload rows Delta,Alpha,Charlie; Back: 2 conditions, chip visible true",
+      "result": "pass",
+      "at": "2026-09-25T11:16:58.212Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Removing a kind removes its conditions, and the dialog says so",
+      "page": "dialog",
+      "expected": "Deselecting Matter removes the Matter Status condition with Conditions for Matter were removed.",
+      "actual": "Notice \"Conditions for Matter were removed.\"; Matter row gone true",
+      "result": "pass",
+      "at": "2026-09-25T11:16:58.358Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Preview shows the exact total and up to ten rows; Clear empties the question; up to 20 conditions",
+      "page": "dialog",
+      "expected": "Clear leaves empty words and Build your search; Contract alone previews ten rows with Showing the first 10 of N; a 21st condition is refused",
+      "actual": "Cleared true; Contract: 271 matches, 10 rows, \"Showing the first 10 of 271 matches\", help line true; 20 rows added 20, 21st refused true",
+      "result": "pass",
+      "at": "2026-09-25T11:17:02.739Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Show ended, Show closed and Show archived; Match any with a Show condition",
+      "page": "dialog",
+      "expected": "Contracts include ended by default (Show ended Yes = default); Show ended No leaves ended out; Show archived Yes adds archived; Match all Status Draft + Show ended Yes = Draft only; Match any = every reachable Contract; Show closed No = open Matters",
+      "actual": "Contract default 271 matches (db 271); Show ended Yes 271 matches; No 260 matches (db not ended 260); Status Draft + Show ended Yes: Match all 230 matches (db Draft 230), Match any 271 matches; Show archived Yes 283 matches (db incl. archived 283); Matters default 93 matches (db 93), Show closed No 86 matches (db open 86)",
+      "result": "pass",
+      "at": "2026-09-25T11:17:14.276Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Recover from an empty answer: No records match this question. and No matches",
+      "page": "/search",
+      "expected": "A conditions-only question with no match says No records match this question.; an unmatched word says No matches",
+      "actual": "Conditions-only empty answer true; words-only empty answer No matches true",
+      "result": "pass",
+      "at": "2026-09-25T11:17:16.210Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Sort search results: Relevance, Newest, Oldest, Expiry soonest, Title; the address keeps the sort",
+      "page": "/search",
+      "expected": "Newest: Echo (latest Version upload), Delta, Bravo, Alpha, Charlie; Oldest the reverse; Expiry soonest: Alpha, Charlie, then Delta (no expiry), then other kinds; Title A to Z: Alpha, Bravo, Charlie, Delta, Echo; reload keeps Oldest",
+      "actual": "newest: Echo,Delta,Bravo,Alpha,Charlie (Sort: Newest); oldest: Charlie,Alpha,Bravo,Delta,Echo (Sort: Oldest); expiry: Alpha,Charlie,Delta,Bravo,Echo (Sort: Expiry soonest); title: Alpha,Bravo,Charlie,Delta,Echo (Sort: Title); relevance: Delta,Bravo,Alpha,Charlie,Echo (Sort: Relevance); after reload \"Sort: Oldest\"",
+      "result": "pass",
+      "at": "2026-09-25T11:17:28.188Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Save and reopen a search, steps 1-2: Save search, Save this search, Name, Save; a duplicate name is refused",
+      "page": "dialog",
+      "expected": "Save this search stores the question with its kinds and sort; the control then names the search; the same name in other letter case is refused",
+      "actual": "Dialog \"Save this search\" true; control shows \"DOC-030 search V-C04 1790331205958 Renewals due M actions\" true; stored kinds contract, sort oldest, words true; duplicate \"You already have a view with that name on this list.\"; stored searches with that name 1",
+      "result": "pass",
+      "at": "2026-09-25T11:17:29.860Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Save and reopen a search, step 3: the empty header box Saved group runs the search at once",
+      "page": "/",
+      "expected": "Focusing the empty box lists Saved and Recent; See all results is unavailable; selecting the saved search opens the results page with its kinds and sort",
+      "actual": "Saved entries DOC-030 search V-C04 1790331205958 Renewals due M\nEnter; Recent entries 5; See all results aria-disabled true; opened /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp… rows Charlie,Alpha,Delta \"Sort: Oldest\"",
+      "result": "pass",
+      "at": "2026-09-25T11:17:35.099Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Save and reopen a search, step 4: Saved searches loads the question without running; Search runs it",
+      "page": "dialog",
+      "expected": "The dialog shows the stored words and kind while the page stays put; Search opens the results",
+      "actual": "Loaded words match true; Contract pressed true; page stayed at / true; after Search /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp… rows Charlie,Alpha,Delta",
+      "result": "pass",
+      "at": "2026-09-25T11:17:39.817Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Changing a selected saved search marks it Modified; Save search replaces it; the menu offers Save as…, Rename…, Delete…, Discard unsaved changes",
+      "page": "dialog",
+      "expected": "Adding a kind shows Modified beside Save search; Save search stores it and clears Modified; Discard unsaved changes restores the stored question",
+      "actual": "Before \"DOC-030 search V-C04 1790331205958 Renewals due M\"; after change \"DOC-030 search V-C04 1790331205958 Renewals due M Modified\", Save search enabled true; menu Save | Save as… | Rename… | Delete… | Discard unsaved changes; after Save \"DOC-030 search V-C04 1790331205958 Renewals due M\", stored kinds contract,matter; Discard restored true",
+      "result": "pass",
+      "at": "2026-09-25T11:17:44.970Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "The dialog forgets the selected saved search when it closes",
+      "page": "dialog",
+      "expected": "After closing and reopening, Save search asks for a new Name instead of replacing",
+      "actual": "Save this search dialog opened true; no active saved search control true",
+      "result": "pass",
+      "at": "2026-09-25T11:17:45.228Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Recent searches lists at most five questions; selecting one restores it; Search runs it",
+      "page": "dialog",
+      "expected": "Up to five Recent searches; selecting restores the question without running; Search opens the results",
+      "actual": "5 recent entries; first \"quiredbcafjfi · Contracts · Sort: Oldest\"; restored words \"quiredbcafjfi\"; page stayed true; after Search /search?aq=eyJ2ZXJzaW9uIjoxLCJ3b3JkcyI6eyJhbGwiOiJxdWlyZWRiY2FmamZp…",
+      "result": "pass",
+      "at": "2026-09-25T11:17:46.505Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "A saved search follows the account to another device; Recent lives in this browser only",
+      "page": "/",
+      "expected": "A second browser lists the saved search under Saved and has no Recent group",
+      "actual": "Second browser Saved lists it true; Recent groups 0",
+      "result": "pass",
+      "at": "2026-09-25T11:17:48.565Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Recent entry runs at once; a saved search has no default; signing out clears Recent",
+      "page": "/",
+      "expected": "Selecting a Recent entry in the empty header box opens results; /search opens the empty prompt; after sign-out and sign-in the Recent group is gone",
+      "actual": "Recent entry opened results true; /search prompt true with no rows true; Recent groups after sign-out 0",
+      "result": "pass",
+      "at": "2026-09-25T11:17:55.462Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "A row's menu in Saved searches offers Rename… and Delete…; Delete removes the saved search, not records",
+      "page": "dialog",
+      "expected": "Rename this saved search renames it; Delete this saved search? says records are not touched; the search disappears and the Contracts remain",
+      "actual": "Row menu Rename… | Delete…; rename dialog true, renamed true; delete dialog \"Delete this saved search? DOC-030 search V-C04 1790331205958 Renewals due M 2 is removed. The records it finds are not touched. Cancel Delet\"; gone true; fixture Contracts 6 -> 6",
+      "result": "pass",
+      "at": "2026-09-25T11:17:56.849Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "If a saved search does not load in the dialog, the dialog says so",
+      "page": "dialog",
+      "expected": "With the Field catalog blocked, selecting a saved search holding a Field condition shows This search could not open. Try again.; a retry after recovery loads it",
+      "actual": "Error shown true; retry loaded the Field condition true",
+      "result": "pass",
+      "at": "2026-09-25T11:18:01.187Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Failed reads are not empty answers",
+      "page": "/search",
+      "expected": "A blocked next page keeps the rows with The next results could not be read. Try again. and Show more retries; a blocked search shows Search could not load in the header and Search could not load. Try again. on the page; a retry after recovery works",
+      "actual": "First page 25; next-page error true with 25 rows kept; retry grew to 50; header error true; page error true; recovered true",
+      "result": "pass",
+      "at": "2026-09-25T11:18:04.564Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Search shows only records you can reach",
+      "page": "/contracts",
+      "expected": "The Confidential Contract (reachable by its creator) is absent from header search, questions and a direct link",
+      "actual": "Daniel reaches it true; walker direct link Contract not found true; header API includes it false; question API includes it false",
+      "result": "pass",
+      "at": "2026-09-25T11:18:04.853Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Product check (not a guide step): header list and results page read the same words the same way",
+      "page": "/search",
+      "expected": "The same text gives the same records in the header list and on See all results",
+      "actual": "\"T -X\": header Alpha,Bravo,Delta,Echo; results page Charlie. \"T or X\": header Charlie,Golf,Delta,Alpha,Bravo,Echo; results page Charlie. Consistent false",
+      "result": "pass",
+      "at": "2026-09-25T11:18:13.173Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Filter and sort a list, steps 1-6, with Back and Forward",
+      "page": "/contracts",
+      "expected": "Owner with Apply shows a chip and matching rows; another filter narrows; the Title heading cycles; Back and Forward restore chips and sort; remove and Clear all clear filters; date filters include both dates",
+      "actual": "Count 50 of 263 contracts -> Owner 50 of 64 contracts -> Owner+Status 50 of 58 contracts; chip true; Matches any selected value true; first-page rows owned by Daniel true (25); two chips true; Title ascending -> descending; Back -> ascending, Back -> null with 2 chips, Back -> 1 chips; Forward -> 2 chips, Forward -> ascending; remove Status leaves 1; Clear all leaves 0; Effective date says Includes both dates true",
+      "result": "pass",
+      "at": "2026-09-25T11:18:35.014Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "No contracts match these filters",
+      "page": "/contracts",
+      "expected": "An empty filter answer shows the message; removing filters restores rows",
+      "actual": "Owner Me empty message true; rows after Clear all 50",
+      "result": "pass",
+      "at": "2026-09-25T11:18:39.751Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Save a view, steps 1-6, Modified, Discard unsaved changes, Save, Default view",
+      "page": "/contracts",
+      "expected": "Save as… with a Name stores filters, sort and column order; a change marks Modified; Discard restores; Save replaces; Default view shows the built-in layout; selecting the view restores it",
+      "actual": "Views control \"Default view Modified\"; columns after Move Counterparty later Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline; saved label \"DOC-030 search V-C04 1790331205958 Daniel portfolio M\"; Modified true; Discard restored true; second change Modified true, Save cleared true; Default view built-in true (Reference|Title|Counterparty|Type|Status|Value|Owner|Next deadline); reselected: chip true, sort descending, columns Reference|Title|Type|Counterparty|Status|Value|Owner|Next deadline; stored sort {\"key\":\"title\",\"dir\":\"desc\"}; URL /contracts?filters=1&view=01a0d84a-0013-7a09-9a3e-7090d5d974eb&owner=0…",
+      "result": "pass",
+      "at": "2026-09-25T11:19:00.696Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Set as default marks Opens here; Rename…; duplicate name refused; the view follows the account",
+      "page": "/contracts",
+      "expected": "Set as default opens the list with the view and the menu marks it Opens here; Rename… changes the name; a name differing only by case is refused; a second browser opens the view",
+      "actual": "Menu entry \"DOC-030 search V-C04 1790331205958 Daniel portfolio M Opens here\"; opens with view true; renamed true; duplicate \"You already have a view with that name on this list.\"; second browser true",
+      "result": "pass",
+      "at": "2026-09-25T11:19:13.365Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "Delete… removes the saved view after confirmation and does not delete records",
+      "page": "/contracts",
+      "expected": "The confirmation says the records are not touched; the view is gone; records remain",
+      "actual": "Dialog \"Delete this view? DOC-030 search V-C04 1790331205958 Daniel portfolio M 2 is removed. The records in it are not touched. Cancel Delete\"; still listed false; contracts 339 -> 339",
+      "result": "pass",
+      "at": "2026-09-25T11:19:16.218Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "administrator",
+      "step": "A Field an Administrator archives is removed from the question with a notice",
+      "page": "/search",
+      "expected": "Reopening the question that used the archived Field says Unavailable Field conditions were removed. and drops its chip",
+      "actual": "Results page notice true; condition chips left 0; saved search run from the header Saved group shows the notice true; the saved search selected under Saved searches in the dialog says \"Unavailable search conditions were removed.\" and the Field row is gone true",
+      "result": "pass",
+      "at": "2026-09-25T11:19:22.194Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "legal_team_member",
+      "step": "A Field an Administrator archives is removed from the question with a notice",
+      "page": "/search",
+      "expected": "Reopening the question that used the archived Field says Unavailable Field conditions were removed. and drops its chip",
+      "actual": "Results page notice true; condition chips left 0; saved search run from the header Saved group shows the notice true; the saved search selected under Saved searches in the dialog says \"Unavailable search conditions were removed.\" and the Field row is gone true",
+      "result": "pass",
+      "at": "2026-09-25T11:19:28.037Z"
+    },
+    {
+      "article": "search-and-views",
+      "scenario": "V-C04",
+      "role": "business_user",
+      "step": "Before you start: Business Users are sent from the search page to the Portal",
+      "page": "/search",
+      "expected": "Opening /search as the Business User Lena Vogel lands on the Portal",
+      "actual": "Magic link requested 202; landed on /portal",
+      "result": "pass",
+      "at": "2026-09-25T11:19:29.062Z"
+    }
+  ]
+}

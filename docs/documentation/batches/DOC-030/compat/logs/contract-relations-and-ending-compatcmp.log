@@ -1,0 +1,21 @@
+[V-C20 legal_team_member] PASS Prepare separate Contracts for relations, the confidentiality prompt in both directions, a restricted target, the Matter links, and ending and archiving; and two open Matters
+[V-C20 legal_team_member] PASS Set parent: Cancel leaves no parent; Set parent places A under B; B lists A under Children; choosing A as B's parent is refused as a cycle
+[V-C20 legal_team_member] PASS Add link Related, Renews and Amends from A to C; check direction on both records; a duplicate Renews is refused; the picker does not offer A itself
+[V-C20 legal_team_member] PASS Remove link on the Related row removes only that relationship; Remove parent clears the parent; both records still exist
+[V-C20 legal_team_member] PASS Flag as confidential? after linking Confidential D to open E: the prompt names E and Flag as confidential sets E's flag
+[V-C20 legal_team_member] PASS Flag as confidential? after linking open F to Confidential G: the prompt names F (this Contract) and accepting sets F's flag
+[V-C20 legal_team_member] PASS No, leave it open after linking open H to Confidential I changes nothing; a reader without access to I sees Restricted contract on H and cannot open I
+[V-C20 legal_team_member] PASS Link to Matter: search, inspect the M- reference, Link; the card then offers Unlink and no Link to Matter; Unlink before moving to another Matter; a confidentiality mismatch warns without changing flags
+[V-C20 legal_team_member] PASS End: use the Stage control to choose Expired (Ended); check Status and History; the Contract remains editable; the default Contracts view excludes it until Filter -> Show ended; reopen with Active and History keeps the Expired change
+[V-C20 legal_team_member] PASS Archive from Contract actions: Archived marker and read-only message; Status unchanged; linked Contract and Matter are not archived and the Matter's Linked Contracts omits it; find it with Show archived plus Show ended; Restore from Contract actions and from the known C- address
+[V-C20 administrator] PASS Prepare separate Contracts for relations, the confidentiality prompt in both directions, a restricted target, the Matter links, and ending and archiving; and two open Matters
+[V-C20 administrator] PASS Set parent: Cancel leaves no parent; Set parent places A under B; B lists A under Children; choosing A as B's parent is refused as a cycle
+[V-C20 administrator] PASS Add link Related, Renews and Amends from A to C; check direction on both records; a duplicate Renews is refused; the picker does not offer A itself
+[V-C20 administrator] PASS Remove link on the Related row removes only that relationship; Remove parent clears the parent; both records still exist
+[V-C20 administrator] PASS Flag as confidential? after linking Confidential D to open E: the prompt names E and Flag as confidential sets E's flag
+[V-C20 administrator] PASS Flag as confidential? after linking open F to Confidential G: the prompt names F (this Contract) and accepting sets F's flag
+[V-C20 administrator] PASS No, leave it open after linking open H to Confidential I changes nothing; a reader without access to I sees Restricted contract on H and cannot open I
+[V-C20 administrator] PASS Link to Matter: search, inspect the M- reference, Link; the card then offers Unlink and no Link to Matter; Unlink before moving to another Matter; a confidentiality mismatch warns without changing flags
+[V-C20 administrator] PASS End: use the Stage control to choose Expired (Ended); check Status and History; the Contract remains editable; the default Contracts view excludes it until Filter -> Show ended; reopen with Active and History keeps the Expired change
+[V-C20 administrator] PASS Archive from Contract actions: Archived marker and read-only message; Status unchanged; linked Contract and Matter are not archived and the Matter's Linked Contracts omits it; find it with Show archived plus Show ended; Restore from Contract actions and from the known C- address
+{"total":20,"pass":20,"fail":0}

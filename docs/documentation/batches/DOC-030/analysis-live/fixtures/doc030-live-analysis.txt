@@ -1,0 +1,17 @@
+FICTIONAL SUPPLY AGREEMENT (DOC-030 live analysis test paper)
+
+This agreement is fictional. It exists only to test document analysis.
+
+Parties: Helix Software Ltd and Northwind Fictional Services LLC.
+
+1. Effective date. This agreement starts on 1 April 2026.
+
+2. Term. This agreement has a fixed term. It ends on 31 March 2027.
+
+3. Notice. Either party may end this agreement by giving 60 days' written notice.
+
+4. Fees. Helix Software Ltd pays Northwind Fictional Services LLC USD 18,000 each year.
+
+5. Data location. Northwind Fictional Services LLC stores all Helix data only in data centres in the European Union and deletes that data within 30 days after this agreement ends.
+
+6. Price review. The parties review the fees on 1 January 2027.

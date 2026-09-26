@@ -1,0 +1,48 @@
+{
+  "section": "settingsStored",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2w",
+  "labProject": "openlaw-docs-80ceef9e-auth2w",
+  "appUrl": "http://127.0.0.1:43311",
+  "mailUrl": "http://127.0.0.1:48436",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "stored again: environment override removed, app and worker recreated (overlay-mail-stored.json)",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:23:02.202Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/email",
+      "action": "Return to a stored relay: remove the environment override and restart; Settings shows the app relay and a test arrives from the stored sender",
+      "expected": "No Managed message; Sender line names the stored relay; test mail from stored-relay@helix.example",
+      "startedAt": "2026-09-25T10:23:02.731Z",
+      "finishedAt": "2026-09-25T10:23:03.684Z",
+      "actual": "After the override was removed and app and worker were recreated, the pane read \"Personal Profile Appearance Notifications API keys View Business Portal Organization General Regions Departments Users Matters Contracts Intake Entities Knowled\". Send test email showed \"Test email sent to doc030-wiz-admin@helix.example. Check your inbox.\" and the message came from DOC-030 Stored <stored-relay@helix.example>.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/email",
+      "action": "Settings, Advanced, Outbound email: Replace relay opens the same form empty; Cancel keeps the current relay; no Clear relay; a replacement applies to the next email without a restart",
+      "expected": "Buttons Send test email and Replace relay; empty form; Cancel; saved change used by the next test",
+      "startedAt": "2026-09-25T10:23:03.685Z",
+      "finishedAt": "2026-09-25T10:23:06.221Z",
+      "actual": "Check failed: buttons Advanced,Send test email,Replace relay",
+      "result": "fail"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:23:06.227Z"
+}

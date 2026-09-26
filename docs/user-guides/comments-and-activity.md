@@ -23,6 +23,8 @@ Keep a conversation with its Contract, Matter, or Request, and choose the audien
 
 Record access applies to every audience. A later-added Business User can read the earlier Contract Team or Matter Team comments. A removed person loses them, including through an old Request link. A never-converted Request keeps its Requester audience.
 
+A Task has its own conversation on the Tasks tab. It has no audience choice and no audience badge. Everyone who can access the Task can read its comments.
+
 Comments form one chronological conversation. Use **Show older** when earlier comments are available. The Comments badge counts unread comments you can see, excluding your own posts and removed comments. Reading the loaded conversation updates that count.
 
 ## Choose an audience in the Inbox
@@ -38,7 +40,7 @@ On a Request, choose **Legal Only** for internal legal discussion or **Shared wi
 
 The list offers people the conversation can reach. A mention grants no record access. Ask Legal to arrange access if the required person is absent. You can remove a selected mention before posting with its **Remove** control. Administrators and Legal Team Members also see a **Files** tab. A file reference links to a Document, grants no access, and sends no notification.
 
-An edit changes the text of an existing comment, not its selected recipients. Post a new comment to address someone else. Mentions can produce notifications according to the recipient's [notification preferences](notifications.md).
+An edit changes the text of an existing comment, not its selected recipients. Post a new comment to address someone else. Mentions can produce notifications according to the recipient's [notification preferences](notifications.md). Mention, comment, and reply emails include the comment's words, but only for people who can read the comment on its thread.
 
 ## Attach paper to a comment
 
@@ -49,7 +51,7 @@ An edit changes the text of an existing comment, not its selected recipients. Po
 
 Attachments have the comment's audience. They are conversation paper, with no Document Version chain of their own. A failed post does not mean the paper has been filed. Keep the draft, check the error, and retry after correcting the cause. Check for an existing post before retrying to avoid sending it twice.
 
-On a Contract or Matter conversation, Administrators and Legal Team Members can use **File to Contract** or **File to Matter** on an attachment that has not been filed yet. The attachment preview also offers it. It puts the attachment on the record as a new Document or a new Version of an existing Document. Request conversations and archived records do not offer it. Business Users cannot file it. Filing is a separate action. The attachment remains on the thread and shows **Filed to** with its Document and Version. See [Upload Documents and add Document Versions](document-versions.md) for that procedure.
+On a Contract or Matter conversation, Administrators and Legal Team Members can use **File to Contract** or **File to Matter** on an attachment that has not been filed yet. The attachment preview also offers it. In **File attachment**, choose a **Destination**, then name a **New Document** or pick the Document for a **New Version on an existing Document**. You can also choose a Document **Type**. Select **File**. Request conversations and archived records do not offer it. Business Users cannot file it. Filing is a separate action. The attachment remains on the thread and shows **Filed to** with its Document and Version. See [Upload Documents and add Document Versions](document-versions.md) for that procedure.
 
 ## Edit or remove a post
 
@@ -58,7 +60,7 @@ On the Contract, Matter, or Legal Request conversation, open **Comment actions**
 - Select **Edit**, change **Edit comment**, and select **Save**. The comment shows **edited**. Use **Cancel** to leave it unchanged.
 - Select **Delete** and read the confirmation before selecting **Delete** again. The thread retains **Comment deleted by its author.** You cannot undo this in the app.
 
-You cannot change a posted comment's tier. If you used the wrong audience, delete it and post a corrected comment in the intended tier. Deleting it cannot recall a message or file someone already received.
+You cannot change a posted comment's tier. If you used the wrong audience, delete it and post a corrected comment in the intended tier. Deleting it cannot recall a message or file someone already received. That includes an email that already carried the comment's words.
 
 An Administrator can select **Redact** on a reached comment, including one already deleted by its author. Read the confirmation before proceeding. Redaction permanently removes the text, its earlier text versions, mentions, and attached paper. The thread says **Comment removed by an Administrator.** A Document already filed from the attachment remains on the record. Administrators cannot edit another author's words.
 
@@ -77,6 +79,15 @@ After conversion, the Request address opens its Contract or Matter, and you are 
 
 On a reached Contract or Matter page, select **History**. Read the entries in order and use **Show older** for earlier changes. The Activity feed describes actions on that record and applies your visibility limits. It is different from the Administrator's system-wide Audit log.
 
-The Portal also has History for shared comment activity and business Field edits. It excludes all Legal Only and Working Team activity, and Fields that are now legal-only. A Request in the Inbox has its conversation but no History panel. A converted Request in the Inbox has no conversation. Open its linked record instead. When Legal converts a Request, the resulting record's History begins with the record's creation, and the comments themselves follow the work.
+An action taken through an MCP Client shows the person and the Client, for example "Ravi Menon, via Claude,". An entry about a linked record that you cannot reach leaves out that record's number and title.
+
+The Portal also has **History** on a Contract or Matter. It shows shared comment activity and the record progress that the Portal record itself shows:
+
+- a Contract moving to another Stage, and a Matter moving to another Status
+- a change to a value on the Portal record, such as the title, the owners, the Department, the Region, the term dates, or the Value
+- a change to a Field whose Row has **Visible on Portal** on
+- a Task that someone added, with its due date when it has one, and a Task that someone completed
+
+A Contract entry names the Stage, not the Status name that Legal uses. Portal History excludes Legal Only and Working Team comments, Task edits, reorders and removals, a Matter's closing note, and Fields that the Portal does not show. On a Request that was never converted, Portal History shows only shared comment activity. A Request in the Inbox has its conversation but no History panel. A converted Request in the Inbox has no conversation. Open its linked record instead. When Legal converts a Request, the resulting record's History begins with the record's creation, and the comments themselves follow the work.
 
 If the conversation or History cannot load, follow its message to reopen the panel. Retry **Show older** if only the earlier page failed. If access has changed, ask Legal to check it before posting again.

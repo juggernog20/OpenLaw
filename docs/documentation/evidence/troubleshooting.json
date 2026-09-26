@@ -1,19 +1,59 @@
 {
   "articleId": "troubleshooting",
-  "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (support, round 1)",
+  "contentSha256": "7bdfd9be072d31a28150ff9843949782d325ca9605e129a463cc515d0cdf4678",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (support)",
+  "technicalReviewer": "DOC-030 source-review author agent (support)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (support)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (support)",
-  "technicalReviewer": "DOC-029 source-review author agent (support)",
-  "verifiedAt": "2026-09-16T16:25:31Z",
+  "verifiedAt": "2026-09-25T11:55:31Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/troubleshooting.md",
-    "docs/documentation/batches/DOC-029/support/technical-review.json",
-    "docs/documentation/batches/DOC-029/support/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-030/support/technical-review.json",
+    "docs/documentation/batches/DOC-030/support/walkthrough.json",
+    "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/support/lib.mjs",
+    "docs/documentation/batches/DOC-030/support/fixtures.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "docs/decision-records/DECISIONS-CONTRACTS.md (2026-09-17 amendment: default groups and business approvers)",
+    "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-001 M38 addendum, NOT-004 2026-09-24 addendum)",
+    "docs/decision-records/DECISIONS.md (DD-029)",
+    "apps/web/src/routes/error-page.tsx",
+    "apps/web/src/routes/not-found.tsx",
+    "apps/web/src/routes/portal-contract.tsx",
+    "apps/web/src/routes/portal-request.tsx",
+    "apps/api/src/modules/requests/read.ts",
+    "apps/api/src/lib/contract-access.ts",
+    "apps/api/src/lib/custom-fields.ts",
+    "apps/web/src/components/portal/notification-preferences.ts",
+    "apps/web/src/components/notification-preferences.tsx",
+    "apps/web/src/routes/settings-notifications.tsx",
+    "apps/web/src/routes/portal-settings.tsx",
+    "apps/web/src/components/my-reminder-lead-times.tsx",
+    "apps/api/src/lib/notifications/notifier.ts",
+    "apps/api/src/lib/notifications/catalog.ts",
+    "apps/web/src/components/notification-bell.tsx",
+    "apps/web/src/components/portal/portal-nav.tsx",
+    "apps/api/src/modules/portal/approvals.ts",
+    "apps/web/src/components/contracts/analysis.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/components/intake/convert-dialog.tsx",
+    "apps/web/src/components/intake/prepared-convert-dialog.tsx",
+    "apps/web/src/components/api-keys.tsx",
+    "apps/web/src/components/connected-clients.tsx",
+    "apps/web/src/routes/settings-api-keys.tsx",
+    "apps/web/src/routes/settings-mcp.tsx",
+    "apps/api/src/modules/api-keys/routes.ts",
+    "apps/api/src/lib/uploads.ts",
+    "docs/user-guides/contributor-guide.md",
+    "docs/user-guides/contract-approvals.md",
+    "docs/user-guides/configure-analysis.md",
+    "docs/user-guides/connect-headless-client.md",
+    "docs/user-guides/connect-claude.md"
   ],
   "scenarios": [
     {
@@ -22,18 +62,19 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator (Daniel Okafor) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Seeded fictional Administrator Daniel Okafor, password sign-in, in his own browser context on the shared work2 lab (openlaw-docs-80ceef9e-work2, 067c1646).",
+        "Reviewer-created records named DOC-030 support ... 09251133 (fixtures.json); DOC-029 support fixture files in docs/documentation/batches/DOC-029/support/fixtures. MCP switches, Read-only and one Contract Document type were set for single steps and put back."
       ],
-      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
-      "actual": "11 recorded steps passed for this role on 3fa407e3. Header Help reached Resolve common problems. A wrong password showed \"Check your email and password.\" and the account still signed in. C-999999 and a Confidential Contract without named access both showed \"Contract not found\" with \"Back to Contracts\"; two reloads changed nothing and no title leaked. After the Legal Owner added a team entry, the same link opened. A 315-character filename was refused with \"Rename the file to 255 characters or fewer before uploading it.\" and nothing was stored. The failed Word Version showed \"This file could not be prepared for reading here. Download it to read it.\" and Download returned the original bytes. Notification preferences showed In-app, Email and Briefing with \"In-app off turns the group off entirely, email included.\" and Profile had Timezone. On a request naming Nadia Haddad only \"Cancel request\" was offered; on his own request Approve, Reject and Cancel request; a direct decision on Nadia's request answered 403. Moving to Active opened \"Move past approval\" listing the Pending request, and Cancel kept Draft. E-signature read \"DocuSign Not connected\", no Send for signature appeared, and Mark as executed copy stayed available. AI analysis read \"Provider Not connected\" with Field prompts. Settings > Contracts > Fields opened.",
+      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation with useful non-sensitive facts. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
+      "actual": "16 recorded steps passed for this role on 067c1646. Header Help reached Resolve common problems (/help/troubleshooting, 11 sections). A wrong password showed \"Check your email and password.\" and the account still signed in. C-999999 and a Confidential Contract without named access both showed \"Contract not found\" with \"Back to Contracts\"; two reloads changed nothing and no title leaked; after the Legal Owner added a team entry the link opened. Settings > Contracts > Fields and the DPA type's Form (Row switches On intake form, Required for creation, Visible on Portal) opened. A 315-character filename was refused with \"Rename the file to 255 characters or fewer before uploading it.\" and nothing was stored. The failed Word Version showed the failure sentence and Download returned the original 2,046 bytes. Notifications showed In-app, Email and Push per group, Briefing, Devices with Turn on for this browser once the browser allowed notifications, and Reminder lead times with \"Use the organization's default lead times\"; Profile had Timezone. On a request naming Nadia Haddad only Cancel request was offered; on his own, Approve, Reject and Cancel request; a direct decision on Nadia's answered 403. Moving to Active opened \"Move past approval\" listing the Pending request; Cancel kept Draft. E-signature read \"DocuSign Not connected\"; no Send for signature; Mark as executed copy offered. AI analysis read Provider Not connected, so the Request conversion card was absent, as the linked section says. In Organization > MCP he turned on Enable MCP and both API keys switches, denied one key from Your approvals in the bell and one with a note from API key requests, approved one from the bell, saw his own request approve itself, and saw a 400-day lifetime refused with the 1 to 365 message. All MCP settings were put back.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/r1-admin-contract-not-found.png",
-        "docs/documentation/batches/DOC-029/support/r1-admin-move-past-approval.png"
+        "docs/documentation/batches/DOC-030/support/walkthrough.json",
+        "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/support/lib.mjs",
+        "docs/documentation/batches/DOC-030/support/fixtures.json",
+        "docs/documentation/batches/DOC-030/support/administrator-contract-not-found.png",
+        "docs/documentation/batches/DOC-030/support/administrator-move-past-approval.png"
       ]
     },
     {
@@ -42,18 +83,19 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member (Nadia Haddad) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Seeded fictional Legal Team Member Nadia Haddad, password sign-in, in her own browser context on the shared work2 lab.",
+        "Reviewer-created records named DOC-030 support ... 09251133 (fixtures.json); DOC-029 support fixture files in docs/documentation/batches/DOC-029/support/fixtures. MCP switches, Read-only and one Contract Document type were set for single steps and put back."
       ],
-      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
-      "actual": "11 recorded steps passed for this role on 3fa407e3. Header Help reached the guide. A wrong password showed \"Check your email and password.\" and the account still signed in. With the record read failing, the page showed \"Something went wrong.\" and Reload; after the connection returned, Reload opened the Contract. M-999999 showed \"Matter not found\", and a Confidential Contract without access showed \"Contract not found\" until its Legal Owner added a team entry. The archived Contract offered no Upload. Notice period (days) 99999 showed \"One or more request fields are invalid.\" and kept the entered value; a reload showed the value had not saved. Organization settings stayed closed. A 105 MiB file was refused with \"That file is over the 100 MB upload limit.\", a 305-character filename was refused, nothing was stored, the corrected name uploaded once, and uploading it again as a new Document made a second row. A damaged Word file showed \"Preparing this document for reading…\" and then the failure message; Download returned the original 2,046 bytes and reopening added no Version. The named approver's dialog said \"A decision is final. To change it, ask for a new approval.\"; afterwards no decision control remained and a second decision answered 409. No Send for signature appeared and Mark as executed copy was offered. The Contract had no Analysis control, and Triage > Convert to contract opened a manual Convert dialog with no Conversion draft; Cancel left the Request open.",
+      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation with useful non-sensitive facts. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
+      "actual": "16 recorded steps passed for this role on 067c1646. Help reached the guide. A wrong password showed \"Check your email and password.\" and the account still signed in. With the Contract read blocked the page showed \"Something went wrong.\" and Reload; Reload then opened the Contract. The header search found 0 rows for an unreachable Confidential Contract and M-999999 showed \"Matter not found\"; after the Legal Owner added a team entry the link and the search (1 row) both found it. The archived Contract offered no Upload. Notice period 99999 showed \"One or more request fields are invalid.\" and kept the value; reload showed it had not saved. A 105 MiB file was refused with \"That file is over the 100 MB upload limit.\", a 305-character name was refused, nothing was stored, the short name uploaded once and a repeat made a separate Document; Add version put Version 2 on the existing chain instead. A damaged Word file showed \"Preparing this document for reading…\" then the failure sentence; Download returned the original bytes; reopening added no Version. Notifications matched the Administrator's. The bell's Your approvals listed her request with Review; the Approve dialog said \"A decision is final. To change it, ask for a new approval.\"; afterwards no decision control remained and a second decision answered 409. No Send for signature; Mark as executed copy offered. The Fields header had no Run analysis while Analysis was unavailable and none on an Ended Contract; Convert to contract opened the manual dialog with no Conversion draft. API keys: Request a key was absent while MCP was off; with MCP on, the dialog asked for Client name, Toolsets (\"Nothing is selected for you.\"), Read or Write and Note (Optional); Cancel request gave Cancelled; denials showed Denied and the note; after approval her next visit showed \"Your key is ready\" once; the key answered 200 at /mcp in x-api-key, a write tool returned \"mcp_read_only ... This credential is read-only.\"; Revoke gave Revoked and the key then answered 401; with Read-only on, Write was absent. Connected Clients read \"No Client is connected.\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/r1-member-page-could-not-load.png",
-        "docs/documentation/batches/DOC-029/support/r1-member-preview-failed.png"
+        "docs/documentation/batches/DOC-030/support/walkthrough.json",
+        "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/support/lib.mjs",
+        "docs/documentation/batches/DOC-030/support/fixtures.json",
+        "docs/documentation/batches/DOC-030/support/legal-team-member-page-could-not-load.png",
+        "docs/documentation/batches/DOC-030/support/legal-team-member-preview-failed.png"
       ]
     },
     {
@@ -62,55 +104,37 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Business User (Jonas Weber, fresh magic links from the lab Mailpit) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Fictional Business User Lena Fischer (doc030.support.bu@helix.example), created by Portal sign-in on the allowed helix.example domain and onboarded in the browser; fresh sign-in links from the lab Mailpit. A second created Business User (doc030.support.bu2@helix.example) was used only for the spent-link check.",
+        "Reviewer-created records named DOC-030 support ... 09251133 (fixtures.json); DOC-029 support fixture files in docs/documentation/batches/DOC-029/support/fixtures. MCP switches, Read-only and one Contract Document type were set for single steps and put back."
       ],
-      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
-      "actual": "8 recorded steps passed for this role on 3fa407e3. Portal Help reached the guide. A spent sign-in link opened \"Sign-in link expired\" with \"The link has expired or was already used. Enter your email to get a fresh one.\"; a new link from the newest message signed in, and /contracts in that session landed on /portal. C-999999 and a Confidential Contract without a team entry both showed \"This Contract does not exist, or you cannot open it.\" with no title. A team Contract opened, and after Legal archived it the same link showed the not-found copy, also after reload. A Matter linked to a shared Contract stayed closed. The converted Request opened its Contract in the Portal. After Legal removed the team entry, the Request address returned to the Portal home, and it opened again after Legal restored the entry. On a shared Contract, Overview and Fields had no editable controls, a direct Field write answered 403, and no Approval, Task, signing, Stage or archive control appeared. The reply posted in Comments, and Add team member added Amara Nwosu. On a Confidential Contract, Add team member was disabled and a direct add answered 403. Add version on the Primary Document made Version 2, the upload dialog had no folder choice, and a folder destination was refused with \"Business Users may upload supporting Documents at the record root only.\". Notification settings listed Request updates, Assigned to you and Activity on your records with In-app and Email.",
+      "expected": "The intended reader starts from each visible symptom, follows the article's checks and recovery links, and reaches an accurate resolution or a specific escalation with useful non-sensitive facts. The article offers no access bypass, invents no unavailable action, and does not treat a provider stand-in as live-provider evidence.",
+      "actual": "12 recorded steps passed for this role on 067c1646. Portal Help reached the guide. A spent link opened \"Sign-in link expired\" with \"The link has expired or was already used. Enter your email to get a fresh one.\"; a link from the newest message signed in, and /contracts landed in the Portal. C-999999 and a Confidential Contract without a team entry showed \"This Contract does not exist, or you cannot open it.\" with no title; a team Contract opened, and after Legal archived it showed the same copy, also after reload; a linked Matter stayed closed. The converted Request opened its Contract in the Portal, returned to the Portal home without the team entry, and opened again after Legal restored it. On a shared DPA Contract, Fields showed Security review (Visible on Portal on) and not Processes personal data (off); no editable controls; a Field write answered 403; the reply posted; Add team member added Amara Nwosu. On a Confidential Contract Add team member was disabled and a direct add answered 403. Add version made Version 2 on the primary and on another Document; no folder choice, a folder destination answered 403; a reply attachment stayed in the thread and did not become a Document. Notification settings listed Request updates, Assigned to you, Activity on your records and Dates approaching, with no lead-time control; with Request updates In-app off a Legal reply sent no email in 25 s, and with it back on the next reply did. Approvals in the Portal listed three Pending requests; the review page showed the Contract title and primary Document only; Approve was final (second decision 4xx). After Legal withdrew one request and archived another Contract, their review pages showed \"Page not found\" and left the list. API keys: Notification settings > API keys had no Request a key while MCP was off; with it on, a Portal key was approved from Organization > MCP and \"Your key is ready\" showed once, then Revoke.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/r1-portal-link-expired.png"
+        "docs/documentation/batches/DOC-030/support/walkthrough.json",
+        "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/support/lib.mjs",
+        "docs/documentation/batches/DOC-030/support/fixtures.json",
+        "docs/documentation/batches/DOC-030/support/business-user-link-expired.png"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the source-review author; not a human user study and not feature-owner approval.",
-    "The lab Help and formal readers serve the article bytes committed at 3fa407e3, which differ from the reviewed corrected bytes. Steps followed the reviewed bytes against the app. Reader checks prove the routes, headings and UI behavior; link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
-    "The admin lab is shared with other DOC-029 agents. The walkthrough created only records named DOC-029 support ... and changed no organisation settings.",
-    "Two earlier recorded attempts (walkthrough-r1-attempt1.json, walkthrough-r1-attempt2.json) each had one reviewer harness fault and are kept with their disposition. Exploratory probes and development runs before them are not evidence.",
-    "Signing and Analysis were observed unconfigured in this lab (DocuSign Not connected, AI Provider Not connected). The Signed Envelope, Executed copy filing, Kept, Unverified, Retry Request-context Analysis, purple border, sparkle evidence and Conversion draft preparation checks were not exercised; the provider stand-in groups verify those workflows, and neither is live-provider evidence.",
-    "Email delivery, spam filtering and morning briefing timing were not exercised. The walkthrough checked only the preference and Timezone controls the article names.",
-    "Page-could-not-load was produced by blocking the browser's request for one Contract read, as a controlled fixture, not by a real network outage.",
-    "The save error shown for an out-of-range Notice period was the general message \"One or more request fields are invalid.\", not a field-specific correction. The article's reload check still showed what saved.",
-    "The Contributor role no longer exists at this build, so no Contributor walkthrough was run. Ravi Menon is a Business User in this lab and was not used."
+    "The lab Help and formal readers serve the article bytes bundled at 067c1646, which predate the reviewed bytes. Steps followed the reviewed bytes against the app; link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
+    "The work2 lab is shared with other DOC-030 agents. This walkthrough created records named DOC-030 support ... and put back every organization setting it changed (MCP switches, Read-only, one Contract Document type, archived again). Run history and reruns of reviewer harness faults are in walkthrough.json runNotes.",
+    "Signing and Analysis were unconfigured when observed (DocuSign Not connected; AI Provider Not connected; another group had configured and removed a provider stand-in earlier). The Signed Envelope, Executed copy filing, Running…, the Request-context Analysis failure sentence, Retry Request-context Analysis, Unverified values, purple borders, sparkle evidence, Conversion draft preparation and the Request conversion switch names were not produced here; nothing here is live-provider evidence.",
+    "Push delivery was not exercised. With browser notification permission granted (full Chromium in new headless mode) the Devices card offered Turn on for this browser; it was not selected.",
+    "An Expired API key could not be produced: the shortest organization lifetime is 1 day. The label is in the Status list only.",
+    "Connected Clients was seen only in its empty state (\"No Client is connected.\"). No OAuth Client was connected on this local lab, so Disconnect and the Revoke OAuth grant dialog were not exercised; the author listed the same limitation.",
+    "Page-could-not-load was produced by blocking the browser request for one Contract read, not by a real outage. Email checks read the lab Mailpit only; spam filtering and morning briefing timing were not exercised.",
+    "A Business User created for this walkthrough (Lena Fischer) was used instead of the seeded Jonas Weber, because the three-links-per-address sign-in budget is shared with other agents on this lab."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "e2404361abcc621f8ee36fcd03dec23150bdabc0070d30678ba54caaabb9dd1b",
-    "verifiedAt": "2026-09-08T11:54:09.727Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "39b96a28bd7d7710a99027144c54c44e9c39f249cc54ac36fd2a87a21de44afa",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to record not-found pages, Portal pages, uploads, previews, notifications, Approval, signing or Analysis; the sign-in page gains branding only. I replayed the round 1 V-C49 walkthrough on the admin2 lab and all 30 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. The sign-in section points to staff and Portal sign-in and to Authentication settings. It makes no claim about the wizard or two-factor enrollment.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/support.json",
-        "sha256": "2a585ecc57a52770b2a537f10edc806b7b22535f91701f6265ecef59d916f18f"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T16:25:31Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }
