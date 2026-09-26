@@ -1350,9 +1350,17 @@ The Entity Contracts and Matters tabs are the first application: one `LinkedReco
 
 `LinkedRecordsList` and its typed seam configuration now serve both Entity roll-up tabs. The Contract and Matter mounts differ only in the record kind, endpoint, response key, empty copy, and link target supplied by `ENTITY_LINKED_RECORD_SEAMS`. The route loader reads the tab counts; the mounted list reads its own rows. No Entity-specific linked-record component was added.
 
+_(2026-09-26, [#1198](https://github.com/juggernog20/OpenLaw/pull/1198): **the component in this addendum is superseded** by the managed-table addendum below. `LinkedRecordsList` and `ENTITY_LINKED_RECORD_SEAMS` are removed.)_
+
 ### Built addendum (2026-08-30, M28 close, [#598](https://github.com/juggernog20/OpenLaw/issues/598)) — the Documents card is a configured mount
 
 The Knowledge record is the third web mount of the Documents card. One `DocumentsCard` receives the Knowledge owner reference, routes, permissions, vocabulary, primary-pin capability, and `folders: false` as configuration. Upload, batch progress, Version history, preview, rendition polling, download, archive, and primary designation stay in the shared component. No Knowledge-specific Document card or Version list was added. Contract and Matter retain their existing mounts; this change configures the shared card rather than migrating unrelated record pages.
+
+### Built addendum (2026-09-26, [#1198](https://github.com/juggernog20/OpenLaw/pull/1198)) — the Entity roll-up tabs use the managed table
+
+The Entity Contracts and Matters tabs now show the same columns, sort and paging as the main Contracts and Matters lists. One generic `LinkedTable` in `components/entities/linked-records-table.tsx` renders both. `EntityContractsTable` and `EntityMattersTable` pass it only the Entity, the column catalogue, the read seam and the title. The linked-records routes call `listContracts` and `listMatters` with the Entity as an extra scope, so the reach checks are the ones the main lists apply. The table still reads its own rows when the tab mounts.
+
+The rule of this decision is unchanged. The third mount is still one component driven by configuration. The removed `LinkedRecordsList` had no other caller.
 
 ### Rationale
 
