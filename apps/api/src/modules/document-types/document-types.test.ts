@@ -3,7 +3,7 @@
 /** DOC-015 Document types: three lists in one table, fixed Contract rows,
  * and the type a Version carries through upload and correction. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, documentVersions, eq, users } from "@openlaw/db";
+import { documentVersions, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -304,11 +304,14 @@ describe("document type colours", () => {
     });
     expect(refused.statusCode).toBe(409);
     expect((await listTypes("contract")).find((row) => row.id === fixed.id)?.color).toBe("blue");
-    const entries = await harness.db
-      .select()
-      .from(activityLog)
-      .where(eq(activityLog.action, "document_type.updated"));
-    expect(entries).toEqual(
+    const audit = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/audit-log",
+      cookies: adminCookies,
+      query: { action: "document_type.updated" },
+    });
+    expect(audit.statusCode, audit.body).toBe(200);
+    expect(audit.json().entries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           payload: { slug: fixed.slug, changed: { color: { from: null, to: "blue" } } },

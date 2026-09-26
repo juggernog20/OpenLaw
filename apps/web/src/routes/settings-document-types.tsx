@@ -224,7 +224,13 @@ function DocumentTypeColorPicker({
           variant="ghost"
           size="sm"
           aria-label={label}
-          title={`${label}: ${documentTypeColorLabel(intl, row.color)}`}
+          title={intl.formatMessage(
+            {
+              id: "settings.documentTypes.colorTitle",
+              defaultMessage: "Colour for {name}: {color}",
+            },
+            { name: row.displayName, color: documentTypeColorLabel(intl, row.color) },
+          )}
         >
           <span
             aria-hidden="true"
@@ -248,7 +254,7 @@ function DocumentTypeColorPicker({
             >
               <span aria-hidden="true" className="size-3 rounded-full bg-current" />
               <span className="flex-1 text-start">{documentTypeColorLabel(intl, color)}</span>
-              {row.color === color && <Check size={14} aria-hidden="true" />}
+              {row.color === color && <Check size={16} aria-hidden="true" />}
             </button>
           ))}
         </div>

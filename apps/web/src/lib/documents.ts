@@ -316,6 +316,8 @@ export const DOCUMENT_TYPE_COLOR_PILL: Record<DocumentTypeColor, string> = {
   purple: "bg-status-assigned-bg text-status-assigned-fg",
 };
 
+/** The pill classes for a Version's Document type. A colour the
+ * Administrator chose wins; with none, the Version kind's colour applies. */
 export function documentTypePill(
   kind: DocumentVersionKind,
   color?: DocumentTypeColor | null,

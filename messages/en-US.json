@@ -10604,6 +10604,9 @@
   "settings.documentTypes.colorSaving": {
     "defaultMessage": "Saving colour…"
   },
+  "settings.documentTypes.colorTitle": {
+    "defaultMessage": "Colour for {name}: {color}"
+  },
   "settings.documentTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },

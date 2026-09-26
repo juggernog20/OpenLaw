@@ -483,11 +483,13 @@ it.each([
     await user.click(screen.getByRole("heading", { name: "Fields" }));
     expect(added).toBeInvalid();
     expect(state.saves).toHaveLength(0);
+    await user.click(added);
     fireEvent.change(added, { target: { value: "invalid" } });
-    fireEvent.blur(added);
+    await user.click(screen.getByRole("heading", { name: "Fields" }));
     expect(state.saves).toHaveLength(0);
+    await user.click(added);
     fireEvent.change(added, { target: { value: second } });
-    fireEvent.blur(added);
+    await user.click(screen.getByRole("heading", { name: "Fields" }));
     await waitFor(() => expect(state.saves.at(-1)?.clauseRules[0]?.value).toEqual(expected));
     await user.click(within(rule).getByRole("button", { name: "Remove value 1" }));
     const remaining = within(rule).getByLabelText("Value 1");

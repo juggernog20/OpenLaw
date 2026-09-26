@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The name control on an Officer row. One combobox holds the name and
+ * the optional link to a user, so the two cannot disagree.
+ */
 import { useId, useState } from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -114,6 +118,8 @@ export function OfficerNameInput({
                 event.preventDefault();
                 void commit(open && selected ? selected : draft);
               } else if (event.key === "Escape") {
+                // Nothing to undo: let Escape reach the page's own handler.
+                if (!open && draft.name === name && draft.userId === userId) return;
                 event.preventDefault();
                 event.stopPropagation();
                 change({ name, userId });

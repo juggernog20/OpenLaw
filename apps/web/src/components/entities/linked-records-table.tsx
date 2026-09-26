@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * The Contracts and Matters tabs on an Entity record. Each reads the
+ * linked-records route with the main list's sort and cursor, and shows
+ * the rows with the main list's column catalogue.
+ */
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { CONTRACT_SORT_KEYS, MATTER_SORT_KEYS } from "@openlaw/shared";
@@ -85,6 +90,8 @@ function LinkedTable<Row extends { id: string }>({
   const [busy, setBusy] = useState(true);
   const [failed, setFailed] = useState(false);
   const [retry, setRetry] = useState(0);
+  /** The first row of the page Show more appended. Focus lands there. */
+  const [appended, setAppended] = useState<string>();
   const request = useRef<{ cancelled: boolean } | null>(null);
   const sortKey = layout.sort?.key;
   const sortDir = layout.sort?.dir;
@@ -110,6 +117,7 @@ function LinkedTable<Row extends { id: string }>({
     if (next.sort?.key !== layout.sort?.key || next.sort?.dir !== layout.sort?.dir) {
       if (request.current) request.current.cancelled = true;
       setPage(null);
+      setAppended(undefined);
       setBusy(true);
       setFailed(false);
     }
@@ -124,16 +132,13 @@ function LinkedTable<Row extends { id: string }>({
     setFailed(false);
     try {
       const next = await read(entityId, layout.sort, page.nextCursor);
-      if (!turn.cancelled)
-        setPage((previous) => ({
-          ...next,
-          records: [
-            ...(previous?.records ?? []),
-            ...next.records.filter(
-              (row) => !previous?.records.some((known) => known.id === row.id),
-            ),
-          ],
-        }));
+      if (!turn.cancelled) {
+        const fresh = next.records.filter(
+          (row) => !page.records.some((known) => known.id === row.id),
+        );
+        setPage({ ...next, records: [...page.records, ...fresh] });
+        if (fresh[0]) setAppended(fresh[0].id);
+      }
     } catch {
       if (!turn.cancelled) setFailed(true);
     } finally {
@@ -195,6 +200,7 @@ function LinkedTable<Row extends { id: string }>({
           rows={page.records}
           rowKey={(row) => row.id}
           onLayoutChange={changeLayout}
+          focusRowKey={appended}
           foot={
             page.nextCursor ? (
               <Button variant="secondary" disabled={busy} onClick={() => void more()}>

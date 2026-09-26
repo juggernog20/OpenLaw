@@ -35,7 +35,7 @@ You cannot correct every Version. A **Generated redline** from a [Comparison exp
 
 ## Configure Document type colours
 
-An Administrator can open **Settings → Documents**, choose **Matters**, **Contracts**, or **Entities**, and select the colour swatch beside a Document type. Choose a colour to save it immediately, or **Automatic** to restore its default. Built-in Contract types keep their fixed names but can have any of the available colours.
+An Administrator can open **Settings → Documents**, choose **Matters**, **Contracts**, or **Entities**, and select the colour swatch beside a Document type. Choose a colour to save it immediately, or **Automatic** to restore its default. The fixed Contract types keep their names but can have any of the available colours.
 
 The colour applies to existing and future Versions carrying that type, including archived types, in record Documents, the Documents repository, and the Business Portal. Colours adapt to the selected theme and do not change a Version's kind or the Executed pin.
 

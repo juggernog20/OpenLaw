@@ -210,8 +210,8 @@ export function UploadDialog({
                   if (!busy) setOver(true);
                 }}
                 onDragLeave={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget as Node | null))
-                    setOver(false);
+                  const next = event.relatedTarget;
+                  if (!(next instanceof Node && event.currentTarget.contains(next))) setOver(false);
                 }}
                 onDrop={(event) => {
                   event.preventDefault();
