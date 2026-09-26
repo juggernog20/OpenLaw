@@ -107,6 +107,8 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   rowMeta?: (row: Row) => ReactNode;
   /** Extra trailing icon actions before archive (e.g. an edit button). */
   rowActions?: (row: Row) => ReactNode;
+  /** Expanded content directly beneath the row header. */
+  rowContent?: (row: Row) => ReactNode;
   /** The lock's accessible name for protected rows; null renders archive. */
   protectedLabel?: (row: Row) => string | null;
   /** Archive and restore, for a taxonomy whose rows records point at
@@ -162,6 +164,7 @@ export function ListEditor<Row extends ListEditorRow>({
   rowCaption,
   rowMeta,
   rowActions,
+  rowContent,
   protectedLabel,
   archiveLabel,
   onArchive,
@@ -368,60 +371,69 @@ export function ListEditor<Row extends ListEditorRow>({
         {/* tabIndex -1: guard dialogs park focus here when the row they
             were opened from has left the list. */}
         <ul ref={listRef} tabIndex={-1}>
-          {rows.map((row, index) => (
-            <li
-              key={row.id}
-              draggable={reorder !== undefined && editing?.id !== row.id}
-              onDragStart={() => {
-                dragFrom.current = index;
-              }}
-              onDragOver={reorder && ((event) => event.preventDefault())}
-              onDrop={reorder && ((event) => drop(event, index))}
-              className={`flex ${rowCaption ? "h-13" : "h-11"} items-center border-b border-border-muted pe-3 ${rowClassName?.(row) ?? ""}`}
-            >
-              {reorder && (
-                <span className="flex w-9 shrink-0 justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="cursor-grab px-1"
-                    // aria-disabled, not disabled: a disabled grip
-                    // drops keyboard focus mid-reorder (DES-011);
-                    // `moveBy` already refuses while a save is in
-                    // flight.
-                    aria-disabled={reorder.status === "saving"}
-                    aria-label={reorder.gripLabel(row, index + 1, rows.length)}
-                    onKeyDown={(event) => {
-                      if (event.key === "ArrowUp") {
-                        event.preventDefault();
-                        moveBy(index, -1);
-                      }
-                      if (event.key === "ArrowDown") {
-                        event.preventDefault();
-                        moveBy(index, 1);
-                      }
-                    }}
-                  >
-                    <GripVertical size={16} aria-hidden="true" className="text-muted" />
-                  </Button>
-                </span>
-              )}
-              <span
-                className={`flex min-w-0 flex-1 items-center gap-2 ${reorder ? "ps-1" : "ps-4"}`}
+          {rows.map((row, index) => {
+            const content = rowContent?.(row);
+            return (
+              <li
+                key={row.id}
+                draggable={reorder !== undefined && editing?.id !== row.id && !content}
+                onDragStart={() => {
+                  dragFrom.current = index;
+                }}
+                onDragOver={reorder && ((event) => event.preventDefault())}
+                onDrop={reorder && ((event) => drop(event, index))}
+                className={`border-b border-border-muted ${rowClassName?.(row) ?? ""}`}
               >
-                {nameSlot(row)}
-                {rowDetails?.(row)}
-              </span>
-              {rowMeta && (
-                <span className="px-3 text-sm whitespace-nowrap text-muted">{rowMeta(row)}</span>
-              )}
-              <span className="flex items-center gap-1">
-                <StatusNote status={rowStatus[row.id] ?? "idle"} detail={rowError[row.id]} />
-                {rowActions?.(row)}
-                {trailingAction(row)}
-              </span>
-            </li>
-          ))}
+                <div className={`flex ${rowCaption ? "h-13" : "h-11"} items-center pe-3`}>
+                  {reorder && (
+                    <span className="flex w-9 shrink-0 justify-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="cursor-grab px-1"
+                        draggable={!!content}
+                        // aria-disabled, not disabled: a disabled grip
+                        // drops keyboard focus mid-reorder (DES-011);
+                        // `moveBy` already refuses while a save is in
+                        // flight.
+                        aria-disabled={reorder.status === "saving"}
+                        aria-label={reorder.gripLabel(row, index + 1, rows.length)}
+                        onKeyDown={(event) => {
+                          if (event.key === "ArrowUp") {
+                            event.preventDefault();
+                            moveBy(index, -1);
+                          }
+                          if (event.key === "ArrowDown") {
+                            event.preventDefault();
+                            moveBy(index, 1);
+                          }
+                        }}
+                      >
+                        <GripVertical size={16} aria-hidden="true" className="text-muted" />
+                      </Button>
+                    </span>
+                  )}
+                  <span
+                    className={`flex min-w-0 flex-1 items-center gap-2 ${reorder ? "ps-1" : "ps-4"}`}
+                  >
+                    {nameSlot(row)}
+                    {rowDetails?.(row)}
+                  </span>
+                  {rowMeta && (
+                    <span className="px-3 text-sm whitespace-nowrap text-muted">
+                      {rowMeta(row)}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <StatusNote status={rowStatus[row.id] ?? "idle"} detail={rowError[row.id]} />
+                    {rowActions?.(row)}
+                    {trailingAction(row)}
+                  </span>
+                </div>
+                {content}
+              </li>
+            );
+          })}
           {adding && addRow && (
             <li
               className={`flex min-h-11 items-center gap-2 border-b border-border-muted py-2 pe-3 ${reorder ? "ps-9" : "ps-4"}`}

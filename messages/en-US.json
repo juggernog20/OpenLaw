@@ -2237,6 +2237,9 @@
   "autoDocs.reviewCurrentForm": {
     "defaultMessage": "Review current form"
   },
+  "autoDocs.ruleAddValue": {
+    "defaultMessage": "Add value"
+  },
   "autoDocs.ruleCount": {
     "defaultMessage": "{count, plural, one {# rule} other {# rules}}"
   },
@@ -2252,8 +2255,17 @@
   "autoDocs.ruleOperator": {
     "defaultMessage": "{operator, select, equals {Equals} is_one_of {Is one of} is_set {Is set} other {Is not}}"
   },
+  "autoDocs.ruleRemoveValue": {
+    "defaultMessage": "Remove value {number}"
+  },
   "autoDocs.ruleValue": {
     "defaultMessage": "Value"
+  },
+  "autoDocs.ruleValueNumber": {
+    "defaultMessage": "Value {number}"
+  },
+  "autoDocs.ruleValues": {
+    "defaultMessage": "Values"
   },
   "autoDocs.ruleWords": {
     "defaultMessage": "{operator, select, equals {{label} equals {value}} is_one_of {{label} is one of {value}} is_set {{label} is set} other {{label} is not {value}}}"
@@ -2342,17 +2354,47 @@
   "autoDocs.upload": {
     "defaultMessage": "Upload"
   },
-  "autoDocs.uploadCaption": {
-    "defaultMessage": "Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place."
+  "autoDocs.uploadBlocks": {
+    "defaultMessage": "Blocks detected"
+  },
+  "autoDocs.uploadChangeFile": {
+    "defaultMessage": "Change file"
+  },
+  "autoDocs.uploadChooseFile": {
+    "defaultMessage": "Choose file"
+  },
+  "autoDocs.uploadComplete": {
+    "defaultMessage": "File version {number} uploaded"
+  },
+  "autoDocs.uploadDrop": {
+    "defaultMessage": "Drop your Word template here"
   },
   "autoDocs.uploadFailed": {
     "defaultMessage": "Could not upload the template. Try again."
   },
-  "autoDocs.uploadReport": {
-    "defaultMessage": "File version {number}: {placeholders, plural, one {# Placeholder} other {# Placeholders}}, {blocks, plural, one {# Block} other {# Blocks}}. {created, plural, =0 {No new form fields.} one {# form field created.} other {# form fields created.}} {orphaned, plural, =0 {} one {# field has no Placeholder now.} other {# fields have no Placeholder now.}}"
+  "autoDocs.uploadFieldsCreated": {
+    "defaultMessage": "{created, plural, =0 {No new form fields.} one {# form field created.} other {# form fields created.}}"
+  },
+  "autoDocs.uploadFileType": {
+    "defaultMessage": "Choose a single Word document (.docx)."
+  },
+  "autoDocs.uploadFormat": {
+    "defaultMessage": "One .docx file"
+  },
+  "autoDocs.uploadOrphanedFields": {
+    "defaultMessage": "{count, plural, one {# field no longer has a placeholder in this file.} other {# fields no longer have placeholders in this file.}} Your existing fields have been kept for review."
+  },
+  "autoDocs.uploadPlaceholders": {
+    "defaultMessage": "Placeholders detected"
+  },
+  "autoDocs.uploadRemoveFile": {
+    "defaultMessage": "Remove file"
   },
   "autoDocs.uploadVersion": {
     "defaultMessage": "Upload version"
+  },
+  "autoDocs.uploading": {
+    "defaultMessage": "Uploading…"
   },
   "autoDocs.valueCadence": {
     "defaultMessage": "Cadence"
@@ -2641,6 +2683,9 @@
   },
   "common.delete": {
     "defaultMessage": "Delete"
+  },
+  "common.done": {
+    "defaultMessage": "Done"
   },
   "common.edit": {
     "defaultMessage": "Edit"
