@@ -5,6 +5,7 @@
  * Matters (DOC-002), filtered on standard Document properties only (DOC-007)
  * under the DD-014 reach gate. Built in M26.
  */
+import { DOCUMENT_TYPE_COLORS } from "@openlaw/shared";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -171,6 +172,7 @@ const RepositoryRowSchema = z.object({
     /** DOC-015: the current Version's type name, or its Knowledge Item's
      * Knowledge type, or null for none. */
     documentType: z.string().nullable(),
+    documentTypeColor: z.enum(DOCUMENT_TYPE_COLORS).nullable(),
     originalFilename: z.string(),
     mimeType: z.string(),
     byteSize: z.int().nonnegative(),
@@ -336,6 +338,7 @@ function selectRepository(db: Db) {
         versionId: documentVersions.id,
         versionNumber: documentVersions.versionNumber,
         versionKind: documentVersions.kind,
+        documentTypeColor: documentTypes.color,
         documentTypeName: sql<
           string | null
         >`coalesce(${documentTypes.displayName}, ${knowledgeTypes.displayName})`,
@@ -434,6 +437,7 @@ function toRepositoryRow(row: RepositoryDbRow): z.infer<typeof RepositoryRowSche
       versionNumber: row.versionNumber,
       kind: row.versionKind,
       documentType: row.documentTypeName,
+      documentTypeColor: row.documentTypeColor,
       originalFilename: row.originalFilename,
       mimeType: row.mimeType,
       byteSize: row.byteSize,

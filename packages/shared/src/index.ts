@@ -714,3 +714,4 @@ export function isLiveEnvelopeStatus(status: string): boolean {
 }
 export const ENVELOPE_IDEMPOTENCY_CONFLICT_PROBLEM_TYPE =
   "urn:openlaw:problem:envelope-idempotency-conflict";
+export { DOCUMENT_TYPE_COLORS, type DocumentTypeColor } from "./document-type-colors.js";

@@ -41,74 +41,38 @@ document is the map, not the territory.
 
 ## Where we are
 
-**M44 Advanced search is built on `feat/m44-advanced-search`, with its close in [#1100](https://github.com/juggernog20/OpenLaw/issues/1100), omnibus [#1068](https://github.com/juggernog20/OpenLaw/issues/1068).** The dialog combines words, kind, scope, standard properties and Fields, with relative dates and a live exact total. Questions travel in URLs, private saved searches and browser-local Recent. The close adds the records and browser proof. M41 OAuth Clients is in build, M42 follows it, and M34 Release goes after both.
+**All planned feature milestones are merged to `dev`: M1–M33 (including M21A) and M35–M44.**
+M34 Release remains open. Status here follows the fetched `origin/dev` history through
+`36bf8fdd`, rather than the age of an individual checkout. Checked milestones mean their implementation
+has landed on the development branch; they do not mean a tagged release has shipped.
 
-**M39 is shipped, omnibus [#1007](https://github.com/juggernog20/OpenLaw/issues/1007).** Each Contract, Matter and Entity type owns a Form of Rows and Branches. Contract and Matter Rows carry On intake form, Required for creation and Visible on Portal; Entity Rows omit On intake form. The switches decide the touchpoint and what a Business User reads. Request types read their destination Form; conversion and direct creation use the same conditions. The legacy intake catalog and Field tag are retired. **M40, MCP API keys and the Client register, is shipped to dev in PR [#1120](https://github.com/juggernog20/OpenLaw/pull/1120).** DD-029 and its sibling records are written. M41 OAuth Clients is in build, M42 follows it, and M34 Release goes after both.
+The latest closes are:
 
-**M37 Answer style is built.** Administrators choose the organization Answer style and override it on Contract text Fields. Prompt cards separate editable extraction instructions from fixed format sentences.
+- **M40 — MCP API keys and the register**, merged in [#1120](https://github.com/juggernog20/OpenLaw/pull/1120).
+  Approved API keys expose the default read and write Toolsets, with activity attribution and a Tool calls log.
+- **M41 — MCP OAuth Clients**, merged in [#1154](https://github.com/juggernog20/OpenLaw/pull/1154).
+  Allowed Clients, consent, connected Clients and Disconnect are built, with an SDK browser journey and
+  an M40 upgrade rehearsal. Live vendor connections retain their deployment checklist.
+- **M42 — MCP resources, prompts and subscriptions**, merged in [#1188](https://github.com/juggernog20/OpenLaw/pull/1188).
+  Record resources, triage and summary prompts, change notifications, and the Team and Administration
+  Toolsets complete the planned MCP work.
+- **M43 — Email**, merged in [#1142](https://github.com/juggernog20/OpenLaw/pull/1142).
+  Every email uses the shared HTML layout, with inline organization branding and configurable comment words.
+- **M44 — Advanced search**, merged in [#1145](https://github.com/juggernog20/OpenLaw/pull/1145).
+  Compound questions, relative dates, live exact totals, URLs, private saved searches and browser-local
+  Recent are built, with the close journey and accessibility coverage.
 
-**M38 adds device notifications on the staff app and the Portal.** Push joins In-app and Email,
-with browser enrolment, a Devices list, revocation, and a choice to hide record names. The push
-service carries only a notification ID and its bell surface; the service worker reads the item
-through the signed-in API. M36 added the share register and cap table. **M43 is shipped to dev in PR [#1142](https://github.com/juggernog20/OpenLaw/pull/1142), and every email now sits on one HTML layout.** M41 OAuth Clients is in build, M42 follows it, and M34 Release goes after both.
+**Next milestone: M34 Release.** Installation, upgrade and backup documentation already exists. The
+remaining release work includes tagged images and artifacts, a generated changelog, and the timed
+clean-VM install by someone who did not build the app. Earlier feature detail stays in the milestone
+entries below.
 
-**M35 delivered Auto-Docs.** Legal publishes a Word template and form as one Live pair, and selected Business Users generate documents through the Portal. Generations deliver Word and PDF, create draft Contracts with their default people and assigned Legal Owner, and can be Filed to reached records. Departments and the Portal first run complete SET-011's pre-launch obligation. M33 closed the app first run. Then, for the record: **M32 added Redline compare to the Document chain.** A reader opens a stored Comparison of two Versions, reads its change model in the compare screen, and moves through the change pane. Word pairs run through the existing doc-engine sidecar and export once per pair as a Generated redline with both operands on the chain. Other pairs use extracted text and state that formatting and export are unavailable. **M31 ships AI Contract analysis.** One runtime BYO-key connector supports Anthropic Messages, OpenAI-compatible chat completions, and Gemini through presets or a custom endpoint. An executed primary Document automatically queues extraction against the seven core targets plus prompted catalog Fields; the evidence-checked writer preserves human values, marks every AI write unverified, and carries that marker onto derived deadline surfaces until a person confirms. The Contract record revalidates from the completion frame, so another open browser sees the run and its writes land without a refresh. **M30 makes the open record live.** One `GET /api/events` connection per signed-in tab carries prompts, never payloads, and Postgres `LISTEN`/`NOTIFY` fans them out across the API and the worker. The bell, an open comment thread, an open Activity feed, the Approvals & signing card, the Envelope row, and the Home Inbox count re-read their existing routes when a frame names them, so a live update passes the same reach and tier gates as a page load. The 60-second bell poll is gone. **M29 makes Home the personal state summary and completes the daily briefing.** A Member+ user lands on pending Approvals, assigned Tasks, approaching Dates, Entity Obligations, the Inbox, managed Contracts, and managed Matters. The morning email carries its six cross-module sections, and one daily bell summary opens Home. Reporting remains deferred as a destination.
-
-**Arc 6 is complete: M28 gives the legal team's know-how a file-first Knowledge destination and a requester-facing route out of Intake.** A dropped file creates one draft Knowledge Item with its Document pinned as primary. Member+ publishes it, marks it portal-readable, and an Administrator places it on the portal home as an internal deflection link. The portal article reads the primary Document first and optional Markdown guidance last. Nested Knowledge Folders organize items without adding Document folders, the managed list and search cover both item text and owned paper, the Documents repository gains its fourth owner, and the morning briefing gains its Knowledge section. **M27 turns the Entity registry into the corporate record.** A subsidiary now carries Officers, Registrations, Holdings, Obligations, statutory Documents, and query-derived Contract and Matter roll-ups. The Entities destination opens on the compliance calendar, with the DES-046 registry and the ownership chart beside it; the DD-014 gate reaches every view and reference. M27 also extends the M26 Documents destination to Entity-owned Documents. **M26 makes the legal file layer browsable from one Documents destination.** A reader can start with a Counterparty, format, Version kind, date, uploader, or owning-record filter, then open the matching current Version on its Contract or Matter without knowing that owner first. Recent means recently uploaded, and the flat managed list carries saved views while DD-014 removes unreachable rows and filter options before paging. **M25 opened Arc 6 with one global search across the records and the words inside their paper.** Pressing `/` opens the ranked, viewer-scoped answer; a Document hit names its owning record and opens the matching Version with the PDF find bar already filled. Stored generated vectors keep record edits and extracted text indexed in the same write, while DD-014's existing reach predicates stay ahead of ranking and paging. **Arcs 4 and 5 are complete: M24 adds reusable Matter templates to the complete Matter workspace.** Named templates can pre-fill Matter defaults and custom fields, then create relative Tasks and Key dates through either the direct or Intake creation path. M23 supplied the work surfaces around the M22 record: Key dates join the active deadline system; Tasks stay a lightweight internal checklist; parent, child, and flat relationships remain navigational; Contracts link without losing their standalone identity; reached Contributors can edit business Fields and supply supporting Documents; and Closing is an advisory signal that leaves the record writable. Arc 1 is done: the monorepo and CI,
-the authentication chain, the Compose stack a deployer actually runs, the themed app shell, and the
-`/settings` destination with its Personal and Organization rails. Arc 2 is done too: the
-configurable types and statuses, the Entities registry, the contract record, the conversation on a
-record with the two read surfaces over the activity log, and the confidentiality gate that takes a
-walled-off contract out of the reach of everyone outside its team. Arc 3 is now complete: M11 puts the
-paper on the record — the version chain, the storage adapter, and the two drivers behind it — M12
-makes that paper readable, with the doc panel over five families, the doc-engine sidecar, and the
-background pipeline that extracts every version's text, M13 organizes it, with folders inside
-the record and a folder drop that recreates the structure it arrived with, M14 puts the
-six-stage backbone and its sign-off on the record — the stage pipeline, parallel approvals with
-reusable approver groups, and the soft gate that warns before a contract goes past open sign-off —
-M15 sends the paper out and takes it back: the signing adapter with DocuSign behind it, the
-envelope on the record, the webhook and the sweep that both report what happened, and the executed
-PDF that files and pins itself when everybody has signed — the manual hand-off still needs no
-configuration at all — M16 gives the record a term: the five typed columns, the notice deadline
-and the pending-confirmation state that derive themselves out of them, the key dates that join both
-in one deadline surface, and the Renew dialog that routes a renewal to whichever of the four vehicles
-the team actually used — M17 adds the task checklist, the relations panel with parent hierarchy
-and typed directional links, and end of life as a signal that leaves the record writable — and M18
-finally makes the system speak: the Notifier seam, the bell with its 9+ badge, immediate email for a
-direct ask, and one morning briefing for the dates coming up, on a scheduled round that serves each
-reader at their own eight o'clock. Arc 4, the front door, is complete: M19 configures it — the Intake
-section on the settings rail, request types on the same machinery every other type table already
-uses, the three-state target that decides at the door what a request will become, the form definition
-that reuses the M6 field catalog rather than building a second one, and the deflection links panel
-that answers a question before it becomes a request. Nothing in M19 was visible to a requester, and
-M20 is the milestone that opens the door: the lightweight portal a business user magic-links into, the
-form that renders M19's configuration, the Request with its R-### and its paper, the conversation
-Legal answers on, and a bell and a notification pane of the portal's own. Every one of those reads is
-its own mount rather than a loosened staff gate, and the thread and the bell are the comments and
-notification machinery given one more arm rather than a second system. M21 closes the arc by
-receiving what M20 lets people send: the Inbox one click behind Home, listing exactly the Requests whose
-fate is undecided; the staff detail that reads a whole Request on one screen; and disposition at
-pickup — Convert, Resolve, or Decline, atomic on `new` under the Request's own row lock, with no
-parked intermediate state and no claim step. Convert is the one the milestone is for. It runs the
-ordinary contract-create write inside the disposition transaction, so the record is born ordinary,
-with the summary as its title, the urgency as its priority, the collected values in their real
-fields, the paper promoted into documents, and the thread re-parented onto the record with its tiers
-intact. Nothing is re-keyed and nothing is dropped in silence. The Requester's window survives all
-of it: the same address, the same conversation, and one vocabulary — Open, In progress, Resolved,
-Declined — on the pill, the banner, and the email alike. M21A completes the hand-off after conversion:
-paper rides a comment at its tier, a Member+ files it as a new Document or the next Version, and the
-round's kind can be corrected without moving the bytes or the executed pin. A dispositioned Request
-takes no more attachments of its own; its stable portal thread is the door beside that wall. M22 added the
-second workspace: a Matter is born under its own M-###, configured type and open/closed status, one
-nullable Matter Manager and roster, priority and risk, hard-required matter fields, lifecycle timestamps,
-confidential reach, a managed list, an editable detail, and the same comments, history, notifications, and
-document machinery a Contract already wears. The Request door now converts into either record through
-one guarded transaction; its values, paper, thread, watermarks, and requester window all follow the Matter
-arm too. M23 completed the record as a work surface with Key dates, Tasks, relationships, linked
-Contracts, the Contributor grid, and Closing that leaves the record writable. M24 completed Arc 5 with
-named Matter templates, direct and Intake application, Matter defaults, and relative Tasks and Key dates.
-M25 now makes every live, reachable record and every ready Document text row findable from one box.
-M26 adds a flat repository over every reachable Contract-owned and Matter-owned Document, with standard-property filters, recently uploaded paper, saved views, and direct landing on the current Version.
+Two follow-ups sit outside the milestone checkmarks. DocuSign preparation and resume
+([#1170](https://github.com/juggernog20/OpenLaw/issues/1170)) merged in
+[#1197](https://github.com/juggernog20/OpenLaw/pull/1197); its live verification and default rollout
+stay open in [#1178](https://github.com/juggernog20/OpenLaw/issues/1178). The DOC-030 guide
+re-verification ([#1157](https://github.com/juggernog20/OpenLaw/issues/1157)) merged in
+[#1196](https://github.com/juggernog20/OpenLaw/pull/1196).
 
 ---
 
@@ -679,8 +643,8 @@ leaves a coherent product; none of them is optional in the sense that we intend 
       Setup checklist; configuring AI analysis in its Settings pane removes that row.
   - The SET-004 wizard, completed: the auth, portal, email, and invite steps shipped with M2; the org
     identity, E-signature, AI analysis, and review-seeded-types steps land here, once the features behind them exist
-  - Sits deliberately last-but-one: building these steps earlier would mean wizard steps for features
-    that don't exist, which the no-stubbed-demos rule forbids
+  - Follows the features it configures so every wizard step has a working destination; later feature
+    milestones also land before M34 Release
   - _Decisions:_ SET-004, SET-008 · _Issues:_ #697–#702 · _Parent:_ #696
 
 - [x] **M35 — Auto-Docs**
@@ -762,6 +726,8 @@ leaves a coherent product; none of them is optional in the sense that we intend 
 - [x] **M40 — MCP: API keys and the register**, omnibus [#1047](https://github.com/juggernog20/OpenLaw/issues/1047)
       _Demo:_ A Legal Team Member requests an API key, an Administrator approves it from "Your approvals",
       the member adds OpenLaw to Claude Code with one command and asks which Contracts expire this quarter.
+      _Merged to dev:_ [#1120](https://github.com/juggernog20/OpenLaw/pull/1120).
+      The browser journey is [`62-m40-mcp.spec.ts`](../e2e/tests/62-m40-mcp.spec.ts).
   - The `/mcp` mount on SDK v2 serving both protocol eras; the api-key plugin with the approval flow
   - Personal → API keys; Organization → MCP with the group rows and the ceiling; "Your approvals" in the bell
   - Every Tool of every default Toolset, read and write: T1 to T32, T36 to T39, T41 and T42, with the `write` scope
@@ -772,6 +738,8 @@ leaves a coherent product; none of them is optional in the sense that we intend 
 - [x] **M41 — MCP: OAuth Clients**, omnibus [#1131](https://github.com/juggernog20/OpenLaw/issues/1131)
       _Demo:_ An Administrator lists ChatGPT as an Allowed Client, a Legal Team Member adds OpenLaw in
       ChatGPT Developer mode, consents to Matters with write, and asks ChatGPT to open a Matter from a Request.
+      _Merged to dev:_ [#1154](https://github.com/juggernog20/OpenLaw/pull/1154).
+      The browser journey is [`63-m41-oauth.spec.ts`](../e2e/tests/63-m41-oauth.spec.ts).
   - The `mcp()`, `jwt()` and `cimd()` plugins; Allowed Clients with both entry kinds
   - The consent page, connected Clients on the API keys pane, and the reachability warning
   - Client guides for Claude, ChatGPT and Microsoft 365 Copilot; public vendor connections follow the deployment checklist
@@ -779,32 +747,40 @@ leaves a coherent product; none of them is optional in the sense that we intend 
   - _Tickets:_ [#1132](https://github.com/juggernog20/OpenLaw/issues/1132), [#1133](https://github.com/juggernog20/OpenLaw/issues/1133), [#1134](https://github.com/juggernog20/OpenLaw/issues/1134), [#1135](https://github.com/juggernog20/OpenLaw/issues/1135), [#1136](https://github.com/juggernog20/OpenLaw/issues/1136), [#1137](https://github.com/juggernog20/OpenLaw/issues/1137), [#1138](https://github.com/juggernog20/OpenLaw/issues/1138), [#1139](https://github.com/juggernog20/OpenLaw/issues/1139)
   - _Decisions:_ DD-029, TECH-035, SET-014, DES-092
 
-- [x] **M42: MCP resources, prompts and subscriptions**, omnibus [#1159](https://github.com/juggernog20/OpenLaw/issues/1159)
+- [x] **M42 — MCP: resources, prompts, subscriptions**, omnibus [#1159](https://github.com/juggernog20/OpenLaw/issues/1159)
       _Demo:_ In Claude Code, attach a Contract as a resource, run the triage prompt on the Inbox, and see
       the tool list refresh when an Administrator turns a Toolset on; an Administrator asks the audit log
       a question from the chat.
-  - Record resources and the triage and summary prompts
-  - The listen stream on the event hub for change notifications
+      _Merged to dev:_ [#1188](https://github.com/juggernog20/OpenLaw/pull/1188).
+      The browser journey is [`64-m42.spec.ts`](https://github.com/juggernog20/OpenLaw/blob/9380e2a6/e2e/tests/64-m42.spec.ts).
+  - Record resources and the triage and summary prompts, sharing the matching Tools' grant and record gates
+  - The listen stream on the event hub for modern Clients; legacy Clients reload their lists manually
   - The `team` and `administration` Toolsets, T33 to T35 and T40; audit-log routes already enforce record-level reach
+  - Team and Administration start off in the ceiling; enabling either adds no access to existing credentials
+  - The SDK browser journey and upgrade rehearsal cover the new surfaces and preserve existing credentials
   - _Tickets:_ [#1160](https://github.com/juggernog20/OpenLaw/issues/1160), [#1161](https://github.com/juggernog20/OpenLaw/issues/1161), [#1162](https://github.com/juggernog20/OpenLaw/issues/1162), [#1163](https://github.com/juggernog20/OpenLaw/issues/1163), [#1164](https://github.com/juggernog20/OpenLaw/issues/1164), [#1165](https://github.com/juggernog20/OpenLaw/issues/1165), [#1166](https://github.com/juggernog20/OpenLaw/issues/1166), [#1167](https://github.com/juggernog20/OpenLaw/issues/1167)
   - _Decisions:_ DD-029, TECH-035
 
-- [ ] **M43 — Email: one HTML layout for every email**
+- [x] **M43 — Email: one HTML layout for every email**
       _Demo:_ A Legal Team Member opens an approval email on a phone and sees the org's logo and name, the
       Contract, its status and who asked, with the button in the record card. A mention email shows the
       comment's words and its tier. The morning briefing opens with count tiles. An Administrator turns
       comment words off, and the next mention arrives without them.
       _Issues:_ omnibus [#1080](https://github.com/juggernog20/OpenLaw/issues/1080), tasks #1083–#1101.
+      _Merged to dev:_ [#1142](https://github.com/juggernog20/OpenLaw/pull/1142).
+      The browser journey is [`62-m43-approval-email.spec.ts`](../e2e/tests/62-m43-approval-email.spec.ts).
   - The shared email layout (A2 · Console+) and the approval email on it, with a Mailpit HTML check in e2e
   - The org logo as an inline PNG, made at upload from PNG, JPEG, WebP or SVG
   - Every Contract, Matter, Request, briefing, Auto-Doc, account and SMTP test email on the layout
   - Comment words in mention, comment and reply emails, read at send time, with an Administrator switch
   - _Decisions:_ DES-093 (new), DES-051, NOT-002 and CMT-006 addenda of 2026-09-24, a TECH-011 addendum
 
-- [ ] **M44 — Advanced search**
+- [x] **M44 — Advanced search**
       _Demo:_ Open Advanced search, ask for Contracts that expire in the next 90 days, whose Governing law
       Field contains "Delaware", and that mention "change of control"; save it as Renewals; open it again
       tomorrow from the search box.
+      _Merged to dev:_ [#1145](https://github.com/juggernog20/OpenLaw/pull/1145).
+      The browser journey is [`62-m44-close.spec.ts`](../e2e/tests/62-m44-close.spec.ts).
   - One versioned question, shared validation and URL codec; words and scope over the existing search vectors
   - Standard properties and live Contract, Matter and Entity Fields as conditions; Match all / Match any,
     exact totals, stable paging and five sorts behind the existing reach gates
@@ -822,7 +798,8 @@ leaves a coherent product; none of them is optional in the sense that we intend 
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.
   - Semver tag to ghcr images plus `compose.yml` and `.env.example` artifacts; generated CHANGELOG
-  - Install documentation, upgrade path, and the backup story
+  - Install documentation, upgrade path, and the backup story already exist in `DEPLOYMENT.md` and the
+    operator guides; reconcile them with the release artifacts
   - The under-an-hour install actually timed, by someone who didn't build it
   - _Decisions:_ TECH-005, TECH-014, PRODUCT.md
 

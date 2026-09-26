@@ -75,6 +75,7 @@ function recordApi(
   let row = initial;
   const patches: unknown[] = [];
   const posts: string[] = [];
+  const linkedReads: URL[] = [];
   const handler = (call: StubCall): Response | undefined => {
     if (call.url.pathname === "/api/v1/entities/e1" && call.method === "GET") {
       return json(200, {
@@ -91,10 +92,39 @@ function recordApi(
       return json(200, linked.counts ?? { contracts: 0, matters: 0 });
     }
     if (call.url.pathname === "/api/v1/entities/e1/contracts" && call.method === "GET") {
-      return json(200, { records: linked.contracts ?? [] });
+      linkedReads.push(call.url);
+      return json(200, {
+        records: (linked.contracts ?? []).map((row) => ({
+          archivedAt: null,
+          stage: "active",
+          contractTypeName: "NDA",
+          manager: null,
+          primaryCounterparty: null,
+          nextDeadline: null,
+          value: null,
+          entity: null,
+          ...(row as object),
+        })),
+        total: linked.contracts?.length ?? 0,
+        nextCursor: null,
+      });
     }
     if (call.url.pathname === "/api/v1/entities/e1/matters" && call.method === "GET") {
-      return json(200, { records: linked.matters ?? [] });
+      linkedReads.push(call.url);
+      return json(200, {
+        records: (linked.matters ?? []).map((row) => ({
+          archivedAt: null,
+          matterTypeName: "Litigation",
+          manager: null,
+          priority: "medium",
+          risk: null,
+          nextDeadline: null,
+          openedAt: "2026-09-01T00:00:00Z",
+          ...(row as object),
+        })),
+        total: linked.matters?.length ?? 0,
+        nextCursor: null,
+      });
     }
     if (call.url.pathname === "/api/v1/entities/e1/documents" && call.method === "GET") {
       return json(200, { documents: [], nextCursor: null });
@@ -129,7 +159,7 @@ function recordApi(
     }
     return undefined;
   };
-  return { handler, patches, posts };
+  return { handler, patches, posts, linkedReads };
 }
 
 describe("the /entities/:entityId record page", () => {
@@ -375,17 +405,27 @@ describe("the /entities/:entityId record page", () => {
     });
     stubApi({ signedIn: MEMBER, extra: api.handler });
     const { router } = renderAt("/entities/e1/contracts");
-    expect(await screen.findByRole("link", { name: /C-7.*Lease/ })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Lease" })).toHaveAttribute(
       "href",
       "/contracts/7",
     );
     expect(screen.getByRole("img", { name: "1 linked Contract" })).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByRole("columnheader", { name: /Counterparty/ })).toBeVisible();
+    expect(within(table).getByText("NDA")).toBeVisible();
+    await userEvent.setup().click(within(table).getByRole("button", { name: "Title" }));
+    await waitFor(() => expect(api.linkedReads.at(-1)?.searchParams.get("sort")).toBe("title"));
+    await screen.findByRole("link", { name: "Lease" });
     await router.navigate("/entities/e1/matters");
-    expect(await screen.findByRole("link", { name: /M-8.*Dispute/ })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Dispute" })).toHaveAttribute(
       "href",
       "/matters/8",
     );
     expect(screen.getByRole("img", { name: "1 linked Matter" })).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Litigation")).toBeVisible();
+    expect(
+      within(screen.getByRole("table")).getByRole("columnheader", { name: /Priority/ }),
+    ).toBeVisible();
   });
 
   it("mounts the Activity applet with the Entity reference", async () => {
@@ -478,7 +518,10 @@ describe("the /entities/:entityId record page", () => {
         }
         if (call.url.pathname === "/api/v1/entities/e1/officers" && call.method === "POST") {
           writes.push({ method: "POST", path: call.url.pathname, body: call.body });
-          held = officer(call.body as Record<string, unknown>);
+          held = officer({
+            ...(call.body as Record<string, unknown>),
+            user: { id: "u2", displayName: "Nadia Counsel", image: null },
+          });
           return json(201, { officer: held });
         }
         if (call.url.pathname === "/api/v1/entities/e1/officers/o1") {
@@ -487,7 +530,11 @@ describe("the /entities/:entityId record page", () => {
             held = null;
             return new Response(null, { status: 204 });
           }
-          held = { ...held, ...(call.body as Record<string, unknown>) };
+          held = {
+            ...held,
+            ...(call.body as Record<string, unknown>),
+            ...((call.body as Record<string, unknown>).userId === null ? { user: null } : {}),
+          };
           return json(200, { officer: held });
         }
         return api.handler(call);
@@ -498,19 +545,20 @@ describe("the /entities/:entityId record page", () => {
 
     expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Add director or officer" }));
-    await user.type(screen.getByLabelText("Director or officer name"), "Dana Director");
+    expect(screen.queryByLabelText("Linked user")).not.toBeInTheDocument();
+    await user.type(screen.getByRole("combobox", { name: "Director or officer name" }), "Nadia");
+    await user.keyboard("{ArrowDown}{Enter}");
     await user.type(screen.getByLabelText("Appointed on"), "2025-02-03");
-    await user.selectOptions(screen.getByLabelText("Linked user"), "u2");
     await user.click(screen.getByRole("button", { name: "Add" }));
-    expect(await screen.findByLabelText("Dana Director Director or officer name")).toHaveValue(
-      "Dana Director",
+    expect(await screen.findByLabelText("Nadia Counsel Director or officer name")).toHaveValue(
+      "Nadia Counsel",
     );
     expect(writes).toEqual([
       {
         method: "POST",
         path: "/api/v1/entities/e1/officers",
         body: {
-          name: "Dana Director",
+          name: "Nadia Counsel",
           officerRoleId: "r-director",
           appointedOn: "2025-02-03",
           userId: "u2",
@@ -518,11 +566,22 @@ describe("the /entities/:entityId record page", () => {
       },
     ]);
 
+    const name = screen.getByRole("combobox", { name: "Nadia Counsel Director or officer name" });
+    await user.clear(name);
+    await user.type(name, "Dana Director");
+    await user.tab();
+    await waitFor(() =>
+      expect(writes.at(-1)).toMatchObject({
+        method: "PATCH",
+        body: { name: "Dana Director", userId: null },
+      }),
+    );
+
     // Resigning moves the row out of the current list.
     await user.type(screen.getByLabelText("Dana Director Resigned on"), "2026-08-29");
     await user.tab();
     await waitFor(() =>
-      expect(writes[1]).toEqual({
+      expect(writes.at(-1)).toEqual({
         method: "PATCH",
         path: "/api/v1/entities/e1/officers/o1",
         body: { resignedOn: "2026-08-29" },

@@ -31,6 +31,7 @@ interface TypeRow {
   archivedAt: string | null;
   inUseCount: number;
   systemKind: string | null;
+  color: string | null;
 }
 
 interface VersionRow {
@@ -245,6 +246,147 @@ describe("the Document type lists", () => {
   });
 });
 
+describe("document type colours", () => {
+  it.each(["matter", "contract", "entity"])(
+    "saves and resets a colour in the %s list",
+    async (module) => {
+      const row = await createType(module, "Colour test");
+      expect(row.color).toBeNull();
+      const url = `/api/v1/documents/types/${module}/${row.id}`;
+      const changed = await harness.app.inject({
+        method: "PATCH",
+        url,
+        cookies: adminCookies,
+        payload: { color: "purple" },
+      });
+      expect(changed.statusCode, changed.body).toBe(200);
+      expect(changed.json().documentType.color).toBe("purple");
+      expect((await listTypes(module)).find((type) => type.id === row.id)?.color).toBe("purple");
+      const options = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/documents/type-options?module=${module}`,
+        cookies: memberCookies,
+      });
+      expect(options.json().documentTypes.find((type: TypeRow) => type.id === row.id).color).toBe(
+        "purple",
+      );
+      const reset = await harness.app.inject({
+        method: "PATCH",
+        url,
+        cookies: adminCookies,
+        payload: { color: null },
+      });
+      expect(reset.statusCode, reset.body).toBe(200);
+      expect(reset.json().documentType.color).toBeNull();
+    },
+  );
+
+  it("allows colours on fixed types while retaining their names and kinds", async () => {
+    const fixed = (await listTypes("contract")).find((row) => row.systemKind === "executed")!;
+    const url = `/api/v1/documents/types/contract/${fixed.id}`;
+    const changed = await harness.app.inject({
+      method: "PATCH",
+      url,
+      cookies: adminCookies,
+      payload: { color: "blue" },
+    });
+    expect(changed.statusCode, changed.body).toBe(200);
+    expect(changed.json().documentType).toMatchObject({
+      displayName: "Executed",
+      systemKind: "executed",
+      color: "blue",
+    });
+    const refused = await harness.app.inject({
+      method: "PATCH",
+      url,
+      cookies: adminCookies,
+      payload: { color: "red", displayName: "Renamed" },
+    });
+    expect(refused.statusCode).toBe(409);
+    expect((await listTypes("contract")).find((row) => row.id === fixed.id)?.color).toBe("blue");
+    const audit = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/audit-log",
+      cookies: adminCookies,
+      query: { action: "document_type.updated" },
+    });
+    expect(audit.statusCode, audit.body).toBe(200);
+    expect(audit.json().entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          payload: { slug: fixed.slug, changed: { color: { from: null, to: "blue" } } },
+        }),
+      ]),
+    );
+  });
+
+  it("rejects invalid colours, edits by non-admins, and cross-module writes", async () => {
+    const row = (await listTypes("contract"))[0]!;
+    const url = `/api/v1/documents/types/contract/${row.id}`;
+    for (const color of ["not-a-colour", "#ff0000", 123]) {
+      const res = await harness.app.inject({
+        method: "PATCH",
+        url,
+        cookies: adminCookies,
+        payload: { color },
+      });
+      expect(res.statusCode, res.body).toBe(400);
+    }
+    const forbidden = await harness.app.inject({
+      method: "PATCH",
+      url,
+      cookies: memberCookies,
+      payload: { color: "red" },
+    });
+    expect(forbidden.statusCode).toBe(403);
+    const crossed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/documents/types/matter/${row.id}`,
+      cookies: adminCookies,
+      payload: { color: "red" },
+    });
+    expect(crossed.statusCode).toBe(404);
+  });
+
+  it("updates existing document versions and the repository without changing their kind", async () => {
+    const row = await createType("contract", "Coloured attachment");
+    const contract = await newContract("Coloured paper");
+    const uploadUrl = `/api/v1/contracts/${contract.number}/documents`;
+    const uploaded = await upload(uploadUrl, { documentTypeId: row.id });
+    expect(uploaded.statusCode, uploaded.body).toBe(201);
+    const document = uploaded.json().document;
+    const changed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/documents/types/contract/${row.id}`,
+      cookies: adminCookies,
+      payload: { color: "orange" },
+    });
+    expect(changed.statusCode).toBe(200);
+    const list = await harness.app.inject({
+      method: "GET",
+      url: uploadUrl,
+      cookies: memberCookies,
+    });
+    expect(
+      list.json().documents.find((item: { id: string }) => item.id === document.id).versions[0],
+    ).toMatchObject({ kind: "general", documentType: { id: row.id, color: "orange" } });
+    const repository = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/documents",
+      cookies: memberCookies,
+    });
+    expect(repository.statusCode, repository.body).toBe(200);
+    expect(
+      repository.json().documents.find((item: { id: string }) => item.id === document.id)
+        .currentVersion,
+    ).toMatchObject({
+      documentType: row.displayName,
+      documentTypeColor: "orange",
+      kind: "general",
+    });
+  });
+});
+
 describe("a Version's type", () => {
   it("uploads with a type, maps its kind, and corrects it", async () => {
     const sideLetter = await createType("contract", "Side letter");
@@ -304,6 +446,12 @@ describe("a Version's type", () => {
     expect(typed.statusCode, typed.body).toBe(201);
     expect(currentOf(typed.json().document).documentType?.displayName).toBe("Letter");
 
+    await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/documents/types/matter/${letter.id}`,
+      cookies: adminCookies,
+      payload: { color: "green" },
+    });
     const archived = await harness.app.inject({
       method: "POST",
       url: `/api/v1/documents/types/matter/${letter.id}/archive`,
@@ -322,7 +470,11 @@ describe("a Version's type", () => {
       cookies: memberCookies,
     });
     const [kept] = list.json().documents as { versions: VersionRow[] }[];
-    expect(currentOf(kept!).documentType).toMatchObject({ displayName: "Letter", archived: true });
+    expect(currentOf(kept!).documentType).toMatchObject({
+      displayName: "Letter",
+      archived: true,
+      color: "green",
+    });
 
     // A Matter upload that names a negotiation kind stays neutral.
     const byKind = await upload(url, { kind: "executed" });

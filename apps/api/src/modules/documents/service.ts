@@ -155,6 +155,7 @@ const versionColumns = {
   kind: documentVersions.kind,
   documentTypeId: documentTypes.id,
   documentTypeName: documentTypes.displayName,
+  documentTypeColor: documentTypes.color,
   documentTypeArchivedAt: documentTypes.archivedAt,
   knowledgeTypeId: knowledgeTypes.id,
   knowledgeTypeName: knowledgeTypes.displayName,
@@ -228,12 +229,14 @@ export function toVersion(
         ? {
             id: row.documentTypeId,
             displayName: row.documentTypeName,
+            color: row.documentTypeColor,
             archived: row.documentTypeArchivedAt !== null,
           }
         : row.knowledgeTypeId !== null && row.knowledgeTypeName !== null
           ? {
               id: row.knowledgeTypeId,
               displayName: row.knowledgeTypeName,
+              color: null,
               archived: row.knowledgeTypeArchivedAt !== null,
             }
           : null,

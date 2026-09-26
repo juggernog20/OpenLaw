@@ -3,23 +3,17 @@
 /** Entity record roll-ups. Each target composes its own live reach predicate. */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import {
-  and,
-  contracts,
-  contractStatuses,
-  count,
-  eq,
-  fields,
-  matters,
-  matterStatuses,
-  sql,
-  CONTRACT_STAGES,
-} from "@openlaw/db";
+import { and, contracts, count, eq, fields, matters, sql, CONTRACT_STAGES } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { contractTeamScope } from "../../lib/contract-access.js";
 import { NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
 import { matterTeamScope } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+
+import { ContractListQuery, ContractRowSchema } from "../contracts/record.js";
+import { listContracts } from "../contracts/service.js";
+import { MatterListQuery, MatterRowSchema } from "../matters/record.js";
+import { listMatters } from "../matters/service.js";
 
 const requireReader = requireRole("administrator", "legal_team_member");
 const Params = z.object({ id: z.string().min(1).max(64) });
@@ -32,18 +26,26 @@ const Common = {
   isConfidential: z.boolean(),
   archived: z.boolean(),
 };
-const ContractRow = z.strictObject({
+const ContractRow = ContractRowSchema.extend({
   kind: z.literal("contract"),
   ...Common,
   statusCategory: z.enum(CONTRACT_STAGES),
 });
-const MatterRow = z.strictObject({
+const MatterRow = MatterRowSchema.extend({
   kind: z.literal("matter"),
   ...Common,
   statusCategory: z.enum(["open", "closed"]),
 });
-const ContractsEnvelope = z.object({ records: z.array(ContractRow) });
-const MattersEnvelope = z.object({ records: z.array(MatterRow) });
+const ContractsEnvelope = z.object({
+  records: z.array(ContractRow),
+  total: z.int(),
+  nextCursor: z.string().nullable(),
+});
+const MattersEnvelope = z.object({
+  records: z.array(MatterRow),
+  total: z.int(),
+  nextCursor: z.string().nullable(),
+});
 const CountsEnvelope = z.object({
   contracts: z.int().nonnegative(),
   matters: z.int().nonnegative(),
@@ -72,35 +74,30 @@ export const entityLinkedRecordsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary: "Contracts signed by this Entity that the viewer independently reaches.",
         tags: ["entities"],
         params: Params,
+        querystring: ContractListQuery,
         response: { 200: ContractsEnvelope, default: problemResponse },
       },
     },
     async (request) => {
       const entity = await assertEntity(request.params.id, request.user);
-      const rows = await app.db
-        .select({
-          id: contracts.id,
-          number: contracts.number,
-          title: contracts.title,
-          statusName: contractStatuses.displayName,
-          statusCategory: contractStatuses.stage,
-          isConfidential: contracts.isConfidential,
-          archivedAt: contracts.archivedAt,
-        })
-        .from(contracts)
-        .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
-        .where(and(eq(contracts.entityId, entity.id), contractTeamScope(app.db, request.user)))
-        .orderBy(contracts.number);
+      const page = await listContracts(
+        app.db,
+        request.user,
+        {
+          includeArchived: "true",
+          includeEnded: "true",
+          ...request.query,
+        },
+        eq(contracts.entityId, entity.id),
+      );
       return {
-        records: rows.map((row) => ({
+        total: page.total,
+        nextCursor: page.nextCursor,
+        records: page.contracts.map((row) => ({
+          ...row,
           kind: "contract" as const,
           restricted: false as const,
-          id: row.id,
-          number: row.number,
-          title: row.title,
-          statusName: row.statusName,
-          statusCategory: row.statusCategory,
-          isConfidential: row.isConfidential,
+          statusCategory: row.stage,
           archived: row.archivedAt !== null,
         })),
       };
@@ -116,35 +113,29 @@ export const entityLinkedRecordsRoutes: FastifyPluginAsyncZod = async (app) => {
         summary: "Matters naming this Entity in an attached Entity field that the viewer reaches.",
         tags: ["entities"],
         params: Params,
+        querystring: MatterListQuery,
         response: { 200: MattersEnvelope, default: problemResponse },
       },
     },
     async (request) => {
       const entity = await assertEntity(request.params.id, request.user);
-      const rows = await app.db
-        .select({
-          id: matters.id,
-          number: matters.number,
-          title: matters.title,
-          statusName: matterStatuses.displayName,
-          statusCategory: matterStatuses.category,
-          isConfidential: matters.isConfidential,
-          archivedAt: matters.archivedAt,
-        })
-        .from(matters)
-        .innerJoin(matterStatuses, eq(matterStatuses.id, matters.statusId))
-        .where(and(matterNamesEntity(entity.id), matterTeamScope(app.db, request.user)))
-        .orderBy(matters.number);
+      const page = await listMatters(
+        app.db,
+        request.user,
+        {
+          includeArchived: "true",
+          includeClosed: "true",
+          ...request.query,
+        },
+        matterNamesEntity(entity.id),
+      );
       return {
-        records: rows.map((row) => ({
+        total: page.total,
+        nextCursor: page.nextCursor,
+        records: page.matters.map((row) => ({
+          ...row,
           kind: "matter" as const,
           restricted: false as const,
-          id: row.id,
-          number: row.number,
-          title: row.title,
-          statusName: row.statusName,
-          statusCategory: row.statusCategory,
-          isConfidential: row.isConfidential,
           archived: row.archivedAt !== null,
         })),
       };

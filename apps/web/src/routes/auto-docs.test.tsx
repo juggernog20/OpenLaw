@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** ADO-001–004 through the destination, record, and form editor routes. */
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
 import type { AutoDocAnswer } from "../lib/auto-docs";
@@ -373,7 +373,16 @@ it("edits a field from its card, keeps the orphan cue, and reports or refuses an
   expect(within(fields).getByText("1 orphaned")).toBeVisible();
   expect(within(fields).getByText("No Placeholder in file version 1")).toBeVisible();
   expect(screen.getByRole("button", { name: "Placeholder counterparty_name" })).toBeVisible();
-  await user.click(within(fields).getByRole("button", { name: "Edit Signing date" }));
+  const editSigningDate = within(fields).getByRole("button", { name: "Edit Signing date" });
+  expect(editSigningDate).toHaveAttribute("aria-expanded", "false");
+  await user.click(editSigningDate);
+  const initialCard = screen.getByRole("region", { name: "Signing date" });
+  expect(editSigningDate.closest("li")).toContainElement(initialCard);
+  expect(editSigningDate).toHaveAttribute("aria-controls", initialCard.id);
+  expect(editSigningDate).toHaveAttribute("aria-expanded", "true");
+  await user.click(editSigningDate);
+  expect(initialCard).not.toBeInTheDocument();
+  await user.click(editSigningDate);
   const card = screen.getByRole("region", { name: "Signing date" });
   await user.selectOptions(within(card).getByLabelText("Type"), "date");
   await waitFor(() => expect(saves).toHaveLength(1));
@@ -437,6 +446,75 @@ it("edits a field from its card, keeps the orphan cue, and reports or refuses an
       "The upload response could not be read.",
     ),
   );
+});
+
+it("validates dropped templates, removes a selection, and reports a completed upload", async () => {
+  const user = userEvent.setup();
+  const current = record();
+  let uploads = 0;
+  let finish!: (response: Response) => void;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/reading")) return json(200, reading);
+      if (call.url.pathname.endsWith("/template")) {
+        uploads++;
+        return new Promise<Response>((resolve) => {
+          finish = resolve;
+        });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs/nda/form");
+  await screen.findByRole("heading", { name: "Supplier NDA" });
+  await user.click(screen.getByRole("button", { name: "Upload version" }));
+  const dialog = screen.getByRole("dialog");
+  const submit = within(dialog).getByRole("button", { name: "Upload" });
+  const drop = (files: File[]) =>
+    fireEvent.drop(within(dialog).getByText("Drop your Word template here"), {
+      dataTransfer: { files },
+    });
+  expect(within(dialog).getByRole("button", { name: "Choose file" })).toHaveFocus();
+  expect(submit).toBeDisabled();
+  drop([new File(["pdf"], "wrong.pdf")]);
+  expect(within(dialog).getByRole("alert")).toHaveTextContent(
+    "Choose a single Word document (.docx).",
+  );
+  const file = new File(["word"], "new-template.docx");
+  drop([file, file]);
+  expect(submit).toBeDisabled();
+  drop([file]);
+  expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+  expect(within(dialog).getByText("new-template.docx")).toBeVisible();
+  await user.click(within(dialog).getByRole("button", { name: "Remove file" }));
+  expect(submit).toBeDisabled();
+  expect(within(dialog).getByRole("button", { name: "Choose file" })).toHaveFocus();
+  await user.upload(within(dialog).getByLabelText("Word template"), file);
+  await user.click(submit);
+  await waitFor(() => expect(uploads).toBe(1));
+  expect(within(dialog).getByRole("button", { name: "Uploading…" })).toBeDisabled();
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeDisabled();
+  await user.keyboard("{Escape}");
+  expect(dialog).toBeVisible();
+  finish(
+    json(201, {
+      ...current,
+      template: {
+        ...current.template,
+        versions: [{ ...current.template!.versions[0], id: "v2", versionNumber: 2 }],
+      },
+    }),
+  );
+  expect(await within(dialog).findByText("File version 2 uploaded")).toBeVisible();
+  expect(within(dialog).getByText("Placeholders detected")).toBeVisible();
+  expect(within(dialog).getByText(/1 field no longer has a placeholder/)).toBeVisible();
+  await user.click(within(dialog).getByRole("button", { name: "Done" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
 it("refuses a duplicate slug and empty options beside the control, before anything is sent", async () => {

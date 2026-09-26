@@ -124,6 +124,7 @@
  * rather than one generic edit.
  */
 
+import { DOCUMENT_TYPE_COLORS } from "@openlaw/shared";
 import {
   and,
   asc,
@@ -366,7 +367,12 @@ const VersionSchema = z.object({
    * that carry it. A Knowledge Item's files carry the item's Knowledge
    * type, which is set on the item and not per round. */
   documentType: z
-    .object({ id: z.string(), displayName: z.string(), archived: z.boolean() })
+    .object({
+      id: z.string(),
+      displayName: z.string(),
+      archived: z.boolean(),
+      color: z.enum(DOCUMENT_TYPE_COLORS).nullable(),
+    })
     .nullable(),
   source: z.enum(DOCUMENT_VERSION_SOURCES),
   comparedFromVersionNumber: z.int().positive().nullable(),

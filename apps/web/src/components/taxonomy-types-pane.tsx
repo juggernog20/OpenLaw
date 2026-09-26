@@ -310,6 +310,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   editor,
   protectedRow,
   columns,
+  rowActions,
   api,
   messages,
 }: Readonly<{
@@ -324,6 +325,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   protectedRow?: TaxonomyPaneProtectedRow;
   /** The mount's own columns; omit for the one-line ST6 anatomy. */
   columns?: TaxonomyPaneColumns<Row>;
+  rowActions?: (row: Row, onSaved: (row: Row) => void) => ReactNode;
   api: TaxonomyPaneApi<Row>;
   messages: TaxonomyPaneMessages;
 }>) {
@@ -535,20 +537,24 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
             inUse && ((row) => <FormattedMessage {...inUse} values={{ count: row.inUseCount }} />)
           }
           rowActions={
-            editor &&
-            ((row) => (
-              // Each row's own editor screen — fields attach there,
-              // and the description lives there, not in the list.
-              <Button
-                variant="ghost"
-                size="sm"
-                className="px-1.5"
-                aria-label={intl.formatMessage(editor.label, { name: row.displayName })}
-                onClick={() => void navigate(editor.path(row))}
-              >
-                <Pencil size={16} aria-hidden="true" className="text-muted" />
-              </Button>
-            ))
+            rowActions || editor
+              ? (row) => (
+                  <>
+                    {rowActions?.(row, replaceRow)}
+                    {editor && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="px-1.5"
+                        aria-label={intl.formatMessage(editor.label, { name: row.displayName })}
+                        onClick={() => void navigate(editor.path(row))}
+                      >
+                        <Pencil size={16} aria-hidden="true" className="text-muted" />
+                      </Button>
+                    )}
+                  </>
+                )
+              : undefined
           }
           protectedLabel={(row) =>
             protectedRow && isProtected(row)

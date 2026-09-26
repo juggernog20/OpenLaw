@@ -7,7 +7,8 @@
  *
  * A row with a system kind is fixed. The machinery's `isProtected`
  * refuses its archive and delete, and the extras refuse its rename and
- * description edit, because code reads the kind it stands for.
+ * description edit, because code reads the kind it stands for. Its colour
+ * remains configurable.
  *
  * Archive keeps references. A Version is a record of what somebody
  * called that round, so an archived type goes on labelling it and only
@@ -15,6 +16,7 @@
  */
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { DOCUMENT_TYPE_COLORS, type DocumentTypeColor } from "@openlaw/shared";
 import {
   and,
   asc,
@@ -53,6 +55,9 @@ const documentTypeUsage: TaxonomyUsage = {
 const systemKindOf = (row: TaxonomyRow) =>
   (row as TaxonomyRow & { systemKind: string | null }).systemKind;
 
+const colorOf = (row: TaxonomyRow) =>
+  (row as TaxonomyRow & { color: DocumentTypeColor | null }).color;
+
 const MOUNTS = {
   matter: { id: "MatterDocumentType", ids: "MatterDocumentTypes" },
   contract: { id: "ContractDocumentType", ids: "ContractDocumentTypes" },
@@ -77,8 +82,13 @@ function documentTypeMount(module: DocumentTypeModule) {
     archiveKeepsReferences: true,
     isProtected: (row) => systemKindOf(row) !== null,
     extras: {
-      rowSchema: { systemKind: z.enum(DOCUMENT_TYPE_SYSTEM_KINDS).nullable() },
+      rowSchema: {
+        systemKind: z.enum(DOCUMENT_TYPE_SYSTEM_KINDS).nullable(),
+        color: z.enum(DOCUMENT_TYPE_COLORS).nullable(),
+      },
+      patchSchema: { color: z.enum(DOCUMENT_TYPE_COLORS).nullable().optional() },
       projectRow: (row) => ({
+        color: colorOf(row),
         systemKind: systemKindOf(row) as (typeof DOCUMENT_TYPE_SYSTEM_KINDS)[number] | null,
       }),
       applyPatch: ({ row, body }) => {
@@ -88,7 +98,11 @@ function documentTypeMount(module: DocumentTypeModule) {
         ) {
           throw httpError(409, `${row.displayName} is a fixed document type and can't be edited.`);
         }
-        return {};
+        if (body.color === undefined || body.color === colorOf(row)) return {};
+        return {
+          columns: { color: body.color },
+          changed: { color: { from: colorOf(row), to: body.color } },
+        };
       },
     },
   });
@@ -103,6 +117,7 @@ export const documentTypesRoutes: FastifyPluginAsyncZod = async (app) => {
 const DocumentTypeOptionSchema = z.object({
   id: z.string(),
   displayName: z.string(),
+  color: z.enum(DOCUMENT_TYPE_COLORS).nullable(),
   systemKind: z.enum(DOCUMENT_TYPE_SYSTEM_KINDS).nullable(),
 });
 
@@ -142,6 +157,7 @@ export const documentTypeOptionsRoutes: FastifyPluginAsyncZod = async (app) => {
         .select({
           id: documentTypes.id,
           displayName: documentTypes.displayName,
+          color: documentTypes.color,
           systemKind: documentTypes.systemKind,
         })
         .from(documentTypes)

@@ -142,7 +142,7 @@ test.describe.serial("M27 deployer journey", () => {
       expect(addedOfficer.status(), await addedOfficer.text()).toBe(201);
       officerId = CreatedOfficer.parse(await addedOfficer.json()).officer.id;
       await expect(
-        officers.getByRole("textbox", { name: `${DIRECTOR_NAME} Director or officer name` }),
+        officers.getByRole("combobox", { name: `${DIRECTOR_NAME} Director or officer name` }),
       ).toHaveValue(DIRECTOR_NAME);
 
       const dueOn = nextMonthDay();
@@ -173,7 +173,7 @@ test.describe.serial("M27 deployer journey", () => {
       await subsidiaryRow.click();
       await expect(page).toHaveURL(`/entities/${subsidiaryId}`);
       await expect(
-        main(page).getByRole("textbox", { name: `${DIRECTOR_NAME} Director or officer name` }),
+        main(page).getByRole("combobox", { name: `${DIRECTOR_NAME} Director or officer name` }),
       ).toHaveValue(DIRECTOR_NAME);
 
       await page.goto("/entities?view=chart");

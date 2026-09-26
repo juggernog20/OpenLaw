@@ -6,7 +6,7 @@
  * status moves, activity and notifications atomic (DD-017, CTR-012).
  */
 
-import type { Db } from "@openlaw/db";
+import type { Db, SQL } from "@openlaw/db";
 import {
   and,
   contracts,
@@ -94,6 +94,7 @@ export async function listContracts(
   db: Db,
   user: AuthenticatedUser,
   input: z.input<typeof ContractListQuery> = {},
+  additionalScope?: SQL,
 ) {
   assertReader(user);
   const query = ContractListQuery.parse(input);
@@ -105,6 +106,7 @@ export async function listContracts(
   const sort: SortRequest | null =
     query.sort === undefined ? null : { key: query.sort, dir: query.dir ?? "asc" };
   const predicates = and(
+    additionalScope,
     query.includeArchived === "true" ? undefined : isNull(contracts.archivedAt),
     // The stage check also excludes legacy ended records without an endedAt stamp.
     query.includeEnded === "true"

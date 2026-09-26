@@ -12,13 +12,14 @@
  * **Fixed rows carry a system kind.** The Contract list starts with the
  * six CTR-014 negotiation types. Each one maps to the Version kind that
  * code reads (the executed-copy append, the Auto-Doc original, the
- * renewal seed, the pill colours), so those rows cannot be renamed,
+ * renewal seed), so those rows cannot be renamed,
  * archived, or deleted. A row an Administrator adds has no system kind,
  * and a Version of that type stores the neutral `general` kind.
  *
  * `generated_redline` is never a row. It records how a file was made,
  * not what somebody called it, so a generated redline has no type.
  */
+import { DOCUMENT_TYPE_COLORS } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
 import { check, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { taxonomyColumns } from "./helpers.js";
@@ -45,6 +46,8 @@ export const documentTypes = pgTable(
   "document_types",
   {
     ...taxonomyColumns(),
+    /** Null retains the default colour for the system kind. */
+    color: text("color", { enum: DOCUMENT_TYPE_COLORS }),
     /** Which owner's list the row belongs to. Never changes. */
     module: text("module", { enum: DOCUMENT_TYPE_MODULES }).notNull(),
     /** The Version kind a fixed row stands for; NULL on every row an
@@ -52,6 +55,10 @@ export const documentTypes = pgTable(
     systemKind: text("system_kind", { enum: DOCUMENT_TYPE_SYSTEM_KINDS }),
   },
   (table) => [
+    check(
+      "document_types_color_check",
+      sql`${table.color} is null or ${table.color} in ('grey', 'blue', 'amber', 'green', 'red', 'orange', 'purple')`,
+    ),
     uniqueIndex("document_types_module_slug_unique").on(table.module, table.slug),
     // One fixed row per kind per list, so a kind maps back to one type.
     uniqueIndex("document_types_module_system_kind_unique")

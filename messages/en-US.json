@@ -2237,6 +2237,9 @@
   "autoDocs.reviewCurrentForm": {
     "defaultMessage": "Review current form"
   },
+  "autoDocs.ruleAddValue": {
+    "defaultMessage": "Add value"
+  },
   "autoDocs.ruleCount": {
     "defaultMessage": "{count, plural, one {# rule} other {# rules}}"
   },
@@ -2252,8 +2255,17 @@
   "autoDocs.ruleOperator": {
     "defaultMessage": "{operator, select, equals {Equals} is_one_of {Is one of} is_set {Is set} other {Is not}}"
   },
+  "autoDocs.ruleRemoveValue": {
+    "defaultMessage": "Remove value {number}"
+  },
   "autoDocs.ruleValue": {
     "defaultMessage": "Value"
+  },
+  "autoDocs.ruleValueNumber": {
+    "defaultMessage": "Value {number}"
+  },
+  "autoDocs.ruleValues": {
+    "defaultMessage": "Values"
   },
   "autoDocs.ruleWords": {
     "defaultMessage": "{operator, select, equals {{label} equals {value}} is_one_of {{label} is one of {value}} is_set {{label} is set} other {{label} is not {value}}}"
@@ -2342,17 +2354,47 @@
   "autoDocs.upload": {
     "defaultMessage": "Upload"
   },
-  "autoDocs.uploadCaption": {
-    "defaultMessage": "Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place."
+  "autoDocs.uploadBlocks": {
+    "defaultMessage": "Blocks detected"
+  },
+  "autoDocs.uploadChangeFile": {
+    "defaultMessage": "Change file"
+  },
+  "autoDocs.uploadChooseFile": {
+    "defaultMessage": "Choose file"
+  },
+  "autoDocs.uploadComplete": {
+    "defaultMessage": "File version {number} uploaded"
+  },
+  "autoDocs.uploadDrop": {
+    "defaultMessage": "Drop your Word template here"
   },
   "autoDocs.uploadFailed": {
     "defaultMessage": "Could not upload the template. Try again."
   },
-  "autoDocs.uploadReport": {
-    "defaultMessage": "File version {number}: {placeholders, plural, one {# Placeholder} other {# Placeholders}}, {blocks, plural, one {# Block} other {# Blocks}}. {created, plural, =0 {No new form fields.} one {# form field created.} other {# form fields created.}} {orphaned, plural, =0 {} one {# field has no Placeholder now.} other {# fields have no Placeholder now.}}"
+  "autoDocs.uploadFieldsCreated": {
+    "defaultMessage": "{created, plural, =0 {No new form fields.} one {# form field created.} other {# form fields created.}}"
+  },
+  "autoDocs.uploadFileType": {
+    "defaultMessage": "Choose a single Word document (.docx)."
+  },
+  "autoDocs.uploadFormat": {
+    "defaultMessage": "One .docx file"
+  },
+  "autoDocs.uploadOrphanedFields": {
+    "defaultMessage": "{count, plural, one {# field no longer has a placeholder in this file.} other {# fields no longer have placeholders in this file.}} Your existing fields have been kept for review."
+  },
+  "autoDocs.uploadPlaceholders": {
+    "defaultMessage": "Placeholders detected"
+  },
+  "autoDocs.uploadRemoveFile": {
+    "defaultMessage": "Remove file"
   },
   "autoDocs.uploadVersion": {
     "defaultMessage": "Upload version"
+  },
+  "autoDocs.uploading": {
+    "defaultMessage": "Uploading…"
   },
   "autoDocs.valueCadence": {
     "defaultMessage": "Cadence"
@@ -2641,6 +2683,9 @@
   },
   "common.delete": {
     "defaultMessage": "Delete"
+  },
+  "common.done": {
+    "defaultMessage": "Done"
   },
   "common.edit": {
     "defaultMessage": "Edit"
@@ -4835,6 +4880,9 @@
   "documents.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "documents.type.color": {
+    "defaultMessage": "{color, select, grey {Grey} blue {Blue} amber {Amber} green {Green} red {Red} orange {Orange} purple {Purple} other {Automatic}}"
+  },
   "documents.type.none": {
     "defaultMessage": "No type"
   },
@@ -5204,6 +5252,9 @@
   "entities.linked.matters": {
     "defaultMessage": "Matters"
   },
+  "entities.linked.more": {
+    "defaultMessage": "Show more"
+  },
   "entities.list.archived": {
     "defaultMessage": "Archived"
   },
@@ -5405,9 +5456,6 @@
   "entities.record.fields.yes": {
     "defaultMessage": "Yes"
   },
-  "entities.record.none": {
-    "defaultMessage": "None"
-  },
   "entities.record.notRecorded": {
     "defaultMessage": "Not recorded"
   },
@@ -5495,8 +5543,17 @@
   "entities.record.officers.empty": {
     "defaultMessage": "No current directors or officers."
   },
+  "entities.record.officers.enterName": {
+    "defaultMessage": "Enter a name to add someone outside the user list."
+  },
   "entities.record.officers.name": {
     "defaultMessage": "Director or officer name"
+  },
+  "entities.record.officers.namePlaceholder": {
+    "defaultMessage": "Select a user or enter a name"
+  },
+  "entities.record.officers.people": {
+    "defaultMessage": "People"
   },
   "entities.record.officers.remove": {
     "defaultMessage": "Remove {officer}"
@@ -5516,8 +5573,11 @@
   "entities.record.officers.title": {
     "defaultMessage": "Directors & Officers"
   },
-  "entities.record.officers.user": {
-    "defaultMessage": "Linked user"
+  "entities.record.officers.useName": {
+    "defaultMessage": "Use \"{name}\" without linking a user"
+  },
+  "entities.record.officers.userLinked": {
+    "defaultMessage": "User linked"
   },
   "entities.record.portal.title": {
     "defaultMessage": "Portal"
@@ -10535,14 +10595,26 @@
   "settings.documentTypes.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."
   },
+  "settings.documentTypes.colorError": {
+    "defaultMessage": "The colour could not be saved. Try again."
+  },
+  "settings.documentTypes.colorLabel": {
+    "defaultMessage": "Colour for {name}"
+  },
+  "settings.documentTypes.colorSaving": {
+    "defaultMessage": "Saving colour…"
+  },
+  "settings.documentTypes.colorTitle": {
+    "defaultMessage": "Colour for {name}: {color}"
+  },
   "settings.documentTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },
   "settings.documentTypes.fixed": {
-    "defaultMessage": "{name} is fixed. Contract workflows depend on it."
+    "defaultMessage": "{name} has a fixed name. Its colour can be changed."
   },
   "settings.documentTypes.help": {
-    "defaultMessage": "People pick a type when they upload a file, or leave it blank. Drag to reorder."
+    "defaultMessage": "People pick a type when they upload a file, or leave it blank. Choose a colour for each type. Drag to reorder."
   },
   "settings.documentTypes.inUse": {
     "defaultMessage": "{count, plural, one {# version} other {# versions}}"

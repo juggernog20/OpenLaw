@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The form half of the builder (DES-087 clause 3): the Fields and
- * Clauses tables, and under them the card for the selected row. Every
+ * Fields and clauses expand in place to show their settings. Every
  * commit here writes one form version (ADO-004); there is no Save form
  * and no dirty state.
  */
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { Label } from "../ui/label";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Pencil } from "lucide-react";
+import { ChevronUp, Pencil } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
 import {
@@ -24,7 +23,6 @@ import { useFieldCommit, type CommitOutcome, type FieldStatus } from "../../lib/
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { CurrencySelect } from "../currency-select";
 import { ListEditor } from "../list-editor";
-import { SettingsCard } from "../settings-card";
 import { StatusNote } from "../status-note";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -183,9 +181,27 @@ export function FormBuilder({
   const selectedBlock =
     selected?.kind === "block" && ruleNames.includes(selected.name) ? selected.name : undefined;
 
-  const selectButton = (label: string, onClick: () => void) => (
-    <Button variant="ghost" size="sm" className="px-1.5" aria-label={label} onClick={onClick}>
-      <Pencil size={16} aria-hidden="true" className="text-muted" />
+  const selectButton = (
+    label: string,
+    expanded: boolean,
+    controls: string,
+    onClick: () => void,
+  ) => (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="px-1.5"
+      aria-label={label}
+      title={label}
+      aria-expanded={expanded}
+      aria-controls={expanded ? controls : undefined}
+      onClick={onClick}
+    >
+      {expanded ? (
+        <ChevronUp size={16} aria-hidden="true" className="text-muted" />
+      ) : (
+        <Pencil size={16} aria-hidden="true" className="text-muted" />
+      )}
     </Button>
   );
 
@@ -278,8 +294,36 @@ export function FormBuilder({
               { id: "autoDocs.editField", defaultMessage: "Edit {label}" },
               { label: row.label },
             ),
-            () => onSelect({ kind: "field", slug: row.slug }),
+            selectedField?.slug === row.slug,
+            `auto-doc-field-${row.slug}-editor`,
+            () =>
+              onSelect(selectedField?.slug === row.slug ? null : { kind: "field", slug: row.slug }),
           )
+        }
+        rowContent={(row) =>
+          selectedField?.slug === row.slug ? (
+            <FieldEditor
+              key={selectedField.slug}
+              field={selectedField}
+              fields={fields}
+              rules={rules}
+              assignmentUses={
+                record.assignmentRules.filter((rule) => rule.fieldSlug === selectedField.slug)
+                  .length
+              }
+              options={options}
+              disabled={archived}
+              commits={commits}
+              onCommit={(key, patch) =>
+                commitDefinition(key, replaceField(selectedField.slug, patch)).then((outcome) => {
+                  if (outcome.ok && patch.slug && patch.slug !== selectedField.slug)
+                    onSelect({ kind: "field", slug: patch.slug });
+                  return outcome;
+                })
+              }
+              onRemove={() => requestRemove(selectedField)}
+            />
+          ) : null
         }
         removeLabel={(row) =>
           intl.formatMessage(
@@ -373,13 +417,40 @@ export function FormBuilder({
             </span>
           )
         }
+        rowContent={(row) =>
+          selectedBlock === row.id ? (
+            <RuleEditor
+              key={selectedBlock}
+              blockName={selectedBlock}
+              present={blocks.includes(selectedBlock)}
+              fields={fields}
+              rule={rules.find((rule) => rule.blockName === selectedBlock)}
+              disabled={archived}
+              commits={commits}
+              onCommit={(next) =>
+                commitDefinition(`block:${selectedBlock}`, (current) => ({
+                  fields: current.fields,
+                  clauseRules: next
+                    ? current.clauseRules.some((rule) => rule.blockName === selectedBlock)
+                      ? current.clauseRules.map((rule) =>
+                          rule.blockName === selectedBlock ? next : rule,
+                        )
+                      : [...current.clauseRules, next]
+                    : current.clauseRules.filter((rule) => rule.blockName !== selectedBlock),
+                }))
+              }
+            />
+          ) : null
+        }
         rowActions={(row) =>
           selectButton(
             intl.formatMessage(
               { id: "autoDocs.editRule", defaultMessage: "Edit the rule for {name}" },
               { name: row.id },
             ),
-            () => onSelect({ kind: "block", name: row.id }),
+            selectedBlock === row.id,
+            `auto-doc-rule-${row.id}-editor`,
+            () => onSelect(selectedBlock === row.id ? null : { kind: "block", name: row.id }),
           )
         }
       />
@@ -387,51 +458,6 @@ export function FormBuilder({
         <p className="-mt-2 text-sm text-muted">
           <FormattedMessage id="autoDocs.noBlocks" defaultMessage="This file has no Blocks." />
         </p>
-      )}
-      {selectedField && (
-        <FieldCard
-          key={selectedField.slug}
-          field={selectedField}
-          fields={fields}
-          rules={rules}
-          assignmentUses={
-            record.assignmentRules.filter((rule) => rule.fieldSlug === selectedField.slug).length
-          }
-          options={options}
-          disabled={archived}
-          commits={commits}
-          onCommit={(key, patch) =>
-            commitDefinition(key, replaceField(selectedField.slug, patch)).then((outcome) => {
-              if (outcome.ok && patch.slug && patch.slug !== selectedField.slug)
-                onSelect({ kind: "field", slug: patch.slug });
-              return outcome;
-            })
-          }
-          onRemove={() => requestRemove(selectedField)}
-        />
-      )}
-      {selectedBlock !== undefined && (
-        <RuleCard
-          key={selectedBlock}
-          blockName={selectedBlock}
-          present={blocks.includes(selectedBlock)}
-          fields={fields}
-          rule={rules.find((rule) => rule.blockName === selectedBlock)}
-          disabled={archived}
-          commits={commits}
-          onCommit={(next) =>
-            commitDefinition(`block:${selectedBlock}`, (current) => ({
-              fields: current.fields,
-              clauseRules: next
-                ? current.clauseRules.some((rule) => rule.blockName === selectedBlock)
-                  ? current.clauseRules.map((rule) =>
-                      rule.blockName === selectedBlock ? next : rule,
-                    )
-                  : [...current.clauseRules, next]
-                : current.clauseRules.filter((rule) => rule.blockName !== selectedBlock),
-            }))
-          }
-        />
       )}
       {removing && (
         <Dialog open onOpenChange={(open) => !open && setRemoving(null)}>
@@ -520,7 +546,7 @@ function Control({
   );
 }
 
-function FieldCard({
+function FieldEditor({
   field,
   fields,
   rules,
@@ -577,7 +603,12 @@ function FieldCard({
   const slugTaken = (candidate: string) =>
     candidate !== field.slug && fields.some((row) => row.slug === candidate);
   return (
-    <SettingsCard region title={field.label}>
+    <div
+      id={`${id}-editor`}
+      role="region"
+      aria-label={field.label}
+      className="flex flex-col gap-4 border-t border-border-muted bg-raised p-4"
+    >
       <fieldset disabled={disabled} className="flex flex-col gap-4">
         <Control
           label={<FormattedMessage id="autoDocs.fieldLabel" defaultMessage="Label" />}
@@ -891,11 +922,11 @@ function FieldCard({
           </Button>
         )}
       </div>
-    </SettingsCard>
+    </div>
   );
 }
 
-function RuleCard({
+function RuleEditor({
   blockName,
   present,
   fields,
@@ -923,7 +954,12 @@ function RuleCard({
     if (commitNow) void onCommit(next);
   }
   return (
-    <SettingsCard region title={blockName}>
+    <div
+      id={`${id}-editor`}
+      role="region"
+      aria-label={blockName}
+      className="flex flex-col gap-4 border-t border-border-muted bg-raised p-4"
+    >
       <fieldset disabled={disabled} className="flex flex-col gap-4">
         {!present && (
           <p className="text-sm text-status-danger-fg">
@@ -958,7 +994,7 @@ function RuleCard({
                     operator: "equals",
                     value: defaultRuleValue("equals", first),
                   },
-                  true,
+                  !!first && (!!first.options || first.fieldType === "boolean"),
                 );
               }
             }}
@@ -982,6 +1018,15 @@ function RuleCard({
               // person can finish typing before the form version is written.
               if (!typed) return;
               if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+              const invalid = Array.from(
+                event.currentTarget.querySelectorAll<
+                  HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+                >("input, select, textarea"),
+              ).find((input) => !input.checkValidity());
+              if (invalid) {
+                invalid.reportValidity();
+                return;
+              }
               if (JSON.stringify(draft) !== JSON.stringify(rule)) void onCommit(draft);
             }}
           >
@@ -1067,6 +1112,6 @@ function RuleCard({
           </div>
         )}
       </fieldset>
-    </SettingsCard>
+    </div>
   );
 }

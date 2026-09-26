@@ -187,7 +187,7 @@ import {
   documentComparisonPath,
   documentTypeLabel,
   documentTypeModuleOf,
-  DOCUMENT_KIND_PILL,
+  documentTypePill,
   FOLDER_ROOT,
   hardDeleteDocument,
   isPreviewable,
@@ -237,25 +237,6 @@ const MAX_FOLDER_NAME_LENGTH = 255;
  * pixels (DES-033). Drawn as a spacer at the head of the Name cell, so
  * one rule serves both row kinds and nothing is positioned by eye. */
 const FOLDER_INDENT = 18;
-
-/**
- * The kind, as the C4 mock colors it: our own work reads as the calm
- * informational pair, their paper as the one that wants attention, a
- * signed copy as settled, and an amendment as a plain fact. Paired
- * bg+fg from one family per DES-005 — never mixed across families.
- *
- * **The color says whose paper it is; the label says what the round
- * is.** So `draft_theirs` takes the same amber as `redline_theirs`
- * (#326) rather than a sixth family. The two axes are already split
- * this way — `draft_ours` and `redline_ours` share the informational
- * pair for exactly the same reason — and giving the sixth kind its own
- * color would make the column encode two facts at once, leaving the
- * reader to work out which one a color meant. The palette also has no
- * spare family that would not misread: `assigned` is within a shade of
- * the confidentiality marker (DES-009) on the light theme, `neutral` is
- * the amendment's, and the two red families would call a routine round
- * a problem.
- */
 
 /**
  * What a composer is opened for: the record's first file on a document
@@ -3505,11 +3486,8 @@ function DeleteDialog({
 /**
  * The round's Document type (DOC-015), and where a Member corrects it.
  *
- * The pill keeps CTR-014's colours: a fixed Contract type stores its
- * negotiation kind, so the kind still says whose paper it is. A type an
- * Administrator added stores `general` and reads neutral. An archived
- * type stays on the round it labels, and the picker keeps it as the
- * selected option so the control never claims a type it does not have.
+ * The pill uses the type's configured colour, falling back to its kind.
+ * Archived types retain their label and colour on existing versions.
  */
 function TypeCell({
   document,
@@ -3521,7 +3499,7 @@ function TypeCell({
   rows: RowContext;
 }>) {
   const label = documentTypeLabel(rows.intl, version);
-  const pill = `whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[version.kind]}`;
+  const pill = `whitespace-nowrap rounded-pill px-2 py-0.5 text-xs font-medium ${documentTypePill(version.kind, version.documentType?.color)}`;
   const current = version.documentType;
   const options =
     current && !rows.typeOptions.some((option) => option.id === current.id)

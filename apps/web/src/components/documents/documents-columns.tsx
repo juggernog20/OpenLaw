@@ -9,7 +9,7 @@ import {
   documentKindLabel,
   documentLandingPath,
   documentOwnerReference,
-  DOCUMENT_KIND_PILL,
+  documentTypePill,
   type RepositoryDocument,
 } from "../../lib/documents";
 import type { ColumnCatalogue, ColumnDef } from "../../lib/list-views";
@@ -77,8 +77,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
     minWidth: 96,
     clip: true,
     sortKey: "kind",
-    // DOC-015: the current Version's type name. A fixed Contract type
-    // keeps its negotiation colour through the kind it stores.
+    // The current version carries the type's name and configured colour.
     render: (row, intl) => {
       const label =
         row.currentVersion.documentType ??
@@ -89,7 +88,7 @@ const COLUMNS: ColumnDef<RepositoryDocument>[] = [
         <span className="text-muted">—</span>
       ) : (
         <span
-          className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${DOCUMENT_KIND_PILL[row.currentVersion.kind]}`}
+          className={`inline-flex w-max rounded-pill px-2 py-0.5 text-xs font-medium ${documentTypePill(row.currentVersion.kind, row.currentVersion.documentTypeColor)}`}
         >
           {label}
         </span>

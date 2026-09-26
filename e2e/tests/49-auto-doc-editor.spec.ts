@@ -47,7 +47,8 @@ test("Legal uploads a template, edits its form from the card, and retains orphan
     fields
       .getByRole("listitem")
       .filter({ has: page.getByRole("button", { name: "Edit Signing date", exact: true }) })
-      .getByText("Date", { exact: true }),
+      .getByText("Date", { exact: true })
+      .first(),
   ).toBeVisible();
   await card.getByLabel("Help text", { exact: true }).fill("Use the agreed date.");
   await card.getByLabel("Help text", { exact: true }).blur();
@@ -55,12 +56,16 @@ test("Legal uploads a template, edits its form from the card, and retains orphan
   await expect(card.getByRole("checkbox", { name: "Required", exact: true })).toBeChecked();
   expect(page.getByRole("button", { name: "Save form", exact: true })).toHaveCount(0);
   dialog = await upload("formatting");
-  await expect(dialog.getByRole("status")).toContainText("1 field has no Placeholder now.");
+  await expect(dialog.getByRole("status")).toContainText(
+    "1 field no longer has a placeholder in this file.",
+  );
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(fields.getByText("1 orphaned", { exact: true })).toBeVisible();
   await expect(fields.getByText("No Placeholder in file version 2", { exact: true })).toBeVisible();
   await expect(fields.getByText("Amount", { exact: true })).toBeVisible();
-  await fields.getByRole("button", { name: "Edit Signing date", exact: true }).click();
+  // The pencil toggles the row's editor, and the upload keeps it open.
+  const editDate = fields.getByRole("button", { name: "Edit Signing date", exact: true });
+  if ((await editDate.getAttribute("aria-expanded")) !== "true") await editDate.click();
   await expect(card.getByRole("combobox", { name: "Type", exact: true })).toHaveValue("date");
   expect(await reportAxeViolations(page, testInfo, "Auto-Doc-editor")).toEqual([]);
   dialog = await upload("unclosed-block");

@@ -143,7 +143,7 @@ const FIXED_TYPE_NAMES: Partial<Record<string, string>> = {
 };
 function typedAs(kind: string) {
   const displayName = FIXED_TYPE_NAMES[kind];
-  return displayName ? { id: `dt-${kind}`, displayName, archived: false } : null;
+  return displayName ? { id: `dt-${kind}`, displayName, archived: false, color: null } : null;
 }
 /** The type-options read, as the Contract list answers it. */
 const CONTRACT_TYPE_OPTIONS = Object.entries(FIXED_TYPE_NAMES).map(([kind, displayName]) => ({
@@ -6652,6 +6652,20 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       .getAllByRole("menuitem")
       .map((item) => item.textContent ?? "");
   }
+
+  it("uses the configured document type colour on a record version", async () => {
+    const paper = {
+      ...DRAFT,
+      versions: [version({ documentType: { ...typedAs("draft_ours")!, color: "purple" } })],
+    };
+    stubApi({ signedIn: MEMBER, extra: documentsApi([paper]).handler });
+    renderAt("/contracts/42/documents");
+    const section = await documentsSection();
+    const type = await within(section).findByRole("combobox", {
+      name: "Type of version 1 of Orion_MSA_2026_draft.docx",
+    });
+    expect(type).toHaveClass("bg-status-assigned-bg", "text-status-assigned-fg");
+  });
 
   it("draws the section with a count of the paper on the record", async () => {
     stubApi({ signedIn: MEMBER, extra: documentsApi([DRAFT, THEIRS]).handler });

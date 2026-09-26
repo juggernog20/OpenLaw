@@ -72,7 +72,8 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
     fields
       .getByRole("listitem")
       .filter({ has: page.getByRole("button", { name: "Edit Jurisdiction", exact: true }) })
-      .getByText("Single select", { exact: true }),
+      .getByText("Single select", { exact: true })
+      .first(),
   ).toBeVisible();
   await page.getByRole("button", { name: "Edit the rule for arbitration", exact: true }).click();
   const rule = page.getByRole("region", { name: "arbitration", exact: true });
@@ -111,7 +112,9 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await dialog.getByRole("button", { name: "Publish", exact: true }).click();
   await expect(dialog.getByRole("alert")).toContainText('Clause rule "arbitration"');
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
-  await page.getByRole("button", { name: "Edit the rule for arbitration", exact: true }).click();
+  // The pencil toggles the rule's editor, which may still be open.
+  const editRule = page.getByRole("button", { name: "Edit the rule for arbitration", exact: true });
+  if ((await editRule.getAttribute("aria-expanded")) !== "true") await editRule.click();
   await rule.getByRole("combobox", { name: "Include", exact: true }).selectOption("always");
   // A Block the file lacks and no rule names has no row to keep.
   await expect(page.getByText("Not in file version 2", { exact: true })).toHaveCount(0);

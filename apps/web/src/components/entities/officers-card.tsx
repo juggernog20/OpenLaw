@@ -7,10 +7,8 @@
  * The list shows current officers unless "Show former" is on, so an
  * update that sets `resignedOn` drops the row from the list while the
  * toggle is off. The row still exists; the toggle reads it back. A
- * row's role or linked user may no longer be in the option lists (an
- * archived role, a person no longer offered), so the row's own value
- * is re-offered as one extra option. Without it the select would show
- * the first option and read as a change nobody made.
+ * row's role may be archived, so the role selector retains its saved value.
+ * The name picker also preserves links to users no longer offered in the list.
  */
 
 import { useId, useState } from "react";
@@ -25,6 +23,7 @@ import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { OfficerNameInput } from "./officer-name-input";
 
 export function OfficersCard({
   entityId,
@@ -39,7 +38,6 @@ export function OfficersCard({
   users: readonly EntityPersonOption[];
   frozen: boolean;
 }>) {
-  const intl = useIntl();
   const [officers, setOfficers] = useState([...initial]);
   const [showFormer, setShowFormer] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -66,7 +64,7 @@ export function OfficersCard({
   }
 
   async function addOfficer() {
-    if (!name.trim() || !roleId) return;
+    if (!name.trim() || !roleId || status === "saving") return;
     setStatus("saving");
     setError(undefined);
     const result = await api
@@ -103,7 +101,7 @@ export function OfficersCard({
     if (!result?.data) {
       setStatus("error");
       setError((await problem(result)).detail);
-      return;
+      return false;
     }
     setOfficers((current) =>
       current
@@ -111,6 +109,7 @@ export function OfficersCard({
         .filter((row) => showFormer || row.resignedOn === null),
     );
     setStatus("saved");
+    return true;
   }
 
   async function removeOfficer(id: string) {
@@ -164,7 +163,7 @@ export function OfficersCard({
         </div>
       </header>
       {adding ? (
-        <div className="grid grid-cols-1 gap-3 border-b border-border-muted bg-canvas p-4 @2xl/page:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 border-b border-border-muted bg-canvas p-4 @2xl/page:grid-cols-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="new-officer-name">
               <FormattedMessage
@@ -172,10 +171,16 @@ export function OfficersCard({
                 defaultMessage="Director or officer name"
               />
             </Label>
-            <Input
+            <OfficerNameInput
               id="new-officer-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              name={name}
+              userId={userId || null}
+              users={users}
+              disabled={status === "saving"}
+              onChange={(person) => {
+                setName(person.name);
+                setUserId(person.userId ?? "");
+              }}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -209,28 +214,12 @@ export function OfficersCard({
               onChange={(event) => setAppointedOn(event.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-officer-user">
-              <FormattedMessage id="entities.record.officers.user" defaultMessage="Linked user" />
-            </Label>
-            <select
-              id="new-officer-user"
-              className={CONTROL_CLASS}
-              value={userId}
-              onChange={(event) => setUserId(event.target.value)}
+          <div className="flex items-center gap-2 @2xl/page:col-span-3">
+            <Button
+              size="sm"
+              disabled={status === "saving" || !name.trim() || !roleId}
+              onClick={() => void addOfficer()}
             >
-              <option value="">
-                {intl.formatMessage({ id: "entities.record.none", defaultMessage: "None" })}
-              </option>
-              {users.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-2 @2xl/page:col-span-4">
-            <Button size="sm" onClick={() => void addOfficer()}>
               <FormattedMessage id="common.add" defaultMessage="Add" />
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
@@ -256,7 +245,7 @@ export function OfficersCard({
               roles={roles}
               users={users}
               frozen={frozen}
-              onUpdate={(body) => void updateOfficer(officer.id, body)}
+              onUpdate={(body) => updateOfficer(officer.id, body)}
               onRemove={() => void removeOfficer(officer.id)}
             />
           ))}
@@ -278,11 +267,10 @@ function OfficerRow({
   roles: readonly OfficerRoleOption[];
   users: readonly EntityPersonOption[];
   frozen: boolean;
-  onUpdate: (body: Record<string, unknown>) => void;
+  onUpdate: (body: Record<string, unknown>) => Promise<boolean>;
   onRemove: () => void;
 }>) {
   const intl = useIntl();
-  const [name, setName] = useState(officer.name);
   const label = (field: string) =>
     intl.formatMessage(
       {
@@ -294,20 +282,19 @@ function OfficerRow({
   const [appointedOn, setAppointedOn] = useState(officer.appointedOn ?? "");
   const [resignedOn, setResignedOn] = useState(officer.resignedOn ?? "");
   return (
-    <div className="grid grid-cols-1 gap-3 p-4 @2xl/page:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
-      <Input
-        aria-label={label(
+    <div className="grid grid-cols-1 gap-3 p-4 @2xl/page:grid-cols-[1.4fr_1fr_1fr_1fr_auto]">
+      <OfficerNameInput
+        label={label(
           intl.formatMessage({
             id: "entities.record.officers.name",
             defaultMessage: "Director or officer name",
           }),
         )}
-        value={name}
+        name={officer.name}
+        userId={officer.user?.id ?? null}
+        users={users}
         disabled={frozen}
-        onChange={(event) => setName(event.target.value)}
-        onBlur={() =>
-          name.trim() && name.trim() !== officer.name && onUpdate({ name: name.trim() })
-        }
+        onCommit={(person) => onUpdate(person)}
       />
       <select
         aria-label={label(
@@ -358,30 +345,6 @@ function OfficerRow({
           resignedOn !== (officer.resignedOn ?? "") && onUpdate({ resignedOn: resignedOn || null })
         }
       />
-      <select
-        aria-label={label(
-          intl.formatMessage({
-            id: "entities.record.officers.user",
-            defaultMessage: "Linked user",
-          }),
-        )}
-        className={CONTROL_CLASS}
-        value={officer.user?.id ?? ""}
-        disabled={frozen}
-        onChange={(event) => onUpdate({ userId: event.target.value || null })}
-      >
-        <option value="">
-          {intl.formatMessage({ id: "entities.record.none", defaultMessage: "None" })}
-        </option>
-        {officer.user && !users.some((person) => person.id === officer.user!.id) ? (
-          <option value={officer.user.id}>{officer.user.displayName}</option>
-        ) : null}
-        {users.map((person) => (
-          <option key={person.id} value={person.id}>
-            {person.displayName}
-          </option>
-        ))}
-      </select>
       {!frozen ? (
         <Button
           size="icon"

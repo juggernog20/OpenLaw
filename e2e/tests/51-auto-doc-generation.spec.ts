@@ -54,7 +54,8 @@ test("Legal keeps answers through Unpublish, then generates and downloads the ap
     fields
       .getByRole("listitem")
       .filter({ has: page.getByRole("button", { name: "Edit Signing date", exact: true }) })
-      .getByText("Date", { exact: true }),
+      .getByText("Date", { exact: true })
+      .first(),
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Publish", exact: true }).first().click();

@@ -146,6 +146,60 @@ describe("Entity linked-record roll-ups", () => {
       "Visible Entity matter",
     ]);
     expect(counts.json()).toEqual({ contracts: 1, matters: 1 });
+    expect(contractsAnswer.json()).toMatchObject({
+      total: 1,
+      nextCursor: null,
+      records: [{ contractTypeName: expect.any(String), manager: null }],
+    });
+    expect(mattersAnswer.json()).toMatchObject({
+      total: 1,
+      nextCursor: null,
+      records: [{ matterTypeName: expect.any(String), priority: expect.any(String) }],
+    });
+  });
+
+  it("sorts and pages full rows within the Entity scope", async () => {
+    const [type] = await harness.db.select().from(entityTypes).limit(1);
+    const [entity] = await harness.db
+      .insert(entities)
+      .values({ legalName: "Paged vehicle", entityTypeId: type!.id })
+      .returning();
+    const [contract] = await harness.db.select().from(contracts).limit(1);
+    const [matter] = await harness.db.select().from(matters).limit(1);
+    await harness.db.insert(contracts).values(
+      Array.from({ length: 51 }, (_, index) => ({
+        title: `Contract ${String(index).padStart(2, "0")}`,
+        entityId: entity!.id,
+        contractTypeId: contract!.contractTypeId,
+        statusId: contract!.statusId,
+      })),
+    );
+    await harness.db.insert(matters).values(
+      Array.from({ length: 51 }, (_, index) => ({
+        title: `Matter ${String(index).padStart(2, "0")}`,
+        customFields: { "named-entity": entity!.id },
+        matterTypeId: matter!.matterTypeId,
+        statusId: matter!.statusId,
+        createdBy: matter!.createdBy,
+      })),
+    );
+    for (const kind of ["contracts", "matters"]) {
+      const url = `/api/v1/entities/${entity!.id}/${kind}?sort=title&dir=asc`;
+      const first = await harness.app.inject({ method: "GET", url, cookies });
+      expect(first.statusCode, first.body).toBe(200);
+      expect(first.json().total).toBe(51);
+      expect(first.json().records).toHaveLength(50);
+      expect(first.json().records[0].title).toMatch(/00$/);
+      const last = await harness.app.inject({
+        method: "GET",
+        url: `${url}&cursor=${first.json().nextCursor}`,
+        cookies,
+      });
+      expect(last.statusCode, last.body).toBe(200);
+      expect(last.json().records).toHaveLength(1);
+      expect(last.json().records[0].title).toMatch(/50$/);
+      expect(last.json().nextCursor).toBeNull();
+    }
   });
 
   it("answers 404 for a confidential Entity the Legal Team Member holds no grant on", async () => {

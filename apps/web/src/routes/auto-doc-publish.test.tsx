@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** DES-087: the builder's rules, maps, and Publish; the settings cards; the Generations table. */
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
 import { json, problem, renderAt, stubApi } from "../testing/helpers";
@@ -173,6 +173,9 @@ it("selects a field from its Placeholder chip, maps it, and writes each Clause o
     contractAttribute: null,
   });
   await user.click(screen.getByRole("button", { name: "Edit the rule for arbitration" }));
+  expect(
+    screen.getByRole("button", { name: "Edit the rule for arbitration" }).closest("li"),
+  ).toContainElement(screen.getByRole("region", { name: "arbitration" }));
   const rule = screen.getByRole("region", { name: "arbitration" });
   await user.selectOptions(within(rule).getByLabelText("Include"), "conditional");
   await waitFor(() =>
@@ -192,7 +195,7 @@ it("selects a field from its Placeholder chip, maps it, and writes each Clause o
     }
   }
   expect(screen.getByText("Included when Jurisdiction is not US")).toBeVisible();
-  // One selection at a time: the rule card replaced the field card.
+  // Opening a clause closes the previously expanded field.
   expect(screen.queryByRole("region", { name: "Jurisdiction" })).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Edit Jurisdiction" }));
   await user.selectOptions(
@@ -419,17 +422,83 @@ it("commits a typed is-one-of rule value when focus leaves the rule", async () =
   await user.click(screen.getByRole("button", { name: "Edit the rule for arbitration" }));
   const rule = screen.getByRole("region", { name: "arbitration" });
   await user.selectOptions(within(rule).getByLabelText("Include"), "conditional");
-  await waitFor(() => expect(state.saves).toHaveLength(1));
+  expect(state.saves).toHaveLength(0);
   await user.selectOptions(within(rule).getByLabelText("Operator"), "is_one_of");
   const input = within(rule).getByLabelText("Value");
   await user.type(input, "United States{enter}United Kingdom{enter}");
   expect(input).toHaveValue("United States\nUnited Kingdom\n");
-  expect(state.saves).toHaveLength(1);
+  expect(state.saves).toHaveLength(0);
   await user.tab();
   await waitFor(() =>
     expect(state.saves.at(-1)?.clauseRules[0]?.value).toEqual(["United States", "United Kingdom"]),
   );
 });
+
+it.each([
+  {
+    fieldType: "date" as const,
+    inputType: "date",
+    first: "2026-09-01",
+    second: "2026-09-25",
+    expected: ["2026-09-01", "2026-09-25"],
+  },
+  {
+    fieldType: "number" as const,
+    inputType: "number",
+    first: "12.5",
+    second: "30",
+    expected: [12.5, 30],
+  },
+  {
+    fieldType: "currency" as const,
+    inputType: "number",
+    first: "1250.50",
+    second: "3000",
+    expected: [1250.5, 3000],
+  },
+])(
+  "uses $inputType inputs and validates an is-one-of $fieldType rule before saving",
+  async ({ fieldType, inputType, first, second, expected }) => {
+    const user = userEvent.setup();
+    const state = { current: record(), saves: [] as Definition[] };
+    state.current.formVersion!.definition.fields[0] = {
+      ...state.current.formVersion!.definition.fields[0]!,
+      fieldType,
+      options: null,
+    };
+    stubApi({ signedIn: member, extra: builderStub(state) });
+    renderAt("/auto-docs/nda/form");
+    await screen.findByRole("heading", { name: "Publish NDA" });
+    await user.click(screen.getByRole("button", { name: "Edit the rule for arbitration" }));
+    const rule = screen.getByRole("region", { name: "arbitration" });
+    await user.selectOptions(within(rule).getByLabelText("Include"), "conditional");
+    await user.selectOptions(within(rule).getByLabelText("Operator"), "is_one_of");
+    const input = within(rule).getByLabelText("Value 1");
+    expect(input).toHaveAttribute("type", inputType);
+    fireEvent.change(input, { target: { value: first } });
+    await user.click(within(rule).getByRole("button", { name: "Add value" }));
+    const added = within(rule).getByLabelText("Value 2");
+    expect(added).toHaveFocus();
+    expect(added).toHaveAttribute("type", inputType);
+    await user.click(screen.getByRole("heading", { name: "Fields" }));
+    expect(added).toBeInvalid();
+    expect(state.saves).toHaveLength(0);
+    await user.click(added);
+    fireEvent.change(added, { target: { value: "invalid" } });
+    await user.click(screen.getByRole("heading", { name: "Fields" }));
+    expect(state.saves).toHaveLength(0);
+    await user.click(added);
+    fireEvent.change(added, { target: { value: second } });
+    await user.click(screen.getByRole("heading", { name: "Fields" }));
+    await waitFor(() => expect(state.saves.at(-1)?.clauseRules[0]?.value).toEqual(expected));
+    await user.click(within(rule).getByRole("button", { name: "Remove value 1" }));
+    const remaining = within(rule).getByLabelText("Value 1");
+    expect(remaining).toHaveFocus();
+    expect(within(rule).queryByLabelText("Value 2")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("heading", { name: "Fields" }));
+    await waitFor(() => expect(state.saves.at(-1)?.clauseRules[0]?.value).toEqual([expected[1]]));
+  },
+);
 
 it("drops unknown state and audience filters from a copied list URL", async () => {
   const searches: URLSearchParams[] = [];
