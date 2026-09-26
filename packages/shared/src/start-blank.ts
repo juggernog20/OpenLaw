@@ -22,7 +22,7 @@ export const START_BLANK_LISTS = {
   matter_type: ["other", "default"],
   matter_status: ["open", "closed"],
   contract_type: ["other", "default"],
-  contract_status: ["draft", "active", "expired"],
+  contract_status: ["draft", "partially_signed", "active", "expired"],
   entity_type: ["other"],
   officer_role: ["other"],
   knowledge_type: [],

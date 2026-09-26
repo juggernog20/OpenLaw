@@ -575,11 +575,7 @@ export function SignaturesCard({
                 onClick={() => setSending(true)}
               >
                 <Send size={16} aria-hidden="true" />
-                {signing.preparationEnabled ? (
-                  <FormattedMessage id="signing.prepare" defaultMessage="Prepare Envelope" />
-                ) : (
-                  <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
-                )}
+                <FormattedMessage id="signing.send" defaultMessage="Send for signature" />
               </Button>
             )}
           </div>
@@ -909,7 +905,14 @@ function ExecutedFile({ envelope }: Readonly<{ envelope: ContractEnvelope }>) {
       >
         <Download size={16} aria-hidden="true" className="shrink-0" />
         <span className="truncate">
-          <FormattedMessage id="signing.executedFile" defaultMessage="Executed copy" />
+          {envelope.completesContract === false ? (
+            <FormattedMessage
+              id="signing.partiallySignedFile"
+              defaultMessage="Partially signed copy"
+            />
+          ) : (
+            <FormattedMessage id="signing.executedFile" defaultMessage="Executed copy" />
+          )}
         </span>
       </a>
     );
@@ -920,10 +923,10 @@ function ExecutedFile({ envelope }: Readonly<{ envelope: ContractEnvelope }>) {
       {envelope.executedFetch === "failed" ? (
         <FormattedMessage
           id="signing.executedFailed"
-          defaultMessage="The executed copy could not be filed. Upload it to the record instead."
+          defaultMessage="The signed copy could not be filed. Upload it to the record instead."
         />
       ) : (
-        <FormattedMessage id="signing.executedFiling" defaultMessage="Filing the executed copy…" />
+        <FormattedMessage id="signing.executedFiling" defaultMessage="Filing the signed copy…" />
       )}
     </span>
   );
@@ -1925,6 +1928,7 @@ function SendEnvelopeDialog({
     idempotencyKey: string;
     signers: SendSigner[];
     subject?: string;
+    completesContract: boolean;
   }) => Promise<string | null>;
 }>) {
   const intl = useIntl();
@@ -1948,6 +1952,7 @@ function SendEnvelopeDialog({
    * the row is not a dialog). */
   const addSigner = useRef<HTMLButtonElement>(null);
   const [subject, setSubject] = useState("");
+  const [completesContract, setCompletesContract] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   /** The send's own gate, for the reason the void dialog gives: `busy`
    * is state and two submits in one tick both find it false. A send is
@@ -1963,7 +1968,7 @@ function SendEnvelopeDialog({
   }
 
   async function submit() {
-    if (busy || inFlight.current) return;
+    if (busy || inFlight.current || completesContract === null) return;
     // In the order the rows show, because that is the order the
     // envelope keeps. A blank typed row is skipped, not refused.
     const named = signers.flatMap((signer): SendSigner[] => {
@@ -1988,6 +1993,7 @@ function SendEnvelopeDialog({
     const request = {
       documentVersionId: versionId,
       signers: named,
+      completesContract,
       ...(subject.trim() ? { subject: subject.trim() } : {}),
     };
     const intent = JSON.stringify(request);
@@ -2033,7 +2039,7 @@ function SendEnvelopeDialog({
           ) : (
             <FormattedMessage
               id="signing.sendNote"
-              defaultMessage="When everyone signs, the executed file lands on this Contract. The Contract advances to Active only if it is still in the Signature Stage."
+              defaultMessage="The signed file will be saved to this Contract when everyone in this DocuSign round has signed."
             />
           )}
         </p>
@@ -2201,6 +2207,67 @@ function SendEnvelopeDialog({
               </div>
             )}
           </fieldset>
+          <fieldset
+            className="flex flex-col gap-3 rounded-card border border-border-default p-4"
+            disabled={busy}
+          >
+            <legend className="px-1 text-sm font-medium text-primary">
+              <FormattedMessage
+                id="signing.completesContract"
+                defaultMessage="Will the agreement be fully signed when this DocuSign round is complete?"
+              />
+            </legend>
+            <label className="flex cursor-pointer items-start gap-2 text-sm">
+              <input
+                type="radio"
+                name="completes-contract"
+                value="yes"
+                required
+                checked={completesContract === true}
+                onChange={() => setCompletesContract(true)}
+                className="mt-1 accent-link"
+              />
+              <span>
+                <span className="font-medium">
+                  <FormattedMessage
+                    id="signing.completesYes"
+                    defaultMessage="Yes, all required signatures will be in place"
+                  />
+                </span>
+                <span className="mt-1 block text-xs text-muted">
+                  <FormattedMessage
+                    id="signing.completesYesHelp"
+                    defaultMessage="Everyone still needed is signing in this round. Any other parties have already signed. The Contract will move to Active."
+                  />
+                </span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 text-sm">
+              <input
+                type="radio"
+                name="completes-contract"
+                value="no"
+                required
+                checked={completesContract === false}
+                onChange={() => setCompletesContract(false)}
+                className="mt-1 accent-link"
+              />
+              <span>
+                <span className="font-medium">
+                  <FormattedMessage
+                    id="signing.completesNo"
+                    defaultMessage="No, more signatures will still be needed"
+                  />
+                </span>
+                <span className="mt-1 block text-xs text-muted">
+                  <FormattedMessage
+                    id="signing.completesNoHelp"
+                    defaultMessage="The Contract will move to Partially signed and stay in the Signature stage."
+                  />
+                </span>
+              </span>
+            </label>
+          </fieldset>
           <div className="flex flex-col gap-1.5">
             <Label
               htmlFor="envelope-subject"
@@ -2235,7 +2302,10 @@ function SendEnvelopeDialog({
             <Button type="button" variant="secondary" onClick={onClose}>
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
-            <Button type="submit" disabled={busy || document.versions.length === 0}>
+            <Button
+              type="submit"
+              disabled={busy || document.versions.length === 0 || completesContract === null}
+            >
               <Send size={16} aria-hidden="true" />
               {preparing ? (
                 <FormattedMessage

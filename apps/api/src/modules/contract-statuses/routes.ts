@@ -60,7 +60,7 @@ const ContractStatusListEnvelope = z.object({ contractStatuses: z.array(Contract
 const DisplayNameSchema = z.string().trim().min(1).max(100);
 
 /** The CTR-001 system-protected seeds: no archive, no hard delete. */
-const PROTECTED_SLUGS = new Set(["draft", "active", "expired"]);
+const PROTECTED_SLUGS = new Set(["draft", "partially_signed", "active", "expired"]);
 
 function toRow(row: ContractStatus, counts: Map<string, number>) {
   return {
@@ -139,11 +139,14 @@ export const contractStatusesRoutes: FastifyPluginAsyncZod = async (app) => {
    */
   async function breaksStageFloor(tx: Transaction, target: ContractStatus): Promise<boolean> {
     const liveInStage = await tx
-      .select({ id: contractStatuses.id })
+      .select({ id: contractStatuses.id, slug: contractStatuses.slug })
       .from(contractStatuses)
       .where(and(eq(contractStatuses.stage, target.stage), isNull(contractStatuses.archivedAt)))
       .for("update");
-    return !liveInStage.some((row) => row.id !== target.id);
+    return !liveInStage.some(
+      (row) =>
+        row.id !== target.id && (target.stage !== "signature" || row.slug !== "partially_signed"),
+    );
   }
 
   app.get(

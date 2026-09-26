@@ -112,6 +112,8 @@ export const contractEnvelopes = pgTable(
     documentId: text("document_id").references(() => documents.id, { onDelete: "set null" }),
     /** The retained subject. NULL on historical rounds and after Signer erasure. */
     subject: text("subject"),
+    /** Whether this round supplies every remaining signature on the agreement. */
+    completesContract: boolean("completes_contract").notNull().default(true),
     /** The caller's key for one request; unique per contract. */
     idempotencyKey: text("idempotency_key"),
     /** A hash of the request the key first named, so a reuse with other

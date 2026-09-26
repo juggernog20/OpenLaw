@@ -39,6 +39,7 @@ const SEEDS = [
   ["redlining", "review"],
   ["awaiting_approval", "approval"],
   ["out_for_signature", "signature"],
+  ["partially_signed", "signature"],
   ["active", "active"],
   ["expired", "ended"],
   ["terminated", "ended"],
@@ -164,10 +165,10 @@ describe("the SET-002 role gate", () => {
 });
 
 describe("GET /contract-statuses", () => {
-  it("lists the eight CTR-001 seeds with their stages, in display order", async () => {
+  it("lists the default Contract statuses with their stages, in display order", async () => {
     const rows = await listStatuses();
     expect(rows.map((row) => [row.slug, row.stage])).toEqual(SEEDS.map((seed) => [...seed]));
-    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(rows.map((row) => row.displayOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     for (const row of rows) {
       expect(row.isSystemDefault).toBe(true);
       expect(row.archivedAt).toBeNull();
@@ -193,7 +194,7 @@ describe("POST /contract-statuses", () => {
     expect(created.displayName).toBe("On hold");
     expect(created.stage).toBe("review");
     expect(created.isSystemDefault).toBe(false);
-    expect(created.displayOrder).toBe(9);
+    expect(created.displayOrder).toBe(10);
 
     const rows = await listStatuses();
     expect(rows.at(-1)!.slug).toBe("on_hold");
@@ -473,7 +474,7 @@ describe("the protected `draft` / `active` / `expired` rows (CTR-001)", () => {
   it("refuses archive as 409 problem+json — even with a live stage-mate", async () => {
     // `draft` has draft_2 beside it, so the floor alone would allow
     // this: the refusal below is protection, distinct from the floor.
-    for (const slug of ["draft", "active", "expired"]) {
+    for (const slug of ["draft", "partially_signed", "active", "expired"]) {
       const row = await statusBySlug(slug);
       const res = await harness.app.inject({
         method: "POST",
@@ -488,7 +489,7 @@ describe("the protected `draft` / `active` / `expired` rows (CTR-001)", () => {
   });
 
   it("refuses hard delete as 409", async () => {
-    for (const slug of ["draft", "active", "expired"]) {
+    for (const slug of ["draft", "partially_signed", "active", "expired"]) {
       const row = await statusBySlug(slug);
       const res = await harness.app.inject({
         method: "DELETE",

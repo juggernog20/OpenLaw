@@ -64,7 +64,7 @@ test("sends in DocuSign and confirms through sign-in; forged returns reveal no C
       await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
     ).json()) as { primaryDocument: { versions: { id: string }[] } };
     await page.goto(`/contracts/${contract.number}/signatures`);
-    await page.getByRole("button", { name: "Prepare Envelope", exact: true }).click();
+    await page.getByRole("button", { name: "Send for signature", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog
       .getByLabel("Version", { exact: true })

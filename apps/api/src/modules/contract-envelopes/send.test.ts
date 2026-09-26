@@ -1072,6 +1072,16 @@ describe("preparation refusals and reservations", () => {
     return { contract, payload, prepare };
   }
 
+  it("persists partial completion intent and rejects a changed answer on the same request key", async () => {
+    const { prepare } = await ready();
+    const prepared = await prepare({ completesContract: false });
+    expect(prepared.statusCode, prepared.body).toBe(201);
+    const row = prepared.json().envelopes[0];
+    expect(row.completesContract).toBe(false);
+    expect((await prepare({ completesContract: false })).json().envelopes[0].id).toBe(row.id);
+    expect((await prepare({ completesContract: true })).statusCode).toBe(409);
+  });
+
   it("keeps preparation and session actors separate from provider-confirmed history", async () => {
     const { contract, payload, prepare } = await ready();
     const history = async () => {
@@ -2276,7 +2286,7 @@ describe("preparation refusals and reservations", () => {
     },
   );
 
-  it("keeps embedded preparation Stage behavior when the recovered provider Envelope was sent", async () => {
+  it("advances to Signature when a recovered embedded Envelope was sent", async () => {
     const { row, contract } = await interruptedDraft();
     const found = await provider().findEnvelope(row.providerTransactionId!);
     provider().sendDraft(found!.providerEnvelopeId);
@@ -2291,7 +2301,7 @@ describe("preparation refusals and reservations", () => {
       .from(contracts)
       .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
       .where(eq(contracts.id, contract.id));
-    expect(record!.stage).toBe("draft");
+    expect(record!.stage).toBe("signature");
   });
 
   it("records a confirmed refusal without keeping the live reservation", async () => {
@@ -2315,9 +2325,22 @@ describe("preparation refusals and reservations", () => {
 });
 
 describe("authenticated Sender View launch and return", () => {
-  async function draft() {
+  async function draft(stage: "draft" | "approval" = "draft") {
     await configureConnector();
     const contract = await newContract("Sender View return");
+    if (stage === "approval") {
+      const [status] = await harness.db
+        .select()
+        .from(contractStatuses)
+        .where(eq(contractStatuses.stage, stage));
+      const moved = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: as(MEMBER),
+        payload: { statusId: status!.id },
+      });
+      expect(moved.statusCode, moved.body).toBe(200);
+    }
     await paperOn(contract.number, Buffer.from("one"), Buffer.from("two"));
     const before = await signingState(as(MEMBER), contract.number);
     const response = await harness.app.inject({
@@ -2692,13 +2715,8 @@ describe("authenticated Sender View launch and return", () => {
     expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("sent");
   });
 
-  it("launches only after durable creation, preserves the read allowance, and confirms one send without changing Stage", async () => {
-    const { envelope, contract } = await draft();
-    const [initialContract] = await harness.db
-      .select()
-      .from(contracts)
-      .where(eq(contracts.id, contract.id));
-    const envelopeStatusBefore = initialContract!.statusId;
+  it("launches after durable creation and advances Approval to Signature on confirmed send", async () => {
+    const { envelope, contract } = await draft("approval");
     const confirmedSentAt = new Date("2026-09-25T12:00:00Z");
     const read = vi
       .spyOn(harness.signing!, "readEnvelope")
@@ -2724,12 +2742,107 @@ describe("authenticated Sender View launch and return", () => {
     expect(stored).toMatchObject({ status: "sent", confirmationPending: false });
     expect(stored!.sentAt).toEqual(confirmedSentAt);
     expect(await entriesOn(contract.id)).toHaveLength(1);
-    const [record] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
-    expect(record!.statusId).toBe(envelopeStatusBefore);
+    const record = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${contract.number}`,
+      cookies: as(MEMBER),
+    });
+    expect(record.json().contract).toMatchObject({
+      stage: "signature",
+      statusName: "Out for signature",
+    });
+    const changes = await harness.db
+      .select()
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.entityId, contract.id),
+          eq(activityLog.action, "contract.status_changed"),
+        ),
+      );
+    expect(changes.filter((entry) => entry.payload.toStage === "signature")).toHaveLength(1);
     expect((await confirm(cookies)).statusCode).toBe(404);
     expect(read).toHaveBeenCalledTimes(1);
     read.mockRestore();
   });
+
+  it.each(["sent", "signed"] as const)(
+    "advances a prepared Contract when the first provider observation is %s, once",
+    async (status) => {
+      const { envelope, contract } = await draft();
+      const change = {
+        provider: "docusign" as const,
+        providerEnvelopeId: envelope.providerEnvelopeId!,
+        status,
+      };
+      await applyEnvelopeStatus(harness.app.notifier, change);
+      await applyEnvelopeStatus(harness.app.notifier, change);
+      const record = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/contracts/${contract.number}`,
+        cookies: as(MEMBER),
+      });
+      expect(record.json().contract.stage).toBe("signature");
+      const changes = await harness.db
+        .select()
+        .from(activityLog)
+        .where(
+          and(
+            eq(activityLog.entityId, contract.id),
+            eq(activityLog.action, "contract.status_changed"),
+          ),
+        );
+      expect(changes).toHaveLength(1);
+    },
+  );
+
+  it.each(["saved", "changed", "changed-back", "archived"] as const)(
+    "preserves the Contract Status after an embedded draft is %s",
+    async (scenario) => {
+      const { envelope, contract } = await draft();
+      const [initial] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      let expected = initial!.statusId;
+      const patch = async (statusId: string) => {
+        const result = await harness.app.inject({
+          method: "PATCH",
+          url: `/api/v1/contracts/${contract.number}`,
+          cookies: as(MEMBER),
+          payload: { statusId },
+        });
+        expect(result.statusCode, result.body).toBe(200);
+      };
+      if (scenario === "changed" || scenario === "changed-back") {
+        const [review] = await harness.db
+          .select()
+          .from(contractStatuses)
+          .where(eq(contractStatuses.stage, "review"));
+        await patch(review!.id);
+        expected = review!.id;
+        if (scenario === "changed-back") {
+          await patch(initial!.statusId);
+          expected = initial!.statusId;
+        }
+      } else if (scenario === "archived") {
+        await harness.db
+          .update(contracts)
+          .set({ archivedAt: new Date() })
+          .where(eq(contracts.id, contract.id));
+      }
+      await applyEnvelopeStatus(harness.app.notifier, {
+        provider: "docusign",
+        providerEnvelopeId: envelope.providerEnvelopeId!,
+        status: scenario === "saved" ? "draft" : "sent",
+      });
+      const [after] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      expect(after!.statusId).toBe(expected);
+    },
+  );
 
   it("refuses a sibling-origin return before consuming its correlation or read allowance", async () => {
     const { envelope, contract } = await draft();

@@ -479,7 +479,11 @@ const CATALOG_LISTS = [
   ["/api/v1/matter-types", "matterTypes", ["other", "default"]],
   ["/api/v1/matter-statuses", "matterStatuses", ["open", "closed"]],
   ["/api/v1/contract-types", "contractTypes", ["other", "default"]],
-  ["/api/v1/contract-statuses", "contractStatuses", ["draft", "active", "expired"]],
+  [
+    "/api/v1/contract-statuses",
+    "contractStatuses",
+    ["draft", "partially_signed", "active", "expired"],
+  ],
   ["/api/v1/entity-types", "entityTypes", ["other"]],
   ["/api/v1/officer-roles", "officerRoles", ["other"]],
   ["/api/v1/knowledge/types", "knowledgeTypes", []],

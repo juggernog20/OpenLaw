@@ -12521,6 +12521,21 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.completesContract": {
+    "defaultMessage": "Will the agreement be fully signed when this DocuSign round is complete?"
+  },
+  "signing.completesNo": {
+    "defaultMessage": "No, more signatures will still be needed"
+  },
+  "signing.completesNoHelp": {
+    "defaultMessage": "The Contract will move to Partially signed and stay in the Signature stage."
+  },
+  "signing.completesYes": {
+    "defaultMessage": "Yes, all required signatures will be in place"
+  },
+  "signing.completesYesHelp": {
+    "defaultMessage": "Everyone still needed is signing in this round. Any other parties have already signed. The Contract will move to Active."
+  },
   "signing.connectorUnavailable": {
     "defaultMessage": "The Signing connector is disabled or unavailable. Ask an Administrator to restore the original configuration before resuming. Your preparation remains saved."
   },
@@ -12531,13 +12546,13 @@
     "defaultMessage": "No signature requests on this contract yet."
   },
   "signing.executedFailed": {
-    "defaultMessage": "The executed copy could not be filed. Upload it to the record instead."
+    "defaultMessage": "The signed copy could not be filed. Upload it to the record instead."
   },
   "signing.executedFile": {
     "defaultMessage": "Executed copy"
   },
   "signing.executedFiling": {
-    "defaultMessage": "Filing the executed copy…"
+    "defaultMessage": "Filing the signed copy…"
   },
   "signing.externalSessionLimit": {
     "defaultMessage": "Changing OpenLaw access, archiving the Contract or turning off the connector does not close a session already issued by DocuSign. Resolve that session in DocuSign if it must stop. OpenLaw continues recording confirmed outcomes."
@@ -12563,14 +12578,14 @@
   "signing.openDraft": {
     "defaultMessage": "Resume in DocuSign"
   },
+  "signing.partiallySignedFile": {
+    "defaultMessage": "Partially signed copy"
+  },
   "signing.peopleMatches": {
     "defaultMessage": "People in OpenLaw"
   },
   "signing.preparationPending": {
     "defaultMessage": "Preparation is awaiting confirmation. Check Signatures before trying again."
-  },
-  "signing.prepare": {
-    "defaultMessage": "Prepare Envelope"
   },
   "signing.prepareEnvelope": {
     "defaultMessage": "Continue to DocuSign"
@@ -12639,7 +12654,7 @@
     "defaultMessage": "The envelope could not be sent. Try again."
   },
   "signing.sendNote": {
-    "defaultMessage": "When everyone signs, the executed file lands on this Contract. The Contract advances to Active only if it is still in the Signature Stage."
+    "defaultMessage": "The signed file will be saved to this Contract when everyone in this DocuSign round has signed."
   },
   "signing.sendTitle": {
     "defaultMessage": "Send for signature"

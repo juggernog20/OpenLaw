@@ -417,7 +417,7 @@ describe("the record's signing block", () => {
     renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
-    expect(within(rows[0]!).getByText("Filing the executed copy…")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Filing the signed copy…")).toBeInTheDocument();
     api.replaceEnvelopes([{ ...signed, executedFetch: "ready", executedCopy: EXECUTED_COPY }]);
 
     sources[0]!.emit({
@@ -565,7 +565,7 @@ describe("the record's signing block", () => {
     renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
-    expect(within(rows[0]!).getByText("Filing the executed copy…")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("Filing the signed copy…")).toBeInTheDocument();
   });
 
   it("says plainly when the executed copy could not be filed", async () => {
@@ -584,7 +584,7 @@ describe("the record's signing block", () => {
     const rows = await envelopeRows();
     expect(
       within(rows[0]!).getByText(
-        "The executed copy could not be filed. Upload it to the record instead.",
+        "The signed copy could not be filed. Upload it to the record instead.",
       ),
     ).toBeInTheDocument();
   });
@@ -607,7 +607,7 @@ describe("the record's signing block", () => {
     renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
-    expect(within(rows[0]!).queryByText("Filing the executed copy…")).not.toBeInTheDocument();
+    expect(within(rows[0]!).queryByText("Filing the signed copy…")).not.toBeInTheDocument();
     expect(within(rows[0]!).queryByRole("link", { name: "Executed copy" })).not.toBeInTheDocument();
   });
 
@@ -625,7 +625,7 @@ describe("the record's signing block", () => {
     renderAt("/contracts/42/signatures");
 
     const rows = await envelopeRows();
-    expect(within(rows[0]!).queryByText("Filing the executed copy…")).not.toBeInTheDocument();
+    expect(within(rows[0]!).queryByText("Filing the signed copy…")).not.toBeInTheDocument();
     expect(within(rows[0]!).queryByRole("link", { name: "Executed copy" })).not.toBeInTheDocument();
   });
 
@@ -675,8 +675,7 @@ describe("sending for signature", () => {
     const dialog = await screen.findByRole("dialog");
     expect(
       within(dialog).getByText(
-        "When everyone signs, the executed file lands on this Contract. " +
-          "The Contract advances to Active only if it is still in the Signature Stage.",
+        "The signed file will be saved to this Contract when everyone in this DocuSign round has signed.",
       ),
     ).toBeInTheDocument();
   });
@@ -702,6 +701,7 @@ describe("sending for signature", () => {
     await user.click(within(dialog).getByRole("button", { name: "Add signer" }));
     await user.type(within(dialog).getByLabelText("Signer 2 name"), "J. Malone");
     await user.type(within(dialog).getByLabelText("Signer 2 email"), "j.malone@orioncloud.example");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Send envelope" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
@@ -737,6 +737,7 @@ describe("sending for signature", () => {
     // Nadia is on row 1, so row 2 does not offer her again.
     expect(within(dialog).queryByRole("option", { name: "Nadia Counsel" })).not.toBeInTheDocument();
     await user.type(within(dialog).getByLabelText("Signer 2 email"), "sarah@meridianbio.example");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Send envelope" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
@@ -756,6 +757,7 @@ describe("sending for signature", () => {
     await user.selectOptions(within(dialog).getByLabelText("Version"), "v1");
     await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
     await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Send envelope" }));
 
     await waitFor(() => expect(api.writes).toHaveLength(1));
@@ -802,6 +804,7 @@ describe("sending for signature", () => {
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
     await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Send envelope" }));
 
     // The seam's sentence, printed once and where the press was made.
@@ -823,6 +826,7 @@ describe("sending for signature", () => {
     await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Send envelope" }));
 
     expect(
@@ -990,7 +994,7 @@ describe("preparing an unsent Envelope", () => {
       stubApi({ signedIn: MEMBER, extra: api.handler });
       renderAt("/contracts/42/signatures");
       const trigger = await screen.findByRole("button", {
-        name: preparationEnabled ? "Prepare Envelope" : "Send for signature",
+        name: "Send for signature",
       });
       await user.click(trigger);
       const dialog = await screen.findByRole("dialog");
@@ -1007,7 +1011,7 @@ describe("preparing an unsent Envelope", () => {
     renderAt("/contracts/42/signatures");
     const heading = await screen.findByRole("heading", { name: "Signatures" });
     await waitFor(() => expect(heading).toHaveFocus());
-    const trigger = screen.getByRole("button", { name: "Prepare Envelope" });
+    const trigger = screen.getByRole("button", { name: "Send for signature" });
     trigger.focus();
     // A live connection rereads the record but must not take keyboard focus.
     act(() => sources[0]!.open());
@@ -1016,16 +1020,21 @@ describe("preparing an unsent Envelope", () => {
   });
 
   it("keeps preparation enabled when the live connection re-reads signing state", async () => {
+    const user = userEvent.setup();
     const sources = stubEventSource();
     const api = recordApi({ preparationEnabled: true });
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/signatures");
-    expect(await screen.findByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Send for signature" })).toBeInTheDocument();
     sources[0]!.open();
     await waitFor(() => expect(api.reads).toBe(2));
     await act(async () => Promise.resolve());
-    expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Send for signature" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).getByRole("button", { name: "Continue to DocuSign" }),
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByRole("button", { name: "Send envelope" })).not.toBeInTheDocument();
   });
 
   it("retains discarded preparation history without Resume or Void", async () => {
@@ -1038,7 +1047,7 @@ describe("preparing an unsent Envelope", () => {
     expect(await screen.findByText("Discarded")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send for signature" })).toBeInTheDocument();
   });
 
   it.each([
@@ -1057,7 +1066,7 @@ describe("preparing an unsent Envelope", () => {
     expect(await screen.findByText(text)).toBeInTheDocument();
     expect(screen.getByText("Not sent")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 
   it("converges a waiting preparation through the record event without a return", async () => {
@@ -1101,7 +1110,7 @@ describe("preparing an unsent Envelope", () => {
         ),
       ).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
       expect(screen.getByText(/does not close a session already issued/)).toBeInTheDocument();
     },
   );
@@ -1136,7 +1145,7 @@ describe("preparing an unsent Envelope", () => {
     renderAt("/contracts/42/signatures");
     expect(await screen.findByText("Waiting for confirmation")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Resume in DocuSign" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
   });
@@ -1162,17 +1171,45 @@ describe("preparing an unsent Envelope", () => {
     expect(screen.getByRole("button", { name: "Resume in DocuSign" })).toBeEnabled();
   });
 
+  it.each([true, false])(
+    "requires an explicit completion choice and sends partial intent, preparation=%s",
+    async (preparationEnabled) => {
+      const user = userEvent.setup();
+      const api = recordApi({ preparationEnabled });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/signatures");
+      await user.click(
+        await screen.findByRole("button", {
+          name: "Send for signature",
+        }),
+      );
+      const dialog = await screen.findByRole("dialog");
+      const submit = within(dialog).getByRole("button", {
+        name: preparationEnabled ? "Continue to DocuSign" : "Send envelope",
+      });
+      expect(submit).toBeDisabled();
+      await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+      await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+      await user.click(within(dialog).getByRole("radio", { name: /No, more signatures/ }));
+      await user.click(submit);
+      await waitFor(() =>
+        expect(api.writes[0]).toMatchObject({ body: { completesContract: false } }),
+      );
+    },
+  );
+
   it("selects the exact Version, Signers and Subject and displays the unsent draft", async () => {
     const user = userEvent.setup();
     const api = recordApi({ preparationEnabled: true });
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/signatures");
-    await user.click(await screen.findByRole("button", { name: "Prepare Envelope" }));
+    await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
     await user.selectOptions(within(dialog).getByLabelText("Version"), "v1");
     await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
     await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
     await user.type(within(dialog).getByLabelText("Subject"), "Please review this agreement");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     expect(await screen.findByText("Draft — not sent")).toBeInTheDocument();
     expect(screen.getByText("Not sent")).toBeInTheDocument();
@@ -1194,18 +1231,21 @@ describe("preparing an unsent Envelope", () => {
     const api = recordApi({ preparationEnabled: true });
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/signatures");
-    await user.click(await screen.findByRole("button", { name: "Prepare Envelope" }));
+    await user.click(await screen.findByRole("button", { name: "Send for signature" }));
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
     await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
     const refused = "The provider would not take the envelope.";
     api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     expect(await within(dialog).findByText(refused)).toBeInTheDocument();
     api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     await waitFor(() => expect(api.writes).toHaveLength(2));
     await user.type(within(dialog).getByLabelText("Subject"), "Corrected");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
     await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
     await waitFor(() => expect(api.writes).toHaveLength(3));
     const keys = api.writes.map(
@@ -1277,7 +1317,7 @@ describe("preparing an unsent Envelope", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42/signatures");
     expect(await screen.findByText("Creation uncertain — not confirmed sent")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 });

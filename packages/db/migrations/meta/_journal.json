@@ -1268,6 +1268,13 @@
       "when": 1790402946310,
       "tag": "0180_document-type-colors",
       "breakpoints": true
+    },
+    {
+      "idx": 181,
+      "version": "7",
+      "when": 1790440443274,
+      "tag": "0181_partial-signing",
+      "breakpoints": true
     }
   ]
 }

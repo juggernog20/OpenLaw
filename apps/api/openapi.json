@@ -58501,6 +58501,9 @@
                           "subject": {
                             "type": ["string", "null"]
                           },
+                          "completesContract": {
+                            "type": "boolean"
+                          },
                           "documentVersionId": {
                             "type": ["string", "null"]
                           },
@@ -58579,6 +58582,7 @@
                           "nextRecoveryAt",
                           "recoveryStopped",
                           "subject",
+                          "completesContract",
                           "documentVersionId",
                           "documentId",
                           "sourceState",
@@ -58741,6 +58745,10 @@
                   "subject": {
                     "type": "string",
                     "maxLength": 200
+                  },
+                  "completesContract": {
+                    "default": true,
+                    "type": "boolean"
                   }
                 },
                 "required": ["documentVersionId", "signers"]
@@ -58905,6 +58913,9 @@
                           "subject": {
                             "type": ["string", "null"]
                           },
+                          "completesContract": {
+                            "type": "boolean"
+                          },
                           "documentVersionId": {
                             "type": ["string", "null"]
                           },
@@ -58983,6 +58994,7 @@
                           "nextRecoveryAt",
                           "recoveryStopped",
                           "subject",
+                          "completesContract",
                           "documentVersionId",
                           "documentId",
                           "sourceState",
@@ -59202,6 +59214,10 @@
                   "subject": {
                     "type": "string",
                     "maxLength": 200
+                  },
+                  "completesContract": {
+                    "default": true,
+                    "type": "boolean"
                   }
                 },
                 "required": ["idempotencyKey", "documentVersionId", "signers"]
@@ -59366,6 +59382,9 @@
                           "subject": {
                             "type": ["string", "null"]
                           },
+                          "completesContract": {
+                            "type": "boolean"
+                          },
                           "documentVersionId": {
                             "type": ["string", "null"]
                           },
@@ -59444,6 +59463,7 @@
                           "nextRecoveryAt",
                           "recoveryStopped",
                           "subject",
+                          "completesContract",
                           "documentVersionId",
                           "documentId",
                           "sourceState",
@@ -59781,6 +59801,9 @@
                           "subject": {
                             "type": ["string", "null"]
                           },
+                          "completesContract": {
+                            "type": "boolean"
+                          },
                           "documentVersionId": {
                             "type": ["string", "null"]
                           },
@@ -59859,6 +59882,7 @@
                           "nextRecoveryAt",
                           "recoveryStopped",
                           "subject",
+                          "completesContract",
                           "documentVersionId",
                           "documentId",
                           "sourceState",

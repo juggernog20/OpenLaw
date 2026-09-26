@@ -61,7 +61,7 @@ test("selects an exact Version and Signers in Signatures and retains an unsent d
       await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
     ).json()) as { primaryDocument: { versions: { id: string }[] } };
     await page.goto(`/contracts/${contract.number}/signatures`);
-    await page.getByRole("button", { name: "Prepare Envelope", exact: true }).click();
+    await page.getByRole("button", { name: "Send for signature", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await dialog
       .getByLabel("Version", { exact: true })
@@ -99,7 +99,7 @@ test("selects an exact Version and Signers in Signatures and retains an unsent d
     await page.getByRole("button", { name: "Resume in DocuSign" }).click();
     await page.getByRole("link", { name: "Send", exact: true }).click();
     await expect(page.getByText("Waiting for confirmation", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Prepare Envelope", exact: true })).toHaveCount(
+    await expect(page.getByRole("button", { name: "Send for signature", exact: true })).toHaveCount(
       0,
     );
     expect(stub.sentEnvelopeIds()).toHaveLength(1);

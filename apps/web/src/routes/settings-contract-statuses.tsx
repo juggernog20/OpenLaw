@@ -47,7 +47,7 @@ const STAGES = ["draft", "review", "approval", "signature", "active", "ended"] a
 type Stage = (typeof STAGES)[number];
 
 /** The CTR-001 system-protected seeds: no archive, no hard delete. */
-const PROTECTED_SLUGS = new Set(["draft", "active", "expired"]);
+const PROTECTED_SLUGS = new Set(["draft", "partially_signed", "active", "expired"]);
 
 /** One row of GET /contract-statuses, as the client sees it. */
 interface StatusRow {

@@ -28692,6 +28692,7 @@ export interface operations {
               recoveryStopped:
                 ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
+              completesContract: boolean;
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */
@@ -28760,6 +28761,8 @@ export interface operations {
               }
           )[];
           subject?: string;
+          /** @default true */
+          completesContract?: boolean;
         };
       };
     };
@@ -28806,6 +28809,7 @@ export interface operations {
               recoveryStopped:
                 ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
+              completesContract: boolean;
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */
@@ -28901,6 +28905,8 @@ export interface operations {
               }
           )[];
           subject?: string;
+          /** @default true */
+          completesContract?: boolean;
         };
       };
     };
@@ -28947,6 +28953,7 @@ export interface operations {
               recoveryStopped:
                 ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
+              completesContract: boolean;
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */
@@ -29076,6 +29083,7 @@ export interface operations {
               recoveryStopped:
                 ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
+              completesContract: boolean;
               documentVersionId: string | null;
               documentId: string | null;
               /** @enum {string} */

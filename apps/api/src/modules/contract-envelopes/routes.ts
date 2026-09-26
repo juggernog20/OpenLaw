@@ -134,6 +134,7 @@ import {
   EXECUTED_FETCH_STATES,
   inArray,
   isNull,
+  ne,
   users,
   type EnvelopeStatus,
   type Executor,
@@ -248,6 +249,7 @@ const EnvelopeSchema = z.object({
   nextRecoveryAt: z.iso.datetime().nullable(),
   recoveryStopped: z.enum(["lookup_expired", "attempts_exhausted", "identity_missing"]).nullable(),
   subject: z.string().nullable(),
+  completesContract: z.boolean(),
   documentVersionId: z.string().nullable(),
   documentId: z.string().nullable(),
   sourceState: z.enum(["available", "changed", "unavailable"]),
@@ -436,6 +438,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         scheduled: contractEnvelopes.scheduled,
         externallyRestored: contractEnvelopes.externallyRestored,
         subject: contractEnvelopes.subject,
+        completesContract: contractEnvelopes.completesContract,
         documentVersionId: contractEnvelopes.documentVersionId,
         documentId: contractEnvelopes.documentId,
         documentTitle: documents.title,
@@ -512,6 +515,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       scheduled: row.scheduled,
       externallyRestored: row.externallyRestored,
       subject: row.subject,
+      completesContract: row.completesContract,
       documentId: row.sourceReadable ? row.documentId : null,
       documentVersionId: row.sourceReadable ? row.documentVersionId : null,
       sourceState:
@@ -924,6 +928,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
              * seam carries a subject and no body in v1; omitted, the
              * record names itself. */
             subject: z.string().trim().max(MAX_ENVELOPE_SUBJECT_LENGTH).optional(),
+            completesContract: z.boolean().default(true),
           }),
           response: {
             201: EnvelopesEnvelope,
@@ -986,6 +991,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               subject: request.body.subject || null,
               preparer: request.user.id,
               preparing,
+              ...(request.body.completesContract ? {} : { completesContract: false }),
             }),
           )
           .digest("hex");
@@ -1104,6 +1110,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               documentVersionId: version.id,
               sentBy: request.user.id,
               subject,
+              completesContract: request.body.completesContract,
               idempotencyKey: key,
               requestFingerprint: fingerprint,
               providerTransactionId: randomUUID(),
@@ -1354,7 +1361,11 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               .select()
               .from(contractStatuses)
               .where(
-                and(eq(contractStatuses.stage, "signature"), isNull(contractStatuses.archivedAt)),
+                and(
+                  eq(contractStatuses.stage, "signature"),
+                  isNull(contractStatuses.archivedAt),
+                  ne(contractStatuses.slug, "partially_signed"),
+                ),
               )
               .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
               .limit(1)

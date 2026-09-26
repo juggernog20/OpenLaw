@@ -11,6 +11,9 @@
  * signature stage — advances the contract's status to active. Nobody
  * downloads anything, and nobody remembers four manual steps.
  *
+ * A round marked as partial saves the PDF without the executed pin or
+ * post-execution analysis, and moves Signature to Partially signed.
+ *
  * Five rules shape it.
  *
  * **The pin is set explicitly, never inferred from the kind.** The
@@ -204,6 +207,7 @@ interface OwedFetch {
   providerEnvironment: string | null;
   providerTransactionId: string | null;
   creationKind: string | null;
+  completesContract: boolean;
   providerEnvelopeId: string;
   sentBy: string;
   /** The chain the send left from, or NULL once that round has been
@@ -232,6 +236,7 @@ async function owedFetch(deps: ExecutedCopyDeps, envelopeId: string): Promise<Ow
       providerEnvironment: contractEnvelopes.providerEnvironment,
       providerTransactionId: contractEnvelopes.providerTransactionId,
       creationKind: contractEnvelopes.creationKind,
+      completesContract: contractEnvelopes.completesContract,
       providerEnvelopeId: contractEnvelopes.providerEnvelopeId,
       status: contractEnvelopes.status,
       executedFetch: contractEnvelopes.executedFetch,
@@ -288,7 +293,9 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
   await requireEnvelopeIdentity(signing, owed);
 
   const versionId = uuidv7();
-  const filename = executedCopyFilename(owed.sentFilename);
+  const filename = owed.completesContract
+    ? executedCopyFilename(owed.sentFilename)
+    : executedCopyFilename(owed.sentFilename).replace(" (executed).pdf", " (partially signed).pdf");
   const stored = await storeExecutedCopy(deps, {
     providerEnvelopeId: owed.providerEnvelopeId,
     documentId,
@@ -352,11 +359,13 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
         fileRef: stored.fileRef,
         // What the round **is** (CTR-014). The pin below is a separate
         // write, and this value is never read as one.
-        kind: "executed",
+        kind: owed.completesContract ? "executed" : "general",
         source: "uploaded",
         comparedFromVersionId: null,
         comparedToVersionId: null,
-        note: null,
+        note: owed.completesContract
+          ? null
+          : "Partially signed; additional signatures are required.",
         originalFilename: filename,
         // The provider answers a PDF. Declared rather than sniffed, as
         // everywhere else: it is a rendering hint (DOC-004).
@@ -371,10 +380,11 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
       // filed — never read off the kind above it. The same write bumps
       // `updated_at`, so "when did this document last change" answers
       // with the round that just landed.
-      await tx
-        .update(documents)
-        .set({ executedVersionId: versionId, updatedAt: new Date() })
-        .where(eq(documents.id, documentId));
+      if (owed.completesContract)
+        await tx
+          .update(documents)
+          .set({ executedVersionId: versionId, updatedAt: new Date() })
+          .where(eq(documents.id, documentId));
       // And the envelope keeps its own answer to "which file did **I**
       // produce" — the row draws it, and the pin can be moved by hand
       // afterwards without the row starting to draw somebody else's.
@@ -396,16 +406,17 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
           versionId,
           title: document.title,
           versionNumber,
-          kind: "executed",
+          kind: owed.completesContract ? "executed" : "general",
         },
       });
-      await recordActivity(tx, {
-        entityType: "contract",
-        entityId: owed.contractId,
-        action: "document.executed_set",
-        visibility: RECORD_ACTIVITY_TIER,
-        payload: { documentId, title: document.title, versionId, versionNumber },
-      });
+      if (owed.completesContract)
+        await recordActivity(tx, {
+          entityType: "contract",
+          entityId: owed.contractId,
+          action: "document.executed_set",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: { documentId, title: document.title, versionId, versionNumber },
+        });
 
       // Two events beside the two entries, and both actorless: the
       // whole team hears that the signed copy landed, and nobody is
@@ -424,7 +435,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
       });
 
       filed = true;
-      await advanceFromSignature(deps.notifier, tx, contract);
+      await advanceFromSignature(deps.notifier, tx, contract, owed.completesContract);
     });
   } catch (error) {
     await discardStoredCopy(deps, owed.envelopeId, stored.fileRef);
@@ -440,7 +451,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
 
   deps.log.info(
     { envelopeId: owed.envelopeId, documentId, versionId, bytes: stored.byteSize },
-    "filed an envelope's executed copy and pinned it",
+    "filed an envelope's signed copy",
   );
   // After the commit, never inside it — the transaction is closed, and
   // a queue that cannot be reached must not undo a round that is
@@ -454,7 +465,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
   // Analysis is not durable until its run row exists. It must not starve
   // the derivation requests above if an injected callback misbehaves.
   try {
-    await deps.onExecutedVersionPinned?.(versionId);
+    if (owed.completesContract) await deps.onExecutedVersionPinned?.(versionId);
   } catch (error) {
     deps.log.warn(
       { envelopeId: owed.envelopeId, versionId, reason: reasonOf(error) },
@@ -504,6 +515,7 @@ async function advanceFromSignature(
   notifier: Notifier,
   tx: NotifyingTransaction,
   contract: Readonly<{ id: string; number: number; title: string; statusId: string }>,
+  completesContract: boolean,
 ): Promise<void> {
   const [current] = await tx
     .select({ displayName: contractStatuses.displayName, stage: contractStatuses.stage })
@@ -516,13 +528,20 @@ async function advanceFromSignature(
   // order is the settings pane's own, so the status a team put first is
   // the one the integration picks — this reads the record's
   // configuration rather than a slug it was built knowing.
+  const targetStage = completesContract ? ACTIVE_STAGE : SIGNATURE_STAGE;
   const [target] = await tx
     .select({ id: contractStatuses.id, displayName: contractStatuses.displayName })
     .from(contractStatuses)
-    .where(and(eq(contractStatuses.stage, ACTIVE_STAGE), isNull(contractStatuses.archivedAt)))
+    .where(
+      and(
+        eq(contractStatuses.stage, targetStage),
+        isNull(contractStatuses.archivedAt),
+        completesContract ? undefined : eq(contractStatuses.slug, "partially_signed"),
+      ),
+    )
     .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
     .limit(1);
-  if (!target) return;
+  if (!target || target.id === contract.statusId) return;
 
   await tx.update(contracts).set({ statusId: target.id }).where(eq(contracts.id, contract.id));
   // CTR-012's soft gate is not asked, and it is not an omission: it
@@ -541,7 +560,7 @@ async function advanceFromSignature(
       from: current.displayName,
       to: target.displayName,
       fromStage: SIGNATURE_STAGE,
-      toStage: ACTIVE_STAGE,
+      toStage: targetStage,
     },
   });
   // And the record's people hear that it moved (NOT-002 group 2), with
@@ -553,7 +572,7 @@ async function advanceFromSignature(
     from: current.displayName,
     to: target.displayName,
     fromStage: SIGNATURE_STAGE,
-    toStage: ACTIVE_STAGE,
+    toStage: targetStage,
   });
 }
 

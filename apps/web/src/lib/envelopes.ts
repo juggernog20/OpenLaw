@@ -116,13 +116,19 @@ export async function readContractSigning(contractNumber: number): Promise<Signi
  */
 export async function sendContractEnvelope(
   contractNumber: number,
-  input: { documentVersionId: string; signers: readonly SendSigner[]; subject?: string },
+  input: {
+    documentVersionId: string;
+    signers: readonly SendSigner[];
+    subject?: string;
+    completesContract: boolean;
+  },
 ): Promise<SigningOutcome> {
   const result = await api
     .POST("/api/v1/contracts/{number}/envelopes", {
       params: { path: { number: contractNumber } },
       body: {
         documentVersionId: input.documentVersionId,
+        completesContract: input.completesContract,
         signers: input.signers.map((signer) =>
           "personId" in signer
             ? { personId: signer.personId }
@@ -168,6 +174,7 @@ export async function prepareContractEnvelope(
     signers: readonly SendSigner[];
     subject?: string;
     idempotencyKey: string;
+    completesContract: boolean;
   },
 ): Promise<SigningOutcome> {
   const result = await api

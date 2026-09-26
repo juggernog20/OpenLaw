@@ -65,7 +65,7 @@ for (const scenario of ["resume", "discard"] as const)
         await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
       ).json()) as { primaryDocument: { versions: { id: string }[] } };
       await page.goto(`/contracts/${contract.number}/signatures`);
-      await page.getByRole("button", { name: "Prepare Envelope", exact: true }).click();
+      await page.getByRole("button", { name: "Send for signature", exact: true }).click();
       const dialog = page.getByRole("dialog");
       await dialog
         .getByLabel("Version", { exact: true })
@@ -90,7 +90,7 @@ for (const scenario of ["resume", "discard"] as const)
         await expect(page).toHaveURL(new RegExp(`${signatures}$`));
         await expect(page.getByText("Discarded", { exact: true })).toBeVisible();
         await expect(page.getByRole("button", { name: "Resume in DocuSign" })).toHaveCount(0);
-        await expect(page.getByRole("button", { name: "Prepare Envelope" })).toBeVisible();
+        await expect(page.getByRole("button", { name: "Send for signature" })).toBeVisible();
         const state = (await (
           await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
         ).json()) as { envelopes: { status: string; sentAt: string | null }[] };

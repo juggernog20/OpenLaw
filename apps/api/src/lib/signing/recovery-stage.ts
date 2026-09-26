@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Preserve legacy direct-send Stage behavior during recovery without
- * replacing a newer Status choice (CTR-013, #1174). */
+/** Advance confirmed sends without replacing a newer Status choice. */
 
 import {
   activityLog,
@@ -11,6 +10,7 @@ import {
   contractStatuses,
   eq,
   isNull,
+  ne,
   sql,
   type ContractEnvelope,
   type Executor,
@@ -34,9 +34,9 @@ export async function contractStatusRevision(db: Executor, contractId: string): 
   return row!.revision;
 }
 
-/** Reproduce the direct-send Status change only while the original choice
- * still holds. Unknown historical intent never authorizes a Stage change. */
-export async function recoverDirectSendStage(
+/** Direct sends and embedded sends advance only while the Status recorded
+ * at preparation still holds. Preparing or saving a draft does not advance it. */
+export async function advanceSentContractStage(
   tx: NotifyingTransaction,
   notifier: Notifier,
   envelope: Pick<
@@ -45,7 +45,7 @@ export async function recoverDirectSendStage(
   >,
 ): Promise<void> {
   if (
-    envelope.creationKind !== "send" ||
+    !envelope.creationKind ||
     !envelope.creationStatusId ||
     envelope.creationStatusRevision === null
   )
@@ -69,7 +69,13 @@ export async function recoverDirectSendStage(
   const [signature] = await tx
     .select()
     .from(contractStatuses)
-    .where(and(eq(contractStatuses.stage, "signature"), isNull(contractStatuses.archivedAt)))
+    .where(
+      and(
+        eq(contractStatuses.stage, "signature"),
+        isNull(contractStatuses.archivedAt),
+        ne(contractStatuses.slug, "partially_signed"),
+      ),
+    )
     .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
     .limit(1)
     .for("share");

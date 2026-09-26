@@ -36,7 +36,7 @@
  * void suites do.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   activityLog,
   and,
@@ -45,6 +45,7 @@ import {
   contractEnvelopes,
   contracts,
   contractStatuses,
+  documentVersionText,
   desc,
   eq,
   gt,
@@ -57,6 +58,7 @@ import { FAKE_VALID_AI_KEY } from "../../lib/ai/fake.js";
 import { crossesApprovalGate } from "../../lib/soft-gate.js";
 import { FAKE_SIGNATURE_HEADER, FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import type { WebhookDelivery } from "../../lib/signing/provider.js";
+import { requestAutomaticContractAnalysis } from "../../pipeline/automatic-contract-analysis.js";
 import { handleExecutedCopyFetch, runExecutedCopySweep } from "../../pipeline/executed-copy.js";
 import {
   signInCookies,
@@ -280,14 +282,14 @@ async function primaryOf(number: number): Promise<DocumentRow> {
   return primary!;
 }
 
-async function sendFrom(number: number): Promise<EnvelopeRow> {
+async function sendFrom(number: number, completesContract = true): Promise<EnvelopeRow> {
   const state = await signingState(number);
   const versionId = state.primaryDocument!.versions[0]!.id;
   const sent = await harness.app.inject({
     method: "POST",
     url: `/api/v1/contracts/${String(number)}/envelopes`,
     cookies: as(SENDER),
-    payload: { documentVersionId: versionId, signers: [...SIGNERS] },
+    payload: { documentVersionId: versionId, signers: [...SIGNERS], completesContract },
   });
   expect(sent.statusCode, sent.body).toBe(201);
   const rows = (sent.json() as { envelopes: EnvelopeRow[] }).envelopes;
@@ -500,6 +502,80 @@ describe("a signed envelope files its executed copy", () => {
       cookies: as(ADMIN),
     });
     expect(disabled.statusCode, disabled.body).toBe(200);
+  });
+
+  it("keeps the first round partially signed, then executes the final round", async () => {
+    const partialContract = await recordWithPaper("Two signing rounds");
+    const partial = await sendFrom(partialContract.number, false);
+    expect(partial).toMatchObject({ completesContract: false });
+    await signIt(partial);
+    const filed = await settledFetch(partialContract.number, partial.id);
+    expect(filed.executedFetch).toBe("ready");
+    expect(await statusOf(partialContract.id)).toEqual({
+      displayName: "Partially signed",
+      stage: "signature",
+    });
+    const paper = await primaryOf(partialContract.number);
+    expect(paper.versions).toHaveLength(2);
+    expect(paper.versions[1]).toMatchObject({
+      kind: "general",
+      isExecuted: false,
+      originalFilename: "agreement (partially signed).pdf",
+    });
+    expect(paper.versions.every((version) => !version.isExecuted)).toBe(true);
+    await vi.waitFor(
+      async () => {
+        const [text] = await harness.db
+          .select()
+          .from(documentVersionText)
+          .where(eq(documentVersionText.versionId, paper.versions[1]!.id));
+        expect(text?.state).toBe("ready");
+      },
+      { timeout: 20_000 },
+    );
+    await requestAutomaticContractAnalysis(
+      {
+        db: harness.db,
+        jobs: harness.pipeline,
+        resolveAiProvider: harness.resolveAiProvider,
+        log: harness.app.log,
+      },
+      paper.versions[1]!.id,
+    );
+
+    expect(
+      await harness.db
+        .select()
+        .from(contractAnalysisRuns)
+        .where(
+          and(
+            eq(contractAnalysisRuns.contractId, partialContract.id),
+            eq(contractAnalysisRuns.versionId, paper.versions[1]!.id),
+          ),
+        ),
+    ).toEqual([]);
+    expect(
+      (await entriesOn(partialContract.id, "")).filter(
+        (entry) => entry.action === "document.executed_set",
+      ),
+    ).toEqual([]);
+
+    const final = await sendFrom(partialContract.number, true);
+    expect(final).toMatchObject({ completesContract: true });
+    expect(await statusOf(partialContract.id)).toEqual({
+      displayName: "Out for signature",
+      stage: "signature",
+    });
+    await signIt(final);
+    const executed = await settledFetch(partialContract.number, final.id);
+    expect(executed.executedFetch).toBe("ready");
+    expect((await statusOf(partialContract.id)).stage).toBe("active");
+    const after = await primaryOf(partialContract.number);
+    expect(after.versions).toHaveLength(3);
+    expect(after.versions.map((version) => version.isExecuted)).toEqual([false, false, true]);
+    expect((await settledAnalysis(partialContract.id, after.versions[2]!.id)).versionId).toBe(
+      after.versions[2]!.id,
+    );
   });
 
   it("appends it to the primary chain as the next executed round", async () => {

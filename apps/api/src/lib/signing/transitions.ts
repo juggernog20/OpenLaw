@@ -49,7 +49,7 @@ import {
   type EnvelopeStatus,
   type SigningProviderKey,
 } from "@openlaw/db";
-import { recoverDirectSendStage } from "./recovery-stage.js";
+import { advanceSentContractStage } from "./recovery-stage.js";
 import { MAX_ENVELOPE_REASON_LENGTH } from "@openlaw/shared";
 import { recordActivity, RECORD_ACTIVITY_TIER, type ActivityAction } from "../activity.js";
 import type { Notifier } from "../notifications/notifier.js";
@@ -273,8 +273,11 @@ export async function applyEnvelopeStatus(
           : TRANSITION_ACTION[change.status];
     if (!action) return { outcome: "unchanged", envelope: held };
 
-    if (row.status === "preparing" && ["sent", "signed", "declined"].includes(change.status))
-      await recoverDirectSendStage(tx, notifier, row);
+    if (
+      ["preparing", "draft"].includes(row.status) &&
+      ["sent", "signed", "declined"].includes(change.status)
+    )
+      await advanceSentContractStage(tx, notifier, row);
 
     const reason = keptReason(change.status, change.reason);
     // The moment we were told, when the provider named none. The column

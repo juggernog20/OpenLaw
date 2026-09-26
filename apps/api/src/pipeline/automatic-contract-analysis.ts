@@ -12,6 +12,7 @@
 import {
   and,
   contractAnalysisRuns,
+  contractEnvelopes,
   contracts,
   desc,
   documentVersions,
@@ -77,6 +78,20 @@ export async function requestAutomaticContractAnalysis(
         .limit(1)
         .for("update");
       if (!contract || contract.archivedAt || contract.endedAt) return null;
+
+      if (candidate.executedVersionId !== versionId) {
+        const [partial] = await tx
+          .select({ id: contractEnvelopes.id })
+          .from(contractEnvelopes)
+          .where(
+            and(
+              eq(contractEnvelopes.executedVersionId, versionId),
+              eq(contractEnvelopes.completesContract, false),
+            ),
+          )
+          .limit(1);
+        if (partial) return null;
+      }
 
       const [conversion] = await tx
         .select({ id: contractAnalysisRuns.id })
