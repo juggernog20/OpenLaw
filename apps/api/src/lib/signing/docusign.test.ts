@@ -911,7 +911,7 @@ describe("resume and native discard through DocuSign HTTP", () => {
     try {
       stub.envelopes.set("intermediate", { status: "signed" });
       expect((await provider.readEnvelope("intermediate")).status).toBe("sent");
-      for (const status of ["pending", "started"]) {
+      for (const status of ["pending", "started", "completed"]) {
         stub.envelopes.set("scheduled", {
           status: "created",
           workflow: { scheduledSending: { status } },
@@ -927,7 +927,7 @@ describe("resume and native discard through DocuSign HTTP", () => {
       });
       expect(await provider.readEnvelope("scheduled")).toMatchObject({
         status: "draft",
-        scheduled: false,
+        scheduled: true,
       });
       stub.envelopes.set("saved", { status: "created" });
       expect((await provider.readEnvelope("saved")).status).toBe("draft");

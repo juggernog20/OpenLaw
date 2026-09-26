@@ -815,7 +815,7 @@ class DocuSignProvider implements SigningProvider {
       scheduled:
         status === "draft" &&
         !discarded &&
-        ["pending", "started"].includes(
+        ["pending", "started", "completed"].includes(
           readString(
             readObject(readObject(body.workflow)?.scheduledSending) ?? {},
             "status",

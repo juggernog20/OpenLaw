@@ -2575,6 +2575,37 @@ describe("shared browser and worker status allowance", () => {
       .set({ createdAt: new Date(Date.now() - minutes * 60_000) })
       .where(eq(contractEnvelopes.id, id));
 
+  it("refuses Resume when the provider still reports a created scheduled Envelope", async () => {
+    const { id } = await launchedDraft(
+      "Scheduled job ended before Envelope status converged",
+      "scheduled-resume",
+    );
+    // The driver retains scheduled=true for created plus scheduledSending.completed.
+    const read = vi
+      .spyOn(provider(), "readEnvelope")
+      .mockResolvedValueOnce({ status: "draft", scheduled: true });
+    const launch = vi.spyOn(provider(), "launchEnvelope");
+    try {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/envelopes/${id}/launch`,
+        cookies: as(MEMBER),
+      });
+      expect(response.statusCode).toBe(409);
+      expect(await held(id)).toMatchObject({
+        status: "draft",
+        scheduled: true,
+        sentAt: null,
+        completedAt: null,
+        confirmationPending: false,
+      });
+      expect(launch).not.toHaveBeenCalled();
+    } finally {
+      read.mockRestore();
+      launch.mockRestore();
+    }
+  });
+
   it("leaves a fresh launch to the browser return, which spends the first read", async () => {
     const { id, providerEnvelopeId } = await launchedDraft("Sweep waits for the return", "grace");
     const read = vi.spyOn(harness.signing!, "readEnvelope");

@@ -786,10 +786,11 @@ replace a confirmed status. Completion uses the existing executed-copy pipeline,
 explicit executed pin and conditional Signature-to-Active advancement.
 
 The adapter reads `folders,workflow` together. A created Envelope with
-`workflow.scheduledSending.status` of `pending` or `started` remains a draft and
+`workflow.scheduledSending.status` of `pending`, `started` or `completed` remains a draft and
 carries a Scheduled in DocuSign label. It has no Sent timestamp and no Resume
 control. OpenLaw does not modify the schedule. The scheduling job's `completed`
-status is not Envelope completion. These shapes follow the [pinned official
+status is not Envelope completion. A created Envelope remains non-editable even
+when that job reports completed, until its own status confirms sending. These shapes follow the [pinned official
 OpenAPI](https://github.com/docusign/OpenAPI-Specifications/blob/858a3ae59b0edbc8beea4fa3a6d7fe803833dd68/esignature.rest.swagger-v2.1.json).
 Live account verification remains #1178.
 
