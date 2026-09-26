@@ -134,6 +134,19 @@ It noted three things that do not block:
 - As in DOC-029, only `redirect.js` and `search.js` differ between the served
   archive and the export.
 
+## After the pin
+
+While this batch ran, dev took 52 more commits. They include M42
+([#1188](https://github.com/juggernog20/OpenLaw/pull/1188), MCP resources and
+prompts), the signing card rework, owner fields on the Contract and Matter
+records, and MCP settings changes. The branch merges dev, and the edition stays
+pinned to `067c1646`, the build every walkthrough used. After the merge, five
+guides that dev changed no longer match their evidence: configure-mcp,
+connect-claude, connect-headless-client, contract-approvals and
+electronic-signing. Dev builds warn that the compatibility review is stale again.
+DOC-032 ([#1194](https://github.com/juggernog20/OpenLaw/issues/1194)) covers the
+new commits and the three M42 scenarios.
+
 ## Owner rulings wanted
 
 These are registry or wording questions, not guide errors.
