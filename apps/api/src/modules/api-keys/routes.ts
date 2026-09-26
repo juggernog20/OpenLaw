@@ -18,12 +18,15 @@ import {
   sealSecret,
   openSecret,
   type Transaction,
+  type UserRole,
 } from "@openlaw/db";
 import { MCP_TOOLSETS, API_KEY_PROBLEMS } from "@openlaw/shared";
 import { z } from "zod";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { requireAuth, requireRole } from "../../auth/guards.js";
 import { mintApiKey } from "../../auth/api-keys.js";
+import { selectableToolsets } from "../../mcp/selectable-toolsets.js";
+import { publishLiveEvent } from "../../lib/live-events.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import type { NotifyingTransaction } from "../../lib/notifications/notifier.js";
@@ -64,19 +67,21 @@ const Policy = z.object({
   enabled: z.boolean(),
   groupEnabled: z.boolean(),
   toolsetCeiling: z.array(z.enum(MCP_TOOLSETS)),
+  toolsets: z.array(z.enum(MCP_TOOLSETS)),
   readOnly: z.boolean(),
   apiKeyLifetimeDays: z.number(),
 });
 const response = { 200: Row, default: problemResponse };
 type RequestRow = typeof apiKeyRequests.$inferSelect;
 
-async function readPolicy(tx: Transaction, role: string) {
+async function readPolicy(tx: Transaction, role: UserRole) {
   const [p] = await tx.select().from(orgSettings).for("share");
   if (!p) throw httpError(500, "Organization settings are unavailable.");
   return {
     enabled: p.mcpEnabled,
     groupEnabled: role === "business_user" ? p.mcpBusinessApiKeysEnabled : p.mcpLegalApiKeysEnabled,
     toolsetCeiling: p.mcpToolsetCeiling,
+    toolsets: selectableToolsets(p.mcpToolsetCeiling, role),
     readOnly: p.mcpReadOnly,
     apiKeyLifetimeDays: p.mcpApiKeyLifetimeDays,
   };
@@ -87,8 +92,11 @@ function assertPolicy(p: z.infer<typeof Policy>, input: Pick<RequestRow, "toolse
   };
   if (!p.enabled) fail(0, "MCP is off for the organization.");
   if (!p.groupEnabled) fail(1, "API keys are off for your group.");
-  if (input.toolsets.some((t) => !p.toolsetCeiling.includes(t)))
-    fail(2, "A requested Toolset is outside the organization ceiling.");
+  if (input.toolsets.some((t) => !p.toolsets.includes(t)))
+    fail(
+      2,
+      "A requested Toolset is outside the organization ceiling or unavailable for your account type.",
+    );
   if (input.scope === "write" && p.readOnly) fail(3, "MCP is read-only for the organization.");
 }
 async function present(tx: Transaction, row: RequestRow): Promise<z.infer<typeof Row>> {
@@ -356,6 +364,11 @@ export const apiKeyRoutes: FastifyPluginAsyncZod = async (app) => {
               .where(eq(apiKeyRequests.id, row.id))
               .returning();
             await audit(tx, changed!, "revoked", req.user.id);
+            await publishLiveEvent(tx, {
+              kind: "mcp",
+              change: "revocation",
+              credentialIds: [row.keyId!],
+            });
             return present(tx, changed!);
           }
           if (row.status !== "pending")

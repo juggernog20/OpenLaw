@@ -16,14 +16,12 @@ import {
   contractCounterparties,
   contracts,
   contractStatuses,
-  contractTeam,
   contractTypes,
   counterparties,
   entities,
   eq,
   isNull,
   sql,
-  USER_ROLES,
   users,
 } from "@openlaw/db";
 import {
@@ -42,7 +40,7 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
 import { clearAiUnverified } from "../../lib/ai-unverified.js";
 import { NO_CONTRACT } from "../../lib/contract-access.js";
-import { addContractTeamMember } from "../../lib/contract-team.js";
+import { addToContractTeam, removeContractTeamMember } from "../../lib/contract-team.js";
 import { CounterpartyNameSchema, findOrCreateCounterparty } from "../../lib/counterparty-link.js";
 import { CustomFieldsInput } from "../../lib/custom-fields.js";
 import { entityReachScope } from "../../lib/entity-access.js";
@@ -53,8 +51,6 @@ import { departmentOptions } from "../departments/references.js";
 import { createContract } from "./create.js";
 import {
   ApproverGroupOptionSchema,
-  assertEditable,
-  assertMayChangeTeam,
   attachedFieldsOf,
   ContractEnvelope,
   ContractFieldsEnvelope,
@@ -69,7 +65,6 @@ import {
   DescriptionSchema,
   editableContract,
   lockedContract,
-  lockedUser,
   memberRow,
   NoticePeriodSchema,
   NumberParams,
@@ -79,7 +74,6 @@ import {
   RenewalPeriodSchema,
   selectContracts,
   selectRenewals,
-  selectTeam,
   SeveritySchema,
   StatusOptionSchema,
   TeamEnvelope,
@@ -809,23 +803,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       const { userId } = request.body;
       const team = await app.notifier.notifying(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
-        // On a walled record this add is an audience decision (CTR-023),
-        // so it is asked before the archived refusal, the same order the
-        // flag's own write takes.
-        await assertMayChangeTeam(tx, current, request.user);
-        assertEditable(current);
-        // Anyone live may join: a Business User's row is their Portal grant.
-        const person = await lockedUser(tx, userId, USER_ROLES, "That is not a person we can add.");
-
-        const inserted = await addContractTeamMember(
-          tx,
-          app.notifier,
-          current.row,
-          request.user,
-          person,
-        );
-        if (!inserted) throw httpError(409, "This person is already on the team.");
-        return selectTeam(tx, current.row.id);
+        return addToContractTeam(tx, app.notifier, current, request.user, userId);
       });
       return reply.status(201).send({ team });
     },
@@ -851,40 +829,7 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
       const { userId } = request.params;
       const team = await app.db.transaction(async (tx) => {
         const current = await lockedContract(tx, request.params.number, request.user);
-        // Taking somebody off a walled record's team is the same
-        // decision as putting them on it, read the other way (CTR-023).
-        await assertMayChangeTeam(tx, current, request.user);
-        assertEditable(current);
-        if (userId === current.row.businessOwnerId) {
-          throw httpError(
-            409,
-            "Change the Business Owner before removing this person from the team.",
-          );
-        }
-        const [removed] = await tx
-          .delete(contractTeam)
-          .where(and(eq(contractTeam.contractId, current.row.id), eq(contractTeam.userId, userId)))
-          .returning();
-        if (!removed) throw httpError(404, "This person is not on the contract team.");
-
-        const [person] = await tx
-          .select({ displayName: users.displayName })
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1);
-        await recordActivity(tx, {
-          entityType: "contract",
-          entityId: current.row.id,
-          actorId: request.user.id,
-          action: "contract.team_removed",
-          visibility: RECORD_ACTIVITY_TIER,
-          payload: {
-            number: current.row.number,
-            title: current.row.title,
-            member: person?.displayName ?? userId,
-          },
-        });
-        return selectTeam(tx, current.row.id);
+        return removeContractTeamMember(tx, current, request.user, userId);
       });
       return { team };
     },

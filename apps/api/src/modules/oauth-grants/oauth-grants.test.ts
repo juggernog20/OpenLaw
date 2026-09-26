@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { toolRegister, type ToolDefinition } from "../../mcp/register.js";
 import { createHash } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
@@ -334,6 +335,8 @@ it("refuses outside Toolsets and writes with M40 errors and HTTP scope challenge
   const issued = await issue();
   for (const [name, scope, code] of [
     ["openlaw_matters_list", "toolset:matters", "tool_outside_grant"],
+    ["openlaw_team_add", "toolset:team write", "tool_outside_grant"],
+    ["openlaw_team_remove", "toolset:team write", "tool_outside_grant"],
     ["openlaw_document_upload", "toolset:documents write", "mcp_read_only"],
   ]) {
     const res = await call(issued.access_token, name);
@@ -345,6 +348,67 @@ it("refuses outside Toolsets and writes with M40 errors and HTTP scope challenge
       isError: true,
       content: [{ type: "text", text: expect.stringContaining(code!) }],
     });
+  }
+});
+it("lets a Legal Team Member change a team through OAuth and refuses removal under read scope", async () => {
+  const issued = await issue(["team"], "write");
+  const type = (await h.db.select().from(contractTypes).limit(1))[0]!;
+  const status = (
+    await h.db.select().from(contractStatuses).where(eq(contractStatuses.stage, "draft")).limit(1)
+  )[0]!;
+  const [record] = await h.db
+    .insert(contracts)
+    .values({
+      title: "OAuth team",
+      contractTypeId: type.id,
+      statusId: status.id,
+      createdBy: personId,
+      managerId: personId,
+    })
+    .returning();
+  await h.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, personId));
+  try {
+    for (const operation of ["add", "remove"]) {
+      const response = await call(issued.access_token, `openlaw_team_${operation}`, {
+        record: "contract",
+        number: record!.number,
+        userId: businessId,
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      expect(response.json().result.isError).not.toBe(true);
+      expect(response.json().result.structuredContent.team).toHaveLength(
+        operation === "add" ? 1 : 0,
+      );
+    }
+    const entries = await h.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.entityId, record!.id));
+    for (const action of ["contract.team_added", "contract.team_removed"])
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          action,
+          actorId: personId,
+          viaKind: "oauth_client",
+          viaClientName: "Test Client",
+        }),
+      );
+    const read = await issue(["team"], "read");
+    const response = await call(read.access_token, "openlaw_team_remove", {
+      record: "contract",
+      number: record!.number,
+      userId: businessId,
+    });
+    expect(response.statusCode).toBe(403);
+    expect(response.headers["www-authenticate"]).toContain(
+      'error="insufficient_scope" scope="toolset:team write"',
+    );
+    expect(response.json().result).toMatchObject({
+      isError: true,
+      content: [{ type: "text", text: expect.stringContaining("mcp_read_only") }],
+    });
+  } finally {
+    await h.db.update(users).set({ role: "administrator" }).where(eq(users.id, personId));
   }
 });
 it.each(["master", "group", "client", "archived", "missing", "owner", "administrator"])(
@@ -728,3 +792,167 @@ it.each(["legal_team_member", "business_user"] as const)(
     }
   },
 );
+
+it("offers the same audience-filtered Toolsets for consent and API key requests", async () => {
+  const register = toolRegister as ToolDefinition[];
+  const originalLength = register.length;
+  register.push(
+    ...(["team", "administration"] as const).map((toolset) => ({
+      ...register[0]!,
+      name: `test_${toolset}`,
+      toolset,
+      legalUser: "on" as const,
+      businessUser: "off" as const,
+    })),
+  );
+  try {
+    const member = await provisionUser(h.app.auth, {
+      email: "choices-member@example.com",
+      displayName: "Member",
+      password: TEST_ADMIN.password,
+    });
+    await h.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, member.id));
+    const memberCookies = await signInCookies(
+      h.app,
+      "choices-member@example.com",
+      TEST_ADMIN.password,
+    );
+    await h.db
+      .update(orgSettings)
+      .set({ mcpLegalApiKeysEnabled: true, mcpBusinessApiKeysEnabled: true });
+    for (const [session, expected] of [
+      [cookies, ["contracts", "tasks", "team", "administration"]],
+      [memberCookies, ["contracts", "tasks", "team"]],
+      [business, ["contracts"]],
+    ] as const) {
+      await h.db
+        .update(orgSettings)
+        .set({ mcpToolsetCeiling: ["contracts", "tasks", "team", "administration"] });
+      const consent = await facts(await query(session), session);
+      const keys = await h.app.inject({ url: "/api/v1/api-key-requests", cookies: session });
+      expect(consent.statusCode, consent.body).toBe(200);
+      expect(keys.statusCode, keys.body).toBe(200);
+      expect(consent.json().toolsets).toEqual(expected);
+      expect(keys.json().policy.toolsets).toEqual(expected);
+      expect(keys.json().policy.toolsetCeiling).toEqual([
+        "contracts",
+        "tasks",
+        "team",
+        "administration",
+      ]);
+      for (const toolset of ["contracts", "tasks", "team", "administration"] as const) {
+        const response = await h.app.inject({
+          method: "POST",
+          url: "/api/v1/api-key-requests",
+          cookies: session,
+          payload: { clientName: "Audience test", toolsets: [toolset], scope: "read" },
+        });
+        if ((expected as readonly string[]).includes(toolset))
+          expect(response.statusCode, response.body).toBe(201);
+        else {
+          expect(response.statusCode, response.body).toBe(403);
+          expect(response.json().type).toBe("urn:openlaw:problem:toolset-outside-ceiling");
+        }
+      }
+      await h.db.update(orgSettings).set({ mcpToolsetCeiling: ["contracts"] });
+      expect((await facts(await query(session), session)).json().toolsets).toEqual(["contracts"]);
+      expect(
+        (await h.app.inject({ url: "/api/v1/api-key-requests", cookies: session })).json().policy
+          .toolsets,
+      ).toEqual(["contracts"]);
+    }
+  } finally {
+    register.splice(originalLength);
+  }
+});
+
+it("accounts for resource scope refusals with the OAuth challenge", async () => {
+  const issued = await issue();
+  const res = await h.app.inject({
+    method: "POST",
+    url: "/mcp",
+    headers: { authorization: `Bearer ${issued.access_token}` },
+    payload: {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "resources/read",
+      params: { uri: "openlaw://matters/M-123" },
+    },
+  });
+  expect(res.statusCode, res.body).toBe(403);
+  expect(res.headers["www-authenticate"]).toContain(
+    'error="insufficient_scope" scope="toolset:matters"',
+  );
+  expect(res.json().result).toMatchObject({
+    isError: true,
+    content: [{ type: "text", text: expect.stringContaining("tool_outside_grant") }],
+  });
+  const rows = await h.db
+    .select()
+    .from(mcpToolCalls)
+    .where(eq(mcpToolCalls.tool, "resource:matters"));
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toMatchObject({ outcome: "tool_outside_grant", clientName: "Test Client" });
+});
+
+it("accounts for prompt scope refusals with the embedded resource's OAuth challenge", async () => {
+  const issued = await issue();
+  for (const [name, args, scope] of [
+    ["summarize_record", { record: "matter M-123" }, "matters"],
+    ["triage_inbox", {}, "requests"],
+  ] as const) {
+    const before = await h.db.select().from(mcpToolCalls);
+    const res = await h.app.inject({
+      method: "POST",
+      url: "/mcp",
+      headers: { authorization: `Bearer ${issued.access_token}` },
+      payload: { jsonrpc: "2.0", id: 1, method: "prompts/get", params: { name, arguments: args } },
+    });
+    expect(res.statusCode, res.body).toBe(403);
+    expect(res.headers["www-authenticate"]).toContain(
+      `error="insufficient_scope" scope="toolset:${scope}"`,
+    );
+    expect(res.json().result).toMatchObject({
+      messages: [],
+      isError: true,
+      content: [{ type: "text", text: expect.stringContaining("tool_outside_grant") }],
+    });
+    const added = (await h.db.select().from(mcpToolCalls)).filter(
+      (row) => !before.some((old) => old.id === row.id),
+    );
+    expect(added).toHaveLength(1);
+    expect(added[0]).toMatchObject({
+      tool: `prompt:${name}`,
+      outcome: "tool_outside_grant",
+      clientName: "Test Client",
+    });
+  }
+});
+
+it("does not challenge a Business User for the triage prompt no scope can serve", async () => {
+  const issued = await issue(["contracts"], "read", business);
+  const before = await h.db.select().from(mcpToolCalls);
+  const res = await h.app.inject({
+    method: "POST",
+    url: "/mcp",
+    headers: {
+      authorization: `Bearer ${issued.access_token}`,
+      accept: "application/json, text/event-stream",
+      "mcp-protocol-version": "2025-11-25",
+    },
+    payload: {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "prompts/get",
+      params: { name: "triage_inbox", arguments: {} },
+    },
+  });
+  expect(res.statusCode, res.body).toBe(200);
+  expect(res.headers["www-authenticate"]).toBeUndefined();
+  expect(res.body).toContain("tool_outside_grant");
+  const added = (await h.db.select().from(mcpToolCalls)).filter(
+    (row) => !before.some((old) => old.id === row.id),
+  );
+  expect(added).toHaveLength(1);
+  expect(added[0]).toMatchObject({ tool: "prompt:triage_inbox", outcome: "tool_outside_grant" });
+});

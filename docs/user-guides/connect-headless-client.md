@@ -19,6 +19,8 @@ For a [LAN only deployment](deployment-configuration.md#lan-only), run the Clien
 5. Ask an Administrator to approve the request from **Your approvals** in the bell or from the MCP settings. Your row says **Pending approval** until it is handled. An approved row says **Active**. A denied row says **Denied** and shows any note from the Administrator.
 6. Return to **API keys** and reload. The **Your key is ready** dialog shows the key once. Select **Copy** and retain it in your approved secret store before selecting **Done**. A click outside the dialog does not close it, but Esc does. OpenLaw cannot show the key again.
 
+The form offers only Toolsets within the organization ceiling that have a Tool your account type may run. OAuth consent uses the same rule and also limits the choices to the Toolsets the Client requested. Team and Administration start off in the ceiling. Ask an Administrator to enable one before requesting it. Business Users cannot choose either, and only Administrators can choose Administration. Empty Toolsets are not offered.
+
 An Administrator's own request approves itself. A Business User follows the same request flow in the Portal. Select the **Notification settings** gear in the Portal header, then **API keys**. The **Request a key** button appears only if the Administrator turned on API keys for Business Users. Their available Tools and record access follow their account.
 
 ## Connect Claude Code
@@ -40,6 +42,51 @@ The single quotes keep the variable reference in the Client configuration. Suppl
 In Claude Code, open `/mcp` and check that `openlaw` is connected. Ask: "Use OpenLaw to tell me who I am, then find the guide Connect a headless Client." The Client can call `openlaw_whoami`, `openlaw_docs_search`, and `openlaw_docs_read`. The Guide Tools read the same articles as Help. With Contracts selected, you can then ask it to list the Contracts you can access.
 
 Other SDK Clients use Streamable HTTP at the same `/mcp` address and send `x-api-key: <your key>` on requests. `Authorization: Bearer <your key>` is also accepted. A browser session cookie does not authenticate a Client.
+
+## Read resources and get prompts
+
+Scripts can call `resources/templates/list` for record address templates and
+`resources/list` for the fixed views below. Call `resources/read` with `uri` set
+to an address. Each resource uses the matching Tool's grant and record access.
+
+| Address                                   | What it reads                                                 |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| `openlaw://contracts/{number}`            | One Contract                                                  |
+| `openlaw://matters/{number}`              | One Matter                                                    |
+| `openlaw://requests/{number}`             | One Request                                                   |
+| `openlaw://entities/{id}`                 | One Entity                                                    |
+| `openlaw://knowledge/{id}`                | One Knowledge Item                                            |
+| `openlaw://document-versions/{versionId}` | Extracted text from one Document Version                      |
+| `openlaw://inbox`                         | The Inbox for a Legal User, or a Business User's own Requests |
+| `openlaw://tasks/mine`                    | Tasks assigned to you                                         |
+| `openlaw://vocabulary`                    | The organization's configured vocabulary                      |
+
+Replace `{number}` with a positive record number, with or without its prefix.
+For example, `openlaw://contracts/C-12` and `openlaw://contracts/12` read the same Contract.
+Replace `{id}` or `{versionId}` with the UUID returned by the matching Tool.
+Do not add a query or fragment to the address.
+Records and views return JSON. Document Version text returns plain text.
+If that text has a continuation, call `openlaw_document_read` with the supplied cursor.
+
+Call `prompts/list` to see the prompts your grant permits. Call `prompts/get`
+with one of these names and its arguments. Argument values are strings.
+
+| Name               | Arguments                                                                    | Access                                |
+| ------------------ | ---------------------------------------------------------------------------- | ------------------------------------- |
+| `triage_inbox`     | Optional `limit`, from `"1"` to `"100"`, default `"25"`                      | Legal Users with Requests             |
+| `summarize_record` | Required `record`, such as `"openlaw://contracts/C-12"` or `"contract C-12"` | A reached record in a granted Toolset |
+
+Summary accepts a Contract, Matter, Request, Entity or Knowledge Item.
+Each prompt returns instructions and an embedded resource for your Client to use.
+Getting a prompt does not run a model or change a record.
+Triage asks for confirmation before assignments and comments.
+It leaves conversion to the person's Convert dialog. Summary requests no changes.
+Each resource read or prompt get counts as one call against your credential's rate limit.
+The embedded read does not count again.
+
+Modern Clients can use `subscriptions/listen` for
+[change notifications](configure-mcp.md#receive-change-notifications).
+Legacy Clients reload lists by hand. Read a resource again to get current content.
 
 ## Connect Claude Cowork or Claude Desktop
 

@@ -17,6 +17,10 @@ You need an OpenLaw account and a ChatGPT account with Developer mode on the web
 
 See [ChatGPT's Developer mode instructions](https://developers.openai.com/api/docs/guides/developer-mode) for account availability and app controls. The app shows under **Drafts** in ChatGPT's app settings. ChatGPT asks you to confirm write actions by default. Check the Tool input before you confirm.
 
+## Resources and prompts
+
+OpenAI documents [UI resources](https://developers.openai.com/plugins/build/app-quickstart), but its [Developer mode guide](https://developers.openai.com/api/docs/guides/developer-mode) gives no record-resource picker or MCP prompt commands.
+
 ## Choose access on the consent page
 
 1. Sign in to OpenLaw with your usual account if asked. If you use the Portal, select **Business Portal sign-in** on the sign-in page. Password, magic-link and SSO sign-in return you to consent.

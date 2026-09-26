@@ -5,8 +5,8 @@
 /** The one Postgres channel every API and worker process uses (TECH-009). */
 export const LIVE_EVENT_CHANNEL = "openlaw_live_events";
 
-/** The three prompts carried by the live channel. */
-export const LIVE_EVENT_KINDS = ["record", "bell", "inbox"] as const;
+/** The prompts carried by the live channel. */
+export const LIVE_EVENT_KINDS = ["record", "bell", "inbox", "mcp"] as const;
 export type LiveEventKind = (typeof LIVE_EVENT_KINDS)[number];
 
 /** Record surfaces that can hold a scoped live connection. */
@@ -47,7 +47,14 @@ export interface InboxLiveEvent {
   total: number;
 }
 
-export type LiveEvent = RecordLiveEvent | BellLiveEvent | InboxLiveEvent;
+/** MCP policy or credentials changed. Organization settings are a singleton. */
+export interface McpLiveEvent {
+  kind: "mcp";
+  change: "policy" | "revocation";
+  credentialIds?: string[];
+}
+
+export type LiveEvent = RecordLiveEvent | BellLiveEvent | InboxLiveEvent | McpLiveEvent;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -70,6 +77,21 @@ export function parseLiveEvent(value: unknown): LiveEvent | null {
     return typeof value.total === "number" && Number.isSafeInteger(value.total) && value.total >= 0
       ? { kind: "inbox", total: value.total }
       : null;
+  }
+  if (value.kind === "mcp") {
+    if (value.change !== "policy" && value.change !== "revocation") return null;
+    if (
+      value.credentialIds !== undefined &&
+      (!Array.isArray(value.credentialIds) || !value.credentialIds.every(isNonEmptyString))
+    )
+      return null;
+    return {
+      kind: "mcp",
+      change: value.change,
+      ...(value.credentialIds === undefined
+        ? {}
+        : { credentialIds: value.credentialIds as string[] }),
+    };
   }
   if (value.kind !== "record") return null;
   const entityTypes: readonly unknown[] = LIVE_RECORD_ENTITY_TYPES;

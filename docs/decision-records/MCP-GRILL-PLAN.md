@@ -91,6 +91,8 @@ Server facts the records must carry (research section 10): serve both protocol e
 
 The register as settled on 2026-09-23 (Q35). T36 to T42 were added in the round.
 
+Note (2026-09-26, #1166): this table keeps the ids as the grill settled them. The code ships the Administration Toolset as `administration`, not `admin`. DD-029 holds the register as built.
+
 | Id  | Toolset     | Tool                          | Kind  | Legal User | Business User | What it does                                                                                                                                                                |
 | --- | ----------- | ----------------------------- | ----- | ---------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | T1  | `guide`     | `openlaw_whoami`              | read  | always     | always        | Who I am, my account type, enabled Toolsets, organization name, a short glossary block.                                                                                     |

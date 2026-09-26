@@ -15,6 +15,51 @@ You must be an Administrator. Open **Settings → Organization → MCP**, after 
 
 Each change saves at once and shows **Settings saved.** Each Organization change is recorded in the Audit log. Turning MCP or a group's API keys off blocks that group's next Client request. Removing a Toolset from the ceiling blocks its Tools even on an existing key.
 
+## Choose Team and Administration
+
+Expand **Toolset ceiling** to find these two rows. Both start unchecked on a new
+installation and after an upgrade to M42. Select a checkbox to permit that Toolset.
+
+| Row            | Id               | Caption                          | What it permits                                                              |
+| -------------- | ---------------- | -------------------------------- | ---------------------------------------------------------------------------- |
+| Team           | `team`           | Starts off.                      | Legal Users can add or remove people on Contract and Matter teams.           |
+| Administration | `administration` | Starts off. Administrators only. | Administrators can read the Audit log, Tool calls and Organization settings. |
+
+The Team Toolset has `openlaw_team_add` and `openlaw_team_remove`.
+It requires Write scope and an organization that permits writes.
+The same record access and team rules apply as in the app.
+Removal is a destructive Tool. Change or clear the current Business Owner before removing that person.
+
+The Administration Toolset has `openlaw_audit_log_query` and `openlaw_settings_get`.
+Both are read Tools. The Audit log retains record access checks.
+Settings use the same secret masking as the panes. No Tool changes settings.
+Legal Team Members and Business Users cannot choose Administration.
+Business Users cannot choose Team.
+
+API key requests and OAuth consent share one rule for Toolset choices.
+The Toolset must be in the ceiling and have at least one Tool the account type may run.
+Empty Toolsets are not offered. OAuth consent also limits the choices to what the Client requested.
+Nothing is pre-selected. Enabling a ceiling row does not add it to an existing key or grant.
+The person must request a new key or give new consent for the added Toolset.
+
+## Receive change notifications
+
+A Client that supports the modern MCP listen stream can ask for change notifications.
+When MCP switches, the Toolset ceiling or Read-only change, OpenLaw tells it to
+reload its Tools, resources and prompts lists. The lists still follow the person's grant.
+
+The Client can also subscribe to reached Contract, Matter, Request, Entity and
+Knowledge Item resources. Legal Users can subscribe to the Inbox.
+Updates contain the resource address, not its content. The Client reads it again.
+Record access and Visibility tiers still apply. Document Version text, My Tasks
+and vocabulary do not send resource updates.
+
+Revoking a credential closes its stream. OpenLaw also checks expiry, account
+changes and disabled access while a stream is open. A Client must reconnect after
+a role change. These checks apply even if the Client has a cached list.
+Older, legacy Clients reload by hand. Use the Client's refresh control or reconnect
+after a change. Every call checks current access, so a stale list cannot retain removed access.
+
 ## Enable OAuth Clients
 
 1. Turn on MCP and set the **Toolset ceiling** and **Read-only** policy as above.

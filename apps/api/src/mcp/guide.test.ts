@@ -379,6 +379,18 @@ it("keeps vocabulary readable when one Request type has an unavailable destinati
 });
 
 it.each([
+  ["triage_inbox", "connect-claude", "/openlaw:triage_inbox"],
+  ["Team Toolset", "configure-mcp", "Starts off."],
+])("finds %s through T3 and reads its instructions through T4", async (query, id, text) => {
+  for (const client of [legal, business]) {
+    const found = await call(client, "openlaw_docs_search", { query });
+    expect(found.articles.map((article) => article.id)).toContain(id);
+    const read = await call(client, "openlaw_docs_read", { id });
+    expect(read.text).toContain(text);
+  }
+});
+
+it.each([
   "configure-mcp",
   "connect-headless-client",
   "connect-claude",

@@ -9,6 +9,8 @@
 
 import {
   createMcpHandler,
+  classifyInboundRequest,
+  specTypeSchemas,
   McpServer,
   SUPPORTED_PROTOCOL_VERSIONS,
   type Tool,
@@ -18,10 +20,16 @@ import type { FastifyPluginAsync } from "fastify";
 import { OPENLAW_VERSION } from "@openlaw/shared";
 import { loggable } from "../logging.js";
 import { HttpError } from "../lib/problem.js";
-import type { Environment } from "../modules/advanced-settings/config.js";
+import { organizationSettingsReader } from "../modules/settings/read.js";
+import type { ResolveIpv4 } from "../modules/mcp-settings/reachability.js";
+import type { Environment, AdvancedRuntime } from "../modules/advanced-settings/config.js";
+import { EventHubFullError } from "../lib/event-hub.js";
+import { createMcpChangeFeed, SubscriptionLimitError, type ChangeFeedView } from "./change-feed.js";
 import { authenticateMcp, mcpChallenge } from "./auth.js";
 import { generateForTool } from "./auto-docs.js";
 import { callTool } from "./calls.js";
+import { listResources, readResource, resolveResource } from "./resources.js";
+import { getPrompt, listPrompts, promptResource } from "./prompts.js";
 import { documentUploadIssuer, documentUploadRoutes } from "./uploads.js";
 import {
   instructions,
@@ -43,8 +51,12 @@ export function mcpRoutes(
   active: Environment,
   tools: readonly ToolDefinition[] = toolRegister,
   uploadConfig?: { baseUrl: string; secret: string },
+  settingsRuntime: AdvancedRuntime = { baseline: {}, active },
+  resolveIpv4?: ResolveIpv4,
 ): FastifyPluginAsync {
   return async (app) => {
+    const feed = createMcpChangeFeed(app.eventHub);
+    const readSettings = organizationSettingsReader(app, settingsRuntime, resolveIpv4);
     app.decorateRequest("mcpContext", null);
     if (uploadConfig) await app.register(documentUploadRoutes(uploadConfig.secret));
     app.route({
@@ -60,6 +72,7 @@ export function mcpRoutes(
       },
       handler: async (request, reply) => {
         const context = request.mcpContext!;
+        context.readOrganizationSettings = readSettings;
         context.generateAutoDoc = (id, submission) =>
           generateForTool(app, request.log, context.user, id, submission, context.baseUrl);
         if (uploadConfig) context.prepareDocumentUpload = documentUploadIssuer(app, uploadConfig);
@@ -68,16 +81,27 @@ export function mcpRoutes(
               jsonrpc?: string;
               id?: string | number;
               method?: string;
-              params?: { name?: string; arguments?: unknown };
+              params?: { name?: string; arguments?: unknown; uri?: string };
             }
           | undefined;
         if (
           context.user.via?.kind === "oauth_client" &&
-          body?.method === "tools/call" &&
+          (body?.method === "tools/call" ||
+            body?.method === "resources/read" ||
+            body?.method === "prompts/get") &&
           body.jsonrpc === "2.0" &&
           body.id !== undefined
         ) {
-          const tool = tools.find((t) => t.name === body.params?.name);
+          const resource =
+            body.method === "resources/read" && typeof body.params?.uri === "string"
+              ? resolveResource(tools, body.params.uri)
+              : body.method === "prompts/get" && typeof body.params?.name === "string"
+                ? promptResource(tools, context.grant, body.params.name, body.params.arguments)
+                : undefined;
+          const tool =
+            body.method === "tools/call"
+              ? tools.find((t) => t.name === body.params?.name)
+              : resource?.tool;
           if (tool && toolRefusal(tool, context.grant)) {
             const required = [
               ...(tool.toolset === "guide" ? [] : [`toolset:${tool.toolset}`]),
@@ -88,14 +112,26 @@ export function mcpRoutes(
               "WWW-Authenticate",
               `Bearer error="insufficient_scope" scope="${required.join(" ")}" resource_metadata="${metadata}"`,
             );
-            const result = await callTool(
-              tools,
-              tool.name,
-              body.params?.arguments,
-              context,
-              request.id,
-              active,
-            );
+            const result =
+              body.method === "resources/read"
+                ? await readResource(tools, body.params!.uri!, context, request.id, active)
+                : body.method === "prompts/get"
+                  ? await getPrompt(
+                      tools,
+                      body.params!.name!,
+                      body.params?.arguments,
+                      context,
+                      request.id,
+                      active,
+                    )
+                  : await callTool(
+                      tools,
+                      tool.name,
+                      body.params?.arguments,
+                      context,
+                      request.id,
+                      active,
+                    );
             return reply.code(403).send({ jsonrpc: "2.0", id: body.id, result });
           }
         }
@@ -104,6 +140,39 @@ export function mcpRoutes(
           clientId: context.credentialId,
           scopes: [...context.grant.toolsets, context.grant.scope],
         };
+        let view: ChangeFeedView | undefined;
+        let full = false;
+        const classified = classifyInboundRequest({
+          httpMethod: request.method,
+          protocolVersionHeader: request.headers["mcp-protocol-version"] as string | undefined,
+          mcpMethodHeader: request.headers["mcp-method"] as string | undefined,
+          mcpNameHeader: request.headers["mcp-name"] as string | undefined,
+          body: request.body,
+        });
+        const listen = specTypeSchemas.SubscriptionsListenRequest["~standard"].validate(
+          request.body,
+        );
+        if (
+          classified.kind === "modern" &&
+          classified.classification.revision === "2026-07-28" &&
+          !listen.issues
+        ) {
+          try {
+            view = await feed.open(
+              request,
+              context,
+              tools,
+              listen.value.params.notifications.resourceSubscriptions ?? [],
+              () => {
+                void handler.close();
+              },
+            );
+          } catch (error) {
+            if (!(error instanceof EventHubFullError || error instanceof SubscriptionLimitError))
+              throw error;
+            full = true;
+          }
+        }
         const handler = createMcpHandler(
           ({ era, authInfo: verified }) => {
             if (verified !== authInfo) throw new Error("Verified MCP authentication is required.");
@@ -114,7 +183,18 @@ export function mcpRoutes(
                   era === "modern" ? v >= "2026-07-28" : v < "2026-07-28",
                 ),
                 instructions,
-                capabilities: { tools: {} },
+                capabilities: {
+                  tools: { listChanged: true },
+                  resources: { listChanged: true, subscribe: true },
+                  prompts: { listChanged: true },
+                },
+                cacheHints: {
+                  "tools/list": { ttlMs: 300_000, cacheScope: "private" },
+                  "resources/templates/list": { ttlMs: 300_000, cacheScope: "private" },
+                  "resources/list": { ttlMs: 0 },
+                  "resources/read": { ttlMs: 0 },
+                  "prompts/list": { ttlMs: 300_000, cacheScope: "private" },
+                },
               },
             );
             server.server.setRequestHandler("tools/list", async (call) => {
@@ -143,6 +223,59 @@ export function mcpRoutes(
               }
               return { tools: page, ...(hasMore ? { nextCursor: page.at(-1)!.name } : {}) };
             });
+            server.server.setRequestHandler("resources/templates/list", async () => ({
+              resourceTemplates: listResources(tools, context.grant, true),
+            }));
+            server.server.setRequestHandler("resources/list", async () => ({
+              resources: listResources(tools, context.grant, false),
+            }));
+            server.server.setRequestHandler("prompts/list", async () => ({
+              prompts: listPrompts(tools, context.grant),
+            }));
+            server.server.setRequestHandler("prompts/get", async (call) => {
+              try {
+                return await getPrompt(
+                  tools,
+                  call.params.name,
+                  call.params.arguments,
+                  context,
+                  request.id,
+                  active,
+                );
+              } catch (error) {
+                request.log.error(
+                  { credentialId: context.credentialId, error: loggable(error) },
+                  "MCP prompt get ledger failed.",
+                );
+                return {
+                  messages: [],
+                  isError: true,
+                  content: [
+                    { type: "text", text: "internal_error: The prompt get could not be recorded." },
+                  ],
+                };
+              }
+            });
+            server.server.setRequestHandler("resources/read", async (call) => {
+              try {
+                return await readResource(tools, call.params.uri, context, request.id, active);
+              } catch (error) {
+                request.log.error(
+                  { credentialId: context.credentialId, error: loggable(error) },
+                  "MCP resource read ledger failed.",
+                );
+                return {
+                  contents: [],
+                  isError: true,
+                  content: [
+                    {
+                      type: "text",
+                      text: "internal_error: The resource read could not be recorded.",
+                    },
+                  ],
+                };
+              }
+            });
             // Dispatch before schema validation so refused and invalid calls also enter the ledger.
             server.server.setRequestHandler("tools/call", async (call) => {
               try {
@@ -169,14 +302,19 @@ export function mcpRoutes(
             });
             return server;
           },
-          { legacy: "stateless" },
+          { legacy: "stateless", bus: view?.bus, maxSubscriptions: full ? 0 : undefined },
         );
         reply.hijack();
         try {
           await toNodeHandler({
-            fetch: (req, options) => handler.fetch(req, { ...options, authInfo }),
+            fetch: async (req, options) => {
+              const response = await handler.fetch(req, { ...options, authInfo });
+              if (view?.closed) await handler.close();
+              return response;
+            },
           })(request.raw, reply.raw, request.body);
         } finally {
+          view?.release();
           await handler.close();
         }
       },

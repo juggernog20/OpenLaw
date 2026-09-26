@@ -30,8 +30,6 @@ const initial = {
     "entities",
     "knowledge",
     "people",
-    "team",
-    "administration",
   ],
   readOnly: false,
   apiKeyLifetimeDays: 90,
@@ -79,7 +77,15 @@ it("puts MCP between Integrations and Advanced and saves each control immediatel
   expect(ceiling).toHaveAttribute("aria-expanded", "false");
   await user.click(ceiling);
   expect(screen.getAllByRole("checkbox")).toHaveLength(13);
-  for (const box of screen.getAllByRole("checkbox")) expect(box).toBeChecked();
+  for (const name of ["Team", "Administration"]) {
+    const box = screen.getByRole("checkbox", { name });
+    expect(box).not.toBeChecked();
+    expect(box).toHaveAccessibleDescription(
+      name === "Team" ? "Starts off." : "Starts off. Administrators only.",
+    );
+    await user.click(box);
+    await waitFor(() => expect(box).toBeChecked());
+  }
   await user.click(screen.getByRole("checkbox", { name: "Contracts" }));
   await waitFor(() =>
     expect(screen.getByRole("checkbox", { name: "Contracts" })).not.toBeChecked(),
@@ -91,12 +97,20 @@ it("puts MCP between Integrations and Advanced and saves each control immediatel
   await user.clear(lifetime);
   await user.type(lifetime, "30");
   await user.tab();
-  await waitFor(() => expect(writes).toHaveLength(6));
+  await waitFor(() => expect(writes).toHaveLength(8));
   expect(writes).toEqual([
     { enabled: true },
     { legalApiKeysEnabled: true },
     { businessApiKeysEnabled: true },
-    { toolsetCeiling: initial.toolsetCeiling.filter((id) => id !== "contracts") },
+    { toolsetCeiling: [...initial.toolsetCeiling, "team"] },
+    { toolsetCeiling: [...initial.toolsetCeiling, "team", "administration"] },
+    {
+      toolsetCeiling: [
+        ...initial.toolsetCeiling.filter((id) => id !== "contracts"),
+        "team",
+        "administration",
+      ],
+    },
     { readOnly: true },
     { apiKeyLifetimeDays: 30 },
   ]);
@@ -189,7 +203,7 @@ it.each([true, false])(
     expect(legal).not.toBeChecked();
     expect(business).not.toBeChecked();
     expect(screen.queryByText(/Reachable|Not reachable/)).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "publicly reachable" })[0]).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "How to set this up" })).toHaveAttribute(
       "href",
       "/help/deployment-configuration#publicly-reachable",
     );

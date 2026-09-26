@@ -33,3 +33,7 @@ aeb038aa69b65f2cdec50b9eafb2f3e3a6b8be19:designs/mcp.pen:generic-api-key:13996
 
 # Pencil document id for the Advanced search mock, as with mcp.pen above.
 fd39dd5f52154e9a95d20d437933669203304f8f:designs/search.pen:generic-api-key:14409
+
+# A migration tag in the lint's list of files applied before #1119. The
+# generic-api-key rule reads "authentication" as a key name.
+6ab165d02581b6d7eac0d139f0ec55eb47eb135c:scripts/lint-migration-journal.mjs:generic-api-key:157

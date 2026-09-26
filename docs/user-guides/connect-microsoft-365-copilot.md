@@ -55,6 +55,10 @@ It also includes `https://vscode.dev/redirect` for Toolkit's Tool discovery. The
 
 Provision and test the agent using [Microsoft's OAuth setup](https://learn.microsoft.com/en-us/microsoft-365/copilot/extensibility/plugin-authentication-oauth). When Copilot asks you to connect, sign in to OpenLaw and follow the consent steps below. Microsoft 365 MCP plugins use OAuth and do not accept an OpenLaw API key. The admin-center BYO MCP registry is a separate path and is not covered by this guide.
 
+## Resources and prompts
+
+Microsoft documents [MCP tools and resources in Copilot Studio](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agent-extend-action-mcp), but does not list prompts as supported there.
+
 ## Choose access on the consent page
 
 1. Sign in to your OpenLaw account if asked. If you use the Portal, select **Business Portal sign-in** on the sign-in page. Your usual password, magic link or SSO returns you to consent.

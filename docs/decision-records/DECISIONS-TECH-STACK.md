@@ -207,7 +207,7 @@ One thing ends that transaction mid-batch: a bare `COMMIT;` inside a migration f
 - `packages/db/migrations/0054_reminder_dedup_entity_type.sql` opens with one, because its `CREATE INDEX CONCURRENTLY` statements cannot run inside a transaction block at all — Postgres refuses the statement rather than the transaction, so the file has to end the transaction first.
 - `packages/db/migrations/0060_account_issuer.sql` ends with the one that closes its own `BEGIN` (below).
 
-Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`.
+Every file on the two-line pattern below adds another — `0064`–`0066` were the first to follow it ([#391](https://github.com/juggernog20/OpenLaw/issues/391)), and each ends with the `COMMIT` that closes its own `BEGIN`. _(2026-09-25, [#1119](https://github.com/juggernog20/OpenLaw/issues/1119): **the trailing `COMMIT` is superseded** by the #1119 addendum below. A file on the pattern leaves its own `BEGIN` open, and the runner's `COMMIT` at the end of the batch closes it.)_
 
 After any of these files, the session is in **autocommit**, and **every later file in that batch arrives that way**. In autocommit every statement commits as it runs, so a file with an `ALTER TABLE` followed by a guard that raises leaves the `ALTER` applied and nothing else done — and the re-run after the fix dies on the duplicate column instead of resuming.
 
@@ -240,6 +240,27 @@ transaction as its schema change. Unknown histories still refuse to start.
 The upgrade rehearsal covers current dev, the known Home branch history, repeat
 startup, and refusal of an unknown history. No existing database is changed as
 part of preparing this integration.
+
+### Addendum (2026-09-25, [#1119](https://github.com/juggernog20/OpenLaw/issues/1119)): a migration never ends outside a transaction
+
+**A file that opens its own transaction leaves it open. The runner's `COMMIT` at the end of the batch closes it.**
+
+drizzle-orm's `migrate()` sends `BEGIN` once before the batch and `COMMIT` or `ROLLBACK` once after it, on one connection. It never checks whether a file closed that transaction. The #390 addendum told each file on the preamble to end with a `COMMIT` of its own. That `COMMIT` is the trap the same addendum describes. After it, no transaction is open, so the file's own journal row and every later file in the batch run in autocommit. A file that leaves its `BEGIN` open keeps its statements, its journal row and every later file in one transaction, and a later failure rolls them all back.
+
+The M40 dev merge found it. The rehearsal in `apps/api/src/mcp-settings-migration.test.ts` makes the MCP settings migration fail on purpose and expects the batch to roll back. With `0160` and `0161` in front of it, the six `mcp_*` columns survived the failure. `0163_mcp-settings.sql` carries the preamble for this reason.
+
+24 applied files end in autocommit, in two shapes:
+
+- A trailing `COMMIT` after the file's own `BEGIN`: `0060`, `0064`–`0066`, `0068`, `0077`, `0079`, `0084`, `0132`, `0134`, `0148`, `0155`, `0160`, `0161`.
+- A `COMMIT` followed by statements that must run outside a transaction, with no `BEGIN` after them: `0054`'s `CREATE INDEX CONCURRENTLY`, and the `VALIDATE CONSTRAINT` that runs after the locks are released in `0055`, `0069`, `0070`, `0088`, `0093`, `0135`–`0137` and `0158`.
+
+The boot guard matches applied files by hash, so none of them can change. The rule from now on:
+
+- A file that opens its own transaction does not close it.
+- A file that must run statements outside a transaction ends with `BEGIN;`. Those statements commit as they run. A later failure rolls back their journal row but not their effect, so the next start runs them again, and they must be safe to repeat.
+- `pnpm lint:migrations` enforces both. `scripts/lint-migration-journal.mjs` refuses a file whose last transaction statement is `COMMIT`, `END`, `ROLLBACK` or `ABORT`, and lists the 24 files above as the only exceptions.
+
+**The #390 preamble is no longer needed after `0163`.** An install below `0163` crosses it on the way up, and its `BEGIN` reopens the transaction. An install at `0163` or later starts its batch inside the runner's transaction. The lint keeps every later file from closing it. So from `0164` on, a file starts inside the batch transaction on every upgrade path. A new file that must be atomic can leave the preamble out, and it should, because the preamble's leading `COMMIT` makes the earlier pending files durable before the new file runs. A failure in the new file then rolls back less of the upgrade.
 
 ## TECH-007: Background jobs — pg-boss on Postgres
 
@@ -1928,6 +1949,75 @@ A new grant uses the active lifetime. An existing grant retains its absolute exp
 including across token refresh. The API rejects invalid lifetime settings at boot
 and through the settings route.
 
+### Addendum, 2026-09-25, #1166: M42 resources, prompts and the listen stream
+
+M42 is built on the same `/mcp` endpoint. Resource reads use these addresses:
+
+| Address                                   | Content                                                |
+| ----------------------------------------- | ------------------------------------------------------ |
+| `openlaw://contracts/{number}`            | Contract                                               |
+| `openlaw://matters/{number}`              | Matter                                                 |
+| `openlaw://requests/{number}`             | Request                                                |
+| `openlaw://entities/{id}`                 | Entity                                                 |
+| `openlaw://knowledge/{id}`                | Knowledge Item                                         |
+| `openlaw://document-versions/{versionId}` | Extracted Document Version text                        |
+| `openlaw://inbox`                         | Inbox for Legal Users, own Requests for Business Users |
+| `openlaw://tasks/mine`                    | Tasks assigned to the person                           |
+| `openlaw://vocabulary`                    | Configured vocabulary                                  |
+
+Record numbers accept their prefix or a positive integer, such as `C-12` or `12`.
+Entity, Knowledge Item and Version addresses require UUIDs. Each read uses the
+matching Tool's grant, record reach and output budget. Records and views return
+`application/json`. Version text returns `text/plain`, with a T26 continuation
+when more text exists. Resource content has a title in `_meta.title`.
+
+`triage_inbox` accepts an optional string `limit`, from 1 to 100, with default 25.
+It requires Requests and a Legal User. `summarize_record` requires `record`.
+It accepts a record address or a kind and number or id, such as `contract C-12`.
+Its record kinds are Contract, Matter, Request, Entity and Knowledge Item.
+Each prompt returns instructions and an embedded resource in separate user messages.
+It treats record text as data. Triage asks for confirmation before writes and
+hands conversion to the person's Convert dialog. Summary requests no changes.
+A resource read or prompt get reserves one rate-limited call and one ledger row.
+An embedded read does not reserve another call. Ledger names use `resource:<kind>`
+and `prompt:<name>` without record addresses or content.
+
+Modern Clients use `subscriptions/listen` through a long-lived POST response.
+Each stream has one scoped subscription on the shared event hub and its existing
+PostgreSQL LISTEN connection. It adds no database connection per stream.
+The SDK event bus filters the requested notification types and addresses.
+OpenLaw checks the person's grant, record reach and Visibility tiers.
+Subscriptions cover Contract, Matter, Request, Entity and Knowledge Item records,
+plus the Inbox for Legal Users. Other resource addresses do not produce updates.
+
+MCP policy changes recheck the credential and publish
+`notifications/tools/list_changed`, `notifications/resources/list_changed` and
+`notifications/prompts/list_changed`. Record events publish
+`notifications/resources/updated` at the permitted tiers.
+Inbox events publish an Inbox update for subscribed Legal Users.
+A revocation closes the affected stream. The heartbeat rechecks credentials,
+expiry and switches. A role change closes the stream so the Client must reconnect.
+The hub's capacity limit applies. Legacy Clients stay stateless and reload by hand.
+There is no GET stream, `/sse` endpoint or legacy subscription session.
+
+Discovery supplies these cache hints. They never replace a current access check.
+
+| Method                     | `ttlMs` | `cacheScope` |
+| -------------------------- | ------- | ------------ |
+| `tools/list`               | 300000  | `private`    |
+| `resources/templates/list` | 300000  | `private`    |
+| `prompts/list`             | 300000  | `private`    |
+| `resources/list`           | 0       | Not set      |
+| `resources/read`           | 0       | Not set      |
+
+The audience flags mean that an account type may run a Tool. They do not set
+ceiling defaults. T33 and T34 use `team`. T35 and T40 use `administration` and
+require an Administrator. All four declare Legal User `on` and Business User `off`.
+The migration removes both Toolsets from existing ceilings and the column default.
+API key requests and OAuth consent share `selectableToolsets`. It keeps only
+ceiling Toolsets with a Tool the account type may run. Consent also intersects
+this set with the Client's requested scopes. Guide needs no selection.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -1966,4 +2056,4 @@ and through the settings route.
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1132, #1134, #1135, #1138                        |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166            |

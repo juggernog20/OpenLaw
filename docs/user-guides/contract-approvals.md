@@ -8,7 +8,7 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 
 ## Ask for approval
 
-1. Open the Contract's **Approvals** section and its **Approvals & signing** card.
+1. Open the Contract's **Approvals** tab.
 2. Select **Add approver**. Choose one or more people under **Approvers**.
 3. Select **Request approvals**. Check each new **Pending** row.
 

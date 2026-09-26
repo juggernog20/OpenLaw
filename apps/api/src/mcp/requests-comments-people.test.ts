@@ -59,7 +59,10 @@ beforeAll(async () => {
         cookies,
         payload: {
           clientName: "Requests Comments People test",
-          toolsets: ["requests", "comments", "people"],
+          toolsets:
+            role === "business_user"
+              ? ["requests", "comments"]
+              : ["requests", "comments", "people"],
           scope,
         },
       });

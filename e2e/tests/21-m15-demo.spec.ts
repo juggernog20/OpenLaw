@@ -474,10 +474,9 @@ function documentsSection(page: Page): Locator {
   return page.getByRole("region", { name: "Documents" });
 }
 
-/** The record's "Approvals & signing" card — the name DES-035 clause 3
- * reserved, taken now that envelope rows join the approval rows. */
+/** The signature requests and history on the record. */
 function signingCard(page: Page): Locator {
-  return page.getByRole("region", { name: "Approvals & signing" });
+  return page.getByRole("region", { name: "Signatures" });
 }
 
 /**
@@ -795,12 +794,19 @@ test.describe("M15 demo path", () => {
       // stage, and no send control at all — absent rather than disabled
       // (DES-035's absence rule) — no signing block, and no envelope
       // chip beside the pipeline.
-      await openSection(memberPage, number, "Approvals", "/approvals");
+      await openSection(memberPage, number, "Signatures", "/signatures");
       await expect(
         signingCard(memberPage).getByRole("button", { name: "Send for signature" }),
       ).toHaveCount(0);
-      await expect(signingCard(memberPage).getByText("Signing", { exact: true })).toHaveCount(0);
-      await expect(memberPage.getByText("Envelope sent")).toHaveCount(0);
+      await expect(
+        signingCard(memberPage).getByText("No signature requests on this contract yet."),
+      ).toBeVisible();
+      await expect(
+        memberPage
+          .locator("section[aria-labelledby=page-title] span")
+          .filter({ has: memberPage.locator("svg") })
+          .filter({ hasText: /^Out for signature$/ }),
+      ).toHaveCount(0);
 
       // The seam half: no connector, no envelopes — and a primary
       // document that would have been sendable if there had been one.
@@ -1077,7 +1083,7 @@ test.describe("M15 demo path", () => {
 
       // ---- Stories 6 to 10: the send, and the round withdrawn ----
 
-      await openSection(senderPage, number, "Approvals", "/approvals");
+      await openSection(senderPage, number, "Signatures", "/signatures");
       await sendForSignature(senderPage, number, current.id);
 
       // The first round is a mistake, and it is withdrawn where it was
@@ -1130,16 +1136,20 @@ test.describe("M15 demo path", () => {
       await expect(liveRow).toContainText("Version 2");
       await expect(liveRow).toContainText("Out for signature");
       await expect(liveRow).toContainText(`by ${SENDER_NAME}`);
-      await expect(senderPage.getByText("Envelope sent")).toBeVisible();
+      await expect(
+        senderPage
+          .locator("section[aria-labelledby=page-title] span")
+          .filter({ hasText: /^Out for signature$/ }),
+      ).toBeVisible();
       await expect(
         signingCard(senderPage).getByRole("button", { name: "Send for signature" }),
       ).toHaveCount(0);
 
-      // The card is this milestone's own surface now that it holds an
-      // envelope row (#48, DES-011).
+      // The Signatures card is this milestone's own surface (#48,
+      // DES-011).
       expect(
         await reportAxeViolations(senderPage, testInfo, "m15-signing-card", {
-          include: 'section[aria-labelledby="contract-approvals-heading"]',
+          include: 'section[aria-labelledby="contract-signatures-heading"]',
         }),
       ).toEqual([]);
 
@@ -1227,7 +1237,7 @@ test.describe("M15 demo path", () => {
 
       // ---- The screen, after the record moved on its own ----
 
-      await senderPage.goto(`/contracts/${number}/approvals`);
+      await senderPage.goto(`/contracts/${number}/signatures`);
       const signedRow = envelopeRow(senderPage, "Signed");
       await expect(signedRow).toHaveCount(1);
       await expect(signedRow).toContainText(SIGNERS[1].name);
@@ -1235,7 +1245,7 @@ test.describe("M15 demo path", () => {
         "href",
         downloadAddress(documentId, chain[2]!.id),
       );
-      await expect(senderPage.getByText("Envelope signed")).toBeVisible();
+      await expect(senderPage.getByText("Envelope signed")).toHaveCount(0);
       await expectStageMarker(senderPage, "Active");
 
       await senderPage.goto(`/contracts/${number}/documents`);

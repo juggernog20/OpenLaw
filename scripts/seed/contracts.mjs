@@ -349,11 +349,14 @@ export async function seedContracts(admin, context, log) {
 
     // A read contract is left bare on purpose: the Analysis run is what
     // fills the term in, and it only writes where nothing is set.
+    const owningDepartmentId = random.pick(departmentIds);
+    const region = random.pick(regionNames);
+    const businessOwner = random.chance(0.6) ? random.pick(helpers.length ? helpers : staff) : null;
     await author.patch(at, {
       managerId: owner.id,
-      owningDepartmentId: random.pick(departmentIds),
-      region: random.pick(regionNames),
-      businessOwnerId: random.chance(0.6) ? random.pick(helpers.length ? helpers : staff).id : null,
+      owningDepartmentId,
+      region,
+      businessOwnerId: businessOwner?.id ?? null,
       entityId: ourEntity.id,
       priority: plan.priority,
       risk: plan.risk,
@@ -373,17 +376,26 @@ export async function seedContracts(admin, context, log) {
     // the reach rules visible (DD-015). The team is remembered because a
     // confidential Contract is reachable by nobody else (DD-016), so the
     // people who comment on it and approve it have to come from here.
+    //
+    // The PATCH above already put the Business Owner on the team (DD-023).
+    // A second POST for them answers 409 and stops the seed, so neither
+    // pick below may choose them. A Business Owner taken from staff is a
+    // team member who can comment and approve, so the list records them.
     const team = [owner];
+    if (businessOwner && businessOwner.id !== owner.id && staff.includes(businessOwner)) {
+      team.push(businessOwner);
+    }
+    const onTeam = new Set([owner.id, businessOwner?.id]);
     for (const member of random.sample(
-      staff.filter((person) => person.id !== owner.id),
+      staff.filter((person) => !onTeam.has(person.id)),
       random.int(1, 3),
     )) {
       await author.post(`${at}/team`, { userId: member.id });
       team.push(member);
     }
-    if (random.chance(0.16) && helpers.length > 0) {
-      const helper = random.pick(helpers);
-      await author.post(`${at}/team`, { userId: helper.id });
+    const otherHelpers = helpers.filter((person) => !onTeam.has(person.id));
+    if (random.chance(0.16) && otherHelpers.length > 0) {
+      await author.post(`${at}/team`, { userId: random.pick(otherHelpers).id });
     }
 
     contracts.push({

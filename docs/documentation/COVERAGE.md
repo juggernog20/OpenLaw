@@ -160,3 +160,14 @@ in V-M41-C59, V-M41-C60, V-M41-C61, V-M41-MCP and V-M41-PUBLIC.
 | C59 | Connect Claude, choose consent and disconnect, including Claude Code on a LAN | L/A/B    | S/P/F       | P1       | DOC-031 / #1138 | `connect-claude`                |
 | C60 | Connect ChatGPT with OAuth, scan Tools and disconnect                         | L/A/B    | S/P/F       | P1       | DOC-031 / #1138 | `connect-chatgpt`               |
 | C61 | Connect Copilot Studio or a declarative agent with the registered client      | L/A/B    | S/P/F       | P1       | DOC-031 / #1138 | `connect-microsoft-365-copilot` |
+
+## M42 documentation, #1166
+
+M42 adds no article. Three existing articles gain sections and two gain one line.
+C59 now includes attaching a record by address and running the triage and summary
+prompts in Claude Code and claude.ai. C58 now includes the resource addresses and
+the prompt names for scripts. C57 now includes the Team and Administration ceiling
+rows, the shared pickable rule and change notifications. C60 and C61 each carry one
+line on what the vendor documents for resources and prompts. The Guide integration
+test proves discovery of the new sections; independent walkthroughs remain pending
+in V-M42-C59, V-M42-C58 and V-M42-MCP.

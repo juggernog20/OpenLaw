@@ -8,6 +8,7 @@
  * transaction, so no change can land unrecorded.
  */
 
+import type { Db } from "@openlaw/db";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { eq, orgSettings } from "@openlaw/db";
@@ -90,12 +91,8 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (_request, reply) => {
-      const [branding] = await app.db
-        .select({ name: orgSettings.name, logo: orgSettings.logo })
-        .from(orgSettings)
-        .limit(1);
       reply.header("Cache-Control", "no-store");
-      return branding ?? { name: "", logo: null };
+      return readOrgBranding(app.db);
     },
   );
 
@@ -110,20 +107,7 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: GeneralEnvelope, default: problemResponse },
       },
     },
-    async () => {
-      const [row] = await app.db.select().from(orgSettings).limit(1);
-      if (!row) throw httpError(500, "org_settings has no row to read.");
-      return {
-        general: {
-          name: row.name,
-          logo: row.logo,
-          // A parse, not a cast: a stored locale outside the shipped set
-          // fails loudly here instead of inside the response serializer.
-          defaultLocale: GeneralSchema.shape.defaultLocale.parse(row.defaultLocale),
-          defaultTimezone: row.defaultTimezone,
-        },
-      };
-    },
+    () => readOrgGeneral(app.db),
   );
 
   app.patch(
@@ -224,14 +208,7 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: NotificationSettingsSchema, default: problemResponse },
       },
     },
-    async () => {
-      const [row] = await app.db
-        .select({ commentWordsInEmail: orgSettings.commentWordsInEmail })
-        .from(orgSettings)
-        .limit(1);
-      if (!row) throw httpError(500, "org_settings has no row to read.");
-      return row;
-    },
+    () => readOrgNotifications(app.db),
   );
 
   app.patch(
@@ -290,14 +267,7 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: OffsetsEnvelope, default: problemResponse },
       },
     },
-    async () => {
-      const [row] = await app.db
-        .select({ offsets: orgSettings.reminderOffsetDays })
-        .from(orgSettings)
-        .limit(1);
-      if (!row) throw httpError(500, "org_settings has no row to read.");
-      return { offsets: savedOffsets(row.offsets) };
-    },
+    () => readReminderOffsets(app.db),
   );
 
   app.put(
@@ -363,3 +333,44 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function readOrgGeneral(db: Db) {
+  const [row] = await db.select().from(orgSettings).limit(1);
+  if (!row) throw httpError(500, "org_settings has no row to read.");
+  return {
+    general: {
+      name: row.name,
+      logo: row.logo,
+      // A parse, not a cast: a stored locale outside the shipped set
+      // fails loudly here instead of inside the response serializer.
+      defaultLocale: GeneralSchema.shape.defaultLocale.parse(row.defaultLocale),
+      defaultTimezone: row.defaultTimezone,
+    },
+  };
+}
+
+export async function readOrgNotifications(db: Db) {
+  const [row] = await db
+    .select({ commentWordsInEmail: orgSettings.commentWordsInEmail })
+    .from(orgSettings)
+    .limit(1);
+  if (!row) throw httpError(500, "org_settings has no row to read.");
+  return row;
+}
+
+export async function readReminderOffsets(db: Db) {
+  const [row] = await db
+    .select({ offsets: orgSettings.reminderOffsetDays })
+    .from(orgSettings)
+    .limit(1);
+  if (!row) throw httpError(500, "org_settings has no row to read.");
+  return { offsets: savedOffsets(row.offsets) };
+}
+
+export async function readOrgBranding(db: Db) {
+  const [branding] = await db
+    .select({ name: orgSettings.name, logo: orgSettings.logo })
+    .from(orgSettings)
+    .limit(1);
+  return branding ?? { name: "", logo: null };
+}

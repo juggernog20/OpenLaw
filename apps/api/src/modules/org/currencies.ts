@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import type { Db, UserRole } from "@openlaw/db";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { eq, orgSettings } from "@openlaw/db";
@@ -21,14 +22,7 @@ export const currencyRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: Envelope, default: problemResponse },
       },
     },
-    async (request) => {
-      const [row] = await app.db
-        .select({ currencies: orgSettings.currenciesInUse })
-        .from(orgSettings)
-        .limit(1);
-      if (!row) throw httpError(500, "The currency settings could not be read.");
-      return { currencies: row.currencies, canManage: request.user.role === "administrator" };
-    },
+    (request) => readCurrencies(app.db, request.user.role),
   );
 
   async function update(code: string, add: boolean, actorId: string) {
@@ -84,3 +78,12 @@ export const currencyRoutes: FastifyPluginAsyncZod = async (app) => {
     (request) => update(request.params.code, false, request.user.id),
   );
 };
+
+export async function readCurrencies(db: Db, role: UserRole) {
+  const [row] = await db
+    .select({ currencies: orgSettings.currenciesInUse })
+    .from(orgSettings)
+    .limit(1);
+  if (!row) throw httpError(500, "The currency settings could not be read.");
+  return { currencies: row.currencies, canManage: role === "administrator" };
+}

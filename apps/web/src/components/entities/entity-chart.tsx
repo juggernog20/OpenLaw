@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Maximize2, Minus, Plus, X } from "lucide-react";
+import { Maximize2, Minus, Plus, UserRound, X } from "lucide-react";
 import type { EntityChart as EntityChartData } from "../../lib/entities";
 import { statusLabel } from "../../lib/entities";
 import { Button } from "../ui/button";
@@ -418,6 +418,14 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                       className="pointer-events-none"
                     >
                       <div className="flex h-full flex-col gap-0.5">
+                        {node.kind === "individual" && (
+                          <span
+                            aria-hidden="true"
+                            className="mb-1.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-raised text-muted"
+                          >
+                            <UserRound size={20} strokeWidth={1.75} />
+                          </span>
+                        )}
                         <p className="line-clamp-2 text-sm font-semibold leading-5 text-primary">
                           {node.legalName}
                         </p>

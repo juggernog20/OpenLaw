@@ -617,10 +617,10 @@ function timelineCard(page: Page): Locator {
   return page.getByRole("region", { name: "Term timeline" });
 }
 
-/** The record's "Approvals & signing" card, which is where the Renew
+/** The record's "Approvals" card, which is where the Renew
  * act and the renewal history both live. */
 function approvalsCard(page: Page): Locator {
-  return page.getByRole("region", { name: "Approvals & signing" });
+  return page.getByRole("region", { name: "Approvals" });
 }
 
 /** One row of the deadline surface, found by the words the surface

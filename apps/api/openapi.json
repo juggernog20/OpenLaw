@@ -4418,6 +4418,27 @@
                             ]
                           }
                         },
+                        "toolsets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "workspace",
+                              "contracts",
+                              "matters",
+                              "tasks",
+                              "requests",
+                              "comments",
+                              "documents",
+                              "auto-docs",
+                              "entities",
+                              "knowledge",
+                              "people",
+                              "team",
+                              "administration"
+                            ]
+                          }
+                        },
                         "readOnly": {
                           "type": "boolean"
                         },
@@ -4429,6 +4450,7 @@
                         "enabled",
                         "groupEnabled",
                         "toolsetCeiling",
+                        "toolsets",
                         "readOnly",
                         "apiKeyLifetimeDays"
                       ],
@@ -58489,7 +58511,7 @@
       },
       "post": {
         "operationId": "sendContractEnvelope",
-        "summary": "Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are name-and-email pairs and every one of them is asked at once: there is no routing order. Sending is legal at any stage; CTR-001's transitions stay unrestricted. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has an envelope out — two envelopes must never race for one signature. The provider is called first and the row commits once it accepts; an envelope the provider took but the record could not keep is voided again before the refusal is raised, so the two systems do not drift apart silently. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored",
+        "summary": "Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are name-and-email pairs and every one of them is asked at once: there is no routing order. A successful send moves the contract to its first live Signature status. Sending is legal at any stage. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has an envelope out — two envelopes must never race for one signature. The provider is called first and the row commits once it accepts; an envelope the provider took but the record could not keep is voided again before the refusal is raised, so the two systems do not drift apart silently. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored",
         "tags": ["envelopes"],
         "requestBody": {
           "required": true,
@@ -58508,21 +58530,36 @@
                     "maxItems": 10,
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 200
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "personId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64
+                            }
+                          },
+                          "required": ["personId"]
                         },
-                        "email": {
-                          "type": "string",
-                          "maxLength": 320,
-                          "format": "email",
-                          "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                        {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 200
+                            },
+                            "email": {
+                              "type": "string",
+                              "maxLength": 320,
+                              "format": "email",
+                              "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                            }
+                          },
+                          "required": ["name", "email"]
                         }
-                      },
-                      "required": ["name", "email"]
+                      ]
                     }
                   },
                   "subject": {
