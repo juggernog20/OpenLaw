@@ -59,9 +59,7 @@
   "scenarios": [
     {
       "id": "V-C45",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
@@ -80,9 +78,7 @@
     },
     {
       "id": "V-C45-advanced-settings",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -101,9 +97,7 @@
     },
     {
       "id": "V-C45-advanced-settings",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "administrator",
       "method": "container-operation",
       "prerequisites": [
@@ -122,9 +116,7 @@
     },
     {
       "id": "V-M40-LAN",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
@@ -143,9 +135,7 @@
     },
     {
       "id": "V-M40-LAN",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "administrator",
       "method": "container-operation",
       "prerequisites": [
@@ -164,9 +154,7 @@
     },
     {
       "id": "V-M41-PUBLIC",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
@@ -194,9 +182,7 @@
     },
     {
       "id": "V-M41-PUBLIC",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "administrator",
       "method": "container-operation",
       "prerequisites": [
@@ -225,9 +211,7 @@
     },
     {
       "id": "V-M41-PUBLIC",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "operator",
       "method": "live-provider-check",
       "prerequisites": [
@@ -252,9 +236,7 @@
     },
     {
       "id": "V-M41-PUBLIC",
-      "coverage": [
-        "C45"
-      ],
+      "coverage": ["C45"],
       "role": "administrator",
       "method": "live-provider-check",
       "prerequisites": [

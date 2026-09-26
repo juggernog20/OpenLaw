@@ -72,9 +72,7 @@
   "scenarios": [
     {
       "id": "V-C38",
-      "coverage": [
-        "C38"
-      ],
+      "coverage": ["C38"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -92,9 +90,7 @@
     },
     {
       "id": "V-C38",
-      "coverage": [
-        "C38"
-      ],
+      "coverage": ["C38"],
       "role": "administrator",
       "method": "api-refusal",
       "prerequisites": [
@@ -112,9 +108,7 @@
     },
     {
       "id": "V-C38",
-      "coverage": [
-        "C38"
-      ],
+      "coverage": ["C38"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -131,9 +125,7 @@
     },
     {
       "id": "V-C38",
-      "coverage": [
-        "C38"
-      ],
+      "coverage": ["C38"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [

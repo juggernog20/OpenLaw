@@ -181,7 +181,10 @@ const cleanEnv = Object.fromEntries(
 );
 export function sh(cmd, args) {
   try {
-    return { code: 0, out: execFileSync(cmd, args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }) };
+    return {
+      code: 0,
+      out: execFileSync(cmd, args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }),
+    };
   } catch (e) {
     return { code: e.status ?? 1, out: `${e.stdout ?? ""}${e.stderr ?? ""}` };
   }

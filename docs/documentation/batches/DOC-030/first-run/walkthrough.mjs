@@ -183,7 +183,8 @@ const OVERLAYS = {
 };
 const ENV_NOTES = {
   default: "lab default overlay (SMTP_URL smtp://mailpit:1025 and SMTP_FROM set)",
-  "from-missing": "lab overlay plus SMTP_URL smtp://mailpit:1025 and SMTP_FROM empty (app and worker)",
+  "from-missing":
+    "lab overlay plus SMTP_URL smtp://mailpit:1025 and SMTP_FROM empty (app and worker)",
   unset: "lab overlay plus SMTP_URL and SMTP_FROM empty (app and worker)",
 };
 async function applyEmailEnvironment(kind) {
@@ -297,7 +298,10 @@ async function waitMail(address, atLeast = 1) {
 async function checkMailHeader(address, subjectRe, screenshotName) {
   const found = await waitMail(address);
   const summary = found.messages.find((m) => subjectRe.test(m.Subject));
-  must(summary, `no message matching ${subjectRe} for ${address}: ${JSON.stringify(found.subjects)}`);
+  must(
+    summary,
+    `no message matching ${subjectRe} for ${address}: ${JSON.stringify(found.subjects)}`,
+  );
   const message = await mailpit(`/api/v1/message/${summary.ID}`);
   const html = message.HTML ?? "";
   const inline = (message.Inline ?? []).map((part) => ({
@@ -307,7 +311,10 @@ async function checkMailHeader(address, subjectRe, screenshotName) {
     partId: part.PartID,
   }));
   const logoPart = inline.find((p) => p.contentId === "org-logo@openlaw");
-  must(html.includes('src="cid:org-logo@openlaw"'), "the HTML header does not use cid:org-logo@openlaw");
+  must(
+    html.includes('src="cid:org-logo@openlaw"'),
+    "the HTML header does not use cid:org-logo@openlaw",
+  );
   must(logoPart, `no inline part org-logo@openlaw in ${JSON.stringify(inline)}`);
   must(html.includes(ORG_NAME), "the organization name is not in the email");
   const res = await fetch(`${MAIL}/api/v1/message/${summary.ID}/part/${logoPart.partId}`);
@@ -321,7 +328,10 @@ async function checkMailHeader(address, subjectRe, screenshotName) {
     const p = await ctx.newPage();
     await p.goto(`${MAIL}/view/${summary.ID}.html`);
     await p.waitForLoadState("networkidle");
-    await p.screenshot({ path: path.join(here, screenshotName), clip: { x: 0, y: 0, width: 760, height: 260 } });
+    await p.screenshot({
+      path: path.join(here, screenshotName),
+      clip: { x: 0, y: 0, width: 760, height: 260 },
+    });
     await ctx.close();
     shot = screenshotName;
   }
@@ -329,7 +339,14 @@ async function checkMailHeader(address, subjectRe, screenshotName) {
     subject: summary.Subject,
     headerUsesOrgLogo: true,
     orgNameInHeader: true,
-    logoPart: { contentId: logoPart.contentId, contentType: logoPart.contentType, fileName: logoPart.fileName, png: isPng, width, height },
+    logoPart: {
+      contentId: logoPart.contentId,
+      contentType: logoPart.contentType,
+      fileName: logoPart.fileName,
+      png: isPng,
+      width,
+      height,
+    },
     screenshot: shot,
   };
 }
@@ -542,9 +559,14 @@ async function phaseP0() {
       for (const label of ["Name", "Email", "Password", "Confirm password"])
         await expect(page.getByLabel(label, { exact: true })).toBeVisible();
       await expect(page.getByLabel("Setup token")).toBeVisible();
-      const tokenName = await page.locator("#setupToken").evaluate((el) => el.labels?.[0]?.innerText.trim());
+      const tokenName = await page
+        .locator("#setupToken")
+        .evaluate((el) => el.labels?.[0]?.innerText.trim());
       await expect(button(page, "Create Administrator")).toBeVisible();
-      return `Setup token label read "${tokenName}". ` + "needsSetup was true; / redirected to /auth/setup, which showed Set up OpenLaw with Setup token, Name, Email, Password, Confirm password and Create Administrator.";
+      return (
+        `Setup token label read "${tokenName}". ` +
+        "needsSetup was true; / redirected to /auth/setup, which showed Set up OpenLaw with Setup token, Name, Email, Password, Confirm password and Create Administrator."
+      );
     },
   );
 
@@ -840,7 +862,10 @@ async function phaseP1Org() {
       const tz = page.getByRole("combobox", { name: "Default timezone" });
       await tz.click();
       await tz.fill("Lisbon");
-      await page.getByRole("option", { name: /Lisbon/ }).first().click();
+      await page
+        .getByRole("option", { name: /Lisbon/ })
+        .first()
+        .click();
       await button(page, "Set up later").click();
       const where = await expectStep(page, "Authentication", 3);
       const general = await getJson(context, "/api/v1/org/general");
@@ -860,7 +885,10 @@ async function phaseP1Org() {
       if (!/Lisbon/.test(await tz.inputValue())) {
         await tz.click();
         await tz.fill("Lisbon");
-        await page.getByRole("option", { name: /Lisbon/ }).first().click();
+        await page
+          .getByRole("option", { name: /Lisbon/ })
+          .first()
+          .click();
       }
       if ((await page.getByLabel("Organization name").inputValue()) !== ORG_NAME)
         await page.getByLabel("Organization name").fill(ORG_NAME);
@@ -874,7 +902,10 @@ async function phaseP1Org() {
       const where = await expectStep(page, "Authentication", 3);
       const general = await getJson(context, "/api/v1/org/general");
       must(general.general.name === ORG_NAME, `name is ${general.general.name}`);
-      must(general.general.defaultTimezone === "Europe/Lisbon", `timezone ${general.general.defaultTimezone}`);
+      must(
+        general.general.defaultTimezone === "Europe/Lisbon",
+        `timezone ${general.general.defaultTimezone}`,
+      );
       must(general.general.logo?.startsWith("data:image/png"), "logo not saved");
       return `${where}. ${reuploaded ? "The draft logo was gone after Back, so the same PNG was chosen again. " : "The draft kept the chosen logo after Back. "}The API read back name "${ORG_NAME}", timezone Europe/Lisbon, locale ${general.general.defaultLocale}, and a PNG logo.`;
     },
@@ -975,8 +1006,16 @@ async function phaseP1Auth() {
         await page.getByRole("switch", { name: "Single sign-on (SSO)", exact: true }).isDisabled(),
         "SSO switch is enabled",
       );
-      await expect(page.getByText("Register your identity provider", { exact: true })).toBeVisible();
-      for (const label of ["Provider ID", "Issuer URL", "Email domain", "Client ID", "Client secret"])
+      await expect(
+        page.getByText("Register your identity provider", { exact: true }),
+      ).toBeVisible();
+      for (const label of [
+        "Provider ID",
+        "Issuer URL",
+        "Email domain",
+        "Client ID",
+        "Client secret",
+      ])
         await expect(page.getByLabel(label, { exact: true })).toBeVisible();
       await expect(button(page, "Register provider")).toBeVisible();
       return "Single sign-on (SSO) was disabled. Register your identity provider showed Provider ID, Issuer URL, Email domain, Client ID, Client secret and Register provider.";
@@ -998,7 +1037,9 @@ async function phaseP1Auth() {
         await page.getByText(/Paste this callback URL into your IdP console:/).textContent()
       ).trim();
       must(callback.includes(BASE), `callback does not use the instance address: ${callback}`);
-      await expect(page.getByRole("switch", { name: "Single sign-on (SSO)", exact: true })).toBeEnabled();
+      await expect(
+        page.getByRole("switch", { name: "Single sign-on (SSO)", exact: true }),
+      ).toBeEnabled();
       return `The step showed "Identity provider harbor-idp is registered." and "${callback}". The Single sign-on (SSO) switch became enabled. The issuer was a local OpenID Connect stand-in (oauth2-mock-server) on the lab backend network.`;
     },
   );
@@ -1028,17 +1069,25 @@ async function phaseP1Auth() {
     async () => {
       await button(page, "Back").click();
       await expectStep(page, "Authentication", 3);
-      for (const name of ["Email and password", "Email magic link", "Require two-factor authentication"]) {
+      for (const name of [
+        "Email and password",
+        "Email magic link",
+        "Require two-factor authentication",
+      ]) {
         const sw = page.getByRole("switch", { name, exact: true });
         if ((await sw.getAttribute("aria-checked")) !== "true") await sw.click();
       }
       await button(page, "Continue").click();
       await page.waitForURL(/\/auth\/two-factor\/enroll$/, { timeout: 15000 });
-      await expect(page.getByText("Your organization requires two-factor authentication.")).toBeVisible();
+      await expect(
+        page.getByText("Your organization requires two-factor authentication."),
+      ).toBeVisible();
       await expect(button(page, "Turn on two-factor")).toBeVisible();
       const methods = await getJson(context, "/api/v1/auth/methods");
       must(
-        methods.policy.legal.requireTwoFactor && methods.policy.legal.magicLink && methods.policy.legal.password,
+        methods.policy.legal.requireTwoFactor &&
+          methods.policy.legal.magicLink &&
+          methods.policy.legal.password,
         `legal policy ${JSON.stringify(methods.policy.legal)}`,
       );
       const obs = [];
@@ -1046,7 +1095,10 @@ async function phaseP1Auth() {
         await page.goto(`${BASE}${target}`);
         await page.waitForLoadState("networkidle");
         obs.push(`${target} -> ${pathOf(page)}`);
-        must(/\/auth\/two-factor\/enroll$/.test(new URL(page.url()).pathname), `${target} did not return to enrollment`);
+        must(
+          /\/auth\/two-factor\/enroll$/.test(new URL(page.url()).pathname),
+          `${target} did not return to enrollment`,
+        );
       }
       return `Continue saved the policy ${JSON.stringify(methods.policy.legal)} and opened /auth/two-factor/enroll with "Your organization requires two-factor authentication." and Turn on two-factor. Other addresses returned there: ${obs.join("; ")}.`;
     },
@@ -1058,7 +1110,9 @@ async function phaseP1Auth() {
     async () => {
       await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
       const [enableResponse] = await Promise.all([
-        page.waitForResponse((r) => r.url().includes("/two-factor/enable") && r.request().method() === "POST"),
+        page.waitForResponse(
+          (r) => r.url().includes("/two-factor/enable") && r.request().method() === "POST",
+        ),
         button(page, "Turn on two-factor").click(),
       ]);
       const enabled = await enableResponse.json();
@@ -1066,22 +1120,42 @@ async function phaseP1Auth() {
       writeFileSync(SECRET_FILE, secret, { mode: 0o600 });
       await page.getByLabel("Code", { exact: true }).fill(totp(secret));
       await button(page, "Confirm").click();
-      await expect(page.getByText(/Two-factor authentication is on\. Save these backup codes/)).toBeVisible();
+      await expect(
+        page.getByText(/Two-factor authentication is on\. Save these backup codes/),
+      ).toBeVisible();
       await page.getByRole("link", { name: "Done", exact: true }).click();
       await expect(page).toHaveURL(/\/welcome(\?|$)/);
       const where = await expectStep(page, "Welcome to OpenLaw", 1);
       const landed = pathOf(page);
       const me = await getJson(context, "/api/v1/me");
-      must(!me.user.twoFactorSetupRequired && !me.user.twoFactorVerificationRequired, "two-factor still pending");
+      must(
+        !me.user.twoFactorSetupRequired && !me.user.twoFactorVerificationRequired,
+        "two-factor still pending",
+      );
       await button(page, "Get started").click();
       await expectStep(page, "Your organization", 2);
-      must((await page.getByLabel("Organization name").inputValue()) === ORG_NAME, "organization name lost");
+      must(
+        (await page.getByLabel("Organization name").inputValue()) === ORG_NAME,
+        "organization name lost",
+      );
       await button(page, "Continue").click();
       await expectStep(page, "Authentication", 3);
       const state = {};
-      for (const name of ["Email and password", "Email magic link", "Single sign-on (SSO)", "Require two-factor authentication"])
-        state[name] = (await page.getByRole("switch", { name, exact: true }).getAttribute("aria-checked")) === "true";
-      must(state["Email and password"] && state["Email magic link"] && state["Require two-factor authentication"], `switches ${JSON.stringify(state)}`);
+      for (const name of [
+        "Email and password",
+        "Email magic link",
+        "Single sign-on (SSO)",
+        "Require two-factor authentication",
+      ])
+        state[name] =
+          (await page.getByRole("switch", { name, exact: true }).getAttribute("aria-checked")) ===
+          "true";
+      must(
+        state["Email and password"] &&
+          state["Email magic link"] &&
+          state["Require two-factor authentication"],
+        `switches ${JSON.stringify(state)}`,
+      );
       return `A generated TOTP code turned two-factor on and the backup-code notice showed. Done led to ${landed} at ${where}. Get started showed the saved name, and Authentication showed ${JSON.stringify(state)}.`;
     },
   );
@@ -1101,7 +1175,12 @@ async function phaseP1Portal() {
       await expectStep(page, "Authentication", 3);
       await button(page, "Continue").click();
       const where = await expectStep(page, "Business-user portal", 4);
-      for (const name of ["Email and password", "Email magic link", "Single sign-on (SSO)", "Require two-factor authentication"])
+      for (const name of [
+        "Email and password",
+        "Email magic link",
+        "Single sign-on (SSO)",
+        "Require two-factor authentication",
+      ])
         await expect(page.getByRole("switch", { name, exact: true })).toBeVisible();
       await expect(page.getByLabel("Allowed email domains")).toBeVisible();
       await expect(button(page, "Add")).toBeVisible();
@@ -1123,7 +1202,8 @@ async function phaseP1Portal() {
       must(domains.domains.length === 0, `domains saved: ${domains.domains}`);
       await button(page, "Back").click();
       await expectStep(page, "Business-user portal", 4);
-      if (await button(page, "Remove unsaved.example").count()) await button(page, "Remove unsaved.example").click();
+      if (await button(page, "Remove unsaved.example").count())
+        await button(page, "Remove unsaved.example").click();
       return `${where}. The saved allowed-domain list stayed empty.`;
     },
   );
@@ -1148,7 +1228,10 @@ async function phaseP1Portal() {
         await button(page, "Remove rowan@harbor.example").click();
       }
       const domains = await getJson(context, "/api/v1/auth/allowed-domains");
-      must(!domains.domains.includes("rowan@harbor.example"), "OpenLaw saved an address as a domain");
+      must(
+        !domains.domains.includes("rowan@harbor.example"),
+        "OpenLaw saved an address as a domain",
+      );
       return `An entry with an email username was ${outcome}. The saved list did not contain it.`;
     },
   );
@@ -1168,7 +1251,11 @@ async function phaseP1Portal() {
       const where = await expectStep(page, "Outbound email", 5);
       const domains = await getJson(context, "/api/v1/auth/allowed-domains");
       const methods = await getJson(context, "/api/v1/auth/methods");
-      must(JSON.stringify([...domains.domains].sort()) === JSON.stringify(["harbor.example", "helix.example"]), `domains ${domains.domains}`);
+      must(
+        JSON.stringify([...domains.domains].sort()) ===
+          JSON.stringify(["harbor.example", "helix.example"]),
+        `domains ${domains.domains}`,
+      );
       must(methods.policy.business.magicLink === true, "business magic link not saved");
       return `${where}. Saved domains ${JSON.stringify(domains.domains)}; business policy ${JSON.stringify(methods.policy.business)}.`;
     },
@@ -1178,14 +1265,32 @@ async function phaseP1Portal() {
     "In Outbound email check the configuration source while email is unset",
     "The step asks for SMTP server, Port, Connection security, Authentication, Sender name (optional) and Sender email with Save relay; no Set up later; Continue unavailable.",
     async () => {
-      const unset = (await page.getByText(/Set up outbound email to finish instance setup/).textContent()).trim();
-      for (const label of ["SMTP server", "Port", "Connection security", "Authentication", "Sender name (optional)", "Sender email"])
+      const unset = (
+        await page.getByText(/Set up outbound email to finish instance setup/).textContent()
+      ).trim();
+      for (const label of [
+        "SMTP server",
+        "Port",
+        "Connection security",
+        "Authentication",
+        "Sender name (optional)",
+        "Sender email",
+      ])
         await expect(page.getByLabel(label, { exact: true })).toBeVisible();
-      const authOptions = await page.getByLabel("Authentication", { exact: true }).locator("option").allTextContents();
-      const securityOptions = await page.getByLabel("Connection security", { exact: true }).locator("option").allTextContents();
+      const authOptions = await page
+        .getByLabel("Authentication", { exact: true })
+        .locator("option")
+        .allTextContents();
+      const securityOptions = await page
+        .getByLabel("Connection security", { exact: true })
+        .locator("option")
+        .allTextContents();
       await expect(button(page, "Save relay")).toBeVisible();
       must((await button(page, "Set up later").count()) === 0, "Set up later shown");
-      must((await button(page, "Send test email").count()) === 0, "Send test email shown before a relay is saved");
+      must(
+        (await button(page, "Send test email").count()) === 0,
+        "Send test email shown before a relay is saved",
+      );
       await expect(button(page, "Continue")).toBeDisabled();
       return `The step said "${unset}" It showed SMTP server, Port, Connection security ${JSON.stringify(securityOptions)}, Authentication ${JSON.stringify(authOptions)}, Sender name (optional), Sender email and Save relay; no Set up later or Send test email; Continue disabled.`;
     },
@@ -1206,20 +1311,29 @@ async function phaseP1Portal() {
     "With Authentication set to Username and password, leave SMTP username and SMTP password empty and select Save relay",
     "SMTP username and SMTP password show and are required; nothing saves.",
     async () => {
-      await page.getByLabel("Authentication", { exact: true }).selectOption({ label: "Username and password" });
+      await page
+        .getByLabel("Authentication", { exact: true })
+        .selectOption({ label: "Username and password" });
       await expect(page.getByLabel("SMTP username", { exact: true })).toBeVisible();
       await expect(page.getByLabel("SMTP password", { exact: true })).toBeVisible();
       await page.getByLabel("SMTP server", { exact: true }).fill("mailpit");
       await page.getByLabel("Sender email", { exact: true }).fill("legal@harbor.example");
       await button(page, "Save relay").click();
       await page.waitForTimeout(800);
-      const missing = await page.getByLabel("SMTP username", { exact: true }).evaluate((el) => el.validity.valueMissing);
-      const missingPw = await page.getByLabel("SMTP password", { exact: true }).evaluate((el) => el.validity.valueMissing);
+      const missing = await page
+        .getByLabel("SMTP username", { exact: true })
+        .evaluate((el) => el.validity.valueMissing);
+      const missingPw = await page
+        .getByLabel("SMTP password", { exact: true })
+        .evaluate((el) => el.validity.valueMissing);
       must(missing && missingPw, "username/password not required");
       const settings = await getJson(context, "/api/v1/email-settings");
       must(settings.source === "unset", `source ${settings.source}`);
       await page.getByLabel("Authentication", { exact: true }).selectOption({ label: "None" });
-      must((await page.getByLabel("SMTP username", { exact: true }).count()) === 0, "username still shown with None");
+      must(
+        (await page.getByLabel("SMTP username", { exact: true }).count()) === 0,
+        "username still shown with None",
+      );
       return `With Username and password, SMTP username and SMTP password showed and both reported a missing value; source stayed "${settings.source}". With None, the two fields were hidden.`;
     },
   );
@@ -1253,7 +1367,9 @@ async function phaseP1Portal() {
       await page.getByLabel("Sender name (optional)", { exact: true }).fill("Harbor Legal");
       await page.getByLabel("Sender email", { exact: true }).fill("legal@harbor.example");
       await button(page, "Save relay").click();
-      await expect(page.getByText("Relay saved. The next email this instance sends will use it.")).toBeVisible();
+      await expect(
+        page.getByText("Relay saved. The next email this instance sends will use it."),
+      ).toBeVisible();
       const inApp = (await page.getByText(/Outbound email is set in the app/).textContent()).trim();
       await expect(button(page, "Continue")).toBeEnabled();
       await expect(button(page, "Send test email")).toBeVisible();
@@ -1292,15 +1408,22 @@ async function phaseP1Invites() {
       must(new URL(page.url()).pathname === "/settings/general", `ended at ${page.url()}`);
       await expect(page.getByText("Setup checklist", { exact: true })).toBeVisible();
       const rows = await outstandingRows(page);
-      must((await page.getByText("Return to setup", { exact: true }).count()) === 0, "Return to setup on a direct visit");
+      must(
+        (await page.getByText("Return to setup", { exact: true }).count()) === 0,
+        "Return to setup on a direct visit",
+      );
       await page.screenshot({ path: path.join(here, "p1-setup-checklist.png") });
       const labels = rows.map((r) => r.label);
       must(
-        JSON.stringify(labels) === JSON.stringify(["Invite your team", "E-signature", "AI analysis", "Review seeded types"]),
+        JSON.stringify(labels) ===
+          JSON.stringify(["Invite your team", "E-signature", "AI analysis", "Review seeded types"]),
         `rows ${JSON.stringify(rows)}`,
       );
       const review = rows.find((r) => r.label === "Review seeded types");
-      must(review.href === null && review.markAsReviewed, "Review seeded types row lacks Mark as reviewed or has a link");
+      must(
+        review.href === null && review.markAsReviewed,
+        "Review seeded types row lacks Mark as reviewed or has a link",
+      );
       for (const r of rows.filter((x) => x.label !== "Review seeded types"))
         must(r.href?.startsWith("/settings/"), `${r.label} has no Settings link`);
       return `With Organization, Business-user portal and Email done, the Setup checklist rows were ${JSON.stringify(rows)}. No Return to setup on a direct visit.`;
@@ -1316,13 +1439,20 @@ async function phaseP1Invites() {
       await expect(page.getByLabel("Name", { exact: true })).toBeVisible();
       await expect(page.getByLabel("Email", { exact: true })).toBeVisible();
       const roles = await page.locator("fieldset button").allTextContents();
-      must(JSON.stringify(roles) === JSON.stringify(["Legal team member", "Administrator"]), `roles ${roles}`);
+      must(
+        JSON.stringify(roles) === JSON.stringify(["Legal team member", "Administrator"]),
+        `roles ${roles}`,
+      );
       await page.getByLabel("Name", { exact: true }).fill("Rowan Lee");
       await page.getByLabel("Email", { exact: true }).fill("rowan.lee@harbor.example");
       await button(page, "Legal team member").click();
       await button(page, "Send invite").click();
       await expect(page.getByText(/1 invite sent:/)).toBeVisible();
-      const header = await checkMailHeader("rowan.lee@harbor.example", /./, "p1-invitation-email-header.png");
+      const header = await checkMailHeader(
+        "rowan.lee@harbor.example",
+        /./,
+        "p1-invitation-email-header.png",
+      );
       return `${where}. Role choices ${JSON.stringify(roles)}. Send invite showed "1 invite sent:". Mailpit: ${JSON.stringify(header)}.`;
     },
   );
@@ -1334,7 +1464,10 @@ async function phaseP1Invites() {
       await page.getByLabel("Name", { exact: true }).fill("Sam Ortiz");
       await page.getByLabel("Email", { exact: true }).fill("sam.ortiz@harbor.example");
       await button(page, "Administrator").click();
-      must((await button(page, "Administrator").getAttribute("aria-pressed")) === "true", "Administrator not selected");
+      must(
+        (await button(page, "Administrator").getAttribute("aria-pressed")) === "true",
+        "Administrator not selected",
+      );
       await button(page, "Send invite").click();
       await expect(page.getByText(/2 invites sent:/)).toBeVisible();
       const mail = await waitMail("sam.ortiz@harbor.example");
@@ -1363,7 +1496,9 @@ async function phaseP1Invites() {
     "In E-signature select Set up later",
     "The manual signing hand-off stays; AI analysis opens.",
     async () => {
-      const hint = (await page.getByText(/The manual hand-off stays the path/).textContent()).trim();
+      const hint = (
+        await page.getByText(/The manual hand-off stays the path/).textContent()
+      ).trim();
       await button(page, "Set up later").click();
       const where = await expectStep(page, "AI analysis", 8);
       const onboarding = await getJson(context, "/api/v1/onboarding");
@@ -1376,7 +1511,9 @@ async function phaseP1Invites() {
     "In AI analysis select Set up later",
     "The AI connector stays unconfigured; Review opens.",
     async () => {
-      const hint = (await page.getByText(/^Optional\. Connect an AI provider/).textContent()).trim();
+      const hint = (
+        await page.getByText(/^Optional\. Connect an AI provider/).textContent()
+      ).trim();
       await button(page, "Set up later").click();
       const where = await expectStep(page, "Review", 9);
       const onboarding = await getJson(context, "/api/v1/onboarding");
@@ -1403,7 +1540,20 @@ async function phaseP1Review() {
       await expectStep(page, "Review", 9);
       reviewRows = await reviewTable(page);
       const lists = reviewRows.map((r) => r.list);
-      for (const name of ["Matter types", "Matter statuses", "Matter fields", "Contract types", "Contract statuses", "Contract fields", "Entity types", "Director & Officer roles", "Entity fields", "Knowledge types", "Request types", "Reminder offsets"])
+      for (const name of [
+        "Matter types",
+        "Matter statuses",
+        "Matter fields",
+        "Contract types",
+        "Contract statuses",
+        "Contract fields",
+        "Entity types",
+        "Director & Officer roles",
+        "Entity fields",
+        "Knowledge types",
+        "Request types",
+        "Reminder offsets",
+      ])
         must(lists.includes(name), `no ${name} row in ${JSON.stringify(lists)}`);
       const hint = (await page.getByText(/We recommend that you start with/).textContent()).trim();
       await expect(button(page, "Start blank")).toBeVisible();
@@ -1441,11 +1591,17 @@ async function phaseP1Review() {
     "A Matter now uses one seeded Matter type.",
     async () => {
       const types = await getJson(context, "/api/v1/matter-types?includeArchived=true");
-      fieldCountBefore = (await getJson(context, "/api/v1/fields?includeArchived=true")).fields.length;
-      const candidates = types.matterTypes.filter((t) => t.isSystemDefault && !["other", "default"].includes(t.slug));
+      fieldCountBefore = (await getJson(context, "/api/v1/fields?includeArchived=true")).fields
+        .length;
+      const candidates = types.matterTypes.filter(
+        (t) => t.isSystemDefault && !["other", "default"].includes(t.slug),
+      );
       const tried = [];
       for (const seeded of candidates) {
-        const res = await postJson(context, "/api/v1/matters", { title: "DOC-030 first-run in-use Matter", matterTypeId: seeded.id });
+        const res = await postJson(context, "/api/v1/matters", {
+          title: "DOC-030 first-run in-use Matter",
+          matterTypeId: seeded.id,
+        });
         if (res.status === 201) {
           fixtureMatter = { number: res.body.matter.number, type: seeded.displayName };
           break;
@@ -1468,12 +1624,28 @@ async function phaseP1Review() {
       await button(page, "Start blank").click();
       const dialog = page.getByRole("dialog", { name: "Start blank" });
       await expect(dialog).toBeVisible();
-      const items = await dialog.locator("ul li").evaluateAll((lis) => lis.map((li) => li.innerText.replace(/\s+/g, " ").trim()));
-      const warning = (await dialog.getByText(/This removes every seeded row/).textContent()).trim();
+      const items = await dialog
+        .locator("ul li")
+        .evaluateAll((lis) => lis.map((li) => li.innerText.replace(/\s+/g, " ").trim()));
+      const warning = (
+        await dialog.getByText(/This removes every seeded row/).textContent()
+      ).trim();
       const keeps = (await dialog.getByText(/^Kept:/).textContent()).trim();
       must(items.length === 8, `dialog lists ${JSON.stringify(items)}`);
-      for (const name of ["Matter types", "Matter statuses", "Contract types", "Contract statuses", "Entity types", "Director & Officer roles", "Knowledge types", "Request types"])
-        must(items.some((i) => i.startsWith(name) && /\d+ rows?$/.test(i)), `dialog does not name ${name} with a row count: ${JSON.stringify(items)}`);
+      for (const name of [
+        "Matter types",
+        "Matter statuses",
+        "Contract types",
+        "Contract statuses",
+        "Entity types",
+        "Director & Officer roles",
+        "Knowledge types",
+        "Request types",
+      ])
+        must(
+          items.some((i) => i.startsWith(name) && /\d+ rows?$/.test(i)),
+          `dialog does not name ${name} with a row count: ${JSON.stringify(items)}`,
+        );
       await dialog.getByRole("button", { name: "Start blank", exact: true }).click();
       const alert = dialog.getByRole("alert");
       await expect(alert).toBeVisible();
@@ -1482,7 +1654,10 @@ async function phaseP1Review() {
       await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
       await expect(dialog).toHaveCount(0);
       const after = countsOf(await reviewTable(page));
-      must(JSON.stringify(before) === JSON.stringify(after), `counts changed ${JSON.stringify(before)} -> ${JSON.stringify(after)}`);
+      must(
+        JSON.stringify(before) === JSON.stringify(after),
+        `counts changed ${JSON.stringify(before)} -> ${JSON.stringify(after)}`,
+      );
       const onboarding = await getJson(context, "/api/v1/onboarding");
       must(!onboarding.steps.review.done, "review recorded by a refused Start blank");
       return `The dialog warned "${warning}", listed ${JSON.stringify(items)}, and said "${keeps}". Confirm showed "${reason}". Cancel closed it; Review counts were unchanged and the review was not recorded.`;
@@ -1497,13 +1672,29 @@ async function phaseP1Review() {
       const def = types.matterTypes.find((t) => t.slug === "default");
       const statuses = await getJson(context, "/api/v1/matter-statuses");
       const open = statuses.matterStatuses.find((s) => s.slug === "open");
-      const moved = await postJson(context, `/api/v1/matters/${fixtureMatter.number}`, { matterTypeId: def.id }, "patch");
-      must(moved.status === 200, `re-type answered ${moved.status} ${JSON.stringify(moved.body).slice(0, 200)}`);
+      const moved = await postJson(
+        context,
+        `/api/v1/matters/${fixtureMatter.number}`,
+        { matterTypeId: def.id },
+        "patch",
+      );
+      must(
+        moved.status === 200,
+        `re-type answered ${moved.status} ${JSON.stringify(moved.body).slice(0, 200)}`,
+      );
       const current = JSON.stringify(moved.body);
       let statusNote = "its Status was already Open";
       if (!current.includes(open.id)) {
-        const status = await postJson(context, `/api/v1/matters/${fixtureMatter.number}`, { statusId: open.id }, "patch");
-        must(status.status === 200, `status answered ${status.status} ${JSON.stringify(status.body).slice(0, 200)}`);
+        const status = await postJson(
+          context,
+          `/api/v1/matters/${fixtureMatter.number}`,
+          { statusId: open.id },
+          "patch",
+        );
+        must(
+          status.status === 200,
+          `status answered ${status.status} ${JSON.stringify(status.body).slice(0, 200)}`,
+        );
         statusNote = "its Status moved to Open";
       }
       await page.goto(`${BASE}/welcome?step=review`);
@@ -1512,10 +1703,14 @@ async function phaseP1Review() {
       await button(page, "Start blank").click();
       const dialog = page.getByRole("dialog", { name: "Start blank" });
       await expect(dialog).toBeVisible();
-      const items = await dialog.locator("ul li").evaluateAll((lis) => lis.map((li) => li.innerText.replace(/\s+/g, " ").trim()));
+      const items = await dialog
+        .locator("ul li")
+        .evaluateAll((lis) => lis.map((li) => li.innerText.replace(/\s+/g, " ").trim()));
       await dialog.getByRole("button", { name: "Start blank", exact: true }).click();
       await expect(dialog).toHaveCount(0);
-      await expect(page.getByText("Seeded rows removed. The counts below are current.")).toBeVisible();
+      await expect(
+        page.getByText("Seeded rows removed. The counts below are current."),
+      ).toBeVisible();
       const after = await reviewTable(page);
       const onboarding = await getJson(context, "/api/v1/onboarding");
       must(!onboarding.completed, "Start blank completed onboarding");
@@ -1530,7 +1725,8 @@ async function phaseP1Review() {
     "Kept: Other in Matter types, Contract types, Entity types and Director & Officer roles; Default in Matter and Contract types; Open and Closed Matter statuses; Draft, Active, Expired Contract statuses; every Field; reminder offsets. Review, Approval and Signature Stages hold no Status; the Open Category holds only Open.",
     async () => {
       const q = "?includeArchived=true";
-      const slugs = async (p, key) => (await getJson(context, `${p}${q}`))[key].map((r) => r.slug).sort();
+      const slugs = async (p, key) =>
+        (await getJson(context, `${p}${q}`))[key].map((r) => r.slug).sort();
       const kept = {
         matterTypes: await slugs("/api/v1/matter-types", "matterTypes"),
         contractTypes: await slugs("/api/v1/contract-types", "contractTypes"),
@@ -1543,19 +1739,47 @@ async function phaseP1Review() {
       const cs = (await getJson(context, `/api/v1/contract-statuses${q}`)).contractStatuses;
       const fields = (await getJson(context, `/api/v1/fields${q}`)).fields;
       const offsets = (await getJson(context, "/api/v1/org/reminder-offsets")).offsets;
-      must(JSON.stringify(kept.matterTypes) === JSON.stringify(["default", "other"]), `matter types ${kept.matterTypes}`);
-      must(JSON.stringify(kept.contractTypes) === JSON.stringify(["default", "other"]), `contract types ${kept.contractTypes}`);
-      must(JSON.stringify(kept.entityTypes) === JSON.stringify(["other"]), `entity types ${kept.entityTypes}`);
-      must(JSON.stringify(kept.officerRoles) === JSON.stringify(["other"]), `officer roles ${kept.officerRoles}`);
-      must(kept.knowledgeTypes.length === 0 && kept.requestTypes.length === 0, "knowledge or request types kept");
-      must(JSON.stringify(ms.map((s) => s.slug).sort()) === JSON.stringify(["closed", "open"]), `matter statuses ${ms.map((s) => s.slug)}`);
-      must(JSON.stringify(ms.filter((s) => s.category === "open").map((s) => s.slug)) === JSON.stringify(["open"]), "Open Category holds more than Open");
-      must(JSON.stringify(cs.map((s) => s.slug).sort()) === JSON.stringify(["active", "draft", "expired"]), `contract statuses ${cs.map((s) => s.slug)}`);
+      must(
+        JSON.stringify(kept.matterTypes) === JSON.stringify(["default", "other"]),
+        `matter types ${kept.matterTypes}`,
+      );
+      must(
+        JSON.stringify(kept.contractTypes) === JSON.stringify(["default", "other"]),
+        `contract types ${kept.contractTypes}`,
+      );
+      must(
+        JSON.stringify(kept.entityTypes) === JSON.stringify(["other"]),
+        `entity types ${kept.entityTypes}`,
+      );
+      must(
+        JSON.stringify(kept.officerRoles) === JSON.stringify(["other"]),
+        `officer roles ${kept.officerRoles}`,
+      );
+      must(
+        kept.knowledgeTypes.length === 0 && kept.requestTypes.length === 0,
+        "knowledge or request types kept",
+      );
+      must(
+        JSON.stringify(ms.map((s) => s.slug).sort()) === JSON.stringify(["closed", "open"]),
+        `matter statuses ${ms.map((s) => s.slug)}`,
+      );
+      must(
+        JSON.stringify(ms.filter((s) => s.category === "open").map((s) => s.slug)) ===
+          JSON.stringify(["open"]),
+        "Open Category holds more than Open",
+      );
+      must(
+        JSON.stringify(cs.map((s) => s.slug).sort()) ===
+          JSON.stringify(["active", "draft", "expired"]),
+        `contract statuses ${cs.map((s) => s.slug)}`,
+      );
       const byStage = {};
       for (const s of cs) (byStage[s.stage] ??= []).push(s.slug);
-      for (const stage of ["review", "approval", "signature"]) must(!byStage[stage], `stage ${stage} holds ${byStage[stage]}`);
+      for (const stage of ["review", "approval", "signature"])
+        must(!byStage[stage], `stage ${stage} holds ${byStage[stage]}`);
       const fieldNames = fields.map((f) => f.displayName ?? f.name);
-      for (const name of ["Governing law", "Jurisdiction", "Our position"]) must(fieldNames.includes(name), `Field ${name} missing`);
+      for (const name of ["Governing law", "Jurisdiction", "Our position"])
+        must(fieldNames.includes(name), `Field ${name} missing`);
       must(fields.length === fieldCountBefore, `Fields ${fieldCountBefore} -> ${fields.length}`);
       return `Types kept ${JSON.stringify(kept)}. Matter statuses ${JSON.stringify(ms.map((s) => `${s.slug}/${s.category}`))}. Contract statuses by Stage ${JSON.stringify(byStage)}. ${fields.length} of ${fieldCountBefore} Fields remain, including Governing law, Jurisdiction and Our position. Reminder offsets ${JSON.stringify(offsets)}.`;
     },
@@ -1590,13 +1814,38 @@ async function phaseP1Review() {
       await expect(p2).toHaveURL(/\/settings\/audit-log/);
       await p2.waitForLoadState("networkidle");
       const text = await p2.locator("main").innerText();
-      const entries = [...text.matchAll(/chose Start blank and removed (\d+) seeded rows? from ([a-z &]+?)(?=\n|$|\s{2})/g)].map((m) => `${m[2].trim()}: ${m[1]}`);
-      const lines = text.split("\n").filter((l) => /chose Start blank/.test(l)).map((l) => l.trim());
-      await p2.screenshot({ path: path.join(here, "p1-audit-log-start-blank.png"), fullPage: true });
+      const entries = [
+        ...text.matchAll(
+          /chose Start blank and removed (\d+) seeded rows? from ([a-z &]+?)(?=\n|$|\s{2})/g,
+        ),
+      ].map((m) => `${m[2].trim()}: ${m[1]}`);
+      const lines = text
+        .split("\n")
+        .filter((l) => /chose Start blank/.test(l))
+        .map((l) => l.trim());
+      await p2.screenshot({
+        path: path.join(here, "p1-audit-log-start-blank.png"),
+        fullPage: true,
+      });
       await p2.close();
-      must(lines.length === 8, `expected 8 Start blank entries, saw ${lines.length}: ${JSON.stringify(lines)}`);
-      for (const list of ["matter types", "matter statuses", "contract types", "contract statuses", "entity types", "officer roles", "knowledge types", "request types"])
-        must(lines.filter((l) => l.includes(`from ${list}`)).length === 1, `no single entry for ${list}`);
+      must(
+        lines.length === 8,
+        `expected 8 Start blank entries, saw ${lines.length}: ${JSON.stringify(lines)}`,
+      );
+      for (const list of [
+        "matter types",
+        "matter statuses",
+        "contract types",
+        "contract statuses",
+        "entity types",
+        "officer roles",
+        "knowledge types",
+        "request types",
+      ])
+        must(
+          lines.filter((l) => l.includes(`from ${list}`)).length === 1,
+          `no single entry for ${list}`,
+        );
       return `The audit log held ${lines.length} Start blank entries: ${JSON.stringify(lines)}. Parsed ${JSON.stringify(entries)}.`;
     },
     { continueOnFail: true },
@@ -1615,8 +1864,14 @@ async function phaseP1Review() {
       await button(page, "Save").click();
       await expect(page.getByText("DOC-030 first-run Advisory").first()).toBeVisible();
       const rowButtons = await page.getByRole("button").allTextContents();
-      const labels = await page.getByRole("button").evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")).filter(Boolean));
-      must(!labels.some((l) => /^Delete/i.test(l)) && !rowButtons.some((t) => /^Delete/.test(t.trim())), "a Delete control exists");
+      const labels = await page
+        .getByRole("button")
+        .evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")).filter(Boolean));
+      must(
+        !labels.some((l) => /^Delete/i.test(l)) &&
+          !rowButtons.some((t) => /^Delete/.test(t.trim())),
+        "a Delete control exists",
+      );
       await page.getByRole("link", { name: "Return to setup", exact: true }).click();
       await expectStep(page, "Review", 9);
       const before = countsOf(await reviewTable(page));
@@ -1653,14 +1908,20 @@ async function phaseP1Review() {
       const finishedAt = new URL(other.url()).pathname;
       await other.close();
       const onboarding = await getJson(context, "/api/v1/onboarding");
-      must(onboarding.completed && onboarding.steps.review.done, `onboarding ${JSON.stringify(onboarding)}`);
+      must(
+        onboarding.completed && onboarding.steps.review.done,
+        `onboarding ${JSON.stringify(onboarding)}`,
+      );
       await dialog.getByRole("button", { name: "Start blank", exact: true }).click();
       const alert = dialog.getByRole("alert");
       await expect(alert).toBeVisible();
       const reason = (await alert.textContent()).trim();
       must(/setup is complete/i.test(reason), `reason ${reason}`);
       const types = await getJson(context, "/api/v1/matter-types?includeArchived=true");
-      must(types.matterTypes.some((t) => t.displayName === "DOC-030 first-run Advisory"), "user row removed");
+      must(
+        types.matterTypes.some((t) => t.displayName === "DOC-030 first-run Advisory"),
+        "user row removed",
+      );
       return `Finish in the second tab opened Home at ${finishedAt}; the onboarding API reported completed true and review done true. Confirming Start blank in the first tab then showed "${reason}", and the Matter types list was unchanged (${types.matterTypes.length} rows).`;
     },
   );
@@ -1695,8 +1956,14 @@ async function phaseP1After() {
       await page.goto(`${BASE}/`);
       await page.waitForLoadState("networkidle");
       const brand = await headerBrand(page);
-      must(brand.name === ORG_NAME && brand.logo && brand.loaded, `header ${JSON.stringify(brand)}`);
-      await page.locator("header").first().screenshot({ path: path.join(here, "p1-app-header.png") });
+      must(
+        brand.name === ORG_NAME && brand.logo && brand.loaded,
+        `header ${JSON.stringify(brand)}`,
+      );
+      await page
+        .locator("header")
+        .first()
+        .screenshot({ path: path.join(here, "p1-app-header.png") });
       return `Header showed ${JSON.stringify(brand)}.`;
     },
   );
@@ -1708,15 +1975,25 @@ async function phaseP1After() {
       await page.goto(`${BASE}/settings/general`);
       await expect(page.getByLabel("Organization name")).toHaveValue(ORG_NAME);
       await expect(page.locator('main img[src^="data:image/png"]').first()).toBeVisible();
-      const tzShown = await page.getByRole("combobox", { name: "Default timezone" }).inputValue().catch(() => "not read");
+      const tzShown = await page
+        .getByRole("combobox", { name: "Default timezone" })
+        .inputValue()
+        .catch(() => "not read");
       const rows = await outstandingRows(page);
       const labels = rows.map((r) => r.label).sort();
-      must(JSON.stringify(labels) === JSON.stringify(["AI analysis", "E-signature"]), `rows ${JSON.stringify(rows)}`);
+      must(
+        JSON.stringify(labels) === JSON.stringify(["AI analysis", "E-signature"]),
+        `rows ${JSON.stringify(rows)}`,
+      );
       await page.goto(`${BASE}/settings/users`);
       await expect(page.getByText("Rowan Lee")).toBeVisible();
       await expect(page.getByText("Sam Ortiz")).toBeVisible();
       must((await page.getByText("Unsent Person").count()) === 0, "unsent invite listed");
-      for (const p of ["/settings/authentication", "/settings/integrations/e-signature", "/settings/ai-analysis"]) {
+      for (const p of [
+        "/settings/authentication",
+        "/settings/integrations/e-signature",
+        "/settings/ai-analysis",
+      ]) {
         await page.goto(`${BASE}${p}`);
         await page.waitForLoadState("networkidle");
         must(new URL(page.url()).pathname === p, `${p} redirected to ${page.url()}`);
@@ -1728,10 +2005,19 @@ async function phaseP1After() {
       await emailLink.click();
       await expect(page).toHaveURL(/\/settings\/email$/);
       await expect(page.getByText(/^Sender: /).first()).toBeVisible();
-      const inApp = (await page.getByText(/^Sender: /).first().textContent()).trim();
-      must((await page.getByText(/Managed by your deployment configuration/).count()) === 0, "app relay shown as deployment-managed");
+      const inApp = (
+        await page
+          .getByText(/^Sender: /)
+          .first()
+          .textContent()
+      ).trim();
+      must(
+        (await page.getByText(/Managed by your deployment configuration/).count()) === 0,
+        "app relay shown as deployment-managed",
+      );
       const controls = [];
-      for (const name of ["Send test email", "Replace relay", "Clear relay"]) if (await button(page, name).count()) controls.push(name);
+      for (const name of ["Send test email", "Replace relay", "Clear relay"])
+        if (await button(page, name).count()) controls.push(name);
       return `General showed the saved name, the PNG logo and Default timezone "${tzShown}". Setup checklist rows after Finish: ${JSON.stringify(rows)}. Users listed Rowan Lee and Sam Ortiz and not the unsent entry. /settings/authentication, /settings/integrations/e-signature and /settings/ai-analysis opened. Settings -> Advanced -> Outbound email showed the app-saved relay ("${inApp}") with ${JSON.stringify(controls)}, and no "Managed by your deployment configuration" note.`;
     },
   );
@@ -1755,11 +2041,19 @@ async function phaseP2() {
         const email = rows.find((r) => r.label === "Email");
         must(email && email.href === "/settings/email", `rows ${JSON.stringify(rows)}`);
         await page.screenshot({ path: path.join(here, "p2-checklist-email-row.png") });
-        await page.getByRole("list", { name: "Outstanding setup steps" }).getByRole("link", { name: "Email", exact: true }).click();
+        await page
+          .getByRole("list", { name: "Outstanding setup steps" })
+          .getByRole("link", { name: "Email", exact: true })
+          .click();
         await expect(page).toHaveURL(/\/settings\/email$/);
         await page.waitForLoadState("networkidle");
         await expect(page.getByText(/sets SMTP_URL but not SMTP_FROM/).first()).toBeVisible();
-        const text = (await page.getByText(/sets SMTP_URL but not SMTP_FROM/).first().textContent()).trim();
+        const text = (
+          await page
+            .getByText(/sets SMTP_URL but not SMTP_FROM/)
+            .first()
+            .textContent()
+        ).trim();
         const nav = page.getByRole("navigation", { name: "Settings sections" });
         const current = await nav.locator('a[aria-current="page"]').allTextContents();
         return `/settings/general stayed at ${landed}. Setup checklist rows ${JSON.stringify(rows)}. The Email row opened ${pathOf(page)} (Settings nav current ${JSON.stringify(current)}), which said "${text}".`;
@@ -1791,7 +2085,10 @@ async function phaseC1() {
       await page.waitForTimeout(1500);
       const note = await page.getByLabel("Setup token").evaluate((el) => el.validationMessage);
       const shown = await page.getByText(TOKEN_MESSAGE).count();
-      must(shown > 0, `the token message did not show. The browser's required-field check blocked the submit with "${note}", no request reached the app, and the page stayed on ${pathOf(page)}`);
+      must(
+        shown > 0,
+        `the token message did not show. The browser's required-field check blocked the submit with "${note}", no request reached the app, and the page stayed on ${pathOf(page)}`,
+      );
       return `The page showed "${TOKEN_MESSAGE}".`;
     },
     { continueOnFail: true },
@@ -1815,7 +2112,10 @@ async function phaseC1() {
       await page.waitForLoadState("networkidle");
       must(new URL(page.url()).pathname === "/", `ended at ${page.url()}`);
       const onboarding = await getJson(context, "/api/v1/onboarding");
-      must(onboarding.completed === true && onboarding.steps.review.done === false, JSON.stringify(onboarding));
+      must(
+        onboarding.completed === true && onboarding.steps.review.done === false,
+        JSON.stringify(onboarding),
+      );
       await page.goto(`${BASE}/welcome`);
       await page.waitForLoadState("networkidle");
       must(new URL(page.url()).pathname === "/", `welcome reopened at ${page.url()}`);
@@ -1853,14 +2153,29 @@ async function phaseC2() {
     "Each Set up later moves on. With email set by the deployment environment, Outbound email is read-only, has no Set up later, and Continue is available.",
     async () => {
       const seen = [];
-      for (const [next, n] of [["Authentication", 3], ["Business-user portal", 4], ["Outbound email", 5]]) {
+      for (const [next, n] of [
+        ["Authentication", 3],
+        ["Business-user portal", 4],
+        ["Outbound email", 5],
+      ]) {
         await button(page, "Set up later").click();
         seen.push(await expectStep(page, next, n));
       }
-      const text = (await page.getByText(/Outbound email is set by the deployment environment/).textContent()).trim();
+      const text = (
+        await page.getByText(/Outbound email is set by the deployment environment/).textContent()
+      ).trim();
       for (const label of ["SMTP server", "Port", "Connection security", "Sender email"])
-        must((await page.getByLabel(label, { exact: true }).count()) === 0, `${label} field is shown`);
-      for (const name of ["Save relay", "Send test email", "Clear relay", "Replace relay", "Set up later"])
+        must(
+          (await page.getByLabel(label, { exact: true }).count()) === 0,
+          `${label} field is shown`,
+        );
+      for (const name of [
+        "Save relay",
+        "Send test email",
+        "Clear relay",
+        "Replace relay",
+        "Set up later",
+      ])
         must((await button(page, name).count()) === 0, `${name} is shown`);
       await expect(button(page, "Continue")).toBeEnabled();
       return `${seen.join(" -> ")}. The step said "${text}" with no relay fields, no Save relay, Send test email, Replace relay, Clear relay or Set up later, and Continue enabled.`;
@@ -1882,7 +2197,10 @@ async function phaseC2() {
       await expect(page).toHaveURL(`${BASE}/`);
       await page.waitForLoadState("networkidle");
       const onboarding = await getJson(context, "/api/v1/onboarding");
-      must(onboarding.completed === true && onboarding.steps.review.done === false, JSON.stringify(onboarding));
+      must(
+        onboarding.completed === true && onboarding.steps.review.done === false,
+        JSON.stringify(onboarding),
+      );
       await page.goto(`${BASE}/welcome`);
       await page.waitForLoadState("networkidle");
       must(new URL(page.url()).pathname === "/", `welcome reopened at ${page.url()}`);
@@ -1897,12 +2215,24 @@ async function phaseC2() {
       const rows = await outstandingRows(page);
       const labels = rows.map((r) => r.label);
       must(
-        JSON.stringify(labels) === JSON.stringify(["Organization", "Business-user portal", "Invite your team", "E-signature", "AI analysis", "Review seeded types"]),
+        JSON.stringify(labels) ===
+          JSON.stringify([
+            "Organization",
+            "Business-user portal",
+            "Invite your team",
+            "E-signature",
+            "AI analysis",
+            "Review seeded types",
+          ]),
         `rows ${JSON.stringify(rows)}`,
       );
-      for (const r of rows.filter((x) => x.label !== "Review seeded types")) must(r.href?.startsWith("/settings/"), `${r.label} not linked`);
+      for (const r of rows.filter((x) => x.label !== "Review seeded types"))
+        must(r.href?.startsWith("/settings/"), `${r.label} not linked`);
       const list = page.getByRole("list", { name: "Outstanding setup steps" });
-      await list.locator("li", { hasText: "Review seeded types" }).getByRole("button", { name: "Mark as reviewed" }).click();
+      await list
+        .locator("li", { hasText: "Review seeded types" })
+        .getByRole("button", { name: "Mark as reviewed" })
+        .click();
       await expect(list.getByText("Review seeded types")).toHaveCount(0);
       const onboarding = await getJson(context, "/api/v1/onboarding");
       must(onboarding.steps.review.done === true, "review not recorded");
@@ -1930,12 +2260,20 @@ async function phaseC3() {
       await createAdministrator(page);
       await expectStep(page, "Welcome to OpenLaw", 1);
       await button(page, "Get started").click();
-      for (const [next, n] of [["Authentication", 3], ["Business-user portal", 4], ["Outbound email", 5]]) {
+      for (const [next, n] of [
+        ["Authentication", 3],
+        ["Business-user portal", 4],
+        ["Outbound email", 5],
+      ]) {
         await button(page, "Set up later").click();
         await expectStep(page, next, n);
       }
       await button(page, "Continue").click();
-      for (const [next, n] of [["E-signature", 7], ["AI analysis", 8], ["Review", 9]]) {
+      for (const [next, n] of [
+        ["E-signature", 7],
+        ["AI analysis", 8],
+        ["Review", 9],
+      ]) {
         await button(page, "Set up later").click();
         await expectStep(page, next, n);
       }
@@ -1993,7 +2331,9 @@ async function phaseR() {
     async () => {
       await fillSetup(page, { token: "", password: PASSWORD, confirm: PASSWORD });
       const sent = [];
-      const listener = (r) => { if (r.url().includes("/api/v1/auth/setup") && r.method() === "POST") sent.push(r.url()); };
+      const listener = (r) => {
+        if (r.url().includes("/api/v1/auth/setup") && r.method() === "POST") sent.push(r.url());
+      };
       page.on("request", listener);
       await button(page, "Create Administrator").click();
       await page.waitForTimeout(1500);
@@ -2003,7 +2343,10 @@ async function phaseR() {
       const note = await field.evaluate((el) => el.validationMessage);
       must(missing, "the empty field was not reported missing");
       must(sent.length === 0, `the form was sent ${sent.length} time(s)`);
-      must((await page.getByText(TOKEN_MESSAGE).count()) === 0, "the token message showed for an empty field");
+      must(
+        (await page.getByText(TOKEN_MESSAGE).count()) === 0,
+        "the token message showed for an empty field",
+      );
       await expect(page).toHaveURL(/\/auth\/setup$/);
       await stillEmpty();
       return `The browser stopped the form with "${note}" on Setup token. No POST /api/v1/auth/setup was sent, the token message did not show, the page stayed on /auth/setup and needsSetup stayed true.`;
@@ -2028,7 +2371,9 @@ async function phaseR() {
       await fillSetup(page, { token: SETUP_TOKEN, password: "Short12", confirm: "Short12" });
       await button(page, "Create Administrator").click();
       await page.waitForTimeout(800);
-      const tooShort = await page.getByLabel("Password", { exact: true }).evaluate((el) => el.validity.tooShort);
+      const tooShort = await page
+        .getByLabel("Password", { exact: true })
+        .evaluate((el) => el.validity.tooShort);
       must(tooShort, "the Password field did not report tooShort");
       await stillEmpty();
       return "The Password field reported a too-short value, the page stayed on /auth/setup, and needsSetup stayed true.";

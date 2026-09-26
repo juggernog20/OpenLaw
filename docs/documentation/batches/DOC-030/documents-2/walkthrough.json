@@ -90,18 +90,8 @@
       "note": "101 MiB of zero bytes, one MiB over the lab's default upload ceiling: the intentionally failing file"
     }
   ],
-  "sections": [
-    "setup",
-    "folders",
-    "repository",
-    "knowledge",
-    "business",
-    "teardown"
-  ],
-  "roles": [
-    "administrator",
-    "legal_team_member"
-  ],
+  "sections": ["setup", "folders", "repository", "knowledge", "business", "teardown"],
+  "roles": ["administrator", "legal_team_member"],
   "stamp": "09251315",
   "settingsChanged": [
     {
@@ -1531,7 +1521,5 @@
       "at": "2026-09-25T13:30:47.511Z"
     }
   ],
-  "screenshots": [
-    "docs/documentation/batches/DOC-030/documents-2/legal-partial-import.png"
-  ]
+  "screenshots": ["docs/documentation/batches/DOC-030/documents-2/legal-partial-import.png"]
 }

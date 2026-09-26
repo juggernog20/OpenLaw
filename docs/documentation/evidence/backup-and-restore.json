@@ -41,9 +41,7 @@
   "scenarios": [
     {
       "id": "V-C47",
-      "coverage": [
-        "C47"
-      ],
+      "coverage": ["C47"],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [

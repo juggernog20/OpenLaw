@@ -52,9 +52,7 @@
   "scenarios": [
     {
       "id": "V-C46",
-      "coverage": [
-        "C46"
-      ],
+      "coverage": ["C46"],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [

@@ -129,7 +129,12 @@ function saveLog() {
 function secretsToRedact() {
   const values = new Set();
   for (const [k, v] of Object.entries(state))
-    if (typeof v === "string" && v.length >= 8 && /Password|Token|Secret|ApiKey|Key$|minioUser|Link$/.test(k) && !/Sha$/.test(k))
+    if (
+      typeof v === "string" &&
+      v.length >= 8 &&
+      /Password|Token|Secret|ApiKey|Key$|minioUser|Link$/.test(k) &&
+      !/Sha$/.test(k)
+    )
       values.add(v);
   const envFile = path.join(INSTALL, ".env");
   if (existsSync(envFile)) {
@@ -176,7 +181,9 @@ async function step(scenario, role, method, action, expected, fn) {
     entry.result = "fail";
   }
   entry.at = new Date().toISOString();
-  console.log(`${entry.result.toUpperCase()} [${scenario} ${role}/${method}] ${action}\n    ${entry.actual}`);
+  console.log(
+    `${entry.result.toUpperCase()} [${scenario} ${role}/${method}] ${action}\n    ${entry.actual}`,
+  );
   saveLog();
   return entry;
 }
@@ -201,7 +208,12 @@ function sh(cmd, { cwd = INSTALL, timeout = 900_000, env = {} } = {}) {
     timeout,
     maxBuffer: 64 * 1024 * 1024,
   });
-  return { code: r.status, stdout: r.stdout ?? "", stderr: r.stderr ?? "", ms: Date.now() - started };
+  return {
+    code: r.status,
+    stdout: r.stdout ?? "",
+    stderr: r.stderr ?? "",
+    ms: Date.now() - started,
+  };
 }
 const compose = (args, opts) => sh(`docker compose ${args}`, opts);
 const up = (services = "") => compose(`up -d --no-build --pull never ${services}`);
@@ -259,7 +271,12 @@ function containerState(service) {
     .filter(Boolean)
     .map((l) => JSON.parse(l));
   return rows[0]
-    ? { state: rows[0].State, health: rows[0].Health, status: rows[0].Status, exit: rows[0].ExitCode }
+    ? {
+        state: rows[0].State,
+        health: rows[0].Health,
+        status: rows[0].Status,
+        exit: rows[0].ExitCode,
+      }
     : null;
 }
 function logsSince(service, since) {
@@ -424,7 +441,9 @@ function textFile(name, bytes) {
 }
 const sha = (buf) => createHash("sha256").update(buf).digest("hex");
 async function upload(api, contractNumber, file) {
-  const r = await api.post(`/api/v1/contracts/${contractNumber}/documents`, { multipart: { file } });
+  const r = await api.post(`/api/v1/contracts/${contractNumber}/documents`, {
+    multipart: { file },
+  });
   const body = await json(r);
   if (r.status() !== 201) return { status: r.status(), body };
   const doc = body.document;
@@ -497,7 +516,9 @@ phases.prep = async () => {
       expect(e.code === 0, `env block exited ${e.code}`);
       // No image is built here: the images lab.mjs built from the pinned commit are tagged for
       // this project, so compose.operator.yml names them the way install.md names its own.
-      const t1 = sh(`docker tag ${APP_IMAGE_ID} ${APP_TAG} && docker tag ${ENGINE_IMAGE_ID} ${ENGINE_TAG}`);
+      const t1 = sh(
+        `docker tag ${APP_IMAGE_ID} ${APP_TAG} && docker tag ${ENGINE_IMAGE_ID} ${ENGINE_TAG}`,
+      );
       expect(t1.code === 0, `tag exited ${t1.code}: ${firstLines(t1.stderr)}`);
       writeFileSync(
         path.join(INSTALL, "compose.operator.yml"),
@@ -519,16 +540,25 @@ phases.prep = async () => {
         PORT: String(APP_PORT),
       });
       const q = compose("config --quiet");
-      expect(q.code === 0 && q.stdout.trim() === "" && q.stderr.trim() === "", `config --quiet: ${q.code} ${firstLines(q.stdout + q.stderr)}`);
+      expect(
+        q.code === 0 && q.stdout.trim() === "" && q.stderr.trim() === "",
+        `config --quiet: ${q.code} ${firstLines(q.stdout + q.stderr)}`,
+      );
       const labels = sh(
         `docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' ${APP_TAG} ${ENGINE_TAG}`,
-      ).stdout.trim().split("\n");
-      expect(labels.every((l) => l === COMMIT), `image revision labels ${labels}`);
+      )
+        .stdout.trim()
+        .split("\n");
+      expect(
+        labels.every((l) => l === COMMIT),
+        `image revision labels ${labels}`,
+      );
       log.images.app = APP_IMAGE_ID;
       log.images.worker = APP_IMAGE_ID;
       log.images["doc-engine"] = ENGINE_IMAGE_ID;
       log.images.tags = { app: APP_TAG, engine: ENGINE_TAG };
-      log.images.builtBy = "scripts/documentation/lab.mjs up from 067c1646 (the work2 lab's images); tagged, not rebuilt";
+      log.images.builtBy =
+        "scripts/documentation/lab.mjs up from 067c1646 (the work2 lab's images); tagged, not rebuilt";
       state.secretKeySha = sha(envValue("OPENLAW_SECRET_KEY"));
       state.authSecretSha = sha(envValue("AUTH_SECRET"));
       saveState();
@@ -625,9 +655,13 @@ volumes:
       const ps = compose("ps --format '{{.Service}} {{.State}}'").stdout.trim().split("\n").sort();
       const imgs = {};
       for (const s of ["relay", "minio", "azurite", "extdb", "proxy"])
-        imgs[s] = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q ${s})`, { cwd: FIX }).stdout.trim();
+        imgs[s] = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q ${s})`, {
+          cwd: FIX,
+        }).stdout.trim();
       log.fixtureImages = imgs;
-      log.images.postgres = sh(`docker inspect --format '{{.Image}}' $(docker compose ps -q postgres)`).stdout.trim();
+      log.images.postgres = sh(
+        `docker inspect --format '{{.Image}}' $(docker compose ps -q postgres)`,
+      ).stdout.trim();
       return `up -d --no-build --pull never exited 0; readyz 200; docker compose ps: ${ps.join("; ")}. Fixture project ${FX_PROJECT} started: Mailpit as the relay stand-in (relay:1025 on the installation's backend network, UI ${MAIL_UI}), MinIO (${MINIO_HOST}, alias minio), Azurite (${AZURITE_HOST}, alias azurite), a separate postgres:16 (extdb, backend network only), and caddy:2-alpine on the host network serving ${ORIGIN} with "reverse_proxy 127.0.0.1:${APP_PORT}" and its internal CA. Fixture image IDs: ${JSON.stringify(imgs)}.`;
     },
   );
@@ -650,7 +684,9 @@ phases.firstrun = async () => {
         expect(r.code === 0, `restart exited ${r.code}`);
         expect((await waitReady()) === 200, "not ready");
         const text = logsSince("app", since);
-        const m = text.match(/Paste this setup token into the setup screen:\s*\n(?:.*\|)?\s*\n(?:.*\|)?\s+(\S+)/);
+        const m = text.match(
+          /Paste this setup token into the setup screen:\s*\n(?:.*\|)?\s*\n(?:.*\|)?\s+(\S+)/,
+        );
         expect(m, `no token line after restart ${i + 1}: ${firstLines(text, 3)}`);
         tokens.push(m[1]);
       }
@@ -686,7 +722,10 @@ phases.firstrun = async () => {
       expect(u.code === 0, `up exited ${u.code}`);
       expect((await waitReady()) === 200, "not ready");
       const text = logsSince("app", since);
-      expect(/The setup screen asks for the token in SETUP_TOKEN\./.test(text), "no SETUP_TOKEN log line");
+      expect(
+        /The setup screen asks for the token in SETUP_TOKEN\./.test(text),
+        "no SETUP_TOKEN log line",
+      );
       expect(!/Paste this setup token/.test(text), "a generated token was still printed");
       const { page, context } = await newSession();
       try {
@@ -706,7 +745,9 @@ phases.firstrun = async () => {
         const stillSetup = await page.getByRole("heading", { name: "Set up OpenLaw" }).count();
         expect(stillSetup === 1, "the old token was accepted");
         await fill(state.setupToken);
-        await page.getByRole("heading", { name: "Welcome to OpenLaw" }).waitFor({ timeout: 30_000 });
+        await page
+          .getByRole("heading", { name: "Welcome to OpenLaw" })
+          .waitFor({ timeout: 30_000 });
         return `After up, the app logged "First-run setup is open. The setup screen asks for the token in SETUP_TOKEN." and printed no generated token. On ${ORIGIN} the "Set up OpenLaw" form with the earlier printed token showed "${refusal}" and stayed on setup. With the SETUP_TOKEN value, Create Administrator created the fictional ${ADMIN.name} and opened "Welcome to OpenLaw".`;
       } finally {
         await context.close();
@@ -741,7 +782,9 @@ phases.firstrun = async () => {
       "The relay saved in the wizard delivers a test email; the wizard finishes.",
       async () => {
         await page.goto(ORIGIN);
-        await page.getByRole("heading", { name: "Welcome to OpenLaw" }).waitFor({ timeout: 30_000 });
+        await page
+          .getByRole("heading", { name: "Welcome to OpenLaw" })
+          .waitFor({ timeout: 30_000 });
         await page.getByRole("button", { name: "Get started" }).click();
         await page.getByLabel("Organization name").fill("DOC-030 operator Organization");
         for (let i = 0; i < 8; i++) {
@@ -792,7 +835,7 @@ phases.firstrun = async () => {
 };
 
 phases.accept = async () => {
-    await step(
+  await step(
     "V-C45",
     "operator",
     "container-operation",
@@ -811,12 +854,21 @@ phases.accept = async () => {
         const pre = await apiClient(ORIGIN, COLLEAGUE.email, state.colleaguePassword);
         if (pre.signInStatus === 200) {
           await s.page.goto(state.inviteLink);
-          await s.page.getByText(/expired or was already used|not valid/).first().waitFor({ timeout: 15_000 }).catch(() => {});
-          const note = (await s.page.locator("body").innerText()).split("\n").find((l) => /expired|already used|not valid/.test(l));
+          await s.page
+            .getByText(/expired or was already used|not valid/)
+            .first()
+            .waitFor({ timeout: 15_000 })
+            .catch(() => {});
+          const note = (await s.page.locator("body").innerText())
+            .split("\n")
+            .find((l) => /expired|already used|not valid/.test(l));
           return `The first attempt (logged above as failed) had already set the password: it waited for a page change, but the page stays on /auth/set-password and shows "Password set". The Legal Team Member now signs in through the proxy with that password (HTTP 200). Opening the same invitation link again shows "${note ?? "no message"}".`;
         }
         await s.page.goto(state.inviteLink);
-        await s.page.getByLabel(/^(New password|Password)$/).first().fill(state.colleaguePassword);
+        await s.page
+          .getByLabel(/^(New password|Password)$/)
+          .first()
+          .fill(state.colleaguePassword);
         await s.page.getByLabel(/Confirm/).fill(state.colleaguePassword);
         await s.page.getByRole("button", { name: /Set password|Save|Continue/ }).click();
         await s.page.getByText("Password set").first().waitFor({ timeout: 30_000 });
@@ -878,7 +930,10 @@ phases.proxy = async () => {
       expect((await waitReady()) === 200, "not ready");
       const inContainer = containerEnv("app", "TRUSTED_PROXIES");
       const warned = /TRUSTED_PROXIES is not set\./.test(logsSince("app", since));
-      expect(inContainer === "127.0.0.1,::1" && !warned, `container "${inContainer}", warned ${warned}`);
+      expect(
+        inContainer === "127.0.0.1,::1" && !warned,
+        `container "${inContainer}", warned ${warned}`,
+      );
       return `up exited 0 and recreated the app. Its TRUSTED_PROXIES is 127.0.0.1,::1 and the start log has no TRUSTED_PROXIES warning.`;
     },
   );
@@ -931,7 +986,9 @@ phases["proxy-diagnose"] = async () => {
 
 async function liveUpdate(base) {
   const a = await signIn(base, ADMIN.email, state.adminPassword);
-  const contract = await json(await a.page.request.get(`${base}/api/v1/contracts/${state.contractNumber}`));
+  const contract = await json(
+    await a.page.request.get(`${base}/api/v1/contracts/${state.contractNumber}`),
+  );
   const contractId = contract.contract.id;
   await a.page.goto(`${base}/contracts/${state.contractNumber}`);
   await a.page.waitForLoadState("networkidle").catch(() => {});
@@ -957,7 +1014,12 @@ async function liveUpdate(base) {
   const c = await apiClient(base, ADMIN.email, state.adminPassword);
   const sent = Date.now();
   const post = await c.ctx.post("/api/v1/comments", {
-    data: { entityType: "contract", entityId: contractId, body: `DOC-030 operator live update ${sent}`, visibility: "working_team" },
+    data: {
+      entityType: "contract",
+      entityId: contractId,
+      body: `DOC-030 operator live update ${sent}`,
+      visibility: "working_team",
+    },
   });
   const postStatus = post.status();
   await c.ctx.dispose();
@@ -983,20 +1045,34 @@ phases.origin = async () => {
     "The standard Compose file publishes on 127.0.0.1:PORT; APP_BIND=0.0.0.0 changes it to all addresses; removing APP_BIND and recreating returns to 127.0.0.1; with the default the port is unreachable on other host addresses.",
     async () => {
       const p1 = compose("port app 3000").stdout.trim();
-      const lan1 = sh(`curl -s -o /dev/null -m 5 -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`).stdout.trim();
-      const ts1 = sh(`curl -s -o /dev/null -m 5 -w '%{http_code}' http://${TAILNET_IP}:${APP_PORT}/readyz`).stdout.trim();
+      const lan1 = sh(
+        `curl -s -o /dev/null -m 5 -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`,
+      ).stdout.trim();
+      const ts1 = sh(
+        `curl -s -o /dev/null -m 5 -w '%{http_code}' http://${TAILNET_IP}:${APP_PORT}/readyz`,
+      ).stdout.trim();
       setEnv({ APP_BIND: "0.0.0.0" });
       expect(up().code === 0, "up failed");
       await waitReady();
       const p2 = compose("port app 3000").stdout.trim();
-      const lan2 = sh(`curl -s -o /dev/null -m 5 -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`).stdout.trim();
+      const lan2 = sh(
+        `curl -s -o /dev/null -m 5 -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`,
+      ).stdout.trim();
       setEnv({ APP_BIND: null });
       expect(up().code === 0, "up failed");
       await waitReady();
       const p3 = compose("port app 3000").stdout.trim();
-      const lan3 = sh(`curl -s -o /dev/null -m 5 -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`).stdout.trim();
-      expect(p1 === `127.0.0.1:${APP_PORT}` && p3 === p1 && p2 === `0.0.0.0:${APP_PORT}`, `ports ${p1} / ${p2} / ${p3}`);
-      expect(lan1 === "000" && ts1 === "000" && lan2 === "200" && lan3 === "000", `lan ${lan1} ts ${ts1} / ${lan2} / ${lan3}`);
+      const lan3 = sh(
+        `curl -s -o /dev/null -m 5 -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`,
+      ).stdout.trim();
+      expect(
+        p1 === `127.0.0.1:${APP_PORT}` && p3 === p1 && p2 === `0.0.0.0:${APP_PORT}`,
+        `ports ${p1} / ${p2} / ${p3}`,
+      );
+      expect(
+        lan1 === "000" && ts1 === "000" && lan2 === "200" && lan3 === "000",
+        `lan ${lan1} ts ${ts1} / ${lan2} / ${lan3}`,
+      );
       return `docker compose port app 3000 printed ${p1}. /readyz on http://${LAN_IP}:${APP_PORT} and http://${TAILNET_IP}:${APP_PORT} got no connection (curl code ${lan1}, ${ts1}). With APP_BIND=0.0.0.0 and up, it printed ${p2} and the LAN address answered ${lan2}. After removing APP_BIND and up again it printed ${p3} and the LAN address got no connection (${lan3}).`;
     },
   );
@@ -1019,7 +1095,10 @@ phases.origin = async () => {
       );
       sh("rm compose.private.yml");
       const ports = JSON.parse(r.stdout);
-      expect(ports.length === 1 && ports[0].host_ip === "127.0.0.1" && ports[0].published === "3000", r.stdout);
+      expect(
+        ports.length === 1 && ports[0].host_ip === "127.0.0.1" && ports[0].published === "3000",
+        r.stdout,
+      );
       return `With compose.private.yml added to the file list, PORT=${APP_PORT} in .env and APP_BIND=0.0.0.0 in the shell, the resolved app ports were ${r.stdout.trim()} (only the port list was read from config --format json; nothing else was printed). Without the overlay they were ${base.stdout.trim()}. The overlay was not started (host port 3000 is taken by an unrelated local service) and was removed.`;
     },
   );
@@ -1033,7 +1112,10 @@ phases.origin = async () => {
       const bad = await apiClient(ORIGIN, ADMIN.email, state.adminPassword, "https://evil.example");
       const direct = await apiClient(LOCAL, ADMIN.email, state.adminPassword, LOCAL);
       const good = await apiClient(ORIGIN, ADMIN.email, state.adminPassword);
-      expect(bad.signInStatus === 403 && direct.signInStatus === 403 && good.signInStatus === 200, `${bad.signInStatus} ${direct.signInStatus} ${good.signInStatus}`);
+      expect(
+        bad.signInStatus === 403 && direct.signInStatus === 403 && good.signInStatus === 200,
+        `${bad.signInStatus} ${direct.signInStatus} ${good.signInStatus}`,
+      );
       return `Through the proxy, sign-in with Origin https://evil.example answered ${bad.signInStatus}; on the direct address ${LOCAL} with that address as Origin it answered ${direct.signInStatus}; with Origin ${ORIGIN} it answered ${good.signInStatus}.`;
     },
   );
@@ -1054,14 +1136,20 @@ phases["origin-upload"] = async () => {
       saveState();
       const f = pdfFile("doc030-local.pdf", "DOC-030 operator local storage check");
       const u = await upload(api, state.contractNumber, f);
-      expect(u.status === 201, `upload ${u.status} ${String(JSON.stringify(u.body)).slice(0, 160)}`);
+      expect(
+        u.status === 201,
+        `upload ${u.status} ${String(JSON.stringify(u.body)).slice(0, 160)}`,
+      );
       const d = await download(api, u);
       const t = await waitText(api, u);
       state.docs = { local: { ...u } };
       saveState();
       const ref = storageRef(u.versionId);
       const live = await liveUpdate(ORIGIN);
-      expect(d.matches && t.state === "ready", `download ${d.status} ${d.matches}; text ${t.state}`);
+      expect(
+        d.matches && t.state === "ready",
+        `download ${d.status} ${d.matches}; text ${t.state}`,
+      );
       return `Contract ${state.contractNumber} created through ${ORIGIN}. A PDF upload answered 201 (SHA-256 ${u.sha256.slice(0, 12)}…); the download answered 200 with identical bytes; the worker's text state became ready. Stored reference prefix: ${ref.split(":")[0]}:. ${live}`;
     },
   );
@@ -1085,7 +1173,10 @@ phases.uploads = async () => {
       expect((await waitReady()) === 200, "not ready");
       const api = await adminApi();
       const r = await upload1m(api, 1024 * 1024 + 1);
-      expect(containerEnv("app", "MAX_UPLOAD_MB") === "" && r.status === 201, `env ${containerEnv("app", "MAX_UPLOAD_MB")} upload ${r.status}`);
+      expect(
+        containerEnv("app", "MAX_UPLOAD_MB") === "" && r.status === 201,
+        `env ${containerEnv("app", "MAX_UPLOAD_MB")} upload ${r.status}`,
+      );
       return `After restart the app container's MAX_UPLOAD_MB was still empty and an upload of 1,048,577 bytes answered 201.`;
     },
   );
@@ -1120,8 +1211,17 @@ phases.uploads = async () => {
         const ro = await s.page.getByLabel("Maximum file size (MiB)").getAttribute("readonly");
         const text = await s.page.locator("main").innerText();
         const save = await s.page.getByRole("button", { name: "Save" }).count();
-        expect(value === "1" && ro !== null && /Deployment configuration · Read only/.test(text) && save === 0, `value ${value} ro ${ro} save ${save}`);
-        const allLocked = /The deployment configuration sets this value\. Change it there, then restart the API and worker\./.test(text);
+        expect(
+          value === "1" &&
+            ro !== null &&
+            /Deployment configuration · Read only/.test(text) &&
+            save === 0,
+          `value ${value} ro ${ro} save ${save}`,
+        );
+        const allLocked =
+          /The deployment configuration sets this value\. Change it there, then restart the API and worker\./.test(
+            text,
+          );
         return `File uploads shows Maximum file size (MiB) = ${value}, read only, with "Deployment configuration · Read only" under it. No Save button; the page says "${allLocked ? "The deployment configuration sets this value. Change it there, then restart the API and worker." : "(no all-locked note)"}".`;
       },
     );
@@ -1132,7 +1232,9 @@ phases.uploads = async () => {
       "Try to save a different upload limit through the API while MAX_UPLOAD_MB is pinned",
       "The API refuses a different value for a pinned key.",
       async () => {
-        const st = await json(await s.page.request.get(`${ORIGIN}/api/v1/advanced-settings/uploads`));
+        const st = await json(
+          await s.page.request.get(`${ORIGIN}/api/v1/advanced-settings/uploads`),
+        );
         const r = await s.page.request.put(`${ORIGIN}/api/v1/advanced-settings/uploads`, {
           headers: { origin: ORIGIN },
           data: { version: st.version, values: { MAX_UPLOAD_MB: "5" } },
@@ -1197,7 +1299,10 @@ phases.uploads = async () => {
       expect((await waitReady()) === 200, "not ready");
       const api = await adminApi();
       const st = await json(await api.get("/api/v1/advanced-settings/uploads"));
-      expect(st.fields[0].source === "default" && st.fields[0].value === "100", JSON.stringify(st.fields[0]));
+      expect(
+        st.fields[0].source === "default" && st.fields[0].value === "100",
+        JSON.stringify(st.fields[0]),
+      );
       return `After removing MAX_UPLOAD_MB and up, File uploads reports value 100 with source default.`;
     },
   );
@@ -1206,7 +1311,10 @@ phases.uploads = async () => {
 async function fieldSource(page, label) {
   // The source line is the first muted paragraph after the control.
   const box = page.getByLabel(label).locator("xpath=ancestor::div[1]");
-  return (await box.innerText()).split("\n").map((l) => l.trim()).filter(Boolean);
+  return (await box.innerText())
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 }
 async function statusRows(page) {
   await page.getByRole("button", { name: "Refresh" }).click();
@@ -1237,12 +1345,30 @@ phases.advanced = async () => {
         const adv = page.getByRole("button", { name: "Advanced", exact: true });
         await adv.waitFor({ timeout: 20_000 });
         if ((await adv.getAttribute("aria-expanded")) !== "true") await adv.click();
-        const nav = page.getByRole("navigation").filter({ has: page.getByRole("button", { name: "Advanced", exact: true }) }).first();
-        const links = (await nav.getByRole("link").allInnerTexts()).map((t) => t.trim()).filter(Boolean);
+        const nav = page
+          .getByRole("navigation")
+          .filter({ has: page.getByRole("button", { name: "Advanced", exact: true }) })
+          .first();
+        const links = (await nav.getByRole("link").allInnerTexts())
+          .map((t) => t.trim())
+          .filter(Boolean);
         const i = links.indexOf("Outbound email");
         const group = links.slice(i);
-        const want = ["Outbound email", "Authentication", "Audit log", "Instance address", "File uploads", "Document storage", "Document processing", "MCP", "System status"];
-        expect(JSON.stringify(group) === JSON.stringify(want), `links after Outbound email: ${group.join(", ")}`);
+        const want = [
+          "Outbound email",
+          "Authentication",
+          "Audit log",
+          "Instance address",
+          "File uploads",
+          "Document storage",
+          "Document processing",
+          "MCP",
+          "System status",
+        ];
+        expect(
+          JSON.stringify(group) === JSON.stringify(want),
+          `links after Outbound email: ${group.join(", ")}`,
+        );
         return `The Advanced button is the last group in the Settings navigation. Expanded, it lists: ${group.join(", ")}.`;
       },
     );
@@ -1263,9 +1389,17 @@ phases.advanced = async () => {
         const t1 = await fieldSource(page, "Processing timeout (milliseconds)");
         const t2 = await fieldSource(page, "Comparison timeout (milliseconds)");
         const roUrl = await page.getByLabel("Document service address").getAttribute("readonly");
-        const roT1 = await page.getByLabel("Processing timeout (milliseconds)").getAttribute("readonly");
-        expect(inst.includes("Deployment configuration · Read only") && instSave === 0, `instance ${inst}`);
-        expect(url.includes("Deployment configuration · Read only") && roUrl !== null && roT1 === null, `url ${url}`);
+        const roT1 = await page
+          .getByLabel("Processing timeout (milliseconds)")
+          .getAttribute("readonly");
+        expect(
+          inst.includes("Deployment configuration · Read only") && instSave === 0,
+          `instance ${inst}`,
+        );
+        expect(
+          url.includes("Deployment configuration · Read only") && roUrl !== null && roT1 === null,
+          `url ${url}`,
+        );
         expect(t1.includes("Default") && t2.includes("Default"), `timeouts ${t1} ${t2}`);
         return `Instance address: Application address "${await page.goto(`${ORIGIN}/settings/instance`).then(() => page.getByLabel("Application address").inputValue())}" with "${inst.find((l) => /Deployment/.test(l))}" and no Save button. Document processing: Document service address shows "${url.find((l) => /Deployment/.test(l))}" (read only); Processing timeout shows "${t1.at(-1)}" and Comparison timeout "${t2.at(-1)}", both editable, with Test connection and Save.`;
       },
@@ -1284,11 +1418,16 @@ phases.advanced = async () => {
         await page.getByLabel("Processing timeout (milliseconds)").fill("240000");
         await page.getByLabel("Comparison timeout (milliseconds)").fill("500000");
         await page.getByRole("button", { name: "Save" }).click();
-        await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
+        await page
+          .getByText("Settings saved. Restart the API and worker to apply changes.")
+          .waitFor({ timeout: 15_000 });
         const t1 = await fieldSource(page, "Processing timeout (milliseconds)");
         const text = await page.locator("main").innerText();
         const pending = /Saved changes are waiting for a restart\./.test(text);
-        expect(t1.includes("Saved in OpenLaw") && t1.some((l) => l === "Active: 300000") && pending, `${t1} pending ${pending}`);
+        expect(
+          t1.includes("Saved in OpenLaw") && t1.some((l) => l === "Active: 300000") && pending,
+          `${t1} pending ${pending}`,
+        );
         return `Test connection showed "Connection test passed." Save showed "Settings saved. Restart the API and worker to apply changes." Processing timeout now reads ${t1.filter((l) => /Saved|Active/.test(l)).join(" / ")}; Comparison timeout ${(await fieldSource(page, "Comparison timeout (milliseconds)")).filter((l) => /Saved|Active/.test(l)).join(" / ")}. The page shows "Saved changes are waiting for a restart. The active values below are still in use by this API."`;
       },
     );
@@ -1318,16 +1457,29 @@ phases.advanced = async () => {
         await page.goto(`${ORIGIN}/settings/uploads`);
         await page.getByLabel("Maximum file size (MiB)").fill("2");
         await page.getByRole("button", { name: "Save" }).click();
-        await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
-        const up1 = (await fieldSource(page, "Maximum file size (MiB)")).filter((l) => /Saved|Active/.test(l));
+        await page
+          .getByText("Settings saved. Restart the API and worker to apply changes.")
+          .waitFor({ timeout: 15_000 });
+        const up1 = (await fieldSource(page, "Maximum file size (MiB)")).filter((l) =>
+          /Saved|Active/.test(l),
+        );
         await page.goto(`${ORIGIN}/settings/mcp-limits`);
         await page.getByLabel("Calls per hour per credential").fill("500");
         await page.getByLabel("OAuth grant lifetime (days)").fill("30");
         await page.getByRole("button", { name: "Save" }).click();
-        await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
-        const m1 = (await fieldSource(page, "Calls per hour per credential")).filter((l) => /Saved|Active|Default/.test(l));
-        const m2 = (await fieldSource(page, "OAuth grant lifetime (days)")).filter((l) => /Saved|Active|Default/.test(l));
-        expect(up1.includes("Active: 100") && m1.includes("Active: 600") && m2.includes("Active: 90"), `${up1} ${m1} ${m2}`);
+        await page
+          .getByText("Settings saved. Restart the API and worker to apply changes.")
+          .waitFor({ timeout: 15_000 });
+        const m1 = (await fieldSource(page, "Calls per hour per credential")).filter((l) =>
+          /Saved|Active|Default/.test(l),
+        );
+        const m2 = (await fieldSource(page, "OAuth grant lifetime (days)")).filter((l) =>
+          /Saved|Active|Default/.test(l),
+        );
+        expect(
+          up1.includes("Active: 100") && m1.includes("Active: 600") && m2.includes("Active: 90"),
+          `${up1} ${m1} ${m2}`,
+        );
         return `File uploads: ${up1.join(" / ")}. MCP: Calls per hour per credential ${m1.join(" / ")}; OAuth grant lifetime (days) ${m2.join(" / ")}.`;
       },
     );
@@ -1350,7 +1502,10 @@ phases.advanced = async () => {
         await alert.first().waitFor({ timeout: 15_000 });
         const msg = (await alert.first().innerText()).trim();
         await p2.close();
-        expect(msg === "These settings changed in another session. Reload the page before saving.", msg);
+        expect(
+          msg === "These settings changed in another session. Reload the page before saving.",
+          msg,
+        );
         // Put the intended value back.
         await page.goto(`${ORIGIN}/settings/uploads`);
         await page.getByLabel("Maximum file size (MiB)").fill("2");
@@ -1369,8 +1524,16 @@ phases.advanced = async () => {
         await page.goto(`${ORIGIN}/settings/system-status`);
         await page.getByRole("button", { name: "Refresh" }).waitFor({ timeout: 20_000 });
         const st = await statusRows(page);
-        expect(/Database: available/.test(st.text) && /Active storage: local/.test(st.text) && /Document service: http:\/\/doc-engine:8080/.test(st.text), st.text.slice(0, 300));
-        expect(st.rows.length >= 2 && st.rows.every((r) => /Running Restart required/.test(r)), st.rows.join(" | "));
+        expect(
+          /Database: available/.test(st.text) &&
+            /Active storage: local/.test(st.text) &&
+            /Document service: http:\/\/doc-engine:8080/.test(st.text),
+          st.text.slice(0, 300),
+        );
+        expect(
+          st.rows.length >= 2 && st.rows.every((r) => /Running Restart required/.test(r)),
+          st.rows.join(" | "),
+        );
         return `System status shows "Database: available", "Active storage: local", "Document service: http://doc-engine:8080". Rows: ${st.rows.join(" | ")}.`;
       },
     );
@@ -1392,22 +1555,36 @@ phases.advanced = async () => {
         let st;
         for (let i = 0; i < 10; i++) {
           st = await statusRows(s2.page);
-          if (st.rows.filter((r) => /Running Current/.test(r)).length >= 2 && !st.rows.some((r) => /Restart required/.test(r))) break;
+          if (
+            st.rows.filter((r) => /Running Current/.test(r)).length >= 2 &&
+            !st.rows.some((r) => /Restart required/.test(r))
+          )
+            break;
           await sleep(3000);
         }
         const api = s2.page.request;
-        const over = await api.post(`${ORIGIN}/api/v1/contracts/${state.contractNumber}/documents`, {
-          headers: { origin: ORIGIN },
-          multipart: { file: textFile("doc030-2m.txt", Buffer.alloc(2 * 1024 * 1024 + 1, 97)) },
-        });
+        const over = await api.post(
+          `${ORIGIN}/api/v1/contracts/${state.contractNumber}/documents`,
+          {
+            headers: { origin: ORIGIN },
+            multipart: { file: textFile("doc030-2m.txt", Buffer.alloc(2 * 1024 * 1024 + 1, 97)) },
+          },
+        );
         const ok = await api.post(`${ORIGIN}/api/v1/contracts/${state.contractNumber}/documents`, {
           headers: { origin: ORIGIN },
           multipart: { file: textFile("doc030-2m-ok.txt", Buffer.alloc(2 * 1024 * 1024, 97)) },
         });
         const proc = await json(await api.get(`${ORIGIN}/api/v1/advanced-settings/processing`));
         const mcp = await json(await api.get(`${ORIGIN}/api/v1/advanced-settings/mcp`));
-        const active = [...proc.fields, ...mcp.fields].map((f) => `${f.key}=${f.activeValue}`).join(", ");
-        expect(st.rows.every((r) => /Running Current/.test(r)) && over.status() === 413 && ok.status() === 201, `${st.rows} ${over.status()} ${ok.status()}`);
+        const active = [...proc.fields, ...mcp.fields]
+          .map((f) => `${f.key}=${f.activeValue}`)
+          .join(", ");
+        expect(
+          st.rows.every((r) => /Running Current/.test(r)) &&
+            over.status() === 413 &&
+            ok.status() === 201,
+          `${st.rows} ${over.status()} ${ok.status()}`,
+        );
         expect(!proc.restartRequired && !mcp.restartRequired, "restartRequired still true");
         return `After docker compose restart app worker and Refresh: ${st.rows.join(" | ")}. A 2,097,153-byte upload answered ${over.status()} "${(await json(over)).detail}"; 2,097,152 bytes answered ${ok.status()}. Active values: ${active}; neither page reports a pending restart.`;
       } finally {
@@ -1432,15 +1609,26 @@ phases.advanced = async () => {
         } catch (e) {
           await s3.page.screenshot({ path: path.join(PRIVATE, "status-kill.png") });
           const api = await s3.page.request.get(`${ORIGIN}/api/v1/system-status`);
-          throw new Error(`System status page did not render (document ${resp?.status()}, API ${api.status()} ${(await api.text()).slice(0, 300)}): ${(await s3.page.locator("body").innerText()).slice(0, 300)}`);
+          throw new Error(
+            `System status page did not render (document ${resp?.status()}, API ${api.status()} ${(await api.text()).slice(0, 300)}): ${(await s3.page.locator("body").innerText()).slice(0, 300)}`,
+          );
         }
         const down = await statusRows(s3.page);
         compose("start worker");
         await sleep(20_000);
         const back = await statusRows(s3.page);
-        const warn = /An API or worker heartbeat is missing\. Check that both services are running\./.test(down.text);
-        expect(warn && down.rows.some((r) => /^Worker No recent heartbeat/.test(r)), `${down.rows} warn ${warn}`);
-        expect(back.rows.some((r) => /^Worker Running Current/.test(r)), `${back.rows}`);
+        const warn =
+          /An API or worker heartbeat is missing\. Check that both services are running\./.test(
+            down.text,
+          );
+        expect(
+          warn && down.rows.some((r) => /^Worker No recent heartbeat/.test(r)),
+          `${down.rows} warn ${warn}`,
+        );
+        expect(
+          back.rows.some((r) => /^Worker Running Current/.test(r)),
+          `${back.rows}`,
+        );
         return `With the worker stopped for 75 s: ${down.rows.join(" | ")}, and the page showed "An API or worker heartbeat is missing. Check that both services are running." After docker compose start worker and Refresh: ${back.rows.join(" | ")}.`;
       } finally {
         await s3.context.close();
@@ -1456,9 +1644,16 @@ phases.advanced = async () => {
     async () => {
       const api = await adminApi();
       const r = await json(await api.get("/api/v1/audit-log"));
-      const rows = (r.entries ?? r.items ?? r.events ?? r.activity ?? []).filter((e) => JSON.stringify(e).includes("advanced."));
-      expect(rows.length >= 4, `advanced entries ${rows.length}: ${JSON.stringify(r).slice(0, 200)}`);
-      const fields = rows.map((e) => e.payload?.field ?? JSON.stringify(e).match(/advanced\.[a-z_A-Z.]+/)?.[0]);
+      const rows = (r.entries ?? r.items ?? r.events ?? r.activity ?? []).filter((e) =>
+        JSON.stringify(e).includes("advanced."),
+      );
+      expect(
+        rows.length >= 4,
+        `advanced entries ${rows.length}: ${JSON.stringify(r).slice(0, 200)}`,
+      );
+      const fields = rows.map(
+        (e) => e.payload?.field ?? JSON.stringify(e).match(/advanced\.[a-z_A-Z.]+/)?.[0],
+      );
       return `The Audit log API lists ${rows.length} entries for Advanced saves (${[...new Set(fields)].join(", ")}), each with old "[configuration]" and new "[configuration saved; restart required]" and no values.`;
     },
   );
@@ -1478,7 +1673,14 @@ phases.nonadmin = async () => {
         await s.page.waitForLoadState("networkidle").catch(() => {});
         const adv = await s.page.getByRole("button", { name: "Advanced", exact: true }).count();
         const landed = [];
-        for (const p of ["/settings/instance", "/settings/uploads", "/settings/storage", "/settings/document-processing", "/settings/mcp-limits", "/settings/system-status"]) {
+        for (const p of [
+          "/settings/instance",
+          "/settings/uploads",
+          "/settings/storage",
+          "/settings/document-processing",
+          "/settings/mcp-limits",
+          "/settings/system-status",
+        ]) {
           await s.page.goto(`${ORIGIN}${p}`);
           await s.page.waitForLoadState("networkidle").catch(() => {});
           landed.push(`${p} → ${new URL(s.page.url()).pathname}`);
@@ -1491,7 +1693,12 @@ phases.nonadmin = async () => {
           data: { version: "x", values: { MAX_UPLOAD_MB: "9" } },
         });
         codes.push(`PUT uploads ${put.status()}`);
-        expect(adv === 0 && landed.every((l) => l.endsWith("/settings/profile")) && codes.every((c) => c.endsWith("403")), `${adv} ${landed} ${codes}`);
+        expect(
+          adv === 0 &&
+            landed.every((l) => l.endsWith("/settings/profile")) &&
+            codes.every((c) => c.endsWith("403")),
+          `${adv} ${landed} ${codes}`,
+        );
         return `Signed in as the Legal Team Member ${COLLEAGUE.name}: the Settings navigation has no Advanced group. ${landed.join("; ")}. ${codes.join("; ")}.`;
       } finally {
         await s.context.close();
@@ -1517,9 +1724,23 @@ phases["advanced-nav"] = async () => {
         if ((await adv.getAttribute("aria-expanded")) !== "true") await adv.click();
         await sleep(500);
         const rail = page.locator("#settings-rail-advanced");
-        const links = (await rail.getByRole("link").allInnerTexts()).map((t) => t.trim()).filter(Boolean);
-        const all = (await page.locator("nav").last().getByRole("button").allInnerTexts()).map((t) => t.trim()).filter(Boolean);
-        const want = ["Outbound email", "Authentication", "Audit log", "Instance address", "File uploads", "Document storage", "Document processing", "MCP", "System status"];
+        const links = (await rail.getByRole("link").allInnerTexts())
+          .map((t) => t.trim())
+          .filter(Boolean);
+        const all = (await page.locator("nav").last().getByRole("button").allInnerTexts())
+          .map((t) => t.trim())
+          .filter(Boolean);
+        const want = [
+          "Outbound email",
+          "Authentication",
+          "Audit log",
+          "Instance address",
+          "File uploads",
+          "Document storage",
+          "Document processing",
+          "MCP",
+          "System status",
+        ];
         expect(JSON.stringify(links) === JSON.stringify(want), `links: ${links.join(", ")}`);
         return `Settings navigation: the Advanced group button is the last group button (${all.slice(-2).join(", ")}). Expanded, it lists: ${links.join(", ")}.`;
       },
@@ -1545,7 +1766,10 @@ phases["advanced-restart"] = async () => {
         const first = await statusRows(s2.page);
         await sleep(65_000);
         const later = await statusRows(s2.page);
-        expect(later.rows.length === 2 && later.rows.every((r) => /Running Current/.test(r)), later.rows.join(" | "));
+        expect(
+          later.rows.length === 2 && later.rows.every((r) => /Running Current/.test(r)),
+          later.rows.join(" | "),
+        );
         return `Right after the restart, Refresh showed: ${first.rows.join(" | ")}. 65 s later Refresh showed: ${later.rows.join(" | ")}. The API process that was restarted keeps a Running row until its last heartbeat is a minute old (the worker's old row disappears at once), so during the first minute a reader can see an extra API row marked Restart required.`;
       } finally {
         await s2.context.close();
@@ -1569,15 +1793,26 @@ phases["advanced-restart"] = async () => {
         } catch (e) {
           await s3.page.screenshot({ path: path.join(PRIVATE, "status-kill.png") });
           const api = await s3.page.request.get(`${ORIGIN}/api/v1/system-status`);
-          throw new Error(`System status page did not render (document ${resp?.status()}, API ${api.status()} ${(await api.text()).slice(0, 300)}): ${(await s3.page.locator("body").innerText()).slice(0, 300)}`);
+          throw new Error(
+            `System status page did not render (document ${resp?.status()}, API ${api.status()} ${(await api.text()).slice(0, 300)}): ${(await s3.page.locator("body").innerText()).slice(0, 300)}`,
+          );
         }
         const down = await statusRows(s3.page);
         compose("start worker");
         await sleep(20_000);
         const back = await statusRows(s3.page);
-        const warn = /An API or worker heartbeat is missing\. Check that both services are running\./.test(down.text);
-        expect(warn && down.rows.some((r) => /^Worker No recent heartbeat/.test(r)), `${down.rows} warn ${warn}`);
-        expect(back.rows.some((r) => /^Worker Running Current/.test(r)), `${back.rows}`);
+        const warn =
+          /An API or worker heartbeat is missing\. Check that both services are running\./.test(
+            down.text,
+          );
+        expect(
+          warn && down.rows.some((r) => /^Worker No recent heartbeat/.test(r)),
+          `${down.rows} warn ${warn}`,
+        );
+        expect(
+          back.rows.some((r) => /^Worker Running Current/.test(r)),
+          `${back.rows}`,
+        );
         return `75 s after docker compose kill worker: ${down.rows.join(" | ")}, with "An API or worker heartbeat is missing. Check that both services are running." After docker compose start worker and Refresh: ${back.rows.join(" | ")}. (In the earlier attempt, docker compose stop worker removed the worker's row entirely: the page showed the warning and only the API row, not a No recent heartbeat row.)`;
       } finally {
         await s3.context.close();
@@ -1600,7 +1835,8 @@ async function s3Client() {
   });
   return {
     create: (Bucket) => client.send(new CreateBucketCommand({ Bucket })),
-    list: async (Bucket) => (await client.send(new ListObjectsV2Command({ Bucket }))).Contents ?? [],
+    list: async (Bucket) =>
+      (await client.send(new ListObjectsV2Command({ Bucket }))).Contents ?? [],
   };
 }
 async function azureContainer(name, create = false) {
@@ -1649,8 +1885,15 @@ phases.storage = async () => {
         await alert.first().waitFor({ timeout: 20_000 });
         const msg = (await alert.first().innerText()).trim();
         const stillDisabled = await page.getByRole("button", { name: "Save" }).isDisabled();
-        expect(saveDisabled && stillDisabled && /S3_ENDPOINT must use https/.test(msg), `${saveDisabled} ${stillDisabled} ${msg}`);
-        expect(localPath.includes("Deployment configuration · Read only") || localPath.some((l) => /Read only/.test(l)), `local path ${localPath}`);
+        expect(
+          saveDisabled && stillDisabled && /S3_ENDPOINT must use https/.test(msg),
+          `${saveDisabled} ${stillDisabled} ${msg}`,
+        );
+        expect(
+          localPath.includes("Deployment configuration · Read only") ||
+            localPath.some((l) => /Read only/.test(l)),
+          `local path ${localPath}`,
+        );
         return `Bucket doc030-app created in MinIO first. Local storage path reads ${localPath.slice(0, 1).join("")} with "${localPath.find((l) => /Read only/.test(l))}". After choosing S3-compatible storage and entering bucket, endpoint http://minio:9000, path-style Yes and the MinIO keys, Save was disabled. Test connection showed "${msg}" and Save stayed disabled.`;
       },
     );
@@ -1695,7 +1938,9 @@ phases.storage = async () => {
         await page.getByRole("button", { name: "Test connection" }).click();
         await page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
         await page.getByRole("button", { name: "Save" }).click();
-        await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
+        await page
+          .getByText("Settings saved. Restart the API and worker to apply changes.")
+          .waitFor({ timeout: 15_000 });
         await storageForm(page);
         const secretVal = await page.getByLabel("S3 secret access key").inputValue();
         const keyVal = await page.getByLabel("S3 access key ID").inputValue();
@@ -1706,9 +1951,23 @@ phases.storage = async () => {
         const endpoint = await fieldSource(page, "S3 endpoint (optional for AWS)");
         const driver = await fieldSource(page, "Store new documents in");
         const st = await json(await page.request.get(`${ORIGIN}/api/v1/advanced-settings/storage`));
-        const leaked = JSON.stringify(st).includes(state.minioPassword) || JSON.stringify(st).includes(state.minioUser);
-        expect(enabled && disabledAfterEdit && secretVal === "" && keyVal === "" && kept === 2 && !leaked, `${enabled} ${disabledAfterEdit} ${secretVal.length} ${keyVal.length} ${kept} leaked ${leaked}`);
-        expect(bucket.some((l) => /Saved in OpenLaw · Read only/.test(l)) && endpoint.some((l) => /Read only/.test(l)), `${bucket} ${endpoint}`);
+        const leaked =
+          JSON.stringify(st).includes(state.minioPassword) ||
+          JSON.stringify(st).includes(state.minioUser);
+        expect(
+          enabled &&
+            disabledAfterEdit &&
+            secretVal === "" &&
+            keyVal === "" &&
+            kept === 2 &&
+            !leaked,
+          `${enabled} ${disabledAfterEdit} ${secretVal.length} ${keyVal.length} ${kept} leaked ${leaked}`,
+        );
+        expect(
+          bucket.some((l) => /Saved in OpenLaw · Read only/.test(l)) &&
+            endpoint.some((l) => /Read only/.test(l)),
+          `${bucket} ${endpoint}`,
+        );
         return `Test connection showed "Connection test passed." and enabled Save; changing S3 region to eu-west-1 disabled Save until another test passed; Save showed "Settings saved. Restart the API and worker to apply changes." On reload, both credential fields (type ${secretType}) were empty, each with "Credential configured. Leave blank to keep it."; the API state carries no credential value. S3 bucket reads "${bucket.filter((l) => /Saved|Read/.test(l)).join(" ")}", S3 endpoint "${endpoint.filter((l) => /Saved|Read/.test(l)).join(" ")}". Store new documents in: ${driver.filter((l) => /Saved|Active/.test(l)).join(" / ")}.`;
       },
     );
@@ -1725,7 +1984,10 @@ phases.storage = async () => {
           data: { version: st.version, values: { S3_BUCKET: "doc030-other" } },
         });
         const body = await json(r);
-        expect(r.status() === 400 && /existing storage location cannot be changed/.test(body.detail), `${r.status()} ${body.detail}`);
+        expect(
+          r.status() === 400 && /existing storage location cannot be changed/.test(body.detail),
+          `${r.status()} ${body.detail}`,
+        );
         return `PUT with S3_BUCKET=doc030-other answered ${r.status()} "${body.detail}".`;
       },
     );
@@ -1752,7 +2014,14 @@ phases.storage = async () => {
       const sys = await json(await api.get("/api/v1/system-status"));
       state.docs.s3 = u;
       saveState();
-      expect(d.matches && old.matches && t.state === "ready" && ref.startsWith("s3:") && sys.storageDriver === "s3", `${d.status} ${old.status} ${t.state} ${ref.split(":")[0]} ${sys.storageDriver}`);
+      expect(
+        d.matches &&
+          old.matches &&
+          t.state === "ready" &&
+          ref.startsWith("s3:") &&
+          sys.storageDriver === "s3",
+        `${d.status} ${old.status} ${t.state} ${ref.split(":")[0]} ${sys.storageDriver}`,
+      );
       return `After restart, System status reports storage driver ${sys.storageDriver}. A new PDF answered 201; its stored reference starts with s3: and the bucket doc030-app holds ${objects.length} object(s); the download matched its SHA-256; the worker's text state became ${t.state}. The older local Document still downloaded with identical bytes.`;
     },
   );
@@ -1787,13 +2056,24 @@ phases.storage = async () => {
       const s3dl = await download(api, state.docs.s3, 40_000);
       const localdl = await download(api, state.docs.local);
       const st = await json(await api.get("/api/v1/advanced-settings/storage"));
-      const values = Object.fromEntries(st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]));
-      const test = await api.post("/api/v1/advanced-settings/storage/test", { data: { version: st.version, values } });
+      const values = Object.fromEntries(
+        st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]),
+      );
+      const test = await api.post("/api/v1/advanced-settings/storage/test", {
+        data: { version: st.version, values },
+      });
       const tbody = await json(test);
       sh("docker compose start minio", { cwd: FIX });
       await sleep(5000);
       const again = await download(api, state.docs.s3);
-      expect(rz === 200 && s3dl.status !== 200 && localdl.matches && test.status() === 502 && again.matches, `${rz} ${s3dl.status} ${localdl.status} ${test.status()} ${again.status}`);
+      expect(
+        rz === 200 &&
+          s3dl.status !== 200 &&
+          localdl.matches &&
+          test.status() === 502 &&
+          again.matches,
+        `${rz} ${s3dl.status} ${localdl.status} ${test.status()} ${again.status}`,
+      );
       return `With MinIO stopped: /readyz answered ${rz}; the S3 Document's download answered ${s3dl.status}; the local Document downloaded with identical bytes; the storage test answered ${test.status()} "${tbody.detail}". After docker compose start minio the S3 Document downloaded again with identical bytes.`;
     },
   );
@@ -1805,11 +2085,18 @@ phases.storage = async () => {
     "Both containers mount the project's openlaw-files volume at /var/lib/openlaw/files.",
     () => {
       const m = (svc) =>
-        sh(`docker inspect --format '{{range .Mounts}}{{.Name}}:{{.Destination}} {{end}}' $(docker compose ps -q ${svc})`).stdout.trim();
+        sh(
+          `docker inspect --format '{{range .Mounts}}{{.Name}}:{{.Destination}} {{end}}' $(docker compose ps -q ${svc})`,
+        ).stdout.trim();
       const a = m("app");
       const w = m("worker");
-      expect(a === w && a.includes(`${PROJECT}_openlaw-files:/var/lib/openlaw/files`), `${a} / ${w}`);
-      const files = sh(`docker compose exec -T worker sh -c 'find /var/lib/openlaw/files -type f | wc -l'`).stdout.trim();
+      expect(
+        a === w && a.includes(`${PROJECT}_openlaw-files:/var/lib/openlaw/files`),
+        `${a} / ${w}`,
+      );
+      const files = sh(
+        `docker compose exec -T worker sh -c 'find /var/lib/openlaw/files -type f | wc -l'`,
+      ).stdout.trim();
       return `app mounts ${a}; worker mounts ${w}; the worker sees ${files} stored file(s) there, including the local Document the app wrote.`;
     },
   );
@@ -1832,7 +2119,10 @@ phases.storage = async () => {
       expect((await waitReady()) === 200, "not ready");
       await sleep(3000);
       const api = await adminApi();
-      const f = pdfFile("doc030-azure-env.pdf", "DOC-030 operator Azure Blob through the environment");
+      const f = pdfFile(
+        "doc030-azure-env.pdf",
+        "DOC-030 operator Azure Blob through the environment",
+      );
       const u = await upload(api, state.contractNumber, f);
       expect(u.status === 201, `upload ${u.status}`);
       const d = await download(api, u);
@@ -1844,9 +2134,23 @@ phases.storage = async () => {
       state.docs.azure = u;
       saveState();
       const st = await json(await api.get("/api/v1/advanced-settings/storage"));
-      const src = Object.fromEntries(st.fields.map((f) => [f.key, `${f.source}${f.locked ? " (read only)" : ""}`]));
-      expect(d.matches && t.state === "ready" && ref.startsWith("azure-blob:") && s3dl.matches && localdl.matches, `${d.status} ${t.state} ${ref.split(":")[0]} ${s3dl.status} ${localdl.status}`);
-      expect(src.STORAGE_DRIVER.startsWith("deployment") && src.AZURE_BLOB_CONTAINER.startsWith("deployment") && src.S3_BUCKET.startsWith("app"), JSON.stringify(src));
+      const src = Object.fromEntries(
+        st.fields.map((f) => [f.key, `${f.source}${f.locked ? " (read only)" : ""}`]),
+      );
+      expect(
+        d.matches &&
+          t.state === "ready" &&
+          ref.startsWith("azure-blob:") &&
+          s3dl.matches &&
+          localdl.matches,
+        `${d.status} ${t.state} ${ref.split(":")[0]} ${s3dl.status} ${localdl.status}`,
+      );
+      expect(
+        src.STORAGE_DRIVER.startsWith("deployment") &&
+          src.AZURE_BLOB_CONTAINER.startsWith("deployment") &&
+          src.S3_BUCKET.startsWith("app"),
+        JSON.stringify(src),
+      );
       return `Container doc030-env created first. After up, a new PDF answered 201 with a stored reference starting azure-blob:, the container holds ${blobs.length} blob(s), the download matched, and the worker's text state became ${t.state}. The app-saved S3 Document and the local Document still downloaded with identical bytes. Document storage sources: STORAGE_DRIVER ${src.STORAGE_DRIVER}, AZURE_BLOB_CONTAINER ${src.AZURE_BLOB_CONTAINER}, AZURE_BLOB_ACCOUNT_KEY ${src.AZURE_BLOB_ACCOUNT_KEY}, S3_BUCKET ${src.S3_BUCKET}, STORAGE_PATH ${src.STORAGE_PATH}.`;
     },
   );
@@ -1874,12 +2178,27 @@ phases["storage-recheck"] = async () => {
             help: (await box.locator("span[hidden]").allTextContents()).join(" ").trim(),
           };
         }
-        await page.getByLabel("S3 secret access key").locator("xpath=ancestor::div[1]").getByRole("button", { name: "More information" }).hover();
+        await page
+          .getByLabel("S3 secret access key")
+          .locator("xpath=ancestor::div[1]")
+          .getByRole("button", { name: "More information" })
+          .hover();
         await sleep(800);
-        const tip = (await page.getByRole("dialog").allInnerTexts().catch(() => [])).join(" ").trim() || (await page.locator("[data-radix-popper-content-wrapper]").allInnerTexts()).join(" ");
+        const tip =
+          (
+            await page
+              .getByRole("dialog")
+              .allInnerTexts()
+              .catch(() => [])
+          )
+            .join(" ")
+            .trim() ||
+          (await page.locator("[data-radix-popper-content-wrapper]").allInnerTexts()).join(" ");
         const bucket = await fieldSource(page, "S3 bucket");
         const endpoint = await fieldSource(page, "S3 endpoint (optional for AWS)");
-        const ok = Object.values(out).every((f) => f.value === "" && f.help === "Credential configured. Leave blank to keep it.");
+        const ok = Object.values(out).every(
+          (f) => f.value === "" && f.help === "Credential configured. Leave blank to keep it.",
+        );
         expect(ok, JSON.stringify(out));
         return `S3 access key ID and S3 secret access key are empty (types ${out["S3 access key ID"].type} and ${out["S3 secret access key"].type}); each field's More information help reads "${out["S3 secret access key"].help}" (hover shows "${tip.trim()}"). S3 bucket: ${bucket.filter((l) => /Saved|Read/.test(l)).join(" ")}; S3 endpoint: ${endpoint.filter((l) => /Saved|Read/.test(l)).join(" ")}. The earlier attempt looked for the help text in the visible page; it sits behind the field's More information button.`;
       } finally {
@@ -1899,16 +2218,29 @@ phases["storage-ttl"] = async () => {
     async () => {
       const api = await adminApi();
       const st = await json(await api.get("/api/v1/advanced-settings/storage"));
-      const values = Object.fromEntries(st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]));
-      const t = await api.post("/api/v1/advanced-settings/storage/test", { data: { version: st.version, values } });
+      const values = Object.fromEntries(
+        st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]),
+      );
+      const t = await api.post("/api/v1/advanced-settings/storage/test", {
+        data: { version: st.version, values },
+      });
       const testedAt = Date.now();
       await sleep(10 * 60_000 + 30_000);
       const api2 = await adminApi();
-      const late = await api2.put("/api/v1/advanced-settings/storage", { data: { version: st.version, values } });
+      const late = await api2.put("/api/v1/advanced-settings/storage", {
+        data: { version: st.version, values },
+      });
       const lateBody = await json(late);
-      const t2 = await api2.post("/api/v1/advanced-settings/storage/test", { data: { version: st.version, values } });
-      const ok = await api2.put("/api/v1/advanced-settings/storage", { data: { version: st.version, values } });
-      expect(t.status() === 200 && late.status() === 409 && t2.status() === 200 && ok.status() === 200, `${t.status()} ${late.status()} ${t2.status()} ${ok.status()}`);
+      const t2 = await api2.post("/api/v1/advanced-settings/storage/test", {
+        data: { version: st.version, values },
+      });
+      const ok = await api2.put("/api/v1/advanced-settings/storage", {
+        data: { version: st.version, values },
+      });
+      expect(
+        t.status() === 200 && late.status() === 409 && t2.status() === 200 && ok.status() === 200,
+        `${t.status()} ${late.status()} ${t2.status()} ${ok.status()}`,
+      );
       return `Unlocked fields sent unchanged (${Object.keys(values).join(", ")}). The test answered ${t.status()}. ${Math.round((Date.now() - testedAt) / 1000)} s later the save answered ${late.status()} "${lateBody.detail}". A new test answered ${t2.status()} and the same save then answered ${ok.status()}.`;
     },
   );
@@ -1988,7 +2320,10 @@ phases.instance = async () => {
       const warn = /The instance address is http:\/\/localhost:3000/.test(logsSince("app", since));
       const viaProxy = await apiClient(ORIGIN, ADMIN.email, state.adminPassword);
       caddyfile(LOCALHOST_SITE);
-      expect(warn && viaProxy.signInStatus === 403, `warn ${warn} proxy sign-in ${viaProxy.signInStatus}`);
+      expect(
+        warn && viaProxy.signInStatus === 403,
+        `warn ${warn} proxy sign-in ${viaProxy.signInStatus}`,
+      );
       return `After removing BASE_URL and up, the app logged "The instance address is http://localhost:3000; emailed links and OIDC callbacks will point there." Sign-in through ${ORIGIN} now answered ${viaProxy.signInStatus}. The reviewer added a Caddy site for http://localhost:3000 on [::1] (the host's 127.0.0.1:3000 is taken) to reach the default origin.`;
     },
   );
@@ -2007,7 +2342,13 @@ phases.instance = async () => {
         const value = await s.page.getByLabel("Application address").inputValue();
         const withPath = await saveInstance(s.page, DEV_ORIGIN, `${ORIGIN}/openlaw`);
         const plain = await saveInstance(s.page, DEV_ORIGIN, "http://openlaw.company.example");
-        expect(value === DEV_ORIGIN && before.includes("Default") && /without a path/.test(withPath) && /must use https/.test(plain), `${value} ${before} | ${withPath} | ${plain}`);
+        expect(
+          value === DEV_ORIGIN &&
+            before.includes("Default") &&
+            /without a path/.test(withPath) &&
+            /must use https/.test(plain),
+          `${value} ${before} | ${withPath} | ${plain}`,
+        );
         return `Application address read ${value} with source "Default". Saving ${ORIGIN}/openlaw showed "${withPath}". Saving http://openlaw.company.example showed "${plain}".`;
       },
     );
@@ -2019,7 +2360,9 @@ phases.instance = async () => {
       "http on a private IP and on a host in OPENLAW_PLAIN_HTTP_HOSTS are accepted, an unlisted internal name is refused; the HTTPS address saves with Active: showing the old value.",
       async () => {
         const put = async (v) => {
-          const st = await json(await s.page.request.get(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`));
+          const st = await json(
+            await s.page.request.get(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`),
+          );
           const r = await s.page.request.put(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`, {
             headers: { origin: DEV_ORIGIN },
             data: { version: st.version, values: { BASE_URL: v } },
@@ -2044,7 +2387,14 @@ phases.instance = async () => {
               return l.slice(0, 160);
             }
           });
-        expect(a.endsWith("200") && b.endsWith("200") && c.endsWith("400") && /Settings saved/.test(msg) && src.includes(`Active: ${DEV_ORIGIN}`), `${a} ${b} ${c} ${msg} ${src}`);
+        expect(
+          a.endsWith("200") &&
+            b.endsWith("200") &&
+            c.endsWith("400") &&
+            /Settings saved/.test(msg) &&
+            src.includes(`Active: ${DEV_ORIGIN}`),
+          `${a} ${b} ${c} ${msg} ${src}`,
+        );
         return `API saves: ${a}; ${b} (minio is listed in OPENLAW_PLAIN_HTTP_HOSTS); ${c} (an internal DNS name that is not listed). Browser: Application address ${ORIGIN} then Save showed "${msg}", with "${src.filter((l) => /Saved|Active/.test(l)).join(" / ")}". Process log: ${hostLog.join("; ") || "(none)"}.`;
       },
     );
@@ -2073,8 +2423,13 @@ phases.instance = async () => {
       await page.context.close();
       const origin = msg ? firstLink(msg).origin : "no mail";
       const audit = await json(await api.get("/api/v1/audit-log"));
-      const hosts = (audit.entries ?? []).filter((e) => JSON.stringify(e).includes("advanced.BASE_URL.host")).length;
-      expect(f.value === ORIGIN && f.activeValue === ORIGIN && f.source === "app" && origin === ORIGIN, `${JSON.stringify(f)} mail ${origin}`);
+      const hosts = (audit.entries ?? []).filter((e) =>
+        JSON.stringify(e).includes("advanced.BASE_URL.host"),
+      ).length;
+      expect(
+        f.value === ORIGIN && f.activeValue === ORIGIN && f.source === "app" && origin === ORIGIN,
+        `${JSON.stringify(f)} mail ${origin}`,
+      );
       return `After restart, sign-in through ${ORIGIN} answered 200; Instance address reads ${f.value}, active ${f.activeValue}, source ${f.source}. A sign-in link requested for ${COLLEAGUE.name} arrived with a link on ${origin}. The Audit log holds ${hosts} host-change entries for advanced.BASE_URL.host.`;
     },
   );
@@ -2088,7 +2443,10 @@ phases.instance = async () => {
       const api = await adminApi();
       const st = await json(await api.get("/api/v1/advanced-settings/instance"));
       const r = await api.put("/api/v1/advanced-settings/instance", {
-        data: { version: st.version, values: { BASE_URL: "https://openlaw-wrong.localhost:25799" } },
+        data: {
+          version: st.version,
+          values: { BASE_URL: "https://openlaw-wrong.localhost:25799" },
+        },
       });
       await restartBoth();
       const c = await apiClient(ORIGIN, ADMIN.email, state.adminPassword);
@@ -2126,10 +2484,21 @@ phases.instance = async () => {
       expect((await waitReady()) === 200, "not ready");
       const api = await adminApi();
       const audit = await json(await api.get("/api/v1/audit-log"));
-      const entry = (audit.entries ?? []).find((e) => JSON.stringify(e).includes("deployment defaults restored by operator"));
+      const entry = (audit.entries ?? []).find((e) =>
+        JSON.stringify(e).includes("deployment defaults restored by operator"),
+      );
       const mcp = await json(await api.get("/api/v1/advanced-settings/mcp"));
-      expect(r.code === 0 && /Saved instance overrides removed\./.test(out) && !/openlaw-wrong/.test(out) && entry, `${r.code} ${out.slice(0, 300)}`);
-      expect(mcp.fields.every((f) => f.source === "app"), "other sections changed");
+      expect(
+        r.code === 0 &&
+          /Saved instance overrides removed\./.test(out) &&
+          !/openlaw-wrong/.test(out) &&
+          entry,
+        `${r.code} ${out.slice(0, 300)}`,
+      );
+      expect(
+        mcp.fields.every((f) => f.source === "app"),
+        "other sections changed",
+      );
       const line = out.split("\n").find((l) => /overrides removed/.test(l)) ?? "";
       return `Exit ${r.code}; output "${line.trim()}". No saved value was printed. The Audit log has an entry with new value "${JSON.stringify(entry).match(/\[deployment defaults[^\]]*\]/)?.[0]}". The MCP fields keep source app, so other sections were untouched.`;
     },
@@ -2145,7 +2514,9 @@ phases.instance = async () => {
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
       const s2 = await devSession();
-      const st = await json(await s2.page.request.get(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`));
+      const st = await json(
+        await s2.page.request.get(`${DEV_ORIGIN}/api/v1/advanced-settings/instance`),
+      );
       await s2.context.close();
       setEnv({ BASE_URL: ORIGIN });
       expect(up().code === 0, "up failed");
@@ -2169,7 +2540,10 @@ phases.instance = async () => {
       const api = await adminApi();
       const mcp = await json(await api.get("/api/v1/advanced-settings/mcp"));
       const usage = (bad.stdout + bad.stderr).split("\n").find((l) => /Usage:/.test(l)) ?? "";
-      expect(m.code === 0 && bad.code !== 0 && mcp.fields.every((f) => f.source === "default"), `${m.code} ${bad.code} ${JSON.stringify(mcp.fields)}`);
+      expect(
+        m.code === 0 && bad.code !== 0 && mcp.fields.every((f) => f.source === "default"),
+        `${m.code} ${bad.code} ${JSON.stringify(mcp.fields)}`,
+      );
       return `mcp: exit ${m.code}, "${(m.stdout.match(/Saved mcp overrides removed\.[^\n]*/) ?? [""])[0]}"; after restart both MCP fields show source default (${mcp.fields.map((f) => `${f.key}=${f.activeValue}`).join(", ")}). "everything": exit ${bad.code}, "${usage.replace(/^.*?Usage/, "Usage")}". The usage line does not list mcp, although mcp is accepted.`;
     },
   );
@@ -2190,7 +2564,11 @@ phases.engine = async () => {
       const a = await waitExitOrRestart("app");
       const w = await waitExitOrRestart("worker");
       await sleep(3000);
-      const pick = (svc) => logsSince(svc, since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /DOC_ENGINE_TIMEOUT_MS/.test(l)) ?? "";
+      const pick = (svc) =>
+        logsSince(svc, since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /DOC_ENGINE_TIMEOUT_MS/.test(l)) ?? "";
       const line = pick("app");
       const wline = pick("worker");
       const r = sh(resetCmd("processing"));
@@ -2199,8 +2577,14 @@ phases.engine = async () => {
       expect((await waitReady()) === 200, "not ready");
       const api = await adminApi();
       const proc = await json(await api.get("/api/v1/advanced-settings/processing"));
-      expect(/restart|exited/i.test(`${a?.state} ${a?.status}`) && line && wline && r.code === 0, `${JSON.stringify(a)} ${JSON.stringify(w)} ${line} ${r.code}`);
-      return `App: ${a.state} (${a.status}); worker: ${w?.state} (${w?.status}). App log: "${line.slice(0, 200)}". The worker log carries the same bound. While the app was restarting, the recovery command for processing exited ${r.code} with "${(r.stdout.match(/Saved processing overrides removed\.[^\n]*/) ?? [""])[0]}". After removing the variable and up, readyz 200; Processing and Comparison timeouts now show ${proc.fields.filter((f) => f.key !== "DOC_ENGINE_URL").map((f) => `${f.activeValue} (${f.source})`).join(" and ")}.`;
+      expect(
+        /restart|exited/i.test(`${a?.state} ${a?.status}`) && line && wline && r.code === 0,
+        `${JSON.stringify(a)} ${JSON.stringify(w)} ${line} ${r.code}`,
+      );
+      return `App: ${a.state} (${a.status}); worker: ${w?.state} (${w?.status}). App log: "${line.slice(0, 200)}". The worker log carries the same bound. While the app was restarting, the recovery command for processing exited ${r.code} with "${(r.stdout.match(/Saved processing overrides removed\.[^\n]*/) ?? [""])[0]}". After removing the variable and up, readyz 200; Processing and Comparison timeouts now show ${proc.fields
+        .filter((f) => f.key !== "DOC_ENGINE_URL")
+        .map((f) => `${f.activeValue} (${f.source})`)
+        .join(" and ")}.`;
     },
   );
   await step(
@@ -2215,7 +2599,11 @@ phases.engine = async () => {
       up();
       const a = await waitExitOrRestart("app");
       await sleep(3000);
-      const pick = (svc) => logsSince(svc, since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /DOC_ENGINE_COMPARE_TIMEOUT_MS/.test(l)) ?? "";
+      const pick = (svc) =>
+        logsSince(svc, since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /DOC_ENGINE_COMPARE_TIMEOUT_MS/.test(l)) ?? "";
       const line = pick("app");
       const wline = pick("worker");
       setEnv({ DOC_ENGINE_COMPARE_TIMEOUT_MS: null });
@@ -2229,7 +2617,9 @@ phases.engine = async () => {
   const burst = (n) => {
     const script = `const pdf=Buffer.from('%PDF-1.4\\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\\ntrailer<</Root 1 0 R>>\\n%%EOF');Promise.all(Array.from({length:${n}},()=>fetch('http://doc-engine:8080/ocr',{method:'POST',body:pdf}).then(r=>r.status+'/'+(r.headers.get('retry-after')||'-')).catch(e=>'err'))).then(a=>console.log(a.join(' ')))`;
     writeFileSync(path.join(PRIVATE, "burst.js"), script);
-    return sh(`docker compose exec -T app node - < ${path.join(PRIVATE, "burst.js")}`, { timeout: 300_000 }).stdout.trim();
+    return sh(`docker compose exec -T app node - < ${path.join(PRIVATE, "burst.js")}`, {
+      timeout: 300_000,
+    }).stdout.trim();
   };
   await step(
     "V-C45",
@@ -2247,7 +2637,15 @@ phases.engine = async () => {
       expect(up().code === 0, "up failed");
       await waitHealthy("doc-engine", 120_000);
       const n503 = (x) => x.split(" ").filter((y) => y.startsWith("503/")).length;
-      const retry = (x) => [...new Set(x.split(" ").filter((y) => y.startsWith("503/")).map((y) => y.split("/")[1]))].join(",");
+      const retry = (x) =>
+        [
+          ...new Set(
+            x
+              .split(" ")
+              .filter((y) => y.startsWith("503/"))
+              .map((y) => y.split("/")[1]),
+          ),
+        ].join(",");
       expect(n503(d) === 2 && n503(c) === 3 && !/503\/-/.test(d + c), `${d} | ${c}`);
       return `From inside the app container: 12 concurrent POST /ocr with the defaults answered [${d}] (status/Retry-After): ${n503(d)} refused with 503, Retry-After ${retry(d)}. With DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=1, 5 concurrent answered [${c}]: ${n503(c)} refused. The variables were removed again.`;
     },
@@ -2262,19 +2660,34 @@ phases.engine = async () => {
       compose("stop doc-engine");
       const api = await adminApi();
       const rz = await readyz();
-      const u = await upload(api, state.contractNumber, pdfFile("doc030-engine-down.pdf", "DOC-030 operator engine down"));
+      const u = await upload(
+        api,
+        state.contractNumber,
+        pdfFile("doc030-engine-down.pdf", "DOC-030 operator engine down"),
+      );
       await sleep(45_000);
       const t = await textState(api, u);
       const st = await json(await api.get("/api/v1/advanced-settings/processing"));
-      const values = Object.fromEntries(st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]));
-      const test = await api.post("/api/v1/advanced-settings/processing/test", { data: { version: st.version, values } });
+      const values = Object.fromEntries(
+        st.fields.filter((f) => !f.locked).map((f) => [f.key, f.value]),
+      );
+      const test = await api.post("/api/v1/advanced-settings/processing/test", {
+        data: { version: st.version, values },
+      });
       const tb = await json(test);
       compose("start doc-engine");
       await waitHealthy("doc-engine", 120_000);
-      const u2 = await upload(api, state.contractNumber, pdfFile("doc030-engine-up.pdf", "DOC-030 operator engine back"));
+      const u2 = await upload(
+        api,
+        state.contractNumber,
+        pdfFile("doc030-engine-up.pdf", "DOC-030 operator engine back"),
+      );
       const t2 = await waitText(api, u2, 180_000);
       const t1b = await waitText(api, u, 240_000);
-      expect(rz === 200 && t.state !== "ready" && test.status() === 502 && t2.state === "ready", `${rz} ${t.state} ${test.status()} ${t2.state}`);
+      expect(
+        rz === 200 && t.state !== "ready" && test.status() === 502 && t2.state === "ready",
+        `${rz} ${t.state} ${test.status()} ${t2.state}`,
+      );
       return `With doc-engine stopped: /readyz ${rz}; a PDF uploaded then (201) still had text state "${t.state}" after 45 s; Document processing Test connection answered ${test.status()} "${tb.detail}". After docker compose start doc-engine, a new PDF reached "${t2.state}", and the earlier PDF reached "${t1b.state}".`;
     },
   );
@@ -2321,7 +2734,9 @@ phases["instance-link"] = async () => {
       await page.context.close();
       const origin = msg ? firstLink(msg).origin : "no mail";
       const audit = await json(await api.get("/api/v1/audit-log"));
-      const hosts = (audit.entries ?? []).filter((e) => JSON.stringify(e).includes("advanced.BASE_URL.host")).length;
+      const hosts = (audit.entries ?? []).filter((e) =>
+        JSON.stringify(e).includes("advanced.BASE_URL.host"),
+      ).length;
       // Put the deployment back the way the rest of the walkthrough expects it.
       setEnv({ BASE_URL: ORIGIN });
       const r = sh(resetCmd("instance"));
@@ -2329,7 +2744,15 @@ phases["instance-link"] = async () => {
       compose("restart app worker");
       expect((await waitReady()) === 200, "not ready");
       caddyfile("");
-      expect(/Settings saved/.test(msg0) && f.value === ORIGIN && f.activeValue === ORIGIN && f.source === "app" && origin === ORIGIN && r.code === 0, `${msg0} ${JSON.stringify(f)} mail ${origin}`);
+      expect(
+        /Settings saved/.test(msg0) &&
+          f.value === ORIGIN &&
+          f.activeValue === ORIGIN &&
+          f.source === "app" &&
+          origin === ORIGIN &&
+          r.code === 0,
+        `${msg0} ${JSON.stringify(f)} mail ${origin}`,
+      );
       return `Save showed "${msg0}". After docker compose restart app worker, sign-in through ${ORIGIN} answered 200; Instance address reads ${f.value}, active ${f.activeValue}, source ${f.source}. "Email me a sign-in link", Email, Send link ("Check your email") for ${COLLEAGUE.name} delivered "${msg.Subject}" with a link on ${origin}. The Audit log holds ${hosts} entries for advanced.BASE_URL.host. Afterwards BASE_URL was set in .env again, the instance override removed with the recovery command, and both services restarted.`;
     },
   );
@@ -2345,7 +2768,9 @@ phases.limits = async () => {
     async () => {
       const lim = (svc) => {
         const id = compose(`ps -q ${svc}`).stdout.trim();
-        return sh(`docker inspect --format '{{.HostConfig.NanoCpus}} {{.HostConfig.Memory}} {{.HostConfig.PidsLimit}} {{with index .HostConfig \"Tmpfs\"}}{{json .}}{{end}}' ${id}`).stdout.trim();
+        return sh(
+          `docker inspect --format '{{.HostConfig.NanoCpus}} {{.HostConfig.Memory}} {{.HostConfig.PidsLimit}} {{with index .HostConfig \"Tmpfs\"}}{{json .}}{{end}}' ${id}`,
+        ).stdout.trim();
       };
       const before = { app: lim("app"), worker: lim("worker"), engine: lim("doc-engine") };
       setEnv({ APP_MEM_LIMIT: "1536m", DOC_ENGINE_TMPFS_SIZE: "1g" });
@@ -2355,8 +2780,17 @@ phases.limits = async () => {
       setEnv({ APP_MEM_LIMIT: null, DOC_ENGINE_TMPFS_SIZE: null });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
-      expect(before.app.startsWith("2000000000 1073741824 256") && before.worker.startsWith("2000000000 1073741824 256") && before.engine.startsWith("2000000000 4294967296 512") && /size=2g/.test(before.engine), JSON.stringify(before));
-      expect(after.app.startsWith("2000000000 1610612736 256") && /size=1g/.test(after.engine), JSON.stringify(after));
+      expect(
+        before.app.startsWith("2000000000 1073741824 256") &&
+          before.worker.startsWith("2000000000 1073741824 256") &&
+          before.engine.startsWith("2000000000 4294967296 512") &&
+          /size=2g/.test(before.engine),
+        JSON.stringify(before),
+      );
+      expect(
+        after.app.startsWith("2000000000 1610612736 256") && /size=1g/.test(after.engine),
+        JSON.stringify(after),
+      );
       return `Defaults (NanoCpus, memory bytes, pids, tmpfs): app ${before.app}; worker ${before.worker}; doc-engine ${before.engine}. With APP_MEM_LIMIT=1536m and DOC_ENGINE_TMPFS_SIZE=1g after up: app ${after.app}; doc-engine ${after.engine}. Both removed again and recreated.`;
     },
   );
@@ -2367,13 +2801,20 @@ async function testEmail(api) {
   const r = await api.post("/api/v1/email-settings/test");
   const body = await json(r);
   const msg = r.status() === 200 ? await waitMail(ADMIN.email, "test email", since, 30_000) : null;
-  return { status: r.status(), detail: body.detail, delivered: Boolean(msg), from: msg?.From?.Address };
+  return {
+    status: r.status(),
+    detail: body.detail,
+    delivered: Boolean(msg),
+    from: msg?.From?.Address,
+  };
 }
 async function advancedSources(api) {
   const out = {};
   for (const section of ["uploads", "storage"]) {
     const st = await json(await api.get(`/api/v1/advanced-settings/${section}`));
-    for (const f of st.fields ?? []) if (["MAX_UPLOAD_MB", "S3_BUCKET", "STORAGE_DRIVER"].includes(f.key)) out[f.key] = `${f.activeValue || f.value} (${f.source})`;
+    for (const f of st.fields ?? [])
+      if (["MAX_UPLOAD_MB", "S3_BUCKET", "STORAGE_DRIVER"].includes(f.key))
+        out[f.key] = `${f.activeValue || f.value} (${f.source})`;
   }
   return out;
 }
@@ -2394,11 +2835,20 @@ phases.keys = async () => {
       const since = new Date().toISOString();
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
-      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /resealed/.test(l)) ?? "";
+      const line =
+        logsSince("app", since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /resealed/.test(l)) ?? "";
       const api = await adminApi();
       const mail = await testEmail(api);
       const s3 = await download(api, state.docs.s3);
-      expect(/Stored credentials resealed under the key in use/.test(line) && mail.delivered && s3.matches, `${line} ${JSON.stringify(mail)} ${s3.status}`);
+      expect(
+        /Stored credentials resealed under the key in use/.test(line) &&
+          mail.delivered &&
+          s3.matches,
+        `${line} ${JSON.stringify(mail)} ${s3.status}`,
+      );
       return `App log: "${line}". The stored relay delivered a test email; the app-saved S3 Document downloaded with identical bytes.`;
     },
   );
@@ -2419,7 +2869,10 @@ phases.keys = async () => {
       const unreadable = /No configured key opens/.test(logsSince("app", since));
       state.sourcesBefore = await advancedSources(api);
       saveState();
-      expect(mail.delivered && s3.matches && !unreadable, `${JSON.stringify(mail)} ${s3.status} ${unreadable}`);
+      expect(
+        mail.delivered && s3.matches && !unreadable,
+        `${JSON.stringify(mail)} ${s3.status} ${unreadable}`,
+      );
       return `After removing OPENLAW_SECRET_KEY_PREVIOUS and up: the test email was delivered, the S3 Document downloaded with identical bytes, and the log has no "No configured key opens" warning. Saved Advanced values in use: ${JSON.stringify(state.sourcesBefore)}.`;
     },
   );
@@ -2436,9 +2889,14 @@ phases.keys = async () => {
       const rz = await waitReady(120_000);
       await sleep(3000);
       const w = containerState("worker");
-      const log = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, ""));
-      const noKey = log.find((l) => /No configured key opens these stored credentials/.test(l)) ?? "";
-      const push = log.find((l) => /Device notifications are off until the VAPID pair can be read/.test(l)) ?? "";
+      const log = logsSince("app", since)
+        .split("\n")
+        .map((l) => l.replace(/^.*?\|\s*/, ""));
+      const noKey =
+        log.find((l) => /No configured key opens these stored credentials/.test(l)) ?? "";
+      const push =
+        log.find((l) => /Device notifications are off until the VAPID pair can be read/.test(l)) ??
+        "";
       expect(rz === 200, `readyz ${rz}`);
       const api = await adminApi();
       const sources = await advancedSources(api);
@@ -2448,7 +2906,17 @@ phases.keys = async () => {
       const local = await download(api, state.docs.local);
       const mail = await testEmail(api);
       const detail = `App readyz ${rz}; worker ${w?.state}. Advanced values now: ${JSON.stringify(sources)} (before: ${JSON.stringify(state.sourcesBefore)}); Maximum file size source "${upl.fields[0].source}". System status storage driver: ${sys.storageDriver}. The app-saved S3 Document's download answered ${s3.status}; the local Document ${local.matches ? "downloaded with identical bytes" : `answered ${local.status}`}. Test email: ${mail.status} "${mail.detail}". Start log: "${noKey.slice(0, 260)}"; "${push.slice(0, 160)}".`;
-      expect(w?.state === "running" && upl.fields[0].source === "default" && sys.storageDriver === "local" && s3.status !== 200 && /SMTP is not configured — save a relay first\./.test(mail.detail ?? "") && /advanced_settings/.test(noKey) && /smtp_url/.test(noKey) && push, detail);
+      expect(
+        w?.state === "running" &&
+          upl.fields[0].source === "default" &&
+          sys.storageDriver === "local" &&
+          s3.status !== 200 &&
+          /SMTP is not configured — save a relay first\./.test(mail.detail ?? "") &&
+          /advanced_settings/.test(noKey) &&
+          /smtp_url/.test(noKey) &&
+          push,
+        detail,
+      );
       return detail;
     },
   );
@@ -2460,7 +2928,8 @@ phases.keys = async () => {
     "The command still exits successfully but replaces the whole saved configuration with an empty one; after the correct key is back, every section's saved values are gone.",
     async () => {
       const r = sh(resetCmd("processing"));
-      const out = (r.stdout + r.stderr).split("\n").find((l) => /overrides removed|decrypted/.test(l)) ?? "";
+      const out =
+        (r.stdout + r.stderr).split("\n").find((l) => /overrides removed|decrypted/.test(l)) ?? "";
       setEnv({ OPENLAW_SECRET_KEY: state.newSecretKey });
       const since = new Date().toISOString();
       expect(up().code === 0, "up failed");
@@ -2471,7 +2940,13 @@ phases.keys = async () => {
       const s3 = await download(api, state.docs.s3, 20_000);
       const noKey = /No configured key opens/.test(logsSince("app", since));
       const detail = `The recovery command for processing exited ${r.code}: "${out.trim()}". After restoring the correct key and up: Advanced values ${JSON.stringify(sources)} (before: ${JSON.stringify(state.sourcesBefore)}); the S3 Document download answered ${s3.status}; the saved relay ${mail.delivered ? "delivered a test email (the relay is sealed in its own column)" : `failed: ${mail.status} ${mail.detail}`}; unreadable-credential warning at start: ${noKey}.`;
-      expect(r.code === 0 && !/app/.test(sources.MAX_UPLOAD_MB) && !/app/.test(sources.S3_BUCKET ?? "") && s3.status !== 200, detail);
+      expect(
+        r.code === 0 &&
+          !/app/.test(sources.MAX_UPLOAD_MB) &&
+          !/app/.test(sources.S3_BUCKET ?? "") &&
+          s3.status !== 200,
+        detail,
+      );
       return detail;
     },
   );
@@ -2487,14 +2962,33 @@ phases.keys = async () => {
         const page = s.page;
         await storageForm(page);
         // STORAGE_DRIVER is pinned to azure-blob by .env; the S3 reader is saved again.
-        await page.getByLabel("S3 bucket").waitFor({ timeout: 5000 }).catch(() => {});
+        await page
+          .getByLabel("S3 bucket")
+          .waitFor({ timeout: 5000 })
+          .catch(() => {});
         if (!(await page.getByLabel("S3 bucket").count())) {
-          const st = await json(await page.request.get(`${ORIGIN}/api/v1/advanced-settings/storage`));
-          const values = { S3_BUCKET: "doc030-app", S3_ENDPOINT: "http://minio:9000", S3_FORCE_PATH_STYLE: "true", S3_REGION: "eu-west-1", S3_ACCESS_KEY_ID: state.minioUser, S3_SECRET_ACCESS_KEY: state.minioPassword };
-          const t = await page.request.post(`${ORIGIN}/api/v1/advanced-settings/storage/test`, { headers: { origin: ORIGIN }, data: { version: st.version, values } });
-          const r = await page.request.put(`${ORIGIN}/api/v1/advanced-settings/storage`, { headers: { origin: ORIGIN }, data: { version: st.version, values } });
+          const st = await json(
+            await page.request.get(`${ORIGIN}/api/v1/advanced-settings/storage`),
+          );
+          const values = {
+            S3_BUCKET: "doc030-app",
+            S3_ENDPOINT: "http://minio:9000",
+            S3_FORCE_PATH_STYLE: "true",
+            S3_REGION: "eu-west-1",
+            S3_ACCESS_KEY_ID: state.minioUser,
+            S3_SECRET_ACCESS_KEY: state.minioPassword,
+          };
+          const t = await page.request.post(`${ORIGIN}/api/v1/advanced-settings/storage/test`, {
+            headers: { origin: ORIGIN },
+            data: { version: st.version, values },
+          });
+          const r = await page.request.put(`${ORIGIN}/api/v1/advanced-settings/storage`, {
+            headers: { origin: ORIGIN },
+            data: { version: st.version, values },
+          });
           expect(t.status() === 200 && r.status() === 200, `${t.status()} ${r.status()}`);
-          state.resaveNote = "The S3 fields are hidden while the pinned driver is azure-blob and no bucket is saved, so the reviewer tested and saved them through the same API the page uses";
+          state.resaveNote =
+            "The S3 fields are hidden while the pinned driver is azure-blob and no bucket is saved, so the reviewer tested and saved them through the same API the page uses";
         } else {
           await page.getByLabel("S3 bucket").fill("doc030-app");
           await page.getByLabel("S3 endpoint (optional for AWS)").fill("http://minio:9000");
@@ -2504,8 +2998,11 @@ phases.keys = async () => {
           await page.getByRole("button", { name: "Test connection" }).click();
           await page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
           await page.getByRole("button", { name: "Save" }).click();
-          await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
-          state.resaveNote = "Document storage: bucket, endpoint, path style and keys entered again; Test connection passed; Save showed the restart message";
+          await page
+            .getByText("Settings saved. Restart the API and worker to apply changes.")
+            .waitFor({ timeout: 15_000 });
+          state.resaveNote =
+            "Document storage: bucket, endpoint, path style and keys entered again; Test connection passed; Save showed the restart message";
         }
         saveState();
       } finally {
@@ -2525,7 +3022,10 @@ function vapidPair() {
   const { createECDH } = require("node:crypto");
   const ecdh = createECDH("prime256v1");
   ecdh.generateKeys();
-  return { pub: ecdh.getPublicKey().toString("base64url"), priv: ecdh.getPrivateKey().toString("base64url") };
+  return {
+    pub: ecdh.getPublicKey().toString("base64url"),
+    priv: ecdh.getPrivateKey().toString("base64url"),
+  };
 }
 phases.vapid = async () => {
   await step(
@@ -2544,21 +3044,30 @@ phases.vapid = async () => {
       const a = await waitExitOrRestart("app");
       const w = await waitExitOrRestart("worker");
       await sleep(3000);
-      const line = (svc) => logsSince(svc, since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY/.test(l)) ?? "";
+      const line = (svc) =>
+        logsSince(svc, since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY/.test(l)) ?? "";
       const aLine = line("app");
       const wLine = line("worker");
       setEnv({ VAPID_PRIVATE_KEY: pair.priv });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
       const api2 = await adminApi();
-      const pinned = (await json(await api2.get("/api/v1/me/notification-preferences"))).vapidPublicKey;
+      const pinned = (await json(await api2.get("/api/v1/me/notification-preferences")))
+        .vapidPublicKey;
       const wEnv = containerEnv("worker", "VAPID_PUBLIC_KEY") === pair.pub;
       setEnv({ VAPID_PUBLIC_KEY: null, VAPID_PRIVATE_KEY: null });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
       const api3 = await adminApi();
-      const back = (await json(await api3.get("/api/v1/me/notification-preferences"))).vapidPublicKey;
-      expect(gen && aLine && wLine && pinned === pair.pub && wEnv && back === gen, `${Boolean(gen)} app "${aLine}" worker "${wLine}" ${pinned === pair.pub} ${wEnv} ${back === gen} app ${JSON.stringify(a)} worker ${JSON.stringify(w)}`);
+      const back = (await json(await api3.get("/api/v1/me/notification-preferences")))
+        .vapidPublicKey;
+      expect(
+        gen && aLine && wLine && pinned === pair.pub && wEnv && back === gen,
+        `${Boolean(gen)} app "${aLine}" worker "${wLine}" ${pinned === pair.pub} ${wEnv} ${back === gen} app ${JSON.stringify(a)} worker ${JSON.stringify(w)}`,
+      );
       return `Unset: the API served a generated public key (prefix ${gen.slice(0, 10)}…). With only VAPID_PUBLIC_KEY: app ${a?.state} (${a?.status}), worker ${w?.state} (${w?.status}); both logs "${aLine}". With both keys: the API served the pinned public key (prefix ${pair.pub.slice(0, 10)}…) and the worker received the same pair. With both removed: the API served the earlier generated key again.`;
     },
   );
@@ -2574,7 +3083,13 @@ phases.mail = async () => {
     async () => {
       // An Invited row to resend: invite Casey while the saved relay still works.
       const api0 = await adminApi();
-      const inv = await api0.post("/api/v1/auth/invites", { data: { email: "casey.invitee@doc030-cfg.example", displayName: "Casey Invitee", role: "legal_team_member" } });
+      const inv = await api0.post("/api/v1/auth/invites", {
+        data: {
+          email: "casey.invitee@doc030-cfg.example",
+          displayName: "Casey Invitee",
+          role: "legal_team_member",
+        },
+      });
       expect([200, 201].includes(inv.status()), `fixture invite ${inv.status()}`);
       setEnv({ SMTP_URL: "smtp://relay:1025", SMTP_FROM: null });
       expect(up().code === 0, "up failed");
@@ -2606,31 +3121,51 @@ phases.mail = async () => {
         const dialog = page.getByRole("dialog");
         await dialog.getByLabel("Display name").fill("Dana Newcomer");
         await dialog.getByLabel("Email").fill("dana.newcomer@doc030-cfg.example");
-        const answered = page.waitForResponse((r) => r.url().endsWith("/api/v1/auth/invites") && r.request().method() === "POST");
+        const answered = page.waitForResponse(
+          (r) => r.url().endsWith("/api/v1/auth/invites") && r.request().method() === "POST",
+        );
         await dialog.getByRole("button", { name: "Send invite" }).click();
         const resp = await answered;
         await sleep(1500);
-        inviteMsg = `${resp.status()} "${(await page.getByRole("alert").allInnerTexts()).map((t) => t.trim()).filter(Boolean).join(" | ")}"`;
+        inviteMsg = `${resp.status()} "${(await page.getByRole("alert").allInnerTexts())
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .join(" | ")}"`;
         await page.screenshot({ path: path.join(here, "invite-without-smtp-from.png") });
         await page.keyboard.press("Escape");
         await page.reload();
         await page.getByRole("button", { name: "Invite user" }).waitFor({ timeout: 20_000 });
-        rowCount = await page.getByRole("row").filter({ hasText: "dana.newcomer@doc030-cfg.example" }).count();
+        rowCount = await page
+          .getByRole("row")
+          .filter({ hasText: "dana.newcomer@doc030-cfg.example" })
+          .count();
         const row = page.getByRole("row").filter({ hasText: "casey.invitee@doc030-cfg.example" });
         const resend = row.getByRole("button", { name: "Resend invite" });
         if (await resend.count()) {
-          const ans = page.waitForResponse((r) => /invite/.test(r.url()) && r.request().method() === "POST");
+          const ans = page.waitForResponse(
+            (r) => /invite/.test(r.url()) && r.request().method() === "POST",
+          );
           await resend.first().click();
           const rr = await ans;
           await sleep(1500);
           resendMsg = `${rr.status()} "${(await row.innerText()).replace(/\s+/g, " ").trim().slice(0, 300)}"`;
-        } else resendMsg = `no Resend invite on Casey's row: "${(await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim()}"`;
+        } else
+          resendMsg = `no Resend invite on Casey's row: "${(await row.innerText().catch(() => "")).replace(/\s+/g, " ").trim()}"`;
       } finally {
         await s.context.close();
       }
       const after = await mailTotal();
       const detail = `Test email: ${test.status} "${test.detail}". Sign-in pages offer: /auth/login [${offers["/auth/login"].join(", ")}], /portal/login [${offers["/portal/login"].join(", ")}]. Settings → Users → Invite user → Send invite for the fictional Dana Newcomer: ${inviteMsg}; after reload ${rowCount} row for her. Resend invite on Casey Invitee's Invited row: ${resendMsg}. Relay message count ${before} before and ${after} after.`;
-      expect(test.status !== 200 && offers["/auth/login"].length === 0 && offers["/portal/login"].length === 0 && /^4\d\d/.test(inviteMsg) && /environment|SMTP_FROM/.test(inviteMsg) && rowCount === 0 && after === before, detail);
+      expect(
+        test.status !== 200 &&
+          offers["/auth/login"].length === 0 &&
+          offers["/portal/login"].length === 0 &&
+          /^4\d\d/.test(inviteMsg) &&
+          /environment|SMTP_FROM/.test(inviteMsg) &&
+          rowCount === 0 &&
+          after === before,
+        detail,
+      );
       return `${detail} Screenshot invite-without-smtp-from.png.`;
     },
   );
@@ -2646,10 +3181,19 @@ phases.mail = async () => {
       expect((await waitReady()) === 200, "not ready");
       const api = await adminApi();
       const since = new Date().toISOString();
-      const r = await api.post("/api/v1/auth/invites", { data: { email: "dana.newcomer@doc030-cfg.example", displayName: "Dana Newcomer", role: "legal_team_member" } });
+      const r = await api.post("/api/v1/auth/invites", {
+        data: {
+          email: "dana.newcomer@doc030-cfg.example",
+          displayName: "Dana Newcomer",
+          role: "legal_team_member",
+        },
+      });
       const msg = await waitMail("dana.newcomer@doc030-cfg.example", null, since, 30_000);
       const origin = msg ? firstLink(msg).origin : null;
-      expect(msg && msg.From.Address === "env-relay@doc030-cfg.example" && origin === ORIGIN, `${r.status()} ${JSON.stringify(await json(r)).slice(0, 200)} from ${msg?.From?.Address} origin ${origin}`);
+      expect(
+        msg && msg.From.Address === "env-relay@doc030-cfg.example" && origin === ORIGIN,
+        `${r.status()} ${JSON.stringify(await json(r)).slice(0, 200)} from ${msg?.From?.Address} origin ${origin}`,
+      );
       return `The invite answered ${r.status()}; "${msg.Subject}" arrived at the relay from ${msg.From.Address} with a link on ${origin}.`;
     },
   );
@@ -2672,7 +3216,10 @@ phases.mail = async () => {
       const api2 = await adminApi();
       const good = await testEmail(api2);
       const settings2 = await json(await api2.get("/api/v1/email-settings"));
-      expect(bad.status !== 200 && good.delivered && good.from === "openlaw@doc030-cfg.example", `${JSON.stringify(bad)} ${JSON.stringify(good)}`);
+      expect(
+        bad.status !== 200 && good.delivered && good.from === "openlaw@doc030-cfg.example",
+        `${JSON.stringify(bad)} ${JSON.stringify(good)}`,
+      );
       return `Unreachable env relay: the test answered ${bad.status} "${bad.detail}"; email settings report source ${settings.source}. After removing SMTP_URL and SMTP_FROM and up, source ${settings2.source}, and the test email was delivered from ${good.from} (the relay saved in the wizard).`;
     },
   );
@@ -2692,10 +3239,16 @@ phases.database = async () => {
       expect(up().code === 0, "up failed");
       const ready = await waitReady(240_000);
       const setup = await fetch(`${LOCAL}/api/v1/auth/setup`).then((x) => x.json());
-      const migrations = sh(`docker compose exec -T extdb psql -U doc030ext -d doc030ext -At -c "select count(*) from drizzle.__drizzle_migrations"`, { cwd: FIX }).stdout.trim();
+      const migrations = sh(
+        `docker compose exec -T extdb psql -U doc030ext -d doc030ext -At -c "select count(*) from drizzle.__drizzle_migrations"`,
+        { cwd: FIX },
+      ).stdout.trim();
       const bundled = containerState("postgres");
       const token = /Paste this setup token/.test(logsSince("app", since));
-      expect(ready === 200 && setup.needsSetup === true && bundled.state === "running", `${ready} ${JSON.stringify(setup)} ${bundled.state}`);
+      expect(
+        ready === 200 && setup.needsSetup === true && bundled.state === "running",
+        `${ready} ${JSON.stringify(setup)} ${bundled.state}`,
+      );
       return `readyz ${ready}; GET /api/v1/auth/setup answered needsSetup=${setup.needsSetup}; the external database holds ${migrations} applied migration rows; the bundled postgres service is still ${bundled.state}; a new setup token was printed: ${token}. No records moved from the bundled database.`;
     },
   );
@@ -2712,7 +3265,11 @@ phases.database = async () => {
       up();
       const a = await waitExitOrRestart("app");
       await sleep(3000);
-      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /S3_BUCKET/.test(l)) ?? "";
+      const line =
+        logsSince("app", since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /S3_BUCKET/.test(l)) ?? "";
       setEnv(saved);
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
@@ -2727,7 +3284,11 @@ phases.database = async () => {
     "On the fresh external database with SMTP_URL set and SMTP_FROM unset: create the Administrator and open the welcome wizard's email step",
     "The email step warns that the environment sets SMTP_URL but not SMTP_FROM, shows no Send test email, and the wizard cannot finish.",
     async () => {
-      setEnv({ SMTP_URL: "smtp://relay:1025", SMTP_FROM: null, SETUP_TOKEN: secret("setupToken2") });
+      setEnv({
+        SMTP_URL: "smtp://relay:1025",
+        SMTP_FROM: null,
+        SETUP_TOKEN: secret("setupToken2"),
+      });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
       const { page, context } = await newSession();
@@ -2740,7 +3301,9 @@ phases.database = async () => {
         await page.getByLabel("Password", { exact: true }).fill(state.adminPassword);
         await page.getByLabel("Confirm password", { exact: true }).fill(state.adminPassword);
         await page.getByRole("button", { name: "Create Administrator" }).click();
-        await page.getByRole("heading", { name: "Welcome to OpenLaw" }).waitFor({ timeout: 30_000 });
+        await page
+          .getByRole("heading", { name: "Welcome to OpenLaw" })
+          .waitFor({ timeout: 30_000 });
         await page.getByRole("button", { name: "Get started" }).click();
         await page.getByLabel("Organization name").fill("DOC-030 external database Organization");
         let warn = "";
@@ -2756,9 +3319,14 @@ phases.database = async () => {
         const sendTest = await page.getByRole("button", { name: "Send test email" }).count();
         const cont = page.getByRole("button", { name: "Continue" });
         const disabled = (await cont.count()) ? await cont.isDisabled() : "absent";
-        const done = await page.request.post(`${ORIGIN}/api/v1/onboarding/complete`, { headers: { origin: ORIGIN } });
+        const done = await page.request.post(`${ORIGIN}/api/v1/onboarding/complete`, {
+          headers: { origin: ORIGIN },
+        });
         await page.screenshot({ path: path.join(here, "wizard-email-without-smtp-from.png") });
-        expect(warn && sendTest === 0 && done.status() === 409, `${warn} ${sendTest} ${disabled} ${done.status()}`);
+        expect(
+          warn && sendTest === 0 && done.status() === 409,
+          `${warn} ${sendTest} ${disabled} ${done.status()}`,
+        );
         return `After Create Administrator for the fictional Jordan External, the wizard's email step showed "${warn}", no Send test email button, Continue disabled: ${disabled}. A completion request answered ${done.status()}. Screenshot wizard-email-without-smtp-from.png.`;
       } finally {
         await context.close();
@@ -2772,13 +3340,21 @@ phases.database = async () => {
     "Point DATABASE_URL at an unresolvable host, then remove DATABASE_URL",
     "An unreachable database stops readiness; removing DATABASE_URL returns the bundled database and its records.",
     async () => {
-      setEnv({ DATABASE_URL: "postgres://doc030ext:x@extdb-missing.invalid:5432/doc030ext", SMTP_URL: null, SETUP_TOKEN: null });
+      setEnv({
+        DATABASE_URL: "postgres://doc030ext:x@extdb-missing.invalid:5432/doc030ext",
+        SMTP_URL: null,
+        SETUP_TOKEN: null,
+      });
       const since = new Date().toISOString();
       up();
       await sleep(20_000);
       const rz = await readyz();
       const a = containerState("app");
-      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /ENOTFOUND|getaddrinfo/.test(l)) ?? "";
+      const line =
+        logsSince("app", since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /ENOTFOUND|getaddrinfo/.test(l)) ?? "";
       setEnv({ DATABASE_URL: null });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
@@ -2791,14 +3367,19 @@ phases.database = async () => {
 };
 
 function remoteAddresses() {
-  return sh(`docker compose logs --since=5m app | grep -o '"remoteAddress":"[^"]*"' | sort | uniq -c`).stdout
-    .trim()
+  return sh(
+    `docker compose logs --since=5m app | grep -o '"remoteAddress":"[^"]*"' | sort | uniq -c`,
+  )
+    .stdout.trim()
     .split("\n")
     .map((l) => l.trim().replace(/\s+/, "× "))
     .join("; ");
 }
 async function browserSignInVia(connectHost) {
-  const b = await chromium.launch({ headless: true, args: [`--host-resolver-rules=MAP openlaw-cfg.localhost ${connectHost}`] });
+  const b = await chromium.launch({
+    headless: true,
+    args: [`--host-resolver-rules=MAP openlaw-cfg.localhost ${connectHost}`],
+  });
   try {
     const context = await b.newContext({ ignoreHTTPSErrors: true });
     const page = await context.newPage();
@@ -2817,8 +3398,15 @@ async function sharedBucket() {
   await sleep(11_000);
   const wrong = [];
   for (let i = 0; i < 4; i++) {
-    const body = JSON.stringify({ email: "nobody@doc030-cfg.example", password: "wrong-password-1" });
-    wrong.push(sh(`curl -sk --resolve openlaw-cfg.localhost:${PROXY_PORT}:127.0.0.1 -o /dev/null -w '%{http_code}' -H 'origin: ${ORIGIN}' -H 'content-type: application/json' --data '${body}' ${ORIGIN}/api/auth/sign-in/email`).stdout.trim());
+    const body = JSON.stringify({
+      email: "nobody@doc030-cfg.example",
+      password: "wrong-password-1",
+    });
+    wrong.push(
+      sh(
+        `curl -sk --resolve openlaw-cfg.localhost:${PROXY_PORT}:127.0.0.1 -o /dev/null -w '%{http_code}' -H 'origin: ${ORIGIN}' -H 'content-type: application/json' --data '${body}' ${ORIGIN}/api/auth/sign-in/email`,
+      ).stdout.trim(),
+    );
   }
   const right = await sessionIpAfterSignIn({ connect: "::1" });
   lastSignIn = Date.now();
@@ -2834,7 +3422,9 @@ phases["trusted-proxy"] = async () => {
     "Find the trusted proxy address: run the guide's docker network inspect command for this project",
     "It prints the gateway and range of the app's Compose network.",
     () => {
-      const r = sh(`docker network inspect ${PROJECT}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'`);
+      const r = sh(
+        `docker network inspect ${PROJECT}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'`,
+      );
       const [gw, subnet] = r.stdout.trim().split(" ");
       expect(r.code === 0 && gw && subnet, r.stdout + r.stderr);
       state.backendGateway = gw;
@@ -2857,7 +3447,13 @@ phases["trusted-proxy"] = async () => {
       await browserSignInVia("127.0.0.1");
       const addrs = remoteAddresses();
       const bucket = await sharedBucket();
-      expect(!warned && addrs.includes(state.backendGateway) && !/127\.0\.0\.1/.test(addrs) && bucket.right === "429", `${warned} ${addrs} ${JSON.stringify(bucket)}`);
+      expect(
+        !warned &&
+          addrs.includes(state.backendGateway) &&
+          !/127\.0\.0\.1/.test(addrs) &&
+          bucket.right === "429",
+        `${warned} ${addrs} ${JSON.stringify(bucket)}`,
+      );
       return `No TRUSTED_PROXIES warning in the start log. The log check printed: ${addrs}. Four wrong-password sign-ins through Caddy on 127.0.0.1 answered ${bucket.wrong}; the right password for ${COLLEAGUE.name} from a client on ::1 then answered ${bucket.right}.`;
     },
   );
@@ -2875,7 +3471,10 @@ phases["trusted-proxy"] = async () => {
       await browserSignInVia("127.0.0.1");
       const addrs = remoteAddresses();
       const bucket = await sharedBucket();
-      expect(/"remoteAddress":"127\.0\.0\.1"/.test(addrs) && bucket.right === "200", `${addrs} ${JSON.stringify(bucket)}`);
+      expect(
+        /"remoteAddress":"127\.0\.0\.1"/.test(addrs) && bucket.right === "200",
+        `${addrs} ${JSON.stringify(bucket)}`,
+      );
       return `TRUSTED_PROXIES=${state.backendGateway}. The log check printed: ${addrs}. Four wrong-password sign-ins from the 127.0.0.1 client answered ${bucket.wrong}; the right password from the ::1 client then answered ${bucket.right}.`;
     },
   );
@@ -2891,7 +3490,11 @@ phases["trusted-proxy"] = async () => {
       up();
       const a = await waitExitOrRestart("app");
       await sleep(3000);
-      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /invalid IP address/.test(l)) ?? "";
+      const line =
+        logsSince("app", since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /invalid IP address/.test(l)) ?? "";
       setEnv({ TRUSTED_PROXIES: state.backendGateway });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
@@ -2906,7 +3509,8 @@ const CA = path.join(CERTS, "ca.pem");
 function curlLan(args, { bind = LAN_IP, origin = LAN_ORIGIN } = {}) {
   const u = new URL(origin);
   const port = u.port || (u.protocol === "https:" ? 443 : 80);
-  const tls = u.protocol === "https:" ? `--cacert ${CA} --resolve ${u.hostname}:${port}:${bind}` : "";
+  const tls =
+    u.protocol === "https:" ? `--cacert ${CA} --resolve ${u.hostname}:${port}:${bind}` : "";
   return sh(`curl -sS -m 20 ${tls} ${args}`, { cwd: WORK });
 }
 /** A Streamable HTTP exchange through curl: initialize, then one request. Returns status and JSON. */
@@ -2923,17 +3527,36 @@ function mcpExchange(auth, method, params = {}, opts = {}) {
       opts,
     );
     const headers = existsSync(hdrFile) ? readFileSync(hdrFile, "utf8") : "";
-    const raw = existsSync(path.join(PRIVATE, "mcp-out.txt")) ? readFileSync(path.join(PRIVATE, "mcp-out.txt"), "utf8") : "";
+    const raw = existsSync(path.join(PRIVATE, "mcp-out.txt"))
+      ? readFileSync(path.join(PRIVATE, "mcp-out.txt"), "utf8")
+      : "";
     let body = null;
-    const data = raw.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim());
+    const data = raw
+      .split("\n")
+      .filter((l) => l.startsWith("data:"))
+      .map((l) => l.slice(5).trim());
     try {
       body = JSON.parse(data.length ? data.at(-1) : raw);
     } catch {
       body = raw.slice(0, 200);
     }
-    return { status: r.stdout.trim() || `curl exit ${r.code}: ${firstLines(r.stderr, 1)}`, headers, body, session: headers.match(/^mcp-session-id:\s*(\S+)/im)?.[1] };
+    return {
+      status: r.stdout.trim() || `curl exit ${r.code}: ${firstLines(r.stderr, 1)}`,
+      headers,
+      body,
+      session: headers.match(/^mcp-session-id:\s*(\S+)/im)?.[1],
+    };
   };
-  const init = post({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "doc030-walkthrough", version: "1" } } });
+  const init = post({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "doc030-walkthrough", version: "1" },
+    },
+  });
   if (init.status !== "200") return init;
   if (init.session) post({ jsonrpc: "2.0", method: "notifications/initialized" }, init.session);
   const res = post({ jsonrpc: "2.0", id: 2, method, params }, init.session);
@@ -2943,7 +3566,10 @@ const keyHeader = () => `x-api-key: ${state.lanKey}`;
 
 async function lanSession(email, password) {
   lanBind = LAN_IP;
-  const b = await chromium.launch({ headless: true, args: [`--host-resolver-rules=MAP ${LAN_HOST} ${LAN_IP}`] });
+  const b = await chromium.launch({
+    headless: true,
+    args: [`--host-resolver-rules=MAP ${LAN_HOST} ${LAN_IP}`],
+  });
   const context = await b.newContext({ ignoreHTTPSErrors: true, baseURL: LAN_ORIGIN });
   context.on("close", () => b.close().catch(() => {}));
   const page = await context.newPage();
@@ -2996,7 +3622,8 @@ async function requestKey(clientName) {
     await dialog.getByLabel("Client name").fill(clientName);
     await dialog.getByText("Contracts", { exact: true }).click();
     await dialog.getByLabel("Read. Find and read what you can access.").check();
-    const expiry = (await dialog.innerText()).split("\n").find((l) => /Expires|expire/.test(l)) ?? "";
+    const expiry =
+      (await dialog.innerText()).split("\n").find((l) => /Expires|expire/.test(l)) ?? "";
     await dialog.getByRole("button", { name: "Send request" }).click();
     await page.getByText("Pending approval").first().waitFor({ timeout: 15_000 });
     return expiry.trim();
@@ -3009,14 +3636,25 @@ async function approveKey(clientName) {
   try {
     const page = s.page;
     await page.goto(`${LAN_ORIGIN}/settings/mcp`);
-    const row = page.getByRole("row").filter({ hasText: clientName }).filter({ hasText: "Pending approval" }).first();
+    const row = page
+      .getByRole("row")
+      .filter({ hasText: clientName })
+      .filter({ hasText: "Pending approval" })
+      .first();
     await row.waitFor({ timeout: 20_000 });
     await row.getByRole("button", { name: "Approve" }).click();
     const confirm = page.getByRole("dialog").getByRole("button", { name: "Approve" });
     if (await confirm.count()) await confirm.click();
-    await page.getByRole("row").filter({ hasText: clientName }).filter({ hasText: "Pending approval" }).first().waitFor({ state: "detached", timeout: 15_000 });
+    await page
+      .getByRole("row")
+      .filter({ hasText: clientName })
+      .filter({ hasText: "Pending approval" })
+      .first()
+      .waitFor({ state: "detached", timeout: 15_000 });
     await sleep(1000);
-    return (await page.getByRole("row").filter({ hasText: clientName }).allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim()).join(" | ");
+    return (await page.getByRole("row").filter({ hasText: clientName }).allInnerTexts())
+      .map((t) => t.replace(/\s+/g, " ").trim())
+      .join(" | ");
   } finally {
     await s.context.close();
   }
@@ -3059,19 +3697,50 @@ phases["lan-setup"] = async () => {
       const fxCompose = path.join(FIX, "compose.yml");
       const text = readFileSync(fxCompose, "utf8");
       if (!text.includes("./certs:/etc/caddy/certs"))
-        writeFileSync(fxCompose, text.replace("      - ./Caddyfile:/etc/caddy/Caddyfile:ro\n", "      - ./Caddyfile:/etc/caddy/Caddyfile:ro\n      - ./certs:/etc/caddy/certs:ro\n"));
-      expect(sh("docker compose up -d --pull never proxy", { cwd: FIX }).code === 0, "proxy recreate failed");
+        writeFileSync(
+          fxCompose,
+          text.replace(
+            "      - ./Caddyfile:/etc/caddy/Caddyfile:ro\n",
+            "      - ./Caddyfile:/etc/caddy/Caddyfile:ro\n      - ./certs:/etc/caddy/certs:ro\n",
+          ),
+        );
+      expect(
+        sh("docker compose up -d --pull never proxy", { cwd: FIX }).code === 0,
+        "proxy recreate failed",
+      );
       caddyfile(LAN_SITE());
-      const v = sh("docker compose exec -T proxy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile 2>&1 | tail -1", { cwd: FIX });
+      const v = sh(
+        "docker compose exec -T proxy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile 2>&1 | tail -1",
+        { cwd: FIX },
+      );
       setEnv({ BASE_URL: LAN_ORIGIN });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
-      const lan = curlLan(`-o /dev/null -D - -w '%{http_code} %{ssl_verify_result}' ${LAN_ORIGIN}/readyz`);
-      const ts = curlLan(`-o /dev/null -w '%{http_code} %{ssl_verify_result}' ${LAN_ORIGIN}/readyz`, { bind: TAILNET_IP });
-      const noCa = sh(`curl -sS -m 10 --resolve ${LAN_HOST}:${LAN_PORT}:${LAN_IP} -o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`);
-      const direct = sh(`curl -s -m 5 -o /dev/null -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`).stdout.trim();
-      const hdrs = lan.stdout.split("\n").filter((l) => /^(x-frame-options|referrer-policy|x-content-type-options):/i.test(l)).map((l) => l.trim());
-      expect(/Valid configuration/.test(v.stdout) && /200 0$/.test(lan.stdout.trim()) && /200 0/.test(ts.stdout) && noCa.code !== 0 && direct === "000", `${v.stdout} | ${lan.stdout} | ${ts.stdout} | ${noCa.code} | ${direct}`);
+      const lan = curlLan(
+        `-o /dev/null -D - -w '%{http_code} %{ssl_verify_result}' ${LAN_ORIGIN}/readyz`,
+      );
+      const ts = curlLan(
+        `-o /dev/null -w '%{http_code} %{ssl_verify_result}' ${LAN_ORIGIN}/readyz`,
+        { bind: TAILNET_IP },
+      );
+      const noCa = sh(
+        `curl -sS -m 10 --resolve ${LAN_HOST}:${LAN_PORT}:${LAN_IP} -o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`,
+      );
+      const direct = sh(
+        `curl -s -m 5 -o /dev/null -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz`,
+      ).stdout.trim();
+      const hdrs = lan.stdout
+        .split("\n")
+        .filter((l) => /^(x-frame-options|referrer-policy|x-content-type-options):/i.test(l))
+        .map((l) => l.trim());
+      expect(
+        /Valid configuration/.test(v.stdout) &&
+          /200 0$/.test(lan.stdout.trim()) &&
+          /200 0/.test(ts.stdout) &&
+          noCa.code !== 0 &&
+          direct === "000",
+        `${v.stdout} | ${lan.stdout} | ${ts.stdout} | ${noCa.code} | ${direct}`,
+      );
       return `A fictional CA signed a certificate for ${LAN_HOST}. The adapted Caddyfile site binds ${LAN_IP} (LAN) and ${TAILNET_IP} (Tailscale) on port ${LAN_PORT} (443 needs root on this host), uses tls with the certificate files, the three headers, and reverse_proxy 127.0.0.1:${APP_PORT}; "caddy validate" printed "${v.stdout.trim()}". BASE_URL=${LAN_ORIGIN} and up. From this machine, curl with only the fictional CA trusted reached ${LAN_ORIGIN}/readyz on the LAN address: ${lan.stdout.trim().split("\n").at(-1)} (HTTP, verify result), headers ${hdrs.join("; ")}; on the Tailscale address: ${ts.stdout.trim()}. Without the CA, curl refused the certificate (exit ${noCa.code}). The app port on ${LAN_IP}:${APP_PORT} got no connection (${direct}). Hostname resolution used curl --resolve and browser host rules in place of internal DNS.`;
     },
   );
@@ -3113,10 +3782,13 @@ phases["lan-keys"] = async () => {
     "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
     async () => {
       let expiry, approvedRow;
-      const waiting = psql("select count(*) from api_key_requests where client_name='Claude Code' and status='approved' and sealed_key is not null").stdout.trim();
+      const waiting = psql(
+        "select count(*) from api_key_requests where client_name='Claude Code' and status='approved' and sealed_key is not null",
+      ).stdout.trim();
       if (waiting === "1") {
         expiry = "(read in the earlier attempt)";
-        approvedRow = "approved in the earlier attempt, which then waited for an Active label that the MCP page does not show";
+        approvedRow =
+          "approved in the earlier attempt, which then waited for an Active label that the MCP page does not show";
       } else {
         expiry = await requestKey("Claude Code");
         approvedRow = await approveKey("Claude Code");
@@ -3140,7 +3812,14 @@ phases["lan-keys"] = async () => {
       const who = mcpExchange(keyHeader(), "tools/call", { name: "openlaw_whoami", arguments: {} });
       const names = (lan.body?.result?.tools ?? []).map((t) => t.name);
       const whoText = JSON.stringify(who.body?.result ?? who.body).slice(0, 200);
-      expect(lan.status === "200" && names.length > 0 && ts.status === "200" && (ts.body?.result?.tools ?? []).length === names.length && who.status === "200", `${lan.status} ${names.length} ${ts.status} ${who.status}`);
+      expect(
+        lan.status === "200" &&
+          names.length > 0 &&
+          ts.status === "200" &&
+          (ts.body?.result?.tools ?? []).length === names.length &&
+          who.status === "200",
+        `${lan.status} ${names.length} ${ts.status} ${who.status}`,
+      );
       return `On ${LAN_IP}: initialize and tools/list answered ${lan.status} with ${names.length} Tools (${names.slice(0, 6).join(", ")}…). On ${TAILNET_IP}: ${ts.status} with the same ${names.length} Tools. openlaw_whoami answered ${who.status}: ${sanitize(whoText)}. curl verified the certificate against the fictional CA only.`;
     },
   );
@@ -3172,7 +3851,9 @@ phases["m41-https"] = async () => {
         "/api/auth/jwks",
       ];
       const out = paths.map((p) => {
-        const r = curlLan(`-o ${path.join(PRIVATE, "wk.json")} -w '%{http_code} %{content_type}' ${LAN_ORIGIN}${p}`);
+        const r = curlLan(
+          `-o ${path.join(PRIVATE, "wk.json")} -w '%{http_code} %{content_type}' ${LAN_ORIGIN}${p}`,
+        );
         let ok = false;
         try {
           JSON.parse(readFileSync(path.join(PRIVATE, "wk.json"), "utf8"));
@@ -3180,10 +3861,21 @@ phases["m41-https"] = async () => {
         } catch {}
         return `${p} ${r.stdout.trim()}${ok ? " JSON" : " not JSON"}`;
       });
-      const mcp = curlLan(`-o /dev/null -D - -X POST -H 'content-type: application/json' --data '{}' ${LAN_ORIGIN}/mcp`);
-      const www = mcp.stdout.split("\n").find((l) => /^www-authenticate:/i.test(l))?.trim() ?? "";
+      const mcp = curlLan(
+        `-o /dev/null -D - -X POST -H 'content-type: application/json' --data '{}' ${LAN_ORIGIN}/mcp`,
+      );
+      const www =
+        mcp.stdout
+          .split("\n")
+          .find((l) => /^www-authenticate:/i.test(l))
+          ?.trim() ?? "";
       const code = mcp.stdout.split("\n")[0].trim();
-      expect(out.every((l) => / 200 application\/json.* JSON$/.test(l)) && / 401/.test(code) && /resource_metadata=.*oauth-protected-resource/.test(www), `${out.join("; ")} | ${code} | ${www}`);
+      expect(
+        out.every((l) => / 200 application\/json.* JSON$/.test(l)) &&
+          / 401/.test(code) &&
+          /resource_metadata=.*oauth-protected-resource/.test(www),
+        `${out.join("; ")} | ${code} | ${www}`,
+      );
       return `${out.join("; ")}. Unauthenticated POST /mcp: "${code}" with "${www}".`;
     },
   );
@@ -3204,7 +3896,9 @@ phases["m41-https"] = async () => {
         await page.getByText("Settings saved.").first().waitFor({ timeout: 15_000 });
         await sleep(1000);
         const pill = await oauthPill(page);
-        const checked = await page.getByRole("switch", { name: "Legal Users OAuth Clients" }).getAttribute("aria-checked");
+        const checked = await page
+          .getByRole("switch", { name: "Legal Users OAuth Clients" })
+          .getAttribute("aria-checked");
         expect(/^Not reachable · /.test(pill) && checked === "true", `${pill} ${checked}`);
         return `Legal Users OAuth Clients saved ("Settings saved.", switch on). The pill reads "${pill}". The API resolves the private hostname from inside its container; this deployment has no public address, so the pill warns as the guide says it may.`;
       } finally {
@@ -3224,7 +3918,9 @@ phases["m41-cc-oauth"] = async () => {
     async () => {
       const { createHash: h, randomBytes: rb } = await import("node:crypto");
       const http = await import("node:http");
-      const meta = JSON.parse(curlLan(`${LAN_ORIGIN}/.well-known/oauth-authorization-server`).stdout);
+      const meta = JSON.parse(
+        curlLan(`${LAN_ORIGIN}/.well-known/oauth-authorization-server`).stdout,
+      );
       const verifier = rb(32).toString("base64url");
       const challenge = h("sha256").update(verifier).digest("base64url");
       let resolveCode;
@@ -3240,9 +3936,20 @@ phases["m41-cc-oauth"] = async () => {
       const port = server.address().port;
       const redirect = `http://127.0.0.1:${port}/callback`;
       const clientId = "https://claude.ai/oauth/claude-code-client-metadata";
-      const scopes = ["toolset:contracts", "offline_access"].filter((x) => (meta.scopes_supported ?? []).includes(x)).join(" ");
+      const scopes = ["toolset:contracts", "offline_access"]
+        .filter((x) => (meta.scopes_supported ?? []).includes(x))
+        .join(" ");
       const url = new URL(meta.authorization_endpoint);
-      url.search = new URLSearchParams({ response_type: "code", client_id: clientId, redirect_uri: redirect, code_challenge: challenge, code_challenge_method: "S256", scope: scopes, state: "doc030", resource: `${LAN_ORIGIN}/mcp` }).toString();
+      url.search = new URLSearchParams({
+        response_type: "code",
+        client_id: clientId,
+        redirect_uri: redirect,
+        code_challenge: challenge,
+        code_challenge_method: "S256",
+        scope: scopes,
+        state: "doc030",
+        resource: `${LAN_ORIGIN}/mcp`,
+      }).toString();
       const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
       let consentText = "";
       let tokenStatus, tools, after, revoked;
@@ -3251,18 +3958,26 @@ phases["m41-cc-oauth"] = async () => {
         await page.goto(url.href);
         await page.waitForLoadState("networkidle").catch(() => {});
         await sleep(1500);
-        consentText = (await page.locator("main, body").first().innerText()).replace(/\s+/g, " ").slice(0, 300);
+        consentText = (await page.locator("main, body").first().innerText())
+          .replace(/\s+/g, " ")
+          .slice(0, 300);
         const early = await Promise.race([got, sleep(5000).then(() => null)]);
         let consented = "consent page shown";
         if (!early) {
-          await page.locator("main label").filter({ hasText: /^Contracts$/ }).first().click();
+          await page
+            .locator("main label")
+            .filter({ hasText: /^Contracts$/ })
+            .first()
+            .click();
           await page.getByRole("radio", { name: "Read only" }).check();
           await page.getByRole("button", { name: "Allow", exact: true }).click();
         } else consented = "no consent page: an existing grant for this Client answered at once";
         state.consented = consented;
         const code = early ?? (await Promise.race([got, sleep(30_000).then(() => null)]));
         expect(code?.code, `no code at the loopback callback; consent page said: ${consentText}`);
-        const tok = curlLan(`-o ${path.join(PRIVATE, "tok.json")} -w '%{http_code}' --data-urlencode grant_type=authorization_code --data-urlencode code=${code.code} --data-urlencode redirect_uri=${redirect} --data-urlencode client_id=${clientId} --data-urlencode code_verifier=${verifier} --data-urlencode resource=${LAN_ORIGIN}/mcp ${meta.token_endpoint}`);
+        const tok = curlLan(
+          `-o ${path.join(PRIVATE, "tok.json")} -w '%{http_code}' --data-urlencode grant_type=authorization_code --data-urlencode code=${code.code} --data-urlencode redirect_uri=${redirect} --data-urlencode client_id=${clientId} --data-urlencode code_verifier=${verifier} --data-urlencode resource=${LAN_ORIGIN}/mcp ${meta.token_endpoint}`,
+        );
         tokenStatus = tok.stdout.trim();
         const token = JSON.parse(readFileSync(path.join(PRIVATE, "tok.json"), "utf8")).access_token;
         state.ccTokenLength = token?.length;
@@ -3271,8 +3986,16 @@ phases["m41-cc-oauth"] = async () => {
         const p2 = await s.context.newPage();
         await p2.goto(`${LAN_ORIGIN}/settings/api-keys`);
         await p2.getByText("Connected Clients").first().waitFor({ timeout: 20_000 });
-        const card = (await p2.locator("main").innerText()).split("Connected Clients")[1]?.split("A Client on")[0]?.replace(/\s+/g, " ").trim() ?? "";
-        await p2.getByRole("button", { name: /Disconnect/ }).first().click();
+        const card =
+          (await p2.locator("main").innerText())
+            .split("Connected Clients")[1]
+            ?.split("A Client on")[0]
+            ?.replace(/\s+/g, " ")
+            .trim() ?? "";
+        await p2
+          .getByRole("button", { name: /Disconnect/ })
+          .first()
+          .click();
         const d = p2.getByRole("dialog");
         const title = (await d.innerText()).split("\n")[0];
         await d.getByRole("button").filter({ hasNotText: "Cancel" }).last().click();
@@ -3283,7 +4006,10 @@ phases["m41-cc-oauth"] = async () => {
         server.close();
         await s.context.close();
       }
-      expect(tokenStatus === "200" && /^200 /.test(tools) && after === "401", `${tokenStatus} ${tools} ${after}`);
+      expect(
+        tokenStatus === "200" && /^200 /.test(tools) && after === "401",
+        `${tokenStatus} ${tools} ${after}`,
+      );
       return `Discovery named ${meta.authorization_endpoint} and ${meta.token_endpoint}. The authorization request with client_id ${clientId} and redirect ${redirect.replace(/:\d+\//, ":<port>/")} for the signed-in Legal Team Member: ${state.consented} ("${sanitize(consentText).slice(0, 160)}…"). The browser then returned to the loopback callback with a code; the token exchange with the PKCE verifier answered ${tokenStatus}; tools/list with the Bearer token answered ${tools}. On API keys the Claude Code grant row was revoked ("${revoked.slice(0, 80)}"); the next tools/list answered ${after}. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).`;
     },
   );
@@ -3312,9 +4038,20 @@ phases["m41-plain"] = async () => {
         "/.well-known/openid-configuration/api/auth",
         "/.well-known/oauth-protected-resource",
         "/.well-known/oauth-protected-resource/mcp",
-      ].map((p) => `${p} ${sh(`curl -s -m 10 -o /dev/null -w '%{http_code}' ${LAN_PLAIN_ORIGIN}${p}`).stdout.trim()}`);
-      const list = mcpExchange(`x-api-key: ${state.plainKey}`, "tools/list", {}, { origin: LAN_PLAIN_ORIGIN });
-      expect(wk.every((l) => l.endsWith(" 404")) && list.status === "200", `${wk.join("; ")} | ${list.status}`);
+      ].map(
+        (p) =>
+          `${p} ${sh(`curl -s -m 10 -o /dev/null -w '%{http_code}' ${LAN_PLAIN_ORIGIN}${p}`).stdout.trim()}`,
+      );
+      const list = mcpExchange(
+        `x-api-key: ${state.plainKey}`,
+        "tools/list",
+        {},
+        { origin: LAN_PLAIN_ORIGIN },
+      );
+      expect(
+        wk.every((l) => l.endsWith(" 404")) && list.status === "200",
+        `${wk.join("; ")} | ${list.status}`,
+      );
       return `BASE_URL=${LAN_PLAIN_ORIGIN}; up and readyz 200. Well-known: ${wk.join("; ")}. tools/list with a key issued at the HTTPS origin just before (Client name Plain check) answered over plain HTTP ${list.status} with ${(list.body?.result?.tools ?? []).length} Tools.`;
     },
   );
@@ -3338,13 +4075,20 @@ phases["m41-plain"] = async () => {
         await page.goto(`${LAN_PLAIN_ORIGIN}/settings/mcp`);
         await page.getByText("Server address").first().waitFor({ timeout: 20_000 });
         const pill = await oauthPill(page);
-        const legal = await page.getByRole("switch", { name: "Legal Users OAuth Clients" }).getAttribute("aria-checked");
+        const legal = await page
+          .getByRole("switch", { name: "Legal Users OAuth Clients" })
+          .getAttribute("aria-checked");
         const sw = page.getByRole("switch", { name: "Business Users OAuth Clients" });
-        const answered = page.waitForResponse((r) => r.url().endsWith("/api/v1/mcp-settings") && r.request().method() === "PATCH");
+        const answered = page.waitForResponse(
+          (r) => r.url().endsWith("/api/v1/mcp-settings") && r.request().method() === "PATCH",
+        );
         await sw.click();
         const resp = await answered;
         await sleep(1200);
-        const alert = (await page.getByRole("alert").allInnerTexts()).map((t) => t.trim()).filter(Boolean).join(" | ");
+        const alert = (await page.getByRole("alert").allInnerTexts())
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .join(" | ");
         const after = await sw.getAttribute("aria-checked");
         let add = "no Add Client button";
         const addBtn = page.getByRole("button", { name: "Add Client" });
@@ -3354,14 +4098,31 @@ phases["m41-plain"] = async () => {
           const inputs = d.locator("input");
           if (await inputs.count()) await inputs.first().fill("DOC-030 test client");
           const urlField = d.getByLabel(/Callback|Redirect/i).first();
-          if (await urlField.count()) await urlField.fill("https://client.doc030-cfg.example/callback");
-          const ans = page.waitForResponse((r) => /allowed-clients/.test(r.url()) && r.request().method() === "POST", { timeout: 15_000 }).catch(() => null);
-          await d.getByRole("button", { name: /Add|Save|Create/ }).last().click();
+          if (await urlField.count())
+            await urlField.fill("https://client.doc030-cfg.example/callback");
+          const ans = page
+            .waitForResponse(
+              (r) => /allowed-clients/.test(r.url()) && r.request().method() === "POST",
+              { timeout: 15_000 },
+            )
+            .catch(() => null);
+          await d
+            .getByRole("button", { name: /Add|Save|Create/ })
+            .last()
+            .click();
           const ar = await ans;
           await sleep(1000);
-          add = `${ar ? ar.status() : "no request"} "${(await page.getByRole("alert").allInnerTexts()).map((t) => t.trim()).filter(Boolean).join(" | ")}"`;
+          add = `${ar ? ar.status() : "no request"} "${(
+            await page.getByRole("alert").allInnerTexts()
+          )
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .join(" | ")}"`;
         }
-        expect(/HTTPS scheme/.test(pill) && resp.status() >= 400 && after === "false", `${pill} ${resp.status()} ${after} ${alert}`);
+        expect(
+          /HTTPS scheme/.test(pill) && resp.status() >= 400 && after === "false",
+          `${pill} ${resp.status()} ${after} ${alert}`,
+        );
         return `The pill reads "${pill}"; Legal Users OAuth Clients shows aria-checked=${legal} (it was on before the change of address). Turning on Business Users OAuth Clients answered ${resp.status()} with "${alert}", and the switch stayed off. Add Client: ${add}.`;
       } finally {
         await b.close();
@@ -3379,7 +4140,9 @@ phases["m41-plain"] = async () => {
       setEnv({ BASE_URL: LAN_ORIGIN });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
-      const r = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/.well-known/oauth-authorization-server`).stdout.trim();
+      const r = curlLan(
+        `-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/.well-known/oauth-authorization-server`,
+      ).stdout.trim();
       expect(r === "200", r);
       return `BASE_URL=${LAN_ORIGIN}, up; discovery answered ${r}; the plain-HTTP Caddy site was removed.`;
     },
@@ -3409,14 +4172,22 @@ phases["lan-revoke"] = async () => {
       try {
         const page = s.page;
         await page.goto(`${LAN_ORIGIN}/settings/api-keys`);
-        const row = page.getByRole("row").filter({ hasText: "Revoke check" }).filter({ hasText: "Active" }).first();
+        const row = page
+          .getByRole("row")
+          .filter({ hasText: "Revoke check" })
+          .filter({ hasText: "Active" })
+          .first();
         await row.waitFor({ timeout: 20_000 });
         await row.getByRole("button", { name: "Revoke" }).click();
         const d = page.getByRole("dialog").filter({ hasText: "Revoke API key" });
         await d.getByRole("button", { name: "Revoke" }).click();
         await page.getByText("Revoked").first().waitFor({ timeout: 15_000 });
         await sleep(1000);
-        rowText = (await page.getByRole("row").filter({ hasText: "Revoke check" }).first().innerText()).replace(/\s+/g, " ").trim();
+        rowText = (
+          await page.getByRole("row").filter({ hasText: "Revoke check" }).first().innerText()
+        )
+          .replace(/\s+/g, " ")
+          .trim();
       } finally {
         await s.context.close();
       }
@@ -3443,14 +4214,18 @@ phases["lan-revoke"] = async () => {
       // The earlier attempt had already moved the expiry; put it back in the future first.
       psql(`update api_keys set expires_at = now() + interval '90 days' where id = ${scriptKeyId}`);
       const ok = mcpExchange(`x-api-key: ${key}`, "tools/list").status;
-      const u = psql(`update api_keys set expires_at = now() - interval '1 minute' where id = ${scriptKeyId} returning id`);
+      const u = psql(
+        `update api_keys set expires_at = now() - interval '1 minute' where id = ${scriptKeyId} returning id`,
+      );
       const after = mcpExchange(`x-api-key: ${key}`, "tools/list").status;
       const s = await lanSession(COLLEAGUE.email, state.colleaguePassword);
       let rowText = "";
       try {
         await s.page.goto(`${LAN_ORIGIN}/settings/api-keys`);
         await sleep(1500);
-        rowText = (await s.page.getByRole("row").filter({ hasText: "Script" }).first().innerText()).replace(/\s+/g, " ").trim();
+        rowText = (await s.page.getByRole("row").filter({ hasText: "Script" }).first().innerText())
+          .replace(/\s+/g, " ")
+          .trim();
       } finally {
         await s.context.close();
       }
@@ -3469,7 +4244,9 @@ phases["lan-pins"] = async () => {
     "A pinned rate limit applies; a value that is not a positive whole number falls back to 600.",
     async () => {
       if (!state.lanKey3) {
-        const pendingRate = psql("select count(*) from api_key_requests where client_name='Rate check'").stdout.trim();
+        const pendingRate = psql(
+          "select count(*) from api_key_requests where client_name='Rate check'",
+        ).stdout.trim();
         if (pendingRate === "0") await requestKey("Rate check");
         await approveKey("Rate check");
         state.lanKey3 = (await readKeyOnce()).key;
@@ -3481,8 +4258,17 @@ phases["lan-pins"] = async () => {
       expect((await waitReady()) === 200, "not ready");
       const calls = [];
       for (let i = 0; i < 4; i++) {
-        const r = mcpExchange(`x-api-key: ${key}`, "tools/call", { name: "openlaw_whoami", arguments: {} });
-        calls.push(JSON.stringify(r.body?.result?.isError ? r.body.result.content?.[0]?.text : r.body?.error?.message ?? "ok").slice(0, 120));
+        const r = mcpExchange(`x-api-key: ${key}`, "tools/call", {
+          name: "openlaw_whoami",
+          arguments: {},
+        });
+        calls.push(
+          JSON.stringify(
+            r.body?.result?.isError
+              ? r.body.result.content?.[0]?.text
+              : (r.body?.error?.message ?? "ok"),
+          ).slice(0, 120),
+        );
       }
       const api = await (async () => {
         const c = await apiClient(LAN_ORIGIN, ADMIN.email, state.adminPassword);
@@ -3494,13 +4280,21 @@ phases["lan-pins"] = async () => {
       // Count Tool calls this hour until the limit answers, in one Node loop inside the app network.
       const script = `const base=${JSON.stringify(LAN_ORIGIN)};let n=0,msg='';const h={'x-api-key':process.env.K,'accept':'application/json, text/event-stream','content-type':'application/json'};(async()=>{const i=await fetch(base+'/mcp',{method:'POST',headers:h,body:JSON.stringify({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'doc030',version:'1'}}})});const sid=i.headers.get('mcp-session-id');if(sid)h['mcp-session-id']=sid;await i.text();for(;n<700;n++){const r=await fetch(base+'/mcp',{method:'POST',headers:h,body:JSON.stringify({jsonrpc:'2.0',id:n+2,method:'tools/call',params:{name:'openlaw_whoami',arguments:{}}})});const t=await r.text();if(/limit is/.test(t)){msg=t.match(/The limit is[^"\\\\]*/)[0];break}}console.log(n+' '+msg)})()`;
       writeFileSync(path.join(PRIVATE, "rate.js"), script);
-      const r = sh(`K='${key}' NODE_EXTRA_CA_CERTS=${CA} node --import ${path.join(PRIVATE, "resolve.mjs")} ${path.join(PRIVATE, "rate.js")}`, { cwd: WORK, timeout: 600_000 });
-      const pinned = api ? await json(await api.get("/api/v1/advanced-settings/mcp")).catch(() => null) : null;
+      const r = sh(
+        `K='${key}' NODE_EXTRA_CA_CERTS=${CA} node --import ${path.join(PRIVATE, "resolve.mjs")} ${path.join(PRIVATE, "rate.js")}`,
+        { cwd: WORK, timeout: 600_000 },
+      );
+      const pinned = api
+        ? await json(await api.get("/api/v1/advanced-settings/mcp")).catch(() => null)
+        : null;
       setEnv({ MCP_RATE_LIMIT_PER_HOUR: null });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
       const out = r.stdout.trim();
-      expect(/The limit is 3 /.test(calls[3]) && /The limit is 600 /.test(out), `${calls.join(" | ")} || ${out} ${r.stderr.slice(0, 200)}`);
+      expect(
+        /The limit is 3 /.test(calls[3]) && /The limit is 600 /.test(out),
+        `${calls.join(" | ")} || ${out} ${r.stderr.slice(0, 200)}`,
+      );
       return `With MCP_RATE_LIMIT_PER_HOUR=3: four openlaw_whoami calls gave ${calls.join(" | ")}. With MCP_RATE_LIMIT_PER_HOUR=abc: after ${out.split(" ")[0]} more successful calls in the hour (3 already counted) the next answered "${out.replace(/^\d+ /, "")}". The pin was removed afterwards.`;
     },
   );
@@ -3516,7 +4310,11 @@ phases["lan-pins"] = async () => {
       up();
       const a = await waitExitOrRestart("app");
       await sleep(3000);
-      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /MCP_OAUTH_GRANT_LIFETIME_DAYS/.test(l)) ?? "";
+      const line =
+        logsSince("app", since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /MCP_OAUTH_GRANT_LIFETIME_DAYS/.test(l)) ?? "";
       setEnv({ MCP_OAUTH_GRANT_LIFETIME_DAYS: "45" });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
@@ -3533,7 +4331,10 @@ phases["lan-pins"] = async () => {
       setEnv({ MCP_OAUTH_GRANT_LIFETIME_DAYS: null });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
-      expect(line && /Deployment configuration · Read only/.test(src), `${JSON.stringify(a)} ${line} ${src}`);
+      expect(
+        line && /Deployment configuration · Read only/.test(src),
+        `${JSON.stringify(a)} ${line} ${src}`,
+      );
       return `400: app ${a?.state} (${a?.status}), log "${line.slice(0, 160)}". 45: Advanced → MCP → OAuth grant lifetime (days) reads "${src}". The pin was removed afterwards.`;
     },
   );
@@ -3553,11 +4354,26 @@ phases["lan-withdraw"] = async () => {
       caddyfile("");
       await sleep(2000);
       const lan = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`);
-      const ts = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`, { bind: TAILNET_IP });
+      const ts = curlLan(`-o /dev/null -w '%{http_code}' ${LAN_ORIGIN}/readyz`, {
+        bind: TAILNET_IP,
+      });
       const key = mcpExchange(`x-api-key: ${state.plainKey}`, "tools/list").status;
-      const direct = sh(`curl -s -m 5 -o /dev/null -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz; echo; curl -s -m 5 -o /dev/null -w '%{http_code}' http://${TAILNET_IP}:${APP_PORT}/readyz`).stdout.trim().split("\n");
-      const listen = sh(`ss -ltn | grep -E ':(${LAN_PORT}|${APP_PORT})\\b' | awk '{print $4}' | sort -u | tr '\\n' ' '`).stdout.trim();
-      expect(before === "200" && lan.code !== 0 && ts.code !== 0 && key === "000" && direct.every((d) => d === "000"), `${before} ${lan.code} ${ts.code} ${key} ${direct}`);
+      const direct = sh(
+        `curl -s -m 5 -o /dev/null -w '%{http_code}' http://${LAN_IP}:${APP_PORT}/readyz; echo; curl -s -m 5 -o /dev/null -w '%{http_code}' http://${TAILNET_IP}:${APP_PORT}/readyz`,
+      )
+        .stdout.trim()
+        .split("\n");
+      const listen = sh(
+        `ss -ltn | grep -E ':(${LAN_PORT}|${APP_PORT})\\b' | awk '{print $4}' | sort -u | tr '\\n' ' '`,
+      ).stdout.trim();
+      expect(
+        before === "200" &&
+          lan.code !== 0 &&
+          ts.code !== 0 &&
+          key === "000" &&
+          direct.every((d) => d === "000"),
+        `${before} ${lan.code} ${ts.code} ${key} ${direct}`,
+      );
       return `While private access was up, the Plain check key listed Tools (${before}). After removing the private Caddy site: the private origin on ${LAN_IP} failed (curl exit ${lan.code}: ${firstLines(lan.stderr, 1)}); on ${TAILNET_IP} failed (exit ${ts.code}); the Client request got no connection (curl code ${key}); the app port on ${LAN_IP} and ${TAILNET_IP} got no connection (${direct.join(", ")}). Listening sockets on those ports: ${listen}. No public forwarding or tunnel was used at any point.`;
     },
   );
@@ -3572,7 +4388,9 @@ phases["trusted-proxy-note"] = async () => {
     "The guide's claim holds for proxied requests: with 127.0.0.1,::1 every request through Caddy showed the gateway, no warning was logged, and one client's wrong passwords refused another client (429).",
     async () => {
       await sleep(65_000);
-      const lines = sh(`docker compose logs --since=2m app | grep '"remoteAddress":"127.0.0.1"' | grep -o '"path":"[^"]*"' | sort | uniq -c`).stdout.trim();
+      const lines = sh(
+        `docker compose logs --since=2m app | grep '"remoteAddress":"127.0.0.1"' | grep -o '"path":"[^"]*"' | sort | uniq -c`,
+      ).stdout.trim();
       expect(/"path":"\/readyz"/.test(lines) && !/"path":"\/(api|auth)/.test(lines), lines);
       return `The earlier attempt failed only on the reviewer's own filter. Its log check printed 20× the gateway 192.168.96.1 (every proxied request) and 10× 127.0.0.1. The 127.0.0.1 lines are the Compose healthcheck, which fetches /readyz inside the container every 30 s: in the last two minutes the only 127.0.0.1 paths are ${lines.replace(/\s+/g, " ")}. No TRUSTED_PROXIES warning was logged, and with the non-matching value four wrong passwords from one client (401,401,401,429) made the other client's right password answer 429; with the gateway listed it answered 200. Note for the author: the guide's log check also counts these healthcheck lines, and a test browser on the same host appears as 127.0.0.1 too, so "the lines show the browsers' addresses" is only clear-cut for browsers on other machines.`;
     },
@@ -3601,7 +4419,6 @@ phases["auth-secret"] = async () => {
       return `An open Administrator session answered ${before} on /api/v1/me/notification-preferences; after a new AUTH_SECRET and up it answered ${after}. The original AUTH_SECRET was restored and the containers recreated.`;
     },
   );
-
 };
 
 phases["wrong-key-note"] = async () => {
@@ -3635,13 +4452,25 @@ phases.resend = async () => {
       try {
         const page = s.page;
         await page.goto(`${ORIGIN}/settings/users`);
-        const btn = page.getByRole("button", { name: "Resend the invite to casey.invitee@doc030-cfg.example" });
+        const btn = page.getByRole("button", {
+          name: "Resend the invite to casey.invitee@doc030-cfg.example",
+        });
         await btn.waitFor({ timeout: 20_000 });
-        const ans = page.waitForResponse((r) => /\/resend$/.test(r.url()) && r.request().method() === "POST");
+        const ans = page.waitForResponse(
+          (r) => /\/resend$/.test(r.url()) && r.request().method() === "POST",
+        );
         await btn.click();
         status = (await ans).status();
         await sleep(1500);
-        rowText = (await page.getByRole("row").filter({ hasText: "casey.invitee@doc030-cfg.example" }).first().innerText()).replace(/\s+/g, " ").trim();
+        rowText = (
+          await page
+            .getByRole("row")
+            .filter({ hasText: "casey.invitee@doc030-cfg.example" })
+            .first()
+            .innerText()
+        )
+          .replace(/\s+/g, " ")
+          .trim();
       } finally {
         await s.context.close();
       }
@@ -3650,7 +4479,12 @@ phases.resend = async () => {
       setEnv({ SMTP_URL: null, SMTP_FROM: null });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
-      expect(status === 409 && /Set SMTP_URL and SMTP_FROM together in the environment/.test(rowText) && after === before, `${status} ${rowText} ${before}->${after}`);
+      expect(
+        status === 409 &&
+          /Set SMTP_URL and SMTP_FROM together in the environment/.test(rowText) &&
+          after === before,
+        `${status} ${rowText} ${before}->${after}`,
+      );
       return `Resend invite (accessible name "Resend the invite to casey.invitee@doc030-cfg.example") answered ${status}; the row reads "${rowText.slice(0, 260)}". Relay count ${before} before and ${after} after. SMTP_URL was removed again afterwards.`;
     },
   );
@@ -3682,12 +4516,16 @@ phases["m41-plain-detail"] = async () => {
         await page.goto(`${LAN_PLAIN_ORIGIN}/settings/mcp`);
         await page.getByText("Server address").first().waitFor({ timeout: 20_000 });
         const sw = page.getByRole("switch", { name: "Business Users OAuth Clients" });
-        const answered = page.waitForResponse((r) => r.url().endsWith("/api/v1/mcp-settings") && r.request().method() === "PATCH");
+        const answered = page.waitForResponse(
+          (r) => r.url().endsWith("/api/v1/mcp-settings") && r.request().method() === "PATCH",
+        );
         await sw.click();
         const resp = await answered;
         const body = await resp.json().catch(() => ({}));
         await sleep(1500);
-        const texts = (await page.locator('[role="alert"], [role="status"]').allInnerTexts()).map((t) => t.trim()).filter(Boolean);
+        const texts = (await page.locator('[role="alert"], [role="status"]').allInnerTexts())
+          .map((t) => t.trim())
+          .filter(Boolean);
         await page.screenshot({ path: path.join(here, "plain-http-oauth-refused.png") });
         out = `PATCH answered ${resp.status()} with detail "${body.detail ?? ""}"${body.checks ? ` and checks ${JSON.stringify(body.checks)}` : ""}. The page's alert and status texts: ${JSON.stringify(texts)}. Switch after: ${await sw.getAttribute("aria-checked")}. Screenshot plain-http-oauth-refused.png.`;
       } finally {
@@ -3716,17 +4554,45 @@ phases.topology = async () => {
       const w = inspect("worker");
       const e = inspect("doc-engine");
       const p = inspect("postgres");
-      const env = (c) => Object.fromEntries(c.Config.Env.map((x) => [x.slice(0, x.indexOf("=")), x.slice(x.indexOf("=") + 1)]));
+      const env = (c) =>
+        Object.fromEntries(
+          c.Config.Env.map((x) => [x.slice(0, x.indexOf("=")), x.slice(x.indexOf("=") + 1)]),
+        );
       const ae = env(a);
       const we = env(w);
       const ee = env(e);
-      const keys = ["DATABASE_URL", "STORAGE_DRIVER", "STORAGE_PATH", "BASE_URL", "OPENLAW_SECRET_KEY", "VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY", "DOC_ENGINE_URL", "AZURE_BLOB_CONTAINER"];
+      const keys = [
+        "DATABASE_URL",
+        "STORAGE_DRIVER",
+        "STORAGE_PATH",
+        "BASE_URL",
+        "OPENLAW_SECRET_KEY",
+        "VAPID_PUBLIC_KEY",
+        "VAPID_PRIVATE_KEY",
+        "DOC_ENGINE_URL",
+        "AZURE_BLOB_CONTAINER",
+      ];
       const same = keys.filter((k) => (ae[k] ?? "") === (we[k] ?? ""));
       const engineSecrets = Object.keys(ee).filter((k) => /DATABASE|SECRET|KEY|SMTP|AUTH/.test(k));
       const nets = Object.keys(e.NetworkSettings.Networks);
       const ports = (c) => JSON.stringify(c.HostConfig.PortBindings ?? {});
-      expect(a.Image === w.Image && JSON.stringify(a.Config.Cmd) !== JSON.stringify(w.Config.Cmd) && same.length === keys.length && engineSecrets.length === 0 && nets.length === 1 && ports(e) === "{}" && ports(p) === "{}", `${same} ${engineSecrets} ${nets} ${ports(e)} ${ports(p)}`);
-      return `App and worker image ${a.Image}; commands ${JSON.stringify(a.Config.Cmd ?? a.Path)} and ${JSON.stringify(w.Config.Cmd)}. Identical in both (values compared, not recorded): ${same.join(", ")}. doc-engine: no variable naming a database, key, secret or relay (its variables include ${Object.keys(ee).filter((k) => k.startsWith("DOC_ENGINE")).join(", ")}); network ${nets.join(", ")}; published ports ${ports(e)}. postgres published ports ${ports(p)}.`;
+      expect(
+        a.Image === w.Image &&
+          JSON.stringify(a.Config.Cmd) !== JSON.stringify(w.Config.Cmd) &&
+          same.length === keys.length &&
+          engineSecrets.length === 0 &&
+          nets.length === 1 &&
+          ports(e) === "{}" &&
+          ports(p) === "{}",
+        `${same} ${engineSecrets} ${nets} ${ports(e)} ${ports(p)}`,
+      );
+      return `App and worker image ${a.Image}; commands ${JSON.stringify(a.Config.Cmd ?? a.Path)} and ${JSON.stringify(w.Config.Cmd)}. Identical in both (values compared, not recorded): ${same.join(", ")}. doc-engine: no variable naming a database, key, secret or relay (its variables include ${Object.keys(
+        ee,
+      )
+        .filter((k) => k.startsWith("DOC_ENGINE"))
+        .join(
+          ", ",
+        )}); network ${nets.join(", ")}; published ports ${ports(e)}. postgres published ports ${ports(p)}.`;
     },
   );
 };
@@ -3741,7 +4607,10 @@ phases["vendor-lists"] = async () => {
     async () => {
       const get = async (u) => {
         try {
-          const r = await fetch(u, { signal: AbortSignal.timeout(20_000), headers: { "user-agent": "Mozilla/5.0 doc030-walkthrough" } });
+          const r = await fetch(u, {
+            signal: AbortSignal.timeout(20_000),
+            headers: { "user-agent": "Mozilla/5.0 doc030-walkthrough" },
+          });
           return { status: r.status, text: await r.text() };
         } catch (e) {
           return { status: `error ${e.cause?.code ?? e.name}`, text: "" };
@@ -3750,7 +4619,9 @@ phases["vendor-lists"] = async () => {
       const a = await get("https://platform.claude.com/docs/en/api/ip-addresses");
       const o = await get("https://openai.com/chatgpt-connectors.json");
       const og = await get("https://developers.openai.com/api/docs/guides/ip-addresses");
-      const m = await get("https://learn.microsoft.com/en-us/connectors/common/outbound-ip-addresses");
+      const m = await get(
+        "https://learn.microsoft.com/en-us/connectors/common/outbound-ip-addresses",
+      );
       let prefixes = "not JSON";
       try {
         const j = JSON.parse(o.text);
@@ -3795,7 +4666,12 @@ phases["r2-trusted"] = async () => {
   r2Caddy();
   const gwCmd = `docker network inspect ${PROJECT}_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'`;
   const logCmd = `docker compose logs --since=5m app | grep -o '"remoteAddress":"[^"]*"' | sort | uniq -c`;
-  const counts = () => sh(logCmd).stdout.trim().split("\n").map((l) => l.trim().replace(/\s+/, "× ")).join("; ");
+  const counts = () =>
+    sh(logCmd)
+      .stdout.trim()
+      .split("\n")
+      .map((l) => l.trim().replace(/\s+/, "× "))
+      .join("; ");
   await step(
     "V-C45",
     "operator",
@@ -3809,11 +4685,16 @@ phases["r2-trusted"] = async () => {
       await sleep(305_000);
       await browserSignInVia(LAN_IP);
       const out = counts();
-      const hc = sh(`docker compose logs --since=5m app | grep '"remoteAddress":"127.0.0.1"' | grep -o '"path":"[^"]*"' | sort -u | tr '\\n' ' '`).stdout.trim();
+      const hc = sh(
+        `docker compose logs --since=5m app | grep '"remoteAddress":"127.0.0.1"' | grep -o '"path":"[^"]*"' | sort -u | tr '\\n' ' '`,
+      ).stdout.trim();
       const gw = sh(gwCmd).stdout.trim().split(" ")[0];
       state.backendGateway = gw;
       saveState();
-      expect(out.includes(gw) && !out.includes(LAN_IP) && hc === '"path":"/readyz"', `${out} | ${hc}`);
+      expect(
+        out.includes(gw) && !out.includes(LAN_IP) && hc === '"path":"/readyz"',
+        `${out} | ${hc}`,
+      );
       return `${gwCmd} printed "${sh(gwCmd).stdout.trim()}". After a browser sign-in through Caddy on ${LAN_IP}, the log check printed: ${out}. The 127.0.0.1 lines are only ${hc} (the container health check). Every other line is the gateway ${gw}.`;
     },
   );
@@ -3851,15 +4732,32 @@ phases["r2-status"] = async () => {
       try {
         for (let i = 0; i < 3; i++) {
           await s.page.goto(`${ORIGIN}/settings/system-status`).catch(() => {});
-          if (await s.page.getByRole("button", { name: "Refresh" }).waitFor({ timeout: 20_000 }).then(() => true, () => false)) break;
+          if (
+            await s.page
+              .getByRole("button", { name: "Refresh" })
+              .waitFor({ timeout: 20_000 })
+              .then(
+                () => true,
+                () => false,
+              )
+          )
+            break;
         }
         await s.page.screenshot({ path: path.join(PRIVATE, "r2-status.png") });
         const down = await statusRows(s.page);
         compose("start worker");
         await sleep(20_000);
         const back = await statusRows(s.page);
-        const warn = /An API or worker heartbeat is missing\. Check that both services are running\./.test(down.text);
-        expect(warn && !down.rows.some((r) => /^Worker/.test(r)) && back.rows.some((r) => /^Worker Running Current/.test(r)), `${down.rows} ${warn} ${back.rows}`);
+        const warn =
+          /An API or worker heartbeat is missing\. Check that both services are running\./.test(
+            down.text,
+          );
+        expect(
+          warn &&
+            !down.rows.some((r) => /^Worker/.test(r)) &&
+            back.rows.some((r) => /^Worker Running Current/.test(r)),
+          `${down.rows} ${warn} ${back.rows}`,
+        );
         return `75 s after docker compose stop worker, Refresh showed only: ${down.rows.join(" | ")} (no Worker row), with "An API or worker heartbeat is missing. Check that both services are running." After docker compose start worker and Refresh: ${back.rows.join(" | ")}.`;
       } finally {
         await s.context.close();
@@ -3894,7 +4792,9 @@ phases["r2-wrongkey"] = async () => {
         await page.getByRole("button", { name: "Test connection" }).click();
         await page.getByText("Connection test passed.").waitFor({ timeout: 20_000 });
         await page.getByRole("button", { name: "Save" }).click();
-        await page.getByText("Settings saved. Restart the API and worker to apply changes.").waitFor({ timeout: 15_000 });
+        await page
+          .getByText("Settings saved. Restart the API and worker to apply changes.")
+          .waitFor({ timeout: 15_000 });
       } finally {
         await s.context.close();
       }
@@ -3902,13 +4802,20 @@ phases["r2-wrongkey"] = async () => {
       const api = await adminApi();
       const contract = await ensureContract(api, `DOC-030 operator r2 ${Date.now()}`);
       state.contractNumber = contract.number ?? contract.id;
-      const u = await upload(api, state.contractNumber, pdfFile("doc030-r2-s3.pdf", "DOC-030 operator round 2 S3"));
+      const u = await upload(
+        api,
+        state.contractNumber,
+        pdfFile("doc030-r2-s3.pdf", "DOC-030 operator round 2 S3"),
+      );
       const ref = storageRef(u.versionId);
       const ok = await download(api, u);
       state.r2Doc = u;
       state.r2Key = envValue("OPENLAW_SECRET_KEY");
       saveState();
-      expect(ref.startsWith("s3:") && ok.matches && !envValue("STORAGE_DRIVER"), `${ref} ${ok.status}`);
+      expect(
+        ref.startsWith("s3:") && ok.matches && !envValue("STORAGE_DRIVER"),
+        `${ref} ${ok.status}`,
+      );
       setEnv({ OPENLAW_SECRET_KEY: randomBytes(32).toString("base64") });
       const since = new Date().toISOString();
       expect(up().code === 0, "up failed");
@@ -3918,13 +4825,23 @@ phases["r2-wrongkey"] = async () => {
       const st = await json(await api2.get("/api/v1/advanced-settings/storage"));
       const drv = st.fields.find((f) => f.key === "STORAGE_DRIVER");
       const bad = await download(api2, u, 20_000);
-      const line = logsSince("app", since).split("\n").map((l) => l.replace(/^.*?\|\s*/, "")).find((l) => /No configured key opens/.test(l)) ?? "";
+      const line =
+        logsSince("app", since)
+          .split("\n")
+          .map((l) => l.replace(/^.*?\|\s*/, ""))
+          .find((l) => /No configured key opens/.test(l)) ?? "";
       setEnv({ OPENLAW_SECRET_KEY: state.r2Key });
       expect(up().code === 0, "up failed");
       expect((await waitReady()) === 200, "not ready");
       const api3 = await adminApi();
       const again = await download(api3, u);
-      expect(sys.storageDriver === "local" && drv.source === "default" && bad.status !== 200 && again.matches, `${sys.storageDriver} ${JSON.stringify(drv)} ${bad.status} ${again.status}`);
+      expect(
+        sys.storageDriver === "local" &&
+          drv.source === "default" &&
+          bad.status !== 200 &&
+          again.matches,
+        `${sys.storageDriver} ${JSON.stringify(drv)} ${bad.status} ${again.status}`,
+      );
       return `.env sets no STORAGE_DRIVER. Document storage saved S3-compatible storage for bucket doc030-r2 (Test connection passed, Save, restart); a new PDF was stored under s3: and downloaded. With a different OPENLAW_SECRET_KEY and up: readyz 200; System status reports storage driver ${sys.storageDriver}; Store new documents in shows ${drv.value} with source ${drv.source}; the S3 Document's download answered ${bad.status}; start log "${line.slice(0, 160)}". With the correct key restored and up, the S3 Document downloaded with identical bytes.`;
     },
   );

@@ -404,16 +404,12 @@
     }
   ],
   "labState": {
-    "allowedDomains": [
-      "helix.example"
-    ]
+    "allowedDomains": ["helix.example"]
   },
   "restoreTargets": {
     "organizationName": "Helix Software Group",
     "logoWasNull": true,
     "defaultTimezone": "Europe/London"
   },
-  "records": [
-    "Contract 306 \"DOC-030 admin-org V-C36 offboarding contract mugv2vde\""
-  ]
+  "records": ["Contract 306 \"DOC-030 admin-org V-C36 offboarding contract mugv2vde\""]
 }

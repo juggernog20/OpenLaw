@@ -294,9 +294,7 @@
         "afterCopy": {
           "button": "Copy",
           "alert": null,
-          "pageErrors": [
-            "Cannot read properties of undefined (reading 'writeText')"
-          ]
+          "pageErrors": ["Cannot read properties of undefined (reading 'writeText')"]
         }
       },
       "articleHashesAtEnd": {

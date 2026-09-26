@@ -459,13 +459,8 @@
       "createdAt": "2026-09-25T11:14:37.500Z"
     }
   },
-  "phases": [
-    "ai-record"
-  ],
-  "roles": [
-    "administrator",
-    "legal_team_member"
-  ],
+  "phases": ["ai-record"],
+  "roles": ["administrator", "legal_team_member"],
   "startedAt": "2026-09-25T11:18:48.354Z",
   "finishedAt": "2026-09-25T11:18:51.559Z",
   "steps": [

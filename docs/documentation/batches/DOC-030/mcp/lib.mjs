@@ -271,7 +271,12 @@ async function rawToolsPage(url, headers, fetchImpl, cursor) {
       "mcp-protocol-version": "2025-06-18",
       ...headers,
     },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: cursor ? { cursor } : {} }),
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/list",
+      params: cursor ? { cursor } : {},
+    }),
   });
   const text = await res.text();
   let names = null;

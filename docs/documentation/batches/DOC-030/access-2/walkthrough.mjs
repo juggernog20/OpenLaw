@@ -73,10 +73,12 @@ async function fillLogin(page, email, password) {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 const leftAuth = (page, timeout = 20000) =>
-  page.waitForURL((u) => !u.pathname.startsWith("/auth"), { timeout }).then(
-    () => true,
-    () => false,
-  );
+  page
+    .waitForURL((u) => !u.pathname.startsWith("/auth"), { timeout })
+    .then(
+      () => true,
+      () => false,
+    );
 
 // A TOTP code is accepted once per 30-second step; wait for a new step before reusing a secret.
 const lastStep = new Map();
@@ -130,7 +132,11 @@ async function brandingAbove(page, headingText) {
     .first()
     .boundingBox()
     .catch(() => null);
-  const formBox = await page.locator("form").first().boundingBox().catch(() => null);
+  const formBox = await page
+    .locator("form")
+    .first()
+    .boundingBox()
+    .catch(() => null);
   const logoCount = await page.getByRole("img", { name: "Organization logo" }).count();
   const above = !!(
     nameBox &&
@@ -138,7 +144,13 @@ async function brandingAbove(page, headingText) {
     nameBox.y + nameBox.height <= headBox.y &&
     (!formBox || nameBox.y + nameBox.height <= formBox.y)
   );
-  return { apiName: name, apiLogo: b?.logo ? "saved" : "none", nameShown: !!nameBox, above, logoCount };
+  return {
+    apiName: name,
+    apiLogo: b?.logo ? "saved" : "none",
+    nameShown: !!nameBox,
+    above,
+    logoCount,
+  };
 }
 
 /** Business User context shared by the Portal checks (JIT-provisioned throwaway address). */
@@ -147,11 +159,18 @@ async function businessUser() {
   const email = `doc030.access2.bu.${STAMP}@helix.example`;
   const c = await portalSignIn(email);
   // Fixture: finish the Portal first run through the API (Department Engineering), as a seeded Business User has.
-  const dept = sql(`select id from departments where display_name='Engineering' and archived_at is null limit 1`);
-  must(await api(c.page, "PATCH", "/portal/onboarding/department", { departmentId: dept }), "onboarding department");
+  const dept = sql(
+    `select id from departments where display_name='Engineering' and archived_at is null limit 1`,
+  );
+  must(
+    await api(c.page, "PATCH", "/portal/onboarding/department", { departmentId: dept }),
+    "onboarding department",
+  );
   must(await api(c.page, "POST", "/portal/onboarding/complete", {}), "onboarding complete");
   fx.bu = { ...c, email, departmentId: dept };
-  fx.created.push(`Business User ${email} (JIT-provisioned by a Portal sign-in link; Portal first run finished through the API with Department Engineering)`);
+  fx.created.push(
+    `Business User ${email} (JIT-provisioned by a Portal sign-in link; Portal first run finished through the API with Department Engineering)`,
+  );
   return fx.bu;
 }
 
@@ -174,7 +193,10 @@ async function staffSignIn(admin) {
     const inv = await api(admin.page, "POST", "/auth/invites", { email, displayName, role });
     const userId = inv.body?.user?.id;
     fx.created.push(`${role} account ${email} (${displayName})`);
-    const mail1 = await waitForLink(email, since, { subjectRe: /password/i, linkRe: /set-password/ });
+    const mail1 = await waitForLink(email, since, {
+      subjectRe: /password/i,
+      linkRe: /set-password/,
+    });
     const html1 = await (async () => {
       const list = await mailSince(email, since, /password/i);
       const m = await fetch(`${MAIL}/api/v1/message/${list[0].ID}`).then((x) => x.json());
@@ -194,7 +216,9 @@ async function staffSignIn(admin) {
     );
 
     // If it does not work: an expired link. Test preparation expires this account's own token.
-    sql(`update verifications set expires_at = now() - interval '1 minute' where value = '${userId}'`);
+    sql(
+      `update verifications set expires_at = now() - interval '1 minute' where value = '${userId}'`,
+    );
     const c1 = await newContext();
     const p = c1.page;
     await p.goto(mail1.link);
@@ -207,7 +231,9 @@ async function staffSignIn(admin) {
     R(
       "If it does not work: an expired invitation link",
       "This link has expired or was already used. Ask for a new one.",
-      expired ? "Shown: This link has expired or was already used. Ask for a new one." : `Not shown: ${(await text(p.locator("main"))).slice(0, 200)}`,
+      expired
+        ? "Shown: This link has expired or was already used. Ask for a new one."
+        : `Not shown: ${(await text(p.locator("main"))).slice(0, 200)}`,
       expired,
       "/auth/set-password",
     );
@@ -220,14 +246,19 @@ async function staffSignIn(admin) {
     R(
       "If it does not work: the browser opened only part of the link",
       "This link is not valid. Ask for a new invitation or password reset.",
-      partial ? "Opening /auth/set-password without the #token fragment showed: This link is not valid. Ask for a new invitation or password reset." : `Not shown: ${(await text(p.locator("main"))).slice(0, 200)}`,
+      partial
+        ? "Opening /auth/set-password without the #token fragment showed: This link is not valid. Ask for a new invitation or password reset."
+        : `Not shown: ${(await text(p.locator("main"))).slice(0, 200)}`,
       partial,
       "/auth/set-password",
     );
 
     since = Date.now();
     const resend = await api(admin.page, "POST", "/auth/invites", { email, displayName, role });
-    const mail2 = await waitForLink(email, since, { subjectRe: /password/i, linkRe: /set-password/ });
+    const mail2 = await waitForLink(email, since, {
+      subjectRe: /password/i,
+      linkRe: /set-password/,
+    });
     R(
       "fixture: the Administrator sends a fresh invitation",
       "A new Set your OpenLaw password email",
@@ -305,7 +336,13 @@ async function staffSignIn(admin) {
       "Accept a password invitation, step 6 and the check after it",
       "Wrong password shows Check your email and password.; Email and Password with Sign in reach the app; the name menu (photo or initials) shows name and email; a wide window shows the organization's name in the header",
       `Wrong password message ${wrongPw}; landed on ${landed} ${in6}; name menu "${menuText}"; organization name "${brand.apiName}" in the header at 1440 px ${orgName}, at 700 px ${orgNarrow}`,
-      wrongPw && in6 && landed === "/" && menuText.includes(displayName) && menuText.includes(email) && orgName && !orgNarrow,
+      wrongPw &&
+        in6 &&
+        landed === "/" &&
+        menuText.includes(displayName) &&
+        menuText.includes(email) &&
+        orgName &&
+        !orgNarrow,
       "/",
     );
 
@@ -321,7 +358,9 @@ async function staffSignIn(admin) {
     R(
       "A successful activation consumes the invitation link",
       "Reopening the used link shows This link has expired or was already used. Ask for a new one.",
-      usedRefused ? "The used link was refused with the expired-or-used message" : "The used link was not refused",
+      usedRefused
+        ? "The used link was refused with the expired-or-used message"
+        : "The used link was not refused",
       usedRefused,
       "/auth/set-password",
     );
@@ -332,7 +371,10 @@ async function staffSignIn(admin) {
     const e1 = await enroll(p, pw1);
     await e1.dialog.getByLabel("Code").fill(wrongCode(e1.secret));
     await e1.dialog.getByRole("button", { name: "Confirm" }).click();
-    const enrollWrong = await seen(e1.dialog.getByText("Wrong code. Scan the QR code again and retry."), 8000);
+    const enrollWrong = await seen(
+      e1.dialog.getByText("Wrong code. Scan the QR code again and retry."),
+      8000,
+    );
     const codes = await confirmEnroll(p, e1.dialog, e1.secret);
     const onMsg = await seen(p.getByText("Two-factor is on"));
     R(
@@ -346,7 +388,10 @@ async function staffSignIn(admin) {
     // Sign in with a second factor.
     await signOutViaMenu(p, displayName);
     await fillLogin(p, email, pw1);
-    const chOpen = await p.waitForURL(/\/auth\/two-factor/, { timeout: 15000 }).then(() => true, () => false);
+    const chOpen = await p.waitForURL(/\/auth\/two-factor/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     const chTitle = await seen(p.getByRole("heading", { name: "Two-factor authentication" }));
     await p.getByLabel("Code").fill(wrongCode(e1.secret));
     await p.getByRole("button", { name: "Verify" }).click();
@@ -378,7 +423,10 @@ async function staffSignIn(admin) {
     const replayMsg = await seen(p.getByText("Wrong code. Try again, or restart sign-in."));
     const bReplay = /\/auth\/two-factor/.test(p.url());
     await p.getByRole("button", { name: "Sign out" }).click();
-    const chOut = await p.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(() => true, () => false);
+    const chOut = await p.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     await p.goto(`${BASE}/`);
     await sleep(1500);
     const stillOut = /\/auth\//.test(p.url());
@@ -407,7 +455,10 @@ async function staffSignIn(admin) {
     const sessSaved = await seen(p.getByText("Saved", { exact: true }));
     await sleep(1000);
     await other.page.reload();
-    const otherOut = await other.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(() => true, () => false);
+    const otherOut = await other.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     await p.reload();
     await sleep(1500);
     const thisIn = /\/settings\/profile/.test(p.url());
@@ -426,7 +477,10 @@ async function staffSignIn(admin) {
     await d2.getByLabel("Password").fill(pw1);
     await d2.getByRole("button", { name: "Continue" }).click();
     await d2.getByText("No camera? Enter this secret manually").waitFor({ timeout: 15000 });
-    const secret2 = (await text(d2.getByText("No camera? Enter this secret manually"))).split(":").pop().trim();
+    const secret2 = (await text(d2.getByText("No camera? Enter this secret manually")))
+      .split(":")
+      .pop()
+      .trim();
     await p.keyboard.press("Escape");
     await d2.waitFor({ state: "hidden" });
     await p.reload();
@@ -506,15 +560,27 @@ async function staffSignIn(admin) {
     await signOutViaMenu(p, displayName);
     await p.goto(ml1.link);
     await p.getByRole("heading", { name: "Sign-in link expired" }).waitFor({ timeout: 15000 });
-    const expiredControls = await p.locator("main").locator("a, button, input").evaluateAll((els) =>
-      els.map((e) => (e.tagName === "INPUT" ? `input ${e.getAttribute("type")}` : e.textContent.trim())).filter(Boolean),
-    );
-    const backCtl = p.getByRole("link", { name: "Back to sign-in" }).or(p.getByRole("button", { name: "Back to sign-in" }));
+    const expiredControls = await p
+      .locator("main")
+      .locator("a, button, input")
+      .evaluateAll((els) =>
+        els
+          .map((e) =>
+            e.tagName === "INPUT" ? `input ${e.getAttribute("type")}` : e.textContent.trim(),
+          )
+          .filter(Boolean),
+      );
+    const backCtl = p
+      .getByRole("link", { name: "Back to sign-in" })
+      .or(p.getByRole("button", { name: "Back to sign-in" }));
     const hasBack = (await backCtl.count()) > 0;
     let backToSignIn = false;
     if (hasBack) {
       await backCtl.first().click();
-      backToSignIn = await p.waitForURL(/\/auth\/login/, { timeout: 10000 }).then(() => true, () => false);
+      backToSignIn = await p.waitForURL(/\/auth\/login/, { timeout: 10000 }).then(
+        () => true,
+        () => false,
+      );
     }
     R(
       "Sign-in link expired: enter your email there to get a new link, or select Back to sign-in",
@@ -539,7 +605,8 @@ async function staffSignIn(admin) {
       "Sign-in link budget: three links for one email address in 15 minutes",
       "The fourth request shows Too many sign-in link requests. Try again later.",
       `Third request: "${third.slice(0, 90)}"; fourth request: "${fourth.slice(0, 160)}"`,
-      third.includes("Check your email") && fourth.includes("Too many sign-in link requests. Try again later."),
+      third.includes("Check your email") &&
+        fourth.includes("Too many sign-in link requests. Try again later."),
       "/auth/login",
     );
 
@@ -554,7 +621,10 @@ async function staffSignIn(admin) {
     since = Date.now();
     await p.getByRole("button", { name: "Send password setup link" }).click();
     const neutral = await seen(p.getByText("Check your email"));
-    const reset = await waitForLink(email, since, { subjectRe: /password/i, linkRe: /set-password/ });
+    const reset = await waitForLink(email, since, {
+      subjectRe: /password/i,
+      linkRe: /set-password/,
+    });
     const expiresRow = sql(
       `select round(extract(epoch from (expires_at - created_at))/60) from verifications where value = '${userId}' order by created_at desc limit 1`,
     );
@@ -564,7 +634,10 @@ async function staffSignIn(admin) {
     await p.getByRole("button", { name: "Set password" }).click();
     const resetSet = await seen(p.getByText("Password set", { exact: true }), 15000);
     await holder.page.reload();
-    const holderOut = await holder.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(() => true, () => false);
+    const holderOut = await holder.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     await holder.context.close();
     await p.goto(`${BASE}/auth/login`);
     await fillLogin(p, email, pw1);
@@ -575,7 +648,14 @@ async function staffSignIn(admin) {
       "If you forgot your password: Set up or reset your password",
       "Email and Send password setup link; Check your email; Set password in the email within one hour sets a new password; the new password signs out every session",
       `Check your email ${neutral}; email "${reset?.subject}"; token lifetime ${expiresRow} min; Password set ${resetSet}; a browser signed in before the reset was sent to sign-in on reload ${holderIn && holderOut}; old password refused ${oldRefused}; new password signed in ${newOk}`,
-      neutral && reset?.subject === "Set your OpenLaw password" && expiresRow === "60" && resetSet && holderIn && holderOut && oldRefused && newOk,
+      neutral &&
+        reset?.subject === "Set your OpenLaw password" &&
+        expiresRow === "60" &&
+        resetSet &&
+        holderIn &&
+        holderOut &&
+        oldRefused &&
+        newOk,
       "/auth/set-password",
     );
     await signOutViaMenu(p, displayName);
@@ -595,7 +675,9 @@ async function staffSignIn(admin) {
       "Password setup budget: three setup emails for one email address in 15 minutes",
       "The fourth request shows Too many password setup requests. Try again later.",
       `Second: "${s2.slice(0, 60)}"; third: "${s3.slice(0, 60)}"; fourth: "${s4.slice(0, 120)}"`,
-      s2.includes("Check your email") && s3.includes("Check your email") && s4.includes("Too many password setup requests. Try again later."),
+      s2.includes("Check your email") &&
+        s3.includes("Check your email") &&
+        s4.includes("Too many password setup requests. Try again later."),
       "/auth/login",
     );
 
@@ -605,10 +687,14 @@ async function staffSignIn(admin) {
       await fillLogin(p, email, `${pw2}-wrong-${i}`);
       await p.getByText("Check your email and password.").waitFor({ timeout: 10000 });
     }
-    const before = sql(`select count(*) from verifications where identifier = 'password-sign-in-failures:' || encode(sha256(convert_to(lower('${email}'),'UTF8')),'hex') and expires_at > now()`);
+    const before = sql(
+      `select count(*) from verifications where identifier = 'password-sign-in-failures:' || encode(sha256(convert_to(lower('${email}'),'UTF8')),'hex') and expires_at > now()`,
+    );
     await fillLogin(p, email, pw2);
     const resetOk = await leftAuth(p);
-    const after = sql(`select count(*) from verifications where identifier = 'password-sign-in-failures:' || encode(sha256(convert_to(lower('${email}'),'UTF8')),'hex') and expires_at > now()`);
+    const after = sql(
+      `select count(*) from verifications where identifier = 'password-sign-in-failures:' || encode(sha256(convert_to(lower('${email}'),'UTF8')),'hex') and expires_at > now()`,
+    );
     await signOutViaMenu(p, displayName);
 
     // Two-factor lockout while the account has two-factor on.
@@ -644,7 +730,10 @@ async function staffSignIn(admin) {
       await p.getByLabel("Code").fill(await code(e4.secret));
       await p.getByRole("button", { name: "Verify" }).click();
       await sleep(1500);
-      rightRefused = (await text(p.locator("main"))).includes("Too many attempts. Wait 15 minutes, then try again.") && /\/auth\/two-factor/.test(p.url());
+      rightRefused =
+        (await text(p.locator("main"))).includes(
+          "Too many attempts. Wait 15 minutes, then try again.",
+        ) && /\/auth\/two-factor/.test(p.url());
       await p.getByRole("button", { name: "Sign out" }).click();
       await p.waitForURL(/\/auth\/login/, { timeout: 15000 });
     }
@@ -675,12 +764,19 @@ async function staffSignIn(admin) {
     await sleep(2000);
     const correctLocked =
       /\/auth\/login/.test(p.url()) &&
-      (await text(p.locator("main"))).includes("Too many attempts. Wait 15 minutes, then try again.");
+      (await text(p.locator("main"))).includes(
+        "Too many attempts. Wait 15 minutes, then try again.",
+      );
     R(
       "End or recover a session: wrong passwords and the 15-minute lock",
       "A wrong password shows Check your email and password.; a successful sign-in before the limit resets the count; after 10 wrong passwords the page shows Too many attempts. Wait 15 minutes, then try again., even for the correct password",
       `9 wrong passwords left a live failure counter (${before} row); the correct password then signed in ${resetOk} and the counter rows became ${after}. Then 11 wrong passwords showed: ${pwMsgs.join(", ")}; the correct password afterwards stayed on sign-in with Too many attempts ${correctLocked}`,
-      before === "1" && resetOk && after === "0" && pwMsgs.slice(0, 10).every((m) => m === "wrong") && pwMsgs[10] === "locked" && correctLocked,
+      before === "1" &&
+        resetOk &&
+        after === "0" &&
+        pwMsgs.slice(0, 10).every((m) => m === "wrong") &&
+        pwMsgs[10] === "locked" &&
+        correctLocked,
       "/auth/login",
     );
     await c1.context.close();
@@ -738,7 +834,9 @@ async function staffSignIn(admin) {
     await sleep(2500);
     const where = pathOf(c.page);
     const shown = await seen(
-      c.page.getByText("This sign-in link could not be used. Request a new link or contact your administrator."),
+      c.page.getByText(
+        "This sign-in link could not be used. Request a new link or contact your administrator.",
+      ),
     );
     log.record(
       A,
@@ -755,7 +853,10 @@ async function staffSignIn(admin) {
   // Organization-wide method branches: browser rendering with a mocked methods answer only.
   {
     const policy = (legal, provider = null) => ({
-      policy: { legal, business: { password: true, magicLink: true, sso: false, requireTwoFactor: false } },
+      policy: {
+        legal,
+        business: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+      },
       mode: "built_in",
       magicLinkEnabled: true,
       requireTwoFactor: false,
@@ -770,8 +871,15 @@ async function staffSignIn(admin) {
       await sleep(800);
       return c;
     };
-    const s = await probe(policy({ password: false, magicLink: false, sso: true, requireTwoFactor: false }, "doc030-mock-provider"));
-    const ssoBtn = await s.page.getByRole("button", { name: "Continue with single sign-on" }).count();
+    const s = await probe(
+      policy(
+        { password: false, magicLink: false, sso: true, requireTwoFactor: false },
+        "doc030-mock-provider",
+      ),
+    );
+    const ssoBtn = await s.page
+      .getByRole("button", { name: "Continue with single sign-on" })
+      .count();
     const adminBtn = await s.page.getByRole("button", { name: "Administrator sign-in" }).count();
     let adminForm = false;
     if (adminBtn) {
@@ -781,7 +889,9 @@ async function staffSignIn(admin) {
     await s.context.close();
     const x = await newContext();
     await x.page.route("**/api/v1/auth/methods", (route) =>
-      route.fulfill({ json: policy({ password: true, magicLink: false, sso: false, requireTwoFactor: false }) }),
+      route.fulfill({
+        json: policy({ password: true, magicLink: false, sso: false, requireTwoFactor: false }),
+      }),
     );
     await x.page.goto(`${BASE}/auth/link-expired`);
     await x.page.getByRole("heading", { name: "Sign-in link expired" }).waitFor({ timeout: 15000 });
@@ -797,8 +907,12 @@ async function staffSignIn(admin) {
       offBack && !offEmail,
       "/auth/link-expired",
     );
-    const n = await probe(policy({ password: false, magicLink: false, sso: true, requireTwoFactor: false }, null));
-    const notConfigured = (await text(n.page.locator("body"))).includes("Single sign-on is not configured yet");
+    const n = await probe(
+      policy({ password: false, magicLink: false, sso: true, requireTwoFactor: false }, null),
+    );
+    const notConfigured = (await text(n.page.locator("body"))).includes(
+      "Single sign-on is not configured yet",
+    );
     await n.context.close();
     log.record(
       A,
@@ -832,7 +946,11 @@ const ORDER = [
 ];
 async function homeSections(p) {
   await p.waitForURL(`${BASE}/`);
-  await p.locator("main h2").first().waitFor({ timeout: 20000 }).catch(() => {});
+  await p
+    .locator("main h2")
+    .first()
+    .waitFor({ timeout: 20000 })
+    .catch(() => {});
   await sleep(1500);
   const h2 = await p.locator("main h2").evaluateAll((els) => els.map((e) => e.textContent.trim()));
   return h2.filter((t) => ORDER.includes(t));
@@ -848,22 +966,57 @@ async function findYourWork(admin) {
   const S = `${TAG} V-C03 ${STAMP}`;
   const users = must(await api(admin.page, "GET", "/users"), "users").users;
   const uid = (email) => users.find((u) => u.email === email)?.id;
-  const nda = must(await api(admin.page, "GET", "/contract-types"), "types").contractTypes.find((t) => t.displayName === "NDA").id;
+  const nda = must(await api(admin.page, "GET", "/contract-types"), "types").contractTypes.find(
+    (t) => t.displayName === "NDA",
+  ).id;
 
   // Fixtures: a Contract with a Task for each seeded account, and a Confidential Contract.
-  const home = must(await api(admin.page, "POST", "/contracts", { title: `${S} Home contract`, contractTypeId: nda, managerId: uid(SEED.daniel.email) }), "contract").contract;
-  const conf = must(await api(admin.page, "POST", "/contracts", { title: `${S} confidential contract`, contractTypeId: nda, managerId: uid(SEED.daniel.email), isConfidential: true }), "confidential").contract;
-  fx.created.push(`Contract C-${home.number} ${home.title}`, `Confidential Contract C-${conf.number} ${conf.title}`);
+  const home = must(
+    await api(admin.page, "POST", "/contracts", {
+      title: `${S} Home contract`,
+      contractTypeId: nda,
+      managerId: uid(SEED.daniel.email),
+    }),
+    "contract",
+  ).contract;
+  const conf = must(
+    await api(admin.page, "POST", "/contracts", {
+      title: `${S} confidential contract`,
+      contractTypeId: nda,
+      managerId: uid(SEED.daniel.email),
+      isConfidential: true,
+    }),
+    "confidential",
+  ).contract;
+  fx.created.push(
+    `Contract C-${home.number} ${home.title}`,
+    `Confidential Contract C-${conf.number} ${conf.title}`,
+  );
   const seededTask = {};
-  for (const [role, email] of [["administrator", SEED.daniel.email], ["legal_team_member", SEED.nadia.email]]) {
+  for (const [role, email] of [
+    ["administrator", SEED.daniel.email],
+    ["legal_team_member", SEED.nadia.email],
+  ]) {
     const title = `${S} Home task ${role}`;
-    must(await api(admin.page, "POST", `/contracts/${home.number}/tasks`, { title, assigneeId: uid(email), addToTeam: true, dueDate: iso(-400) }), "task");
+    must(
+      await api(admin.page, "POST", `/contracts/${home.number}/tasks`, {
+        title,
+        assigneeId: uid(email),
+        addToTeam: true,
+        dueDate: iso(-400),
+      }),
+      "task",
+    );
     seededTask[role] = title;
   }
 
   // Fresh accounts: one Administrator with a Grant, one without, one Legal Team Member.
   const acct = {};
-  for (const [key, role] of [["admin", "administrator"], ["nogrant", "administrator"], ["member", "legal_team_member"]]) {
+  for (const [key, role] of [
+    ["admin", "administrator"],
+    ["nogrant", "administrator"],
+    ["member", "legal_team_member"],
+  ]) {
     acct[key] = await inviteAndActivate(admin.page, {
       email: `doc030.access2.c03.${key}.${STAMP}@helix.example`,
       displayName: `${S} ${key === "admin" ? "Administrator" : key === "nogrant" ? "Administrator without Grant" : "Legal Team Member"}`,
@@ -875,29 +1028,75 @@ async function findYourWork(admin) {
 
   // Entity obligations fixtures, written by the fresh Administrator through the API.
   const fa = await signIn(acct.admin.email, acct.admin.password);
-  const etype = { id: sql(`select id from entity_types where display_name='Other' and archived_at is null`) };
-  const e1 = must(await api(fa.page, "POST", "/entities", { legalName: `${S} open entity`, entityTypeId: etype.id }), "entity 1").entity;
-  const e2 = must(await api(fa.page, "POST", "/entities", { legalName: `${S} confidential entity`, entityTypeId: etype.id }), "entity 2").entity;
-  must(await api(fa.page, "PATCH", `/entities/${e2.id}`, { isConfidential: true }), "confidential entity");
+  const etype = {
+    id: sql(`select id from entity_types where display_name='Other' and archived_at is null`),
+  };
+  const e1 = must(
+    await api(fa.page, "POST", "/entities", {
+      legalName: `${S} open entity`,
+      entityTypeId: etype.id,
+    }),
+    "entity 1",
+  ).entity;
+  const e2 = must(
+    await api(fa.page, "POST", "/entities", {
+      legalName: `${S} confidential entity`,
+      entityTypeId: etype.id,
+    }),
+    "entity 2",
+  ).entity;
+  must(
+    await api(fa.page, "PATCH", `/entities/${e2.id}`, { isConfidential: true }),
+    "confidential entity",
+  );
   const ob = async (entity, label, due, assigneeId) =>
-    must(await api(fa.page, "POST", `/entities/${entity.id}/obligations`, { label, nextDueOn: due, assigneeId }), label).obligation;
+    must(
+      await api(fa.page, "POST", `/entities/${entity.id}/obligations`, {
+        label,
+        nextDueOn: due,
+        assigneeId,
+      }),
+      label,
+    ).obligation;
   const oUn = await ob(e1, `${S} unassigned obligation`, "2001-01-01", null);
   const oMember = await ob(e1, `${S} member obligation`, "2001-01-02", acct.member.userId);
-  const oNoReach = await ob(e2, `${S} unreachable-assignee obligation`, "2001-01-03", acct.nogrant.userId);
+  const oNoReach = await ob(
+    e2,
+    `${S} unreachable-assignee obligation`,
+    "2001-01-03",
+    acct.nogrant.userId,
+  );
   const oFuture = await ob(e1, `${S} member future obligation`, iso(20), acct.member.userId);
-  fx.created.push(`Entities "${e1.legalName}" and Confidential "${e2.legalName}" (Grant: the fresh Administrator) with four Obligations; both Entities archived at the end`);
+  fx.created.push(
+    `Entities "${e1.legalName}" and Confidential "${e2.legalName}" (Grant: the fresh Administrator) with four Obligations; both Entities archived at the end`,
+  );
 
   // Inbox fixture: a Business User submits one Request per role.
   const bu = await businessUser();
-  const lq = { id: sql(`select id from request_types where slug='legal_question' and archived_at is null`) };
+  const lq = {
+    id: sql(`select id from request_types where slug='legal_question' and archived_at is null`),
+  };
   const reqs = {};
   for (const role of ["administrator", "legal_team_member"]) {
-    reqs[role] = must(await api(bu.page, "POST", "/requests", { requestTypeId: lq.id, departmentId: bu.departmentId, title: `${S} inbox request ${role}`, description: "DOC-030 access-2 fixture for the Home Inbox check.", urgency: "critical" }), "request").request;
+    reqs[role] = must(
+      await api(bu.page, "POST", "/requests", {
+        requestTypeId: lq.id,
+        departmentId: bu.departmentId,
+        title: `${S} inbox request ${role}`,
+        description: "DOC-030 access-2 fixture for the Home Inbox check.",
+        urgency: "critical",
+      }),
+      "request",
+    ).request;
     fx.created.push(`Request R-${reqs[role].number} ${reqs[role].title}`);
   }
 
-  for (const [role, seed] of [["administrator", SEED.daniel], ["legal_team_member", SEED.nadia]]) {
-    const R = (step, expected, actual, pass, page) => log.record(A, role, step, expected, actual, pass, page);
+  for (const [role, seed] of [
+    ["administrator", SEED.daniel],
+    ["legal_team_member", SEED.nadia],
+  ]) {
+    const R = (step, expected, actual, pass, page) =>
+      log.record(A, role, step, expected, actual, pass, page);
     const s = role === "administrator" ? admin : await signIn(seed.email);
     const p = s.page;
 
@@ -906,7 +1105,9 @@ async function findYourWork(admin) {
     const shown = await homeSections(p);
     const homeApi = must(await api(p, "GET", "/home"), "home").sections;
     const noZero = homeApi.every((x) => x.total > 0);
-    const taskRow = p.getByRole("region", { name: "Tasks assigned to you" }).getByRole("link", { name: new RegExp(seededTask[role]) });
+    const taskRow = p
+      .getByRole("region", { name: "Tasks assigned to you" })
+      .getByRole("link", { name: new RegExp(seededTask[role]) });
     const taskOnCard = await taskRow.isVisible().catch(() => false);
     await taskRow.click();
     await p.waitForURL(new RegExp(`/contracts/${home.number}/tasks`), { timeout: 15000 });
@@ -915,16 +1116,32 @@ async function findYourWork(admin) {
     const numberTitle = head.includes(`C-${home.number}`) && head.includes(home.title);
     const sections = p.getByRole("navigation", { name: "Contract sections" });
     await sections.getByRole("link", { name: "Fields" }).click();
-    const fieldsOk = await p.waitForURL(new RegExp(`/contracts/${home.number}/fields`)).then(() => true, () => false);
+    const fieldsOk = await p.waitForURL(new RegExp(`/contracts/${home.number}/fields`)).then(
+      () => true,
+      () => false,
+    );
     await sections.getByRole("link", { name: "Documents" }).click();
-    const docsOk = await p.waitForURL(new RegExp(`/contracts/${home.number}/documents`)).then(() => true, () => false);
+    const docsOk = await p.waitForURL(new RegExp(`/contracts/${home.number}/documents`)).then(
+      () => true,
+      () => false,
+    );
     await nav(p).getByRole("link", { name: "Home", exact: true }).click();
-    const backHome = await p.waitForURL(`${BASE}/`).then(() => true, () => false);
+    const backHome = await p.waitForURL(`${BASE}/`).then(
+      () => true,
+      () => false,
+    );
     R(
       "Open work from Home, steps 1-5, and the section order",
       "Home shows only sections with work, Inbox and Entity obligations first, then Approvals, Tasks, Dates, Your contracts, Your matters; a Task title opens its record; number and title show; Fields and Documents open; Home returns",
       `Sections on screen: ${shown.join(" > ")} (documented order ${inOrder(shown)}); API sections ${homeApi.map((x) => `${x.type}:${x.total}`).join(", ")} (none empty ${noZero}); fixture Task on the card ${taskOnCard}; opened C-${home.number} with number and title ${numberTitle}; Fields ${fieldsOk}; Documents ${docsOk}; Home ${backHome}`,
-      inOrder(shown) && shown[0] === "Inbox" && noZero && taskOnCard && numberTitle && fieldsOk && docsOk && backHome,
+      inOrder(shown) &&
+        shown[0] === "Inbox" &&
+        noZero &&
+        taskOnCard &&
+        numberTitle &&
+        fieldsOk &&
+        docsOk &&
+        backHome,
       "/",
     );
 
@@ -934,11 +1151,16 @@ async function findYourWork(admin) {
     const card = p.getByRole("region", { name: "Inbox" });
     const viewAll = card.getByRole("link", { name: /^View all \d+$/ });
     const viewAllLabel = await text(viewAll);
-    const statusCounts = sql(`select string_agg(status||':'||n, ',' order by status) from (select status, count(*) n from requests where archived_at is null and status in ('new','read') group by status) x`);
+    const statusCounts = sql(
+      `select string_agg(status||':'||n, ',' order by status) from (select status, count(*) n from requests where archived_at is null and status in ('new','read') group by status) x`,
+    );
     await viewAll.click();
     await p.waitForURL(/\/inbox/, { timeout: 15000 });
     await sleep(2000);
-    const row = p.locator("main").getByRole("link", { name: new RegExp(mine.title) }).first();
+    const row = p
+      .locator("main")
+      .getByRole("link", { name: new RegExp(mine.title) })
+      .first();
     const listed = await row.isVisible().catch(() => false);
     const before = sql(`select status from requests where id='${mine.id}'`);
     await row.click();
@@ -949,16 +1171,31 @@ async function findYourWork(admin) {
     await homeSections(p);
     const homeApi2 = must(await api(p, "GET", "/home"), "home").sections;
     const inboxTotal1 = homeApi2.find((x) => x.type === "inbox")?.total ?? 0;
-    const newRead = Number(sql(`select count(*) from requests where archived_at is null and status in ('new','read')`));
-    await p.getByRole("region", { name: "Inbox" }).getByRole("link", { name: /^View all \d+$/ }).click();
+    const newRead = Number(
+      sql(`select count(*) from requests where archived_at is null and status in ('new','read')`),
+    );
+    await p
+      .getByRole("region", { name: "Inbox" })
+      .getByRole("link", { name: /^View all \d+$/ })
+      .click();
     await p.waitForURL(/\/inbox/, { timeout: 15000 });
     await sleep(2000);
-    const stillListed = await p.locator("main").getByRole("link", { name: new RegExp(mine.title) }).first().isVisible().catch(() => false);
+    const stillListed = await p
+      .locator("main")
+      .getByRole("link", { name: new RegExp(mine.title) })
+      .first()
+      .isVisible()
+      .catch(() => false);
     R(
       "Inbox: Requests with the status New or Read; View all counts both; opening a New Request makes it Read and it stays in Inbox",
       "View all counts New and Read Requests; the fixture Request is New before an Administrator or Legal Team Member opens it and Read after; it stays in Inbox",
       `Home card "${viewAllLabel}" with New/Read in the database ${statusCounts} (API total ${inboxTotal0}); fixture R-${mine.number} listed on the Inbox list ${listed}, status ${before} before opening and ${afterOpen} after; Home Inbox total after ${inboxTotal1} against ${newRead} New or Read Requests in the database; the Read Request is still on the Inbox list ${stillListed}`,
-      viewAllLabel === `View all ${inboxTotal0}` && listed && before === "new" && afterOpen === "read" && inboxTotal1 === newRead && stillListed,
+      viewAllLabel === `View all ${inboxTotal0}` &&
+        listed &&
+        before === "new" &&
+        afterOpen === "read" &&
+        inboxTotal1 === newRead &&
+        stillListed,
       "/inbox",
     );
     await nav(p).getByRole("link", { name: "Home", exact: true }).click();
@@ -968,8 +1205,12 @@ async function findYourWork(admin) {
     const me = uid(seed.email);
     const cRows = homeApi.find((x) => x.type === "contracts")?.rows ?? [];
     const mRows = homeApi.find((x) => x.type === "matters")?.rows ?? [];
-    const cMgr = cRows.map((r) => sql(`select manager_id from contracts where number=${r.contract?.number ?? r.number}`));
-    const mMgr = mRows.map((r) => sql(`select manager_id from matters where number=${r.matter?.number ?? r.number}`));
+    const cMgr = cRows.map((r) =>
+      sql(`select manager_id from contracts where number=${r.contract?.number ?? r.number}`),
+    );
+    const mMgr = mRows.map((r) =>
+      sql(`select manager_id from matters where number=${r.matter?.number ?? r.number}`),
+    );
     const tRows = homeApi.find((x) => x.type === "tasks")?.rows ?? [];
     R(
       "Section contents: Your contracts by Owner, Your matters by Matter Manager, open Tasks",
@@ -981,11 +1222,16 @@ async function findYourWork(admin) {
 
     // Dates approaching.
     const datesJson = JSON.stringify(homeApi.find((x) => x.type === "dates") ?? {});
-    const taskInDates = datesJson.includes(seededTask[role]) || datesJson.includes(`"number":${home.number}`);
+    const taskInDates =
+      datesJson.includes(seededTask[role]) || datesJson.includes(`"number":${home.number}`);
     const dcard = p.getByRole("region", { name: "Dates approaching" });
     let yourDates = false;
     if (await dcard.isVisible().catch(() => false)) {
-      await dcard.getByRole("button", { name: /^View all \d+$/ }).or(dcard.getByRole("link", { name: /^View all \d+$/ })).first().click();
+      await dcard
+        .getByRole("button", { name: /^View all \d+$/ })
+        .or(dcard.getByRole("link", { name: /^View all \d+$/ }))
+        .first()
+        .click();
       yourDates = await seen(p.getByRole("dialog").getByText("Your dates"), 8000);
       const dialogText = yourDates ? await text(p.getByRole("dialog")) : "";
       yourDates = yourDates && !dialogText.includes(seededTask[role]);
@@ -1005,11 +1251,23 @@ async function findYourWork(admin) {
     await p.keyboard.press("?");
     const sheet = await seen(p.getByRole("dialog").getByText("Keyboard shortcuts"), 5000);
     await p.keyboard.press("Escape");
-    const sheetClosed = await p.getByRole("dialog").waitFor({ state: "hidden", timeout: 5000 }).then(() => true, () => false);
+    const sheetClosed = await p
+      .getByRole("dialog")
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      );
     await p.getByRole("button", { name: seed.name, exact: true }).click();
     const menuOpen = await p.getByRole("menu").isVisible();
     await p.keyboard.press("Escape");
-    const menuClosed = await p.getByRole("menu").waitFor({ state: "hidden", timeout: 5000 }).then(() => true, () => false);
+    const menuClosed = await p
+      .getByRole("menu")
+      .waitFor({ state: "hidden", timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      );
     const box = p.getByRole("combobox", { name: "Search" });
     await p.locator("body").click({ position: { x: 5, y: 500 } });
     await p.keyboard.press("/");
@@ -1017,7 +1275,11 @@ async function findYourWork(admin) {
     await p.keyboard.type("?/x");
     await sleep(400);
     const typed = await box.inputValue();
-    const noSheet = !(await p.getByRole("dialog").filter({ hasText: "Keyboard shortcuts" }).isVisible().catch(() => false));
+    const noSheet = !(await p
+      .getByRole("dialog")
+      .filter({ hasText: "Keyboard shortcuts" })
+      .isVisible()
+      .catch(() => false));
     // Record a recent search: search the Home contract title and open See all results.
     await box.fill(`${S} Home`);
     const list = p.getByRole("listbox", { name: "Search results" });
@@ -1031,24 +1293,45 @@ async function findYourWork(admin) {
     await p.keyboard.press("/");
     await sleep(800);
     const histOpen = await list.isVisible().catch(() => false);
-    const groups = histOpen ? await list.getByRole("group").evaluateAll((g) => g.map((x) => x.getAttribute("aria-label"))) : [];
+    const groups = histOpen
+      ? await list.getByRole("group").evaluateAll((g) => g.map((x) => x.getAttribute("aria-label")))
+      : [];
     const recentEntry = list.getByRole("group", { name: "Recent" }).getByRole("option").first();
     const recentLabel = histOpen ? await text(recentEntry) : "";
-    const advanced = histOpen && (await list.getByRole("option", { name: "Advanced search…" }).count()) > 0;
+    const advanced =
+      histOpen && (await list.getByRole("option", { name: "Advanced search…" }).count()) > 0;
     await p.keyboard.press("Escape");
-    const escClosed = await list.waitFor({ state: "hidden", timeout: 5000 }).then(() => true, () => false);
+    const escClosed = await list.waitFor({ state: "hidden", timeout: 5000 }).then(
+      () => true,
+      () => false,
+    );
     await p.locator("body").click({ position: { x: 5, y: 500 } });
     await p.keyboard.press("/");
     await recentEntry.waitFor({ timeout: 5000 }).catch(() => {});
     await recentEntry.dispatchEvent("pointerdown").catch(() => {});
-    const ran = await p.waitForURL(/\/search/, { timeout: 10000 }).then(() => true, () => false);
+    const ran = await p.waitForURL(/\/search/, { timeout: 10000 }).then(
+      () => true,
+      () => false,
+    );
     await sleep(1500);
     const ranHome = (await text(p.locator("main"))).includes(home.title);
     R(
       "Keyboard navigation: ?, Escape, / and the empty search list with Saved, Recent and Advanced search…",
       "? opens Keyboard shortcuts; Escape closes a dialog, a menu and the search list; / focuses record search; typing in a field keeps ? and /; with a recent search the empty box opens Recent (and Saved when present) and Advanced search…; selecting an entry runs that search",
       `Sheet ${sheet}, closed by Escape ${sheetClosed}; name menu ${menuOpen}, closed by Escape ${menuClosed}; / focused Search ${focused}; typed "${typed}" with no sheet ${noSheet}; after one search the empty box opened a list ${histOpen} with groups [${groups.join(", ")}], first Recent entry "${recentLabel}", Advanced search… ${advanced}; Escape closed the list ${escClosed}; selecting the Recent entry opened /search ${ran} and listed the Home contract ${ranHome}`,
-      sheet && sheetClosed && menuOpen && menuClosed && focused && typed === "?/x" && noSheet && histOpen && groups.includes("Recent") && advanced && escClosed && ran && ranHome,
+      sheet &&
+        sheetClosed &&
+        menuOpen &&
+        menuClosed &&
+        focused &&
+        typed === "?/x" &&
+        noSheet &&
+        histOpen &&
+        groups.includes("Recent") &&
+        advanced &&
+        escClosed &&
+        ran &&
+        ranHome,
       "/",
     );
 
@@ -1057,20 +1340,31 @@ async function findYourWork(admin) {
     const tabMoved = await p.evaluate(() => document.activeElement?.textContent?.trim());
     await nav(p).getByRole("link", { name: "Contracts" }).focus();
     await p.keyboard.press("Enter");
-    const enterOk = await p.waitForURL(/\/contracts$/, { timeout: 10000 }).then(() => true, () => false);
+    const enterOk = await p.waitForURL(/\/contracts$/, { timeout: 10000 }).then(
+      () => true,
+      () => false,
+    );
     await p.goto(`${BASE}/`);
     await homeSections(p);
     await p.getByRole("banner").getByRole("link", { name: "Help" }).click();
     await p.waitForURL(/\/help/);
     await p.getByRole("searchbox", { name: "Search documentation" }).fill("Find your work on Home");
     await p.getByRole("searchbox", { name: "Search documentation" }).press("Enter");
-    await p.locator("main").getByRole("link", { name: "Find your work on Home" }).first().waitFor({ timeout: 15000 }).catch(() => {});
+    await p
+      .locator("main")
+      .getByRole("link", { name: "Find your work on Home" })
+      .first()
+      .waitFor({ timeout: 15000 })
+      .catch(() => {});
     const helpText = await text(p.locator("main"));
     R(
       "Tab and Enter; Help opens product instructions and its search searches guides",
       "Tab moves focus; Enter activates a focused link; Help in the header opens guides; its search finds the guide and not records",
       `Tab moved focus to "${tabMoved}"; Enter on Contracts opened /contracts ${enterOk}; Help at ${pathOf(p)}; guide found ${helpText.includes("Find your work on Home")}; fixture Contract title in Help ${helpText.includes(home.title)}`,
-      !!tabMoved && enterOk && helpText.includes("Find your work on Home") && !helpText.includes(home.title),
+      !!tabMoved &&
+        enterOk &&
+        helpText.includes("Find your work on Home") &&
+        !helpText.includes(home.title),
       "/help",
     );
 
@@ -1079,7 +1373,16 @@ async function findYourWork(admin) {
     for (const [pth, title, back, ref] of [
       ["/contracts/999999", "Contract not found", "Back to Contracts", "C-999999"],
       ["/matters/999999", "Matter not found", "Back to Matters", "M-999999"],
-      ...(role === "legal_team_member" ? [[`/contracts/${conf.number}`, "Contract not found", "Back to Contracts", `C-${conf.number}`]] : []),
+      ...(role === "legal_team_member"
+        ? [
+            [
+              `/contracts/${conf.number}`,
+              "Contract not found",
+              "Back to Contracts",
+              `C-${conf.number}`,
+            ],
+          ]
+        : []),
     ]) {
       await p.goto(`${BASE}${pth}`);
       const t = await seen(p.getByText(title), 15000);
@@ -1087,7 +1390,14 @@ async function findYourWork(admin) {
       const said = body.includes(`${ref} does not exist, or you cannot open it.`);
       const leaked = body.includes(conf.title);
       await p.getByRole("link", { name: back }).click();
-      const returned = await p.waitForURL(new RegExp(`${back.endsWith("Contracts") ? "/contracts" : "/matters"}$`), { timeout: 10000 }).then(() => true, () => false);
+      const returned = await p
+        .waitForURL(new RegExp(`${back.endsWith("Contracts") ? "/contracts" : "/matters"}$`), {
+          timeout: 10000,
+        })
+        .then(
+          () => true,
+          () => false,
+        );
       nf[pth] = { title: t, message: said, backLink: returned, leaked };
     }
     R(
@@ -1105,7 +1415,9 @@ async function findYourWork(admin) {
     const rowsOf = async (p) => {
       const card = p.getByRole("region", { name: "Entity obligations" });
       if (!(await card.isVisible().catch(() => false))) return null;
-      return card.getByRole("listitem").evaluateAll((els) => els.map((e) => e.innerText.replace(/\s+/g, " ").trim()));
+      return card
+        .getByRole("listitem")
+        .evaluateAll((els) => els.map((e) => e.innerText.replace(/\s+/g, " ").trim()));
     };
     const labelIn = (rows, o) => (rows ?? []).some((r) => r.includes(o.label));
     // Administrator with a Grant on the Confidential Entity.
@@ -1113,15 +1425,30 @@ async function findYourWork(admin) {
     const faShown = await homeSections(fa.page);
     const faRows = await rowsOf(fa.page);
     const unRow = (faRows ?? []).find((r) => r.includes(oUn.label)) ?? "";
-    await fa.page.getByRole("region", { name: "Entity obligations" }).getByRole("link", { name: new RegExp(oUn.label) }).first().click();
-    const opened = await fa.page.waitForURL(new RegExp(`/entities/${e1.id}/obligations`), { timeout: 15000 }).then(() => true, () => false);
+    await fa.page
+      .getByRole("region", { name: "Entity obligations" })
+      .getByRole("link", { name: new RegExp(oUn.label) })
+      .first()
+      .click();
+    const opened = await fa.page
+      .waitForURL(new RegExp(`/entities/${e1.id}/obligations`), { timeout: 15000 })
+      .then(
+        () => true,
+        () => false,
+      );
     log.record(
       A,
       "administrator",
       "Entity obligations for an Administrator: Unassigned and unreachable-assignee Obligations, overdue first",
       "An Administrator with a Grant sees Unassigned Obligations and Obligations whose assignee cannot reach the (Confidential) Entity, overdue first; not an Obligation assigned to a Legal Team Member who can reach it; a row opens the Entity's Obligations",
       `Sections ${faShown.join(" > ")}; card rows: ${JSON.stringify(faRows)}; Unassigned row "${unRow}" marked Unassigned ${/Unassigned/.test(unRow)}; unreachable-assignee Obligation listed ${labelIn(faRows, oNoReach)}; member-assigned Obligation listed ${labelIn(faRows, oMember)}; row opened /entities/<id>/obligations ${opened}`,
-      inOrder(faShown) && faShown.indexOf("Entity obligations") <= 1 && /Unassigned/.test(unRow) && /Overdue/.test(unRow) && labelIn(faRows, oNoReach) && !labelIn(faRows, oMember) && opened,
+      inOrder(faShown) &&
+        faShown.indexOf("Entity obligations") <= 1 &&
+        /Unassigned/.test(unRow) &&
+        /Overdue/.test(unRow) &&
+        labelIn(faRows, oNoReach) &&
+        !labelIn(faRows, oMember) &&
+        opened,
       "/",
     );
     // Administrator without a Grant, who is the unreachable Obligation's assignee.
@@ -1139,7 +1466,10 @@ async function findYourWork(admin) {
       "Entity obligations: an Administrator needs a Grant to see a Confidential Entity's Obligations",
       "An Administrator without a Grant does not see the Confidential Entity's Obligation, even when assigned to it; Unassigned Obligations on open Entities still show",
       `Administrator without a Grant (the assignee): Confidential Entity Obligation listed ${labelIn(fbRows, oNoReach)}, Unassigned listed ${labelIn(fbRows, oUn)}; Daniel Okafor (no Grant): Confidential Entity Obligation listed ${labelIn(danielRows, oNoReach)}, Unassigned listed ${labelIn(danielRows, oUn)}`,
-      !labelIn(fbRows, oNoReach) && labelIn(fbRows, oUn) && !labelIn(danielRows, oNoReach) && labelIn(danielRows, oUn),
+      !labelIn(fbRows, oNoReach) &&
+        labelIn(fbRows, oUn) &&
+        !labelIn(danielRows, oNoReach) &&
+        labelIn(danielRows, oUn),
       "/",
     );
     await fb.context.close();
@@ -1147,22 +1477,32 @@ async function findYourWork(admin) {
     const fm = await signIn(acct.member.email, acct.member.password);
     const fmShown = await homeSections(fm.page);
     const fmRows = await rowsOf(fm.page);
-    const fmApi = must(await api(fm.page, "GET", "/home"), "home").sections.find((x) => x.type === "obligations");
+    const fmApi = must(await api(fm.page, "GET", "/home"), "home").sections.find(
+      (x) => x.type === "obligations",
+    );
     log.record(
       A,
       "legal_team_member",
       "Entity obligations for a Legal Team Member: open Obligations assigned to you, overdue first",
       "Only Obligations assigned to this Legal Team Member on reachable Entities, overdue first; no Unassigned rows",
       `Sections ${fmShown.join(" > ")}; card rows: ${JSON.stringify(fmRows)}; total ${fmApi?.total}; overdue member Obligation first ${(fmRows ?? [])[0]?.includes(oMember.label)}; future member Obligation listed ${labelIn(fmRows, oFuture)}; Unassigned listed ${labelIn(fmRows, oUn)}`,
-      inOrder(fmShown) && fmApi?.total === 2 && (fmRows ?? [])[0]?.includes(oMember.label) && labelIn(fmRows, oFuture) && !labelIn(fmRows, oUn),
+      inOrder(fmShown) &&
+        fmApi?.total === 2 &&
+        (fmRows ?? [])[0]?.includes(oMember.label) &&
+        labelIn(fmRows, oFuture) &&
+        !labelIn(fmRows, oUn),
       "/",
     );
     await fm.context.close();
   }
 
   // Your Tasks with the fresh Administrator and Legal Team Member.
-  for (const [role, key] of [["administrator", "admin"], ["legal_team_member", "member"]]) {
-    const R = (step, expected, actual, pass, page) => log.record(A, role, step, expected, actual, pass, page);
+  for (const [role, key] of [
+    ["administrator", "admin"],
+    ["legal_team_member", "member"],
+  ]) {
+    const R = (step, expected, actual, pass, page) =>
+      log.record(A, role, step, expected, actual, pass, page);
     const a = acct[key];
     const c = key === "admin" ? fa : await signIn(a.email, a.password);
     const p = c.page;
@@ -1181,27 +1521,52 @@ async function findYourWork(admin) {
       await list.getByRole("option", { name: /See all results/ }).dispatchEvent("pointerdown");
       await p.waitForURL(/\/search/, { timeout: 15000 });
       await sleep(1500);
-      const recent = await p.evaluate((id) => JSON.parse(localStorage.getItem(`openlaw.recent-searches.${id}`) ?? "[]"), a.userId);
+      const recent = await p.evaluate(
+        (id) => JSON.parse(localStorage.getItem(`openlaw.recent-searches.${id}`) ?? "[]"),
+        a.userId,
+      );
       const savedName = `${S} saved search ${key}`;
-      const sv = await api(p, "POST", "/list-views", { surface: "search", name: savedName, config: { ...recent[0], words: { ...recent[0].words, all: `${S} Home` } }, isDefault: false });
+      const sv = await api(p, "POST", "/list-views", {
+        surface: "search",
+        name: savedName,
+        config: { ...recent[0], words: { ...recent[0].words, all: `${S} Home` } },
+        isDefault: false,
+      });
       fx.created.push(`Saved search "${savedName}" for ${a.email}`);
       await nav(p).getByRole("link", { name: "Home", exact: true }).click();
       await homeSections(p);
       await p.locator("body").click({ position: { x: 5, y: 500 } });
       await p.keyboard.press("/");
       await sleep(1000);
-      const groups = (await list.isVisible().catch(() => false)) ? await list.getByRole("group").evaluateAll((g) => g.map((x) => x.getAttribute("aria-label"))) : [];
-      const entry = list.getByRole("group", { name: "Saved" }).getByRole("option", { name: new RegExp(savedName) });
+      const groups = (await list.isVisible().catch(() => false))
+        ? await list
+            .getByRole("group")
+            .evaluateAll((g) => g.map((x) => x.getAttribute("aria-label")))
+        : [];
+      const entry = list
+        .getByRole("group", { name: "Saved" })
+        .getByRole("option", { name: new RegExp(savedName) });
       const hasEntry = (await entry.count()) > 0;
-      await entry.first().dispatchEvent("pointerdown").catch(() => {});
-      const ran = await p.waitForURL(/\/search/, { timeout: 10000 }).then(() => true, () => false);
+      await entry
+        .first()
+        .dispatchEvent("pointerdown")
+        .catch(() => {});
+      const ran = await p.waitForURL(/\/search/, { timeout: 10000 }).then(
+        () => true,
+        () => false,
+      );
       await sleep(1500);
       const ranHome = (await text(p.locator("main"))).includes(home.title);
       R(
         "Keyboard navigation: with a saved search the empty box opens Saved and Recent groups; selecting the Saved entry runs it",
         "The list has Saved and Recent groups and Advanced search…; selecting the saved search runs it at once",
         `Saved view API ${sv.status}; groups [${groups.join(", ")}]; saved entry listed ${hasEntry}; selecting it opened /search ${ran} and listed the Home contract ${ranHome}`,
-        sv.status < 300 && groups[0] === "Saved" && groups.includes("Recent") && hasEntry && ran && ranHome,
+        sv.status < 300 &&
+          groups[0] === "Saved" &&
+          groups.includes("Recent") &&
+          hasEntry &&
+          ran &&
+          ranHome,
         "/",
       );
       await p.goto(`${BASE}/`);
@@ -1226,7 +1591,15 @@ async function findYourWork(admin) {
       const dated = i < 53;
       const title = `${S} Task ${String(i + 1).padStart(2, "0")} ${dated ? "dated" : "undated"} ${role}`;
       const due = dated ? iso(5 + (53 - i)) : null;
-      must(await api(admin.page, "POST", `/contracts/${home.number}/tasks`, { title, assigneeId: a.userId, addToTeam: true, dueDate: due }), "task");
+      must(
+        await api(admin.page, "POST", `/contracts/${home.number}/tasks`, {
+          title,
+          assigneeId: a.userId,
+          addToTeam: true,
+          dueDate: due,
+        }),
+        "task",
+      );
       titles.push({ title, due });
     }
     fx.created.push(`55 Tasks on C-${home.number} assigned to ${a.email}`);
@@ -1234,18 +1607,31 @@ async function findYourWork(admin) {
     const tcard = p.getByRole("region", { name: "Tasks assigned to you" });
     await tcard.waitFor({ timeout: 15000 });
     await tcard.getByRole("link", { name: "View all 55" }).click();
-    const viaViewAll = await p.waitForURL(/\/home\/tasks/).then(() => true, () => false);
+    const viaViewAll = await p.waitForURL(/\/home\/tasks/).then(
+      () => true,
+      () => false,
+    );
     await p.getByText("Your Tasks").first().waitFor();
     await sleep(1500);
-    const rows = () => p.locator("main li").filter({ hasText: `${S} Task` }).filter({ hasText: role });
+    const rows = () =>
+      p
+        .locator("main li")
+        .filter({ hasText: `${S} Task` })
+        .filter({ hasText: role });
     const before = await rows().count();
     const more = p.getByRole("button", { name: "Load more Tasks" });
     const hasMore = await more.isVisible();
     await more.click();
     await sleep(2500);
     const after = await rows().count();
-    const shownTitles = await rows().evaluateAll((els) => els.map((e) => e.innerText.split("\n")[0].trim()));
-    const expected = [...titles].sort((x, y) => ((x.due ?? "9999") < (y.due ?? "9999") ? -1 : (x.due ?? "9999") > (y.due ?? "9999") ? 1 : 0)).map((t) => t.title);
+    const shownTitles = await rows().evaluateAll((els) =>
+      els.map((e) => e.innerText.split("\n")[0].trim()),
+    );
+    const expected = [...titles]
+      .sort((x, y) =>
+        (x.due ?? "9999") < (y.due ?? "9999") ? -1 : (x.due ?? "9999") > (y.due ?? "9999") ? 1 : 0,
+      )
+      .map((t) => t.title);
     const idx = expected.map((t) => shownTitles.findIndex((x) => x.includes(t)));
     const ordered = idx.every((v, i) => v >= 0 && (i === 0 || v > idx[i - 1]));
     const undatedLast = shownTitles.slice(-2).every((x) => x.includes("undated"));
@@ -1266,7 +1652,9 @@ async function findYourWork(admin) {
     await p.getByText(`Completed: ${t1}`).waitFor({ timeout: 10000 });
     await sleep(1500);
     const gone = (await p.locator("main li").filter({ hasText: t1 }).count()) === 0;
-    const toggle = p.getByRole("switch", { name: "Show completed" }).or(p.getByRole("checkbox", { name: "Show completed" }));
+    const toggle = p
+      .getByRole("switch", { name: "Show completed" })
+      .or(p.getByRole("checkbox", { name: "Show completed" }));
     await toggle.first().click();
     await sleep(2500);
     const hideLabel = (await p.getByText("Hide completed").count()) > 0;
@@ -1274,7 +1662,11 @@ async function findYourWork(admin) {
     await p.getByRole("checkbox", { name: `Reopen Task: ${t1}` }).click();
     const reopened = await seen(p.getByText(`Reopened: ${t1}`));
     const dbOpen = sql(`select is_done from contract_tasks where title='${t1}'`) === "f";
-    await p.getByRole("switch", { name: "Hide completed" }).or(p.getByRole("checkbox", { name: "Hide completed" })).first().click();
+    await p
+      .getByRole("switch", { name: "Hide completed" })
+      .or(p.getByRole("checkbox", { name: "Hide completed" }))
+      .first()
+      .click();
     await sleep(2000);
     const showBack = (await p.getByText("Show completed").count()) > 0;
     R(
@@ -1284,10 +1676,23 @@ async function findYourWork(admin) {
       done && undone && gone && hideLabel && completedShown && reopened && dbOpen && showBack,
       "/home/tasks",
     );
-    await p.locator("main li").filter({ hasText: titles[51].title }).getByRole("link").first().click();
-    const owning = await p.waitForURL(new RegExp(`/contracts/${home.number}/tasks`), { timeout: 15000 }).then(() => true, () => false);
+    await p
+      .locator("main li")
+      .filter({ hasText: titles[51].title })
+      .getByRole("link")
+      .first()
+      .click();
+    const owning = await p
+      .waitForURL(new RegExp(`/contracts/${home.number}/tasks`), { timeout: 15000 })
+      .then(
+        () => true,
+        () => false,
+      );
     await nav(p).getByRole("link", { name: "Home", exact: true }).click();
-    const homeBack = await p.waitForURL(`${BASE}/`).then(() => true, () => false);
+    const homeBack = await p.waitForURL(`${BASE}/`).then(
+      () => true,
+      () => false,
+    );
     R(
       "Open all your Tasks, steps 2 and 4: a Task title opens its owning record; Home returns",
       "The Task title opens the Contract; Home in the app navigation returns",
@@ -1354,7 +1759,8 @@ function png(w, h, noise = false) {
     for (let x = 0; x < w; x++) {
       const i = y * (w * 3 + 1) + 1 + x * 3;
       for (let k = 0; k < 3; k++) {
-        if (noise === "gradient") raw[i + k] = [Math.floor((x * 255) / w), Math.floor((y * 255) / h), 140][k];
+        if (noise === "gradient")
+          raw[i + k] = [Math.floor((x * 255) / w), Math.floor((y * 255) / h), 140][k];
         else if (noise) {
           seed = (seed * 1103515245 + 12345) & 0x7fffffff;
           raw[i + k] = seed & 0xff;
@@ -1374,7 +1780,10 @@ async function personalSettings(admin) {
   const A = "personal-settings";
   const S = `${TAG} V-C05 ${STAMP}`;
   const acct = {};
-  for (const [role, short] of [["administrator", "admin"], ["legal_team_member", "member"]]) {
+  for (const [role, short] of [
+    ["administrator", "admin"],
+    ["legal_team_member", "member"],
+  ]) {
     acct[role] = await inviteAndActivate(admin.page, {
       email: `doc030.access2.c05.${short}.${STAMP}@helix.example`,
       displayName: `${S} ${role === "administrator" ? "Administrator" : "Legal Team Member"}`,
@@ -1384,10 +1793,13 @@ async function personalSettings(admin) {
     fx.created.push(`${role} account ${acct[role].email}`);
   }
   const prefs = (id) =>
-    sql(`select display_name||'|'||coalesce(timezone,'')||'|'||theme||'|'||(image is not null) from users where id='${id}'`);
+    sql(
+      `select display_name||'|'||coalesce(timezone,'')||'|'||theme||'|'||(image is not null) from users where id='${id}'`,
+    );
 
   for (const role of ["administrator", "legal_team_member"]) {
-    const R = (step, expected, actual, pass, page) => log.record(A, role, step, expected, actual, pass, page);
+    const R = (step, expected, actual, pass, page) =>
+      log.record(A, role, step, expected, actual, pass, page);
     const a = acct[role];
     const otherRole = role === "administrator" ? "legal_team_member" : "administrator";
     const otherBefore = prefs(acct[otherRole].userId);
@@ -1400,16 +1812,28 @@ async function personalSettings(admin) {
     await p.getByRole("menuitem", { name: "Settings" }).click();
     await p.waitForURL(/\/settings/);
     const personalNav = p.getByRole("navigation").filter({ hasText: "Personal" }).first();
-    const entries = await personalNav.getByRole("link").evaluateAll((as) => as.map((x) => x.textContent.trim()));
+    const entries = await personalNav
+      .getByRole("link")
+      .evaluateAll((as) => as.map((x) => x.textContent.trim()));
     const personalEntries = entries.slice(0, entries.indexOf("View Business Portal") + 1);
     await personalNav.getByRole("link", { name: "API keys", exact: true }).click();
-    const apiKeys = await p.waitForURL(/\/settings\/api-keys/, { timeout: 10000 }).then(() => true, () => false);
+    const apiKeys = await p.waitForURL(/\/settings\/api-keys/, { timeout: 10000 }).then(
+      () => true,
+      () => false,
+    );
     const apiKeysText = (await text(p.locator("main"))).slice(0, 140);
     R(
       "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal",
       "The Personal group has exactly those five entries in that order; API keys opens its pane",
       `Settings navigation links: ${entries.join(", ")}; Personal entries ${personalEntries.join(", ")}; API keys opened ${pathOf(p)} ${apiKeys} ("${apiKeysText}")`,
-      JSON.stringify(personalEntries) === JSON.stringify(["Profile", "Appearance", "Notifications", "API keys", "View Business Portal"]) && apiKeys,
+      JSON.stringify(personalEntries) ===
+        JSON.stringify([
+          "Profile",
+          "Appearance",
+          "Notifications",
+          "API keys",
+          "View Business Portal",
+        ]) && apiKeys,
       "/settings",
     );
 
@@ -1430,9 +1854,15 @@ async function personalSettings(admin) {
     await p.getByLabel("Full name").waitFor();
     const nameAfter = await p.getByLabel("Full name").inputValue();
     const tzAfter = await tz.inputValue();
-    const headerName = await p.getByRole("button", { name: edited, exact: true }).isVisible().catch(() => false);
+    const headerName = await p
+      .getByRole("button", { name: edited, exact: true })
+      .isVisible()
+      .catch(() => false);
     await tz.click();
-    await p.getByRole("option", { name: /Use browser timezone/ }).first().click();
+    await p
+      .getByRole("option", { name: /Use browser timezone/ })
+      .first()
+      .click();
     const tzCleared = await savedNote(p);
     await sleep(1000);
     const dbTz = sql(`select coalesce(timezone,'null') from users where id='${a.userId}'`);
@@ -1446,19 +1876,30 @@ async function personalSettings(admin) {
       "Update your profile, steps 1-5",
       "Settings from the name menu; Profile under Personal; Full name saves with Enter or on leaving the field; Timezone search and select saves; Saved shows; reload keeps both; Use browser timezone removes the preference",
       `Name saved with Enter ${nameSaved}, after reload "${nameAfter}", header name menu updated ${headerName}; timezone Saved ${tzSaved}, after reload "${tzAfter}"; Use browser timezone Saved ${tzCleared}, stored ${dbTz}; name restored by leaving the field Saved ${blurSaved}, stored "${dbName}"`,
-      nameSaved && nameAfter === edited && headerName && tzSaved && /Tokyo/.test(tzAfter) && tzCleared && dbTz === "null" && blurSaved && dbName === a.displayName,
+      nameSaved &&
+        nameAfter === edited &&
+        headerName &&
+        tzSaved &&
+        /Tokyo/.test(tzAfter) &&
+        tzCleared &&
+        dbTz === "null" &&
+        blurSaved &&
+        dbName === a.displayName,
       "/settings/profile",
     );
 
     // Email and Role; the More information icon beside Role.
     const email = p.getByLabel("Email");
-    const emailRO = (await email.getAttribute("readonly")) !== null && (await email.inputValue()) === a.email;
+    const emailRO =
+      (await email.getAttribute("readonly")) !== null && (await email.inputValue()) === a.email;
     const roleHelp = p
       .locator("span.inline-flex")
       .filter({ has: p.locator("label", { hasText: /^Role$/ }) })
       .getByRole("button", { name: "More information" })
       .first();
-    const tipText = p.getByText("Roles are managed in Organization → Users.").filter({ visible: true });
+    const tipText = p
+      .getByText("Roles are managed in Organization → Users.")
+      .filter({ visible: true });
     await roleHelp.hover();
     await sleep(700);
     let tip = await seen(tipText, 3000);
@@ -1467,7 +1908,9 @@ async function personalSettings(admin) {
       tip = await seen(tipText, 3000);
     }
     await p.keyboard.press("Escape");
-    const roleEditable = (await p.getByRole("combobox", { name: "Role", exact: true }).count()) + (await p.getByLabel("Role", { exact: true }).count());
+    const roleEditable =
+      (await p.getByRole("combobox", { name: "Role", exact: true }).count()) +
+      (await p.getByLabel("Role", { exact: true }).count());
     R(
       "Email and Role are read-only; the More information icon beside Role",
       "Email is read-only; Role has no control; More information beside Role says Roles are managed in Organization → Users.",
@@ -1481,13 +1924,24 @@ async function personalSettings(admin) {
     const hint = await seen(p.getByText("JPG or PNG, up to 10 MB. Resized automatically."), 3000);
     const accept = await fileInput.getAttribute("accept");
     const small = png(64, 64);
-    const [chooser] = await Promise.all([p.waitForEvent("filechooser"), p.getByRole("button", { name: "Upload", exact: true }).click()]);
-    await chooser.setFiles({ name: "doc030-access2-avatar.png", mimeType: "image/png", buffer: small });
+    const [chooser] = await Promise.all([
+      p.waitForEvent("filechooser"),
+      p.getByRole("button", { name: "Upload", exact: true }).click(),
+    ]);
+    await chooser.setFiles({
+      name: "doc030-access2-avatar.png",
+      mimeType: "image/png",
+      buffer: small,
+    });
     const smallSaved = await savedNote(p);
     await sleep(1000);
     await sleep(3000);
     const large = png(1800, 1800, "gradient");
-    await fileInput.setInputFiles({ name: "doc030-access2-large.png", mimeType: "image/png", buffer: large });
+    await fileInput.setInputFiles({
+      name: "doc030-access2-large.png",
+      mimeType: "image/png",
+      buffer: large,
+    });
     const largeSaved = await savedNote(p);
     await sleep(1500);
     const stored = sql(`select image from users where id='${a.userId}'`);
@@ -1497,15 +1951,33 @@ async function personalSettings(admin) {
     await p.reload();
     const profileReloads = await seen(p.getByLabel("Full name"), 15000);
     const huge = png(1900, 1900, true);
-    await fileInput.setInputFiles({ name: "doc030-access2-huge.png", mimeType: "image/png", buffer: huge });
+    await fileInput.setInputFiles({
+      name: "doc030-access2-huge.png",
+      mimeType: "image/png",
+      buffer: huge,
+    });
     const tooBig = await seen(p.getByText("Choose a photo smaller than 10 MB."), 8000);
-    await fileInput.setInputFiles({ name: "doc030-access2.gif", mimeType: "image/gif", buffer: Buffer.from("GIF89a\x01\x00\x01\x00\x00\x00\x00;", "binary") });
+    await fileInput.setInputFiles({
+      name: "doc030-access2.gif",
+      mimeType: "image/gif",
+      buffer: Buffer.from("GIF89a\x01\x00\x01\x00\x00\x00\x00;", "binary"),
+    });
     const wrongType = await seen(p.getByText("Choose a JPG or PNG photo."), 8000);
     R(
       "Change your photo: Upload a JPG or PNG up to 10 MB; larger files and other types are refused",
       "Hint JPG or PNG, up to 10 MB. Resized automatically.; a large photo is scaled down and saved with Saved; a file over 10 MB shows Choose a photo smaller than 10 MB.; another type shows Choose a JPG or PNG photo.",
       `Hint ${hint}; picker filter "${accept}"; ${small.length}-byte PNG via Upload saved ${smallSaved}; ${(large.length / 1048576).toFixed(1)} MB 1800x1800 gradient PNG saved ${largeSaved}, stored as a ${storedW}x${storedH} image of ${storedBytes.length} bytes, Profile reloads ${profileReloads}; ${(huge.length / 1048576).toFixed(1)} MB PNG refused with the 10 MB message ${tooBig}; a GIF set on the input past the picker's JPG/PNG filter refused with Choose a JPG or PNG photo. ${wrongType}`,
-      hint && smallSaved && largeSaved && profileReloads && Math.max(storedW, storedH) <= 512 && storedBytes.length <= 1048576 && large.length > 1048576 && large.length < 10485760 && huge.length > 10485760 && tooBig && wrongType,
+      hint &&
+        smallSaved &&
+        largeSaved &&
+        profileReloads &&
+        Math.max(storedW, storedH) <= 512 &&
+        storedBytes.length <= 1048576 &&
+        large.length > 1048576 &&
+        large.length < 10485760 &&
+        huge.length > 10485760 &&
+        tooBig &&
+        wrongType,
       "/settings/profile",
     );
 
@@ -1533,20 +2005,35 @@ async function personalSettings(admin) {
       "Choose a theme, steps 1-3; another account's preferences unchanged",
       "Light, Warm and Dark each save for this account; reload keeps the choice; changing the theme does not sign out; the other account is unchanged",
       `Saved/stored ${JSON.stringify(themes)}; Dark kept after reload ${darkKept}; still signed in ${stillIn}; other ${otherRole} account name|timezone|theme|photo unchanged ${otherBefore === otherAfter} ("${otherAfter.split("|").slice(1).join("|")}")`,
-      themes.Warm === "true/warm" && themes.Dark === "true/dark" && themes.Light === "true/light" && darkKept && stillIn && otherBefore === otherAfter,
+      themes.Warm === "true/warm" &&
+        themes.Dark === "true/dark" &&
+        themes.Light === "true/light" &&
+        darkKept &&
+        stillIn &&
+        otherBefore === otherAfter,
       "/settings/appearance",
     );
 
     // Open your own Portal view.
     await personalNav.getByRole("link", { name: "View Business Portal", exact: true }).click();
-    const paneUrl = await p.waitForURL(/\/settings\/app-view/).then(() => true, () => false);
-    await p.getByRole("link", { name: "View as business user" }).or(p.getByRole("button", { name: "View as business user" })).first().click();
+    const paneUrl = await p.waitForURL(/\/settings\/app-view/).then(
+      () => true,
+      () => false,
+    );
+    await p
+      .getByRole("link", { name: "View as business user" })
+      .or(p.getByRole("button", { name: "View as business user" }))
+      .first()
+      .click();
     await p.waitForURL(/\/portal/, { timeout: 15000 });
     const banner = await seen(p.getByText("Viewing as business user"), 10000);
     const header = await text(p.locator("header").first());
     const roleUnchanged = sql(`select role from users where id='${a.userId}'`) === role;
     await p.getByRole("link", { name: "Return to legal view" }).click();
-    const returned = await p.waitForURL(/\/settings\/app-view/, { timeout: 15000 }).then(() => true, () => false);
+    const returned = await p.waitForURL(/\/settings\/app-view/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     const stillSignedIn = !/\/auth\//.test(p.url());
     R(
       "Open your own Portal view, steps 1-4",
@@ -1567,22 +2054,32 @@ async function personalSettings(admin) {
     await d.getByLabel("Current password").fill(`${a.password}-wrong`);
     await d.getByLabel("New password").fill(newPw);
     await d.getByRole("button", { name: "Save" }).click();
-    const errText = "The password could not be changed. Check your current password and use at least 8 characters.";
+    const errText =
+      "The password could not be changed. Check your current password and use at least 8 characters.";
     const wrongMsg = await seen(d.getByText(errText));
     await d.getByLabel("Current password").fill(a.password);
     await d.getByLabel("New password").fill("short1");
     await d.getByRole("button", { name: "Save" }).click();
     await sleep(2000);
-    const shortMsg = await d.getByText(errText).isVisible().catch(() => false);
+    const shortMsg = await d
+      .getByText(errText)
+      .isVisible()
+      .catch(() => false);
     const shortOpen = await d.isVisible();
     await d.getByLabel("New password").fill(newPw);
     await d.getByRole("button", { name: "Save" }).click();
-    const closed = await d.waitFor({ state: "hidden", timeout: 10000 }).then(() => true, () => false);
+    const closed = await d.waitFor({ state: "hidden", timeout: 10000 }).then(
+      () => true,
+      () => false,
+    );
     await sleep(1500);
     await p.reload();
     const thisOpen = /\/settings\/profile/.test(p.url());
     await device2.page.reload();
-    const otherOut = await device2.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(() => true, () => false);
+    const otherOut = await device2.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     await device2.context.close();
     a.password = newPw;
     R(
@@ -1599,13 +2096,19 @@ async function personalSettings(admin) {
     const sessSaved = await savedNote(p);
     await sleep(1000);
     await device3.page.reload();
-    const d3Out = await device3.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(() => true, () => false);
+    const d3Out = await device3.page.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     await device3.context.close();
     await p.reload();
     const stillOpen = /\/settings\/profile/.test(p.url());
     await p.getByRole("button", { name: a.displayName, exact: true }).click();
     await p.getByRole("menuitem", { name: "Sign out" }).click();
-    const outOk = await p.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(() => true, () => false);
+    const outOk = await p.waitForURL(/\/auth\/login/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     await p.goto(`${BASE}/settings/profile`);
     await sleep(1500);
     const staysOut = /\/auth\//.test(p.url());
@@ -1622,7 +2125,11 @@ async function personalSettings(admin) {
   // Password & two-factor is absent for an account without a password (email-link sign-in).
   {
     const email = `doc030.access2.c05.nopassword.${STAMP}@helix.example`;
-    const inv = await api(admin.page, "POST", "/auth/invites", { email, displayName: `${S} No Password Member`, role: "legal_team_member" });
+    const inv = await api(admin.page, "POST", "/auth/invites", {
+      email,
+      displayName: `${S} No Password Member`,
+      role: "legal_team_member",
+    });
     fx.created.push(`legal_team_member account ${email} without a password`);
     await waitForBudget(1);
     const c = await newContext();
@@ -1665,7 +2172,9 @@ async function personalSettings(admin) {
     await p.goto(`${BASE}/settings/profile`);
     await p.getByLabel("Full name").waitFor({ timeout: 15000 });
     const noisy = png(1500, 1500, true);
-    await p.getByLabel("Upload a profile photo").setInputFiles({ name: "doc030-access2-detailed.png", mimeType: "image/png", buffer: noisy });
+    await p
+      .getByLabel("Upload a profile photo")
+      .setInputFiles({ name: "doc030-access2-detailed.png", mimeType: "image/png", buffer: noisy });
     const ok = await savedNote(p);
     await sleep(1500);
     const len = Number(sql(`select length(image) from users where id='${b.userId}'`));
@@ -1675,8 +2184,14 @@ async function personalSettings(admin) {
     const broken = body.includes("Something went wrong. The page could not load.");
     fx.productBugs.push({
       article: A,
-      summary: "On 067c1646 a profile photo that is still large after the browser resizes it (here a 512x512 detailed PNG stored as a ~1 MB data URL) saves with Saved, but afterwards Settings > Profile shows Something went wrong. The page could not load. The session endpoint GET /api/auth/get-session answers with a set-auth-jwt response header that carries the whole photo (about 1.4 MB measured on the lab), which Chromium refuses (ERR_RESPONSE_HEADERS_TOO_BIG). Home and other pages still load; the person has no way to remove the photo. dev commit 7abd2a8f (PR #1158, after the pinned commit) stops the jwt plugin from sending set-auth-jwt.",
-      reproduction: `As ${b.email}: Settings > Profile > Upload a ${(noisy.length / 1048576).toFixed(1)} MB 1500x1500 noisy PNG; Saved ${ok}; stored data URL ${len} characters; reload Profile: error page ${broken}; console: ${errors.filter((e) => /HEADERS_TOO_BIG/.test(e)).slice(0, 1).join("") || errors.slice(0, 1).join("")}`,
+      summary:
+        "On 067c1646 a profile photo that is still large after the browser resizes it (here a 512x512 detailed PNG stored as a ~1 MB data URL) saves with Saved, but afterwards Settings > Profile shows Something went wrong. The page could not load. The session endpoint GET /api/auth/get-session answers with a set-auth-jwt response header that carries the whole photo (about 1.4 MB measured on the lab), which Chromium refuses (ERR_RESPONSE_HEADERS_TOO_BIG). Home and other pages still load; the person has no way to remove the photo. dev commit 7abd2a8f (PR #1158, after the pinned commit) stops the jwt plugin from sending set-auth-jwt.",
+      reproduction: `As ${b.email}: Settings > Profile > Upload a ${(noisy.length / 1048576).toFixed(1)} MB 1500x1500 noisy PNG; Saved ${ok}; stored data URL ${len} characters; reload Profile: error page ${broken}; console: ${
+        errors
+          .filter((e) => /HEADERS_TOO_BIG/.test(e))
+          .slice(0, 1)
+          .join("") || errors.slice(0, 1).join("")
+      }`,
       observedAt: new Date().toISOString(),
     });
     console.log(`PRODUCT BUG reproduced ${ok && broken}`);
@@ -1692,7 +2207,9 @@ async function personalSettings(admin) {
       await sleep(2000);
       res[pth] = pathOf(bu.page);
     }
-    const none = (await bu.page.getByText("View as business user").count()) === 0 && (await bu.page.getByText("View Business Portal").count()) === 0;
+    const none =
+      (await bu.page.getByText("View as business user").count()) === 0 &&
+      (await bu.page.getByText("View Business Portal").count()) === 0;
     log.record(
       A,
       "business_user",
@@ -1725,13 +2242,18 @@ function pdf(marker) {
     out += `${i + 1} 0 obj\n${o}\nendobj\n`;
   });
   const xref = out.length;
-  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("");
+  out +=
+    `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` +
+    offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("");
   out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
   return Buffer.from(out);
 }
 const pdfFile = (name) => ({ name, mimeType: "application/pdf", buffer: pdf(name) });
 async function downloadVia(page, locator) {
-  const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 20000 }), locator.click()]);
+  const [dl] = await Promise.all([
+    page.waitForEvent("download", { timeout: 20000 }),
+    locator.click(),
+  ]);
   const p = await dl.path();
   return { filename: dl.suggestedFilename(), bytes: readFileSync(p) };
 }
@@ -1741,14 +2263,22 @@ async function portalKnowledge(admin) {
   const RB = "business_user";
   const S = `${TAG} V-C11 ${STAMP}`;
   const D = admin.page;
-  const article = sql(`select id from knowledge_types where display_name='Article' and archived_at is null limit 1`);
+  const article = sql(
+    `select id from knowledge_types where display_name='Article' and archived_at is null limit 1`,
+  );
   const K = {};
   async function item(key, { audience, publish, archive, docs, body, confidential = [] }) {
     const title = `${S} ${key}`;
-    const it = must(await api(D, "POST", "/knowledge", { title, knowledgeTypeId: article }), `create ${key}`).knowledgeItem;
+    const it = must(
+      await api(D, "POST", "/knowledge", { title, knowledgeTypeId: article }),
+      `create ${key}`,
+    ).knowledgeItem;
     const uploaded = [];
     for (const name of docs) {
-      const d = must(await api(D, "POST", `/knowledge/${it.id}/documents`, undefined, { file: pdfFile(name) }), `upload ${name}`).document;
+      const d = must(
+        await api(D, "POST", `/knowledge/${it.id}/documents`, undefined, { file: pdfFile(name) }),
+        `upload ${name}`,
+      ).document;
       uploaded.push({ id: d.id, name });
       await sleep(1100);
     }
@@ -1756,29 +2286,74 @@ async function portalKnowledge(admin) {
     if (body) patch.body = body;
     if (uploaded.length) patch.primaryDocumentId = uploaded.at(-1).id;
     must(await api(D, "PATCH", `/knowledge/${it.id}`, patch), `patch ${key}`);
-    for (const i of confidential) must(await api(D, "PATCH", `/documents/${uploaded[i].id}`, { isConfidential: true }), `flag ${key}`);
+    for (const i of confidential)
+      must(
+        await api(D, "PATCH", `/documents/${uploaded[i].id}`, { isConfidential: true }),
+        `flag ${key}`,
+      );
     if (publish) must(await api(D, "POST", `/knowledge/${it.id}/publish`, {}), `publish ${key}`);
     if (archive) must(await api(D, "POST", `/knowledge/${it.id}/archive`, {}), `archive ${key}`);
     K[key] = { id: it.id, title, docs: uploaded };
-    fx.created.push(`Knowledge Item "${title}" (${audience}, ${publish ? "published" : "draft"}${archive ? ", archived" : ""}, ${docs.length} Documents${confidential.length ? `, ${confidential.length} marked Confidential` : ""})`);
+    fx.created.push(
+      `Knowledge Item "${title}" (${audience}, ${publish ? "published" : "draft"}${archive ? ", archived" : ""}, ${docs.length} Documents${confidential.length ? `, ${confidential.length} marked Confidential` : ""})`,
+    );
   }
-  await item("guidance", { audience: "everyone", publish: true, docs: [`doc030-supporting-${STAMP}.pdf`, `doc030-primary-${STAMP}.pdf`], body: "Read this DOC-030 guidance before you ask Legal for a review.\n\nSend the latest draft with your Request." });
-  await item("confidential primary", { audience: "everyone", publish: true, docs: [`doc030-open-supporting-${STAMP}.pdf`, `doc030-confidential-primary-${STAMP}.pdf`], confidential: [1], body: "DOC-030 guidance whose primary Document is Confidential." });
-  await item("all confidential", { audience: "everyone", publish: true, docs: [`doc030-only-confidential-${STAMP}.pdf`], confidential: [0], body: "DOC-030 guidance whose only Document is Confidential." });
-  await item("restricted", { audience: "legal_only", publish: true, docs: [`doc030-restricted-${STAMP}.pdf`] });
-  await item("draft", { audience: "everyone", publish: false, docs: [`doc030-draft-${STAMP}.pdf`] });
-  await item("archived", { audience: "everyone", publish: true, archive: true, docs: [`doc030-archived-${STAMP}.pdf`] });
+  await item("guidance", {
+    audience: "everyone",
+    publish: true,
+    docs: [`doc030-supporting-${STAMP}.pdf`, `doc030-primary-${STAMP}.pdf`],
+    body: "Read this DOC-030 guidance before you ask Legal for a review.\n\nSend the latest draft with your Request.",
+  });
+  await item("confidential primary", {
+    audience: "everyone",
+    publish: true,
+    docs: [`doc030-open-supporting-${STAMP}.pdf`, `doc030-confidential-primary-${STAMP}.pdf`],
+    confidential: [1],
+    body: "DOC-030 guidance whose primary Document is Confidential.",
+  });
+  await item("all confidential", {
+    audience: "everyone",
+    publish: true,
+    docs: [`doc030-only-confidential-${STAMP}.pdf`],
+    confidential: [0],
+    body: "DOC-030 guidance whose only Document is Confidential.",
+  });
+  await item("restricted", {
+    audience: "legal_only",
+    publish: true,
+    docs: [`doc030-restricted-${STAMP}.pdf`],
+  });
+  await item("draft", {
+    audience: "everyone",
+    publish: false,
+    docs: [`doc030-draft-${STAMP}.pdf`],
+  });
+  await item("archived", {
+    audience: "everyone",
+    publish: true,
+    archive: true,
+    docs: [`doc030-archived-${STAMP}.pdf`],
+  });
 
   const bu = await businessUser();
   const page = bu.page;
-  const R = (step, expected, actual, pass, pg) => log.record(A, RB, step, expected, actual, pass, pg);
+  const R = (step, expected, actual, pass, pg) =>
+    log.record(A, RB, step, expected, actual, pass, pg);
 
   // Steps 1-3 and 5-6 from Before you submit on the Portal home.
   await page.goto(`${BASE}/portal`);
   const panel = page.getByRole("region", { name: "Before you submit" });
   await panel.waitFor({ timeout: 15000 });
   const homeLinks = await panel.getByRole("link").evaluateAll((as) =>
-    as.map((a) => ({ label: a.childNodes[0]?.textContent?.trim(), href: a.getAttribute("href"), target: a.getAttribute("target"), domain: a.parentElement?.querySelector("span[aria-hidden]")?.textContent ?? a.querySelector("span")?.textContent ?? null })),
+    as.map((a) => ({
+      label: a.childNodes[0]?.textContent?.trim(),
+      href: a.getAttribute("href"),
+      target: a.getAttribute("target"),
+      domain:
+        a.parentElement?.querySelector("span[aria-hidden]")?.textContent ??
+        a.querySelector("span")?.textContent ??
+        null,
+    })),
   );
   const staffList = must(await api(D, "GET", "/knowledge?limit=100"), "knowledge").knowledgeItems;
   const knowledgeLinks = homeLinks.filter((l) => l.href?.startsWith("/portal/knowledge/"));
@@ -1789,19 +2364,27 @@ async function portalKnowledge(admin) {
   await page.goto(`${BASE}/portal/new/contract_review`);
   await page.getByRole("heading", { level: 1 }).first().waitFor();
   const formPanel = page.getByRole("region", { name: "Before you submit" });
-  const formLinks = (await formPanel.count()) ? await formPanel.getByRole("link").evaluateAll((as) => as.map((a) => a.getAttribute("href"))) : [];
+  const formLinks = (await formPanel.count())
+    ? await formPanel.getByRole("link").evaluateAll((as) => as.map((a) => a.getAttribute("href")))
+    : [];
   R(
     "Open guidance and Documents, step 1: Before you submit on the Portal home and a request form",
     "Before you submit lists only eligible guidance; the links can differ between the home page and a form",
     `Home links: ${homeLinks.map((l) => `${l.label} -> ${l.href}${l.target ? ` (${l.target}, shows "${l.domain}")` : ""}`).join("; ")}; every Knowledge link is a published Everyone item ${eligible}; Contract review form links [${formLinks.join(", ")}] differ from home ${JSON.stringify(formLinks) !== JSON.stringify(homeLinks.map((l) => l.href))}`,
-    knowledgeLinks.length > 0 && eligible && JSON.stringify(formLinks) !== JSON.stringify(homeLinks.map((l) => l.href)),
+    knowledgeLinks.length > 0 &&
+      eligible &&
+      JSON.stringify(formLinks) !== JSON.stringify(homeLinks.map((l) => l.href)),
     "/portal",
   );
 
   await page.goto(`${BASE}/portal`);
   const first = knowledgeLinks[0];
   const tabs = page.context().pages().length;
-  await page.getByRole("region", { name: "Before you submit" }).getByRole("link", { name: first.label }).first().click();
+  await page
+    .getByRole("region", { name: "Before you submit" })
+    .getByRole("link", { name: first.label })
+    .first()
+    .click();
   await page.waitForURL(new RegExp(`${first.href}$`), { timeout: 15000 });
   const main = page.getByRole("main");
   const kicker = await text(main.getByText("From Legal", { exact: true }));
@@ -1815,17 +2398,31 @@ async function portalKnowledge(admin) {
   const dCount = await main.getByRole("region", { name: "Documents" }).count();
   let seededDl = "no Documents on this item";
   if (dCount) {
-    const d = await downloadVia(page, main.getByRole("region", { name: "Documents" }).getByRole("link", { name: /^Download / }).first());
+    const d = await downloadVia(
+      page,
+      main
+        .getByRole("region", { name: "Documents" })
+        .getByRole("link", { name: /^Download / })
+        .first(),
+    );
     seededDl = `downloaded ${d.filename} (${d.bytes.length} bytes)`;
   }
   const sameTab = page.context().pages().length === tabs;
   await main.getByRole("link", { name: "Your requests" }).click();
-  const home = await page.waitForURL(/\/portal$/, { timeout: 10000 }).then(() => true, () => false);
+  const home = await page.waitForURL(/\/portal$/, { timeout: 10000 }).then(
+    () => true,
+    () => false,
+  );
   R(
     "Open guidance and Documents, steps 2-6 from a Before you submit link",
     "The Knowledge link opens in the same tab; From Legal above the title; Documents with Download and Guidance when present; Your requests returns to the Portal home",
     `"${first.label}" opened ${first.href} in the same tab ${sameTab}; "${kicker}" above "${h1}" ${kickerAbove}; Guidance section ${gCount > 0}; Documents section ${dCount > 0}, ${seededDl}; Your requests -> /portal ${home}`,
-    sameTab && kicker === "From Legal" && kickerAbove && h1.length > 0 && (gCount > 0 || dCount > 0) && home,
+    sameTab &&
+      kicker === "From Legal" &&
+      kickerAbove &&
+      h1.length > 0 &&
+      (gCount > 0 || dCount > 0) &&
+      home,
     "/portal/knowledge/:id",
   );
 
@@ -1834,12 +2431,27 @@ async function portalKnowledge(admin) {
   await page.goto(`${BASE}/portal/knowledge/${G.id}`);
   await main.getByRole("heading", { level: 1, name: G.title }).waitFor({ timeout: 15000 });
   const docs = main.getByRole("region", { name: "Documents" });
-  const names = (await docs.getByRole("listitem").allInnerTexts()).map((n) => n.replace(/\s+/g, " ").replace(/Download$/, "").trim());
-  const pItem = must(await api(page, "GET", `/portal/knowledge/${G.id}`), "portal item").knowledgeItem;
+  const names = (await docs.getByRole("listitem").allInnerTexts()).map((n) =>
+    n
+      .replace(/\s+/g, " ")
+      .replace(/Download$/, "")
+      .trim(),
+  );
+  const pItem = must(
+    await api(page, "GET", `/portal/knowledge/${G.id}`),
+    "portal item",
+  ).knowledgeItem;
   const got = [];
   for (const d of pItem.documents) {
-    const dl = await downloadVia(page, docs.getByRole("link", { name: `Download ${d.currentVersion.originalFilename}` }));
-    got.push(sha(dl.bytes) === sha(pdf(d.currentVersion.originalFilename)) ? `${dl.filename} matches` : `${dl.filename} differs`);
+    const dl = await downloadVia(
+      page,
+      docs.getByRole("link", { name: `Download ${d.currentVersion.originalFilename}` }),
+    );
+    got.push(
+      sha(dl.bytes) === sha(pdf(d.currentVersion.originalFilename))
+        ? `${dl.filename} matches`
+        : `${dl.filename} differs`,
+    );
   }
   const combos = await main.getByRole("combobox").count();
   const frames = await main.locator("iframe, embed, object").count();
@@ -1848,7 +2460,12 @@ async function portalKnowledge(admin) {
     "Open guidance and Documents, steps 4-5: primary Document first, Download gives the current Version, Guidance",
     "The primary Document (uploaded second) is listed first; Download gives each current Version; no version picker or embedded reader; Guidance shows the written instructions",
     `Documents order: ${names.join(" | ")}; downloads: ${got.join("; ")}; version pickers ${combos}; embedded readers ${frames}; Guidance "${guidance}"`,
-    names[0] === G.docs[1].name && names[1] === G.docs[0].name && got.every((g) => g.endsWith("matches")) && combos === 0 && frames === 0 && guidance.includes("Send the latest draft"),
+    names[0] === G.docs[1].name &&
+      names[1] === G.docs[0].name &&
+      got.every((g) => g.endsWith("matches")) &&
+      combos === 0 &&
+      frames === 0 &&
+      guidance.includes("Send the latest draft"),
     "/portal/knowledge/:id",
   );
 
@@ -1856,13 +2473,25 @@ async function portalKnowledge(admin) {
   const C = K["confidential primary"];
   await page.goto(`${BASE}/portal/knowledge/${C.id}`);
   await main.getByRole("heading", { level: 1, name: C.title }).waitFor({ timeout: 15000 });
-  const cNames = (await main.getByRole("region", { name: "Documents" }).getByRole("listitem").allInnerTexts()).map((n) => n.replace(/\s+/g, " ").replace(/Download$/, "").trim());
-  const cApi = must(await api(page, "GET", `/portal/knowledge/${C.id}`), "confidential item").knowledgeItem;
+  const cNames = (
+    await main.getByRole("region", { name: "Documents" }).getByRole("listitem").allInnerTexts()
+  ).map((n) =>
+    n
+      .replace(/\s+/g, " ")
+      .replace(/Download$/, "")
+      .trim(),
+  );
+  const cApi = must(
+    await api(page, "GET", `/portal/knowledge/${C.id}`),
+    "confidential item",
+  ).knowledgeItem;
   const openUrl = cApi.documents[0]?.currentVersion?.downloadUrl ?? "";
   const confUrl = openUrl.replace(C.docs[0].id, C.docs[1].id);
   const confStatus = (await page.request.get(`${BASE}${confUrl}`)).status();
   const openStatus = (await page.request.get(`${BASE}${openUrl}`)).status();
-  const staffPrimary = must(await api(D, "GET", `/knowledge/${C.id}`), "staff item").knowledgeItem.primaryDocument?.id === C.docs[1].id;
+  const staffPrimary =
+    must(await api(D, "GET", `/knowledge/${C.id}`), "staff item").knowledgeItem.primaryDocument
+      ?.id === C.docs[1].id;
   const AC = K["all confidential"];
   await page.goto(`${BASE}/portal/knowledge/${AC.id}`);
   await main.getByRole("heading", { level: 1, name: AC.title }).waitFor({ timeout: 15000 });
@@ -1872,7 +2501,11 @@ async function portalKnowledge(admin) {
     "A Document that Legal marked Confidential does not appear, even when it is the primary Document; its download address does not work",
     "The Confidential primary is absent and the supporting Document shows; the Confidential Document's address answers 404 while the open one works",
     `Staff primary is the Confidential Document ${staffPrimary}; Portal Documents list: ${cNames.join(" | ")}; Confidential Document address HTTP ${confStatus}; open Document address HTTP ${openStatus}. Observation: an item whose only Document is Confidential shows no Documents section (${acDocs === 0}) and keeps its Guidance (${acGuidance > 0}).`,
-    staffPrimary && cNames.length === 1 && cNames[0] === C.docs[0].name && confStatus === 404 && openStatus === 200,
+    staffPrimary &&
+      cNames.length === 1 &&
+      cNames[0] === C.docs[0].name &&
+      confStatus === 404 &&
+      openStatus === 200,
     "/portal/knowledge/:id",
   );
 
@@ -1880,9 +2513,16 @@ async function portalKnowledge(admin) {
   const primary = pItem.documents[0];
   const savedUrl = primary.currentVersion.downloadUrl;
   const vname = `doc030-primary-v2-${STAMP}.pdf`;
-  const up = await api(D, "POST", `/documents/${primary.id}/versions`, undefined, { file: pdfFile(vname) });
+  const up = await api(D, "POST", `/documents/${primary.id}/versions`, undefined, {
+    file: pdfFile(vname),
+  });
   await page.goto(`${BASE}/portal/knowledge/${G.id}`);
-  const dl2 = await downloadVia(page, main.getByRole("region", { name: "Documents" }).getByRole("link", { name: `Download ${vname}` }));
+  const dl2 = await downloadVia(
+    page,
+    main
+      .getByRole("region", { name: "Documents" })
+      .getByRole("link", { name: `Download ${vname}` }),
+  );
   const savedBytes = await page.request.get(`${BASE}${savedUrl}`).then((r) => r.body());
   R(
     "Unavailable guidance: a file downloaded earlier does not update; Download gives the current Version",
@@ -1895,12 +2535,25 @@ async function portalKnowledge(admin) {
   // Draft, restricted, archived and unknown items and their files.
   const out = [];
   let allOk = true;
-  for (const [label, id] of [["draft", K.draft.id], ["restricted", K.restricted.id], ["archived", K.archived.id], ["unknown", "01a0aaad-0000-7000-8000-000000000000"]]) {
+  for (const [label, id] of [
+    ["draft", K.draft.id],
+    ["restricted", K.restricted.id],
+    ["archived", K.archived.id],
+    ["unknown", "01a0aaad-0000-7000-8000-000000000000"],
+  ]) {
     await page.goto(`${BASE}/portal/knowledge/${id}`);
-    const back = await page.waitForURL(/\/portal$/, { timeout: 15000 }).then(() => true, () => false);
+    const back = await page.waitForURL(/\/portal$/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     const a = await api(page, "GET", `/portal/knowledge/${id}`);
     let fileStatus = "n/a";
-    if (label !== "unknown") fileStatus = (await page.request.get(`${BASE}/api/v1/portal/knowledge/${id}/documents/${K[label].docs[0].id}/download`)).status();
+    if (label !== "unknown")
+      fileStatus = (
+        await page.request.get(
+          `${BASE}/api/v1/portal/knowledge/${id}/documents/${K[label].docs[0].id}/download`,
+        )
+      ).status();
     const ok = back && a.status === 404 && (label === "unknown" || fileStatus === 404);
     allOk &&= ok;
     out.push(`${label}: page -> ${pathOf(page)}, item HTTP ${a.status}, file HTTP ${fileStatus}`);
@@ -1919,7 +2572,10 @@ async function portalKnowledge(admin) {
   let back1;
   try {
     await page.goto(`${BASE}/portal/knowledge/${G.id}`);
-    back1 = await page.waitForURL(/\/portal$/, { timeout: 15000 }).then(() => true, () => false);
+    back1 = await page.waitForURL(/\/portal$/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     s1 = (await page.request.get(`${BASE}${savedUrl}`)).status();
   } finally {
     must(await api(D, "POST", `/knowledge/${G.id}/publish`, {}), "republish");
@@ -1937,25 +2593,50 @@ async function portalKnowledge(admin) {
   await page.goto(`${BASE}/portal`);
   const ext = homeLinks.find((l) => l.target === "_blank");
   if (!ext) {
-    log.notRun(A, RB, "External links open in a new tab", "An external Before you submit link", "The seeded Portal home has no external link.");
+    log.notRun(
+      A,
+      RB,
+      "External links open in a new tab",
+      "An external Before you submit link",
+      "The seeded Portal home has no external link.",
+    );
   } else {
     const [popup] = await Promise.all([
       page.context().waitForEvent("page"),
-      page.getByRole("region", { name: "Before you submit" }).getByRole("link", { name: new RegExp(ext.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) }).first().click(),
+      page
+        .getByRole("region", { name: "Before you submit" })
+        .getByRole("link", { name: new RegExp(ext.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")) })
+        .first()
+        .click(),
     ]);
     await popup.waitForLoadState("domcontentloaded", { timeout: 15000 }).catch(() => {});
     const popupUrl = popup.url();
-    const popupText = await popup.evaluate(() => document.body?.innerText?.slice(0, 80) ?? "").catch((e) => `error: ${e.message.split("\n")[0]}`);
+    const popupText = await popup
+      .evaluate(() => document.body?.innerText?.slice(0, 80) ?? "")
+      .catch((e) => `error: ${e.message.split("\n")[0]}`);
     await popup.close();
     const stayed = pathOf(page) === "/portal";
-    await page.getByRole("list", { name: "Request types" }).getByRole("link", { name: /Legal question/ }).click();
+    await page
+      .getByRole("list", { name: "Request types" })
+      .getByRole("link", { name: /Legal question/ })
+      .click();
     await page.getByLabel(/^Title/).fill(`${S} request after an external link`);
-    await page.getByLabel(/^Description/).fill("DOC-030 access-2: the external website did not load.");
+    await page
+      .getByLabel(/^Description/)
+      .fill("DOC-030 access-2: the external website did not load.");
     await page.getByRole("button", { name: "Submit request" }).click();
-    const thanks = await seen(page.getByText("Thanks! Your request has been submitted to legal."), 15000);
+    const thanks = await seen(
+      page.getByText("Thanks! Your request has been submitted to legal."),
+      15000,
+    );
     await sleep(1000);
-    const num = sql(`select number from requests where title='${S} request after an external link'`);
-    const head = thanks && num ? `Thanks! Your request has been submitted to legal. (R-${num})` : `no confirmation; page ${pathOf(page)}`;
+    const num = sql(
+      `select number from requests where title='${S} request after an external link'`,
+    );
+    const head =
+      thanks && num
+        ? `Thanks! Your request has been submitted to legal. (R-${num})`
+        : `no confirmation; page ${pathOf(page)}`;
     fx.created.push(`Request R-${num} "${S} request after an external link"`);
     R(
       "External links: the website shows beneath the label and opens in a new tab; a broken website does not block the Request",
@@ -1968,8 +2649,15 @@ async function portalKnowledge(admin) {
 
   // No staff Knowledge library or editing controls.
   await page.goto(`${BASE}/portal`);
-  await page.getByRole("navigation", { name: "Portal" }).getByRole("link").first().waitFor({ timeout: 15000 });
-  const portalNav = await page.getByRole("navigation", { name: "Portal" }).getByRole("link").evaluateAll((as) => as.map((a) => a.textContent.trim()));
+  await page
+    .getByRole("navigation", { name: "Portal" })
+    .getByRole("link")
+    .first()
+    .waitFor({ timeout: 15000 });
+  const portalNav = await page
+    .getByRole("navigation", { name: "Portal" })
+    .getByRole("link")
+    .evaluateAll((as) => as.map((a) => a.textContent.trim()));
   await page.goto(`${BASE}/knowledge`);
   await sleep(2500);
   const where = pathOf(page);
@@ -1981,7 +2669,10 @@ async function portalKnowledge(admin) {
     "The Portal does not offer the staff Knowledge library or its editing controls",
     "No Knowledge entry in the Portal navigation; the staff Knowledge address sends a Business User to the Portal; no editing controls on the item page",
     `Portal navigation: ${portalNav.join(", ")}; /knowledge ended at ${where}; staff list API HTTP ${staffApi.status}; editing buttons ${editing}`,
-    !portalNav.some((n) => /Knowledge/i.test(n)) && where.startsWith("/portal") && staffApi.status >= 400 && editing === 0,
+    !portalNav.some((n) => /Knowledge/i.test(n)) &&
+      where.startsWith("/portal") &&
+      staffApi.status >= 400 &&
+      editing === 0,
     "/portal",
   );
 
@@ -1989,16 +2680,30 @@ async function portalKnowledge(admin) {
   {
     const c = await newContext();
     await c.page.goto(`${BASE}/portal/knowledge/${G.id}`);
-    const toLogin = await c.page.waitForURL(/\/portal\/login/, { timeout: 15000 }).then(() => true, () => false);
+    const toLogin = await c.page.waitForURL(/\/portal\/login/, { timeout: 15000 }).then(
+      () => true,
+      () => false,
+    );
     const a = (await c.context.request.get(`${BASE}/api/v1/portal/knowledge/${G.id}`)).status();
     const f = (await c.context.request.get(`${BASE}${savedUrl}`)).status();
     await c.context.close();
-    log.record(A, "anonymous", "Before you start: Everyone still requires a signed-in Portal session", "A signed-out browser goes to the Portal sign-in; item and file answer 401", `Page -> /portal/login ${toLogin}; item HTTP ${a}; file HTTP ${f}`, toLogin && a === 401 && f === 401, "/portal/login");
+    log.record(
+      A,
+      "anonymous",
+      "Before you start: Everyone still requires a signed-in Portal session",
+      "A signed-out browser goes to the Portal sign-in; item and file answer 401",
+      `Page -> /portal/login ${toLogin}; item HTTP ${a}; file HTTP ${f}`,
+      toLogin && a === 401 && f === 401,
+      "/portal/login",
+    );
   }
 
   // Help search does not search organization Knowledge.
   await page.goto(`${BASE}/portal/help`);
-  const box = page.getByRole("searchbox").or(page.getByRole("textbox", { name: /search/i })).first();
+  const box = page
+    .getByRole("searchbox")
+    .or(page.getByRole("textbox", { name: /search/i }))
+    .first();
   await box.waitFor({ timeout: 15000 });
   await box.fill(G.title);
   await box.press("Enter");
@@ -2018,7 +2723,8 @@ async function portalKnowledge(admin) {
 // =====================================================================================
 async function staffExpiredRewalk(admin) {
   const A = "staff-sign-in";
-  const STEP = "Re-walk after the author's correction: Sign-in link expired shows Email and Send link while sign-in links are on and email works, otherwise only Back to sign-in";
+  const STEP =
+    "Re-walk after the author's correction: Sign-in link expired shows Email and Send link while sign-in links are on and email works, otherwise only Back to sign-in";
   for (const role of ["administrator", "legal_team_member"]) {
     const short = role === "administrator" ? "admin" : "member";
     const a = await inviteAndActivate(admin.page, {
@@ -2043,12 +2749,23 @@ async function staffExpiredRewalk(admin) {
     await signOutViaMenu(p, a.displayName);
     await p.goto(ml1.link);
     const expired = await seen(p.getByRole("heading", { name: "Sign-in link expired" }), 15000);
-    const controls = await p.locator("main").locator("a, button, input").evaluateAll((els) =>
-      els.map((e) => (e.tagName === "INPUT" ? `input ${e.getAttribute("type")}` : e.textContent.trim())).filter(Boolean),
-    );
+    const controls = await p
+      .locator("main")
+      .locator("a, button, input")
+      .evaluateAll((els) =>
+        els
+          .map((e) =>
+            e.tagName === "INPUT" ? `input ${e.getAttribute("type")}` : e.textContent.trim(),
+          )
+          .filter(Boolean),
+      );
     const hasEmail = (await p.locator("main").getByLabel("Email").count()) > 0;
     const hasSend = (await p.getByRole("button", { name: "Send link" }).count()) > 0;
-    const hasBack = (await p.getByRole("link", { name: "Back to sign-in" }).or(p.getByRole("button", { name: "Back to sign-in" })).count()) > 0;
+    const hasBack =
+      (await p
+        .getByRole("link", { name: "Back to sign-in" })
+        .or(p.getByRole("button", { name: "Back to sign-in" }))
+        .count()) > 0;
     await p.locator("main").getByLabel("Email").fill(a.email);
     since = Date.now();
     await p.getByRole("button", { name: "Send link" }).click();
@@ -2066,13 +2783,26 @@ async function staffExpiredRewalk(admin) {
       await route.fulfill({ json });
     });
     await off.page.goto(`${BASE}/auth/link-expired`);
-    const offTitle = await seen(off.page.getByRole("heading", { name: "Sign-in link expired" }), 15000);
-    const offControls = await off.page.locator("main").locator("a, button, input").evaluateAll((els) =>
-      els.map((e) => (e.tagName === "INPUT" ? `input ${e.getAttribute("type")}` : e.textContent.trim())).filter(Boolean),
+    const offTitle = await seen(
+      off.page.getByRole("heading", { name: "Sign-in link expired" }),
+      15000,
     );
+    const offControls = await off.page
+      .locator("main")
+      .locator("a, button, input")
+      .evaluateAll((els) =>
+        els
+          .map((e) =>
+            e.tagName === "INPUT" ? `input ${e.getAttribute("type")}` : e.textContent.trim(),
+          )
+          .filter(Boolean),
+      );
     const offEmail = (await off.page.locator("main").getByLabel("Email").count()) > 0;
     await off.page.getByRole("link", { name: "Back to sign-in" }).click();
-    const offBack = await off.page.waitForURL(/\/auth\/login/, { timeout: 10000 }).then(() => true, () => false);
+    const offBack = await off.page.waitForURL(/\/auth\/login/, { timeout: 10000 }).then(
+      () => true,
+      () => false,
+    );
     await off.page.getByLabel("Email").fill(a.email);
     await off.page.getByLabel("Password").fill(a.password);
     await off.page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -2085,7 +2815,17 @@ async function staffExpiredRewalk(admin) {
       STEP,
       "Links on: a used link opens Sign-in link expired with Email and Send link (no Back to sign-in), and Send link gets a new link that signs in. Links off: the page shows only Back to sign-in, which returns to sign-in for another method",
       `Links on (live lab setting): first link signed in ${in1}; reused link opened Sign-in link expired ${expired} with controls [${controls.join(", ")}]: Email ${hasEmail}, Send link ${hasSend}, Back to sign-in ${hasBack}; Send link showed Check your email ${sent}; new email "${ml2?.subject}" signed in ${in2}. Links off (mocked methods answer in the browser only; the shared setting was not changed): Sign-in link expired ${offTitle} with controls [${offControls.join(", ")}], Email field ${offEmail}; Back to sign-in returned to sign-in ${offBack}; password sign-in as another method reached the app ${otherMethod}`,
-      in1 && expired && hasEmail && hasSend && !hasBack && sent && in2 && offTitle && !offEmail && offBack && otherMethod,
+      in1 &&
+        expired &&
+        hasEmail &&
+        hasSend &&
+        !hasBack &&
+        sent &&
+        in2 &&
+        offTitle &&
+        !offEmail &&
+        offBack &&
+        otherMethod,
       "/auth/link-expired",
     );
   }
@@ -2100,7 +2840,15 @@ const MODULES = {
   settings: ["personal-settings", personalSettings],
   knowledge: ["portal-knowledge", portalKnowledge],
   // Appends to staff-sign-in instead of replacing its steps; supersedes the failed expired-link steps.
-  expired: ["staff-sign-in", staffExpiredRewalk, { append: true, supersedes: "Sign-in link expired: enter your email there to get a new link, or select Back to sign-in" }],
+  expired: [
+    "staff-sign-in",
+    staffExpiredRewalk,
+    {
+      append: true,
+      supersedes:
+        "Sign-in link expired: enter your email there to get a new link, or select Back to sign-in",
+    },
+  ],
 };
 const chosen = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(MODULES);
 if (!SEED_PASSWORD) throw new Error("LAB_PASSWORD is required");
@@ -2108,31 +2856,52 @@ const lab = JSON.parse(readFileSync(path.join(root, ".documentation-labs/work2/l
 const running = Object.fromEntries(
   ["app", "worker", "doc-engine"].map((svc) => [
     svc,
-    execFileSync("docker", ["inspect", "-f", "{{.Image}}", `${PROJECT}-${svc}-1`], { encoding: "utf8" }).trim(),
+    execFileSync("docker", ["inspect", "-f", "{{.Image}}", `${PROJECT}-${svc}-1`], {
+      encoding: "utf8",
+    }).trim(),
   ]),
 );
 const hashes = Object.fromEntries(
   Object.values(MODULES).map(([id]) => [
     id,
-    execFileSync("sha256sum", [path.join(root, `docs/user-guides/${id}.md`)], { encoding: "utf8" }).split(" ")[0],
+    execFileSync("sha256sum", [path.join(root, `docs/user-guides/${id}.md`)], {
+      encoding: "utf8",
+    }).split(" ")[0],
   ]),
 );
 const startedAt = new Date().toISOString();
-const budgetAtStart = { magicLink: sharedBudget("magic-link"), passwordSetup: sharedBudget("password-setup") };
+const budgetAtStart = {
+  magicLink: sharedBudget("magic-link"),
+  passwordSetup: sharedBudget("password-setup"),
+};
 const admin = await signIn(SEED.daniel.email);
 for (const name of chosen) {
   const [id, fn] = MODULES[name];
   try {
     await fn(admin);
   } catch (e) {
-    console.error(String(e.stack ?? e.message).split("\n").slice(0, 6).join("\n"));
-    log.record(id, "-", "script error", "module completes", `${String(e.message).split("\n")[0]}`, false);
+    console.error(
+      String(e.stack ?? e.message)
+        .split("\n")
+        .slice(0, 6)
+        .join("\n"),
+    );
+    log.record(
+      id,
+      "-",
+      "script error",
+      "module completes",
+      `${String(e.message).split("\n")[0]}`,
+      false,
+    );
   }
 }
 await close();
 // Cleanup for a module that stopped early: archive this walkthrough's own Entities so their
 // ancient Obligations do not sit at the top of other walkthroughs' Home pages.
-sql(`update entities set archived_at = now() where legal_name like '${TAG} %' and archived_at is null`);
+sql(
+  `update entities set archived_at = now() where legal_name like '${TAG} %' and archived_at is null`,
+);
 
 const out = path.join(here, "walkthrough.json");
 const prior = existsSync(out) ? JSON.parse(readFileSync(out, "utf8")) : { runs: [], steps: [] };
@@ -2143,9 +2912,17 @@ const superseded = [
   ...(prior.supersededSteps ?? []),
   ...prior.steps
     .filter((s) => supersedes.includes(s.step))
-    .map((s) => ({ ...s, supersededAt: new Date().toISOString(), supersededBecause: "The author corrected the guide paragraph (staff-sign-in.md 29d19f72); the step was walked again against the corrected text." })),
+    .map((s) => ({
+      ...s,
+      supersededAt: new Date().toISOString(),
+      supersededBecause:
+        "The author corrected the guide paragraph (staff-sign-in.md 29d19f72); the step was walked again against the corrected text.",
+    })),
 ];
-const steps = [...prior.steps.filter((s) => !replaced.includes(s.article) && !supersedes.includes(s.step)), ...log.steps];
+const steps = [
+  ...prior.steps.filter((s) => !replaced.includes(s.article) && !supersedes.includes(s.step)),
+  ...log.steps,
+];
 const run = {
   articles: ids,
   startedAt,
@@ -2179,13 +2956,28 @@ const doc = {
     seed: lab.seed,
     runningImages: running,
   },
-  browser: "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
-  runs: [...prior.runs.filter((r) => !r.articles.every((a) => replaced.includes(a))), { ...run, append: replaced.length === 0 }],
-  productBugs: [...(prior.productBugs ?? []).filter((b) => !replaced.includes(b.article)), ...fx.productBugs],
+  browser:
+    "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  runs: [
+    ...prior.runs.filter((r) => !r.articles.every((a) => replaced.includes(a))),
+    { ...run, append: replaced.length === 0 },
+  ],
+  productBugs: [
+    ...(prior.productBugs ?? []).filter((b) => !replaced.includes(b.article)),
+    ...fx.productBugs,
+  ],
   summary: Object.fromEntries(
     Object.values(MODULES).map(([id]) => {
       const s = steps.filter((x) => x.article === id);
-      return [id, { steps: s.length, passed: s.filter((x) => x.result === "pass").length, failed: s.filter((x) => x.result === "fail").length, notRun: s.filter((x) => x.result === "not-run").length }];
+      return [
+        id,
+        {
+          steps: s.length,
+          passed: s.filter((x) => x.result === "pass").length,
+          failed: s.filter((x) => x.result === "fail").length,
+          notRun: s.filter((x) => x.result === "not-run").length,
+        },
+      ];
     }),
   ),
   steps,

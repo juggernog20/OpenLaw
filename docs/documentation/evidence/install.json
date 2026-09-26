@@ -25,9 +25,7 @@
   "scenarios": [
     {
       "id": "V-C44",
-      "coverage": [
-        "C44"
-      ],
+      "coverage": ["C44"],
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [

@@ -35,9 +35,7 @@
   "scenarios": [
     {
       "id": "V-C32",
-      "coverage": [
-        "C32"
-      ],
+      "coverage": ["C32"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -55,9 +53,7 @@
     },
     {
       "id": "V-C32",
-      "coverage": [
-        "C32"
-      ],
+      "coverage": ["C32"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [

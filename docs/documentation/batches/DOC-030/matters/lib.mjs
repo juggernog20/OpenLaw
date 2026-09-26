@@ -108,7 +108,11 @@ async function magicLinkSignIn(browser, email) {
       const session = await page.request
         .get(`${BASE}/api/auth/get-session`, { failOnStatusCode: false })
         .then((r) => r.json().catch(() => null));
-      if (where.pathname.startsWith("/portal") && !where.pathname.includes("login") && session?.user)
+      if (
+        where.pathname.startsWith("/portal") &&
+        !where.pathname.includes("login") &&
+        session?.user
+      )
         return { context, page };
     }
     await sleep(30_000);

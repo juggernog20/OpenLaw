@@ -304,7 +304,10 @@ export default async function createMatter(ctx) {
       const none = await read();
       expectThat(none.title === typed && none.priority === "Medium", q(none));
       expectThat(
-        none.optional === "" && none.required === "" && none.hint === null && none.risk === "Not set",
+        none.optional === "" &&
+          none.required === "" &&
+          none.hint === null &&
+          none.risk === "Not set",
         q(none),
       );
       await tpl.selectOption({ label: fx.templateAlpha.name });
@@ -423,7 +426,10 @@ export default async function createMatter(ctx) {
       const dm = (await matterByNumber(page, dn)).matter;
       expectThat(q(rows) === q(["Description"]), `rows ${q(rows)}`);
       expectThat(
-        m.priority === "high" && m.risk === "low" && shownPriority === "High" && shownRisk === "Low",
+        m.priority === "high" &&
+          m.risk === "low" &&
+          shownPriority === "High" &&
+          shownRisk === "Low",
         `${m.priority} ${m.risk} ${shownPriority} ${shownRisk}`,
       );
       expectThat(
@@ -677,7 +683,9 @@ export default async function createMatter(ctx) {
       await panel.waitFor();
       await panel.getByRole("listitem").first().waitFor();
       const rows = async () =>
-        (await panel.getByRole("listitem").allInnerTexts()).map((x) => x.replace(/\s+/g, " ").trim());
+        (await panel.getByRole("listitem").allInnerTexts()).map((x) =>
+          x.replace(/\s+/g, " ").trim(),
+        );
       const rowsBefore = await rows();
       const removeFor = (name) =>
         panel.getByRole("button", { name: `Take ${name} off the matter team` });
@@ -811,8 +819,9 @@ export default async function createMatter(ctx) {
       } catch (e) {
         managerUi = `picker not usable: ${String(e.message).split("\n")[0]}`;
       }
-      const teamWrite = (await api(priya.page, "POST", `/matters/${n}/team`, { userId: uid("Tom Iwu") }))
-        .status;
+      const teamWrite = (
+        await api(priya.page, "POST", `/matters/${n}/team`, { userId: uid("Tom Iwu") })
+      ).status;
       const flagWrite = (await api(priya.page, "PATCH", `/matters/${n}`, { isConfidential: false }))
         .status;
       const managerWrite = (
@@ -822,7 +831,8 @@ export default async function createMatter(ctx) {
         await api(priya.page, "PATCH", `/matters/${n}`, { businessOwnerId: uid("Jonas Weber") })
       ).status;
       const after = (await matterByNumber(page, n)).matter;
-      const actorFlag = (await api(page, "PATCH", `/matters/${n}`, { isConfidential: true })).status;
+      const actorFlag = (await api(page, "PATCH", `/matters/${n}`, { isConfidential: true }))
+        .status;
       const actorManager = (
         await api(page, "PATCH", `/matters/${n}`, { managerId: uid("Priya Raman") })
       ).status;

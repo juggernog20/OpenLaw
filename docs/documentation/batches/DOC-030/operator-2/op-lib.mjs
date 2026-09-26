@@ -18,7 +18,10 @@ const { chromium } = require(
 export const HOME = process.env.HOME;
 // Round 2 re-walks the corrected guides on fresh projects with their own private state.
 export const ROUND = process.env.OP2_ROUND === "2" ? 2 : 1;
-export const WORK = path.join(HOME, ROUND === 2 ? ".cache/openlaw-doc030/operator/op2r2" : ".cache/openlaw-doc030/operator/op2");
+export const WORK = path.join(
+  HOME,
+  ROUND === 2 ? ".cache/openlaw-doc030/operator/op2r2" : ".cache/openlaw-doc030/operator/op2",
+);
 export const LOG = path.join(here, "walkthrough.json");
 const STATE = path.join(WORK, "state.json");
 const SECRETS = path.join(WORK, "secret-store.json");
@@ -501,7 +504,13 @@ export async function textState(api, documentId, versionId) {
   const r = await api.raw("GET", `/api/v1/documents/${documentId}/versions/${versionId}/text`);
   return r.body?.text?.state ?? `http ${r.status}`;
 }
-export async function waitText(api, documentId, versionId, timeoutMs = 240_000, accept = ["ready"]) {
+export async function waitText(
+  api,
+  documentId,
+  versionId,
+  timeoutMs = 240_000,
+  accept = ["ready"],
+) {
   const deadline = Date.now() + timeoutMs;
   let last = null;
   while (Date.now() < deadline) {
@@ -582,5 +591,10 @@ export async function browserSignIn(base, email, password) {
   return s;
 }
 export async function bodyText(page) {
-  return (await page.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ");
+  return (
+    await page
+      .locator("body")
+      .innerText()
+      .catch(() => "")
+  ).replace(/\s+/g, " ");
 }

@@ -63,61 +63,42 @@
   },
   "runs": [
     {
-      "sections": [
-        "setup-n"
-      ],
+      "sections": ["setup-n"],
       "startedAt": "2026-09-25T10:10:40.441Z",
       "finishedAt": "2026-09-25T10:10:51.361Z"
     },
     {
-      "sections": [
-        "leadtimes"
-      ],
+      "sections": ["leadtimes"],
       "startedAt": "2026-09-25T10:11:07.080Z",
       "finishedAt": "2026-09-25T10:11:47.282Z"
     },
     {
-      "sections": [
-        "leadtimes"
-      ],
+      "sections": ["leadtimes"],
       "startedAt": "2026-09-25T10:13:24.999Z",
       "finishedAt": "2026-09-25T10:15:01.452Z"
     },
     {
-      "sections": [
-        "leadtimes"
-      ],
+      "sections": ["leadtimes"],
       "startedAt": "2026-09-25T10:15:49.592Z",
       "finishedAt": "2026-09-25T10:26:09.304Z"
     },
     {
-      "sections": [
-        "morning-ready"
-      ],
+      "sections": ["morning-ready"],
       "startedAt": "2026-09-25T10:26:42.511Z",
       "finishedAt": "2026-09-25T10:26:45.184Z"
     },
     {
-      "sections": [
-        "leadtimes-reset",
-        "morning-ready"
-      ],
+      "sections": ["leadtimes-reset", "morning-ready"],
       "startedAt": "2026-09-25T10:27:09.726Z",
       "finishedAt": "2026-09-25T10:27:14.525Z"
     },
     {
-      "sections": [
-        "setup-c",
-        "member-comments"
-      ],
+      "sections": ["setup-c", "member-comments"],
       "startedAt": "2026-09-25T10:35:35.059Z",
       "finishedAt": "2026-09-25T10:45:26.648Z"
     },
     {
-      "sections": [
-        "setup-c",
-        "member-comments"
-      ],
+      "sections": ["setup-c", "member-comments"],
       "startedAt": "2026-09-25T10:46:30.790Z",
       "finishedAt": "2026-09-25T10:47:16.696Z"
     },
@@ -134,92 +115,62 @@
       "finishedAt": "2026-09-25T10:58:02.152Z"
     },
     {
-      "sections": [
-        "portal-history",
-        "portal-after"
-      ],
+      "sections": ["portal-history", "portal-after"],
       "startedAt": "2026-09-25T10:58:50.322Z",
       "finishedAt": "2026-09-25T10:59:14.169Z"
     },
     {
-      "sections": [
-        "portal-history"
-      ],
+      "sections": ["portal-history"],
       "startedAt": "2026-09-25T10:59:31.963Z",
       "finishedAt": "2026-09-25T10:59:46.359Z"
     },
     {
-      "sections": [
-        "morning-check"
-      ],
+      "sections": ["morning-check"],
       "startedAt": "2026-09-25T11:00:59.986Z",
       "finishedAt": "2026-09-25T11:01:01.894Z"
     },
     {
-      "sections": [
-        "member-bell",
-        "devices",
-        "admin-notifications"
-      ],
+      "sections": ["member-bell", "devices", "admin-notifications"],
       "startedAt": "2026-09-25T11:01:12.535Z",
       "finishedAt": "2026-09-25T11:03:51.086Z"
     },
     {
-      "sections": [
-        "member-bell",
-        "devices"
-      ],
+      "sections": ["member-bell", "devices"],
       "startedAt": "2026-09-25T11:04:35.618Z",
       "finishedAt": "2026-09-25T11:05:09.232Z"
     },
     {
-      "sections": [
-        "api-keys"
-      ],
+      "sections": ["api-keys"],
       "startedAt": "2026-09-25T11:05:16.795Z",
       "finishedAt": "2026-09-25T11:06:40.714Z"
     },
     {
-      "sections": [
-        "via-history",
-        "portal-notifications",
-        "emails"
-      ],
+      "sections": ["via-history", "portal-notifications", "emails"],
       "startedAt": "2026-09-25T11:06:53.366Z",
       "finishedAt": "2026-09-25T11:08:05.441Z"
     },
     {
-      "sections": [
-        "emails"
-      ],
+      "sections": ["emails"],
       "startedAt": "2026-09-25T11:08:24.085Z",
       "finishedAt": "2026-09-25T11:08:26.102Z"
     },
     {
-      "sections": [
-        "emails"
-      ],
+      "sections": ["emails"],
       "startedAt": "2026-09-25T11:09:38.301Z",
       "finishedAt": "2026-09-25T11:09:44.780Z"
     },
     {
-      "sections": [
-        "emails"
-      ],
+      "sections": ["emails"],
       "startedAt": "2026-09-25T11:10:01.475Z",
       "finishedAt": "2026-09-25T11:10:16.598Z"
     },
     {
-      "sections": [
-        "emails"
-      ],
+      "sections": ["emails"],
       "startedAt": "2026-09-25T11:10:40.578Z",
       "finishedAt": "2026-09-25T11:11:01.598Z"
     },
     {
-      "sections": [
-        "portal-notifications"
-      ],
+      "sections": ["portal-notifications"],
       "startedAt": "2026-09-25T11:11:17.076Z",
       "finishedAt": "2026-09-25T11:11:32.846Z"
     }

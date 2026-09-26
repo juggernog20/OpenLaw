@@ -157,7 +157,10 @@ const server = createServer((request, response) => {
       const key = marker ?? "(fallback)";
       stats.byMarker[key] = (stats.byMarker[key] ?? 0) + 1;
       stats.last = {
-        promptSourcesTail: prompt.slice(prompt.lastIndexOf("\nSources:\n"), prompt.lastIndexOf("\nSources:\n") + 160),
+        promptSourcesTail: prompt.slice(
+          prompt.lastIndexOf("\nSources:\n"),
+          prompt.lastIndexOf("\nSources:\n") + 160,
+        ),
         promptEnd: prompt.slice(-160),
         marker: key,
         asked,

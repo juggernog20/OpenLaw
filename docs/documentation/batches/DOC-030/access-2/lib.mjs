@@ -201,7 +201,9 @@ export function makeLog() {
         at: new Date().toISOString(),
       };
       steps.push(s);
-      console.log(`${pass ? "PASS" : "FAIL"} [${article}/${role}] ${step} :: ${s.actual.slice(0, 300)}`);
+      console.log(
+        `${pass ? "PASS" : "FAIL"} [${article}/${role}] ${step} :: ${s.actual.slice(0, 300)}`,
+      );
       return pass;
     },
     notRun(article, role, step, expected, reason) {

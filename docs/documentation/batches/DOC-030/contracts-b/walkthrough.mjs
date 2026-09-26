@@ -31,7 +31,10 @@ const articleFiles = {
   "contract-tasks-and-dates": "docs/user-guides/contract-tasks-and-dates.md",
   "contract-analysis": "docs/user-guides/contract-analysis.md",
 };
-const PEOPLE = { ...h.PEOPLE, business_user_team: { email: "ravi.menon@helix.example", name: "Ravi Menon" } };
+const PEOPLE = {
+  ...h.PEOPLE,
+  business_user_team: { email: "ravi.menon@helix.example", name: "Ravi Menon" },
+};
 
 const results = {
   kind: "independent-article-walkthrough",
@@ -52,7 +55,12 @@ const results = {
   providerMode: ARTICLES.includes("C21")
     ? "V-C21 only: a local OpenAI-compatible stand-in (contracts-b/provider-standin.mjs, a copy of DOC-029 analysis-standin/provider-standin.mjs that also parses the prompt's appended Response JSON Schema block) in its own container (node from the work2 app image) on the work2 backend network, alias doc030-cb-provider, no published port. Fictional paper with known extracted text and known answers. No real provider key or traffic. It is not a live-provider check."
     : null,
-  articles: Object.fromEntries(Object.entries(articleFiles).map(([id, file]) => [id, { path: file, contentSha256: fileHash(file) }])),
+  articles: Object.fromEntries(
+    Object.entries(articleFiles).map(([id, file]) => [
+      id,
+      { path: file, contentSha256: fileHash(file) },
+    ]),
+  ),
   selection: { articles: ARTICLES, roles: ROLES, parts: PARTS },
   startedAt: new Date().toISOString(),
   stamp,
@@ -79,7 +87,8 @@ const stepFor = h.makeRecorder(results, save);
 const browser = await h.chromium.launch();
 try {
   const sessions = {};
-  for (const role of ["administrator", "legal_team_member"]) sessions[role] = await h.passwordSignIn(browser, role);
+  for (const role of ["administrator", "legal_team_member"])
+    sessions[role] = await h.passwordSignIn(browser, role);
   let businessUser = null;
   const getBusinessUser = async () => {
     if (!businessUser) businessUser = await h.magicSignIn(browser, "business_user_team_login");
@@ -89,9 +98,15 @@ try {
   // Sign the Business User in once, before the walk, so a busy sign-in link budget cannot fail a late step.
   try {
     await getBusinessUser();
-    results.setup.push({ at: new Date().toISOString(), text: "Ravi Menon (Business User) signed in to the Portal with a fresh magic link from the lab Mailpit; the same Portal session serves V-C19 and V-C21." });
+    results.setup.push({
+      at: new Date().toISOString(),
+      text: "Ravi Menon (Business User) signed in to the Portal with a fresh magic link from the lab Mailpit; the same Portal session serves V-C19 and V-C21.",
+    });
   } catch (error) {
-    results.setup.push({ at: new Date().toISOString(), text: `Ravi Menon sign-in failed before the walk: ${error.message}` });
+    results.setup.push({
+      at: new Date().toISOString(),
+      text: `Ravi Menon sign-in failed before the walk: ${error.message}`,
+    });
   }
   const options = (await sessions.administrator.api("GET", "/contracts/options")).json;
   const userId = (name) => {
@@ -101,20 +116,41 @@ try {
   };
   const typeId = (name) => options.contractTypes.find((t) => (t.name ?? t.displayName) === name).id;
   const taskFileName = `doc030-contracts-b-task-note-${stamp}.pdf`;
-  const taskPdf = await h.makePdf(browser, taskFileName, ["DOC-030 fictional task attachment.", "Nothing in this file is real."]);
+  const taskPdf = await h.makePdf(browser, taskFileName, [
+    "DOC-030 fictional task attachment.",
+    "Nothing in this file is real.",
+  ]);
   const taskFile = path.join(process.env.TMPDIR ?? "/tmp", taskFileName);
   writeFileSync(taskFile, taskPdf.buffer);
   const ctx = {
-    here, stamp, PEOPLE, sessions, getBusinessUser, options, userId, typeId, h, browser,
-    records: results.records, notes: results.notes, observations: results.observations, setup: results.setup, productBugs: results.productBugs,
-    taskFile, taskFileName,
+    here,
+    stamp,
+    PEOPLE,
+    sessions,
+    getBusinessUser,
+    options,
+    userId,
+    typeId,
+    h,
+    browser,
+    records: results.records,
+    notes: results.notes,
+    observations: results.observations,
+    setup: results.setup,
+    productBugs: results.productBugs,
+    taskFile,
+    taskFileName,
   };
   for (const role of ROLES) {
     const other = role === "administrator" ? "legal_team_member" : "administrator";
     const roleCtx = { ...ctx, role, other, actor: sessions[role], otherSession: sessions[other] };
-    if (ARTICLES.includes("C19")) await runC19(roleCtx, stepFor("contract-tasks-and-dates", "V-C19", role));
+    if (ARTICLES.includes("C19"))
+      await runC19(roleCtx, stepFor("contract-tasks-and-dates", "V-C19", role));
   }
-  if (ARTICLES.includes("C21")) await runC21({ ...ctx, roles: ROLES, parts: PARTS }, (role) => stepFor("contract-analysis", "V-C21", role));
+  if (ARTICLES.includes("C21"))
+    await runC21({ ...ctx, roles: ROLES, parts: PARTS }, (role) =>
+      stepFor("contract-analysis", "V-C21", role),
+    );
 } finally {
   save();
   await browser.close();

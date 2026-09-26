@@ -31,7 +31,12 @@ async function field(key, displayName, fieldType, fieldTag) {
   let row = fieldList.find((f) => f.displayName === displayName);
   if (!row)
     row = must(
-      await api(page, "POST", "/fields", { displayName, moduleScope: "matter", fieldType, fieldTag }),
+      await api(page, "POST", "/fields", {
+        displayName,
+        moduleScope: "matter",
+        fieldType,
+        fieldTag,
+      }),
       displayName,
     ).field;
   fixtures[key] = { id: row.id, slug: row.slug, displayName, fieldType };
@@ -42,7 +47,10 @@ await field("fieldEntity", "DOC-030 matters Entity", "entity", "business");
 await field("fieldPerson", "DOC-030 matters person", "user", "business");
 await field("fieldNumber", "DOC-030 matters retype number", "number", "business");
 
-const types = must(await api(page, "GET", "/matter-types?includeArchived=true"), "types").matterTypes;
+const types = must(
+  await api(page, "GET", "/matter-types?includeArchived=true"),
+  "types",
+).matterTypes;
 const fieldRow = (key, { required = false, intake = false } = {}) => ({
   kind: "row",
   id: fixtures[key].id,
@@ -119,7 +127,8 @@ async function template(key, typeKey, spec) {
       }),
       spec.name,
     ).matterTemplate;
-  if (row.archivedAt) must(await api(page, "POST", `/matter-templates/${row.id}/restore`), "restore");
+  if (row.archivedAt)
+    must(await api(page, "POST", `/matter-templates/${row.id}/restore`), "restore");
   must(await api(page, "PUT", `/matter-templates/${row.id}/tasks`, { tasks: spec.tasks }), "tasks");
   must(
     await api(page, "PUT", `/matter-templates/${row.id}/key-dates`, { keyDates: spec.keyDates }),
@@ -183,7 +192,9 @@ await template("templateUndrawn", "typeRetype", {
 });
 
 const entities = must(await api(page, "GET", "/entities"), "entities").entities;
-const entity = entities.find((e) => e.legalName.startsWith("Helix") && !e.isConfidential && !e.archivedAt);
+const entity = entities.find(
+  (e) => e.legalName.startsWith("Helix") && !e.isConfidential && !e.archivedAt,
+);
 fixtures.entity = { id: entity.id, legalName: entity.legalName };
 const docTypes = must(
   await api(page, "GET", "/documents/type-options?module=matter"),

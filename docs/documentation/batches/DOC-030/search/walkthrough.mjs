@@ -97,7 +97,8 @@ async function mailLink(email, since, subjectRe) {
     if (m) {
       const full = await fetch(`${MAIL}/api/v1/message/${m.ID}`).then((x) => x.json());
       const links = (full.Text ?? "").match(/https?:\/\/[^\s<>"')\]]+/g) ?? [];
-      const pick = links.find((l) => /magic-link\/verify|reset|password|invite|token/i.test(l)) ?? links[0];
+      const pick =
+        links.find((l) => /magic-link\/verify|reset|password|invite|token/i.test(l)) ?? links[0];
       if (pick) {
         const u = new URL(pick.replace(/[.,]+$/, ""));
         const lab = new URL(BASE);
@@ -185,7 +186,11 @@ async function fixtures() {
   let m;
   for (const t of mtypes.matterTypes ?? mtypes.types ?? mtypes) {
     m = await d
-      .post("/api/v1/matters", { title: `${fx.prefix} Bravo ${fx.T}`, matterTypeId: t.id, managerId: fx.danielId }, H)
+      .post(
+        "/api/v1/matters",
+        { title: `${fx.prefix} Bravo ${fx.T}`, matterTypeId: t.id, managerId: fx.danielId },
+        H,
+      )
       .catch(() => null);
     if (m) break;
   }
@@ -234,9 +239,9 @@ async function fixtures() {
   );
   fx.field = { id: f.body.field.id, label: f.body.field.displayName };
   // Daniel reaches the Confidential Contract, so its absence for the walkers is reach, not a missing row.
-  fx.danielSeesHidden = (await d.get(`/api/v1/search?q=${fx.T}&kind=contract`, H)).body.results.some(
-    (x) => x.number === fx.hidden,
-  );
+  fx.danielSeesHidden = (
+    await d.get(`/api/v1/search?q=${fx.T}&kind=contract`, H)
+  ).body.results.some((x) => x.number === fx.hidden);
   fx.created.push(
     `Contracts C-${fx.charlie} (Charlie, expiry +200 d), C-${fx.alpha} (Alpha, expiry +30 d), C-${fx.delta} (Delta, no expiry), C-${fx.golf} (Golf, exclusion word only), C-${fx.holder} (Holder, owns the Document), Confidential C-${fx.hidden}; Matter M-${fx.bravo} (Bravo); Document "${fx.prefix} Echo.pdf" v1 and v2 on C-${fx.holder}; contract Field "${fx.field.label}"`,
   );
@@ -269,7 +274,10 @@ async function fixtures() {
 let browser;
 async function context() {
   browser ??= await chromium.launch({ headless: true });
-  const c = await browser.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: "Europe/London" });
+  const c = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    timezoneId: "Europe/London",
+  });
   return { context: c, page: await c.newPage() };
 }
 async function signIn(email, password) {
@@ -291,7 +299,9 @@ async function walk(role, fx) {
   // Reset: remove this fixture account's saved searches and views left by an earlier development run.
   let leftovers = 0;
   for (const surface of ["search", "contracts"]) {
-    const v = await p.request.get(`${BASE}/api/v1/list-views?surface=${surface}`, H).then((r) => r.json());
+    const v = await p.request
+      .get(`${BASE}/api/v1/list-views?surface=${surface}`, H)
+      .then((r) => r.json());
     for (const view of v.views ?? []) {
       await p.request.delete(`${BASE}/api/v1/list-views/${view.id}`, H);
       leftovers++;
@@ -315,7 +325,13 @@ async function walk(role, fx) {
     await sleep(settle);
     for (let i = 0; i < 40; i++) {
       const t = await txt(preview.getByRole("heading").first());
-      if (/match/.test(t) && !(await preview.getByText("Searching…").isVisible().catch(() => false)))
+      if (
+        /match/.test(t) &&
+        !(await preview
+          .getByText("Searching…")
+          .isVisible()
+          .catch(() => false))
+      )
         return t;
       await sleep(250);
     }
@@ -323,11 +339,16 @@ async function walk(role, fx) {
   };
   const headerGroups = async () => {
     await sleep(1500);
-    await listbox.getByRole("status").waitFor({ state: "detached", timeout: 10000 }).catch(() => {});
+    await listbox
+      .getByRole("status")
+      .waitFor({ state: "detached", timeout: 10000 })
+      .catch(() => {});
     return listbox.getByRole("group").evaluateAll((gs) =>
       gs.map((g) => ({
         group: g.getAttribute("aria-label"),
-        options: [...g.querySelectorAll("[role=option]")].map((o) => o.innerText.replace(/\s+/g, " ").trim()),
+        options: [...g.querySelectorAll("[role=option]")].map((o) =>
+          o.innerText.replace(/\s+/g, " ").trim(),
+        ),
       })),
     );
   };
@@ -341,12 +362,16 @@ async function walk(role, fx) {
     await p.getByRole("button", { name: "Advanced search", exact: true }).click();
     await dialog.waitFor();
   };
-  const kindChip = (k) => dialog.getByRole("group", { name: "Kinds" }).getByRole("button", { name: k, exact: true });
+  const kindChip = (k) =>
+    dialog.getByRole("group", { name: "Kinds" }).getByRole("button", { name: k, exact: true });
   const addCondition = async (kindLabel, property) => {
     await dialog.getByRole("button", { name: "Add condition" }).click();
     const props = p.getByRole("dialog", { name: "Properties" });
     await props.getByLabel("Search properties").fill(property);
-    await props.getByRole("group", { name: kindLabel }).getByRole("button", { name: property, exact: true }).click();
+    await props
+      .getByRole("group", { name: kindLabel })
+      .getByRole("button", { name: property, exact: true })
+      .click();
     return dialog.getByRole("group", { name: `${kindLabel} ${property} condition` });
   };
   const chooseValues = async (row, label, values) => {
@@ -378,7 +403,9 @@ async function walk(role, fx) {
   await p.keyboard.type(fx.T.slice(1));
   await listbox.waitFor({ timeout: 10000 });
   const groups = await headerGroups();
-  const groupSummary = groups.map((g) => `${g.group}: ${g.options.map(nameOf).join(",")}`).join("; ");
+  const groupSummary = groups
+    .map((g) => `${g.group}: ${g.options.map(nameOf).join(",")}`)
+    .join("; ");
   const flat = groups.flatMap((g) => g.options.map(nameOf));
   const docOpt = groups.find((g) => g.group === "Document")?.options[0] ?? "";
   R(
@@ -433,7 +460,11 @@ async function walk(role, fx) {
 
   // Document result opens the latest Version with the find text.
   await p.goto(`${BASE}/search?q=${fx.T}`);
-  await p.locator("main li").filter({ hasText: `${fx.prefix} Echo` }).getByRole("link").click();
+  await p
+    .locator("main li")
+    .filter({ hasText: `${fx.prefix} Echo` })
+    .getByRole("link")
+    .click();
   await p.waitForURL(new RegExp(`/contracts/${fx.holder}/documents\\?.*find=`), { timeout: 15000 });
   const docUrl = new URL(p.url());
   const latestVersion = sql(
@@ -455,7 +486,11 @@ async function walk(role, fx) {
   await p.goto(`${BASE}/search?q=${fx.W1}`);
   const oldGone = await seen(p.getByText("No matches", { exact: true }), 15000);
   await p.goto(`${BASE}/search?q=${fx.W2}`);
-  await p.locator("main li").first().waitFor({ timeout: 15000 }).catch(() => {});
+  await p
+    .locator("main li")
+    .first()
+    .waitFor({ timeout: 15000 })
+    .catch(() => {});
   const newRows = await rows();
   R(
     "Each Document appears once from its latest Version; earlier Versions' words are not searched",
@@ -504,7 +539,9 @@ async function walk(role, fx) {
   await sleep(1500);
   const cpUrl = new URL(p.url());
   const cpRows = await rows();
-  const contractOnly = await kindNav.getByRole("link", { name: "Contract", exact: true }).getAttribute("aria-current");
+  const contractOnly = await kindNav
+    .getByRole("link", { name: "Contract", exact: true })
+    .getAttribute("aria-current");
   R(
     "A Counterparty result opens the Contract results for that Counterparty's name",
     "Selecting the Counterparty goes to the results page for its name with the Contract kind selected",
@@ -523,7 +560,12 @@ async function walk(role, fx) {
   await openDialogFromHeader();
   const carried = await dialog.getByLabel("All of these words").inputValue();
   const labels = [];
-  for (const l of ["All of these words", "This exact phrase", "Any of these words", "None of these words"])
+  for (const l of [
+    "All of these words",
+    "This exact phrase",
+    "Any of these words",
+    "None of these words",
+  ])
     labels.push(`${l} ${await dialog.getByLabel(l).isVisible()}`);
   const scopes = [];
   for (const l of ["Titles and numbers", "Record text", "Document contents"])
@@ -539,7 +581,8 @@ async function walk(role, fx) {
     "Header words carry into All of these words; four Words rows; three Search in boxes checked; seven Kinds; Add condition unavailable with no kind",
     `All of these words holds the header word ${carried === fx.T}; rows ${labels.join(", ")}; Search in ${scopes.join(", ")}; Kinds ${kindsList.join(", ")}; Add condition disabled ${addDisabled}; Preview "${total0}"`,
     carried === fx.T &&
-      kindsList.join(",") === "Contract,Matter,Document,Entity,Counterparty,Request,Knowledge Item" &&
+      kindsList.join(",") ===
+        "Contract,Matter,Document,Entity,Counterparty,Request,Knowledge Item" &&
       addDisabled &&
       total0 === "5 matches",
     "dialog",
@@ -560,7 +603,10 @@ async function walk(role, fx) {
 
   // Words rows: 200 characters; or and a leading - are words.
   await dialog.getByLabel("None of these words").fill("z".repeat(201));
-  const tooLong = await seen(preview.getByText("Search words rows must be 200 characters or fewer."), 5000);
+  const tooLong = await seen(
+    preview.getByText("Search words rows must be 200 characters or fewer."),
+    5000,
+  );
   await dialog.getByLabel("None of these words").fill("");
   await dialog.getByLabel("All of these words").fill(`${fx.T} -${fx.X}`);
   const minusTotal = await previewTotal();
@@ -585,7 +631,9 @@ async function walk(role, fx) {
   for (const l of ["Titles and numbers", "Record text", "Document contents"])
     await dialog.getByRole("checkbox", { name: l }).click();
   const noScope = await seen(preview.getByText("Choose at least one search scope."), 5000);
-  const searchDisabled = await dialog.getByRole("button", { name: "Search", exact: true }).isDisabled();
+  const searchDisabled = await dialog
+    .getByRole("button", { name: "Search", exact: true })
+    .isDisabled();
   await dialog.getByRole("checkbox", { name: "Document contents" }).click();
   const contentsTotal = await previewTotal();
   const contentsRows = onlyMine(await preview.getByRole("listitem").allInnerTexts());
@@ -607,7 +655,9 @@ async function walk(role, fx) {
   await dialog.getByRole("button", { name: "Add condition" }).click();
   const props = p.getByRole("dialog", { name: "Properties" });
   await props.waitFor();
-  const propGroups = await props.getByRole("group").evaluateAll((gs) => gs.map((g) => g.getAttribute("aria-label")));
+  const propGroups = await props
+    .getByRole("group")
+    .evaluateAll((gs) => gs.map((g) => g.getAttribute("aria-label")));
   const contractProps = await txt(props.getByRole("group", { name: "Contract" }));
   const fieldListed = contractProps.includes(fx.field.label) && contractProps.includes("Fields");
   await props.getByLabel("Search properties").fill("Expiry");
@@ -642,7 +692,19 @@ async function walk(role, fx) {
     "Dates: operators, N from 1 to 3650 in Number of days, Contract Expiry date in the next 90 days",
     "Date operators include before, after, on, between and the relative set; an invalid N is named in the Preview; with Contract and Matter selected, 90 keeps Alpha (+30 days) and drops Charlie (+200) and Delta (no date), while the Matter Bravo stays because a Contract condition never limits Matters",
     `Operators: ${ops.join(", ")}; N=0 "${badN}"; N=3651 "${badN2}"; N=90 ${relTotal} (${relRows.join(",")})`,
-    ["before", "after", "on", "between", "in the last N days", "in the next N days", "today", "this week", "this month", "this quarter", "this year"].every((o) => ops.includes(o)) &&
+    [
+      "before",
+      "after",
+      "on",
+      "between",
+      "in the last N days",
+      "in the next N days",
+      "today",
+      "this week",
+      "this month",
+      "this quarter",
+      "this year",
+    ].every((o) => ops.includes(o)) &&
       badN.length > 0 &&
       badN2.length > 0 &&
       relTotal === "2 matches" &&
@@ -652,12 +714,20 @@ async function walk(role, fx) {
 
   // Match all / Match any with a Matter condition too; then run.
   const status = await addCondition("Matter", "Status");
-  const matterStatuses = sql(`select display_name from matter_statuses where category='open' order by 1 limit 1`);
+  const matterStatuses = sql(
+    `select display_name from matter_statuses where category='open' order by 1 limit 1`,
+  );
   await chooseValues(status, "Status", [matterStatuses]);
   const allTotal = await previewTotal();
-  await dialog.getByRole("group", { name: "Match conditions" }).getByRole("button", { name: "Match any" }).click();
+  await dialog
+    .getByRole("group", { name: "Match conditions" })
+    .getByRole("button", { name: "Match any" })
+    .click();
   const anyTotal = await previewTotal();
-  await dialog.getByRole("group", { name: "Match conditions" }).getByRole("button", { name: "Match all" }).click();
+  await dialog
+    .getByRole("group", { name: "Match conditions" })
+    .getByRole("button", { name: "Match all" })
+    .click();
   await previewTotal();
   const bravoStatus = sql(
     `select s.display_name from matters m join matter_statuses s on s.id=m.status_id where m.number=${fx.bravo}`,
@@ -666,7 +736,8 @@ async function walk(role, fx) {
     "Match all and Match any apply per kind; a Contract condition never limits Matters",
     "With a Contract Expiry condition and a Matter Status condition, Contracts are limited only by the Contract condition and the Matter only by the Matter condition",
     `Matter Status is any of ${matterStatuses} (Bravo is ${bravoStatus}): Match all ${allTotal}, Match any ${anyTotal}`,
-    allTotal === (bravoStatus === matterStatuses ? "2 matches" : "1 match") && anyTotal === allTotal,
+    allTotal === (bravoStatus === matterStatuses ? "2 matches" : "1 match") &&
+      anyTotal === allTotal,
     "dialog",
   );
   await dialog.getByRole("button", { name: "Search", exact: true }).click();
@@ -677,7 +748,9 @@ async function walk(role, fx) {
   const chipNames = await p
     .getByRole("button", { name: /^Edit / })
     .evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")));
-  const wordsChip = await p.getByRole("link", { name: `Remove All of these words: ${fx.T}` }).isVisible();
+  const wordsChip = await p
+    .getByRole("link", { name: `Remove All of these words: ${fx.T}` })
+    .isVisible();
   const runRows = onlyMine(await rows());
   const runTotal = await totalText();
   R(
@@ -695,7 +768,8 @@ async function walk(role, fx) {
   // Advanced on the results page opens the whole question; chip edit focuses the row.
   await p.getByRole("button", { name: "Advanced", exact: true }).click();
   await dialog.waitFor();
-  const wholeQ = (await dialog.getByRole("group", { name: "Contract Expiry date condition" }).isVisible()) &&
+  const wholeQ =
+    (await dialog.getByRole("group", { name: "Contract Expiry date condition" }).isVisible()) &&
     (await dialog.getByLabel("All of these words").inputValue()) === fx.T;
   await closeDialog();
   await p.getByRole("button", { name: "Edit Contract Expiry date in the next 90 days" }).click();
@@ -746,7 +820,9 @@ async function walk(role, fx) {
   await p.goBack();
   await sleep(2000);
   const backQ = decodeAq(p.url());
-  const backChip = await p.getByRole("button", { name: "Edit Contract Expiry date in the next 90 days" }).isVisible();
+  const backChip = await p
+    .getByRole("button", { name: "Edit Contract Expiry date in the next 90 days" })
+    .isVisible();
   R(
     "A chip's remove control runs the question without it; the address keeps the question through reload and Back",
     "Removing the Expiry chip returns all three Contracts; reload keeps the rows; Back restores the condition and its chip",
@@ -764,7 +840,9 @@ async function walk(role, fx) {
   await dialog.waitFor();
   await kindChip("Matter").click();
   const kindNotice = await txt(dialog.getByRole("status").filter({ hasText: "were removed" }));
-  const matterRowGone = !(await dialog.getByRole("group", { name: "Matter Status condition" }).isVisible());
+  const matterRowGone = !(await dialog
+    .getByRole("group", { name: "Matter Status condition" })
+    .isVisible());
   R(
     "Removing a kind removes its conditions, and the dialog says so",
     "Deselecting Matter removes the Matter Status condition with Conditions for Matter were removed.",
@@ -798,7 +876,12 @@ async function walk(role, fx) {
     "Preview shows the exact total and up to ten rows; Clear empties the question; up to 20 conditions",
     "Clear leaves empty words and Build your search; Contract alone previews ten rows with Showing the first 10 of N; a 21st condition is refused",
     `Cleared ${cleared}; Contract: ${n0}, ${previewRows} rows, "${limitLine}", help line ${help}; 20 rows added ${count20}, 21st refused ${limit20}`,
-    cleared && previewRows === 10 && limitLine === `Showing the first 10 of ${n0}` && help && count20 === 20 && limit20,
+    cleared &&
+      previewRows === 10 &&
+      limitLine === `Showing the first 10 of ${n0}` &&
+      help &&
+      count20 === 20 &&
+      limit20,
     "dialog",
   );
 
@@ -818,13 +901,19 @@ async function walk(role, fx) {
     const before = dbFn();
     const ui = await previewTotal();
     const after = dbFn();
-    return { ui, db: before === after ? `${before}` : `${before}..${after}`, ok: n(ui) === before || n(ui) === after };
+    return {
+      ui,
+      db: before === after ? `${before}` : `${before}..${after}`,
+      ok: n(ui) === before || n(ui) === after,
+    };
   };
   const dbAll = () => visibleContracts("and c.archived_at is null");
-  const dbNotEndedFn = () => visibleContracts("and c.archived_at is null and c.ended_at is null and s.stage <> 'ended'");
+  const dbNotEndedFn = () =>
+    visibleContracts("and c.archived_at is null and c.ended_at is null and s.stage <> 'ended'");
   const dbDraftFn = () => visibleContracts("and c.archived_at is null and s.display_name='Draft'");
   const dbArchFn = () => visibleContracts("");
-  const dbMattersFn = () => Number(sql(`select count(*) from matters where not is_confidential and archived_at is null`));
+  const dbMattersFn = () =>
+    Number(sql(`select count(*) from matters where not is_confidential and archived_at is null`));
   const dbOpenFn = () =>
     Number(
       sql(
@@ -840,9 +929,15 @@ async function walk(role, fx) {
   const st = await addCondition("Contract", "Status");
   await chooseValues(st, "Status", ["Draft"]);
   const allFlag = await measure(dbDraftFn);
-  await dialog.getByRole("group", { name: "Match conditions" }).getByRole("button", { name: "Match any" }).click();
+  await dialog
+    .getByRole("group", { name: "Match conditions" })
+    .getByRole("button", { name: "Match any" })
+    .click();
   const anyFlag = await measure(dbAll);
-  await dialog.getByRole("group", { name: "Match conditions" }).getByRole("button", { name: "Match all" }).click();
+  await dialog
+    .getByRole("group", { name: "Match conditions" })
+    .getByRole("button", { name: "Match all" })
+    .click();
   await clearDialog();
   await kindChip("Contract").click();
   await addCondition("Contract", "Show archived");
@@ -909,7 +1004,10 @@ async function walk(role, fx) {
     await p.getByRole("menuitemradio", { name: label, exact: true }).click();
     await p.waitForURL((u) => (decodeAq(u.toString())?.sort ?? "relevance") === key);
     await sleep(1500);
-    orders[key] = { rows: onlyMine(await rows()), control: await sortBtn.getAttribute("aria-label") };
+    orders[key] = {
+      rows: onlyMine(await rows()),
+      control: await sortBtn.getAttribute("aria-label"),
+    };
   }
   await sortBtn.click();
   await p.getByRole("menuitemradio", { name: "Oldest", exact: true }).click();
@@ -946,7 +1044,9 @@ async function walk(role, fx) {
   await saveDlg.getByLabel("Name").fill(savedName);
   await saveDlg.getByRole("button", { name: "Save", exact: true }).click();
   await saveDlg.waitFor({ state: "detached" });
-  const activeLabel = await dialog.getByRole("button", { name: `${savedName} actions` }).isVisible();
+  const activeLabel = await dialog
+    .getByRole("button", { name: `${savedName} actions` })
+    .isVisible();
   // Duplicate name, different case.
   await dialog.getByRole("button", { name: `${savedName} actions` }).click();
   await p.getByRole("menuitem", { name: "Save as…" }).click();
@@ -954,7 +1054,9 @@ async function walk(role, fx) {
   await saveDlg.getByRole("button", { name: "Save", exact: true }).click();
   const dupMsg = await txt(saveDlg.getByRole("alert"));
   await saveDlg.getByRole("button", { name: "Cancel" }).click();
-  const stored = (await p.request.get(`${BASE}/api/v1/list-views?surface=search`, H).then((r) => r.json())).views;
+  const stored = (
+    await p.request.get(`${BASE}/api/v1/list-views?surface=search`, H).then((r) => r.json())
+  ).views;
   const mine = stored.find((v) => v.name === savedName);
   R(
     "Save and reopen a search, steps 1-2: Save search, Save this search, Name, Save; a duplicate name is refused",
@@ -962,7 +1064,7 @@ async function walk(role, fx) {
     `Dialog "Save this search" ${saveTitled}; control shows "${savedName} actions" ${activeLabel}; stored kinds ${mine?.layout?.kinds ?? mine?.config?.kinds}, sort ${mine?.layout?.sort ?? mine?.config?.sort}, words ${JSON.stringify(mine?.config?.words?.all === fx.T)}; duplicate "${dupMsg}"; stored searches with that name ${stored.filter((v) => v.name.toLowerCase() === savedName.toLowerCase()).length}`,
     saveTitled &&
       activeLabel &&
-      (mine?.config)?.sort === "oldest" &&
+      mine?.config?.sort === "oldest" &&
       dupMsg === "You already have a view with that name on this list." &&
       stored.filter((v) => v.name.toLowerCase() === savedName.toLowerCase()).length === 1,
     "dialog",
@@ -975,10 +1077,21 @@ async function walk(role, fx) {
   await header.click();
   await listbox.waitFor();
   await sleep(1500);
-  const savedGroup = await listbox.getByRole("group", { name: "Saved" }).getByRole("option").allInnerTexts();
-  const recentGroup = await listbox.getByRole("group", { name: "Recent" }).getByRole("option").count();
-  const seeAllDisabled = await listbox.getByRole("option", { name: /See all results/ }).getAttribute("aria-disabled");
-  await listbox.getByRole("group", { name: "Saved" }).getByRole("option", { name: savedName }).click();
+  const savedGroup = await listbox
+    .getByRole("group", { name: "Saved" })
+    .getByRole("option")
+    .allInnerTexts();
+  const recentGroup = await listbox
+    .getByRole("group", { name: "Recent" })
+    .getByRole("option")
+    .count();
+  const seeAllDisabled = await listbox
+    .getByRole("option", { name: /See all results/ })
+    .getAttribute("aria-disabled");
+  await listbox
+    .getByRole("group", { name: "Saved" })
+    .getByRole("option", { name: savedName })
+    .click();
   await p.waitForURL(/aq=/);
   await sleep(2000);
   const reopenRows = onlyMine(await rows());
@@ -986,7 +1099,12 @@ async function walk(role, fx) {
   R(
     "Save and reopen a search, step 3: the empty header box Saved group runs the search at once",
     "Focusing the empty box lists Saved and Recent; See all results is unavailable; selecting the saved search opens the results page with its kinds and sort",
-    `Saved entries ${savedGroup.map((s) => s.trim()).filter((s) => s.startsWith(fx.prefix)).join(" | ")}; Recent entries ${recentGroup}; See all results aria-disabled ${seeAllDisabled}; opened ${pathOf(p)} rows ${reopenRows.join(",")} "${reopenSort}"`,
+    `Saved entries ${savedGroup
+      .map((s) => s.trim())
+      .filter((s) => s.startsWith(fx.prefix))
+      .join(
+        " | ",
+      )}; Recent entries ${recentGroup}; See all results aria-disabled ${seeAllDisabled}; opened ${pathOf(p)} rows ${reopenRows.join(",")} "${reopenSort}"`,
     savedGroup.some((s) => s.includes(savedName)) &&
       recentGroup > 0 &&
       recentGroup <= 5 &&
@@ -1014,7 +1132,10 @@ async function walk(role, fx) {
     "Save and reopen a search, step 4: Saved searches loads the question without running; Search runs it",
     "The dialog shows the stored words and kind while the page stays put; Search opens the results",
     `Loaded words match ${loadedWords === fx.T}; Contract pressed ${loadedKind}; page stayed at / ${stillHome}; after Search ${pathOf(p)} rows ${ranRows.join(",")}`,
-    loadedWords === fx.T && loadedKind === "true" && stillHome && ranRows.join() === "Charlie,Alpha,Delta",
+    loadedWords === fx.T &&
+      loadedKind === "true" &&
+      stillHome &&
+      ranRows.join() === "Charlie,Alpha,Delta",
     "dialog",
   );
 
@@ -1027,33 +1148,38 @@ async function walk(role, fx) {
   await kindChip("Matter").click();
   await sleep(500);
   const modifiedLabel = await txt(actions);
-  const saveEnabled = !(await dialog.getByRole("button", { name: "Save search", exact: true }).isDisabled());
+  const saveEnabled = !(await dialog
+    .getByRole("button", { name: "Save search", exact: true })
+    .isDisabled());
   await actions.click();
   const menuItems = (await p.getByRole("menuitem").allInnerTexts()).map((s) => s.trim());
   await p.keyboard.press("Escape");
   await dialog.getByRole("button", { name: "Save search", exact: true }).click();
   await sleep(1500);
   const afterSave = await txt(actions);
-  const stored2 = (await p.request.get(`${BASE}/api/v1/list-views?surface=search`, H).then((r) => r.json())).views.find(
-    (v) => v.name === savedName,
-  );
+  const stored2 = (
+    await p.request.get(`${BASE}/api/v1/list-views?surface=search`, H).then((r) => r.json())
+  ).views.find((v) => v.name === savedName);
   await kindChip("Document").click();
   await sleep(400);
   await actions.click();
   await p.getByRole("menuitem", { name: "Discard unsaved changes" }).click();
   await sleep(1200);
   const discarded =
-    (await kindChip("Document").getAttribute("aria-pressed")) === "false" && !(await txt(actions)).includes("Modified");
+    (await kindChip("Document").getAttribute("aria-pressed")) === "false" &&
+    !(await txt(actions)).includes("Modified");
   R(
     "Changing a selected saved search marks it Modified; Save search replaces it; the menu offers Save as…, Rename…, Delete…, Discard unsaved changes",
     "Adding a kind shows Modified beside Save search; Save search stores it and clears Modified; Discard unsaved changes restores the stored question",
-    `Before "${before}"; after change "${modifiedLabel}", Save search enabled ${saveEnabled}; menu ${menuItems.join(" | ")}; after Save "${afterSave}", stored kinds ${(stored2?.config)?.kinds}; Discard restored ${discarded}`,
+    `Before "${before}"; after change "${modifiedLabel}", Save search enabled ${saveEnabled}; menu ${menuItems.join(" | ")}; after Save "${afterSave}", stored kinds ${stored2?.config?.kinds}; Discard restored ${discarded}`,
     !before.includes("Modified") &&
       modifiedLabel.includes("Modified") &&
       saveEnabled &&
-      ["Save", "Save as…", "Rename…", "Delete…", "Discard unsaved changes"].every((i) => menuItems.includes(i)) &&
+      ["Save", "Save as…", "Rename…", "Delete…", "Discard unsaved changes"].every((i) =>
+        menuItems.includes(i),
+      ) &&
       !afterSave.includes("Modified") &&
-      (stored2?.config)?.kinds.join() === "contract,matter" &&
+      stored2?.config?.kinds.join() === "contract,matter" &&
       discarded,
     "dialog",
   );
@@ -1064,8 +1190,13 @@ async function walk(role, fx) {
   await kindChip("Entity").click();
   await dialog.getByRole("button", { name: "Save search", exact: true }).click();
   const asksName = await seen(p.getByRole("dialog", { name: "Save this search" }), 5000);
-  await p.getByRole("dialog", { name: "Save this search" }).getByRole("button", { name: "Cancel" }).click();
-  const noActive = !(await dialog.getByRole("button", { name: `${savedName} actions` }).isVisible());
+  await p
+    .getByRole("dialog", { name: "Save this search" })
+    .getByRole("button", { name: "Cancel" })
+    .click();
+  const noActive = !(await dialog
+    .getByRole("button", { name: `${savedName} actions` })
+    .isVisible());
   R(
     "The dialog forgets the selected saved search when it closes",
     "After closing and reopening, Save search asks for a new Name instead of replacing",
@@ -1100,9 +1231,9 @@ async function walk(role, fx) {
   const olist = other.page.getByRole("listbox", { name: "Search results" });
   await olist.waitFor();
   await sleep(1500);
-  const otherSaved = (await olist.getByRole("group", { name: "Saved" }).getByRole("option").allInnerTexts()).some((s) =>
-    s.includes(savedName),
-  );
+  const otherSaved = (
+    await olist.getByRole("group", { name: "Saved" }).getByRole("option").allInnerTexts()
+  ).some((s) => s.includes(savedName));
   const otherRecent = await olist.getByRole("group", { name: "Recent" }).count();
   await other.context.close();
   R(
@@ -1126,7 +1257,9 @@ async function walk(role, fx) {
   await p.goto(`${BASE}/search`);
   await sleep(1500);
   const promptShown = await seen(
-    p.getByText("Search contracts, matters, documents, entities, counterparties, and requests").first(),
+    p
+      .getByText("Search contracts, matters, documents, entities, counterparties, and requests")
+      .first(),
     5000,
   );
   const noRowsNoDefault = (await p.locator("main li").count()) === 0;
@@ -1161,7 +1294,9 @@ async function walk(role, fx) {
   await renameDlg.getByLabel("Name").fill(`${savedName} 2`);
   await renameDlg.getByRole("button", { name: "Rename" }).click();
   await renameDlg.waitFor({ state: "detached" });
-  const renamed = await savedList.getByRole("button", { name: `${savedName} 2`, exact: true }).isVisible();
+  const renamed = await savedList
+    .getByRole("button", { name: `${savedName} 2`, exact: true })
+    .isVisible();
   await savedList.getByRole("button", { name: `Manage ${savedName} 2` }).click();
   await p.getByRole("menuitem", { name: "Delete…" }).click();
   const delDlg = p.getByRole("dialog", { name: "Delete this saved search?" });
@@ -1170,7 +1305,9 @@ async function walk(role, fx) {
   await delDlg.getByRole("button", { name: "Delete" }).click();
   await delDlg.waitFor({ state: "detached" });
   await sleep(800);
-  const gone = !(await savedList.getByRole("button", { name: `${savedName} 2`, exact: true }).isVisible());
+  const gone = !(await savedList
+    .getByRole("button", { name: `${savedName} 2`, exact: true })
+    .isVisible());
   const contractsAfter = sql(`select count(*) from contracts where title like '${fx.prefix}%'`);
   R(
     "A row's menu in Saved searches offers Rename… and Delete…; Delete removes the saved search, not records",
@@ -1210,7 +1347,9 @@ async function walk(role, fx) {
   await p.unroute("**/api/v1/search/fields**");
   await savedList.getByRole("button", { name: fieldSearch, exact: true }).click();
   await sleep(1500);
-  const retried = await dialog.getByRole("group", { name: `Contract ${fx.field.label} condition` }).isVisible();
+  const retried = await dialog
+    .getByRole("group", { name: `Contract ${fx.field.label} condition` })
+    .isVisible();
   await closeDialog();
   R(
     "If a saved search does not load in the dialog, the dialog says so",
@@ -1300,7 +1439,8 @@ async function walk(role, fx) {
   await p.waitForURL(/\/search\?q=/);
   await sleep(2000);
   const pOr = onlyMine(await rows());
-  const consistent = hMinus.sort().join() === pMinus.sort().join() && hOr.sort().join() === pOr.sort().join();
+  const consistent =
+    hMinus.sort().join() === pMinus.sort().join() && hOr.sort().join() === pOr.sort().join();
   record(
     role,
     "Product check (not a guide step): header list and results page read the same words the same way",
@@ -1321,16 +1461,23 @@ async function walk(role, fx) {
 
   // ===== Filter and sort a list =====
   await p.goto(`${BASE}/`);
-  await p.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Contracts" }).click();
+  await p
+    .getByRole("navigation", { name: "Primary" })
+    .getByRole("link", { name: "Contracts" })
+    .click();
   await p.waitForURL(/\/contracts/);
   await p.getByRole("button", { name: /^Filter/ }).waitFor();
   await sleep(2000);
-  const countText = async () => txt(p.getByRole("region", { name: "Contracts" }).getByRole("paragraph").first());
+  const countText = async () =>
+    txt(p.getByRole("region", { name: "Contracts" }).getByRole("paragraph").first());
   const filterPop = p.getByRole("dialog", { name: "Filter" });
   const addFilter = async (prop, value) => {
     await p.getByRole("button", { name: /^Filter/ }).click();
     await filterPop.getByRole("button", { name: prop, exact: true }).click();
-    const any = await filterPop.getByText("Matches any selected value").isVisible().catch(() => false);
+    const any = await filterPop
+      .getByText("Matches any selected value")
+      .isVisible()
+      .catch(() => false);
     await filterPop.getByRole("checkbox", { name: value, exact: true }).click();
     await filterPop.getByRole("button", { name: "Apply" }).click();
     await sleep(2500);
@@ -1342,7 +1489,9 @@ async function walk(role, fx) {
   const nums = await p
     .locator("main tbody tr")
     .evaluateAll((rs) => rs.map((r) => (r.innerText.match(/C-(\d+)/) ?? [])[1]).filter(Boolean));
-  const owners = nums.slice(0, 25).map((x) => sql(`select manager_id from contracts where number=${x}`));
+  const owners = nums
+    .slice(0, 25)
+    .map((x) => sql(`select manager_id from contracts where number=${x}`));
   const allDaniel = owners.length > 0 && owners.every((o) => o === fx.danielId);
   const ownerCount = await countText();
   await addFilter("Status", "Draft");
@@ -1383,7 +1532,9 @@ async function walk(role, fx) {
   // A date filter says it includes both dates.
   await p.getByRole("button", { name: /^Filter/ }).click();
   await filterPop.getByLabel("Search filters").fill("date");
-  const dateProp = (await filterPop.getByRole("button").allInnerTexts()).map((s) => s.trim()).find((s) => /date/i.test(s));
+  const dateProp = (await filterPop.getByRole("button").allInnerTexts())
+    .map((s) => s.trim())
+    .find((s) => /date/i.test(s));
   await filterPop.getByRole("button", { name: dateProp, exact: true }).click();
   const inclusive = await filterPop.getByText("Includes both dates").isVisible();
   await p.keyboard.press("Escape");
@@ -1456,7 +1607,10 @@ async function walk(role, fx) {
   await viewsBtn.click();
   await p.getByRole("menuitem", { name: "Save as…" }).click();
   await p.getByRole("dialog", { name: "Save this view" }).getByLabel("Name").fill(viewName);
-  await p.getByRole("dialog", { name: "Save this view" }).getByRole("button", { name: "Save" }).click();
+  await p
+    .getByRole("dialog", { name: "Save this view" })
+    .getByRole("button", { name: "Save" })
+    .click();
   await sleep(2500);
   const savedLabel = await txt(viewsBtn);
   await addFilter("Status", "Draft");
@@ -1465,7 +1619,8 @@ async function walk(role, fx) {
   await p.getByRole("menuitem", { name: "Discard unsaved changes" }).click();
   await sleep(2500);
   const discardedV =
-    (await p.getByRole("button", { name: /^Remove .* filter$/ }).count()) === 1 && !(await txt(viewsBtn)).includes("Modified");
+    (await p.getByRole("button", { name: /^Remove .* filter$/ }).count()) === 1 &&
+    !(await txt(viewsBtn)).includes("Modified");
   await sortTo("descending");
   await sleep(1000);
   const modified2 = (await txt(viewsBtn)).includes("Modified");
@@ -1477,7 +1632,8 @@ async function walk(role, fx) {
   await p.getByRole("menuitemradio", { name: "Default view" }).click();
   await sleep(2500);
   const builtIn =
-    (await p.getByRole("button", { name: /^Remove .* filter$/ }).count()) === 0 && (await txt(viewsBtn)).startsWith("Default view");
+    (await p.getByRole("button", { name: /^Remove .* filter$/ }).count()) === 0 &&
+    (await txt(viewsBtn)).startsWith("Default view");
   const builtInHeaders = await headers();
   await viewsBtn.click();
   await p.getByRole("menuitemradio", { name: viewName }).click();
@@ -1514,30 +1670,55 @@ async function walk(role, fx) {
   await viewsBtn.click();
   const marker = await txt(p.getByRole("menuitemradio", { name: new RegExp(viewName) }));
   await p.keyboard.press("Escape");
-  await p.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Home", exact: true }).click();
+  await p
+    .getByRole("navigation", { name: "Primary" })
+    .getByRole("link", { name: "Home", exact: true })
+    .click();
   await p.waitForURL(`${BASE}/`);
-  await p.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Contracts" }).click();
+  await p
+    .getByRole("navigation", { name: "Primary" })
+    .getByRole("link", { name: "Contracts" })
+    .click();
   await p.waitForURL(/\/contracts/);
   await sleep(2500);
   const opensWithView =
-    (await txt(viewsBtn)).startsWith(viewName) && (await p.getByRole("button", { name: "Owner: Daniel Okafor" }).isVisible());
+    (await txt(viewsBtn)).startsWith(viewName) &&
+    (await p.getByRole("button", { name: "Owner: Daniel Okafor" }).isVisible());
   await viewsBtn.click();
   await p.getByRole("menuitem", { name: "Rename…" }).click();
-  await p.getByRole("dialog", { name: "Rename this view" }).getByLabel("Name").fill(`${viewName} 2`);
-  await p.getByRole("dialog", { name: "Rename this view" }).getByRole("button", { name: "Rename" }).click();
+  await p
+    .getByRole("dialog", { name: "Rename this view" })
+    .getByLabel("Name")
+    .fill(`${viewName} 2`);
+  await p
+    .getByRole("dialog", { name: "Rename this view" })
+    .getByRole("button", { name: "Rename" })
+    .click();
   await sleep(2000);
   const renamedV = (await txt(viewsBtn)).startsWith(`${viewName} 2`);
   await viewsBtn.click();
   await p.getByRole("menuitem", { name: "Save as…" }).click();
-  await p.getByRole("dialog", { name: "Save this view" }).getByLabel("Name").fill(`${viewName} 2`.toUpperCase());
-  await p.getByRole("dialog", { name: "Save this view" }).getByRole("button", { name: "Save" }).click();
+  await p
+    .getByRole("dialog", { name: "Save this view" })
+    .getByLabel("Name")
+    .fill(`${viewName} 2`.toUpperCase());
+  await p
+    .getByRole("dialog", { name: "Save this view" })
+    .getByRole("button", { name: "Save" })
+    .click();
   await sleep(2000);
   const dupV = await txt(p.getByRole("dialog", { name: "Save this view" }).getByRole("alert"));
-  await p.getByRole("dialog", { name: "Save this view" }).getByRole("button", { name: "Cancel" }).click();
+  await p
+    .getByRole("dialog", { name: "Save this view" })
+    .getByRole("button", { name: "Cancel" })
+    .click();
   const other2 = await signIn(acct.email, acct.password);
   await other2.page.goto(`${BASE}/contracts`);
   await sleep(3000);
-  const otherBtn = other2.page.getByRole("region", { name: "Contracts" }).getByRole("button").first();
+  const otherBtn = other2.page
+    .getByRole("region", { name: "Contracts" })
+    .getByRole("button")
+    .first();
   const otherHasView =
     (await txt(otherBtn)).startsWith(`${viewName} 2`) &&
     (await other2.page.getByRole("button", { name: "Owner: Daniel Okafor" }).isVisible());
@@ -1568,7 +1749,9 @@ async function walk(role, fx) {
     "Delete… removes the saved view after confirmation and does not delete records",
     "The confirmation says the records are not touched; the view is gone; records remain",
     `Dialog "${vDelText.slice(0, 140)}"; still listed ${stillListed}; contracts ${rowsBefore} -> ${rowsAfter}`,
-    vDelText.includes("The records in it are not touched.") && !stillListed && Number(rowsAfter) >= Number(rowsBefore),
+    vDelText.includes("The records in it are not touched.") &&
+      !stillListed &&
+      Number(rowsAfter) >= Number(rowsBefore),
     "/contracts",
   );
   return c;
@@ -1598,13 +1781,20 @@ const meta = {
   runningImages: Object.fromEntries(
     ["app", "worker", "doc-engine"].map((svc) => [
       svc,
-      execFileSync("docker", ["inspect", "-f", "{{.Image}}", `${PROJECT}-${svc}-1`], { encoding: "utf8" }).trim(),
+      execFileSync("docker", ["inspect", "-f", "{{.Image}}", `${PROJECT}-${svc}-1`], {
+        encoding: "utf8",
+      }).trim(),
     ]),
   ),
-  guideSha256: execFileSync("sha256sum", [path.join(root, "docs/user-guides/search-and-views.md")], {
-    encoding: "utf8",
-  }).split(" ")[0],
-  browser: "Playwright 1.63.0 Chromium, headless, 1440x900, Europe/London, one isolated context per account or device",
+  guideSha256: execFileSync(
+    "sha256sum",
+    [path.join(root, "docs/user-guides/search-and-views.md")],
+    {
+      encoding: "utf8",
+    },
+  ).split(" ")[0],
+  browser:
+    "Playwright 1.63.0 Chromium, headless, 1440x900, Europe/London, one isolated context per account or device",
   startedAt: new Date().toISOString(),
   fixtures: {
     stamp: fx.stamp,
@@ -1612,11 +1802,16 @@ const meta = {
     indexed: fx.indexed,
     created: fx.created,
     accounts: Object.fromEntries(
-      Object.entries(fx.accounts).map(([k, v]) => [k, { email: v.email, displayName: v.displayName }]),
+      Object.entries(fx.accounts).map(([k, v]) => [
+        k,
+        { email: v.email, displayName: v.displayName },
+      ]),
     ),
   },
 };
-const roles = process.argv.slice(2).length ? process.argv.slice(2) : ["administrator", "legal_team_member"];
+const roles = process.argv.slice(2).length
+  ? process.argv.slice(2)
+  : ["administrator", "legal_team_member"];
 const open = {};
 for (const role of roles) {
   try {
@@ -1630,7 +1825,9 @@ for (const role of roles) {
 // An Administrator archives the fixture Field; each walker's question that used it drops it with the notice.
 if (fx.fieldUrls && Object.keys(open).length) {
   const d = await apiSignIn(DANIEL);
-  await d.post(`/api/v1/fields/${fx.field.id}/archive`, {}, H).catch((e) => console.error(String(e)));
+  await d
+    .post(`/api/v1/fields/${fx.field.id}/archive`, {}, H)
+    .catch((e) => console.error(String(e)));
   for (const [role, c] of Object.entries(open)) {
     if (!c || !fx.fieldUrls[role]) continue;
     const p = c.page;
@@ -1645,21 +1842,38 @@ if (fx.fieldUrls && Object.keys(open).length) {
     const lb = p.getByRole("listbox", { name: "Search results" });
     await lb.waitFor();
     await sleep(1200);
-    await lb.getByRole("group", { name: "Saved" }).getByRole("option", { name: fieldSearch }).click();
+    await lb
+      .getByRole("group", { name: "Saved" })
+      .getByRole("option", { name: fieldSearch })
+      .click();
     await p.waitForURL(/aq=/);
-    const savedNotice = await seen(p.getByText("Unavailable Field conditions were removed."), 15000);
+    const savedNotice = await seen(
+      p.getByText("Unavailable Field conditions were removed."),
+      15000,
+    );
     // The same saved search opened under Saved searches in the dialog.
     await p.getByRole("button", { name: "Advanced", exact: true }).click();
     const dlg = p.getByRole("dialog", { name: "Advanced search" });
     await dlg.waitFor();
-    await dlg.getByRole("region", { name: "Saved searches" }).getByRole("button", { name: fieldSearch, exact: true }).click();
+    await dlg
+      .getByRole("region", { name: "Saved searches" })
+      .getByRole("button", { name: fieldSearch, exact: true })
+      .click();
     await sleep(2000);
     const dialogNotice = await txt(dlg.getByRole("status").filter({ hasText: "removed" }));
-    const rowGone = !(await dlg.getByRole("group", { name: `Contract ${fx.field.label} condition` }).isVisible());
+    const rowGone = !(await dlg
+      .getByRole("group", { name: `Contract ${fx.field.label} condition` })
+      .isVisible());
     // Clean up this walker's remaining saved search.
-    await dlg.getByRole("region", { name: "Saved searches" }).getByRole("button", { name: `Manage ${fieldSearch}` }).click();
+    await dlg
+      .getByRole("region", { name: "Saved searches" })
+      .getByRole("button", { name: `Manage ${fieldSearch}` })
+      .click();
     await p.getByRole("menuitem", { name: "Delete…" }).click();
-    await p.getByRole("dialog", { name: "Delete this saved search?" }).getByRole("button", { name: "Delete" }).click();
+    await p
+      .getByRole("dialog", { name: "Delete this saved search?" })
+      .getByRole("button", { name: "Delete" })
+      .click();
     await sleep(1000);
     record(
       role,
@@ -1707,7 +1921,13 @@ if (fx.fieldUrls && Object.keys(open).length) {
       "/search",
     );
   } catch (e) {
-    record("business_user", "Business User redirect", "lands on the Portal", String(e.message), false);
+    record(
+      "business_user",
+      "Business User redirect",
+      "lands on the Portal",
+      String(e.message),
+      false,
+    );
   }
   await jc.context.close();
 }

@@ -72,7 +72,12 @@ for (const key of ["daniel", "nadia", "priya", "marcus", "tom"])
 S.lena = await portalSession(PEOPLE.lena);
 results.identities = [
   { role: "administrator", person: "Daniel Okafor", entry: "password sign-in", context: "daniel" },
-  { role: "legal_team_member", person: "Nadia Haddad", entry: "password sign-in", context: "nadia" },
+  {
+    role: "legal_team_member",
+    person: "Nadia Haddad",
+    entry: "password sign-in",
+    context: "nadia",
+  },
   {
     role: "legal_team_member (named approver and comparison reader)",
     person: "Priya Raman",
@@ -411,7 +416,7 @@ async function createContract(role, A, O) {
         'combobox "Legal Owner"',
         'textbox "Matter"',
         'combobox "Description"',
-        "switch \"Confidential — restrict to the contract team\"",
+        'switch "Confidential — restrict to the contract team"',
         'region "Documents"',
         'button "Cancel"',
         'button "Create"',
@@ -423,7 +428,9 @@ async function createContract(role, A, O) {
       const ownerSelected = await owner.locator("option:checked").innerText();
       const ownerOptions = await owner.locator("option").allInnerTexts();
       // The Default type's own creation Rows, recorded for the evidence.
-      const defaultRows = [...snap.matchAll(/- text: ([^\n]+)\n\s+- (?:textbox|combobox|button) "\1"/g)]
+      const defaultRows = [
+        ...snap.matchAll(/- text: ([^\n]+)\n\s+- (?:textbox|combobox|button) "\1"/g),
+      ]
         .map((m) => m[1])
         .filter((l) => !["Title", "Contract type", "Legal Owner", "Matter"].includes(l));
       must(typeSelected === "Default", `type preselected ${typeSelected}`);
@@ -448,7 +455,10 @@ async function createContract(role, A, O) {
         "Cancel",
         "Create",
       ];
-      const dialogOrder = await orderOf(snap, orderText.map((l) => `"${l}"`));
+      const dialogOrder = await orderOf(
+        snap,
+        orderText.map((l) => `"${l}"`),
+      );
       must(dialogOrder.sorted, `dialog order ${q(dialogOrder.at)}`);
       // Blank Title.
       await d.getByRole("button", { name: "Create", exact: true }).click();
@@ -463,8 +473,14 @@ async function createContract(role, A, O) {
       await typeBox.selectOption({ label: fxType });
       await d.getByRole("combobox", { name: "Entity" }).waitFor();
       const fxSnap = await d.ariaSnapshot();
-      const rowsShown = ["Entity", "Counterparties", dealLabel, reasonLabel, "Region", "Description"]
-        .map((l) => [l, fxSnap.includes(`"${l}"`)]);
+      const rowsShown = [
+        "Entity",
+        "Counterparties",
+        dealLabel,
+        reasonLabel,
+        "Region",
+        "Description",
+      ].map((l) => [l, fxSnap.includes(`"${l}"`)]);
       const entityOptions = await d
         .getByRole("combobox", { name: "Entity" })
         .locator("option")
@@ -492,7 +508,9 @@ async function createContract(role, A, O) {
       const e5 = await alertText(d);
       await typeOver(d.getByRole("textbox", { name: dealLabel }), "250000");
       await d.getByRole("textbox", { name: reasonLabel }).waitFor();
-      await d.getByRole("combobox", { name: "Entity" }).selectOption({ label: "Helix Software Ltd" });
+      await d
+        .getByRole("combobox", { name: "Entity" })
+        .selectOption({ label: "Helix Software Ltd" });
       const cp = d.getByRole("combobox", { name: "Counterparties" });
       await cp.fill("Litware");
       await d
@@ -536,7 +554,9 @@ async function createContract(role, A, O) {
       const matches = d.getByRole("list", { name: "Matter matches" });
       await matches.getByRole("button").filter({ hasText: matter.title }).first().click();
       const matterValue = await d.getByRole("textbox", { name: "Matter" }).inputValue();
-      await d.getByRole("combobox", { name: "Entity" }).selectOption({ label: "Helix Software Ltd" });
+      await d
+        .getByRole("combobox", { name: "Entity" })
+        .selectOption({ label: "Helix Software Ltd" });
       await d.getByRole("combobox", { name: "Counterparties" }).fill("Litware");
       await d
         .getByRole("listbox", { name: "Counterparty matches" })
@@ -546,9 +566,15 @@ async function createContract(role, A, O) {
       await d.getByRole("textbox", { name: reasonLabel }).fill("Board approval above the limit");
       await d.getByRole("switch", { name: "Confidential — restrict to the contract team" }).click();
       const chooser = page.waitForEvent("filechooser");
-      await d.getByRole("region", { name: "Documents" }).getByRole("button", { name: "Attach documents" }).first().click();
+      await d
+        .getByRole("region", { name: "Documents" })
+        .getByRole("button", { name: "Attach documents" })
+        .first()
+        .click();
       const fileName = `doc030-contracts-a-${role}-draft.pdf`;
-      await (await chooser).setFiles({
+      await (
+        await chooser
+      ).setFiles({
         name: fileName,
         mimeType: "application/pdf",
         buffer: pdf(`${P} ${role} draft ${stamp}`),
@@ -581,9 +607,14 @@ async function createContract(role, A, O) {
       );
       must(team.includes(A.displayName) && team.includes("Tom Iwu"), `team ${team}`);
       must(docs.length === 1, `documents ${docs.length}`);
-      const matterLink = await main.getByRole("link", { name: new RegExp(`^M-${matter.number} `) }).count();
+      const matterLink = await main
+        .getByRole("link", { name: new RegExp(`^M-${matter.number} `) })
+        .count();
       must(matterLink === 1, "linked Matter not shown on Overview");
-      await page.getByRole("toolbar", { name: "Applets" }).getByRole("button", { name: "Contract team" }).click();
+      await page
+        .getByRole("toolbar", { name: "Applets" })
+        .getByRole("button", { name: "Contract team" })
+        .click();
       const applet = page.getByRole("complementary", { name: "Contract team" });
       const roster = (await applet.getByRole("listitem").allInnerTexts()).map((t) =>
         t.replace(/\s+/g, " ").trim(),
@@ -614,15 +645,29 @@ async function createContract(role, A, O) {
       const d = await openCreate(page);
       await d.getByRole("textbox", { name: "Title" }).fill(t);
       const chooser = page.waitForEvent("filechooser");
-      await d.getByRole("region", { name: "Documents" }).getByRole("button", { name: "Attach documents" }).first().click();
-      await (await chooser).setFiles({
+      await d
+        .getByRole("region", { name: "Documents" })
+        .getByRole("button", { name: "Attach documents" })
+        .first()
+        .click();
+      await (
+        await chooser
+      ).setFiles({
         name: `doc030-contracts-a-${role}-retry.pdf`,
         mimeType: "application/pdf",
         buffer: pdf(`${P} ${role} retry ${stamp}`),
       });
       const block = (route) =>
         route.request().method() === "POST"
-          ? route.fulfill({ status: 503, contentType: "application/problem+json", body: JSON.stringify({ title: "Service Unavailable", status: 503, detail: "Upload refused by the walkthrough." }) })
+          ? route.fulfill({
+              status: 503,
+              contentType: "application/problem+json",
+              body: JSON.stringify({
+                title: "Service Unavailable",
+                status: 503,
+                detail: "Upload refused by the walkthrough.",
+              }),
+            })
           : route.continue();
       await page.route(/\/api\/v1\/contracts\/\d+\/documents$/, block);
       await d.getByRole("button", { name: "Create", exact: true }).click();
@@ -630,8 +675,14 @@ async function createContract(role, A, O) {
       await note.waitFor({ timeout: 20000 });
       const buttons = await d.getByRole("button").allInnerTexts();
       const exists = await until(() => titleExists(A, t), "contract exists after failed upload");
-      const created = (await A.api("GET", `/contracts?q=${encodeURIComponent(t)}`)).json.contracts.find((c) => c.title === t);
-      record(t, created.number, "created in the browser dialog; the first upload was refused by a routed 503");
+      const created = (
+        await A.api("GET", `/contracts?q=${encodeURIComponent(t)}`)
+      ).json.contracts.find((c) => c.title === t);
+      record(
+        t,
+        created.number,
+        "created in the browser dialog; the first upload was refused by a routed 503",
+      );
       await page.unroute(/\/api\/v1\/contracts\/\d+\/documents$/, block);
       let how;
       if (role === "administrator") {
@@ -643,8 +694,13 @@ async function createContract(role, A, O) {
         await page.waitForURL(/\/contracts\/\d+$/, { timeout: 20000 });
         how = "Continue opened the Contract without the file";
       }
-      const docs = (await A.api("GET", `/contracts/${created.number}/documents`)).json?.documents ?? [];
-      must(buttons.some((b) => /Retry failed uploads/.test(b)) && buttons.some((b) => /Continue/.test(b)), `buttons ${buttons}`);
+      const docs =
+        (await A.api("GET", `/contracts/${created.number}/documents`)).json?.documents ?? [];
+      must(
+        buttons.some((b) => /Retry failed uploads/.test(b)) &&
+          buttons.some((b) => /Continue/.test(b)),
+        `buttons ${buttons}`,
+      );
       must(exists, "contract missing");
       must(page.url().endsWith(`/contracts/${created.number}`), `url ${page.url()}`);
       must(role === "administrator" ? docs.length === 1 : docs.length === 0, `docs ${docs.length}`);
@@ -666,8 +722,16 @@ async function createContract(role, A, O) {
       const t = await S.tom.api("GET", `/contracts/${number}`);
       await S.marcus.page.goto(`${BASE}/contracts/${number}`);
       await sleep(2500);
-      const body = (await S.marcus.page.locator("main").innerText().catch(() => "")).replace(/\s+/g, " ");
-      must(m.status === 200 && [403, 404].includes(c.status) && t.status === 200, `matter ${m.status} contract ${c.status} tom ${t.status}`);
+      const body = (
+        await S.marcus.page
+          .locator("main")
+          .innerText()
+          .catch(() => "")
+      ).replace(/\s+/g, " ");
+      must(
+        m.status === 200 && [403, 404].includes(c.status) && t.status === 200,
+        `matter ${m.status} contract ${c.status} tom ${t.status}`,
+      );
       must(!body.includes(title), "outsider saw the title");
       return `Marcus Oyelaran: Matter M-${matter.number} answered ${m.status}; C-${number} answered ${c.status}; his page read ${q(body.slice(0, 120))}. Tom Iwu (type default person) answered ${t.status}.`;
     },
@@ -710,7 +774,9 @@ async function createContract(role, A, O) {
         "Confidential — restrict to the contract team",
       ];
       const o = await orderOf(text, labels);
-      const leaked = [dealLabel, reasonLabel, FX.notes.displayName, FX.tier.displayName].filter((l) => text.includes(l));
+      const leaked = [dealLabel, reasonLabel, FX.notes.displayName, FX.tier.displayName].filter(
+        (l) => text.includes(l),
+      );
       must(o.sorted, `order ${q(o.at)}`);
       must(leaked.length === 0, `Fields on Overview ${leaked}`);
       return `Contract card label order: ${q(labels)} (all present, in this order). The fixture Form puts Region before Our entity and Needed by inside the Deal size Branch; the card followed it. No Field (${q(dealLabel)}, ${q(FX.notes.displayName)}, ...) appears on Overview.`;
@@ -742,14 +808,32 @@ async function createContract(role, A, O) {
       };
       const legalOffers = await offers("Legal Owner");
       const businessOffers = await offers("Business Owner");
-      must(!legalOffers.includes("Lena Vogel") && !legalOffers.includes("Gabriel Santos") && legalOffers.includes("Unassigned"), `legal offers ${legalOffers}`);
-      must(businessOffers.includes("Lena Vogel") && !businessOffers.includes("Gabriel Santos"), `business offers ${businessOffers}`);
+      must(
+        !legalOffers.includes("Lena Vogel") &&
+          !legalOffers.includes("Gabriel Santos") &&
+          legalOffers.includes("Unassigned"),
+        `legal offers ${legalOffers}`,
+      );
+      must(
+        businessOffers.includes("Lena Vogel") && !businessOffers.includes("Gabriel Santos"),
+        `business offers ${businessOffers}`,
+      );
       await pick(A, "Legal Owner", "Unassigned");
-      await until(async () => (await getContract(A, number)).contract.manager === null, "Legal Owner cleared");
+      await until(
+        async () => (await getContract(A, number)).contract.manager === null,
+        "Legal Owner cleared",
+      );
       await pick(A, "Legal Owner", O.displayName);
-      await until(async () => (await getContract(A, number)).contract.manager?.displayName === O.displayName, "Legal Owner set");
+      await until(
+        async () => (await getContract(A, number)).contract.manager?.displayName === O.displayName,
+        "Legal Owner set",
+      );
       await pick(A, "Business Owner", "Lena Vogel");
-      await until(async () => (await getContract(A, number)).contract.businessOwner?.displayName === "Lena Vogel", "Business Owner set");
+      await until(
+        async () =>
+          (await getContract(A, number)).contract.businessOwner?.displayName === "Lena Vogel",
+        "Business Owner set",
+      );
       // Tom Iwu: on the team as the type default person, not creator, owner or Administrator.
       await openContract(S.tom, number);
       const tMain = S.tom.page.getByRole("main");
@@ -763,14 +847,30 @@ async function createContract(role, A, O) {
       await sleep(1500);
       const tomBusinessText = (await S.tom.page.getByRole("main").innerText()).replace(/\s+/g, " ");
       const afterBusiness = (await getContract(A, number)).contract.businessOwner?.displayName;
-      const direct = await S.tom.api("PATCH", `/contracts/${number}`, { managerId: uid("Tom Iwu") });
-      const errLegal = tomLegalText.match(/[^.]*(?:could not be saved|cannot|can't|Only)[^.]*\./)?.[0];
-      const errBusiness = tomBusinessText.match(/[^.]*(?:could not be saved|cannot|can't|Only)[^.]*\./)?.[0];
-      must(afterLegal === O.displayName && afterBusiness === "Lena Vogel" && direct.status === 403, `after ${afterLegal} ${afterBusiness} direct ${direct.status}`);
+      const direct = await S.tom.api("PATCH", `/contracts/${number}`, {
+        managerId: uid("Tom Iwu"),
+      });
+      const errLegal = tomLegalText.match(
+        /[^.]*(?:could not be saved|cannot|can't|Only)[^.]*\./,
+      )?.[0];
+      const errBusiness = tomBusinessText.match(
+        /[^.]*(?:could not be saved|cannot|can't|Only)[^.]*\./,
+      )?.[0];
+      must(
+        afterLegal === O.displayName && afterBusiness === "Lena Vogel" && direct.status === 403,
+        `after ${afterLegal} ${afterBusiness} direct ${direct.status}`,
+      );
       await pick(A, "Business Owner", "Unassigned");
-      await until(async () => !(await getContract(A, number)).contract.businessOwner, "Business Owner cleared");
+      await until(
+        async () => !(await getContract(A, number)).contract.businessOwner,
+        "Business Owner cleared",
+      );
       await pick(A, "Business Owner", "Lena Vogel");
-      await until(async () => (await getContract(A, number)).contract.businessOwner?.displayName === "Lena Vogel", "Business Owner set again");
+      await until(
+        async () =>
+          (await getContract(A, number)).contract.businessOwner?.displayName === "Lena Vogel",
+        "Business Owner set again",
+      );
       const seeded = (list) => list.filter((o) => !/DOC-030|doc030/.test(o));
       return `Legal Owner offered ${legalOffers.length} entries, seeded ones ${q(seeded(legalOffers))}; Business Owner offered ${legalOffers.length < businessOffers.length ? "more people, " : ""}${businessOffers.length} entries, seeded ones ${q(seeded(businessOffers))}, including Business User Lena Vogel and not archived Gabriel Santos. Unassigned cleared the Legal Owner and ${O.displayName} was set again; Lena Vogel became Business Owner. Tom Iwu, a team member only, chose himself as Legal Owner: page said ${q(errLegal ?? "(no error text)")}, Legal Owner stayed ${q(afterLegal)}; as Business Owner: ${q(errBusiness ?? "(no error text)")}, Business Owner stayed ${q(afterBusiness)}; a direct PATCH answered ${direct.status} (${q(direct.json?.detail)}). ${A.displayName} then cleared Business Owner with Unassigned and set Lena Vogel again.`;
     },
@@ -786,16 +886,29 @@ async function createContract(role, A, O) {
     "Each change is stored as described.",
     async () => {
       await openContract(A, number);
-      const entityOptions = await main.getByRole("combobox", { name: "Our entity" }).locator("option").allInnerTexts();
-      must(entityOptions[0] === "Not known yet" && !entityOptions.includes(FX.archivedEntity.legalName), `entity options ${entityOptions.slice(0, 3)}`);
+      const entityOptions = await main
+        .getByRole("combobox", { name: "Our entity" })
+        .locator("option")
+        .allInnerTexts();
+      must(
+        entityOptions[0] === "Not known yet" &&
+          !entityOptions.includes(FX.archivedEntity.legalName),
+        `entity options ${entityOptions.slice(0, 3)}`,
+      );
       const cget = async () => (await getContract(A, number)).contract;
-      await main.getByRole("combobox", { name: "Our entity" }).selectOption({ label: "Not known yet" });
+      await main
+        .getByRole("combobox", { name: "Our entity" })
+        .selectOption({ label: "Not known yet" });
       await until(async () => (await cget()).entity === null, "entity cleared");
-      await main.getByRole("combobox", { name: "Our entity" }).selectOption({ label: "Helix Software GmbH" });
+      await main
+        .getByRole("combobox", { name: "Our entity" })
+        .selectOption({ label: "Helix Software GmbH" });
       await until(async () => /GmbH/.test(JSON.stringify((await cget()).entity)), "entity set");
       await main.getByRole("combobox", { name: "Department" }).selectOption({ label: "Finance" });
       await until(async () => (await cget()).owningDepartment != null, "department");
-      await main.getByRole("combobox", { name: "Department" }).selectOption({ label: "No Department" });
+      await main
+        .getByRole("combobox", { name: "Department" })
+        .selectOption({ label: "No Department" });
       await until(async () => (await cget()).owningDepartment == null, "department cleared");
       await main.getByRole("combobox", { name: "Department" }).selectOption({ label: "Finance" });
       await main.getByRole("combobox", { name: "Region" }).selectOption({ label: "EMEA" });
@@ -807,14 +920,22 @@ async function createContract(role, A, O) {
       await main.getByRole("combobox", { name: "Risk" }).selectOption({ label: "Low" });
       await until(async () => {
         const c = await cget();
-        return c.priority === "high" && c.risk === "low" && c.region != null && c.owningDepartment != null;
+        return (
+          c.priority === "high" &&
+          c.risk === "low" &&
+          c.region != null &&
+          c.owningDepartment != null
+        );
       }, "priority, risk, region, department");
       const desc = main.getByRole("textbox", { name: "Description" });
       await desc.fill(`${P} fictional services description.`);
       await sleep(700);
       const beforeLeave = (await cget()).description;
       await main.getByRole("combobox", { name: "Priority" }).focus();
-      await until(async () => ((await cget()).description ?? "").startsWith(`${P} fictional`), "description on leave");
+      await until(
+        async () => ((await cget()).description ?? "").startsWith(`${P} fictional`),
+        "description on leave",
+      );
       await desc.fill("");
       await main.getByRole("combobox", { name: "Priority" }).focus();
       await until(async () => !(await cget()).description, "description cleared");
@@ -841,7 +962,10 @@ async function createContract(role, A, O) {
       await typeOver(value.getByRole("textbox", { name: "Amount" }), "");
       await value.getByRole("textbox", { name: "Amount" }).press("Enter");
       await until(async () => (await cget()).value === null, "value removed");
-      const currencyAfterRemoval = await value.getByRole("combobox", { name: "Currency" }).locator("option:checked").innerText();
+      const currencyAfterRemoval = await value
+        .getByRole("combobox", { name: "Currency" })
+        .locator("option:checked")
+        .innerText();
       await typeOver(value.getByRole("textbox", { name: "Amount" }), "12500");
       await value.getByRole("combobox", { name: "Currency" }).selectOption({ label: "EUR — Euro" });
       await value.getByRole("combobox", { name: "Frequency" }).selectOption({ label: "Annually" });
@@ -864,19 +988,31 @@ async function createContract(role, A, O) {
       const nb = main.getByLabel("Needed by", { exact: true });
       await nb.fill("2026-12-01");
       await nb.press("Enter");
-      await until(async () => /2026-12-01/.test(JSON.stringify((await A.api("GET", `/contracts/${number}/key-dates`)).json ?? {})) || true, "needed by");
+      await until(
+        async () =>
+          /2026-12-01/.test(
+            JSON.stringify((await A.api("GET", `/contracts/${number}/key-dates`)).json ?? {}),
+          ) || true,
+        "needed by",
+      );
       await sleep(1000);
       await section(A, "Fields");
       const region = page.getByRole("region", { name: "Fields" });
       const deal = region.getByRole("textbox", { name: new RegExp(dealLabel) });
       await typeOver(deal, "5000");
       await deal.press("Enter");
-      await until(async () => Number((await getContract(A, number)).contract.customFields[FX.dealSize.slug]) === 5000, "deal size 5000");
+      await until(
+        async () =>
+          Number((await getContract(A, number)).contract.customFields[FX.dealSize.slug]) === 5000,
+        "deal size 5000",
+      );
       await section(A, "Overview");
       await contractCard(page).waitFor();
       await sleep(800);
       const withValue = await main.getByLabel("Needed by", { exact: true }).count();
-      const shownValue = withValue ? await main.getByLabel("Needed by", { exact: true }).inputValue() : null;
+      const shownValue = withValue
+        ? await main.getByLabel("Needed by", { exact: true }).inputValue()
+        : null;
       await main.getByLabel("Needed by", { exact: true }).fill("");
       await main.getByRole("combobox", { name: "Priority" }).focus();
       await sleep(1500);
@@ -884,7 +1020,10 @@ async function createContract(role, A, O) {
       await contractCard(page).waitFor();
       await sleep(800);
       const afterClear = await main.getByLabel("Needed by", { exact: true }).count();
-      must(withValue === 1 && shownValue === "2026-12-01" && afterClear === 0, `with ${withValue} ${shownValue} after ${afterClear}`);
+      must(
+        withValue === 1 && shownValue === "2026-12-01" && afterClear === 0,
+        `with ${withValue} ${shownValue} after ${afterClear}`,
+      );
       return `Needed by 2026-12-01 saved while Deal size was 250000. Fields: Deal size 5000 saved on Enter, so the Branch no longer holds. Overview still showed Needed by with ${q(shownValue)}. After it was emptied and the page reloaded, Overview had ${afterClear} Needed by input.`;
     },
   );
@@ -895,8 +1034,8 @@ async function createContract(role, A, O) {
     role,
     [A.displayName],
     "/contracts/:number (Overview) Counterparties",
-    "Search and select parties; a new name offers Create \"name\"; the first linked Counterparty is primary; Make primary moves it; removing a Counterparty removes only its link",
-    "Create \"name\" links a new party; Litware (first) is primary until Make primary moves it; removal keeps the Counterparty record.",
+    'Search and select parties; a new name offers Create "name"; the first linked Counterparty is primary; Make primary moves it; removing a Counterparty removes only its link',
+    'Create "name" links a new party; Litware (first) is primary until Make primary moves it; removal keeps the Counterparty record.',
     async () => {
       await openContract(A, number);
       const newName = `${P} ${role} Counterparty ${stamp}`;
@@ -912,13 +1051,30 @@ async function createContract(role, A, O) {
         return p.length === 2 ? p : null;
       }, "two counterparties");
       const firstPrimary = two.find((p) => p.isPrimary)?.name;
-      const row = main.getByRole("list", { name: "Counterparties" }).getByRole("listitem").filter({ hasText: newName });
+      const row = main
+        .getByRole("list", { name: "Counterparties" })
+        .getByRole("listitem")
+        .filter({ hasText: newName });
       await row.getByRole("button", { name: "Make primary" }).click();
-      await until(async () => ((await getContract(A, number)).counterparties ?? []).find((p) => p.isPrimary)?.name === newName, "primary moved");
+      await until(
+        async () =>
+          ((await getContract(A, number)).counterparties ?? []).find((p) => p.isPrimary)?.name ===
+          newName,
+        "primary moved",
+      );
       await main.getByRole("button", { name: `Take ${newName} off the contract` }).click();
-      await until(async () => ((await getContract(A, number)).counterparties ?? []).length === 1, "link removed");
-      const still = ((await A.api("GET", `/counterparties?query=${encodeURIComponent(newName)}`)).json?.counterparties ?? []).filter((c) => c.name === newName);
-      must(firstPrimary === "Litware Insurance Company" && still.length === 1, `first ${firstPrimary} still ${still.length}`);
+      await until(
+        async () => ((await getContract(A, number)).counterparties ?? []).length === 1,
+        "link removed",
+      );
+      const still = (
+        (await A.api("GET", `/counterparties?query=${encodeURIComponent(newName)}`)).json
+          ?.counterparties ?? []
+      ).filter((c) => c.name === newName);
+      must(
+        firstPrimary === "Litware Insurance Company" && still.length === 1,
+        `first ${firstPrimary} still ${still.length}`,
+      );
       return `Typing a new name offered ${q(`Create "${newName}"`)} and selecting it linked the party. Litware Insurance Company, linked first in the create dialog, was primary. Make primary moved the designation to the new party. "Take ${newName} off the contract" left one linked party, and the Counterparty search still returns ${still.length} record with that name.`;
     },
   );
@@ -933,7 +1089,10 @@ async function createContract(role, A, O) {
     "Priya added once; Lena Vogel's row shows Business Owner without a remove button; after Unassigned she stays with a remove button; removing her works.",
     async () => {
       await openContract(A, number);
-      await page.getByRole("toolbar", { name: "Applets" }).getByRole("button", { name: "Contract team" }).click();
+      await page
+        .getByRole("toolbar", { name: "Applets" })
+        .getByRole("button", { name: "Contract team" })
+        .click();
       const applet = page.getByRole("complementary", { name: "Contract team" });
       await applet.getByRole("button", { name: "Add team member" }).click();
       const d = page.getByRole("dialog", { name: "Add team member" });
@@ -941,27 +1100,54 @@ async function createContract(role, A, O) {
       await d.getByRole("button", { name: "Add", exact: true }).click();
       await d.waitFor({ state: "hidden" });
       await applet.getByRole("listitem").filter({ hasText: "Priya Raman" }).waitFor();
-      const flat = async () => (await applet.getByRole("listitem").allInnerTexts()).map((r) => r.replace(/\s+/g, " ").trim());
+      const flat = async () =>
+        (await applet.getByRole("listitem").allInnerTexts()).map((r) =>
+          r.replace(/\s+/g, " ").trim(),
+        );
       const rows1 = await flat();
-      const lenaRemove1 = await applet.getByRole("button", { name: "Take Lena Vogel off the contract team" }).count();
+      const lenaRemove1 = await applet
+        .getByRole("button", { name: "Take Lena Vogel off the contract team" })
+        .count();
       await applet.getByRole("button", { name: "Close" }).click();
       await main.getByRole("button", { name: "Business Owner" }).click();
-      await page.getByRole("dialog", { name: "Business Owner" }).getByRole("button", { name: "Unassigned", exact: true }).click();
-      await until(async () => !(await getContract(A, number)).contract.businessOwner, "business owner cleared");
+      await page
+        .getByRole("dialog", { name: "Business Owner" })
+        .getByRole("button", { name: "Unassigned", exact: true })
+        .click();
+      await until(
+        async () => !(await getContract(A, number)).contract.businessOwner,
+        "business owner cleared",
+      );
       await page.reload();
       await page.getByRole("heading", { level: 1 }).waitFor();
-      await page.getByRole("toolbar", { name: "Applets" }).getByRole("button", { name: "Contract team" }).click();
+      await page
+        .getByRole("toolbar", { name: "Applets" })
+        .getByRole("button", { name: "Contract team" })
+        .click();
       await applet.getByRole("listitem").first().waitFor();
       const rows2 = await flat();
-      const lenaRemove2 = applet.getByRole("button", { name: "Take Lena Vogel off the contract team" });
+      const lenaRemove2 = applet.getByRole("button", {
+        name: "Take Lena Vogel off the contract team",
+      });
       const lenaRemove2Count = await lenaRemove2.count();
       await lenaRemove2.click();
-      await until(async () => !(await getContract(A, number)).team.some((m) => m.displayName === "Lena Vogel"), "Lena removed");
+      await until(
+        async () =>
+          !(await getContract(A, number)).team.some((m) => m.displayName === "Lena Vogel"),
+        "Lena removed",
+      );
       const rows3 = await flat();
       await applet.getByRole("button", { name: "Close" }).click();
       must(rows1.filter((r) => r.includes("Priya Raman")).length === 1, "Priya rows");
-      must(rows1.some((r) => /Business Owner/.test(r) && r.includes("Lena Vogel")) && lenaRemove1 === 0, `rows1 ${rows1} remove ${lenaRemove1}`);
-      must(rows1.some((r) => /Legal Owner/.test(r)) && rows1.some((r) => /Creator/.test(r)), `statements ${rows1}`);
+      must(
+        rows1.some((r) => /Business Owner/.test(r) && r.includes("Lena Vogel")) &&
+          lenaRemove1 === 0,
+        `rows1 ${rows1} remove ${lenaRemove1}`,
+      );
+      must(
+        rows1.some((r) => /Legal Owner/.test(r)) && rows1.some((r) => /Creator/.test(r)),
+        `statements ${rows1}`,
+      );
       must(rows2.some((r) => r.includes("Lena Vogel")) && lenaRemove2Count === 1, `rows2 ${rows2}`);
       return `After Add team member > Person Priya Raman > Add the roster read ${q(rows1)}; Lena Vogel (Business Owner) had ${lenaRemove1} remove controls. After Business Owner was set to Unassigned the roster read ${q(rows2)} and Lena had a remove control; "Take Lena Vogel off the contract team" removed her: ${q(rows3)}.`;
     },
@@ -987,16 +1173,28 @@ async function createContract(role, A, O) {
       await typeOver(deal, "300000");
       await deal.press("Tab");
       await until(async () => Number((await cf())[FX.dealSize.slug]) === 300000, "blur save");
-      await region.getByRole("textbox", { name: new RegExp(reasonLabel) }).fill("Board approval required");
+      await region
+        .getByRole("textbox", { name: new RegExp(reasonLabel) })
+        .fill("Board approval required");
       await region.getByRole("textbox", { name: new RegExp(reasonLabel) }).press("Enter");
-      await until(async () => (await cf())[FX.reason.slug] === "Board approval required", "enter save");
+      await until(
+        async () => (await cf())[FX.reason.slug] === "Board approval required",
+        "enter save",
+      );
       await region.getByRole("textbox", { name: new RegExp(reasonLabel) }).fill("Unsaved edit");
       await region.getByRole("textbox", { name: new RegExp(reasonLabel) }).press("Escape");
       await sleep(1000);
-      const shown = await region.getByRole("textbox", { name: new RegExp(reasonLabel) }).inputValue();
+      const shown = await region
+        .getByRole("textbox", { name: new RegExp(reasonLabel) })
+        .inputValue();
       const stored = (await cf())[FX.reason.slug];
-      must(shown === "Board approval required" && stored === "Board approval required", `escape shown ${shown} stored ${stored}`);
-      await region.getByRole("combobox", { name: new RegExp(FX.tier.displayName) }).selectOption({ label: "Elevated" });
+      must(
+        shown === "Board approval required" && stored === "Board approval required",
+        `escape shown ${shown} stored ${stored}`,
+      );
+      await region
+        .getByRole("combobox", { name: new RegExp(FX.tier.displayName) })
+        .selectOption({ label: "Elevated" });
       await until(async () => (await cf())[FX.tier.slug] === "Elevated", "choice save");
       const notes = region.getByRole("textbox", { name: new RegExp(FX.notes.displayName) });
       await notes.click();
@@ -1006,7 +1204,10 @@ async function createContract(role, A, O) {
       await sleep(700);
       const mid = (await cf())[FX.notes.slug] ?? null;
       await deal.focus();
-      await until(async () => (await cf())[FX.notes.slug] === "Line one\nLine two", "long text on leave");
+      await until(
+        async () => (await cf())[FX.notes.slug] === "Line one\nLine two",
+        "long text on leave",
+      );
       return `Fields showed the Branch Row ${q(reasonLabel)} (${reasonCount}). Deal size 300000 saved on Tab; Escalation reason saved on Enter; typing "Unsaved edit" then Escape restored ${q(shown)} and the stored value stayed ${q(stored)}; Risk tier Elevated saved on selection. In Notes, Enter made a new line with nothing saved yet (${q(mid)}); leaving saved "Line one\\nLine two".`;
     },
   );
@@ -1040,23 +1241,41 @@ async function createContract(role, A, O) {
       await typeOver(d.getByRole("textbox", { name: new RegExp(dealLabel) }), "42");
       await d.getByRole("button", { name: "Change type" }).click();
       await d.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
-      const branchAsk = (await d.isVisible()) ? (await d.getByRole("alert").first().innerText().catch(() => (d.innerText()))).replace(/\s+/g, " ") : null;
+      const branchAsk = (await d.isVisible())
+        ? (
+            await d
+              .getByRole("alert")
+              .first()
+              .innerText()
+              .catch(() => d.innerText())
+          ).replace(/\s+/g, " ")
+        : null;
       if (branchAsk) {
-        await d.getByRole("textbox", { name: new RegExp(reasonLabel) }).fill("Not needed below the limit");
+        await d
+          .getByRole("textbox", { name: new RegExp(reasonLabel) })
+          .fill("Not needed below the limit");
         await d.getByRole("button", { name: "Change type" }).click();
         await d.waitFor({ state: "hidden", timeout: 10000 }).catch(() => {});
       }
       const after = (await d.isVisible()) ? (await d.innerText()).replace(/\s+/g, " ") : null;
       // The server's answer to the same re-type without the Branch Row.
-      const n2 = await quickContract(A, `${role} retype server check`, { managerId: uid(A.displayName) });
-      const server = await A.api("PATCH", `/contracts/${n2}`, { contractTypeId: FX.formType.id, customFields: { [FX.dealSize.slug]: 42 } });
+      const n2 = await quickContract(A, `${role} retype server check`, {
+        managerId: uid(A.displayName),
+      });
+      const server = await A.api("PATCH", `/contracts/${n2}`, {
+        contractTypeId: FX.formType.id,
+        customFields: { [FX.dealSize.slug]: 42 },
+      });
       if (branchAsk && !results.productBugs.some((b) => b.id === "retype-dialog-ignores-branch"))
         results.productBugs.push({
           id: "retype-dialog-ignores-branch",
-          summary: "Re-typing a Contract requires a Field Row under a Branch whose condition does not hold. The create dialog and create API skip such a Row (DD-028); the Change contract type dialog and the PATCH seam both demand it.",
+          summary:
+            "Re-typing a Contract requires a Field Row under a Branch whose condition does not hold. The create dialog and create API skip such a Row (DD-028); the Change contract type dialog and the PATCH seam both demand it.",
           reproduction: `Type ${FX.formType.displayName}: required Deal size, then a Branch (Deal size greater than 100000) holding required Escalation reason. On an MSA Contract, choose that type on Overview, enter Deal size 42, select Change type. The dialog lists Escalation reason and refuses with ${JSON.stringify(branchAsk)}. PATCH /api/v1/contracts/${n2} with the same type and Deal size 42 answered ${server.status} ${JSON.stringify(server.json?.detail ?? "")}. Creating a Contract of the same type with Deal size 5000 does not ask for or require Escalation reason.`,
-          source: "apps/web/src/routes/contract-record.tsx RetypeDialog uses unansweredRequired(target.fields) without evaluating the Form's Branches; the contract PATCH re-type check refuses the same way",
-          guideImpact: "None found: the guide says only that Change contract type requests missing required Fields.",
+          source:
+            "apps/web/src/routes/contract-record.tsx RetypeDialog uses unansweredRequired(target.fields) without evaluating the Form's Branches; the contract PATCH re-type check refuses the same way",
+          guideImpact:
+            "None found: the guide says only that Change contract type requests missing required Fields.",
         });
       const c = await until(async () => {
         const r = await getContract(A, n);
@@ -1064,7 +1283,8 @@ async function createContract(role, A, O) {
       }, `retyped (dialog ${after})`);
       const body = (await page.locator("body").innerText()).replace(/\s+/g, " ");
       must(open1 && kept === "MSA" && body.includes(`C-${n}`), `open ${open1} kept ${kept}`);
-      if (role === "legal_team_member") await page.screenshot({ path: path.join(here, "c14-after-change-type.png") });
+      if (role === "legal_team_member")
+        await page.screenshot({ path: path.join(here, "c14-after-change-type.png") });
       return `Choosing ${q(fxType)} on C-${n} (MSA) opened Change contract type: ${q(note.slice(0, 220))}. Change type with blanks kept the dialog open: ${q(refusal.slice(0, 260))}. Cancel kept ${q(kept)}. With Deal size 42 only, Change type ${branchAsk ? `still asked: ${q(branchAsk.slice(0, 160))} (the Branch Row; see productBugs; a PATCH re-type of C-${n2} with Deal size 42 alone answered ${server.status} ${q(server.json?.detail)})` : "closed"}. With the required answers filled, Change type re-typed it to ${q(c.contract.contractTypeName)}; Fields ${q(c.contract.customFields)}; the page still shows C-${n}.`;
     },
   );
@@ -1083,10 +1303,16 @@ async function createContract(role, A, O) {
       await openContract(A, n);
       const text = (await main.innerText()).replace(/\s+/g, " ");
       const note = text.match(/This contract is archived[^.]*\.[^.]*\./)?.[0];
-      const titleEditable = await main.getByRole("textbox", { name: "Title" }).isEditable().catch(() => false);
+      const titleEditable = await main
+        .getByRole("textbox", { name: "Title" })
+        .isEditable()
+        .catch(() => false);
       const addApprover = await page.getByRole("button", { name: "Add approver" }).count();
       await A.api("POST", `/contracts/${n}/restore`, {});
-      must(ar.status < 300 && note && !titleEditable, `archive ${ar.status} note ${note} editable ${titleEditable}`);
+      must(
+        ar.status < 300 && note && !titleEditable,
+        `archive ${ar.status} note ${note} editable ${titleEditable}`,
+      );
       return `C-${n} archived (setup ${ar.status}): the page said ${q(note)}; Title editable: ${titleEditable}. It was restored afterwards.`;
     },
   );
@@ -1103,7 +1329,9 @@ async function createContract(role, A, O) {
       const lp = S.lena.page;
       await lp.goto(`${BASE}/portal/contracts`);
       await sleep(2000);
-      const createControls = await lp.getByRole("button", { name: /create contract|new contract/i }).count() + (await lp.getByRole("link", { name: /create contract|new contract/i }).count());
+      const createControls =
+        (await lp.getByRole("button", { name: /create contract|new contract/i }).count()) +
+        (await lp.getByRole("link", { name: /create contract|new contract/i }).count());
       const post = await S.lena.api("POST", "/contracts", {
         title: `${P} portal refusal ${stamp}`,
         contractTypeId: typeId("MSA"),
@@ -1111,9 +1339,17 @@ async function createContract(role, A, O) {
         isConfidential: false,
         managerId: null,
       });
-      const patch = await S.lena.api("PATCH", `/contracts/${number}`, { managerId: uid("Lena Vogel") });
+      const patch = await S.lena.api("PATCH", `/contracts/${number}`, {
+        managerId: uid("Lena Vogel"),
+      });
       const after = (await getContract(A, number)).contract.manager?.displayName;
-      must(createControls === 0 && post.status >= 400 && patch.status >= 400 && after === O.displayName, `controls ${createControls} post ${post.status} patch ${patch.status} after ${after}`);
+      must(
+        createControls === 0 &&
+          post.status >= 400 &&
+          patch.status >= 400 &&
+          after === O.displayName,
+        `controls ${createControls} post ${post.status} patch ${patch.status} after ${after}`,
+      );
       return `Lena Vogel's Portal Contracts page had ${createControls} create controls. A direct create answered ${post.status}; a Legal Owner change on C-${number} answered ${patch.status}; the Legal Owner is still ${after}.`;
     },
   );
@@ -1208,14 +1444,30 @@ async function contractApprovals(role, A, O) {
       await section(A, "Approvals");
       await card().waitFor();
       const { offered } = await addApprovers(A, ["Priya Raman", "Lena Vogel"]);
-      await card().getByRole("row").filter({ hasText: "Priya Raman" }).filter({ hasText: "Pending" }).waitFor();
-      await card().getByRole("row").filter({ hasText: "Lena Vogel" }).filter({ hasText: "Pending" }).waitFor();
-      const rows = (await approvalsOf(A, number)).map((a) => `${a.approver.displayName}:${a.status}`);
+      await card()
+        .getByRole("row")
+        .filter({ hasText: "Priya Raman" })
+        .filter({ hasText: "Pending" })
+        .waitFor();
+      await card()
+        .getByRole("row")
+        .filter({ hasText: "Lena Vogel" })
+        .filter({ hasText: "Pending" })
+        .waitFor();
+      const rows = (await approvalsOf(A, number)).map(
+        (a) => `${a.approver.displayName}:${a.status}`,
+      );
       await card().getByRole("button", { name: "Add approver" }).click();
       const d = page.getByRole("dialog", { name: "Add approver" });
       const again = await checkboxNames(d);
       await d.getByRole("button", { name: "Cancel" }).click();
-      must(offered.includes("Lena Vogel") && offered.includes("Jonas Weber") && offered.includes("Priya Raman") && !offered.includes("Gabriel Santos"), `offered ${offered}`);
+      must(
+        offered.includes("Lena Vogel") &&
+          offered.includes("Jonas Weber") &&
+          offered.includes("Priya Raman") &&
+          !offered.includes("Gabriel Santos"),
+        `offered ${offered}`,
+      );
       must(!again.includes("Priya Raman") && !again.includes("Lena Vogel"), `re-offered ${again}`);
       must(rows.length === 2 && rows.every((r) => r.endsWith(":pending")), `rows ${rows}`);
       return `Approvals > Approvals & signing > Add approver listed ${offered.length} people under Approvers, including Business Users Lena Vogel and Jonas Weber and not archived Gabriel Santos. After Request approvals: ${q(rows)}. The reopened picker offered ${again.length} people and not Priya Raman or Lena Vogel.`;
@@ -1234,17 +1486,23 @@ async function contractApprovals(role, A, O) {
       const pref = await notificationPrefs(S.priya);
       await S.priya.page.goto(`${BASE}/`);
       await S.priya.page.waitForLoadState("networkidle").catch(() => {});
-      const found = await until(async () => {
-        const r = await yourApprovals(S.priya, title);
-        if (r.mine.length) return r;
-        await S.priya.page.keyboard.press("Escape");
-        await S.priya.page.reload();
-        return null;
-      }, "Priya's pinned approval", 30000);
+      const found = await until(
+        async () => {
+          const r = await yourApprovals(S.priya, title);
+          if (r.mine.length) return r;
+          await S.priya.page.keyboard.press("Escape");
+          await S.priya.page.reload();
+          return null;
+        },
+        "Priya's pinned approval",
+        30000,
+      );
       const item = found.region.getByRole("listitem").filter({ hasText: title });
       const reviewHref = await item.getByRole("link", { name: "Review" }).getAttribute("href");
       await item.getByRole("link", { name: "Review" }).click();
-      await S.priya.page.waitForURL((u) => u.pathname.startsWith(`/contracts/${number}`), { timeout: 15000 });
+      await S.priya.page.waitForURL((u) => u.pathname.startsWith(`/contracts/${number}`), {
+        timeout: 15000,
+      });
       const landed = new URL(S.priya.page.url()).pathname;
       // The requester's own request: A asks A.
       const selfAsk = await addApprovers(A, [A.displayName]);
@@ -1254,12 +1512,26 @@ async function contractApprovals(role, A, O) {
       await A.page.getByRole("heading", { level: 1 }).waitFor();
       const own = await yourApprovals(A, title);
       await A.page.keyboard.press("Escape");
-      const selfRow = (await approvalsOf(A, number)).find((a) => a.approver.displayName === A.displayName && a.status === "pending");
+      const selfRow = (await approvalsOf(A, number)).find(
+        (a) => a.approver.displayName === A.displayName && a.status === "pending",
+      );
       await openContract(A, number, "approvals");
-      await card().getByRole("row").filter({ hasText: A.displayName }).getByRole("button", { name: `Actions for ${A.displayName}` }).click();
+      await card()
+        .getByRole("row")
+        .filter({ hasText: A.displayName })
+        .getByRole("button", { name: `Actions for ${A.displayName}` })
+        .click();
       await page.getByRole("menuitem", { name: "Cancel request" }).click();
-      await until(async () => !(await approvalsOf(A, number)).some((a) => a.id === selfRow.id), "self request cancelled");
-      must(pref?.inApp === true && found.mine.length === 1 && landed === `/contracts/${number}/approvals`, `pref ${q(pref)} mine ${found.mine.length} landed ${landed}`);
+      await until(
+        async () => !(await approvalsOf(A, number)).some((a) => a.id === selfRow.id),
+        "self request cancelled",
+      );
+      must(
+        pref?.inApp === true &&
+          found.mine.length === 1 &&
+          landed === `/contracts/${number}/approvals`,
+        `pref ${q(pref)} mine ${found.mine.length} landed ${landed}`,
+      );
       must(own.mine.length === 0, `own request pinned ${q(own.mine)}`);
       return `Priya Raman's "Assigned to you" in-app preference is ${pref?.inApp}. Her bell showed Your approvals with ${found.items.length} item(s); the one for this Contract read ${q(found.mine[0])} with Review (${reviewHref}), which opened ${landed}. ${A.displayName} (in-app ${aPref?.inApp}) then asked themselves; their bell's Your approvals held ${own.items.length} item(s) and none for this Contract. That self request was cancelled.`;
     },
@@ -1276,7 +1548,9 @@ async function contractApprovals(role, A, O) {
     async () => {
       await openContract(A, number, "approvals");
       const aMenu = await rowActions(A, "Priya Raman");
-      const req = (await approvalsOf(A, number)).find((a) => a.approver.displayName === "Priya Raman");
+      const req = (await approvalsOf(A, number)).find(
+        (a) => a.approver.displayName === "Priya Raman",
+      );
       const wrong = await A.api("POST", `/approvals/${req.id}/decision`, { decision: "approved" });
       const pCard = approvalsCard(S.priya.page);
       await pCard.waitFor();
@@ -1289,8 +1563,14 @@ async function contractApprovals(role, A, O) {
       await rd.getByLabel("Note").fill(`${P} needs a lower liability cap.`);
       await rd.getByRole("button", { name: "Reject", exact: true }).click();
       await rd.waitFor({ state: "hidden" });
-      await pCard.getByRole("row").filter({ hasText: "Priya Raman" }).filter({ hasText: "Rejected" }).waitFor();
-      const again = await S.priya.api("POST", `/approvals/${req.id}/decision`, { decision: "approved" });
+      await pCard
+        .getByRole("row")
+        .filter({ hasText: "Priya Raman" })
+        .filter({ hasText: "Rejected" })
+        .waitFor();
+      const again = await S.priya.api("POST", `/approvals/${req.id}/decision`, {
+        decision: "approved",
+      });
       const decidedMenu = await rowActions(S.priya, "Priya Raman");
       await S.priya.page.reload();
       await S.priya.page.getByRole("heading", { level: 1 }).waitFor();
@@ -1298,9 +1578,17 @@ async function contractApprovals(role, A, O) {
       await S.priya.page.keyboard.press("Escape");
       await page.reload();
       await card().waitFor();
-      const rowText = (await card().getByRole("row").filter({ hasText: "Priya Raman" }).first().innerText()).replace(/\s+/g, " ");
-      must(aMenu && !aMenu.includes("Approve") && !aMenu.includes("Reject") && wrong.status === 403, `A menu ${aMenu} wrong ${wrong.status}`);
-      must(/A decision is final/.test(rdText) && again.status === 409, `dialog ${rdText} again ${again.status}`);
+      const rowText = (
+        await card().getByRole("row").filter({ hasText: "Priya Raman" }).first().innerText()
+      ).replace(/\s+/g, " ");
+      must(
+        aMenu && !aMenu.includes("Approve") && !aMenu.includes("Reject") && wrong.status === 403,
+        `A menu ${aMenu} wrong ${wrong.status}`,
+      );
+      must(
+        /A decision is final/.test(rdText) && again.status === 409,
+        `dialog ${rdText} again ${again.status}`,
+      );
       must(/Rejected/.test(rowText) && rowText.includes("lower liability cap"), `row ${rowText}`);
       must(after.mine.length === 0, `still pinned ${q(after.mine)}`);
       return `${A.displayName}'s actions on Priya's row: ${q(aMenu)}; a direct decision answered ${wrong.status} (${q(wrong.json?.detail)}). Priya's own actions: ${q(pItems)}. Reject opened ${q(rdText.slice(0, 140))}. With a Note she selected Reject in the dialog. ${A.displayName}'s row: ${q(rowText)}. A second decision answered ${again.status}; Priya's decided-row actions: ${decidedMenu ? q(decidedMenu) : "no Actions button"}. Her bell no longer pins this request (${after.items.length} other pinned item(s)).`;
@@ -1324,45 +1612,89 @@ async function contractApprovals(role, A, O) {
       if (await bell.count()) {
         await bell.first().click();
         await sleep(1200);
-        const item = lp.getByRole("dialog", { name: "Notifications" }).getByRole("region", { name: "Your approvals" }).getByRole("listitem").filter({ hasText: title });
-        if (await item.count()) bellHref = await item.first().getByRole("link", { name: "Review" }).getAttribute("href");
+        const item = lp
+          .getByRole("dialog", { name: "Notifications" })
+          .getByRole("region", { name: "Your approvals" })
+          .getByRole("listitem")
+          .filter({ hasText: title });
+        if (await item.count())
+          bellHref = await item.first().getByRole("link", { name: "Review" }).getAttribute("href");
         await lp.keyboard.press("Escape");
       }
-      await lp.getByRole("navigation", { name: "Portal" }).getByRole("link", { name: "Approvals", exact: true }).first().click();
+      await lp
+        .getByRole("navigation", { name: "Portal" })
+        .getByRole("link", { name: "Approvals", exact: true })
+        .first()
+        .click();
       await lp.getByRole("heading", { name: "Your approvals" }).waitFor();
       const tabNav = lp.getByRole("navigation", { name: "Approvals" }).last();
       const tabs = await tabNav.getByRole("link").allInnerTexts();
-      const pendingCurrent = await tabNav.getByRole("link", { name: "Pending" }).getAttribute("aria-current");
+      const pendingCurrent = await tabNav
+        .getByRole("link", { name: "Pending" })
+        .getAttribute("aria-current");
       await lp.getByRole("searchbox", { name: "Search approvals" }).fill(title);
       await lp.getByRole("search").getByRole("button", { name: "Search" }).click();
       await sleep(1500);
-      const rowTexts = (await lp.getByRole("row").allInnerTexts()).map((t) => t.replace(/\s+/g, " "));
-      await lp.getByRole("link", { name: new RegExp(title) }).first().click();
+      const rowTexts = (await lp.getByRole("row").allInnerTexts()).map((t) =>
+        t.replace(/\s+/g, " "),
+      );
+      await lp
+        .getByRole("link", { name: new RegExp(title) })
+        .first()
+        .click();
       await lp.waitForURL(/\/portal\/approvals\/.+/);
       const reviewPath = new URL(lp.url()).pathname;
       await lp.getByText("Your decision").first().waitFor();
       const pageText = (await lp.locator("main").innerText()).replace(/\s+/g, " ");
-      const download = await lp.getByRole("link", { name: "Download" }).or(lp.getByRole("button", { name: "Download" })).count();
+      const download = await lp
+        .getByRole("link", { name: "Download" })
+        .or(lp.getByRole("button", { name: "Download" }))
+        .count();
       await lp.getByLabel("Note (optional)").fill(`${P} business sign-off given.`);
       let dialogs = 0;
       lp.on("dialog", () => dialogs++);
       await lp.getByRole("button", { name: "Approve", exact: true }).click();
-      const saved = await until(async () => (await approvalsOf(A, number)).find((a) => a.approver.displayName === "Lena Vogel" && a.status === "approved"), "Lena approved");
-      const confirmOpen = await lp.getByRole("alertdialog").count() + (await lp.getByRole("dialog").count());
+      const saved = await until(
+        async () =>
+          (await approvalsOf(A, number)).find(
+            (a) => a.approver.displayName === "Lena Vogel" && a.status === "approved",
+          ),
+        "Lena approved",
+      );
+      const confirmOpen =
+        (await lp.getByRole("alertdialog").count()) + (await lp.getByRole("dialog").count());
       await lp.goto(`${BASE}/portal/approvals`);
-      await lp.getByRole("navigation", { name: "Approvals" }).last().getByRole("link", { name: "Completed" }).click();
+      await lp
+        .getByRole("navigation", { name: "Approvals" })
+        .last()
+        .getByRole("link", { name: "Completed" })
+        .click();
       await sleep(1500);
       const completed = (await lp.locator("main").innerText()).replace(/\s+/g, " ").includes(title);
       await page.reload();
       await card().waitFor();
-      const rowText = (await card().getByRole("row").filter({ hasText: "Lena Vogel" }).first().innerText()).replace(/\s+/g, " ");
+      const rowText = (
+        await card().getByRole("row").filter({ hasText: "Lena Vogel" }).first().innerText()
+      ).replace(/\s+/g, " ");
       const team = (await getContract(A, number)).team.map((m) => m.displayName);
-      must(rowTexts.some((t) => t.includes(title)), `search rows ${rowTexts}`);
-      must(pageText.includes(`doc030-contracts-a-${role}-approval.pdf`) && download > 0, `page ${pageText.slice(0, 300)}`);
-      must(confirmOpen === 0 && dialogs === 0 && completed, `confirm ${confirmOpen} completed ${completed}`);
+      must(
+        rowTexts.some((t) => t.includes(title)),
+        `search rows ${rowTexts}`,
+      );
+      must(
+        pageText.includes(`doc030-contracts-a-${role}-approval.pdf`) && download > 0,
+        `page ${pageText.slice(0, 300)}`,
+      );
+      must(
+        confirmOpen === 0 && dialogs === 0 && completed,
+        `confirm ${confirmOpen} completed ${completed}`,
+      );
       must(/Approved/.test(rowText) && rowText.includes("business sign-off"), `row ${rowText}`);
       must(!team.includes("Lena Vogel"), "Lena was added to the team");
-      must(!/Fields|Comments/.test(pageText.replace(/Approval request.*/, "")), "packet shows more than the title and primary Document");
+      must(
+        !/Fields|Comments/.test(pageText.replace(/Approval request.*/, "")),
+        "packet shows more than the title and primary Document",
+      );
       return `Lena Vogel's Portal bell item for this Contract linked to ${q(bellHref)}. Approvals in the Portal navigation opened "Your approvals" with ${q(tabs)} (Pending current: ${pendingCurrent === "page"}). Searching the Contract title listed ${q(rowTexts.filter((t) => t.includes(title)))}. The request opened ${reviewPath}; the page showed ${q(pageText.slice(0, 260))} with ${download} Download control(s). Approve with a Note saved at once (${saved.status}); no confirmation appeared. Completed lists the request. On the Contract: ${q(rowText)}. Lena is not on the Contract team (${q(team)}).`;
     },
   );
@@ -1378,7 +1710,9 @@ async function contractApprovals(role, A, O) {
     async () => {
       await addApprovers(A, ["Priya Raman"]);
       const rows = await until(async () => {
-        const l = (await approvalsOf(A, number)).filter((a) => a.approver.displayName === "Priya Raman");
+        const l = (await approvalsOf(A, number)).filter(
+          (a) => a.approver.displayName === "Priya Raman",
+        );
         return l.length === 2 ? l : null;
       }, "second Priya request");
       return `Priya Raman now has ${q(rows.map((a) => a.status))} requests on C-${number}.`;
@@ -1397,20 +1731,38 @@ async function contractApprovals(role, A, O) {
       await page.reload();
       await card().getByRole("button", { name: "Apply group" }).click();
       const d = page.getByRole("dialog", { name: "Apply approver group" });
-      const startsOn = await d.getByRole("combobox", { name: "Approver group" }).locator("option:checked").innerText();
-      await d.getByRole("combobox", { name: "Approver group" }).selectOption({ label: FX.group.name });
+      const startsOn = await d
+        .getByRole("combobox", { name: "Approver group" })
+        .locator("option:checked")
+        .innerText();
+      await d
+        .getByRole("combobox", { name: "Approver group" })
+        .selectOption({ label: FX.group.name });
       await sleep(400);
       const text = (await d.innerText()).replace(/\s+/g, " ");
       await d.getByRole("button", { name: "Apply group", exact: true }).click();
       await d.waitFor({ state: "hidden" });
       await card().getByRole("row").filter({ hasText: "Marcus Oyelaran" }).waitFor();
-      const before = (await approvalsOf(A, number)).map((a) => `${a.approver.displayName}:${a.status}:${a.source}`);
-      const edit = await D.api("PUT", `/approver-groups/${FX.group.id}/members`, { memberIds: [uid("Marcus Oyelaran"), uid("Priya Raman"), uid("Tom Iwu")] });
-      const after = (await approvalsOf(A, number)).map((a) => `${a.approver.displayName}:${a.status}:${a.source}`);
-      await D.api("PUT", `/approver-groups/${FX.group.id}/members`, { memberIds: [uid("Marcus Oyelaran"), uid("Priya Raman")] });
-      const rowText = (await card().getByRole("row").filter({ hasText: "Marcus Oyelaran" }).innerText()).replace(/\s+/g, " ");
+      const before = (await approvalsOf(A, number)).map(
+        (a) => `${a.approver.displayName}:${a.status}:${a.source}`,
+      );
+      const edit = await D.api("PUT", `/approver-groups/${FX.group.id}/members`, {
+        memberIds: [uid("Marcus Oyelaran"), uid("Priya Raman"), uid("Tom Iwu")],
+      });
+      const after = (await approvalsOf(A, number)).map(
+        (a) => `${a.approver.displayName}:${a.status}:${a.source}`,
+      );
+      await D.api("PUT", `/approver-groups/${FX.group.id}/members`, {
+        memberIds: [uid("Marcus Oyelaran"), uid("Priya Raman")],
+      });
+      const rowText = (
+        await card().getByRole("row").filter({ hasText: "Marcus Oyelaran" }).innerText()
+      ).replace(/\s+/g, " ");
       must(/Asks Marcus Oyelaran\./.test(text) && /Skips 1 person/.test(text), `dialog ${text}`);
-      must(edit.status === 200 && JSON.stringify(before) === JSON.stringify(after), `edit ${edit.status} ${after}`);
+      must(
+        edit.status === 200 && JSON.stringify(before) === JSON.stringify(after),
+        `edit ${edit.status} ${after}`,
+      );
       return `The dialog started on ${q(startsOn)} (this MSA Contract has no default group). With ${q(FX.group.name)} chosen it read ${q(afterPicker(text))}. Apply group added Marcus's row ${q(rowText)}. Requests: ${q(before)}. Daniel Okafor added Tom Iwu to the group (${edit.status}); requests stayed ${q(after)}; the group was then put back.`;
     },
   );
@@ -1425,18 +1777,35 @@ async function contractApprovals(role, A, O) {
     "Marcus (not requester, Legal Owner or Administrator) has no Cancel request on Priya's pending row and is refused; A cancels Marcus's pending row with no confirmation and History records it; the other permitted person cancels Priya's pending row; decided rows stay and cannot be cancelled.",
     async () => {
       const list = await approvalsOf(A, number);
-      const priyaPending = list.find((a) => a.approver.displayName === "Priya Raman" && a.status === "pending");
-      const marcusPending = list.find((a) => a.approver.displayName === "Marcus Oyelaran" && a.status === "pending");
+      const priyaPending = list.find(
+        (a) => a.approver.displayName === "Priya Raman" && a.status === "pending",
+      );
+      const marcusPending = list.find(
+        (a) => a.approver.displayName === "Marcus Oyelaran" && a.status === "pending",
+      );
       await openContract(S.marcus, number, "approvals");
-      const mMenu = await rowActions(S.marcus, "Priya Raman", { row: approvalsCard(S.marcus.page).getByRole("row").filter({ hasText: "Priya Raman" }).filter({ hasText: "Pending" }) });
+      const mMenu = await rowActions(S.marcus, "Priya Raman", {
+        row: approvalsCard(S.marcus.page)
+          .getByRole("row")
+          .filter({ hasText: "Priya Raman" })
+          .filter({ hasText: "Pending" }),
+      });
       const mCancel = await S.marcus.api("DELETE", `/approvals/${priyaPending.id}`);
       // The requester cancels Marcus's group request.
       await page.reload();
-      await card().getByRole("row").filter({ hasText: "Marcus Oyelaran" }).getByRole("button", { name: "Actions for Marcus Oyelaran" }).click();
+      await card()
+        .getByRole("row")
+        .filter({ hasText: "Marcus Oyelaran" })
+        .getByRole("button", { name: "Actions for Marcus Oyelaran" })
+        .click();
       await page.getByRole("menuitem", { name: "Cancel request" }).click();
       await sleep(400);
-      const confirm = await page.getByRole("dialog").count() + (await page.getByRole("alertdialog").count());
-      await until(async () => !(await approvalsOf(A, number)).some((a) => a.id === marcusPending.id), "Marcus row removed");
+      const confirm =
+        (await page.getByRole("dialog").count()) + (await page.getByRole("alertdialog").count());
+      await until(
+        async () => !(await approvalsOf(A, number)).some((a) => a.id === marcusPending.id),
+        "Marcus row removed",
+      );
       // The other permitted person cancels Priya's pending request that A made.
       let who;
       if (role === "administrator") {
@@ -1444,18 +1813,34 @@ async function contractApprovals(role, A, O) {
         who = `${O.displayName} as Legal Owner (not the requester or an Administrator)`;
       } else who = `${O.displayName} as Administrator (not the requester or Legal Owner)`;
       await openContract(O, number, "approvals");
-      const oRow = approvalsCard(O.page).getByRole("row").filter({ hasText: "Priya Raman" }).filter({ hasText: "Pending" });
+      const oRow = approvalsCard(O.page)
+        .getByRole("row")
+        .filter({ hasText: "Priya Raman" })
+        .filter({ hasText: "Pending" });
       await oRow.getByRole("button", { name: "Actions for Priya Raman" }).click();
       await O.page.getByRole("menuitem", { name: "Cancel request" }).click();
-      await until(async () => !(await approvalsOf(A, number)).some((a) => a.id === priyaPending.id), "Priya pending removed");
-      if (role === "administrator") await A.api("PATCH", `/contracts/${number}`, { managerId: uid(A.displayName) });
+      await until(
+        async () => !(await approvalsOf(A, number)).some((a) => a.id === priyaPending.id),
+        "Priya pending removed",
+      );
+      if (role === "administrator")
+        await A.api("PATCH", `/contracts/${number}`, { managerId: uid(A.displayName) });
       const decided = (await approvalsOf(A, number)).filter((a) => a.status !== "pending");
       const decidedMenu = await rowActions(A, "Priya Raman");
-      const decidedCancel = await A.api("DELETE", `/approvals/${decided.find((a) => a.approver.displayName === "Priya Raman").id}`);
+      const decidedCancel = await A.api(
+        "DELETE",
+        `/approvals/${decided.find((a) => a.approver.displayName === "Priya Raman").id}`,
+      );
       const hist = await history(page);
-      must(!(mMenu ?? []).includes("Cancel request") && mCancel.status === 403, `marcus ${mMenu} ${mCancel.status}`);
+      must(
+        !(mMenu ?? []).includes("Cancel request") && mCancel.status === 403,
+        `marcus ${mMenu} ${mCancel.status}`,
+      );
       must(confirm === 0, `confirmation dialogs ${confirm}`);
-      must(decided.length === 2 && decidedCancel.status === 409 && /cancel/i.test(hist), `decided ${decided.length} cancel ${decidedCancel.status}`);
+      must(
+        decided.length === 2 && decidedCancel.status === 409 && /cancel/i.test(hist),
+        `decided ${decided.length} cancel ${decidedCancel.status}`,
+      );
       return `Marcus Oyelaran's actions on Priya's pending row: ${mMenu ? q(mMenu) : "no Actions button"}; a direct cancel answered ${mCancel.status}. ${A.displayName}'s Cancel request removed Marcus's pending row at once; ${confirm} confirmation dialogs appeared. ${who} cancelled Priya's second pending request. Decided rows stayed: ${q(decided.map((a) => `${a.approver.displayName}:${a.status}`))}; actions on Priya's decided row: ${decidedMenu ? q(decidedMenu) : "none"}; cancelling a decided one answered ${decidedCancel.status}. History: ${q(hist.match(/[^.]{0,60}cancelled[^.]{0,80}/g)?.slice(0, 3))}.`;
     },
   );
@@ -1476,18 +1861,30 @@ async function contractApprovals(role, A, O) {
       await page.getByRole("heading", { level: 1 }).waitFor();
       let dialog = await stageMove(A, number, "Active", { expectGate: true });
       const text = (await dialog.innerText()).replace(/\s+/g, " ");
-      if (role === "legal_team_member") await page.screenshot({ path: path.join(here, "c16-move-past-approval.png") });
+      if (role === "legal_team_member")
+        await page.screenshot({ path: path.join(here, "c16-move-past-approval.png") });
       await dialog.getByRole("button", { name: "Cancel" }).click();
       await dialog.waitFor({ state: "hidden" });
       await sleep(800);
       const kept = (await getContract(A, number)).contract.statusName;
       dialog = await stageMove(A, number, "Active", { expectGate: true });
       await dialog.getByRole("button", { name: "Move anyway" }).click();
-      await until(async () => (await getContract(A, number)).contract.statusName === "Active", "moved");
-      const states = (await approvalsOf(A, number)).map((a) => `${a.approver.displayName}:${a.status}`);
+      await until(
+        async () => (await getContract(A, number)).contract.statusName === "Active",
+        "moved",
+      );
+      const states = (await approvalsOf(A, number)).map(
+        (a) => `${a.approver.displayName}:${a.status}`,
+      );
       const hist = await history(page);
-      must(/Rejected/.test(text) && /Pending/.test(text) && kept === "Awaiting approval", `${text} kept ${kept}`);
-      must(states.includes("Tom Iwu:pending") && states.includes("Priya Raman:rejected"), `${states}`);
+      must(
+        /Rejected/.test(text) && /Pending/.test(text) && kept === "Awaiting approval",
+        `${text} kept ${kept}`,
+      );
+      must(
+        states.includes("Tom Iwu:pending") && states.includes("Priya Raman:rejected"),
+        `${states}`,
+      );
       must(/override|past approval|anyway/i.test(hist), `history ${hist.slice(0, 300)}`);
       return `Dialog: ${q(text.slice(0, 320))}. Cancel kept ${q(kept)}; Move anyway saved Active. History: ${q(hist.match(/[^.]{0,80}(?:override|past approval|anyway)[^.]{0,80}/i)?.[0])}. Approvals afterwards: ${q(states)}.`;
     },
@@ -1502,13 +1899,18 @@ async function contractApprovals(role, A, O) {
     "On a Confidential Contract the picker offers only staff who can already open it plus Business Users; if the primary Document is Confidential a staff approver outside its audience is refused by name and a Business approver is not refused but sees no Document",
     "Confidential Contract: Priya and Marcus not offered, Lena offered. Open Contract with a Confidential primary Document: Marcus refused by name and no request made; Lena asked; her review page shows No document attached.",
     async () => {
-      const conf = await quickContract(A, `${role} confidential approvals`, { confidential: true, managerId: uid(A.displayName) });
+      const conf = await quickContract(A, `${role} confidential approvals`, {
+        confidential: true,
+        managerId: uid(A.displayName),
+      });
       await openContract(A, conf, "approvals");
       await card().getByRole("button", { name: "Add approver" }).click();
       const d = page.getByRole("dialog", { name: "Add approver" });
       const offered = await checkboxNames(d);
       await d.getByRole("button", { name: "Cancel" }).click();
-      const docNo = await quickContract(A, `${role} confidential document`, { managerId: uid(A.displayName) });
+      const docNo = await quickContract(A, `${role} confidential document`, {
+        managerId: uid(A.displayName),
+      });
       const doc = await uploadPrimary(A, docNo, `doc030-contracts-a-${role}-restricted.pdf`);
       const mark = await A.api("PATCH", `/documents/${doc.id}`, { isConfidential: true });
       await openContract(A, docNo, "approvals");
@@ -1516,18 +1918,37 @@ async function contractApprovals(role, A, O) {
       const d2 = page.getByRole("dialog", { name: "Add approver" });
       await d2.getByRole("checkbox", { name: "Marcus Oyelaran" }).check();
       await d2.getByRole("button", { name: "Request approvals" }).click();
-      const refusal = (await d2.getByRole("alert").first().innerText({ timeout: 10000 }).catch(() => "(no alert)")).trim();
+      const refusal = (
+        await d2
+          .getByRole("alert")
+          .first()
+          .innerText({ timeout: 10000 })
+          .catch(() => "(no alert)")
+      ).trim();
       await d2.getByRole("button", { name: "Cancel" }).click();
       const none = (await approvalsOf(A, docNo)).length;
       await addApprovers(A, ["Lena Vogel"]);
-      const lenaReq = (await approvalsOf(A, docNo)).find((a) => a.approver.displayName === "Lena Vogel");
+      const lenaReq = (await approvalsOf(A, docNo)).find(
+        (a) => a.approver.displayName === "Lena Vogel",
+      );
       const lp = S.lena.page;
       await lp.goto(`${BASE}/portal/approvals/${lenaReq.id}`);
       await lp.getByText("Your decision").first().waitFor({ timeout: 20000 });
       const lenaText = (await lp.locator("main").innerText()).replace(/\s+/g, " ");
-      must(!offered.includes("Priya Raman") && !offered.includes("Marcus Oyelaran") && offered.includes("Lena Vogel"), `offered ${offered}`);
-      must(mark.status === 200 && refusal.includes("Marcus Oyelaran") && none === 0, `mark ${mark.status} refusal ${refusal} none ${none}`);
-      must(/No document attached/.test(lenaText) && !lenaText.includes("restricted.pdf"), `lena ${lenaText.slice(0, 300)}`);
+      must(
+        !offered.includes("Priya Raman") &&
+          !offered.includes("Marcus Oyelaran") &&
+          offered.includes("Lena Vogel"),
+        `offered ${offered}`,
+      );
+      must(
+        mark.status === 200 && refusal.includes("Marcus Oyelaran") && none === 0,
+        `mark ${mark.status} refusal ${refusal} none ${none}`,
+      );
+      must(
+        /No document attached/.test(lenaText) && !lenaText.includes("restricted.pdf"),
+        `lena ${lenaText.slice(0, 300)}`,
+      );
       const seededOffered = offered.filter((o) => !/DOC-030|doc030/i.test(o));
       return `Confidential C-${conf}: the picker offered ${offered.length} people; the seeded ones were ${q(seededOffered)} (no Priya Raman or Marcus Oyelaran; Business Users present). Open C-${docNo} with its primary Document marked Confidential (${mark.status}): asking Marcus Oyelaran showed ${q(refusal)} and ${none} requests exist. Asking Lena Vogel succeeded; her review page read ${q(lenaText.slice(0, 220))}.`;
     },
@@ -1542,7 +1963,10 @@ async function contractApprovals(role, A, O) {
     "A Contract inherits its type's default group; the dialog starts on it; under Administrators only a Legal Team Member cannot change the choice and sees Only an administrator can choose a different group.; an archived default shows Default group unavailable — contact an administrator",
     "Dialog starts on the default; the lock follows the role and the setting; the archived default reads as unavailable and another group can be chosen by someone allowed to override.",
     async () => {
-      const n = await quickContract(A, `${role} default group`, { contractTypeId: FX.defaultType.id, managerId: uid(A.displayName) });
+      const n = await quickContract(A, `${role} default group`, {
+        contractTypeId: FX.defaultType.id,
+        managerId: uid(A.displayName),
+      });
       await openContract(A, n, "approvals");
       await card().getByRole("button", { name: "Apply group" }).click();
       const d = page.getByRole("dialog", { name: "Apply approver group" });
@@ -1551,8 +1975,16 @@ async function contractApprovals(role, A, O) {
       const openEnabled = await box.isEnabled();
       await d.getByRole("button", { name: "Cancel" }).click();
       // Organization setting: Administrators only, set and put back around this check.
-      const set = await D.api("PUT", "/org/approval-policy", { allowLegalApproverGroupOverride: false });
-      results.orgSettings.push({ at: new Date().toISOString(), setting: "Who can override a default approver group?", value: "Administrators only", by: "Daniel Okafor (API, fixture)", status: set.status });
+      const set = await D.api("PUT", "/org/approval-policy", {
+        allowLegalApproverGroupOverride: false,
+      });
+      results.orgSettings.push({
+        at: new Date().toISOString(),
+        setting: "Who can override a default approver group?",
+        value: "Administrators only",
+        by: "Daniel Okafor (API, fixture)",
+        status: set.status,
+      });
       let lockedEnabled, lockedText, direct;
       try {
         await page.reload();
@@ -1562,8 +1994,16 @@ async function contractApprovals(role, A, O) {
         await d.getByRole("button", { name: "Cancel" }).click();
         direct = await A.api("POST", `/contracts/${n}/approvals/group`, { groupId: FX.group.id });
       } finally {
-        const back = await D.api("PUT", "/org/approval-policy", { allowLegalApproverGroupOverride: true });
-        results.orgSettings.push({ at: new Date().toISOString(), setting: "Who can override a default approver group?", value: "Legal team members and administrators", by: "Daniel Okafor (API, restored)", status: back.status });
+        const back = await D.api("PUT", "/org/approval-policy", {
+          allowLegalApproverGroupOverride: true,
+        });
+        results.orgSettings.push({
+          at: new Date().toISOString(),
+          setting: "Who can override a default approver group?",
+          value: "Legal team members and administrators",
+          by: "Daniel Okafor (API, restored)",
+          status: back.status,
+        });
       }
       // Archived default.
       const arch = await D.api("POST", `/approver-groups/${FX.defaultGroup.id}/archive`, {});
@@ -1579,12 +2019,24 @@ async function contractApprovals(role, A, O) {
       }
       const expectLocked = role === "legal_team_member";
       must(start === FX.defaultGroup.name && openEnabled, `start ${start} enabled ${openEnabled}`);
-      must(expectLocked ? !lockedEnabled && lockedText.includes("Only an administrator can choose a different group.") : lockedEnabled && !lockedText.includes("Only an administrator"), `locked ${lockedEnabled} ${lockedText}`);
+      must(
+        expectLocked
+          ? !lockedEnabled &&
+              lockedText.includes("Only an administrator can choose a different group.")
+          : lockedEnabled && !lockedText.includes("Only an administrator"),
+        `locked ${lockedEnabled} ${lockedText}`,
+      );
       must(expectLocked ? direct.status === 403 : direct.status < 300, `direct ${direct.status}`);
-      must(arch.status < 300 && unavailable === "Default group unavailable — contact an administrator" && canChoose, `archived ${arch.status} ${unavailable} ${canChoose}`);
+      must(
+        arch.status < 300 &&
+          unavailable === "Default group unavailable — contact an administrator" &&
+          canChoose,
+        `archived ${arch.status} ${unavailable} ${canChoose}`,
+      );
       if (!expectLocked) {
         const rows = await approvalsOf(A, n);
-        for (const r of rows.filter((x) => x.status === "pending")) await A.api("DELETE", `/approvals/${r.id}`);
+        for (const r of rows.filter((x) => x.status === "pending"))
+          await A.api("DELETE", `/approvals/${r.id}`);
       }
       return `C-${n} of type ${q(FX.defaultType.displayName)} opened Apply approver group on ${q(start)} (select enabled: ${openEnabled}). With the organization setting at Administrators only (set ${set.status}, restored right after), the select was ${lockedEnabled ? "enabled" : "disabled"} and the dialog ${lockedText.includes("Only an administrator") ? 'said "Only an administrator can choose a different group."' : "showed no lock note"}; applying a different group through the API answered ${direct.status}${expectLocked ? "" : " (the requests it made were cancelled)"}. With the default group archived (${arch.status}) the dialog started on ${q(unavailable)} and the select was enabled for this person; the group was restored.`;
     },
@@ -1599,10 +2051,20 @@ SECTIONS["contract-approvals"] = async () => {
     must(g.status === 201, `default group ${g.status} ${q(g.json)}`);
     FX.defaultGroup = g.json.approverGroup ?? g.json.group;
     FX.defaultType = await makeType("Default group type");
-    const set = await D.api("PUT", `/contract-types/${FX.defaultType.id}/approval-default`, { groupId: FX.defaultGroup.id });
+    const set = await D.api("PUT", `/contract-types/${FX.defaultType.id}/approval-default`, {
+      groupId: FX.defaultGroup.id,
+    });
     must(set.status < 300, `approval default ${set.status} ${q(set.json)}`);
-    fixture("Approver group", FX.defaultGroup.name, "Priya Raman and Tom Iwu; the default group of the next type");
-    fixture("Contract type", FX.defaultType.displayName, `default approver group ${FX.defaultGroup.name}`);
+    fixture(
+      "Approver group",
+      FX.defaultGroup.name,
+      "Priya Raman and Tom Iwu; the default group of the next type",
+    );
+    fixture(
+      "Contract type",
+      FX.defaultType.displayName,
+      `default approver group ${FX.defaultGroup.name}`,
+    );
   }
   for (const role of ROLES) {
     const A = role === "administrator" ? S.daniel : S.nadia;
@@ -1615,7 +2077,11 @@ SECTIONS["contract-approvals"] = async () => {
 // V-C55 approver-groups
 // =====================================================================
 /** The Apply dialog text after the group picker's option list. */
-const afterPicker = (text) => (text.match(/(Asks .*|This group has nobody.*|Everybody in this group.*)$/)?.[1] ?? text).slice(0, 320);
+const afterPicker = (text) =>
+  (text.match(/(Asks .*|This group has nobody.*|Everybody in this group.*)$/)?.[1] ?? text).slice(
+    0,
+    320,
+  );
 async function approverGroups() {
   const art = "approver-groups";
   const sc = "V-C55";
@@ -1635,13 +2101,28 @@ async function approverGroups() {
   const memberBox = (scope, name) => scope.getByRole("checkbox", { name: new RegExp(`^${name}`) });
 
   // Fixture: an invited Legal Team Member who is archived later in the walk.
-  const extra = { name: `${P} Approver ${stamp}`, email: `doc030-contracts-a-approver-${stamp}@helix.example` };
-  const inv = await A.api("POST", "/auth/invites", { email: extra.email, displayName: extra.name, role: "legal_team_member" });
+  const extra = {
+    name: `${P} Approver ${stamp}`,
+    email: `doc030-contracts-a-approver-${stamp}@helix.example`,
+  };
+  const inv = await A.api("POST", "/auth/invites", {
+    email: extra.email,
+    displayName: extra.name,
+    role: "legal_team_member",
+  });
   must(inv.status === 201, `invite ${inv.status} ${q(inv.json)}`);
   extra.id = inv.json.user.id;
-  fixture("User", extra.name, "invited Legal Team Member; archived during the walk to test Can no longer approve");
+  fixture(
+    "User",
+    extra.name,
+    "invited Legal Team Member; archived during the walk to test Can no longer approve",
+  );
   const agType = await makeType("Approval defaults type");
-  fixture("Contract type", agType.displayName, "its default group is set in the browser during V-C55");
+  fixture(
+    "Contract type",
+    agType.displayName,
+    "its default group is set in the browser during V-C55",
+  );
 
   await step(
     art,
@@ -1657,8 +2138,14 @@ async function approverGroups() {
       await n.waitForLoadState("networkidle").catch(() => {});
       await sleep(1000);
       const landed = new URL(n.url()).pathname;
-      const create = await S.nadia.api("POST", "/approver-groups", { name: `${P} denied ${stamp}`, memberIds: [] });
-      must(landed === "/settings/profile" && create.status === 403, `landed ${landed} create ${create.status}`);
+      const create = await S.nadia.api("POST", "/approver-groups", {
+        name: `${P} denied ${stamp}`,
+        memberIds: [],
+      });
+      must(
+        landed === "/settings/profile" && create.status === 403,
+        `landed ${landed} create ${create.status}`,
+      );
       return `Nadia Haddad opened the address and landed on ${landed}. A group create through the API answered ${create.status}.`;
     },
   );
@@ -1675,8 +2162,14 @@ async function approverGroups() {
       await page.goto(`${BASE}/`);
       await page.getByRole("banner").getByRole("button", { name: "Daniel Okafor" }).click();
       await page.getByRole("menuitem", { name: "Settings" }).click();
-      await page.getByRole("navigation", { name: "Settings sections" }).getByRole("link", { name: "Contracts" }).click();
-      await page.getByRole("navigation", { name: "Contracts panes" }).getByRole("link", { name: "Approver groups" }).click();
+      await page
+        .getByRole("navigation", { name: "Settings sections" })
+        .getByRole("link", { name: "Contracts" })
+        .click();
+      await page
+        .getByRole("navigation", { name: "Contracts panes" })
+        .getByRole("link", { name: "Approver groups" })
+        .click();
       await page.getByRole("heading", { name: "Approver groups", level: 2 }).waitFor();
       const reached = new URL(page.url()).pathname;
       await page.getByRole("button", { name: "Add group" }).click();
@@ -1691,7 +2184,8 @@ async function approverGroups() {
       await page.getByRole("button", { name: `Edit ${groupName}` }).click();
       const e = page.getByRole("dialog", { name: `Edit ${groupName}` });
       const checked = [];
-      for (const n of ["Priya Raman", "Lena Vogel", extra.name]) checked.push(await memberBox(e, n).isChecked());
+      for (const n of ["Priya Raman", "Lena Vogel", extra.name])
+        checked.push(await memberBox(e, n).isChecked());
       await e.getByRole("button", { name: "Cancel" }).click();
       const names = (await listGroups()).filter((g) => !g.archivedAt).map((g) => g.name);
       const shown = [];
@@ -1703,7 +2197,12 @@ async function approverGroups() {
       G.group = (await listGroups()).find((g) => g.name === groupName);
       fixture("Approver group", groupName, "created in the browser during V-C55");
       must(reached === "/settings/contracts/approver-groups", reached);
-      must(offered.some((o) => o.startsWith("Lena Vogel")) && offered.some((o) => o.startsWith("Jonas Weber")) && !offered.some((o) => o.startsWith("Gabriel Santos")), `offered ${offered}`);
+      must(
+        offered.some((o) => o.startsWith("Lena Vogel")) &&
+          offered.some((o) => o.startsWith("Jonas Weber")) &&
+          !offered.some((o) => o.startsWith("Gabriel Santos")),
+        `offered ${offered}`,
+      );
       must(checked.every(Boolean) && G.group.memberIds.length === 3, `checked ${checked}`);
       must(JSON.stringify(shown) === JSON.stringify(sortedShown), `order ${shown}`);
       return `The profile menu path reached ${reached}. Add approver group offered ${offered.length} people under Members, including Business Users Lena Vogel and Jonas Weber and the invited fixture user, and not archived Gabriel Santos. After Add group and a reload, Edit showed all three chosen members checked. Page list order ${q(shown)} is name order (${names.length} live groups).`;
@@ -1721,7 +2220,9 @@ async function approverGroups() {
     "The dialog asks Lena Vogel and the fixture user and skips Priya (already pending); two new Pending rows; Lena is not on the Contract team.",
     async () => {
       c1 = await quickContract(A, "groups apply one", { managerId: uid(A.displayName) });
-      const manual = await A.api("POST", `/contracts/${c1}/approvals`, { approverIds: [uid("Priya Raman")] });
+      const manual = await A.api("POST", `/contracts/${c1}/approvals`, {
+        approverIds: [uid("Priya Raman")],
+      });
       await openContract(A, c1);
       await section(A, "Approvals");
       await card().getByRole("button", { name: "Apply group" }).click();
@@ -1731,13 +2232,28 @@ async function approverGroups() {
       const text = (await d.innerText()).replace(/\s+/g, " ");
       await d.getByRole("button", { name: "Apply group", exact: true }).click();
       await d.waitFor({ state: "hidden" });
-      await card().getByRole("row").filter({ hasText: "Lena Vogel" }).filter({ hasText: "Pending" }).waitFor();
-      const rows = (await approvalsOf(A, c1)).map((a) => `${a.approver.displayName}:${a.status}:${a.source}`);
+      await card()
+        .getByRole("row")
+        .filter({ hasText: "Lena Vogel" })
+        .filter({ hasText: "Pending" })
+        .waitFor();
+      const rows = (await approvalsOf(A, c1)).map(
+        (a) => `${a.approver.displayName}:${a.status}:${a.source}`,
+      );
       G.c1Rows = rows;
       const team = (await getContract(A, c1)).team.map((m) => m.displayName);
       must(manual.status === 201, `manual ${manual.status}`);
-      must(/Asks /.test(text) && text.includes("Lena Vogel") && text.includes(extra.name) && /Skips 1 person/.test(text), `dialog ${text}`);
-      must(rows.length === 3 && rows.filter((r) => r.startsWith("Priya Raman")).length === 1, `rows ${rows}`);
+      must(
+        /Asks /.test(text) &&
+          text.includes("Lena Vogel") &&
+          text.includes(extra.name) &&
+          /Skips 1 person/.test(text),
+        `dialog ${text}`,
+      );
+      must(
+        rows.length === 3 && rows.filter((r) => r.startsWith("Priya Raman")).length === 1,
+        `rows ${rows}`,
+      );
       must(!team.includes("Lena Vogel"), `team ${team}`);
       return `On C-${c1}, after one manual request for Priya Raman, Apply group with ${q(groupName)} read ${q(afterPicker(text))}. Requests afterwards: ${q(rows)}. Contract team: ${q(team)} (no Lena Vogel).`;
     },
@@ -1759,7 +2275,13 @@ async function approverGroups() {
       await d.getByRole("combobox", { name: "Approver group" }).selectOption({ label: groupName });
       const allPendingText = (await d.innerText()).replace(/\s+/g, " ");
       await d.getByRole("button", { name: "Apply group", exact: true }).click();
-      const allPendingAlert = (await d.getByRole("alert").first().innerText({ timeout: 8000 }).catch(() => "(no alert)")).trim();
+      const allPendingAlert = (
+        await d
+          .getByRole("alert")
+          .first()
+          .innerText({ timeout: 8000 })
+          .catch(() => "(no alert)")
+      ).trim();
       await d.getByRole("button", { name: "Cancel" }).click();
       const c1Count = (await approvalsOf(A, c1)).length;
       // Empty group.
@@ -1771,32 +2293,63 @@ async function approverGroups() {
       await d.getByRole("combobox", { name: "Approver group" }).selectOption({ label: emptyName });
       const emptyText = (await d.innerText()).replace(/\s+/g, " ");
       await d.getByRole("button", { name: "Apply group", exact: true }).click();
-      const emptyAlert = (await d.getByRole("alert").first().innerText({ timeout: 8000 }).catch(() => "(no alert)")).trim();
+      const emptyAlert = (
+        await d
+          .getByRole("alert")
+          .first()
+          .innerText({ timeout: 8000 })
+          .catch(() => "(no alert)")
+      ).trim();
       await d.getByRole("button", { name: "Cancel" }).click();
       const c2Count = (await approvalsOf(A, c2)).length;
       // Confidential Contract: Priya has no access.
-      const c3 = await quickContract(A, "groups confidential", { confidential: true, managerId: uid(A.displayName) });
+      const c3 = await quickContract(A, "groups confidential", {
+        confidential: true,
+        managerId: uid(A.displayName),
+      });
       await openContract(A, c3, "approvals");
       await card().getByRole("button", { name: "Apply group" }).click();
       await d.getByRole("combobox", { name: "Approver group" }).selectOption({ label: groupName });
       await d.getByRole("button", { name: "Apply group", exact: true }).click();
-      const confAlert = (await d.getByRole("alert").first().innerText({ timeout: 8000 }).catch(() => "(no alert)")).trim();
+      const confAlert = (
+        await d
+          .getByRole("alert")
+          .first()
+          .innerText({ timeout: 8000 })
+          .catch(() => "(no alert)")
+      ).trim();
       await d.getByRole("button", { name: "Cancel" }).click();
       const c3Count = (await approvalsOf(A, c3)).length;
       // Confidential primary Document on an open Contract.
-      const c4 = await quickContract(A, "groups confidential document", { managerId: uid(A.displayName) });
+      const c4 = await quickContract(A, "groups confidential document", {
+        managerId: uid(A.displayName),
+      });
       const doc = await uploadPrimary(A, c4, "doc030-contracts-a-groups-restricted.pdf");
       const mark = await A.api("PATCH", `/documents/${doc.id}`, { isConfidential: true });
       await openContract(A, c4, "approvals");
       await card().getByRole("button", { name: "Apply group" }).click();
       await d.getByRole("combobox", { name: "Approver group" }).selectOption({ label: groupName });
       await d.getByRole("button", { name: "Apply group", exact: true }).click();
-      const docAlert = (await d.getByRole("alert").first().innerText({ timeout: 8000 }).catch(() => "(no alert)")).trim();
+      const docAlert = (
+        await d
+          .getByRole("alert")
+          .first()
+          .innerText({ timeout: 8000 })
+          .catch(() => "(no alert)")
+      ).trim();
       await d.getByRole("button", { name: "Cancel" }).click();
       const c4Count = (await approvalsOf(A, c4)).length;
       must(eg.status === 201 && mark.status === 200, `setup ${eg.status} ${mark.status}`);
-      must(/already has a request open/.test(allPendingText) && allPendingAlert !== "(no alert)" && c1Count === 3, `all pending ${allPendingText} ${allPendingAlert} ${c1Count}`);
-      must(/nobody to ask/.test(emptyText) && emptyAlert !== "(no alert)" && c2Count === 0, `empty ${emptyText} ${emptyAlert} ${c2Count}`);
+      must(
+        /already has a request open/.test(allPendingText) &&
+          allPendingAlert !== "(no alert)" &&
+          c1Count === 3,
+        `all pending ${allPendingText} ${allPendingAlert} ${c1Count}`,
+      );
+      must(
+        /nobody to ask/.test(emptyText) && emptyAlert !== "(no alert)" && c2Count === 0,
+        `empty ${emptyText} ${emptyAlert} ${c2Count}`,
+      );
       const namesStaff = (t) => ["Priya Raman", extra.name].some((n) => t.includes(n));
       must(namesStaff(confAlert) && c3Count === 0, `confidential ${confAlert} ${c3Count}`);
       must(namesStaff(docAlert) && c4Count === 0, `document ${docAlert} ${c4Count}`);
@@ -1814,7 +2367,9 @@ async function approverGroups() {
     "The next apply asks only the live members; the editor flags the archived member; Save with it ticked is refused; after unticking, Save works; C-1's requests are unchanged.",
     async () => {
       const arch = await A.api("POST", `/users/${extra.id}/archive`, {});
-      const c5 = await quickContract(A, "groups archived member", { managerId: uid(A.displayName) });
+      const c5 = await quickContract(A, "groups archived member", {
+        managerId: uid(A.displayName),
+      });
       await openContract(A, c5, "approvals");
       await card().getByRole("button", { name: "Apply group" }).click();
       const d = page.getByRole("dialog", { name: "Apply approver group" });
@@ -1826,23 +2381,50 @@ async function approverGroups() {
       await page.goto(`${BASE}/settings/contracts/approver-groups`);
       await page.getByRole("button", { name: `Edit ${groupName}` }).click();
       const e = page.getByRole("dialog", { name: `Edit ${groupName}` });
-      const flagged = await e.getByRole("listitem").filter({ hasText: extra.name }).getByText("Can no longer approve").count();
+      const flagged = await e
+        .getByRole("listitem")
+        .filter({ hasText: extra.name })
+        .getByText("Can no longer approve")
+        .count();
       // A real member change (add Tom Iwu) while the archived member is still ticked.
       await memberBox(e, "Tom Iwu").check();
       await e.getByRole("button", { name: "Save" }).click();
-      const saveAlert = (await e.getByRole("alert").first().innerText({ timeout: 8000 }).catch(() => "(no alert)")).trim();
+      const saveAlert = (
+        await e
+          .getByRole("alert")
+          .first()
+          .innerText({ timeout: 8000 })
+          .catch(() => "(no alert)")
+      ).trim();
       const stillOpen = await e.isVisible();
       const refusedList = (await listGroups()).find((g) => g.name === groupName).memberIds.length;
       await memberBox(e, extra.name).uncheck();
       await e.getByRole("button", { name: "Save" }).click();
       await e.waitFor({ state: "hidden" });
       const after = (await listGroups()).find((g) => g.name === groupName);
-      const direct = await A.api("PUT", `/approver-groups/${G.group.id}/members`, { memberIds: [uid("Priya Raman"), extra.id] });
-      const c1Now = (await approvalsOf(A, c1)).map((a) => `${a.approver.displayName}:${a.status}:${a.source}`);
+      const direct = await A.api("PUT", `/approver-groups/${G.group.id}/members`, {
+        memberIds: [uid("Priya Raman"), extra.id],
+      });
+      const c1Now = (await approvalsOf(A, c1)).map(
+        (a) => `${a.approver.displayName}:${a.status}:${a.source}`,
+      );
       must(arch.status < 300, `archive ${arch.status}`);
-      must(!text.includes(extra.name) && rows.length === 2 && !rows.includes(extra.name), `apply ${text} rows ${rows}`);
-      must(flagged === 1 && saveAlert !== "(no alert)" && stillOpen, `flag ${flagged} alert ${saveAlert} open ${stillOpen}`);
-      must(refusedList === 3 && after.memberIds.length === 3 && after.memberIds.includes(uid("Tom Iwu")) && !after.memberIds.includes(extra.id) && direct.status === 422, `refused ${refusedList} after ${after.memberIds.length} direct ${direct.status}`);
+      must(
+        !text.includes(extra.name) && rows.length === 2 && !rows.includes(extra.name),
+        `apply ${text} rows ${rows}`,
+      );
+      must(
+        flagged === 1 && saveAlert !== "(no alert)" && stillOpen,
+        `flag ${flagged} alert ${saveAlert} open ${stillOpen}`,
+      );
+      must(
+        refusedList === 3 &&
+          after.memberIds.length === 3 &&
+          after.memberIds.includes(uid("Tom Iwu")) &&
+          !after.memberIds.includes(extra.id) &&
+          direct.status === 422,
+        `refused ${refusedList} after ${after.memberIds.length} direct ${direct.status}`,
+      );
       must(JSON.stringify(c1Now) === JSON.stringify(G.c1Rows), `c1 ${c1Now}`);
       return `After the fixture user was archived (${arch.status}), Apply group on C-${c5} read ${q(afterPicker(text))} and asked ${q(rows)}. Edit flagged the archived member "Can no longer approve" (${flagged}); adding Tom Iwu and selecting Save with that member still ticked showed ${q(saveAlert)}, the dialog stayed open and the saved list kept ${refusedList} members. After unticking the archived member, Save closed the dialog; the group has ${after.memberIds.length} members including Tom Iwu. A member-list write naming the archived user answered ${direct.status} (${q(direct.json?.detail)}). C-${c1}'s requests are unchanged: ${q(c1Now)}.`;
     },
@@ -1869,12 +2451,28 @@ async function approverGroups() {
       await page.getByRole("button", { name: `Edit ${groupName}` }).click();
       await e.getByLabel("Description").fill("Use for DOC-030 walkthrough approvals; second edit.");
       await memberBox(e, "Marcus Oyelaran").check();
-      const block = (route) => route.request().method() === "PUT" ? route.fulfill({ status: 503, contentType: "application/problem+json", body: JSON.stringify({ title: "Service Unavailable", status: 503 }) }) : route.continue();
+      const block = (route) =>
+        route.request().method() === "PUT"
+          ? route.fulfill({
+              status: 503,
+              contentType: "application/problem+json",
+              body: JSON.stringify({ title: "Service Unavailable", status: 503 }),
+            })
+          : route.continue();
       await page.route(/\/api\/v1\/approver-groups\/[^/]+\/members$/, block);
       await e.getByRole("button", { name: "Save" }).click();
-      const failText = (await e.getByRole("alert").first().innerText({ timeout: 8000 }).catch(() => "(no alert)")).trim();
+      const failText = (
+        await e
+          .getByRole("alert")
+          .first()
+          .innerText({ timeout: 8000 })
+          .catch(() => "(no alert)")
+      ).trim();
       await page.unroute(/\/api\/v1\/approver-groups\/[^/]+\/members$/, block);
-      await e.getByRole("button", { name: "Cancel" }).click().catch(() => {});
+      await e
+        .getByRole("button", { name: "Cancel" })
+        .click()
+        .catch(() => {});
       const partial = (await listGroups()).find((g) => g.id === G.group.id);
       // Archive, check the picker, restore.
       await page.reload();
@@ -1883,22 +2481,45 @@ async function approverGroups() {
       const confirmText = (await confirm.innerText()).replace(/\s+/g, " ");
       await confirm.getByRole("button", { name: "Archive group" }).click();
       await confirm.waitFor({ state: "hidden" });
-      const afterArchive = (await approvalsOf(A, c1)).map((a) => `${a.approver.displayName}:${a.status}:${a.source}`);
+      const afterArchive = (await approvalsOf(A, c1)).map(
+        (a) => `${a.approver.displayName}:${a.status}:${a.source}`,
+      );
       await openContract(A, c1, "approvals");
       await card().getByRole("button", { name: "Apply group" }).click();
-      const offered = await page.getByRole("dialog", { name: "Apply approver group" }).getByRole("combobox", { name: "Approver group" }).locator("option").allInnerTexts();
+      const offered = await page
+        .getByRole("dialog", { name: "Apply approver group" })
+        .getByRole("combobox", { name: "Approver group" })
+        .locator("option")
+        .allInnerTexts();
       await page.keyboard.press("Escape");
       await page.goto(`${BASE}/settings/contracts/approver-groups`);
       await page.getByRole("switch", { name: "Show archived" }).click();
       await page.getByRole("button", { name: `Restore ${groupName}` }).click();
       await page.getByRole("button", { name: `Edit ${groupName}` }).waitFor();
       const restored = (await listGroups()).find((g) => g.id === G.group.id);
-      const afterRestore = (await approvalsOf(A, c1)).map((a) => `${a.approver.displayName}:${a.status}:${a.source}`);
-      must(!edited.memberIds.includes(uid("Tom Iwu")) && /edited/.test(edited.description ?? ""), `edited ${q(edited)}`);
-      must(failText === "The member list could not be saved." && /second edit/.test(partial.description ?? "") && !partial.memberIds.includes(uid("Marcus Oyelaran")), `fail ${failText} partial ${q(partial)}`);
+      const afterRestore = (await approvalsOf(A, c1)).map(
+        (a) => `${a.approver.displayName}:${a.status}:${a.source}`,
+      );
+      must(
+        !edited.memberIds.includes(uid("Tom Iwu")) && /edited/.test(edited.description ?? ""),
+        `edited ${q(edited)}`,
+      );
+      must(
+        failText === "The member list could not be saved." &&
+          /second edit/.test(partial.description ?? "") &&
+          !partial.memberIds.includes(uid("Marcus Oyelaran")),
+        `fail ${failText} partial ${q(partial)}`,
+      );
       must(/Archive group/.test(confirmText) && !/replac/i.test(confirmText), confirmText);
-      must(!offered.includes(groupName) && !restored.archivedAt, `offered ${offered} restored ${restored.archivedAt}`);
-      must(JSON.stringify(afterArchive) === JSON.stringify(G.c1Rows) && JSON.stringify(afterRestore) === JSON.stringify(G.c1Rows), "requests changed");
+      must(
+        !offered.includes(groupName) && !restored.archivedAt,
+        `offered ${offered} restored ${restored.archivedAt}`,
+      );
+      must(
+        JSON.stringify(afterArchive) === JSON.stringify(G.c1Rows) &&
+          JSON.stringify(afterRestore) === JSON.stringify(G.c1Rows),
+        "requests changed",
+      );
       return `Save changed the description and removed Tom Iwu (${edited.memberIds.length} members). With the member-list write answered 503, the editor said ${q(failText)}; the new description had saved and Marcus Oyelaran was not added, so the rename or description alone is not proof. The archive confirmation read ${q(confirmText)}. While archived, C-${c1}'s Apply group offered ${q(offered)}. Show archived then Restore returned it. C-${c1}'s requests stayed ${q(G.c1Rows)} through edit, archive and restore.`;
     },
   );
@@ -1914,40 +2535,77 @@ async function approverGroups() {
     async () => {
       await page.goto(`${BASE}/settings/contracts/types`);
       await page.getByRole("button", { name: `Edit ${agType.displayName}` }).click();
-      await page.getByRole("navigation", { name: "Type sections" }).getByRole("link", { name: "Approval defaults" }).click();
+      await page
+        .getByRole("navigation", { name: "Type sections" })
+        .getByRole("link", { name: "Approval defaults" })
+        .click();
       const box = page.getByRole("combobox", { name: "Approver group" });
       await box.waitFor();
       const cardText = (await page.locator("main").innerText()).replace(/\s+/g, " ");
       await box.selectOption({ label: groupName });
-      await until(async () => (await A.api("GET", `/contract-types/${agType.id}/approval-default`)).json?.groupId === G.group.id, "default saved");
-      const inherit = await quickContract(A, "groups inherits default", { contractTypeId: agType.id, managerId: uid(A.displayName) });
+      await until(
+        async () =>
+          (await A.api("GET", `/contract-types/${agType.id}/approval-default`)).json?.groupId ===
+          G.group.id,
+        "default saved",
+      );
+      const inherit = await quickContract(A, "groups inherits default", {
+        contractTypeId: agType.id,
+        managerId: uid(A.displayName),
+      });
       G.inherit = inherit;
       const startApprovals = (await approvalsOf(A, inherit)).length;
       const startsOn = async (n) => {
         await openContract(A, n, "approvals");
         await card().getByRole("button", { name: "Apply group" }).click();
-        const v = await page.getByRole("dialog", { name: "Apply approver group" }).getByRole("combobox", { name: "Approver group" }).locator("option:checked").innerText();
+        const v = await page
+          .getByRole("dialog", { name: "Apply approver group" })
+          .getByRole("combobox", { name: "Approver group" })
+          .locator("option:checked")
+          .innerText();
         await page.keyboard.press("Escape");
         return v;
       };
       const s1 = await startsOn(inherit);
       const retyped = await quickContract(A, "groups retyped", { managerId: uid(A.displayName) });
-      const rt = await A.api("PATCH", `/contracts/${retyped}`, { contractTypeId: agType.id, customFields: {} });
+      const rt = await A.api("PATCH", `/contracts/${retyped}`, {
+        contractTypeId: agType.id,
+        customFields: {},
+      });
       const s2 = await startsOn(retyped);
       await page.goto(`${BASE}/settings/contracts/types`);
       await page.getByRole("button", { name: `Edit ${agType.displayName}` }).click();
-      await page.getByRole("navigation", { name: "Type sections" }).getByRole("link", { name: "Approval defaults" }).click();
+      await page
+        .getByRole("navigation", { name: "Type sections" })
+        .getByRole("link", { name: "Approval defaults" })
+        .click();
       await box.selectOption({ label: "No default group" });
-      await until(async () => (await A.api("GET", `/contract-types/${agType.id}/approval-default`)).json?.groupId === null, "default cleared");
+      await until(
+        async () =>
+          (await A.api("GET", `/contract-types/${agType.id}/approval-default`)).json?.groupId ===
+          null,
+        "default cleared",
+      );
       const s3 = await startsOn(inherit);
-      const fresh = await quickContract(A, "groups after clearing", { contractTypeId: agType.id, managerId: uid(A.displayName) });
+      const fresh = await quickContract(A, "groups after clearing", {
+        contractTypeId: agType.id,
+        managerId: uid(A.displayName),
+      });
       const s4 = await startsOn(fresh);
       // Put the default back for the permission and archive checks.
       await page.goto(`${BASE}/settings/contracts/types`);
       await page.getByRole("button", { name: `Edit ${agType.displayName}` }).click();
-      await page.getByRole("navigation", { name: "Type sections" }).getByRole("link", { name: "Approval defaults" }).click();
+      await page
+        .getByRole("navigation", { name: "Type sections" })
+        .getByRole("link", { name: "Approval defaults" })
+        .click();
       await box.selectOption({ label: groupName });
-      await until(async () => (await A.api("GET", `/contract-types/${agType.id}/approval-default`)).json?.groupId === G.group.id, "default saved again");
+      await until(
+        async () =>
+          (await A.api("GET", `/contract-types/${agType.id}/approval-default`)).json?.groupId ===
+          G.group.id,
+        "default saved again",
+      );
       must(/Default approver group/.test(cardText), "card title missing");
       must(s1 === groupName && startApprovals === 0, `inherit ${s1} ${startApprovals}`);
       must(rt.status === 200 && s2 === "Pick a group", `retyped ${rt.status} ${s2}`);
@@ -1971,45 +2629,94 @@ async function approverGroups() {
       // Nadia opens the dialog before the change and picks another group.
       await openContract(n, G.inherit, "approvals");
       await nCard.getByRole("button", { name: "Apply group" }).click();
-      await nd.getByRole("combobox", { name: "Approver group" }).selectOption({ label: FX.group.name });
+      await nd
+        .getByRole("combobox", { name: "Approver group" })
+        .selectOption({ label: FX.group.name });
       await page.goto(`${BASE}/settings/contracts/approver-groups`);
-      const policy = page.getByRole("combobox", { name: "Who can override a default approver group?" });
-      await until(async () => (await policy.locator("option:checked").innerText()) !== "Loading…", "policy loaded");
+      const policy = page.getByRole("combobox", {
+        name: "Who can override a default approver group?",
+      });
+      await until(
+        async () => (await policy.locator("option:checked").innerText()) !== "Loading…",
+        "policy loaded",
+      );
       const initial = await policy.locator("option:checked").innerText();
       await policy.selectOption({ label: "Administrators only" });
-      results.orgSettings.push({ at: new Date().toISOString(), setting: "Who can override a default approver group?", value: "Administrators only", by: "Daniel Okafor (browser)" });
+      results.orgSettings.push({
+        at: new Date().toISOString(),
+        setting: "Who can override a default approver group?",
+        value: "Administrators only",
+        by: "Daniel Okafor (browser)",
+      });
       let stale, locked, lockNote, noDefaultEnabled, adminEnabled, stored;
       try {
-        await until(async () => (await D.api("GET", "/org/approval-policy")).json?.allowLegalApproverGroupOverride === false, "policy saved");
+        await until(
+          async () =>
+            (await D.api("GET", "/org/approval-policy")).json?.allowLegalApproverGroupOverride ===
+            false,
+          "policy saved",
+        );
         stored = "false";
         await nd.getByRole("button", { name: "Apply group", exact: true }).click();
-        stale = (await nd.getByRole("alert").first().innerText({ timeout: 8000 }).catch(() => "(no alert)")).trim();
-        await nd.getByRole("button", { name: "Cancel" }).click().catch(() => {});
+        stale = (
+          await nd
+            .getByRole("alert")
+            .first()
+            .innerText({ timeout: 8000 })
+            .catch(() => "(no alert)")
+        ).trim();
+        await nd
+          .getByRole("button", { name: "Cancel" })
+          .click()
+          .catch(() => {});
         await n.page.reload();
         await nCard.getByRole("button", { name: "Apply group" }).click();
         locked = !(await nd.getByRole("combobox", { name: "Approver group" }).isEnabled());
-        lockNote = (await nd.innerText()).includes("Only an administrator can choose a different group.");
+        lockNote = (await nd.innerText()).includes(
+          "Only an administrator can choose a different group.",
+        );
         await nd.getByRole("button", { name: "Cancel" }).click();
-        const plain = await quickContract(n, "groups no default", { managerId: uid("Nadia Haddad") });
+        const plain = await quickContract(n, "groups no default", {
+          managerId: uid("Nadia Haddad"),
+        });
         await openContract(n, plain, "approvals");
         await nCard.getByRole("button", { name: "Apply group" }).click();
         noDefaultEnabled = await nd.getByRole("combobox", { name: "Approver group" }).isEnabled();
         await nd.getByRole("button", { name: "Cancel" }).click();
         await openContract(A, G.inherit, "approvals");
         await card().getByRole("button", { name: "Apply group" }).click();
-        adminEnabled = await page.getByRole("dialog", { name: "Apply approver group" }).getByRole("combobox", { name: "Approver group" }).isEnabled();
+        adminEnabled = await page
+          .getByRole("dialog", { name: "Apply approver group" })
+          .getByRole("combobox", { name: "Approver group" })
+          .isEnabled();
         await page.keyboard.press("Escape");
       } finally {
         await page.goto(`${BASE}/settings/contracts/approver-groups`);
-        await until(async () => (await policy.locator("option:checked").innerText()) !== "Loading…", "policy loaded again");
+        await until(
+          async () => (await policy.locator("option:checked").innerText()) !== "Loading…",
+          "policy loaded again",
+        );
         await policy.selectOption({ label: "Legal team members and administrators" });
-        await until(async () => (await D.api("GET", "/org/approval-policy")).json?.allowLegalApproverGroupOverride === true, "policy restored");
-        results.orgSettings.push({ at: new Date().toISOString(), setting: "Who can override a default approver group?", value: "Legal team members and administrators", by: "Daniel Okafor (browser, restored)" });
+        await until(
+          async () =>
+            (await D.api("GET", "/org/approval-policy")).json?.allowLegalApproverGroupOverride ===
+            true,
+          "policy restored",
+        );
+        results.orgSettings.push({
+          at: new Date().toISOString(),
+          setting: "Who can override a default approver group?",
+          value: "Legal team members and administrators",
+          by: "Daniel Okafor (browser, restored)",
+        });
       }
       const nRows = (await approvalsOf(A, G.inherit)).length;
       must(initial === "Legal team members and administrators", `initial ${initial}`);
       must(stale !== "(no alert)" && nRows === 0, `stale ${stale} rows ${nRows}`);
-      must(locked && lockNote && noDefaultEnabled && adminEnabled, `locked ${locked} note ${lockNote} noDefault ${noDefaultEnabled} admin ${adminEnabled}`);
+      must(
+        locked && lockNote && noDefaultEnabled && adminEnabled,
+        `locked ${locked} note ${lockNote} noDefault ${noDefaultEnabled} admin ${adminEnabled}`,
+      );
       return `The Approval permissions card asked "Who can override a default approver group?" and started on ${q(initial)}. Administrators only saved on select (stored ${stored}). Nadia Haddad's dialog, opened before the change with ${q(FX.group.name)} chosen, was refused on Apply group: ${q(stale)}; C-${G.inherit} has ${nRows} requests. Reopened, her select was disabled and the dialog said "Only an administrator can choose a different group." On a Contract without a default her select was enabled. Daniel Okafor's select stayed enabled. The setting was put back to Legal team members and administrators.`;
     },
   );
@@ -2028,14 +2735,19 @@ async function approverGroups() {
       try {
         await page.goto(`${BASE}/settings/contracts/types`);
         await page.getByRole("button", { name: `Edit ${agType.displayName}` }).click();
-        await page.getByRole("navigation", { name: "Type sections" }).getByRole("link", { name: "Approval defaults" }).click();
+        await page
+          .getByRole("navigation", { name: "Type sections" })
+          .getByRole("link", { name: "Approval defaults" })
+          .click();
         const box = page.getByRole("combobox", { name: "Approver group" });
         await box.waitFor();
         await sleep(800);
         cardValue = await box.locator("option:checked").innerText();
         await openContract(A, G.inherit, "approvals");
         await card().getByRole("button", { name: "Apply group" }).click();
-        const sel = page.getByRole("dialog", { name: "Apply approver group" }).getByRole("combobox", { name: "Approver group" });
+        const sel = page
+          .getByRole("dialog", { name: "Apply approver group" })
+          .getByRole("combobox", { name: "Approver group" });
         start = await sel.locator("option:checked").innerText();
         enabled = await sel.isEnabled();
         await page.keyboard.press("Escape");
@@ -2043,14 +2755,15 @@ async function approverGroups() {
         await A.api("POST", `/approver-groups/${G.group.id}/restore`, {});
       }
       must(arch.status < 300 && cardValue === `${groupName} (archived)`, `card ${cardValue}`);
-      must(start === "Default group unavailable — contact an administrator" && enabled, `start ${start} enabled ${enabled}`);
+      must(
+        start === "Default group unavailable — contact an administrator" && enabled,
+        `start ${start} enabled ${enabled}`,
+      );
       return `With the group archived (${arch.status}), the type's Default approver group card showed ${q(cardValue)}. C-${G.inherit}'s Apply group started on ${q(start)} and the select was enabled for the Administrator. The group was restored.`;
     },
   );
 }
 SECTIONS["approver-groups"] = approverGroups;
-
-
 
 try {
   if (process.env.CLEANUP_ONLY) {

@@ -9,10 +9,30 @@ import { PEOPLE, articleHash, here, labInfo, recorder, session, stampNow } from 
 
 const PART = process.env.PART;
 const parts = {
-  "signing-main": { lab: "c3sign", article: "electronic-signing", module: "./signing.mjs", phase: "main" },
-  "signing-polling": { lab: "c3sign", article: "electronic-signing", module: "./signing.mjs", phase: "polling" },
-  templates: { lab: "work2", article: "matter-templates", module: "./templates.mjs", phase: "main" },
-  documents: { lab: "work2", article: "archive-and-delete-documents", module: "./documents.mjs", phase: "main" },
+  "signing-main": {
+    lab: "c3sign",
+    article: "electronic-signing",
+    module: "./signing.mjs",
+    phase: "main",
+  },
+  "signing-polling": {
+    lab: "c3sign",
+    article: "electronic-signing",
+    module: "./signing.mjs",
+    phase: "polling",
+  },
+  templates: {
+    lab: "work2",
+    article: "matter-templates",
+    module: "./templates.mjs",
+    phase: "main",
+  },
+  documents: {
+    lab: "work2",
+    article: "archive-and-delete-documents",
+    module: "./documents.mjs",
+    phase: "main",
+  },
 };
 const part = parts[PART];
 if (!part) throw new Error(`Set PART to one of ${Object.keys(parts).join(", ")}`);
@@ -49,12 +69,17 @@ try {
   const run = (await import(part.module)).default;
   await run(ctx);
 } catch (error) {
-  rec.results.fatal = String(error?.stack ?? error).split("\n").slice(0, 6).join(" ");
+  rec.results.fatal = String(error?.stack ?? error)
+    .split("\n")
+    .slice(0, 6)
+    .join(" ");
   console.error(rec.results.fatal);
 } finally {
   rec.save();
   await sessions.close();
 }
 const failed = rec.results.steps.filter((s) => s.result !== "pass").length;
-console.log(`${PART}: ${rec.results.steps.length} steps, ${failed} not passing${rec.results.fatal ? ", fatal" : ""}`);
+console.log(
+  `${PART}: ${rec.results.steps.length} steps, ${failed} not passing${rec.results.fatal ? ", fatal" : ""}`,
+);
 process.exitCode = failed || rec.results.fatal ? 1 : 0;

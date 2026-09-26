@@ -54,16 +54,8 @@
   "appUrl": "http://127.0.0.1:43300",
   "mailUrl": "http://127.0.0.1:48425",
   "tag": "0925-1129",
-  "phases": [
-    "c31",
-    "c32",
-    "c52",
-    "c53"
-  ],
-  "roles": [
-    "legal_team_member",
-    "administrator"
-  ],
+  "phases": ["c31", "c32", "c52", "c53"],
+  "roles": ["legal_team_member", "administrator"],
   "startedAt": "2026-09-25T11:29:07.174Z",
   "finishedAt": "2026-09-25T11:45:22.748Z",
   "steps": [
@@ -4864,16 +4856,8 @@
       "tag": "0925-1129",
       "startedAt": "2026-09-25T11:29:07.174Z",
       "finishedAt": "2026-09-25T11:38:23.867Z",
-      "phases": [
-        "c31",
-        "c32",
-        "c52",
-        "c53"
-      ],
-      "roles": [
-        "legal_team_member",
-        "administrator"
-      ],
+      "phases": ["c31", "c32", "c52", "c53"],
+      "roles": ["legal_team_member", "administrator"],
       "articleHashes": {
         "entities-and-counterparties": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
         "entity-records": "c3209b12d7c67ec167125da9a559cefc5bbe6b07d1077e922bcecc8d1deb82ed",
@@ -4888,13 +4872,8 @@
       "tag": "0925-1140",
       "startedAt": "2026-09-25T11:40:58.648Z",
       "finishedAt": "2026-09-25T11:45:22.748Z",
-      "phases": [
-        "c53"
-      ],
-      "roles": [
-        "legal_team_member",
-        "administrator"
-      ],
+      "phases": ["c53"],
+      "roles": ["legal_team_member", "administrator"],
       "reason": "The author corrected the entry row labels in entity-structure-and-access (Edit entry 3, Remove entry 3). V-C53 was walked again in full for both roles, because the edit and delete steps need the register the earlier steps build.",
       "articleHashes": {
         "entity-structure-and-access": "0a4b028bcaadc3fc71c1a3b820ad9e6fd5af217c3db2be999695c3beb4136c8f"

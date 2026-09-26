@@ -1113,25 +1113,8 @@
   "summary": {
     "result": "pass",
     "articleContentSha256": "ef145063a10347be4696a2ce3e25f507e520450f4fa0b10c8f80729e9d03b47f",
-    "finalRuns": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      8,
-      10,
-      11,
-      12,
-      13,
-      14
-    ],
-    "supersededRuns": [
-      0,
-      7,
-      9
-    ],
+    "finalRuns": [1, 2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 14],
+    "supersededRuns": [0, 7, 9],
     "steps": 71,
     "failedSteps": [],
     "guideFailures": 0,

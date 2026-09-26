@@ -589,15 +589,8 @@
       "createdAt": "2026-09-25T10:23:43.738Z"
     }
   },
-  "phases": [
-    "triage",
-    "convert",
-    "access"
-  ],
-  "roles": [
-    "administrator",
-    "legal_team_member"
-  ],
+  "phases": ["triage", "convert", "access"],
+  "roles": ["administrator", "legal_team_member"],
   "startedAt": "2026-09-25T10:23:49.300Z",
   "finishedAt": "2026-09-25T10:26:59.645Z",
   "steps": [

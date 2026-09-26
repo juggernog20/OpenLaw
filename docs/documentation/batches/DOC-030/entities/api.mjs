@@ -16,15 +16,17 @@ export const MAIL = process.env.LAB_MAIL_URL ?? "http://127.0.0.1:48425";
 export const PASSWORD = process.env.LAB_PASSWORD;
 if (!PASSWORD)
   throw new Error("Set LAB_PASSWORD to the seed demo password documented in VALIDATION.md.");
-const PW = path.join(root, "node_modules/.pnpm/playwright@1.63.0/node_modules/playwright/index.mjs");
+const PW = path.join(
+  root,
+  "node_modules/.pnpm/playwright@1.63.0/node_modules/playwright/index.mjs",
+);
 export const { chromium } = await import(PW);
 
 export const lab = JSON.parse(
   readFileSync(path.join(root, ".documentation-labs/work2/lab.json"), "utf8"),
 );
 export const sha = (buf) => createHash("sha256").update(buf).digest("hex");
-export const articleHash = (id) =>
-  sha(readFileSync(path.join(root, `docs/user-guides/${id}.md`)));
+export const articleHash = (id) => sha(readFileSync(path.join(root, `docs/user-guides/${id}.md`)));
 
 export const PEOPLE = {
   daniel: { email: "daniel.okafor@helix.example", name: "Daniel Okafor", role: "administrator" },

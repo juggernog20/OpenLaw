@@ -48,9 +48,7 @@
   "scenarios": [
     {
       "id": "V-C50",
-      "coverage": [
-        "C50"
-      ],
+      "coverage": ["C50"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -69,9 +67,7 @@
     },
     {
       "id": "V-C50",
-      "coverage": [
-        "C50"
-      ],
+      "coverage": ["C50"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -90,9 +86,7 @@
     },
     {
       "id": "V-C50",
-      "coverage": [
-        "C50"
-      ],
+      "coverage": ["C50"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -111,9 +105,7 @@
     },
     {
       "id": "V-C50",
-      "coverage": [
-        "C50"
-      ],
+      "coverage": ["C50"],
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [

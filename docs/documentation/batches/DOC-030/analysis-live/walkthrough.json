@@ -198,12 +198,7 @@
           "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
         ],
         "kept": [],
-        "unsupported": [
-          "renewal_period_months",
-          "liability_cap",
-          "governing_law",
-          "jurisdiction"
-        ],
+        "unsupported": ["renewal_period_months", "liability_cap", "governing_law", "jurisdiction"],
         "invalid": [],
         "unmatched": "Northwind Fictional Services LLC",
         "results": [
@@ -327,9 +322,7 @@
           "doc_030_analysis_live_v_c43_data_location_202609251453",
           "doc_030_analysis_live_v_c43_supplier_name_202609251453"
         ],
-        "kept": [
-          "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
-        ],
+        "kept": ["key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"],
         "unsupported": [
           "renewal_period_months",
           "liability_cap",
@@ -489,12 +482,7 @@
           "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
         ],
         "kept": [],
-        "unsupported": [
-          "renewal_period_months",
-          "liability_cap",
-          "governing_law",
-          "jurisdiction"
-        ],
+        "unsupported": ["renewal_period_months", "liability_cap", "governing_law", "jurisdiction"],
         "invalid": [],
         "unmatched": "Northwind Fictional Services LLC",
         "results": [
@@ -827,11 +815,7 @@
         "hasApiKey": true,
         "maxOutputTokens": 32768,
         "answerStyle": "sentence",
-        "switches": [
-          false,
-          false,
-          false
-        ],
+        "switches": [false, false, false],
         "savedKeys": [
           {
             "preset": "openrouter",
@@ -1168,15 +1152,11 @@
       "customFieldOutcome": {
         "location": {
           "slug": "doc_030_analysis_live_v_c43_data_location_202609251453",
-          "in": [
-            "written"
-          ]
+          "in": ["written"]
         },
         "supplier": {
           "slug": "doc_030_analysis_live_v_c43_supplier_name_202609251453",
-          "in": [
-            "written"
-          ]
+          "in": ["written"]
         },
         "unattached": {
           "slug": "doc_030_analysis_live_v_c43_unattached_202609251453",
@@ -1266,9 +1246,7 @@
             "doc_030_analysis_live_v_c43_data_location_202609251453",
             "doc_030_analysis_live_v_c43_supplier_name_202609251453"
           ],
-          "kept": [
-            "key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"
-          ],
+          "kept": ["key_date:76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db"],
           "unsupported": [
             "renewal_period_months",
             "liability_cap",
@@ -1730,100 +1708,72 @@
   "runs": [
     {
       "startedAt": "2026-09-25T14:53:41.779Z",
-      "sections": [
-        "A"
-      ],
+      "sections": ["A"],
       "finishedAt": "2026-09-25T14:53:44.328Z"
     },
     {
       "startedAt": "2026-09-25T14:53:49.170Z",
-      "sections": [
-        "B"
-      ],
+      "sections": ["B"],
       "finishedAt": "2026-09-25T14:54:49.656Z"
     },
     {
       "startedAt": "2026-09-25T14:54:59.369Z",
-      "sections": [
-        "B"
-      ],
+      "sections": ["B"],
       "finishedAt": "2026-09-25T14:55:02.150Z"
     },
     {
       "startedAt": "2026-09-25T14:55:11.600Z",
-      "sections": [
-        "C"
-      ],
+      "sections": ["C"],
       "finishedAt": "2026-09-25T14:55:20.993Z"
     },
     {
       "startedAt": "2026-09-25T14:55:29.475Z",
-      "sections": [
-        "D"
-      ],
+      "sections": ["D"],
       "finishedAt": "2026-09-25T14:56:32.436Z"
     },
     {
       "startedAt": "2026-09-25T14:56:47.430Z",
-      "sections": [
-        "P"
-      ],
+      "sections": ["P"],
       "finishedAt": "2026-09-25T14:56:51.981Z"
     },
     {
       "startedAt": "2026-09-25T14:56:56.927Z",
-      "sections": [
-        "P"
-      ],
+      "sections": ["P"],
       "finishedAt": "2026-09-25T14:57:57.625Z"
     },
     {
       "startedAt": "2026-09-25T14:58:29.759Z",
-      "sections": [
-        "P"
-      ],
+      "sections": ["P"],
       "finishedAt": "2026-09-25T14:58:34.040Z"
     },
     {
       "startedAt": "2026-09-25T14:59:27.636Z",
-      "sections": [
-        "E"
-      ],
+      "sections": ["E"],
       "finishedAt": "2026-09-25T15:01:08.822Z"
     },
     {
       "startedAt": "2026-09-25T15:01:30.303Z",
-      "sections": [
-        "F"
-      ],
+      "sections": ["F"],
       "finishedAt": "2026-09-25T15:01:33.431Z"
     },
     {
       "startedAt": "2026-09-25T15:01:48.373Z",
-      "sections": [
-        "O"
-      ],
+      "sections": ["O"],
       "finishedAt": "2026-09-25T15:02:05.134Z"
     },
     {
       "startedAt": "2026-09-25T15:02:10.979Z",
-      "sections": [
-        "R"
-      ],
+      "sections": ["R"],
       "finishedAt": "2026-09-25T15:02:13.771Z"
     },
     {
       "startedAt": "2026-09-25T15:02:29.451Z",
-      "sections": [
-        "T"
-      ],
+      "sections": ["T"],
       "finishedAt": "2026-09-25T15:02:30.096Z"
     },
     {
       "startedAt": "2026-09-25T15:06:18.755Z",
-      "sections": [
-        "V"
-      ],
+      "sections": ["V"],
       "articleHash": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
       "lab": {
         "project": "openlaw-docs-80ceef9e-live2",
@@ -1870,11 +1820,7 @@
     "hasApiKey": false,
     "maxOutputTokens": 32768,
     "answerStyle": "sentence",
-    "switches": [
-      false,
-      false,
-      false
-    ],
+    "switches": [false, false, false],
     "savedKeys": [],
     "disabled": false,
     "updatedAt": null
@@ -2046,11 +1992,7 @@
     "hasApiKey": false,
     "maxOutputTokens": 32768,
     "answerStyle": "sentence",
-    "switches": [
-      false,
-      false,
-      false
-    ],
+    "switches": [false, false, false],
     "savedKeys": [],
     "disabled": false,
     "updatedAt": null
@@ -2061,9 +2003,7 @@
     "articleHash": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
     "steps": 30,
     "passed": 29,
-    "failed": [
-      "E02 (superseded by V03)"
-    ],
+    "failed": ["E02 (superseded by V03)"],
     "coverage": {
       "administrator/browser-walkthrough": [
         "A01 pass",
@@ -2095,14 +2035,8 @@
         "V01 pass",
         "V02 pass"
       ],
-      "operator/browser-walkthrough": [
-        "B02 pass",
-        "O03 pass"
-      ],
-      "operator/live-provider-check": [
-        "O01 pass",
-        "O02 pass"
-      ]
+      "operator/browser-walkthrough": ["B02 pass", "O03 pass"],
+      "operator/live-provider-check": ["O01 pass", "O02 pass"]
     },
     "providerSpend": {
       "analysisRuns": 3,

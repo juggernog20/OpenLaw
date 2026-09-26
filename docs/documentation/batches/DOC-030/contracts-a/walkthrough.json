@@ -47,15 +47,8 @@
     "contract-approvals": "45c6f9161c459b95c3205a6e0d4dac5a25d9f5dec2740cf480663ac18f1b6241",
     "approver-groups": "c0f132517840b0fd75f56250e1ed446326f13fd62027aef4577305ae37d4d88d"
   },
-  "only": [
-    "create-contract",
-    "contract-approvals",
-    "approver-groups"
-  ],
-  "roles": [
-    "legal_team_member",
-    "administrator"
-  ],
+  "only": ["create-contract", "contract-approvals", "approver-groups"],
+  "roles": ["legal_team_member", "administrator"],
   "stamp": 1790332469976,
   "identities": [
     {
@@ -566,9 +559,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts > Create contract",
       "action": "Create the record, steps 1-5 and If a change is refused: dialog order, Default type first, Legal Owner seed and choices, archived type and Entity not offered, blank Title, missing type, blank required Rows, Branch Row, Cancel",
       "expected": "Title, Contract type, Legal Owner, Matter, the Form's Rows, Confidential, Documents, Create; Default preselected; Legal Owner starts on the acting person with Unassigned and staff only; errors Name the contract., Pick a contract type., and named required Rows; a Branch reveals its Row only when its condition holds; nothing is created.",
@@ -582,9 +573,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts > Create contract > /contracts/:number",
       "action": "Create the record, steps 1-8: Title, Contract type, Legal Owner, Matter search, Entity and Counterparties Rows, required Field and Branch Row, Confidential, Attach documents with Document type, Create",
       "expected": "The app opens the new Contract: its title, type, Legal Owner, C- reference, Draft Status, Creator on the team, the type's default person on the team, and the attached Document.",
@@ -598,9 +587,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts > Create contract (Default type)",
       "action": "Create the record: a failed upload after Create shows Record created. Some documents could not be uploaded. with Retry failed uploads and Continue; the Contract already exists",
       "expected": "The Contract exists; Retry failed uploads uploads the file; Continue opens the Contract.",
@@ -614,11 +601,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Marcus Oyelaran",
-        "Tom Iwu"
-      ],
+      "actors": ["Nadia Haddad", "Marcus Oyelaran", "Tom Iwu"],
       "page": "/contracts/:number and /matters/:number",
       "action": "Step 4: a Matter link does not copy access. A Legal Team Member outside the Confidential team reads the Matter but not the Contract; the type's default person reads the Contract",
       "expected": "Marcus opens the Matter; the Contract is refused for him and his page does not show its title; Tom Iwu opens it.",
@@ -632,9 +615,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number (Overview)",
       "action": "Record the parties and ownership: the Contract card shows the type Form's built-in Rows in Form order, then Legal Owner, Business Owner, Days remaining, Last renewal and the Confidential switch; attached Fields are not on Overview",
       "expected": "Title, Contract type, Region, Our entity, Counterparties, Needed by (Branch holds), Description, Department, Priority, Risk, the term Rows and Value, then the owner and read-only rows and the switch; no Deal size, Notes or Risk tier.",
@@ -648,10 +629,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Tom Iwu"
-      ],
+      "actors": ["Nadia Haddad", "Tom Iwu"],
       "page": "/contracts/:number (Overview) Legal Owner and Business Owner",
       "action": "Legal Owner offers active staff; Business Owner offers any active person; Unassigned clears either; on a Confidential Contract only an Administrator, the creator or the Legal Owner can change the Legal Owner or name a Business Owner",
       "expected": "Legal Owner picker has no Business User or archived person; Business Owner picker includes Lena Vogel; Unassigned clears; Tom Iwu (team member only) is refused both changes.",
@@ -665,9 +643,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number (Overview) Our entity, Department, Region, Priority, Risk, Description, Value",
       "action": "Our entity offers Not known yet and no archived Entity; Department and Region save on choice and clear with No Department and No Region; Description saves on leave and clearing removes it; Value parts save together; Other needs Custom cadence; emptying Amount removes the value",
       "expected": "Each change is stored as described.",
@@ -681,9 +657,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number (Overview and Fields)",
       "action": "A Row under a Branch whose condition does not hold appears only while it holds a value",
       "expected": "Needed by shows while Deal size is 250000; after Deal size becomes 5000 it stays while it holds a date and disappears when cleared.",
@@ -697,9 +671,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number (Overview) Counterparties",
       "action": "Search and select parties; a new name offers Create \"name\"; the first linked Counterparty is primary; Make primary moves it; removing a Counterparty removes only its link",
       "expected": "Create \"name\" links a new party; Litware (first) is primary until Make primary moves it; removal keeps the Counterparty record.",
@@ -713,9 +685,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number Contract team applet",
       "action": "Contract team: Add team member, Person, Add; one row per person; Legal Owner, Business Owner and Creator statements; the Business Owner joined automatically and their row has no remove control; after the assignment is cleared the former owner stays until removed",
       "expected": "Priya added once; Lena Vogel's row shows Business Owner without a remove button; after Unassigned she stays with a remove button; removing her works.",
@@ -729,9 +699,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number/fields",
       "action": "Maintain the values: text saves on leave or Enter; a choice saves on selection; Escape abandons an unsaved text edit; long text Enter is a new line",
       "expected": "Blur and Enter save; Escape restores the saved text with no save; the choice saves; long text keeps two lines.",
@@ -745,9 +713,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number (Overview) Contract type",
       "action": "Changing Contract type opens Change contract type for missing required Fields; blank answers are refused; Cancel keeps the type; Change type applies it; the C- reference stays",
       "expected": "The dialog lists the required Field; blank Change type is refused; Cancel keeps MSA; filling it re-types the Contract.",
@@ -761,9 +727,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number (archived)",
       "action": "An archived Contract must be restored before editing",
       "expected": "The archived Contract shows the restore note and its Overview inputs are read-only.",
@@ -777,10 +741,7 @@
       "scenario": "V-C14",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Lena Vogel (Portal)"
-      ],
+      "actors": ["Nadia Haddad", "Lena Vogel (Portal)"],
       "page": "/portal/contracts",
       "action": "In the Portal, a Business User cannot create a Contract directly or assign its Legal Owner",
       "expected": "No create control in the Portal Contracts list; the API refuses a direct create and a Legal Owner change.",
@@ -794,9 +755,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts > Create contract",
       "action": "Create the record, steps 1-5 and If a change is refused: dialog order, Default type first, Legal Owner seed and choices, archived type and Entity not offered, blank Title, missing type, blank required Rows, Branch Row, Cancel",
       "expected": "Title, Contract type, Legal Owner, Matter, the Form's Rows, Confidential, Documents, Create; Default preselected; Legal Owner starts on the acting person with Unassigned and staff only; errors Name the contract., Pick a contract type., and named required Rows; a Branch reveals its Row only when its condition holds; nothing is created.",
@@ -810,9 +769,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts > Create contract > /contracts/:number",
       "action": "Create the record, steps 1-8: Title, Contract type, Legal Owner, Matter search, Entity and Counterparties Rows, required Field and Branch Row, Confidential, Attach documents with Document type, Create",
       "expected": "The app opens the new Contract: its title, type, Legal Owner, C- reference, Draft Status, Creator on the team, the type's default person on the team, and the attached Document.",
@@ -826,9 +783,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts > Create contract (Default type)",
       "action": "Create the record: a failed upload after Create shows Record created. Some documents could not be uploaded. with Retry failed uploads and Continue; the Contract already exists",
       "expected": "The Contract exists; Retry failed uploads uploads the file; Continue opens the Contract.",
@@ -842,11 +797,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Marcus Oyelaran",
-        "Tom Iwu"
-      ],
+      "actors": ["Daniel Okafor", "Marcus Oyelaran", "Tom Iwu"],
       "page": "/contracts/:number and /matters/:number",
       "action": "Step 4: a Matter link does not copy access. A Legal Team Member outside the Confidential team reads the Matter but not the Contract; the type's default person reads the Contract",
       "expected": "Marcus opens the Matter; the Contract is refused for him and his page does not show its title; Tom Iwu opens it.",
@@ -860,9 +811,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number (Overview)",
       "action": "Record the parties and ownership: the Contract card shows the type Form's built-in Rows in Form order, then Legal Owner, Business Owner, Days remaining, Last renewal and the Confidential switch; attached Fields are not on Overview",
       "expected": "Title, Contract type, Region, Our entity, Counterparties, Needed by (Branch holds), Description, Department, Priority, Risk, the term Rows and Value, then the owner and read-only rows and the switch; no Deal size, Notes or Risk tier.",
@@ -876,10 +825,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Tom Iwu"
-      ],
+      "actors": ["Daniel Okafor", "Tom Iwu"],
       "page": "/contracts/:number (Overview) Legal Owner and Business Owner",
       "action": "Legal Owner offers active staff; Business Owner offers any active person; Unassigned clears either; on a Confidential Contract only an Administrator, the creator or the Legal Owner can change the Legal Owner or name a Business Owner",
       "expected": "Legal Owner picker has no Business User or archived person; Business Owner picker includes Lena Vogel; Unassigned clears; Tom Iwu (team member only) is refused both changes.",
@@ -893,9 +839,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number (Overview) Our entity, Department, Region, Priority, Risk, Description, Value",
       "action": "Our entity offers Not known yet and no archived Entity; Department and Region save on choice and clear with No Department and No Region; Description saves on leave and clearing removes it; Value parts save together; Other needs Custom cadence; emptying Amount removes the value",
       "expected": "Each change is stored as described.",
@@ -909,9 +853,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number (Overview and Fields)",
       "action": "A Row under a Branch whose condition does not hold appears only while it holds a value",
       "expected": "Needed by shows while Deal size is 250000; after Deal size becomes 5000 it stays while it holds a date and disappears when cleared.",
@@ -925,9 +867,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number (Overview) Counterparties",
       "action": "Search and select parties; a new name offers Create \"name\"; the first linked Counterparty is primary; Make primary moves it; removing a Counterparty removes only its link",
       "expected": "Create \"name\" links a new party; Litware (first) is primary until Make primary moves it; removal keeps the Counterparty record.",
@@ -941,9 +881,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number Contract team applet",
       "action": "Contract team: Add team member, Person, Add; one row per person; Legal Owner, Business Owner and Creator statements; the Business Owner joined automatically and their row has no remove control; after the assignment is cleared the former owner stays until removed",
       "expected": "Priya added once; Lena Vogel's row shows Business Owner without a remove button; after Unassigned she stays with a remove button; removing her works.",
@@ -957,9 +895,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number/fields",
       "action": "Maintain the values: text saves on leave or Enter; a choice saves on selection; Escape abandons an unsaved text edit; long text Enter is a new line",
       "expected": "Blur and Enter save; Escape restores the saved text with no save; the choice saves; long text keeps two lines.",
@@ -973,9 +909,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number (Overview) Contract type",
       "action": "Changing Contract type opens Change contract type for missing required Fields; blank answers are refused; Cancel keeps the type; Change type applies it; the C- reference stays",
       "expected": "The dialog lists the required Field; blank Change type is refused; Cancel keeps MSA; filling it re-types the Contract.",
@@ -989,9 +923,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number (archived)",
       "action": "An archived Contract must be restored before editing",
       "expected": "The archived Contract shows the restore note and its Overview inputs are read-only.",
@@ -1005,10 +937,7 @@
       "scenario": "V-C14",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Lena Vogel (Portal)"
-      ],
+      "actors": ["Daniel Okafor", "Lena Vogel (Portal)"],
       "page": "/portal/contracts",
       "action": "In the Portal, a Business User cannot create a Contract directly or assign its Legal Owner",
       "expected": "No create control in the Portal Contracts list; the API refuses a direct create and a Legal Owner change.",
@@ -1022,9 +951,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number/approvals",
       "action": "Ask for approval, steps 1-3: Approvals section, Approvals & signing card, Add approver, choose Priya Raman and Business User Lena Vogel under Approvers, Request approvals",
       "expected": "The picker offers all active users including Business Users and not archived people; both new rows are Pending at once; a person with a pending request is not offered again.",
@@ -1038,10 +965,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Priya Raman",
-        "Nadia Haddad"
-      ],
+      "actors": ["Priya Raman", "Nadia Haddad"],
       "page": "Notification bell > Your approvals > Review",
       "action": "Give a decision: with in-app notifications on, a request made by someone else is pinned under Your approvals with Review; the requester's own request is not pinned for them",
       "expected": "Priya's bell pins the request with Review, which opens the Contract's approvals; A's bell has no pinned item for a request A made to themselves.",
@@ -1055,10 +979,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Priya Raman",
-        "Nadia Haddad"
-      ],
+      "actors": ["Priya Raman", "Nadia Haddad"],
       "page": "/contracts/:number/approvals row actions",
       "action": "Give a decision: only the named person can answer; other people see no Approve or Reject; the dialog says a decision is final; Note; Reject in the dialog; the row shows Rejected with the note; the pinned item goes",
       "expected": "A sees only Cancel request on Priya's row and a direct decision is refused; Priya rejects with a Note; Rejected row and note; a second decision is refused; Priya's pinned item is gone.",
@@ -1072,10 +993,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Lena Vogel (Portal)",
-        "Nadia Haddad"
-      ],
+      "actors": ["Lena Vogel (Portal)", "Nadia Haddad"],
       "page": "/portal/approvals > Your approvals > request",
       "action": "Approve from the business portal: Approvals in the Portal navigation bar, Your approvals, Pending and Completed, search by Contract title, open the request, primary Document with Download, Note (optional), Approve saves at once; the decision shows on the Contract; the Portal bell links to the review page",
       "expected": "Lena finds the request under Pending, reviews the primary Document, approves with a note without a confirmation; Completed lists it; the Contract row shows Approved with her note.",
@@ -1089,9 +1007,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number/approvals Add approver",
       "action": "To ask again after a decision, add a new approval request; the earlier decision stays in history",
       "expected": "A new Pending row for Priya Raman; the Rejected row stays.",
@@ -1105,11 +1021,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Priya Raman",
-        "Marcus Oyelaran"
-      ],
+      "actors": ["Nadia Haddad", "Priya Raman", "Marcus Oyelaran"],
       "page": "/contracts/:number/approvals Apply group",
       "action": "Apply group: choose the Approver group, inspect the named people and the skipped pending requests, select Apply group in the dialog; later group edits do not rewrite existing requests",
       "expected": "The dialog asks Marcus and skips Priya; Apply group creates Marcus's Pending row; an Administrator's later group edit leaves the requests as they are.",
@@ -1123,11 +1035,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Marcus Oyelaran",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Marcus Oyelaran", "Daniel Okafor"],
       "page": "/contracts/:number/approvals Cancel request",
       "action": "Cancel request: the requester, the Legal Owner or an Administrator can cancel a pending request at once without a confirmation; others cannot; a decided approval is not erased",
       "expected": "Marcus (not requester, Legal Owner or Administrator) has no Cancel request on Priya's pending row and is refused; A cancels Marcus's pending row with no confirmation and History records it; the other permitted person cancels Priya's pending row; decided rows stay and cannot be cancelled.",
@@ -1141,9 +1049,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/contracts/:number Stage control",
       "action": "Move beyond Approval: Move past approval lists Pending and Rejected rows; Cancel keeps the current Status; Move anyway saves it and records an override; the approvals keep their decisions",
       "expected": "The dialog lists the unresolved rows; Cancel keeps Awaiting approval; Move anyway saves Active; History records the override; decisions unchanged.",
@@ -1157,10 +1063,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Lena Vogel (Portal)"
-      ],
+      "actors": ["Nadia Haddad", "Lena Vogel (Portal)"],
       "page": "/contracts/:number/approvals on Confidential work",
       "action": "On a Confidential Contract the picker offers only staff who can already open it plus Business Users; if the primary Document is Confidential a staff approver outside its audience is refused by name and a Business approver is not refused but sees no Document",
       "expected": "Confidential Contract: Priya and Marcus not offered, Lena offered. Open Contract with a Confidential primary Document: Marcus refused by name and no request made; Lena asked; her review page shows No document attached.",
@@ -1174,10 +1077,7 @@
       "scenario": "V-C16",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad",
-        "Daniel Okafor"
-      ],
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
       "page": "/contracts/:number/approvals Apply group with a default group",
       "action": "A Contract inherits its type's default group; the dialog starts on it; under Administrators only a Legal Team Member cannot change the choice and sees Only an administrator can choose a different group.; an archived default shows Default group unavailable — contact an administrator",
       "expected": "Dialog starts on the default; the lock follows the role and the setting; the archived default reads as unavailable and another group can be chosen by someone allowed to override.",
@@ -1191,9 +1091,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number/approvals",
       "action": "Ask for approval, steps 1-3: Approvals section, Approvals & signing card, Add approver, choose Priya Raman and Business User Lena Vogel under Approvers, Request approvals",
       "expected": "The picker offers all active users including Business Users and not archived people; both new rows are Pending at once; a person with a pending request is not offered again.",
@@ -1207,10 +1105,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Priya Raman",
-        "Daniel Okafor"
-      ],
+      "actors": ["Priya Raman", "Daniel Okafor"],
       "page": "Notification bell > Your approvals > Review",
       "action": "Give a decision: with in-app notifications on, a request made by someone else is pinned under Your approvals with Review; the requester's own request is not pinned for them",
       "expected": "Priya's bell pins the request with Review, which opens the Contract's approvals; A's bell has no pinned item for a request A made to themselves.",
@@ -1224,10 +1119,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Priya Raman",
-        "Daniel Okafor"
-      ],
+      "actors": ["Priya Raman", "Daniel Okafor"],
       "page": "/contracts/:number/approvals row actions",
       "action": "Give a decision: only the named person can answer; other people see no Approve or Reject; the dialog says a decision is final; Note; Reject in the dialog; the row shows Rejected with the note; the pinned item goes",
       "expected": "A sees only Cancel request on Priya's row and a direct decision is refused; Priya rejects with a Note; Rejected row and note; a second decision is refused; Priya's pinned item is gone.",
@@ -1241,10 +1133,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Lena Vogel (Portal)",
-        "Daniel Okafor"
-      ],
+      "actors": ["Lena Vogel (Portal)", "Daniel Okafor"],
       "page": "/portal/approvals > Your approvals > request",
       "action": "Approve from the business portal: Approvals in the Portal navigation bar, Your approvals, Pending and Completed, search by Contract title, open the request, primary Document with Download, Note (optional), Approve saves at once; the decision shows on the Contract; the Portal bell links to the review page",
       "expected": "Lena finds the request under Pending, reviews the primary Document, approves with a note without a confirmation; Completed lists it; the Contract row shows Approved with her note.",
@@ -1258,9 +1147,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number/approvals Add approver",
       "action": "To ask again after a decision, add a new approval request; the earlier decision stays in history",
       "expected": "A new Pending row for Priya Raman; the Rejected row stays.",
@@ -1274,11 +1161,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Priya Raman",
-        "Marcus Oyelaran"
-      ],
+      "actors": ["Daniel Okafor", "Priya Raman", "Marcus Oyelaran"],
       "page": "/contracts/:number/approvals Apply group",
       "action": "Apply group: choose the Approver group, inspect the named people and the skipped pending requests, select Apply group in the dialog; later group edits do not rewrite existing requests",
       "expected": "The dialog asks Marcus and skips Priya; Apply group creates Marcus's Pending row; an Administrator's later group edit leaves the requests as they are.",
@@ -1292,11 +1175,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Marcus Oyelaran",
-        "Nadia Haddad"
-      ],
+      "actors": ["Daniel Okafor", "Marcus Oyelaran", "Nadia Haddad"],
       "page": "/contracts/:number/approvals Cancel request",
       "action": "Cancel request: the requester, the Legal Owner or an Administrator can cancel a pending request at once without a confirmation; others cannot; a decided approval is not erased",
       "expected": "Marcus (not requester, Legal Owner or Administrator) has no Cancel request on Priya's pending row and is refused; A cancels Marcus's pending row with no confirmation and History records it; the other permitted person cancels Priya's pending row; decided rows stay and cannot be cancelled.",
@@ -1310,9 +1189,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number Stage control",
       "action": "Move beyond Approval: Move past approval lists Pending and Rejected rows; Cancel keeps the current Status; Move anyway saves it and records an override; the approvals keep their decisions",
       "expected": "The dialog lists the unresolved rows; Cancel keeps Awaiting approval; Move anyway saves Active; History records the override; decisions unchanged.",
@@ -1326,10 +1203,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Lena Vogel (Portal)"
-      ],
+      "actors": ["Daniel Okafor", "Lena Vogel (Portal)"],
       "page": "/contracts/:number/approvals on Confidential work",
       "action": "On a Confidential Contract the picker offers only staff who can already open it plus Business Users; if the primary Document is Confidential a staff approver outside its audience is refused by name and a Business approver is not refused but sees no Document",
       "expected": "Confidential Contract: Priya and Marcus not offered, Lena offered. Open Contract with a Confidential primary Document: Marcus refused by name and no request made; Lena asked; her review page shows No document attached.",
@@ -1343,10 +1217,7 @@
       "scenario": "V-C16",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor", "Daniel Okafor"],
       "page": "/contracts/:number/approvals Apply group with a default group",
       "action": "A Contract inherits its type's default group; the dialog starts on it; under Administrators only a Legal Team Member cannot change the choice and sees Only an administrator can choose a different group.; an archived default shows Default group unavailable — contact an administrator",
       "expected": "Dialog starts on the default; the lock follows the role and the setting; the archived default reads as unavailable and another group can be chosen by someone allowed to override.",
@@ -1360,9 +1231,7 @@
       "scenario": "V-C55",
       "role": "legal_team_member",
       "method": "browser-walkthrough",
-      "actors": [
-        "Nadia Haddad"
-      ],
+      "actors": ["Nadia Haddad"],
       "page": "/settings/contracts/approver-groups",
       "action": "Create a group, step 1: only an Administrator can open the page; anyone else who opens its address goes to their profile settings",
       "expected": "Nadia lands on /settings/profile; the API refuses her group write.",
@@ -1376,9 +1245,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Profile menu > Settings > Contracts > Approver groups > Add group",
       "action": "Create a group, steps 1-4: Name, Description, Members including a Business User; Add group; reopen Edit to confirm the saved members; groups appear by name",
       "expected": "The dialog offers any active user including Business Users; after Add group, Edit shows the chosen members; the list is in name order.",
@@ -1392,9 +1259,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number/approvals > Apply group",
       "action": "Apply and check the group, steps 1-3: Approvals, Approvals & signing, Apply group, choose the Approver group, review the named people and the skipped pending request, Apply group; one request per person asked; Business approvers are not added to the team",
       "expected": "The dialog asks Lena Vogel and the fixture user and skips Priya (already pending); two new Pending rows; Lena is not on the Contract team.",
@@ -1408,9 +1273,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/contracts/:number/approvals > Apply group (refusals)",
       "action": "A group with everyone already pending is refused; a group with no active members is refused; on a Confidential Contract a staff member without access refuses the whole action and no request is created; a Confidential primary Document also needs staff approvers in its audience",
       "expected": "Each apply is refused with a reason and creates no request.",
@@ -1424,9 +1287,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/settings/contracts/approver-groups > Edit",
       "action": "A member who has been archived is left out of an apply and shows as Can no longer approve in the editor; remove that selection before saving; the API refuses an archived member; existing requests keep their named people",
       "expected": "The next apply asks only the live members; the editor flags the archived member; Save with it ticked is refused; after unticking, Save works; C-1's requests are unchanged.",
@@ -1440,9 +1301,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "/settings/contracts/approver-groups > Edit, Archive, Show archived, Restore",
       "action": "Edit, archive, or restore a group: change the name, description and Members and Save; a member-list failure after the name saved is visible; Archive group needs no replacement; Show archived then Restore; existing requests keep their named people",
       "expected": "Save updates the group; the member-list failure says The member list could not be saved. and the rename alone holds; archive and restore leave C-1's requests unchanged and the archived group is not offered.",
@@ -1456,9 +1315,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Settings > Contracts > Types > Edit type > Approval defaults",
       "action": "Defaults: open a type, select its Approval defaults tab, choose the Approver group in the Default approver group card; the choice saves on select; new Contracts inherit it and no approval starts; clearing or changing affects future Contracts only; re-typed Contracts keep their default",
       "expected": "The card saves the group; a new Contract of the type starts Apply group on it with no requests; after No default group, that Contract still starts on it and a new one does not; a Contract re-typed into the type has no default.",
@@ -1472,10 +1329,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor",
-        "Nadia Haddad"
-      ],
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
       "page": "/settings/contracts/approver-groups > Approval permissions",
       "action": "Override permissions: the card asks Who can override a default approver group?, starts on Legal team members and administrators, and saves on select; Administrators only restricts applying a different group on a Contract with a default, including for pages opened before the change; Contracts without a default still allow Legal to choose; the setting is put back",
       "expected": "Nadia's dialog is locked with the note, her already-open dialog's different group is refused, a Contract without a default still lets her choose; Daniel is not locked; the setting returns to the initial value.",
@@ -1489,9 +1343,7 @@
       "scenario": "V-C55",
       "role": "administrator",
       "method": "browser-walkthrough",
-      "actors": [
-        "Daniel Okafor"
-      ],
+      "actors": ["Daniel Okafor"],
       "page": "Types > Approval defaults and /contracts/:number/approvals with an archived default",
       "action": "If a type's default group is archived, the type card shows it with (archived); on a Contract that inherited it, Apply group shows Default group unavailable — contact an administrator; anyone who may override can choose another group",
       "expected": "The card shows (archived); the dialog starts on the unavailable option; Daniel can choose another group; the group is restored afterwards.",

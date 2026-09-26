@@ -37,9 +37,7 @@
   "scenarios": [
     {
       "id": "V-C55",
-      "coverage": [
-        "C55"
-      ],
+      "coverage": ["C55"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [

@@ -68,9 +68,7 @@
   "scenarios": [
     {
       "id": "V-C43",
-      "coverage": [
-        "C43"
-      ],
+      "coverage": ["C43"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -88,9 +86,7 @@
     },
     {
       "id": "V-C43",
-      "coverage": [
-        "C43"
-      ],
+      "coverage": ["C43"],
       "role": "administrator",
       "method": "live-provider-check",
       "prerequisites": [
@@ -108,9 +104,7 @@
     },
     {
       "id": "V-C43",
-      "coverage": [
-        "C43"
-      ],
+      "coverage": ["C43"],
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -129,9 +123,7 @@
     },
     {
       "id": "V-C43",
-      "coverage": [
-        "C43"
-      ],
+      "coverage": ["C43"],
       "role": "operator",
       "method": "live-provider-check",
       "prerequisites": [

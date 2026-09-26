@@ -57,9 +57,7 @@
   "scenarios": [
     {
       "id": "V-C37",
-      "coverage": [
-        "C37"
-      ],
+      "coverage": ["C37"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -83,9 +81,7 @@
     },
     {
       "id": "V-C37",
-      "coverage": [
-        "C37"
-      ],
+      "coverage": ["C37"],
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [

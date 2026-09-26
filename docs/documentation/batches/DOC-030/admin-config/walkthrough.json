@@ -53,202 +53,137 @@
   },
   "runs": [
     {
-      "sections": [
-        "types"
-      ],
+      "sections": ["types"],
       "startedAt": "2026-09-25T11:15:51.962Z",
       "stamp": "09251115"
     },
     {
-      "sections": [
-        "types"
-      ],
+      "sections": ["types"],
       "startedAt": "2026-09-25T11:16:24.352Z",
       "stamp": "09251116"
     },
     {
-      "sections": [
-        "types"
-      ],
+      "sections": ["types"],
       "startedAt": "2026-09-25T11:16:47.815Z",
       "stamp": "09251116"
     },
     {
-      "sections": [
-        "types"
-      ],
+      "sections": ["types"],
       "startedAt": "2026-09-25T11:17:42.247Z",
       "stamp": "0925111742"
     },
     {
-      "sections": [
-        "documents",
-        "statuses",
-        "fields"
-      ],
+      "sections": ["documents", "statuses", "fields"],
       "startedAt": "2026-09-25T11:21:34.187Z",
       "stamp": "0925112134"
     },
     {
-      "sections": [
-        "documents",
-        "statuses",
-        "fields"
-      ],
+      "sections": ["documents", "statuses", "fields"],
       "startedAt": "2026-09-25T11:22:57.254Z",
       "stamp": "0925112257"
     },
     {
-      "sections": [
-        "form"
-      ],
+      "sections": ["form"],
       "startedAt": "2026-09-25T11:25:51.978Z",
       "stamp": "0925112551"
     },
     {
-      "sections": [
-        "form"
-      ],
+      "sections": ["form"],
       "startedAt": "2026-09-25T11:28:05.175Z",
       "stamp": "0925112805"
     },
     {
-      "sections": [
-        "form"
-      ],
+      "sections": ["form"],
       "startedAt": "2026-09-25T11:29:52.127Z",
       "stamp": "0925112952"
     },
     {
-      "sections": [
-        "form"
-      ],
+      "sections": ["form"],
       "startedAt": "2026-09-25T11:31:34.981Z",
       "stamp": "0925113134"
     },
     {
-      "sections": [
-        "form"
-      ],
+      "sections": ["form"],
       "startedAt": "2026-09-25T11:34:34.537Z",
       "stamp": "0925113434"
     },
     {
-      "sections": [
-        "form"
-      ],
+      "sections": ["form"],
       "startedAt": "2026-09-25T11:36:30.568Z",
       "stamp": "0925113630"
     },
     {
-      "sections": [
-        "form",
-        "officers",
-        "access"
-      ],
+      "sections": ["form", "officers", "access"],
       "startedAt": "2026-09-25T11:38:32.340Z",
       "stamp": "0925113832"
     },
     {
-      "sections": [
-        "officers",
-        "access"
-      ],
+      "sections": ["officers", "access"],
       "startedAt": "2026-09-25T11:41:15.844Z",
       "stamp": "0925114115"
     },
     {
-      "sections": [
-        "officers"
-      ],
+      "sections": ["officers"],
       "startedAt": "2026-09-25T11:41:57.171Z",
       "stamp": "0925114157"
     },
     {
-      "sections": [
-        "forms"
-      ],
+      "sections": ["forms"],
       "startedAt": "2026-09-25T11:45:26.655Z",
       "stamp": "0925114526"
     },
     {
-      "sections": [
-        "forms"
-      ],
+      "sections": ["forms"],
       "startedAt": "2026-09-25T11:48:42.608Z",
       "stamp": "0925114842"
     },
     {
-      "sections": [
-        "forms"
-      ],
+      "sections": ["forms"],
       "startedAt": "2026-09-25T11:51:26.272Z",
       "stamp": "0925115126"
     },
     {
-      "sections": [
-        "forms"
-      ],
+      "sections": ["forms"],
       "startedAt": "2026-09-25T11:54:03.826Z",
       "stamp": "0925115403"
     },
     {
-      "sections": [
-        "forms"
-      ],
+      "sections": ["forms"],
       "startedAt": "2026-09-25T13:16:03.452Z",
       "stamp": "0925131603"
     },
     {
-      "sections": [
-        "reminders"
-      ],
+      "sections": ["reminders"],
       "startedAt": "2026-09-25T13:24:05.691Z",
       "stamp": "0925132405"
     },
     {
-      "sections": [
-        "reminders"
-      ],
+      "sections": ["reminders"],
       "startedAt": "2026-09-25T13:25:48.897Z",
       "stamp": "0925132548"
     },
     {
-      "sections": [
-        "audit",
-        "toolcalls"
-      ],
+      "sections": ["audit", "toolcalls"],
       "startedAt": "2026-09-25T13:27:03.331Z",
       "stamp": "0925132703"
     },
     {
-      "sections": [
-        "audit",
-        "toolcalls"
-      ],
+      "sections": ["audit", "toolcalls"],
       "startedAt": "2026-09-25T13:28:51.168Z",
       "stamp": "0925132851"
     },
     {
-      "sections": [
-        "forms"
-      ],
+      "sections": ["forms"],
       "startedAt": "2026-09-25T13:29:41.774Z",
       "stamp": "0925132941"
     },
     {
-      "sections": [
-        "autodoc"
-      ],
+      "sections": ["autodoc"],
       "startedAt": "2026-09-25T13:33:39.656Z",
       "stamp": "0925133339"
     },
     {
-      "sections": [
-        "types",
-        "audit",
-        "autodoc"
-      ],
+      "sections": ["types", "audit", "autodoc"],
       "startedAt": "2026-09-25T13:34:20.050Z",
       "stamp": "0925133420"
     }

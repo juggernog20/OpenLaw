@@ -14,15 +14,17 @@ export const root = path.resolve(here, "../../../../..");
 export const PASSWORD = process.env.LAB_PASSWORD;
 if (!PASSWORD)
   throw new Error("Set LAB_PASSWORD to the seed demo password documented in VALIDATION.md.");
-const PW = path.join(root, "node_modules/.pnpm/playwright@1.63.0/node_modules/playwright/index.mjs");
+const PW = path.join(
+  root,
+  "node_modules/.pnpm/playwright@1.63.0/node_modules/playwright/index.mjs",
+);
 export const { chromium } = await import(PW);
 
 export function labInfo(name) {
   return JSON.parse(readFileSync(path.join(root, `.documentation-labs/${name}/lab.json`), "utf8"));
 }
 export const sha = (buf) => createHash("sha256").update(buf).digest("hex");
-export const articleHash = (id) =>
-  sha(readFileSync(path.join(root, `docs/user-guides/${id}.md`)));
+export const articleHash = (id) => sha(readFileSync(path.join(root, `docs/user-guides/${id}.md`)));
 export const articleText = (id) =>
   readFileSync(path.join(root, `docs/user-guides/${id}.md`), "utf8");
 

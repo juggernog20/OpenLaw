@@ -41,9 +41,7 @@
   "scenarios": [
     {
       "id": "V-C40",
-      "coverage": [
-        "C40"
-      ],
+      "coverage": ["C40"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -61,9 +59,7 @@
     },
     {
       "id": "V-C40",
-      "coverage": [
-        "C40"
-      ],
+      "coverage": ["C40"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [

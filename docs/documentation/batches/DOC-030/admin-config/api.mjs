@@ -81,7 +81,12 @@ export async function waitForMail(address, subjectRe, since, timeoutMs = 60000) 
     );
     if (match) {
       const message = await mailpit(`/api/v1/message/${match.ID}`);
-      return { id: match.ID, subject: message.Subject, text: message.Text ?? "", created: match.Created };
+      return {
+        id: match.ID,
+        subject: message.Subject,
+        text: message.Text ?? "",
+        created: match.Created,
+      };
     }
     await pause(800);
   }

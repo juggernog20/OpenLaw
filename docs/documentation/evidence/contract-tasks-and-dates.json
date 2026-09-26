@@ -42,9 +42,7 @@
   "scenarios": [
     {
       "id": "V-C19",
-      "coverage": [
-        "C19"
-      ],
+      "coverage": ["C19"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -64,9 +62,7 @@
     },
     {
       "id": "V-C19",
-      "coverage": [
-        "C19"
-      ],
+      "coverage": ["C19"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [

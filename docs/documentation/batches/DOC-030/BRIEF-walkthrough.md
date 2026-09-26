@@ -30,9 +30,9 @@ Both labs were created with `scripts/documentation/lab.mjs` from the pinned
 commit. Read `.documentation-labs/<name>/lab.json` for the exact project name,
 image IDs and seed timestamps; record them in your evidence.
 
-| Lab        | App                    | Mailpit                | State                                    |
-| ---------- | ---------------------- | ---------------------- | ---------------------------------------- |
-| `work2`    | http://127.0.0.1:43300 | http://127.0.0.1:48425 | Helix seed, light profile, random seed 7 |
+| Lab         | App                    | Mailpit                | State                                    |
+| ----------- | ---------------------- | ---------------------- | ---------------------------------------- |
+| `work2`     | http://127.0.0.1:43300 | http://127.0.0.1:48425 | Helix seed, light profile, random seed 7 |
 | `firstrun2` | http://127.0.0.1:43301 | http://127.0.0.1:48426 | Empty; for the first-run guide only      |
 
 Accounts and roles are in `docs/documentation/VALIDATION.md` ("Repeatable

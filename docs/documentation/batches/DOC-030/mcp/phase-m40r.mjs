@@ -5,7 +5,16 @@
 // so the Business User steps, which passed in the full m40 run, are not repeated here.
 // Every organization MCP setting is read first and put back as found at the end.
 import { execFileSync, spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import {
   api,
@@ -41,7 +50,9 @@ const { log, save, step } = createLog("m40r", {
   environment: LAB.project,
   appUrl: BASE,
   mailUrl: LAB.mail,
-  labManifest: JSON.parse(readFileSync(path.join(ROOT, ".documentation-labs/work2/lab.json"), "utf8")),
+  labManifest: JSON.parse(
+    readFileSync(path.join(ROOT, ".documentation-labs/work2/lab.json"), "utf8"),
+  ),
 });
 const CM = { article: "configure-mcp", scenario: "V-M40-MCP", lab: LAB.name };
 const CH = { article: "connect-headless-client", scenario: "V-M40-CLIENT", lab: LAB.name };
@@ -57,7 +68,10 @@ const ctx = {};
 const pages = {};
 async function open(role) {
   if (pages[role]) return pages[role];
-  ctx[role] = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
+  ctx[role] = await browser.newContext({
+    viewport: { width: 1440, height: 1000 },
+    acceptDownloads: true,
+  });
   await ctx[role].grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
   pages[role] = await ctx[role].newPage();
   if (role === "business_user") await portalSignIn(pages[role], LAB, PEOPLE[role].email);
@@ -117,7 +131,10 @@ async function toggle(page, label, want) {
   if (now === want) return `${label} already ${want ? "on" : "off"}`;
   const status = await saved(page, () => sw.click());
   expectThat(status === 200, `${label} PATCH answered ${status}`);
-  await until(async () => ((await sw.getAttribute("aria-checked")) === "true") === want, `${label} did not change`);
+  await until(
+    async () => ((await sw.getAttribute("aria-checked")) === "true") === want,
+    `${label} did not change`,
+  );
   return `${label} turned ${want ? "on" : "off"}; Settings saved.`;
 }
 async function expandCard(page, title) {
@@ -152,16 +169,24 @@ async function requestKey(page, { name, toolsets, scope, note }) {
   const writeShown = (await writeRadio.count()) > 0;
   await dialog.getByRole("radio", { name: scope === "write" ? /^Write\./ : /^Read\./ }).check();
   if (note) await dialog.getByLabel("Note (Optional)").fill(note);
-  const offered = await dialog.getByRole("checkbox").evaluateAll((els) =>
-    els.map((e) => e.closest("label")?.textContent?.trim()),
-  );
+  const offered = await dialog
+    .getByRole("checkbox")
+    .evaluateAll((els) => els.map((e) => e.closest("label")?.textContent?.trim()));
   const posted = page.waitForResponse(
     (r) => r.url().endsWith("/api/v1/api-key-requests") && r.request().method() === "POST",
   );
   await send.click();
   const response = await posted;
   const body = await response.json();
-  return { id: body.id, status: response.status(), dialogText: text, disabledBefore, writeShown, offered, body };
+  return {
+    id: body.id,
+    status: response.status(),
+    dialogText: text,
+    disabledBefore,
+    writeShown,
+    offered,
+    body,
+  };
 }
 async function readyDialog(page) {
   const ready = page.getByRole("dialog", { name: "Your key is ready" });
@@ -206,17 +231,26 @@ async function expectRefused(key) {
 }
 
 // ---------- fixture: the policy the revoke steps need (as in the m40 run) ----------
-await step(as(CM, "administrator", "/settings/mcp"), "Fixture (repeats Enable API keys 1 and 3): MCP on and Legal Users API keys on", "Settings saved.", async () => {
-  await gotoMcp(admin);
-  const a = await toggle(admin, "Enable MCP", true);
-  const b = await toggle(admin, "Legal Users API keys", true);
-  return `${a} ${b}`;
-});
+await step(
+  as(CM, "administrator", "/settings/mcp"),
+  "Fixture (repeats Enable API keys 1 and 3): MCP on and Legal Users API keys on",
+  "Settings saved.",
+  async () => {
+    await gotoMcp(admin);
+    const a = await toggle(admin, "Enable MCP", true);
+    const b = await toggle(admin, "Legal Users API keys", true);
+    return `${a} ${b}`;
+  },
+);
 // ---------- revoked keys: fresh keys per role, then Revoke ----------
 async function freshKey(role, page) {
   const name = `DOC-030 mcp revoke ${role} ${stamp}`;
   await apiKeysPane(page, role);
-  const r = await requestKey(page, { name, toolsets: role === "business_user" ? ["Requests"] : ["Contracts"], scope: "read" });
+  const r = await requestKey(page, {
+    name,
+    toolsets: role === "business_user" ? ["Requests"] : ["Contracts"],
+    scope: "read",
+  });
   created.push(r.id);
   if (role !== "administrator") {
     await admin.goto(`${BASE}/settings/profile`);
@@ -226,7 +260,14 @@ async function freshKey(role, page) {
     await item.waitFor({ state: "detached" });
     await closeBell(admin);
     // Metadata list only; GET /:id would collect the key outside the browser.
-    await until(async () => (await api(page, BASE, "GET", "/api/v1/api-key-requests")).body?.requests?.find((q) => q.id === r.id)?.keyAvailable, "approval not stored", 20000);
+    await until(
+      async () =>
+        (await api(page, BASE, "GET", "/api/v1/api-key-requests")).body?.requests?.find(
+          (q) => q.id === r.id,
+        )?.keyAvailable,
+      "approval not stored",
+      20000,
+    );
     await page.reload();
   }
   const c = await collect(page, await readyDialog(page), { closeWith: "Done" });
@@ -235,93 +276,161 @@ async function freshKey(role, page) {
 for (const role of ["legal_team_member", "administrator"]) {
   const page = role === "legal_team_member" ? ltm : admin;
   let k;
-  await step({ ...CH, role, page: "/settings/api-keys" }, "Fixture: a second key for the revoke check (request, approve, collect)", "Key collected and connects", async () => {
-    k = await freshKey(role, page);
-    const ok = await rawToolsList(MCP_URL, { "x-api-key": k.key });
-    expectThat(ok.status === 200, `status ${ok.status}`);
-    return `Collected; tools/list ${ok.status} with ${ok.names.length} Tools.`;
-  });
+  await step(
+    { ...CH, role, page: "/settings/api-keys" },
+    "Fixture: a second key for the revoke check (request, approve, collect)",
+    "Key collected and connects",
+    async () => {
+      k = await freshKey(role, page);
+      const ok = await rawToolsList(MCP_URL, { "x-api-key": k.key });
+      expectThat(ok.status === 200, `status ${ok.status}`);
+      return `Collected; tools/list ${ok.status} with ${ok.names.length} Tools.`;
+    },
+  );
   if (!k) continue;
   if (role === "legal_team_member") {
-    await step({ ...CM, role: "administrator", page: "/settings/mcp" }, "Revoke and inspect 2: Revoke on a key in Active keys and grants → Revoke API key → Revoke", "Next request refused; owner's row says Revoked", async () => {
-      await gotoMcp(admin);
-      await expandCard(admin, "Active keys and grants");
-      await admin.getByRole("row").filter({ hasText: k.name }).getByRole("button", { name: "Revoke", exact: true }).click();
-      const dlg = admin.getByRole("dialog", { name: "Revoke API key" });
-      const warn = flat(await dlg.innerText());
-      await dlg.getByRole("button", { name: "Revoke", exact: true }).click();
-      await dlg.waitFor({ state: "detached" });
-      const refused = await expectRefused(k.key);
-      await apiKeysPane(ltm, role);
-      const row = await until(async () => {
-        const t = await rowText(ltm, k.name);
-        if (/Revoked/.test(t)) return t;
-        await ltm.reload();
-        return null;
-      }, "Nadia's row never read Revoked", 20000);
-      return `Dialog "Revoke API key": "${warn}". After Revoke: ${refused}. Nadia's row "${row}".`;
-    });
-    await step({ ...CH, role, page: "SDK Client" }, "Negative: a revoked key cannot connect", "401", async () => expectRefused(k.key));
+    await step(
+      { ...CM, role: "administrator", page: "/settings/mcp" },
+      "Revoke and inspect 2: Revoke on a key in Active keys and grants → Revoke API key → Revoke",
+      "Next request refused; owner's row says Revoked",
+      async () => {
+        await gotoMcp(admin);
+        await expandCard(admin, "Active keys and grants");
+        await admin
+          .getByRole("row")
+          .filter({ hasText: k.name })
+          .getByRole("button", { name: "Revoke", exact: true })
+          .click();
+        const dlg = admin.getByRole("dialog", { name: "Revoke API key" });
+        const warn = flat(await dlg.innerText());
+        await dlg.getByRole("button", { name: "Revoke", exact: true }).click();
+        await dlg.waitFor({ state: "detached" });
+        const refused = await expectRefused(k.key);
+        await apiKeysPane(ltm, role);
+        const row = await until(
+          async () => {
+            const t = await rowText(ltm, k.name);
+            if (/Revoked/.test(t)) return t;
+            await ltm.reload();
+            return null;
+          },
+          "Nadia's row never read Revoked",
+          20000,
+        );
+        return `Dialog "Revoke API key": "${warn}". After Revoke: ${refused}. Nadia's row "${row}".`;
+      },
+    );
+    await step(
+      { ...CH, role, page: "SDK Client" },
+      "Negative: a revoked key cannot connect",
+      "401",
+      async () => expectRefused(k.key),
+    );
   } else {
-    await step({ ...CH, role, page: role === "business_user" ? "/portal/settings/api-keys" : "/settings/api-keys" }, "Stop access: Revoke on its own row → Revoke API key → Revoke; next request refused; row Revoked", "401; row Revoked", async () => {
-      await apiKeysPane(page, role);
-      await page.getByRole("row").filter({ hasText: k.name }).getByRole("button", { name: "Revoke", exact: true }).click();
-      const dlg = page.getByRole("dialog", { name: "Revoke API key" });
-      await dlg.getByRole("button", { name: "Revoke", exact: true }).click();
-      await dlg.waitFor({ state: "detached" });
-      const refused = await expectRefused(k.key);
-      const row = await until(async () => {
-        const t = await rowText(page, k.name);
-        if (/Revoked/.test(t)) return t;
-        await page.reload();
-        return null;
-      }, "the row never read Revoked", 20000);
-      return `${refused}. Row "${row}".`;
-    });
+    await step(
+      {
+        ...CH,
+        role,
+        page: role === "business_user" ? "/portal/settings/api-keys" : "/settings/api-keys",
+      },
+      "Stop access: Revoke on its own row → Revoke API key → Revoke; next request refused; row Revoked",
+      "401; row Revoked",
+      async () => {
+        await apiKeysPane(page, role);
+        await page
+          .getByRole("row")
+          .filter({ hasText: k.name })
+          .getByRole("button", { name: "Revoke", exact: true })
+          .click();
+        const dlg = page.getByRole("dialog", { name: "Revoke API key" });
+        await dlg.getByRole("button", { name: "Revoke", exact: true }).click();
+        await dlg.waitFor({ state: "detached" });
+        const refused = await expectRefused(k.key);
+        const row = await until(
+          async () => {
+            const t = await rowText(page, k.name);
+            if (/Revoked/.test(t)) return t;
+            await page.reload();
+            return null;
+          },
+          "the row never read Revoked",
+          20000,
+        );
+        return `${refused}. Row "${row}".`;
+      },
+    );
   }
 }
-await step({ ...CM, role: "administrator", page: "/settings/mcp" }, "Negative (V-M40-MCP): a revoked key cannot connect", "401 for the key revoked from Active keys and grants", async () => {
-  const revoked = log.steps.find((s) => s.phase === "m40r" && s.step.startsWith("Revoke and inspect 2"));
-  expectThat(revoked?.result === "pass", "the revoke step did not pass");
-  return `See the "Revoke and inspect 2" step: ${revoked.actual.slice(0, 200)}`;
-});
+await step(
+  { ...CM, role: "administrator", page: "/settings/mcp" },
+  "Negative (V-M40-MCP): a revoked key cannot connect",
+  "401 for the key revoked from Active keys and grants",
+  async () => {
+    const revoked = log.steps.find(
+      (s) => s.phase === "m40r" && s.step.startsWith("Revoke and inspect 2"),
+    );
+    expectThat(revoked?.result === "pass", "the revoke step did not pass");
+    return `See the "Revoke and inspect 2" step: ${revoked.actual.slice(0, 200)}`;
+  },
+);
 
 // ---------- the audit trail of the Organization changes ----------
-await step(as(CM, "administrator", "/settings/audit-log"), "Each Organization change is recorded in the Audit log", "Audit log lists the MCP setting changes made in this run", async () => {
-  const nav = await openSettings(admin, PEOPLE.administrator.name);
-  const auditLink = nav.getByRole("link", { name: "Audit log", exact: true });
-  if (!(await auditLink.isVisible())) await nav.getByRole("button", { name: "Advanced" }).click();
-  await auditLink.click();
-  await admin.waitForURL(/\/settings\/audit-log/);
-  // Other agents share work2, so narrow to this Administrator and the settings action.
-  await admin.locator("#auditAction").selectOption("org_settings.updated");
-  const person = admin.locator("#auditActor");
-  if (await person.count()) await person.selectOption({ label: PEOPLE.administrator.name });
-  const entries = admin.locator("main").getByText("Daniel Okafor changed the organization settings");
-  await entries.first().waitFor({ timeout: 20000 });
-  const n = await entries.count();
-  const text = await main(admin);
-  const i = text.indexOf("Daniel Okafor changed the organization settings");
-  expectThat(n >= 1, "no organization settings entries");
-  return `Action filter "org_settings.updated" option label "${flat(await admin.locator("#auditAction option:checked").innerText())}", Person Daniel Okafor: ${n} "Daniel Okafor changed the organization settings" entries on the first page; newest: "${text.slice(i, i + 260)}".`;
-});
+await step(
+  as(CM, "administrator", "/settings/audit-log"),
+  "Each Organization change is recorded in the Audit log",
+  "Audit log lists the MCP setting changes made in this run",
+  async () => {
+    const nav = await openSettings(admin, PEOPLE.administrator.name);
+    const auditLink = nav.getByRole("link", { name: "Audit log", exact: true });
+    if (!(await auditLink.isVisible())) await nav.getByRole("button", { name: "Advanced" }).click();
+    await auditLink.click();
+    await admin.waitForURL(/\/settings\/audit-log/);
+    // Other agents share work2, so narrow to this Administrator and the settings action.
+    await admin.locator("#auditAction").selectOption("org_settings.updated");
+    const person = admin.locator("#auditActor");
+    if (await person.count()) await person.selectOption({ label: PEOPLE.administrator.name });
+    const entries = admin
+      .locator("main")
+      .getByText("Daniel Okafor changed the organization settings");
+    await entries.first().waitFor({ timeout: 20000 });
+    const n = await entries.count();
+    const text = await main(admin);
+    const i = text.indexOf("Daniel Okafor changed the organization settings");
+    expectThat(n >= 1, "no organization settings entries");
+    return `Action filter "org_settings.updated" option label "${flat(await admin.locator("#auditAction option:checked").innerText())}", Person Daniel Okafor: ${n} "Daniel Okafor changed the organization settings" entries on the first page; newest: "${text.slice(i, i + 260)}".`;
+  },
+);
 
 // ---------- restore everything this run changed ----------
-await step(as(CM, "administrator", "fixture"), "Cleanup: revoke keys this run left active and put every organization MCP setting back as found", "Policy equals the found policy", async () => {
-  const list = (await api(admin, BASE, "GET", "/api/v1/mcp-settings/api-keys")).body;
-  const mine = list.filter((r) => created.includes(r.id));
-  for (const r of mine.filter((r) => r.status === "active")) await api(admin, BASE, "POST", `/api/v1/api-key-requests/${r.id}/revoke`);
-  for (const r of mine.filter((r) => r.status === "pending")) await api(admin, BASE, "POST", `/api/v1/api-key-requests/${r.id}/deny`, {});
-  const now = (await api(admin, BASE, "GET", "/api/v1/mcp-settings")).body;
-  const restore = await api(admin, BASE, "PATCH", "/api/v1/mcp-settings", FOUND_POLICY);
-  const after = (await api(admin, BASE, "GET", "/api/v1/mcp-settings")).body;
-  const same = Object.keys(FOUND_POLICY).every((k) => JSON.stringify(after[k]) === JSON.stringify(FOUND_POLICY[k]));
-  expectThat(restore.status === 200 && same, JSON.stringify(after));
-  return `Revoked ${mine.filter((r) => r.status === "active").length} active keys created by this run. Policy before restore ${JSON.stringify(Object.fromEntries(Object.keys(FOUND_POLICY).map((k) => [k, now[k]])))}; PATCH ${restore.status}; now equals the found policy.`;
-});
+await step(
+  as(CM, "administrator", "fixture"),
+  "Cleanup: revoke keys this run left active and put every organization MCP setting back as found",
+  "Policy equals the found policy",
+  async () => {
+    const list = (await api(admin, BASE, "GET", "/api/v1/mcp-settings/api-keys")).body;
+    const mine = list.filter((r) => created.includes(r.id));
+    for (const r of mine.filter((r) => r.status === "active"))
+      await api(admin, BASE, "POST", `/api/v1/api-key-requests/${r.id}/revoke`);
+    for (const r of mine.filter((r) => r.status === "pending"))
+      await api(admin, BASE, "POST", `/api/v1/api-key-requests/${r.id}/deny`, {});
+    const now = (await api(admin, BASE, "GET", "/api/v1/mcp-settings")).body;
+    const restore = await api(admin, BASE, "PATCH", "/api/v1/mcp-settings", FOUND_POLICY);
+    const after = (await api(admin, BASE, "GET", "/api/v1/mcp-settings")).body;
+    const same = Object.keys(FOUND_POLICY).every(
+      (k) => JSON.stringify(after[k]) === JSON.stringify(FOUND_POLICY[k]),
+    );
+    expectThat(restore.status === 200 && same, JSON.stringify(after));
+    return `Revoked ${mine.filter((r) => r.status === "active").length} active keys created by this run. Policy before restore ${JSON.stringify(Object.fromEntries(Object.keys(FOUND_POLICY).map((k) => [k, now[k]])))}; PATCH ${restore.status}; now equals the found policy.`;
+  },
+);
 
-log.runs.m40r.articleHashesAtEnd = { "configure-mcp": articleHash("configure-mcp"), "connect-headless-client": articleHash("connect-headless-client") };
+log.runs.m40r.articleHashesAtEnd = {
+  "configure-mcp": articleHash("configure-mcp"),
+  "connect-headless-client": articleHash("connect-headless-client"),
+};
 save();
 await browser.close();
 const failed = log.steps.filter((s) => s.phase === "m40r" && s.result !== "pass");
-console.log(`m40r done: ${log.steps.filter((s) => s.phase === "m40r").length} steps, ${failed.length} failed`);
+console.log(
+  `m40r done: ${log.steps.filter((s) => s.phase === "m40r").length} steps, ${failed.length} failed`,
+);

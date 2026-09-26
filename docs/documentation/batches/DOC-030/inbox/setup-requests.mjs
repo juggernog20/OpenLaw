@@ -129,11 +129,13 @@ for (const role of ROLES) {
         format === "broken"
           ? Buffer.from("%PDF-1.4\nThis fictional file is intentionally not a readable PDF.\n")
           : format === "pdf"
-          ? makePdf(`${title} attachment ${i}`, [
-              `Fictional attachment ${i} for ${title}.`,
-              "No real parties are named.",
-            ])
-          : makeDocx(`${title} attachment ${i}`, [`Fictional Word attachment ${i} for ${title}.`]);
+            ? makePdf(`${title} attachment ${i}`, [
+                `Fictional attachment ${i} for ${title}.`,
+                "No real parties are named.",
+              ])
+            : makeDocx(`${title} attachment ${i}`, [
+                `Fictional Word attachment ${i} for ${title}.`,
+              ]);
       const form = new FormData();
       form.append(
         "file",

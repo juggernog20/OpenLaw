@@ -52,9 +52,7 @@
   "scenarios": [
     {
       "id": "V-C24",
-      "coverage": [
-        "C24"
-      ],
+      "coverage": ["C24"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -78,9 +76,7 @@
     },
     {
       "id": "V-C24",
-      "coverage": [
-        "C24"
-      ],
+      "coverage": ["C24"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [

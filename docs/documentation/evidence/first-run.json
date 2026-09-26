@@ -62,9 +62,7 @@
   "scenarios": [
     {
       "id": "V-C35",
-      "coverage": [
-        "C35"
-      ],
+      "coverage": ["C35"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [

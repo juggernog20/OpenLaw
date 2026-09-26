@@ -492,8 +492,7 @@ async function publishKnowledge(role, S, shared) {
       const api = [
         (await apiJson(reader, "GET", "/api/v1/knowledge")).status,
         (await apiJson(reader, "GET", `/api/v1/knowledge/${ctx.id}`)).status,
-        (await apiJson(reader, "POST", `/api/v1/knowledge/${ctx.id}/publish`, { data: {} }))
-          .status,
+        (await apiJson(reader, "POST", `/api/v1/knowledge/${ctx.id}/publish`, { data: {} })).status,
       ];
       expectThat(
         !listPath.startsWith("/knowledge") && !recordPath.startsWith("/knowledge"),
@@ -559,7 +558,10 @@ async function publishKnowledge(role, S, shared) {
     "Add link takes Target Knowledge item, this item, a Label and Placement Portal home; the Knowledge item list offers only live items published for Everyone.",
     async () => {
       await admin.goto("/");
-      await admin.getByRole("button", { name: ACCOUNTS.administrator.name, exact: true }).first().click();
+      await admin
+        .getByRole("button", { name: ACCOUNTS.administrator.name, exact: true })
+        .first()
+        .click();
       await admin.getByRole("menuitem", { name: "Settings" }).click();
       await admin.waitForURL(/\/settings/);
       await admin.getByRole("link", { name: "Intake", exact: true }).first().click();
@@ -602,9 +604,9 @@ async function publishKnowledge(role, S, shared) {
   };
   const portalNames = async (p) =>
     p.evaluate(() =>
-      [
-        ...document.querySelectorAll("section[aria-labelledby='portal-knowledge-files'] li"),
-      ].map((li) => li.innerText.split("\n")[0].trim()),
+      [...document.querySelectorAll("section[aria-labelledby='portal-knowledge-files'] li")].map(
+        (li) => li.innerText.split("\n")[0].trim(),
+      ),
     );
 
   await step(
@@ -734,7 +736,12 @@ async function publishKnowledge(role, S, shared) {
       const markerName = await documentRow(admin, title)
         .getByText("CONFI")
         .first()
-        .evaluate((el) => (el.closest("[aria-label]")?.getAttribute("aria-label") ?? el.getAttribute("aria-label") ?? ""));
+        .evaluate(
+          (el) =>
+            el.closest("[aria-label]")?.getAttribute("aria-label") ??
+            el.getAttribute("aria-label") ??
+            "",
+        );
       await reader.goto(ctx.savedArticle);
       await reader.getByRole("heading", { name: ctx.title }).waitFor();
       const names = await portalNames(reader);
@@ -752,7 +759,10 @@ async function publishKnowledge(role, S, shared) {
         await apiJson(
           reader,
           "GET",
-          ctx.savedDownloads[ctx.restrictedName].replace(ctx.id, "00000000-0000-7000-8000-000000000000"),
+          ctx.savedDownloads[ctx.restrictedName].replace(
+            ctx.id,
+            "00000000-0000-7000-8000-000000000000",
+          ),
         )
       ).status;
       const otherStatuses = [
@@ -763,7 +773,10 @@ async function publishKnowledge(role, S, shared) {
         restrictedStatuses.every((s) => s === 404) && missingItem === 404,
         `confidential download ${q(restrictedStatuses)} missing item ${missingItem}`,
       );
-      expectThat(otherStatuses.every((s) => s === 200), `other downloads ${q(otherStatuses)}`);
+      expectThat(
+        otherStatuses.every((s) => s === 200),
+        `other downloads ${q(otherStatuses)}`,
+      );
       await openRecord(legal, ctx.id);
       await sleep(800);
       const legalRow = await legal.getByRole("button", { name: `Actions for ${title}` }).count();
@@ -811,13 +824,22 @@ async function publishKnowledge(role, S, shared) {
         if (hasMark) {
           await legal.getByRole("menuitem", { name: "Mark confidential" }).click();
           await sleep(1500);
-          const rowBefore = await legal.getByRole("button", { name: `Actions for ${title}` }).count();
+          const rowBefore = await legal
+            .getByRole("button", { name: `Actions for ${title}` })
+            .count();
           await openRecord(legal, ctx.id);
           await sleep(800);
-          const rowAfter = await legal.getByRole("button", { name: `Actions for ${title}` }).count();
-          const clear = await apiJson(legal, "PATCH", `/api/v1/documents/${ctx.docId[ctx.restrictedName]}`, {
-            data: { isConfidential: false },
-          });
+          const rowAfter = await legal
+            .getByRole("button", { name: `Actions for ${title}` })
+            .count();
+          const clear = await apiJson(
+            legal,
+            "PATCH",
+            `/api/v1/documents/${ctx.docId[ctx.restrictedName]}`,
+            {
+              data: { isConfidential: false },
+            },
+          );
           const saved = (await readDocuments(admin, ctx.id)).find(
             (d) => d.id === ctx.docId[ctx.restrictedName],
           );
@@ -862,7 +884,10 @@ async function publishKnowledge(role, S, shared) {
       const guidance = page.getByRole("region", { name: "Guidance", exact: true });
       const editor = page.locator("#knowledge-body");
       if (!(await editor.isVisible())) {
-        await guidance.getByRole("button", { name: /Edit|Add guidance/ }).first().click();
+        await guidance
+          .getByRole("button", { name: /Edit|Add guidance/ })
+          .first()
+          .click();
       }
       await editor.fill(`## ${base} heading two\n\nFictional guidance, second edit.`);
       await guidance.getByRole("button", { name: "Preview" }).click();

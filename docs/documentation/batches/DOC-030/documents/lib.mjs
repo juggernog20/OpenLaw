@@ -75,7 +75,11 @@ export async function portalContext(person) {
     const since = Date.now();
     await page.getByRole("button", { name: "Send link" }).click();
     const answer = await Promise.race([
-      page.getByText("Check your email").first().waitFor({ timeout: 15000 }).then(() => "sent"),
+      page
+        .getByText("Check your email")
+        .first()
+        .waitFor({ timeout: 15000 })
+        .then(() => "sent"),
       page
         .getByText("Too many sign-in link requests")
         .first()

@@ -22,7 +22,8 @@ export const PASSWORD = process.env.LAB_PASSWORD;
 if (!PASSWORD)
   throw new Error("Set LAB_PASSWORD to the seed demo password documented in VALIDATION.md.");
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-export const STAMP = process.env.RUN_STAMP ?? new Date().toISOString().slice(0, 16).replace(/\D/g, "");
+export const STAMP =
+  process.env.RUN_STAMP ?? new Date().toISOString().slice(0, 16).replace(/\D/g, "");
 
 export const SEED = {
   daniel: { email: "daniel.okafor@helix.example", name: "Daniel Okafor" },
@@ -45,7 +46,10 @@ export async function closeBrowser() {
 }
 export async function newContext() {
   const b = await launch();
-  const context = await b.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+  const context = await b.newContext({
+    viewport: { width: 1440, height: 900 },
+    acceptDownloads: true,
+  });
   const page = await context.newPage();
   page.__errors = [];
   page.on("pageerror", (e) => page.__errors.push(e.message.slice(0, 200)));
@@ -115,8 +119,16 @@ export async function portalSignIn(email, c) {
     const since = Date.now();
     await c.page.getByRole("button", { name: "Send link" }).click();
     const answer = await Promise.race([
-      c.page.getByText("Check your email").first().waitFor({ timeout: 15000 }).then(() => "sent"),
-      c.page.getByText("Too many sign-in link requests").first().waitFor({ timeout: 15000 }).then(() => "budget"),
+      c.page
+        .getByText("Check your email")
+        .first()
+        .waitFor({ timeout: 15000 })
+        .then(() => "sent"),
+      c.page
+        .getByText("Too many sign-in link requests")
+        .first()
+        .waitFor({ timeout: 15000 })
+        .then(() => "budget"),
     ]).catch(() => "none");
     if (answer !== "sent") {
       // The link budget (3 per address, 30 per client address, 15 minutes) is shared with other agents on the lab.
@@ -124,16 +136,20 @@ export async function portalSignIn(email, c) {
       budgetWaits.push({ email, at: new Date().toISOString(), answer });
       await sleep(60000);
       i = Math.max(-1, i - 1);
-      if (budgetWaits.filter((w) => w.email === email).length > 18) throw new Error(`link budget did not recover for ${email}`);
+      if (budgetWaits.filter((w) => w.email === email).length > 18)
+        throw new Error(`link budget did not recover for ${email}`);
       continue;
     }
     const m = await waitForLink(email, since, { subjectRe: /Sign in/i, linkRe: /magic-link/ });
     if (!m?.link) continue;
     await c.page.goto(m.link);
     const ok = await c.page
-      .waitForURL((u) => u.pathname.startsWith("/portal") && !u.pathname.startsWith("/portal/login"), {
-        timeout: 20000,
-      })
+      .waitForURL(
+        (u) => u.pathname.startsWith("/portal") && !u.pathname.startsWith("/portal/login"),
+        {
+          timeout: 20000,
+        },
+      )
       .then(
         () => true,
         () => false,
@@ -261,7 +277,9 @@ export async function applet(page, name) {
   return panel;
 }
 export async function rosterRows(panel) {
-  return (await panel.getByRole("listitem").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
+  return (await panel.getByRole("listitem").allInnerTexts()).map((t) =>
+    t.replace(/\s+/g, " ").trim(),
+  );
 }
 
 // ---------- step log ----------
@@ -299,7 +317,9 @@ export function makeLog(results, save) {
       entry.result = "fail";
     }
     entry.at = new Date().toISOString();
-    console.log(`[${article}/${role}] ${entry.result.toUpperCase()} ${id}: ${String(entry.actual).slice(0, 400)}`);
+    console.log(
+      `[${article}/${role}] ${entry.result.toUpperCase()} ${id}: ${String(entry.actual).slice(0, 400)}`,
+    );
     save();
     return entry;
   };

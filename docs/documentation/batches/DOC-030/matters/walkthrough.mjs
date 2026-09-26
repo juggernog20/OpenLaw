@@ -17,9 +17,7 @@ import matterWork from "./wt-matter-work.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(here, "walkthrough.json");
 const fx = JSON.parse(readFileSync(path.join(here, "fixtures.json"), "utf8"));
-const ARTICLES = (
-  process.env.ARTICLES ?? "create-matter,matter-work"
-).split(",");
+const ARTICLES = (process.env.ARTICLES ?? "create-matter,matter-work").split(",");
 const ROLES = (process.env.ROLES ?? "administrator,legal_team_member").split(",");
 const stamp = Date.now();
 

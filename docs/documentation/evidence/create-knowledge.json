@@ -27,9 +27,7 @@
   "scenarios": [
     {
       "id": "V-C33",
-      "coverage": [
-        "C33"
-      ],
+      "coverage": ["C33"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -46,9 +44,7 @@
     },
     {
       "id": "V-C33",
-      "coverage": [
-        "C33"
-      ],
+      "coverage": ["C33"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [

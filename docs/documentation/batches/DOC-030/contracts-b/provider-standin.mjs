@@ -128,7 +128,11 @@ const server = createServer((request, response) => {
         .find((key) => text.includes(key));
       if (!marker && !fallback.enabled) {
         stats.unknown += 1;
-        stats.lastUnknown = { length: prompt.length, sources: sources.length, tail: prompt.slice(-300) };
+        stats.lastUnknown = {
+          length: prompt.length,
+          sources: sources.length,
+          tail: prompt.slice(-300),
+        };
         return send(response, 422, {
           error: { message: "The stand-in has no answers for this text." },
         });

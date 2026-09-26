@@ -55,14 +55,8 @@
     }
   },
   "selection": {
-    "articles": [
-      "C19",
-      "C21"
-    ],
-    "roles": [
-      "legal_team_member",
-      "administrator"
-    ]
+    "articles": ["C19", "C21"],
+    "roles": ["legal_team_member", "administrator"]
   },
   "startedAt": "2026-09-25T10:56:01.795Z",
   "stamp": 1790333761793,
@@ -221,10 +215,7 @@
     {
       "article": "contract-analysis",
       "scenario": "V-C21",
-      "roles": [
-        "legal_team_member",
-        "administrator"
-      ],
+      "roles": ["legal_team_member", "administrator"],
       "section": "Analysis after Request conversion",
       "step": "At this build, Risk, Region and Department on Overview show no marker or Confirm when this run filled them. ... Confirm all still counts and clears their markers.",
       "expected": "With Risk and one Field both written by Request-context Analysis, Confirm all appears in the Fields header (more than one marked value) and clears both markers.",
@@ -1346,16 +1337,9 @@
         }
       },
       "selection": {
-        "articles": [
-          "C21"
-        ],
-        "roles": [
-          "legal_team_member",
-          "administrator"
-        ],
-        "parts": [
-          "conversion"
-        ]
+        "articles": ["C21"],
+        "roles": ["legal_team_member", "administrator"],
+        "parts": ["conversion"]
       },
       "providerMode": "V-C21 only: a local OpenAI-compatible stand-in (contracts-b/provider-standin.mjs, a copy of DOC-029 analysis-standin/provider-standin.mjs that also parses the prompt's appended Response JSON Schema block) in its own container (node from the work2 app image) on the work2 backend network, alias doc030-cb-provider, no published port. Fictional paper with known extracted text and known answers. No real provider key or traffic. It is not a live-provider check.",
       "setup": [

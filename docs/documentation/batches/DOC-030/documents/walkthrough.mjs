@@ -13,7 +13,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import { PEOPLE, staffContext, portalContext, api, close, BASE, MAIL, here, root, sleep } from "./lib.mjs";
+import {
+  PEOPLE,
+  staffContext,
+  portalContext,
+  api,
+  close,
+  BASE,
+  MAIL,
+  here,
+  root,
+  sleep,
+} from "./lib.mjs";
 
 const OUT = process.env.OUT ?? path.join(here, "walkthrough.json");
 const ROLES = (process.env.ROLES ?? "administrator,legal_team_member").split(",");
@@ -25,8 +36,17 @@ const fixture = (name) => path.join(FIX, name);
 const fixtureHash = (name) => sha(fs.readFileSync(fixture(name)));
 const A = "document-versions";
 const S = "V-C26";
-const lab = JSON.parse(fs.readFileSync(path.join(root, ".documentation-labs/work2/lab.json"), "utf8"));
-const FIXED = ["Draft · ours", "Draft · theirs", "Redline · theirs", "Redline · ours", "Executed", "Amendment"];
+const lab = JSON.parse(
+  fs.readFileSync(path.join(root, ".documentation-labs/work2/lab.json"), "utf8"),
+);
+const FIXED = [
+  "Draft · ours",
+  "Draft · theirs",
+  "Redline · theirs",
+  "Redline · ours",
+  "Executed",
+  "Amendment",
+];
 const MATTER_TYPE = `DOC-030 documents Matter type ${stamp}`;
 const ENTITY_TYPE = `DOC-030 documents Entity type ${stamp}`;
 
@@ -54,7 +74,10 @@ const results = {
     "doc029-bulk-a.txt",
     "doc029-bulk-b.txt",
     "doc029-services-text.pdf",
-  ].map((f) => ({ path: `docs/documentation/batches/DOC-029/documents/fixtures/${f}`, sha256: fixtureHash(f) })),
+  ].map((f) => ({
+    path: `docs/documentation/batches/DOC-029/documents/fixtures/${f}`,
+    sha256: fixtureHash(f),
+  })),
   roles: ROLES,
   stamp,
   addedDocumentTypes: [],
@@ -112,7 +135,10 @@ async function step(role, action, expected, fn, method = "browser-walkthrough") 
 function expect(condition, message) {
   if (!condition) throw new Error(message);
 }
-const tidy = (s) => String(s ?? "").replace(/\s+/g, " ").trim();
+const tidy = (s) =>
+  String(s ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
 async function until(fn, message, timeout = 15000) {
   const end = Date.now() + timeout;
   let last;
@@ -141,7 +167,10 @@ async function addTeam(page, number, email) {
 }
 async function createContract(page, role, title) {
   const r = await api(page, "POST", "/contracts", { title, contractTypeId });
-  expect(r.status === 201, `fixture contract refused ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`);
+  expect(
+    r.status === 201,
+    `fixture contract refused ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`,
+  );
   record(role, "contract", title, `C-${r.body.contract.number}`);
   return r.body.contract;
 }
@@ -152,7 +181,10 @@ async function createMatter(page, role, title) {
     matterTypeId = o.body.matterTypes.find((t) => !t.fields?.some((f) => f.isRequired))?.id;
   }
   const r = await api(page, "POST", "/matters", { title, matterTypeId });
-  expect(r.status === 201, `fixture matter refused ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`);
+  expect(
+    r.status === 201,
+    `fixture matter refused ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`,
+  );
   record(role, "matter", title, `M-${r.body.matter.number}`);
   return r.body.matter;
 }
@@ -165,7 +197,10 @@ async function createEntity(page, role, legalName) {
 }
 async function createKnowledge(page, role, title) {
   const kType = (await api(page, "GET", "/knowledge?limit=1")).body.knowledgeItems?.[0];
-  const r = await api(page, "POST", "/knowledge", { title, knowledgeTypeId: kType.knowledgeTypeId });
+  const r = await api(page, "POST", "/knowledge", {
+    title,
+    knowledgeTypeId: kType.knowledgeTypeId,
+  });
   expect(r.status === 201, `fixture knowledge ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`);
   record(role, "knowledge_item", title, r.body.knowledgeItem.id);
   return { item: r.body.knowledgeItem, typeName: kType.knowledgeTypeName };
@@ -187,7 +222,10 @@ async function uploadApi(page, url, name, { as, documentTypeId } = {}) {
   if (documentTypeId) multipart.documentTypeId = documentTypeId;
   multipart.file = part(name, as ?? name);
   const r = await api(page, "POST", url, undefined, multipart);
-  expect(r.status === 201, `fixture upload refused ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`);
+  expect(
+    r.status === 201,
+    `fixture upload refused ${r.status} ${JSON.stringify(r.body).slice(0, 200)}`,
+  );
   return r.body.document;
 }
 async function recordDocs(page, recordUrl, archived = false) {
@@ -269,8 +307,11 @@ async function chooseFiles(page, button, files) {
   await chooser.setFiles(files);
 }
 const rowOf = (page, title) =>
-  page.getByRole("row").filter({ has: page.getByRole("button", { name: `Actions for ${title}`, exact: true }) });
-const typeSelect = (page, n, title) => page.getByLabel(`Type of version ${n} of ${title}`, { exact: true });
+  page
+    .getByRole("row")
+    .filter({ has: page.getByRole("button", { name: `Actions for ${title}`, exact: true }) });
+const typeSelect = (page, n, title) =>
+  page.getByLabel(`Type of version ${n} of ${title}`, { exact: true });
 async function optionTexts(select) {
   return (await select.locator("option").allInnerTexts()).map((t) => t.trim());
 }
@@ -342,10 +383,17 @@ async function settingsAdmin() {
           `Entity type list was not empty when the empty-list check ran (${now.length} active types added by other agents on the shared lab).`,
         );
       }
-      expect(now.length === 0, `entity list not empty (${now.map((t) => t.displayName)}); check needs an empty list`);
+      expect(
+        now.length === 0,
+        `entity list not empty (${now.map((t) => t.displayName)}); check needs an empty list`,
+      );
       await openDocuments(page, `/entities/${ent.id}/documents`);
       const dialog = await uploadDialog(page);
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose files$/ }), fixture("doc029-bulk-a.txt"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose files$/ }),
+        fixture("doc029-bulk-a.txt"),
+      );
       const typeCount = await dialog.getByLabel("Type", { exact: true }).count();
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       await dialog.waitFor({ state: "hidden", timeout: 30000 });
@@ -354,7 +402,10 @@ async function settingsAdmin() {
       await row.waitFor();
       const selects = await typeSelect(page, 1, doc.title).count();
       const cells = (await row.getByRole("cell").allInnerTexts()).map(tidy);
-      expect(typeCount === 0 && selects === 0 && cells.includes("—"), `type ${typeCount} selects ${selects} cells ${cells}`);
+      expect(
+        typeCount === 0 && selects === 0 && cells.includes("—"),
+        `type ${typeCount} selects ${selects} cells ${cells}`,
+      );
       return `Entity "${ent.legalName}": Upload document showed Choose files and Note but no Type (count ${typeCount}). After Upload the row "${doc.title}" v1 had cells ${JSON.stringify(cells)}; the Type cell read "—" with no select (0 "Type of version 1" controls).`;
     },
   );
@@ -417,9 +468,17 @@ async function versions(role, person) {
   const label = role === "administrator" ? "Admin" : "Legal";
   const { context, page } = await staffContext(person);
   currentPage = page;
-  const contract = await createContract(page, role, `DOC-030 documents ${label} versions Contract ${stamp}`);
+  const contract = await createContract(
+    page,
+    role,
+    `DOC-030 documents ${label} versions Contract ${stamp}`,
+  );
   await addTeam(page, contract.number, PEOPLE.amara.email);
-  const matter = await createMatter(page, role, `DOC-030 documents ${label} versions Matter ${stamp}`);
+  const matter = await createMatter(
+    page,
+    role,
+    `DOC-030 documents ${label} versions Matter ${stamp}`,
+  );
   const recUrl = `/contracts/${contract.number}`;
   let first;
   const contractTypes = await listTypes(page, "contract");
@@ -437,9 +496,15 @@ async function versions(role, person) {
       const start = await selectedText(type);
       const options = await optionTexts(type);
       expect(start === "No type", `Type started on ${start}`);
-      expect(options[0] === "No type" && FIXED.every((k) => options.includes(k)), `options ${options}`);
+      expect(
+        options[0] === "No type" && FIXED.every((k) => options.includes(k)),
+        `options ${options}`,
+      );
       expect(!options.includes("Generated redline"), `options ${options}`);
-      expect(options.length === contractTypes.length + 1, `options ${options.length} list ${contractTypes.length}`);
+      expect(
+        options.length === contractTypes.length + 1,
+        `options ${options.length} list ${contractTypes.length}`,
+      );
       await type.selectOption({ label: "Draft · ours" });
       await dialog.getByLabel("Note").fill("DOC-030 round one note");
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
@@ -452,7 +517,10 @@ async function versions(role, person) {
       const text = tidy(await row.innerText());
       const shown = await selectedText(typeSelect(page, 1, first.title));
       expect(/v1/.test(text) && shown === "Draft · ours", `row ${text} type ${shown}`);
-      expect(first.title.startsWith("doc029-draft-v1") && first.isPrimary, `title ${first.title} primary ${first.isPrimary}`);
+      expect(
+        first.title.startsWith("doc029-draft-v1") && first.isPrimary,
+        `title ${first.title} primary ${first.isPrimary}`,
+      );
       expect(/Primary/.test(text), `no Primary mark: ${text}`);
       return `Upload document had Choose files, Type and Note. Type started on "No type" and offered ${options.length} options: ${options.join(", ")}; no Generated redline. After Upload one row "${first.title}" (from the filename) showed v1, the Primary mark and Type "Draft · ours"; read-back isPrimary true, note "DOC-030 round one note".`;
     },
@@ -494,7 +562,9 @@ async function versions(role, person) {
       await page.getByRole("button", { name: `Actions for ${newName}`, exact: true }).waitFor();
       const doc = await getDoc(page, recUrl, first.id);
       expect(
-        doc.title === newName && doc.description === "DOC-030 fictional description" && doc.versions.length === 1,
+        doc.title === newName &&
+          doc.description === "DOC-030 fictional description" &&
+          doc.versions.length === 1,
         JSON.stringify(doc).slice(0, 200),
       );
       first = doc;
@@ -513,7 +583,11 @@ async function versions(role, person) {
       await chooseMenu(page, newName, "Add version");
       const dialog = page.getByRole("dialog", { name: "Add version" });
       await dialog.waitFor();
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose file$/ }), fixture("doc029-draft-v2.docx"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose file$/ }),
+        fixture("doc029-draft-v2.docx"),
+      );
       const start = await selectedText(dialog.getByLabel("Type", { exact: true }));
       expect(start === "No type", `Add version Type started on ${start}`);
       await dialog.getByLabel("Note").fill("DOC-030 round two note");
@@ -522,10 +596,16 @@ async function versions(role, person) {
       const row = rowOf(page, newName);
       await row.getByText("v2", { exact: true }).waitFor();
       const v2Type = await selectedText(typeSelect(page, 2, newName));
-      const toggle = page.getByRole("button", { name: `Show the 1 earlier version of ${newName}`, exact: true });
+      const toggle = page.getByRole("button", {
+        name: `Show the 1 earlier version of ${newName}`,
+        exact: true,
+      });
       const nameBox = await row.getByText(newName, { exact: true }).first().boundingBox();
       const toggleBox = await toggle.boundingBox();
-      expect(nameBox && toggleBox && toggleBox.x > nameBox.x, `arrow ${JSON.stringify(toggleBox)} name ${JSON.stringify(nameBox)}`);
+      expect(
+        nameBox && toggleBox && toggleBox.x > nameBox.x,
+        `arrow ${JSON.stringify(toggleBox)} name ${JSON.stringify(nameBox)}`,
+      );
       await toggle.click();
       await page.getByRole("button", { name: "doc029-draft-v1.docx", exact: true }).click();
       const panel = page.getByRole("complementary", { name: `${newName}, version 1` });
@@ -536,7 +616,10 @@ async function versions(role, person) {
       const doc = await getDoc(page, recUrl, first.id);
       const v1 = snap(vOf(doc, 1));
       expect(dl.sha256 === v1Hash, `v1 download hash ${dl.sha256}`);
-      expect(doc.versions.length === 2 && JSON.stringify(v1) === JSON.stringify(v1Before), `v1 changed ${JSON.stringify(v1)}`);
+      expect(
+        doc.versions.length === 2 && JSON.stringify(v1) === JSON.stringify(v1Before),
+        `v1 changed ${JSON.stringify(v1)}`,
+      );
       expect(v2Type === "No type" && vOf(doc, 2).documentType === null, `v2 type ${v2Type}`);
       first = doc;
       return `Add version showed Choose file, Type (started on "No type") and Note. After Upload the row read v2 and v2's Type read "${v2Type}" (v1 was Draft · ours; not copied). The arrow "Show the 1 earlier version of ${newName}" sits to the right of the name (x ${Math.round(toggleBox.x)} > ${Math.round(nameBox.x)}). It listed doc029-draft-v1.docx; selecting it opened the reader "${newName}, version 1" (v1 chip ${chip ? "visible" : "absent"}); Download returned the original v1 bytes (SHA-256 match). v1 kept its note, type, filename and uploader.`;
@@ -549,12 +632,19 @@ async function versions(role, person) {
     "A second Document at v1; the first chain is not merged or changed",
     async () => {
       const dialog = await uploadDialog(page);
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose files$/ }), fixture("doc029-draft-v1.docx"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose files$/ }),
+        fixture("doc029-draft-v1.docx"),
+      );
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       await dialog.waitFor({ state: "hidden", timeout: 30000 });
       const docs = await recordDocs(page, recUrl);
       const again = docs.find((d) => d.id !== first.id);
-      expect(docs.length === 2 && again && (await getDoc(page, recUrl, first.id)).versions.length === 2, `docs ${docs.length}`);
+      expect(
+        docs.length === 2 && again && (await getDoc(page, recUrl, first.id)).versions.length === 2,
+        `docs ${docs.length}`,
+      );
       return `The same file uploaded again made a second Document "${again.title}" at v1 (not Primary: ${!again.isPrimary}); "${newName}" still had two Versions.`;
     },
   );
@@ -568,25 +658,24 @@ async function versions(role, person) {
       const options = await optionTexts(select);
       const before = snap(vOf(await getDoc(page, recUrl, first.id), 2));
       await select.selectOption({ label: "Redline · theirs" });
-      let doc = await until(
-        async () => {
-          const d = await getDoc(page, recUrl, first.id);
-          return vOf(d, 2).documentType?.displayName === "Redline · theirs" ? d : null;
-        },
-        "type change read-back",
-      );
+      let doc = await until(async () => {
+        const d = await getDoc(page, recUrl, first.id);
+        return vOf(d, 2).documentType?.displayName === "Redline · theirs" ? d : null;
+      }, "type change read-back");
       const mid = snap(vOf(doc, 2));
       const bytes = await api(page, "GET", `/documents/${first.id}/versions/${mid.id}/download`);
-      const same = ["id", "n", "note", "file", "by", "sha", "executed"].every((k) => mid[k] === before[k]);
-      await typeSelect(page, 2, newName).selectOption({ label: "No type" });
-      doc = await until(
-        async () => {
-          const d = await getDoc(page, recUrl, first.id);
-          return vOf(d, 2).documentType === null ? d : null;
-        },
-        "no type read-back",
+      const same = ["id", "n", "note", "file", "by", "sha", "executed"].every(
+        (k) => mid[k] === before[k],
       );
-      expect(same && !options.includes("Generated redline") && doc.versions.length === 2, `before ${JSON.stringify(before)} mid ${JSON.stringify(mid)}`);
+      await typeSelect(page, 2, newName).selectOption({ label: "No type" });
+      doc = await until(async () => {
+        const d = await getDoc(page, recUrl, first.id);
+        return vOf(d, 2).documentType === null ? d : null;
+      }, "no type read-back");
+      expect(
+        same && !options.includes("Generated redline") && doc.versions.length === 2,
+        `before ${JSON.stringify(before)} mid ${JSON.stringify(mid)}`,
+      );
       return `"Type of version 2 of ${newName}" offered ${options.join(", ")} (no Generated redline). Choosing Redline · theirs saved (read-back type Redline · theirs, kind ${mid.kind}); id, number, note, filename, uploader and pin were unchanged and the download answered ${bytes.status}. Choosing No type cleared it (read-back null). Still two Versions.`;
     },
   );
@@ -596,8 +685,14 @@ async function versions(role, person) {
     "Executed pin: Mark as executed copy on v1; choosing the Executed type on v2 does not set the pin; correcting v1's type does not move it; a later upload does not move it; Unmark clears it",
     "The pin stays on v1 throughout until Unmark",
     async () => {
-      const earlierMenu = page.getByRole("button", { name: `Actions for version 1 of ${newName}`, exact: true });
-      if (!(await earlierMenu.isVisible())) await page.getByRole("button", { name: `Show the 1 earlier version of ${newName}` }).click();
+      const earlierMenu = page.getByRole("button", {
+        name: `Actions for version 1 of ${newName}`,
+        exact: true,
+      });
+      if (!(await earlierMenu.isVisible()))
+        await page
+          .getByRole("button", { name: `Show the 1 earlier version of ${newName}` })
+          .click();
       await earlierMenu.click();
       await page.getByRole("menuitem", { name: "Mark as executed copy" }).click();
       let doc = await until(async () => {
@@ -619,22 +714,43 @@ async function versions(role, person) {
       const afterCorrect = doc.versions.filter((v) => v.isExecuted).map((v) => v.versionNumber);
       await chooseMenu(page, newName, "Add version");
       const dialog = page.getByRole("dialog", { name: "Add version" });
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose file$/ }), fixture("doc029-draft-v2.docx"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose file$/ }),
+        fixture("doc029-draft-v2.docx"),
+      );
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       await dialog.waitFor({ state: "hidden", timeout: 30000 });
       doc = await getDoc(page, recUrl, first.id);
       const afterUpload = doc.versions.filter((v) => v.isExecuted).map((v) => v.versionNumber);
-      const toggle = page.getByRole("button", { name: `Show the 2 earlier versions of ${newName}` });
+      const toggle = page.getByRole("button", {
+        name: `Show the 2 earlier versions of ${newName}`,
+      });
       if (await toggle.isVisible().catch(() => false)) await toggle.click();
-      const pinnedText = tidy(await page.getByRole("row").filter({ has: page.getByRole("button", { name: `Actions for version 1 of ${newName}`, exact: true }) }).innerText());
-      await page.getByRole("button", { name: `Actions for version 1 of ${newName}`, exact: true }).click();
+      const pinnedText = tidy(
+        await page
+          .getByRole("row")
+          .filter({
+            has: page.getByRole("button", {
+              name: `Actions for version 1 of ${newName}`,
+              exact: true,
+            }),
+          })
+          .innerText(),
+      );
+      await page
+        .getByRole("button", { name: `Actions for version 1 of ${newName}`, exact: true })
+        .click();
       await page.getByRole("menuitem", { name: "Unmark as executed copy" }).click();
       doc = await until(async () => {
         const d = await getDoc(page, recUrl, first.id);
         return !d.versions.some((v) => v.isExecuted) ? d : null;
       }, "unmark");
       expect(
-        afterType.join() === "1" && afterCorrect.join() === "1" && afterUpload.join() === "1" && doc.versions.length === 3,
+        afterType.join() === "1" &&
+          afterCorrect.join() === "1" &&
+          afterUpload.join() === "1" &&
+          doc.versions.length === 3,
         `afterType ${afterType} afterCorrect ${afterCorrect} afterUpload ${afterUpload}`,
       );
       first = doc;
@@ -654,10 +770,17 @@ async function versions(role, person) {
       const primaryItems = await menuItems(page, primary.title);
       expect(!primaryItems.includes("Make primary"), `primary row items ${primaryItems}`);
       await chooseMenu(page, other.title, "Make primary");
-      const moved = await until(async () => (await recordDocs(page, recUrl)).find((d) => d.isPrimary && d.id === other.id), "primary move");
+      const moved = await until(
+        async () => (await recordDocs(page, recUrl)).find((d) => d.isPrimary && d.id === other.id),
+        "primary move",
+      );
       await rowOf(page, other.title).getByText("Primary", { exact: true }).waitFor();
       await chooseMenu(page, primary.title, "Make primary");
-      await until(async () => (await recordDocs(page, recUrl)).find((d) => d.isPrimary && d.id === primary.id), "primary back");
+      await until(
+        async () =>
+          (await recordDocs(page, recUrl)).find((d) => d.isPrimary && d.id === primary.id),
+        "primary back",
+      );
       return `"${primary.title}" carried the Primary mark and its Actions had no Make primary (${primaryItems.join(", ")}). Make primary on "${moved.title}" moved the mark there; Make primary on "${primary.title}" moved it back.`;
     },
   );
@@ -673,11 +796,19 @@ async function versions(role, person) {
         fromVersionId: vOf(doc0, 1).id,
         toVersionId: vOf(doc0, 2).id,
       });
-      expect([200, 202].includes(c.status), `comparison ${c.status} ${JSON.stringify(c.body).slice(0, 200)}`);
+      expect(
+        [200, 202].includes(c.status),
+        `comparison ${c.status} ${JSON.stringify(c.body).slice(0, 200)}`,
+      );
       const ready = await until(
         async () => {
-          const r = await api(page, "GET", `/documents/${first.id}/comparisons/${c.body.comparison.id}`);
-          if (r.body.comparison?.state === "failed") throw new Error(`comparison failed ${JSON.stringify(r.body).slice(0, 200)}`);
+          const r = await api(
+            page,
+            "GET",
+            `/documents/${first.id}/comparisons/${c.body.comparison.id}`,
+          );
+          if (r.body.comparison?.state === "failed")
+            throw new Error(`comparison failed ${JSON.stringify(r.body).slice(0, 200)}`);
           return r.body.comparison?.state === "ready" ? r.body.comparison : null;
         },
         "comparison ready",
@@ -685,7 +816,10 @@ async function versions(role, person) {
       );
       expect(ready.mode === "word", `mode ${ready.mode}`);
       const ex = await api(page, "POST", `/documents/${first.id}/comparisons/${ready.id}/export`);
-      expect([200, 201].includes(ex.status), `export ${ex.status} ${JSON.stringify(ex.body).slice(0, 200)}`);
+      expect(
+        [200, 201].includes(ex.status),
+        `export ${ex.status} ${JSON.stringify(ex.body).slice(0, 200)}`,
+      );
       const gen = ex.body.version;
       await openDocuments(page, `${recUrl}/documents`);
       const row = rowOf(page, newName);
@@ -693,10 +827,18 @@ async function versions(role, person) {
       const cells = (await row.getByRole("cell").allInnerTexts()).map(tidy);
       const selects = await typeSelect(page, gen.versionNumber, newName).count();
       const before = snap(vOf(await getDoc(page, recUrl, first.id), gen.versionNumber));
-      const refusal = await api(page, "PATCH", `/documents/${first.id}/versions/${gen.id}`, { documentTypeId: null });
+      const refusal = await api(page, "PATCH", `/documents/${first.id}/versions/${gen.id}`, {
+        documentTypeId: null,
+      });
       const after = snap(vOf(await getDoc(page, recUrl, first.id), gen.versionNumber));
-      expect(selects === 0 && cells.includes("Generated redline"), `selects ${selects} cells ${cells}`);
-      expect(refusal.status === 409 && JSON.stringify(before) === JSON.stringify(after), `refusal ${refusal.status}`);
+      expect(
+        selects === 0 && cells.includes("Generated redline"),
+        `selects ${selects} cells ${cells}`,
+      );
+      expect(
+        refusal.status === 409 && JSON.stringify(before) === JSON.stringify(after),
+        `refusal ${refusal.status}`,
+      );
       await shot(page, `${role}-generated-redline-type.png`);
       return `Fixture: Word Comparison v1 -> v2 (mode ${ready.mode}) exported as v${gen.versionNumber} (kind ${gen.kind}). The Documents row for "${newName}" now reads ${JSON.stringify(cells)}: Type "Generated redline" as a plain label with no "Type of version ${gen.versionNumber}" select. A direct correction attempt answered ${refusal.status} ("${refusal.body?.detail}"); the Version read back unchanged (type ${after.type}, kind ${after.kind}).`;
     },
@@ -710,12 +852,24 @@ async function versions(role, person) {
       const matterTypes = await listTypes(page, "matter");
       await openDocuments(page, `/matters/${matter.number}/documents`);
       const dialog = await uploadDialog(page);
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose files$/ }), fixture("doc029-draft-v1.docx"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose files$/ }),
+        fixture("doc029-draft-v1.docx"),
+      );
       const type = dialog.getByLabel("Type", { exact: true });
       const start = await selectedText(type);
       const options = await optionTexts(type);
-      expect(start === "No type" && options.includes(MATTER_TYPE) && !FIXED.some((k) => options.includes(k)), `start ${start} options ${options}`);
-      expect(options.length === matterTypes.length + 1, `options ${options.length} list ${matterTypes.length}`);
+      expect(
+        start === "No type" &&
+          options.includes(MATTER_TYPE) &&
+          !FIXED.some((k) => options.includes(k)),
+        `start ${start} options ${options}`,
+      );
+      expect(
+        options.length === matterTypes.length + 1,
+        `options ${options.length} list ${matterTypes.length}`,
+      );
       await type.selectOption({ label: MATTER_TYPE });
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       await dialog.waitFor({ state: "hidden", timeout: 30000 });
@@ -724,11 +878,23 @@ async function versions(role, person) {
       const header = (await docsSection(page).getByRole("columnheader").allInnerTexts()).map(tidy);
       const shown = await selectedText(typeSelect(page, 1, doc.title));
       await typeSelect(page, 1, doc.title).selectOption({ label: "No type" });
-      await until(async () => (await getDoc(page, `/matters/${matter.number}`, doc.id)).versions[0].documentType === null, "matter correction");
+      await until(
+        async () =>
+          (await getDoc(page, `/matters/${matter.number}`, doc.id)).versions[0].documentType ===
+          null,
+        "matter correction",
+      );
       const items = await menuItems(page, doc.title);
-      const primaryMarks = await rowOf(page, doc.title).getByText("Primary", { exact: true }).count();
+      const primaryMarks = await rowOf(page, doc.title)
+        .getByText("Primary", { exact: true })
+        .count();
       expect(header.includes("Type") && shown === MATTER_TYPE, `header ${header} shown ${shown}`);
-      expect(!items.includes("Make primary") && !items.includes("Mark as executed copy") && primaryMarks === 0, `items ${items}`);
+      expect(
+        !items.includes("Make primary") &&
+          !items.includes("Mark as executed copy") &&
+          primaryMarks === 0,
+        `items ${items}`,
+      );
       return `Matter M-${matter.number}: Upload document showed Type starting on "No type" with ${options.length} options (${options.join(", ")}), none of the Contract types. Uploaded with "${MATTER_TYPE}"; the column headers read ${header.join(", ")} and v1's Type read "${shown}". Choosing No type in the column saved (read-back null). No Primary mark; Actions offered ${items.join(", ")}.`;
     },
   );
@@ -738,14 +904,25 @@ async function versions(role, person) {
     "Entity upload with a type list: Upload document shows Type with the Entity list; no Primary mark or Executed pin",
     "Type starts on No type and lists the Administrator-added Entity type; the row menu has no Make primary or Mark as executed copy",
     async () => {
-      const ent = await createEntity(page, role, `DOC-030 documents ${label} versions Entity ${stamp} Ltd`);
+      const ent = await createEntity(
+        page,
+        role,
+        `DOC-030 documents ${label} versions Entity ${stamp} Ltd`,
+      );
       await openDocuments(page, `/entities/${ent.id}/documents`);
       const dialog = await uploadDialog(page);
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose files$/ }), fixture("doc029-bulk-b.txt"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose files$/ }),
+        fixture("doc029-bulk-b.txt"),
+      );
       const type = dialog.getByLabel("Type", { exact: true });
       const start = await selectedText(type);
       const options = await optionTexts(type);
-      expect(start === "No type" && options.includes(ENTITY_TYPE), `start ${start} options ${options}`);
+      expect(
+        start === "No type" && options.includes(ENTITY_TYPE),
+        `start ${start} options ${options}`,
+      );
       await type.selectOption({ label: ENTITY_TYPE });
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       await dialog.waitFor({ state: "hidden", timeout: 30000 });
@@ -753,9 +930,19 @@ async function versions(role, person) {
       await rowOf(page, doc.title).waitFor();
       const shown = await selectedText(typeSelect(page, 1, doc.title));
       const items = await menuItems(page, doc.title);
-      const primaryMarks = await rowOf(page, doc.title).getByText("Primary", { exact: true }).count();
-      expect(shown === ENTITY_TYPE && doc.versions[0].documentType?.displayName === ENTITY_TYPE, `shown ${shown}`);
-      expect(!items.includes("Make primary") && !items.includes("Mark as executed copy") && primaryMarks === 0, `items ${items}`);
+      const primaryMarks = await rowOf(page, doc.title)
+        .getByText("Primary", { exact: true })
+        .count();
+      expect(
+        shown === ENTITY_TYPE && doc.versions[0].documentType?.displayName === ENTITY_TYPE,
+        `shown ${shown}`,
+      );
+      expect(
+        !items.includes("Make primary") &&
+          !items.includes("Mark as executed copy") &&
+          primaryMarks === 0,
+        `items ${items}`,
+      );
       return `Entity "${ent.legalName}": Upload document showed Type starting on "No type" with ${options.join(", ")}. The upload read back with "${ENTITY_TYPE}" and the column showed it. No Primary mark; Actions offered ${items.join(", ")}.`;
     },
   );
@@ -765,12 +952,22 @@ async function versions(role, person) {
     "Knowledge Item: Upload in its Documents section has no Type; the first Document becomes primary paper; the Type column shows the Knowledge type, offers a choice, and OpenLaw refuses the change",
     "No Type in Upload document; isPrimary on the first upload; a change in the Type column shows a refusal and the label stays",
     async () => {
-      const { item, typeName } = await createKnowledge(page, role, `DOC-030 documents ${label} Knowledge ${stamp}`);
+      const { item, typeName } = await createKnowledge(
+        page,
+        role,
+        `DOC-030 documents ${label} Knowledge ${stamp}`,
+      );
       await page.goto(`${BASE}/knowledge/${item.id}`);
-      await docsSection(page).getByRole("heading", { name: "Documents" }).waitFor({ timeout: 30000 });
+      await docsSection(page)
+        .getByRole("heading", { name: "Documents" })
+        .waitFor({ timeout: 30000 });
       await page.waitForLoadState("networkidle").catch(() => {});
       const dialog = await uploadDialog(page);
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose files$/ }), fixture("doc029-services-text.pdf"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose files$/ }),
+        fixture("doc029-services-text.pdf"),
+      );
       const typeCount = await dialog.getByLabel("Type", { exact: true }).count();
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       await dialog.waitFor({ state: "hidden", timeout: 30000 });
@@ -779,26 +976,40 @@ async function versions(role, person) {
       const select = typeSelect(page, 1, doc.title);
       const selectCount = await select.count();
       const options = selectCount ? await optionTexts(select) : [];
-      const shown = selectCount ? await selectedText(select) : tidy(await rowOf(page, doc.title).innerText());
+      const shown = selectCount
+        ? await selectedText(select)
+        : tidy(await rowOf(page, doc.title).innerText());
       const before = snap(doc.versions[0]);
       let message = null;
       if (selectCount) {
         await select.selectOption({ label: "No type" });
-        message = tidy(await until(async () => {
-          const t = tidy(await docsSection(page).innerText());
-          const m = t.match(/That version already has this type\.|Pick a document type from this record's list\.|[^.]*could not[^.]*\./);
-          return m?.[0] ?? null;
-        }, "refusal message"));
+        message = tidy(
+          await until(async () => {
+            const t = tidy(await docsSection(page).innerText());
+            const m = t.match(
+              /That version already has this type\.|Pick a document type from this record's list\.|[^.]*could not[^.]*\./,
+            );
+            return m?.[0] ?? null;
+          }, "refusal message"),
+        );
       }
       await shot(page, `${role}-knowledge-type-refused.png`);
-      const probe = await api(page, "PATCH", `/documents/${doc.id}/versions/${doc.versions[0].id}`, {
-        documentTypeId: doc.versions[0].documentType?.id ?? null,
-      });
+      const probe = await api(
+        page,
+        "PATCH",
+        `/documents/${doc.id}/versions/${doc.versions[0].id}`,
+        {
+          documentTypeId: doc.versions[0].documentType?.id ?? null,
+        },
+      );
       const after = snap((await getDoc(page, `/knowledge/${item.id}`, doc.id)).versions[0]);
       const afterShown = selectCount ? await selectedText(typeSelect(page, 1, doc.title)) : null;
       expect(typeCount === 0, `Type control count ${typeCount}`);
       expect(doc.isPrimary, "first Knowledge Document is not primary");
-      expect(before.type === typeName && JSON.stringify(before) === JSON.stringify(after), `before ${JSON.stringify(before)} after ${JSON.stringify(after)}`);
+      expect(
+        before.type === typeName && JSON.stringify(before) === JSON.stringify(after),
+        `before ${JSON.stringify(before)} after ${JSON.stringify(after)}`,
+      );
       expect(selectCount === 1 && message, `select ${selectCount} message ${message}`);
       if (!results.productBugs.some((b) => b.id === "knowledge-type-picker-refuses"))
         results.productBugs.push({
@@ -807,7 +1018,8 @@ async function versions(role, person) {
           summary:
             "On a Knowledge Item the Documents Type column renders an editable select (No type plus the item's Knowledge type), but every choice is refused. DOC-015's Knowledge addendum says the label is derived from the item, so the cell should be read-only.",
           reproduction: `As ${role}, create a Knowledge Item, upload a file in its Documents section, then choose No type in "Type of version 1 of <title>". Observed: the section shows "${message}" and the Version keeps "${typeName}". Choosing the Knowledge type itself is a no-op in the browser; the same id sent to PATCH /documents/:id/versions/:versionId answers ${probe.status} "${probe.body?.detail}".`,
-          source: "apps/web/src/components/documents/documents-card.tsx TypeCell (options include the derived Knowledge type, so readOnly is false)",
+          source:
+            "apps/web/src/components/documents/documents-card.tsx TypeCell (options include the derived Knowledge type, so readOnly is false)",
         });
       return `Knowledge Item "${item.title}" (Knowledge type ${typeName}): Upload document had no Type (count ${typeCount}). The first upload read back isPrimary true. The Type column rendered a select "Type of version 1 of ${doc.title}" showing "${shown}" with options ${JSON.stringify(options)}. Choosing No type showed "${message}" and the Version kept "${afterShown}" (read-back type ${after.type}, unchanged). Sending the Knowledge type id directly answered ${probe.status} ("${probe.body?.detail}"). Matches the guide ("offers a choice, but OpenLaw refuses the change"); recorded as a product bug.`;
     },
@@ -818,7 +1030,11 @@ async function versions(role, person) {
     "Before you start and the Type column: an archived Document or owning record freezes the Type column; an archived record hides Upload and refuses uploads until restored",
     "No Type select while archived; Upload hidden; a direct upload is refused with a restore message; after restore the controls return",
     async () => {
-      const frozen = await createContract(page, role, `DOC-030 documents ${label} archived owner ${stamp}`);
+      const frozen = await createContract(
+        page,
+        role,
+        `DOC-030 documents ${label} archived owner ${stamp}`,
+      );
       const fUrl = `/contracts/${frozen.number}`;
       const d = await uploadApi(page, `${fUrl}/documents`, "doc029-bulk-a.txt", {
         documentTypeId: contractTypes.find((t) => t.displayName === "Draft · ours").id,
@@ -826,28 +1042,61 @@ async function versions(role, person) {
       await openDocuments(page, `${fUrl}/documents`);
       const liveSelect = await typeSelect(page, 1, d.title).count();
       // Archived Document (fixture archive, then Show archived in the browser).
-      expect((await api(page, "POST", `/documents/${d.id}/archive`, {})).status === 200, "fixture doc archive");
+      expect(
+        (await api(page, "POST", `/documents/${d.id}/archive`, {})).status === 200,
+        "fixture doc archive",
+      );
       await openDocuments(page, `${fUrl}/documents`);
       await docsSection(page).getByRole("switch", { name: "Show archived" }).click();
       await rowOf(page, d.title).waitFor();
       const archivedDocSelect = await typeSelect(page, 1, d.title).count();
-      const archivedDocCells = (await rowOf(page, d.title).getByRole("cell").allInnerTexts()).map(tidy);
-      expect((await api(page, "POST", `/documents/${d.id}/restore`, {})).status === 200, "fixture doc restore");
+      const archivedDocCells = (await rowOf(page, d.title).getByRole("cell").allInnerTexts()).map(
+        tidy,
+      );
+      expect(
+        (await api(page, "POST", `/documents/${d.id}/restore`, {})).status === 200,
+        "fixture doc restore",
+      );
       // Archived owning record.
       expect((await api(page, "POST", `${fUrl}/archive`, {})).status === 200, "fixture archive");
       await openDocuments(page, `${fUrl}/documents`);
-      const uploadWhileArchived = await docsSection(page).getByRole("button", { name: "Upload", exact: true }).count();
+      const uploadWhileArchived = await docsSection(page)
+        .getByRole("button", { name: "Upload", exact: true })
+        .count();
       const frozenSelect = await typeSelect(page, 1, d.title).count();
-      const refused = await api(page, "POST", `${fUrl}/documents`, undefined, { file: part("doc029-bulk-b.txt") });
-      const refusedType = await api(page, "PATCH", `/documents/${d.id}/versions/${d.versions[0].id}`, { documentTypeId: null });
+      const refused = await api(page, "POST", `${fUrl}/documents`, undefined, {
+        file: part("doc029-bulk-b.txt"),
+      });
+      const refusedType = await api(
+        page,
+        "PATCH",
+        `/documents/${d.id}/versions/${d.versions[0].id}`,
+        { documentTypeId: null },
+      );
       expect((await api(page, "POST", `${fUrl}/restore`, {})).status === 200, "fixture restore");
       await openDocuments(page, `${fUrl}/documents`);
-      const uploadAfter = await docsSection(page).getByRole("button", { name: "Upload", exact: true }).count();
+      const uploadAfter = await docsSection(page)
+        .getByRole("button", { name: "Upload", exact: true })
+        .count();
       const selectAfter = await typeSelect(page, 1, d.title).count();
       const docs = await recordDocs(page, fUrl);
-      expect(liveSelect === 1 && archivedDocSelect === 0 && frozenSelect === 0 && selectAfter === 1, `selects ${liveSelect}/${archivedDocSelect}/${frozenSelect}/${selectAfter}`);
-      expect(uploadWhileArchived === 0 && uploadAfter === 1 && refused.status === 409 && refusedType.status >= 400, `upload ${uploadWhileArchived}/${uploadAfter} api ${refused.status} type ${refusedType.status}`);
-      expect(docs.length === 1 && docs[0].versions.length === 1 && docs[0].versions[0].documentType?.displayName === "Draft · ours", "chain changed");
+      expect(
+        liveSelect === 1 && archivedDocSelect === 0 && frozenSelect === 0 && selectAfter === 1,
+        `selects ${liveSelect}/${archivedDocSelect}/${frozenSelect}/${selectAfter}`,
+      );
+      expect(
+        uploadWhileArchived === 0 &&
+          uploadAfter === 1 &&
+          refused.status === 409 &&
+          refusedType.status >= 400,
+        `upload ${uploadWhileArchived}/${uploadAfter} api ${refused.status} type ${refusedType.status}`,
+      );
+      expect(
+        docs.length === 1 &&
+          docs[0].versions.length === 1 &&
+          docs[0].versions[0].documentType?.displayName === "Draft · ours",
+        "chain changed",
+      );
       return `C-${frozen.number}: live, v1's Type was a select. With the Document archived (Show archived on) its Type cell was a plain label (${JSON.stringify(archivedDocCells)}), no select. With the Contract archived the section had no Upload button and no Type select; a direct upload answered ${refused.status} ("${refused.body?.detail}") and a direct type correction answered ${refusedType.status}. After restore, Upload and the Type select returned; the chain still had one Version typed Draft · ours.`;
     },
   );
@@ -875,13 +1124,21 @@ async function versions(role, person) {
       );
       await chooseMenu(page, newName, "Add version");
       const dialog = page.getByRole("dialog", { name: "Add version" });
-      await chooseFiles(page, dialog.getByRole("button", { name: /Choose file$/ }), fixture("doc029-draft-v2.docx"));
+      await chooseFiles(
+        page,
+        dialog.getByRole("button", { name: /Choose file$/ }),
+        fixture("doc029-draft-v2.docx"),
+      );
       await dialog.getByRole("button", { name: "Upload", exact: true }).click();
       const alert = tidy(await dialog.getByRole("alert").innerText());
       await page.unroute("**/api/v1/documents/*/versions");
       await dialog.getByRole("button", { name: "Cancel" }).click();
       const after = (await getDoc(page, recUrl, first.id)).versions.map(snap);
-      expect(JSON.stringify(after) === JSON.stringify(before) && /larger than the upload limit/.test(alert), `alert ${alert}`);
+      expect(
+        JSON.stringify(after) === JSON.stringify(before) &&
+          /larger than the upload limit/.test(alert),
+        `alert ${alert}`,
+      );
       return `With a browser-network fixture answering 413 for the Version upload, Add version stayed open with "${alert}". The chain still had ${after.length} Versions with identical ids, numbers, types, notes and pin.`;
     },
   );
@@ -902,13 +1159,22 @@ async function versions(role, person) {
     visibility: "full_thread",
     file: part("doc029-draft-v2.docx", `doc030-${label.toLowerCase()}-round-${stamp}.docx`),
   });
-  expect(legalOnly.status === 201 && teamNote.status === 201, `fixture comments ${legalOnly.status} ${teamNote.status}`);
+  expect(
+    legalOnly.status === 201 && teamNote.status === 201,
+    `fixture comments ${legalOnly.status} ${teamNote.status}`,
+  );
 
   async function openComments() {
-    await page.getByRole("toolbar", { name: "Applets" }).getByRole("button", { name: "Comments" }).click();
+    await page
+      .getByRole("toolbar", { name: "Applets" })
+      .getByRole("button", { name: "Comments" })
+      .click();
   }
   const attachmentItem = (name) =>
-    page.getByRole("list", { name: "Comment attachments" }).getByRole("listitem").filter({ hasText: name });
+    page
+      .getByRole("list", { name: "Comment attachments" })
+      .getByRole("listitem")
+      .filter({ hasText: name });
 
   const filedTitle = `DOC-030 ${label} filed paper ${stamp}`;
   await step(
@@ -926,7 +1192,9 @@ async function versions(role, person) {
       await dialog.waitFor();
       const destOptions = await optionTexts(dialog.getByLabel("Destination"));
       const dest = await selectedText(dialog.getByLabel("Destination"));
-      const toggle = dialog.getByRole("switch", { name: "Confidential — restrict to the contract team" });
+      const toggle = dialog.getByRole("switch", {
+        name: "Confidential — restrict to the contract team",
+      });
       const on = await toggle.getAttribute("aria-checked");
       const type = dialog.getByLabel("Type", { exact: true });
       const start = await selectedText(type);
@@ -938,9 +1206,20 @@ async function versions(role, person) {
       await item.getByText(/Filed to/).waitFor();
       const filedText = tidy(await item.innerText());
       const doc = (await recordDocs(page, recUrl)).find((d) => d.title === filedTitle);
-      expect(dest === "New Document" && destOptions.includes("New Version on an existing Document"), `dest ${dest} ${destOptions}`);
-      expect(on === "true" && start === "No type" && FIXED.every((k) => typeOptions.includes(k)), `on ${on} start ${start}`);
-      expect(doc?.isConfidential && doc.versions.length === 1 && doc.versions[0].documentType?.displayName === "Draft · theirs", `doc ${JSON.stringify(doc).slice(0, 200)}`);
+      expect(
+        dest === "New Document" && destOptions.includes("New Version on an existing Document"),
+        `dest ${dest} ${destOptions}`,
+      );
+      expect(
+        on === "true" && start === "No type" && FIXED.every((k) => typeOptions.includes(k)),
+        `on ${on} start ${start}`,
+      );
+      expect(
+        doc?.isConfidential &&
+          doc.versions.length === 1 &&
+          doc.versions[0].documentType?.displayName === "Draft · theirs",
+        `doc ${JSON.stringify(doc).slice(0, 200)}`,
+      );
       return `The attachment offered File to Contract. File attachment opened with Destination "${dest}" (options ${destOptions.join(" / ")}), the switch "Confidential — restrict to the contract team" already on, and Type starting on "No type" with the Contract list. File created "${filedTitle}" (Confidential, one Version, Type Draft · theirs) and the comment read "${filedText.match(/Filed to.*$/)?.[0]}".`;
     },
   );
@@ -957,7 +1236,9 @@ async function versions(role, person) {
       await preview.waitFor();
       await preview.getByRole("button", { name: "File to Contract" }).click();
       const dialog = page.getByRole("dialog", { name: "File attachment" });
-      await dialog.getByLabel("Destination").selectOption({ label: "New Version on an existing Document" });
+      await dialog
+        .getByLabel("Destination")
+        .selectOption({ label: "New Version on an existing Document" });
       await dialog.getByLabel("Document", { exact: true }).selectOption({ label: newName });
       await dialog.getByLabel("Note").fill("DOC-030 filed round note");
       await dialog.getByRole("button", { name: "File", exact: true }).click();
@@ -965,7 +1246,10 @@ async function versions(role, person) {
       await item.getByText(/Filed to/).waitFor();
       const doc = await getDoc(page, recUrl, first.id);
       const last = doc.versions.reduce((a, b) => (a.versionNumber > b.versionNumber ? a : b));
-      expect(last.note === "DOC-030 filed round note" && last.originalFilename === name, `last ${JSON.stringify(last).slice(0, 150)}`);
+      expect(
+        last.note === "DOC-030 filed round note" && last.originalFilename === name,
+        `last ${JSON.stringify(last).slice(0, 150)}`,
+      );
       const filedText = tidy(await item.innerText());
       return `Selecting the attachment name opened its preview with File to Contract. New Version on an existing Document, Document "${newName}" and a Note appended v${last.versionNumber} with that note; the comment read "${filedText.match(/Filed to.*$/)?.[0]}".`;
     },
@@ -995,15 +1279,22 @@ async function versions(role, person) {
       const type = dialog.getByLabel("Type", { exact: true });
       const start = await selectedText(type);
       const typeOptions = await optionTexts(type);
-      const switchName = await dialog.getByRole("switch", { name: "Confidential — restrict to the matter team" }).count();
+      const switchName = await dialog
+        .getByRole("switch", { name: "Confidential — restrict to the matter team" })
+        .count();
       const title = `DOC-030 ${label} matter filed ${stamp}`;
       await dialog.getByLabel("Document name").fill(title);
       await type.selectOption({ label: MATTER_TYPE });
       await dialog.getByRole("button", { name: "File", exact: true }).click();
       await dialog.waitFor({ state: "hidden", timeout: 20000 });
       await item.getByText(/Filed to/).waitFor();
-      const doc = (await recordDocs(page, `/matters/${matter.number}`)).find((d) => d.title === title);
-      expect(start === "No type" && typeOptions.includes(MATTER_TYPE) && switchName === 1, `start ${start} options ${typeOptions} switch ${switchName}`);
+      const doc = (await recordDocs(page, `/matters/${matter.number}`)).find(
+        (d) => d.title === title,
+      );
+      expect(
+        start === "No type" && typeOptions.includes(MATTER_TYPE) && switchName === 1,
+        `start ${start} options ${typeOptions} switch ${switchName}`,
+      );
       expect(doc?.versions[0].documentType?.displayName === MATTER_TYPE, "filed type");
       return `The Matter attachment offered File to Matter. File attachment showed Type starting on "No type" with ${typeOptions.join(", ")}, and the switch "Confidential — restrict to the matter team". File created "${title}" typed "${MATTER_TYPE}".`;
     },
@@ -1025,9 +1316,14 @@ async function versions(role, person) {
       const typeLabels = await p.getByLabel(/^Type of version/).count();
       const doc = await getDoc(page, recUrl, first.id);
       const target = vOf(doc, 1);
-      const attempt = await api(p, "PATCH", `/documents/${first.id}/versions/${target.id}`, { documentTypeId: null });
+      const attempt = await api(p, "PATCH", `/documents/${first.id}/versions/${target.id}`, {
+        documentTypeId: null,
+      });
       const after = vOf(await getDoc(page, recUrl, first.id), 1);
-      expect(selects === 0 && typeLabels === 0 && attempt.status === 403, `selects ${selects} labels ${typeLabels} attempt ${attempt.status}`);
+      expect(
+        selects === 0 && typeLabels === 0 && attempt.status === 403,
+        `selects ${selects} labels ${typeLabels} attempt ${attempt.status}`,
+      );
       expect(after.documentType?.displayName === target.documentType?.displayName, "type changed");
       await p.waitForLoadState("networkidle").catch(() => {});
       const portalPath = new URL(p.url()).pathname;
@@ -1059,7 +1355,9 @@ try {
   if (results.addedDocumentTypes.length) {
     const { context, page } = await staffContext(PEOPLE.daniel).catch(() => ({}));
     for (const t of results.addedDocumentTypes) {
-      const r = page ? await api(page, "POST", `/documents/types/${t.module}/${t.id}/archive`, {}) : { status: 0 };
+      const r = page
+        ? await api(page, "POST", `/documents/types/${t.module}/${t.id}/archive`, {})
+        : { status: 0 };
       t.leftInPlace = false;
       t.archivedAfterRun = r.status === 200;
     }

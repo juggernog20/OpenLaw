@@ -22,19 +22,61 @@ const H = { headers: { origin: BASE } };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const steps = [];
 const record = (role, step, expected, actual, pass, page) => {
-  steps.push({ article: "search-and-views", scenario: "V-C04", role, step, page, expected, actual, result: pass ? "pass" : "fail", at: new Date().toISOString() });
+  steps.push({
+    article: "search-and-views",
+    scenario: "V-C04",
+    role,
+    step,
+    page,
+    expected,
+    actual,
+    result: pass ? "pass" : "fail",
+    at: new Date().toISOString(),
+  });
   console.log(`${pass ? "PASS" : "FAIL"} [${role}] ${step} :: ${actual}`);
 };
-const seen = (loc, timeout = 10000) => loc.first().waitFor({ timeout }).then(() => true, () => false);
-const txt = async (loc) => (await loc.first().innerText({ timeout: 5000 }).catch(() => "")).replace(/\s+/g, " ").trim();
+const seen = (loc, timeout = 10000) =>
+  loc
+    .first()
+    .waitFor({ timeout })
+    .then(
+      () => true,
+      () => false,
+    );
+const txt = async (loc) =>
+  (
+    await loc
+      .first()
+      .innerText({ timeout: 5000 })
+      .catch(() => "")
+  )
+    .replace(/\s+/g, " ")
+    .trim();
 const startedAt = new Date().toISOString();
-const guideSha256 = execFileSync("sha256sum", [path.join(root, "docs/user-guides/search-and-views.md")], { encoding: "utf8" }).split(" ")[0];
+const guideSha256 = execFileSync(
+  "sha256sum",
+  [path.join(root, "docs/user-guides/search-and-views.md")],
+  { encoding: "utf8" },
+).split(" ")[0];
 
 // Fresh fixture Field, created by Daniel Okafor.
 const d = new Session("daniel", BASE);
-await d.request("POST", "/api/auth/sign-in/email", { json: { email: "daniel.okafor@helix.example", password: PASSWORD }, headers: { origin: BASE } });
+await d.request("POST", "/api/auth/sign-in/email", {
+  json: { email: "daniel.okafor@helix.example", password: PASSWORD },
+  headers: { origin: BASE },
+});
 const stamp = Date.now();
-const created = (await d.post("/api/v1/fields", { displayName: `DOC-030 search V-C04 ${stamp} ref`, moduleScope: "contract", fieldType: "text" }, H)).body.field;
+const created = (
+  await d.post(
+    "/api/v1/fields",
+    {
+      displayName: `DOC-030 search V-C04 ${stamp} ref`,
+      moduleScope: "contract",
+      fieldType: "text",
+    },
+    H,
+  )
+).body.field;
 const field = { id: created.id, label: created.displayName };
 console.log(`fixture Field ${field.label}`);
 
@@ -42,7 +84,10 @@ const browser = await chromium.launch({ headless: true });
 const ctx = {};
 for (const role of ["administrator", "legal_team_member"]) {
   const acct = fx.accounts[role];
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: "Europe/London" });
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    timezoneId: "Europe/London",
+  });
   const p = await context.newPage();
   await p.goto(`${BASE}/auth/login`);
   await p.getByLabel("Email").fill(acct.email);
@@ -55,12 +100,21 @@ for (const role of ["administrator", "legal_team_member"]) {
   await p.getByRole("button", { name: "Advanced search", exact: true }).click();
   const dialog = p.getByRole("dialog", { name: "Advanced search" });
   await dialog.waitFor();
-  await dialog.getByRole("group", { name: "Kinds" }).getByRole("button", { name: "Contract", exact: true }).click();
+  await dialog
+    .getByRole("group", { name: "Kinds" })
+    .getByRole("button", { name: "Contract", exact: true })
+    .click();
   await dialog.getByRole("button", { name: "Add condition" }).click();
   const props = p.getByRole("dialog", { name: "Properties" });
   await props.getByLabel("Search properties").fill(field.label);
-  await props.getByRole("group", { name: "Contract" }).getByRole("button", { name: field.label, exact: true }).click();
-  await dialog.getByRole("group", { name: `Contract ${field.label} condition` }).getByLabel("Value").fill("ref");
+  await props
+    .getByRole("group", { name: "Contract" })
+    .getByRole("button", { name: field.label, exact: true })
+    .click();
+  await dialog
+    .getByRole("group", { name: `Contract ${field.label} condition` })
+    .getByLabel("Value")
+    .fill("ref");
   await sleep(1500);
   await dialog.getByRole("button", { name: "Save search", exact: true }).click();
   const save = p.getByRole("dialog", { name: "Save this search" });
@@ -99,19 +153,28 @@ for (const [role, { context, p, name, url }] of Object.entries(ctx)) {
   await saved.getByRole("button", { name, exact: true }).click();
   await sleep(2000);
   const dialogNotice = await txt(dialog.getByRole("status").filter({ hasText: "removed" }));
-  const rowGone = !(await dialog.getByRole("group", { name: `Contract ${field.label} condition` }).isVisible());
+  const rowGone = !(await dialog
+    .getByRole("group", { name: `Contract ${field.label} condition` })
+    .isVisible());
   record(
     role,
     "Re-walk (guide e68143e1): a Field an Administrator archives is removed from the question with a notice",
     "The results page and a saved search run from the header say Unavailable Field conditions were removed.; selecting that saved search under Saved searches in the dialog says Unavailable search conditions were removed.; the Field condition is gone",
     `Results page notice ${pageNotice}, condition chips left ${chips}; header Saved entry notice ${headerNotice}; dialog notice "${dialogNotice}", Field row gone ${rowGone}`,
-    pageNotice && chips === 0 && headerNotice && dialogNotice === "Unavailable search conditions were removed." && rowGone,
+    pageNotice &&
+      chips === 0 &&
+      headerNotice &&
+      dialogNotice === "Unavailable search conditions were removed." &&
+      rowGone,
     "/search",
   );
   // Clean up this walker's saved search.
   await saved.getByRole("button", { name: `Manage ${name}` }).click();
   await p.getByRole("menuitem", { name: "Delete…" }).click();
-  await p.getByRole("dialog", { name: "Delete this saved search?" }).getByRole("button", { name: "Delete" }).click();
+  await p
+    .getByRole("dialog", { name: "Delete this saved search?" })
+    .getByRole("button", { name: "Delete" })
+    .click();
   await sleep(1000);
   await context.close();
 }
@@ -121,12 +184,19 @@ const logPath = path.join(here, "walkthrough.json");
 const log = JSON.parse(readFileSync(logPath, "utf8"));
 log.reruns ??= [];
 log.reruns.push({
-  reason: "The author added the Saved searches dialog notice to the archived-Field sentence. Only that step was walked again; the earlier steps stand with their times.",
+  reason:
+    "The author added the Saved searches dialog notice to the archived-Field sentence. Only that step was walked again; the earlier steps stand with their times.",
   guideSha256,
   startedAt,
   finishedAt: new Date().toISOString(),
-  fixtures: { created: [`contract Field "${field.label}" (archived by Daniel Okafor during the re-walk)`] },
-  summary: { total: steps.length, passed: steps.filter((s) => s.result === "pass").length, failed: steps.filter((s) => s.result === "fail").length },
+  fixtures: {
+    created: [`contract Field "${field.label}" (archived by Daniel Okafor during the re-walk)`],
+  },
+  summary: {
+    total: steps.length,
+    passed: steps.filter((s) => s.result === "pass").length,
+    failed: steps.filter((s) => s.result === "fail").length,
+  },
   steps,
 });
 writeFileSync(logPath, JSON.stringify(log, null, 2) + "\n");

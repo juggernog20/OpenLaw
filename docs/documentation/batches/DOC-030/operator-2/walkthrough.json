@@ -5499,11 +5499,7 @@
   "supersededAttempts": "Steps with result fail whose failure was a walkthrough-script defect (selector, timing or fixture API shape) were rerun; the later step with the same action is the recorded outcome. The failures that are guide findings are listed in guideFailures. The first 'Engine busy' step set DOC_ENGINE_MAX_QUEUED=0, which the engine treats as unset (default 8), so the direct probe with 1/1 is the recorded outcome.",
   "round2": {
     "at": "2026-09-25T14:02:26.140Z",
-    "projects": [
-      "openlaw-doc030-opinst2",
-      "openlaw-doc030-opup2",
-      "openlaw-doc030-oprestore2"
-    ],
+    "projects": ["openlaw-doc030-opinst2", "openlaw-doc030-opup2", "openlaw-doc030-oprestore2"],
     "articleHashes": {
       "install": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e",
       "upgrade": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da",

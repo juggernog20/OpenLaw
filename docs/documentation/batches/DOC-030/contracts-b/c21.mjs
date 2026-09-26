@@ -20,24 +20,46 @@ export async function runC21(ctx, stepFor) {
   // ---------- helpers ----------
   // State read only: the stored marker map, which the record API filters (see the productBugs entry).
   const storedMarkers = (number) => {
-    const out = execFileSync("docker", ["--context", "default", "exec", `${h.LAB.project}-postgres-1`, "sh", "-c",
-      `psql -U "\${POSTGRES_USER:-postgres}" -d "\${POSTGRES_DB:-openlaw}" -Atc "select coalesce(string_agg(k, ','), '') from contracts, jsonb_object_keys(coalesce(ai_unverified, '{}'::jsonb)) k where number = ${Number(number)}"`], { encoding: "utf8" }).trim();
+    const out = execFileSync(
+      "docker",
+      [
+        "--context",
+        "default",
+        "exec",
+        `${h.LAB.project}-postgres-1`,
+        "sh",
+        "-c",
+        `psql -U "\${POSTGRES_USER:-postgres}" -d "\${POSTGRES_DB:-openlaw}" -Atc "select coalesce(string_agg(k, ','), '') from contracts, jsonb_object_keys(coalesce(ai_unverified, '{}'::jsonb)) k where number = ${Number(number)}"`,
+      ],
+      { encoding: "utf8" },
+    ).trim();
     return out ? out.split(",").sort() : [];
   };
   const contract = async (api, number) => api.ok("GET", `/contracts/${number}`);
-  const markers = async (api, number) => Object.keys((await contract(api, number)).contract.aiUnverified ?? {}).sort();
+  const markers = async (api, number) =>
+    Object.keys((await contract(api, number)).contract.aiUnverified ?? {}).sort();
   const latestRun = async (api, number) => (await contract(api, number)).analysis.latestRun;
   const waitRun = (api, number, pred, msg, timeout = 120000) =>
-    until(async () => {
-      const run = await latestRun(api, number);
-      return run && pred(run) ? run : null;
-    }, msg, timeout, 750);
+    until(
+      async () => {
+        const run = await latestRun(api, number);
+        return run && pred(run) ? run : null;
+      },
+      msg,
+      timeout,
+      750,
+    );
   const textState = (api, documentId, versionId, want, timeout = 150000) =>
-    until(async () => {
-      const a = await api("GET", `/documents/${documentId}/versions/${versionId}/text`);
-      const state = a.json?.text?.state;
-      return want.includes(state) ? state : null;
-    }, `text state ${want} for ${versionId}`, timeout, 1000);
+    until(
+      async () => {
+        const a = await api("GET", `/documents/${documentId}/versions/${versionId}/text`);
+        const state = a.json?.text?.state;
+        return want.includes(state) ? state : null;
+      },
+      `text state ${want} for ${versionId}`,
+      timeout,
+      1000,
+    );
   async function openTab(page, number, tab) {
     const url = `${BASE}/contracts/${number}${tab ? `/${tab}` : ""}`;
     await page.goto(url);
@@ -56,12 +78,19 @@ export async function runC21(ctx, stepFor) {
     const region = fieldsRegion(page);
     await region.waitFor();
     const names = await region.getByRole("button").evaluateAll((els) =>
-      els.map((e) => ({ name: (e.getAttribute("aria-label") ?? e.textContent ?? "").trim(), disabled: e.disabled })),
+      els.map((e) => ({
+        name: (e.getAttribute("aria-label") ?? e.textContent ?? "").trim(),
+        disabled: e.disabled,
+      })),
     );
-    return names.filter((b) => /^(Run analysis|Running…|Confirm all|Retry Request-context Analysis)$/.test(b.name));
+    return names.filter((b) =>
+      /^(Run analysis|Running…|Confirm all|Retry Request-context Analysis)$/.test(b.name),
+    );
   }
   async function fieldsAlerts(page) {
-    return (await fieldsRegion(page).getByRole("alert").allTextContents()).map((s) => s.trim()).filter(Boolean);
+    return (await fieldsRegion(page).getByRole("alert").allTextContents())
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
   async function menuItems(page, name) {
     await page.getByRole("button", { name }).click();
@@ -70,8 +99,14 @@ export async function runC21(ctx, stepFor) {
     const items = (await menu.getByRole("menuitem").allInnerTexts()).map((s) => s.trim());
     return { menu, items };
   }
-  const sparkle = (page, label) => page.getByRole("main").getByRole("button", { name: `View AI evidence for ${label}`, exact: true });
-  const rowConfirm = (page, label) => sparkle(page, label).locator("xpath=preceding-sibling::*[1]").getByRole("button", { name: "Confirm" });
+  const sparkle = (page, label) =>
+    page
+      .getByRole("main")
+      .getByRole("button", { name: `View AI evidence for ${label}`, exact: true });
+  const rowConfirm = (page, label) =>
+    sparkle(page, label)
+      .locator("xpath=preceding-sibling::*[1]")
+      .getByRole("button", { name: "Confirm" });
 
   // ---------- fixtures ----------
   let typeId;
@@ -92,34 +127,88 @@ export async function runC21(ctx, stepFor) {
       `The services are performed in ${v1 ? "Muscat" : "Doha"}.`,
       `The service tier is ${v1 ? "1" : "2"}.`,
       "The price review takes place on January 15, 2027.",
-      ...(v1 ? [] : ["The option exercise deadline is May 1, 2027.", "The customer may audit the supplier once a year."]),
+      ...(v1
+        ? []
+        : [
+            "The option exercise deadline is May 1, 2027.",
+            "The customer may audit the supplier once a year.",
+          ]),
     ];
   }
   function answers(version) {
     const v1 = version === 1;
     const kd = [
-      { kind: "milestone", date: "2027-01-15", label: "Price review", note: null, evidence: "The price review takes place on January 15, 2027." },
-      { kind: "milestone", date: v1 ? "2027-03-31" : "2027-06-30", label: "Contract expiry", note: null, evidence: `This Agreement expires on ${v1 ? "March 31, 2027" : "June 30, 2027"}.` },
+      {
+        kind: "milestone",
+        date: "2027-01-15",
+        label: "Price review",
+        note: null,
+        evidence: "The price review takes place on January 15, 2027.",
+      },
+      {
+        kind: "milestone",
+        date: v1 ? "2027-03-31" : "2027-06-30",
+        label: "Contract expiry",
+        note: null,
+        evidence: `This Agreement expires on ${v1 ? "March 31, 2027" : "June 30, 2027"}.`,
+      },
     ];
-    if (!v1) kd.push({ kind: "milestone", date: "2027-05-01", label: "Option exercise deadline", note: null, evidence: "The option exercise deadline is May 1, 2027." });
+    if (!v1)
+      kd.push({
+        kind: "milestone",
+        date: "2027-05-01",
+        label: "Option exercise deadline",
+        note: null,
+        evidence: "The option exercise deadline is May 1, 2027.",
+      });
     return {
       term_type: { value: null, evidence: null },
-      effective_date: { value: "2027-02-30", evidence: "The Agreement takes effect on the thirtieth day of February 2027." },
-      expiry_date: { value: v1 ? "2027-03-31" : "2027-06-30", evidence: `This Agreement expires on ${v1 ? "March 31, 2027" : "June 30, 2027"}.` },
+      effective_date: {
+        value: "2027-02-30",
+        evidence: "The Agreement takes effect on the thirtieth day of February 2027.",
+      },
+      expiry_date: {
+        value: v1 ? "2027-03-31" : "2027-06-30",
+        evidence: `This Agreement expires on ${v1 ? "March 31, 2027" : "June 30, 2027"}.`,
+      },
       renewal_period_months: { value: null, evidence: null },
-      notice_period_days: { value: v1 ? 60 : 90, evidence: `at least ${v1 ? "60" : "90"} days before expiry` },
-      value: { value: { amount: v1 ? 250000 : 300000, currency: "USD", cadence: "monthly" }, evidence: `The fees are USD ${v1 ? "2,500" : "3,000"} per month.` },
-      counterparties: { value: v1 ? "Doc030 Unknown Supplier LLC" : supplierName, evidence: v1 ? "Doc030 Unknown Supplier LLC" : supplierName },
-      [fieldSlugs.location.slug]: { value: v1 ? "Muscat" : "Doha", evidence: `The services are performed in ${v1 ? "Muscat" : "Doha"}.` },
-      [fieldSlugs.tier.slug]: { value: v1 ? 1 : 2, evidence: `The service tier is ${v1 ? "1" : "2"}.` },
-      [fieldSlugs.absent.slug]: { value: "Annual audit", evidence: "The customer may audit the supplier once a year." },
+      notice_period_days: {
+        value: v1 ? 60 : 90,
+        evidence: `at least ${v1 ? "60" : "90"} days before expiry`,
+      },
+      value: {
+        value: { amount: v1 ? 250000 : 300000, currency: "USD", cadence: "monthly" },
+        evidence: `The fees are USD ${v1 ? "2,500" : "3,000"} per month.`,
+      },
+      counterparties: {
+        value: v1 ? "Doc030 Unknown Supplier LLC" : supplierName,
+        evidence: v1 ? "Doc030 Unknown Supplier LLC" : supplierName,
+      },
+      [fieldSlugs.location.slug]: {
+        value: v1 ? "Muscat" : "Doha",
+        evidence: `The services are performed in ${v1 ? "Muscat" : "Doha"}.`,
+      },
+      [fieldSlugs.tier.slug]: {
+        value: v1 ? 1 : 2,
+        evidence: `The service tier is ${v1 ? "1" : "2"}.`,
+      },
+      [fieldSlugs.absent.slug]: {
+        value: "Annual audit",
+        evidence: "The customer may audit the supplier once a year.",
+      },
       "key_dates:milestones": { value: kd },
     };
   }
 
   async function setup() {
-    if (connector0.configured && connector0.baseUrl !== `${STANDIN_BASE}/` && connector0.baseUrl !== STANDIN_BASE)
-      throw new Error(`the work2 AI connector is already configured by someone else (${connector0.preset} ${connector0.baseUrl}); V-C21 not started`);
+    if (
+      connector0.configured &&
+      connector0.baseUrl !== `${STANDIN_BASE}/` &&
+      connector0.baseUrl !== STANDIN_BASE
+    )
+      throw new Error(
+        `the work2 AI connector is already configured by someone else (${connector0.preset} ${connector0.baseUrl}); V-C21 not started`,
+      );
     const saved = await admin.ok("PUT", "/ai-connector", {
       preset: "custom",
       protocol: "openai_chat_completions",
@@ -127,29 +216,66 @@ export async function runC21(ctx, stepFor) {
       apiKey: h.STANDIN_KEY,
       model: MODEL,
     });
-    myKeyId = saved.connector.savedKeys?.find((k) => (k.baseUrl ?? "").startsWith(STANDIN_BASE))?.id ?? null;
+    myKeyId =
+      saved.connector.savedKeys?.find((k) => (k.baseUrl ?? "").startsWith(STANDIN_BASE))?.id ??
+      null;
     if (!saved.connector.enabled) await admin.ok("POST", "/ai-connector/enable");
-    setupNote(`Administrator API: AI connector (was ${connector0.configured ? "configured" : "not configured"}, ${connector0.enabled ? "enabled" : "disabled"}) saved as Custom, OpenAI chat completions, base URL ${STANDIN_BASE} (the stand-in), model ${MODEL}, and enabled for V-C21 only. Prerequisite preparation from configure-analysis, not a C21 step.`);
-    const type = await admin.ok("POST", "/contract-types", { displayName: `DOC-030 contracts-b Analysis type ${stamp}` });
+    setupNote(
+      `Administrator API: AI connector (was ${connector0.configured ? "configured" : "not configured"}, ${connector0.enabled ? "enabled" : "disabled"}) saved as Custom, OpenAI chat completions, base URL ${STANDIN_BASE} (the stand-in), model ${MODEL}, and enabled for V-C21 only. Prerequisite preparation from configure-analysis, not a C21 step.`,
+    );
+    const type = await admin.ok("POST", "/contract-types", {
+      displayName: `DOC-030 contracts-b Analysis type ${stamp}`,
+    });
     typeId = type.contractType.id;
     fieldSlugs = {};
     const newRows = [];
     for (const [key, displayName, fieldType, prompt] of [
-      ["location", `DOC-030 Service location ${stamp}`, "text", "Extract the city where the services are performed."],
+      [
+        "location",
+        `DOC-030 Service location ${stamp}`,
+        "text",
+        "Extract the city where the services are performed.",
+      ],
       ["tier", `DOC-030 Service tier ${stamp}`, "number", "Extract the numeric service tier."],
       ["absent", `DOC-030 Audit clause ${stamp}`, "text", "Extract the audit clause summary."],
     ]) {
-      const field = await admin.ok("POST", "/fields", { displayName, moduleScope: "contract", fieldType, fieldTag: "legal", aiPrompt: prompt });
+      const field = await admin.ok("POST", "/fields", {
+        displayName,
+        moduleScope: "contract",
+        fieldType,
+        fieldTag: "legal",
+        aiPrompt: prompt,
+      });
       fieldSlugs[key] = { slug: field.field.slug, label: displayName, id: field.field.id };
-      newRows.push({ kind: "row", id: field.field.id, rowRef: field.field.slug, fieldType, onIntakeForm: false, isRequired: false, visibleOnPortal: false });
+      newRows.push({
+        kind: "row",
+        id: field.field.id,
+        rowRef: field.field.slug,
+        fieldType,
+        onIntakeForm: false,
+        isRequired: false,
+        visibleOnPortal: false,
+      });
     }
     const form = (await admin.ok("GET", `/contract-types/${typeId}/form`)).form;
     await admin.ok("PUT", `/contract-types/${typeId}/form`, { form: [...form, ...newRows] });
-    const holder = await admin.ok("POST", "/contracts", { title: `DOC-030 contracts-b V-C21 Counterparty holder ${stamp}`, contractTypeId: typeId });
+    const holder = await admin.ok("POST", "/contracts", {
+      title: `DOC-030 contracts-b V-C21 Counterparty holder ${stamp}`,
+      contractTypeId: typeId,
+    });
     supplierName = `DOC-030 Analysis Supplier ${stamp} Ltd`;
-    await admin.ok("POST", `/contracts/${holder.contract.number}/counterparties`, { name: supplierName });
-    ctx.records.push({ article: "contract-analysis", role: "administrator", reference: `C-${holder.contract.number}`, title: `DOC-030 contracts-b V-C21 Counterparty holder ${stamp}` });
-    setupNote(`Administrator API: Contract type "DOC-030 contracts-b Analysis type ${stamp}" whose Form gains three prompted record Rows (text location, number tier, text audit clause), and live Counterparty "${supplierName}" on holder Contract C-${holder.contract.number}.`);
+    await admin.ok("POST", `/contracts/${holder.contract.number}/counterparties`, {
+      name: supplierName,
+    });
+    ctx.records.push({
+      article: "contract-analysis",
+      role: "administrator",
+      reference: `C-${holder.contract.number}`,
+      title: `DOC-030 contracts-b V-C21 Counterparty holder ${stamp}`,
+    });
+    setupNote(
+      `Administrator API: Contract type "DOC-030 contracts-b Analysis type ${stamp}" whose Form gains three prompted record Rows (text location, number tier, text audit clause), and live Counterparty "${supplierName}" on holder Contract C-${holder.contract.number}.`,
+    );
   }
 
   async function restore() {
@@ -157,18 +283,29 @@ export async function runC21(ctx, stepFor) {
     if (now.configured && (now.baseUrl ?? "").startsWith(STANDIN_BASE)) {
       if (!connector0.configured) {
         const d = await admin("DELETE", "/ai-connector");
-        setupNote(`Administrator API: removed the stand-in AI connector (DELETE ${d.status}); work2 is back to no AI connector.`);
+        setupNote(
+          `Administrator API: removed the stand-in AI connector (DELETE ${d.status}); work2 is back to no AI connector.`,
+        );
       } else {
-        setupNote("Administrator API: the connector was configured before V-C21; it was left on the stand-in. Manual restore needed.");
+        setupNote(
+          "Administrator API: the connector was configured before V-C21; it was left on the stand-in. Manual restore needed.",
+        );
       }
-    } else setupNote(`Restore: the connector no longer points at the stand-in (${now.baseUrl}); left as is.`);
+    } else
+      setupNote(
+        `Restore: the connector no longer points at the stand-in (${now.baseUrl}); left as is.`,
+      );
     const keys = (await admin.ok("GET", "/ai-connector")).connector.savedKeys ?? [];
-    for (const k of keys.filter((k) => (k.baseUrl ?? "").startsWith(STANDIN_BASE) || k.id === myKeyId)) {
+    for (const k of keys.filter(
+      (k) => (k.baseUrl ?? "").startsWith(STANDIN_BASE) || k.id === myKeyId,
+    )) {
       const d = await admin("DELETE", `/ai-connector/saved-keys/${k.id}`);
       setupNote(`Administrator API: deleted the stand-in Saved key (${d.status}).`);
     }
     const after = (await admin.ok("GET", "/ai-connector")).connector;
-    setupNote(`Connector after restore: configured ${after.configured}, enabled ${after.enabled}, saved keys ${after.savedKeys.length}, conversion analysis ${after.contractConversionAnalysis}.`);
+    setupNote(
+      `Connector after restore: configured ${after.configured}, enabled ${after.enabled}, saved keys ${after.savedKeys.length}, conversion analysis ${after.contractConversionAnalysis}.`,
+    );
   }
 
   // ---------- one role ----------
@@ -180,15 +317,32 @@ export async function runC21(ctx, stepFor) {
     const api = me.api;
     const tag = `${short(role)} ${stamp}`;
     const mk = async (suffix) =>
-      (await api.ok("POST", "/contracts", { title: `DOC-030 contracts-b V-C21 ${suffix} ${tag}`, contractTypeId: typeId, managerId: null })).contract.number;
+      (
+        await api.ok("POST", "/contracts", {
+          title: `DOC-030 contracts-b V-C21 ${suffix} ${tag}`,
+          contractTypeId: typeId,
+          managerId: null,
+        })
+      ).contract.number;
     const noPaper = await mk("No paper");
     const failedPaper = await mk("Failed extraction");
     const main = await mk("Main");
     const marker = `DOC030CB${short(role).toUpperCase()}${stamp}`;
     const markerV2 = `${marker}V2`;
-    for (const [n, s] of [[noPaper, "No paper"], [failedPaper, "Failed extraction"], [main, "Main"]])
-      ctx.records.push({ article: "contract-analysis", role, reference: `C-${n}`, title: `DOC-030 contracts-b V-C21 ${s} ${tag}` });
-    setupNote(`${role} API: created C-${noPaper} (no paper), C-${failedPaper} (unreadable primary PDF) and C-${main} (main walk) of the analysis type; stand-in markers ${marker} and ${markerV2}.`);
+    for (const [n, s] of [
+      [noPaper, "No paper"],
+      [failedPaper, "Failed extraction"],
+      [main, "Main"],
+    ])
+      ctx.records.push({
+        article: "contract-analysis",
+        role,
+        reference: `C-${n}`,
+        title: `DOC-030 contracts-b V-C21 ${s} ${tag}`,
+      });
+    setupNote(
+      `${role} API: created C-${noPaper} (no paper), C-${failedPaper} (unreadable primary PDF) and C-${main} (main walk) of the analysis type; stand-in markers ${marker} and ${markerV2}.`,
+    );
 
     await step(
       "If Analysis cannot finish: no primary Document; Run analysis in the Fields header and in the Contract actions menu",
@@ -203,13 +357,23 @@ export async function runC21(ctx, stepFor) {
         const { menu, items } = await menuItems(page, "Contract actions");
         await menu.getByRole("menuitem", { name: "Run analysis" }).click();
         await sleep(1500);
-        await page.getByRole("navigation", { name: "Contract sections" }).getByRole("link", { name: "Fields" }).click();
+        await page
+          .getByRole("navigation", { name: "Contract sections" })
+          .getByRole("link", { name: "Fields" })
+          .click();
         await fieldsRegion(page).getByRole("alert").first().waitFor({ timeout: 15000 });
         const fromMenu = await fieldsAlerts(page);
         const run = await latestRun(api, noPaper);
-        expectThat(controls.some((c) => c.name === "Run analysis"), `header ${q(controls)}`);
+        expectThat(
+          controls.some((c) => c.name === "Run analysis"),
+          `header ${q(controls)}`,
+        );
         expectThat(items.includes("Run analysis"), `menu ${q(items)}`);
-        expectThat(fromHeader.some((a) => /primary Document/i.test(a)) && fromMenu.some((a) => /primary Document/i.test(a)), `alerts ${q({ fromHeader, fromMenu })}`);
+        expectThat(
+          fromHeader.some((a) => /primary Document/i.test(a)) &&
+            fromMenu.some((a) => /primary Document/i.test(a)),
+          `alerts ${q({ fromHeader, fromMenu })}`,
+        );
         expectThat(run === null, "a run was created");
         return `C-${noPaper} Fields header offered ${q(controls.map((c) => c.name))}. Run analysis showed ${q(fromHeader)} under the Fields header. Overview -> Contract actions (${q(items)}) -> Run analysis, then the Fields tab, showed ${q(fromMenu)} in the same place. No Analysis run exists.`;
       },
@@ -220,15 +384,27 @@ export async function runC21(ctx, stepFor) {
       "If Analysis cannot finish: failed extraction of the primary Document text",
       "No automatic run starts and Run analysis is refused because the target text is not ready or is empty",
       async () => {
-        const broken = { name: `doc030-broken-${short(role).toLowerCase()}.pdf`, mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.7\nthis is not a readable PDF body\n%%EOF\n") };
+        const broken = {
+          name: `doc030-broken-${short(role).toLowerCase()}.pdf`,
+          mimeType: "application/pdf",
+          buffer: Buffer.from("%PDF-1.7\nthis is not a readable PDF body\n%%EOF\n"),
+        };
         const up = (await api.upload(`/contracts/${failedPaper}/documents`, broken)).json;
-        const state = await textState(api, up.document.id, up.document.versions[0].id, ["failed", "ready", "empty", "unsupported"]);
+        const state = await textState(api, up.document.id, up.document.versions[0].id, [
+          "failed",
+          "ready",
+          "empty",
+          "unsupported",
+        ]);
         expectThat(state !== "ready", `text state ${state}`);
         await openTab(page, failedPaper, "fields");
         await fieldsRegion(page).getByRole("button", { name: "Run analysis" }).click();
         await fieldsRegion(page).getByRole("alert").first().waitFor({ timeout: 15000 });
         const alerts = await fieldsAlerts(page);
-        expectThat(alerts.some((a) => /text/i.test(a)), `alerts ${q(alerts)}`);
+        expectThat(
+          alerts.some((a) => /text/i.test(a)),
+          `alerts ${q(alerts)}`,
+        );
         expectThat((await latestRun(api, failedPaper)) === null, "a run exists");
         return `Uploaded an unreadable PDF as C-${failedPaper}'s primary Document (setup API); its text state became ${q(state)}; no automatic run. Run analysis showed ${q(alerts)} under the Fields header and created no run.`;
       },
@@ -256,7 +432,10 @@ export async function runC21(ctx, stepFor) {
         }
         await openTab(page, noPaper, "fields");
         const back = await headerControls(page);
-        expectThat(back.some((c) => c.name === "Run analysis"), `after enable ${q(back)}`);
+        expectThat(
+          back.some((c) => c.name === "Run analysis"),
+          `after enable ${q(back)}`,
+        );
         return `${out} After enabling, the header shows ${q(back.map((c) => c.name))}.`;
       },
       { page },
@@ -271,11 +450,19 @@ export async function runC21(ctx, stepFor) {
         await h.standin("/control/pause", { paused: true });
         let pendingControls;
         try {
-          const pdf = await h.makePdf(browser, `doc030-services-${short(role).toLowerCase()}.pdf`, paper(marker, 1));
+          const pdf = await h.makePdf(
+            browser,
+            `doc030-services-${short(role).toLowerCase()}.pdf`,
+            paper(marker, 1),
+          );
           v1Doc = (await api.upload(`/contracts/${main}/documents`, pdf)).json.document;
           await waitRun(api, main, (r) => r.state === "pending", "automatic run queued", 150000);
           await openTab(page, main, "fields");
-          await until(async () => (await headerControls(page)).some((c) => c.name === "Running…"), "Running… shown", 30000);
+          await until(
+            async () => (await headerControls(page)).some((c) => c.name === "Running…"),
+            "Running… shown",
+            30000,
+          );
           pendingControls = await headerControls(page);
           const menuRun = await menuItems(page, "Contract actions");
           await page.keyboard.press("Escape");
@@ -284,24 +471,66 @@ export async function runC21(ctx, stepFor) {
           await h.standin("/control/pause", { paused: false });
         }
         await waitRun(api, main, (r) => r.state === "ready", "run finished");
-        await until(async () => (await headerControls(page)).some((c) => c.name === "Run analysis"), "record updated in place", 60000);
-        const note = (await fieldsAlerts(page)).concat(await fieldsRegion(page).getByRole("status").allTextContents());
+        await until(
+          async () => (await headerControls(page)).some((c) => c.name === "Run analysis"),
+          "record updated in place",
+          60000,
+        );
+        const note = (await fieldsAlerts(page)).concat(
+          await fieldsRegion(page).getByRole("status").allTextContents(),
+        );
         const record = await contract(api, main);
         const flagged = Object.keys(record.contract.aiUnverified ?? {}).sort();
         const fieldsText = await text(fieldsRegion(page));
-        const locationShown = await fieldsRegion(page).getByRole("textbox", { name: fieldSlugs.location.label }).inputValue();
-        const unverifiedOnFields = await fieldsRegion(page).getByText("Unverified", { exact: true }).count();
+        const locationShown = await fieldsRegion(page)
+          .getByRole("textbox", { name: fieldSlugs.location.label })
+          .inputValue();
+        const unverifiedOnFields = await fieldsRegion(page)
+          .getByText("Unverified", { exact: true })
+          .count();
         const kd = (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines;
         const running = pendingControls.find((c) => c.name === "Running…");
-        expectThat(running && running.disabled && !pendingControls.some((c) => c.name === "Run analysis"), `pending controls ${q(pendingControls)}`);
-        expectThat(record.analysis.latestRun.trigger === "automatic", `trigger ${record.analysis.latestRun.trigger}`);
-        const want = ["expiry_date", "notice_period_days", "value", fieldSlugs.location.slug, fieldSlugs.tier.slug].sort();
-        expectThat(want.every((s) => flagged.includes(s)) && !flagged.includes("effective_date") && !flagged.includes("term_type") && !flagged.includes("counterparties") && !flagged.includes(fieldSlugs.absent.slug), `markers ${q(flagged)}`);
+        expectThat(
+          running && running.disabled && !pendingControls.some((c) => c.name === "Run analysis"),
+          `pending controls ${q(pendingControls)}`,
+        );
+        expectThat(
+          record.analysis.latestRun.trigger === "automatic",
+          `trigger ${record.analysis.latestRun.trigger}`,
+        );
+        const want = [
+          "expiry_date",
+          "notice_period_days",
+          "value",
+          fieldSlugs.location.slug,
+          fieldSlugs.tier.slug,
+        ].sort();
+        expectThat(
+          want.every((s) => flagged.includes(s)) &&
+            !flagged.includes("effective_date") &&
+            !flagged.includes("term_type") &&
+            !flagged.includes("counterparties") &&
+            !flagged.includes(fieldSlugs.absent.slug),
+          `markers ${q(flagged)}`,
+        );
         expectThat(record.counterparties.length === 0, "a Counterparty was linked");
-        expectThat(kd.some((d) => d.label === "Price review" && d.unverified) && !kd.some((d) => d.label === "Contract expiry"), `key dates ${q(kd.map((d) => d.label))}`);
-        expectThat(note.filter((n) => /complet|finished|wrote|written/i.test(n)).length === 0, `summary sentence ${q(note)}`);
-        expectThat(locationShown === "Muscat" && unverifiedOnFields >= 2, `fields ${locationShown} ${unverifiedOnFields}`);
-        expectThat(!/Unmatched|Doc030 Unknown Supplier/.test(await text(page.getByRole("main"))), "unmatched name surfaced");
+        expectThat(
+          kd.some((d) => d.label === "Price review" && d.unverified) &&
+            !kd.some((d) => d.label === "Contract expiry"),
+          `key dates ${q(kd.map((d) => d.label))}`,
+        );
+        expectThat(
+          note.filter((n) => /complet|finished|wrote|written/i.test(n)).length === 0,
+          `summary sentence ${q(note)}`,
+        );
+        expectThat(
+          locationShown === "Muscat" && unverifiedOnFields >= 2,
+          `fields ${locationShown} ${unverifiedOnFields}`,
+        );
+        expectThat(
+          !/Unmatched|Doc030 Unknown Supplier/.test(await text(page.getByRole("main"))),
+          "unmatched name surfaced",
+        );
         return `Uploaded the Version 1 PDF as C-${main}'s primary Document (setup API; stand-in held). Fields header while pending: ${q(pendingControls)} (Running… disabled, no Run analysis). After the stand-in answered, without a reload the header showed Run analysis again and no summary sentence (alerts/status: ${q(note)}). Unverified keys: ${q(flagged)} (Fields shows ${unverifiedOnFields} Unverified markers; location ${q(locationShown)}). Effective date (invalid answer), Term type (null), audit clause (quote not in text) and the unknown Counterparty wrote nothing; no Counterparty linked and the page does not mention the unmatched name. Key dates: Price review added Unverified; the Contract expiry milestone matched the term date and added nothing.`;
       },
       { page },
@@ -312,22 +541,48 @@ export async function runC21(ctx, stepFor) {
       "A value typed but not saved on Fields stays in its control when a pending run completes",
       async () => {
         const draftContract = await mk("Typed draft");
-        ctx.records.push({ article: "contract-analysis", role, reference: `C-${draftContract}`, title: `DOC-030 contracts-b V-C21 Typed draft ${tag}` });
+        ctx.records.push({
+          article: "contract-analysis",
+          role,
+          reference: `C-${draftContract}`,
+          title: `DOC-030 contracts-b V-C21 Typed draft ${tag}`,
+        });
         const draftMarker = `${marker}DRAFT`;
         await h.standin("/control/register", { marker: draftMarker, answers: answers(1) });
         await h.standin("/control/pause", { paused: true });
         try {
-          const pdf = await h.makePdf(browser, `doc030-draft-${short(role).toLowerCase()}.pdf`, paper(draftMarker, 1));
+          const pdf = await h.makePdf(
+            browser,
+            `doc030-draft-${short(role).toLowerCase()}.pdf`,
+            paper(draftMarker, 1),
+          );
           await api.upload(`/contracts/${draftContract}/documents`, pdf);
-          await waitRun(api, draftContract, (r) => r.state === "pending", "draft run queued", 150000);
+          await waitRun(
+            api,
+            draftContract,
+            (r) => r.state === "pending",
+            "draft run queued",
+            150000,
+          );
           await openTab(page, draftContract, "fields");
-          await fieldsRegion(page).getByRole("textbox", { name: fieldSlugs.absent.label }).fill("DOC-030 unsaved draft text");
+          await fieldsRegion(page)
+            .getByRole("textbox", { name: fieldSlugs.absent.label })
+            .fill("DOC-030 unsaved draft text");
         } finally {
           await h.standin("/control/pause", { paused: false });
         }
         await waitRun(api, draftContract, (r) => r.state === "ready", "draft run finished");
-        await until(async () => (await fieldsRegion(page).getByRole("textbox", { name: fieldSlugs.location.label }).inputValue()) === "Muscat", "location updated", 60000);
-        const shown = await fieldsRegion(page).getByRole("textbox", { name: fieldSlugs.absent.label }).inputValue();
+        await until(
+          async () =>
+            (await fieldsRegion(page)
+              .getByRole("textbox", { name: fieldSlugs.location.label })
+              .inputValue()) === "Muscat",
+          "location updated",
+          60000,
+        );
+        const shown = await fieldsRegion(page)
+          .getByRole("textbox", { name: fieldSlugs.absent.label })
+          .inputValue();
         expectThat(shown === "DOC-030 unsaved draft text", `draft ${q(shown)}`);
         return `C-${draftContract}: typed "DOC-030 unsaved draft text" into ${fieldSlugs.absent.label} (not saved) while the run was pending. When the record updated and ${fieldSlugs.location.label} showed "Muscat", the typed draft was still in its control.`;
       },
@@ -342,19 +597,35 @@ export async function runC21(ctx, stepFor) {
         const { items } = await menuItems(page, "Contract actions");
         await page.keyboard.press("Escape");
         const mainRegion = page.getByRole("main");
-        const sparkles = await mainRegion.getByRole("button", { name: /^View AI evidence for / }).evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+        const sparkles = await mainRegion
+          .getByRole("button", { name: /^View AI evidence for / })
+          .evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
         const unverified = await mainRegion.getByText("Unverified", { exact: true }).count();
         const confirms = await rowConfirm(page, "Notice period (days)").count();
         const notice = mainRegion.getByRole("spinbutton", { name: "Notice period (days)" });
         const border = await notice.evaluate((el) => {
           const wrap = el.closest(".ai-field");
           if (!wrap) return null;
-          return { generated: wrap.getAttribute("data-ai-generated"), pseudo: getComputedStyle(wrap, "::after").backgroundImage.slice(0, 60) };
+          return {
+            generated: wrap.getAttribute("data-ai-generated"),
+            pseudo: getComputedStyle(wrap, "::after").backgroundImage.slice(0, 60),
+          };
         });
         expectThat(items.includes("Run analysis"), `menu ${q(items)}`);
-        expectThat(sparkles.includes("View AI evidence for Expiry date") && sparkles.includes("View AI evidence for Notice period (days)") && sparkles.includes("View AI evidence for Value"), `sparkles ${q(sparkles)}`);
-        expectThat(confirms === 1 && unverified >= 3, `confirm ${confirms} unverified ${unverified}`);
-        expectThat(border?.generated === "true" && /gradient/.test(border.pseudo), `border ${q(border)}`);
+        expectThat(
+          sparkles.includes("View AI evidence for Expiry date") &&
+            sparkles.includes("View AI evidence for Notice period (days)") &&
+            sparkles.includes("View AI evidence for Value"),
+          `sparkles ${q(sparkles)}`,
+        );
+        expectThat(
+          confirms === 1 && unverified >= 3,
+          `confirm ${confirms} unverified ${unverified}`,
+        );
+        expectThat(
+          border?.generated === "true" && /gradient/.test(border.pseudo),
+          `border ${q(border)}`,
+        );
         return `Overview Contract actions: ${q(items)}. Overview shows ${unverified} Unverified indicators, sparkles ${q(sparkles)}, and Confirm beside Notice period (days); the Notice period control sits in an AI border wrapper ${q(border)}.`;
       },
       { page },
@@ -374,7 +645,9 @@ export async function runC21(ctx, stepFor) {
         const url = page.url();
         await panel.getByRole("button", { name: "Close the document" }).click();
         await openTab(page, main, "key-dates");
-        const priceRow = page.getByRole("region", { name: "Key dates" }).getByRole("row", { name: /Price review/ });
+        const priceRow = page
+          .getByRole("region", { name: "Key dates" })
+          .getByRole("row", { name: /Price review/ });
         const priceText = await text(priceRow);
         await priceRow.getByRole("button", { name: "View AI evidence for Price review" }).click();
         const kdPanel = page.getByRole("complementary", { name: /, version 1$/ });
@@ -393,11 +666,24 @@ export async function runC21(ctx, stepFor) {
       "Before confirmation the extracted Key date is in the list, the notice period drives the derived deadline, and the Value is saved",
       async () => {
         await openTab(page, main, "key-dates");
-        const rows = (await page.getByRole("region", { name: "Key dates" }).getByRole("row").allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
+        const rows = (
+          await page.getByRole("region", { name: "Key dates" }).getByRole("row").allInnerTexts()
+        ).map((t) => t.replace(/\s+/g, " ").trim());
         const record = await contract(api, main);
-        expectThat(rows.some((r) => /Price review/.test(r)), "no Price review row");
-        expectThat(rows.some((r) => /notice/i.test(r) && /60 days before expiry/.test(r)), `no derived notice deadline in ${q(rows)}`);
-        expectThat(record.contract.value?.amount === 250000 && record.contract.value.currency === "USD" && record.contract.value.cadence === "monthly", `value ${q(record.contract.value)}`);
+        expectThat(
+          rows.some((r) => /Price review/.test(r)),
+          "no Price review row",
+        );
+        expectThat(
+          rows.some((r) => /notice/i.test(r) && /60 days before expiry/.test(r)),
+          `no derived notice deadline in ${q(rows)}`,
+        );
+        expectThat(
+          record.contract.value?.amount === 250000 &&
+            record.contract.value.currency === "USD" &&
+            record.contract.value.cadence === "monthly",
+          `value ${q(record.contract.value)}`,
+        );
         return `Key dates rows before any confirmation: ${q(rows.slice(1))}. Saved Value ${q(record.contract.value)}; notice deadline ${record.contract.noticeDeadline}.`;
       },
       { page },
@@ -410,19 +696,39 @@ export async function runC21(ctx, stepFor) {
         const before = await markers(api, main);
         await openTab(page, main, "");
         await rowConfirm(page, "Notice period (days)").click();
-        await until(async () => !(await markers(api, main)).includes("notice_period_days"), "notice marker cleared");
+        await until(
+          async () => !(await markers(api, main)).includes("notice_period_days"),
+          "notice marker cleared",
+        );
         await sleep(600);
         const sparkleGone = (await sparkle(page, "Notice period (days)").count()) === 0;
         const afterConfirm = await markers(api, main);
-        expectThat(afterConfirm.length === before.length - 1, `confirm cleared ${before.length - afterConfirm.length}`);
-        expectThat((await contract(api, main)).contract.noticePeriodDays === 60, "notice value changed");
+        expectThat(
+          afterConfirm.length === before.length - 1,
+          `confirm cleared ${before.length - afterConfirm.length}`,
+        );
+        expectThat(
+          (await contract(api, main)).contract.noticePeriodDays === 60,
+          "notice value changed",
+        );
         await openTab(page, main, "fields");
-        const locationBox = fieldsRegion(page).getByRole("textbox", { name: fieldSlugs.location.label });
+        const locationBox = fieldsRegion(page).getByRole("textbox", {
+          name: fieldSlugs.location.label,
+        });
         await locationBox.fill("Salalah");
         await locationBox.blur();
-        await until(async () => (await contract(api, main)).contract.customFields[fieldSlugs.location.slug] === "Salalah", "location saved");
+        await until(
+          async () =>
+            (await contract(api, main)).contract.customFields[fieldSlugs.location.slug] ===
+            "Salalah",
+          "location saved",
+        );
         const afterEdit = await markers(api, main);
-        expectThat(!afterEdit.includes(fieldSlugs.location.slug) && afterEdit.length === afterConfirm.length - 1, `after edit ${q(afterEdit)}`);
+        expectThat(
+          !afterEdit.includes(fieldSlugs.location.slug) &&
+            afterEdit.length === afterConfirm.length - 1,
+          `after edit ${q(afterEdit)}`,
+        );
         await openTab(page, main, "key-dates");
         const kd = page.getByRole("region", { name: "Key dates" });
         const editKd = async (label, change) => {
@@ -434,12 +740,25 @@ export async function runC21(ctx, stepFor) {
           await dialog.getByRole("button", { name: "Save" }).click();
           await dialog.waitFor({ state: "hidden", timeout: 15000 });
         };
-        await editKd("Price review", (d) => d.getByRole("textbox", { name: "Note" }).fill("DOC-030 note only"));
+        await editKd("Price review", (d) =>
+          d.getByRole("textbox", { name: "Note" }).fill("DOC-030 note only"),
+        );
         await sleep(1000);
-        const priceMarked = async (label) => (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines.find((d) => d.label === label)?.unverified;
+        const priceMarked = async (label) =>
+          (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines.find(
+            (d) => d.label === label,
+          )?.unverified;
         const afterNote = await priceMarked("Price review");
-        await editKd("Price review", (d) => d.getByRole("textbox", { name: "Event" }).fill("Annual price review"));
-        await until(async () => (await priceMarked("Annual price review")) === false || (await priceMarked("Annual price review")) === undefined || (await priceMarked("Annual price review")) === null, "key date marker cleared");
+        await editKd("Price review", (d) =>
+          d.getByRole("textbox", { name: "Event" }).fill("Annual price review"),
+        );
+        await until(
+          async () =>
+            (await priceMarked("Annual price review")) === false ||
+            (await priceMarked("Annual price review")) === undefined ||
+            (await priceMarked("Annual price review")) === null,
+          "key date marker cleared",
+        );
         const afterEvent = await markers(api, main);
         await openTab(page, main, "fields");
         const controls = await headerControls(page);
@@ -450,10 +769,15 @@ export async function runC21(ctx, stepFor) {
         const entry = history.getByText(/confirmed/i).first();
         await entry.waitFor({ timeout: 15000 });
         const historyText = (await entry.textContent()).trim();
-        const analysisEntry = (await history.getByText(/AI analysis of this contract/).allTextContents()).slice(0, 3);
+        const analysisEntry = (
+          await history.getByText(/AI analysis of this contract/).allTextContents()
+        ).slice(0, 3);
         await history.getByRole("button", { name: "Close" }).click();
         expectThat(afterNote === true, `note-only edit cleared the marker (${afterNote})`);
-        expectThat(controls.some((c) => c.name === "Confirm all") && afterEvent.length > 1, `Confirm all ${q(controls)} with ${afterEvent.length} markers`);
+        expectThat(
+          controls.some((c) => c.name === "Confirm all") && afterEvent.length > 1,
+          `Confirm all ${q(controls)} with ${afterEvent.length} markers`,
+        );
         expectThat(sparkleGone, "sparkle still shown after Confirm");
         expectThat(analysisEntry.length > 0, "History shows no Analysis entry");
         return `Overview Confirm beside Notice period (days) kept 60 and cleared only its marker and sparkle (${before.length} -> ${afterConfirm.length} marked). Editing ${fieldSlugs.location.label} to Salalah on Fields cleared its marker (${afterEdit.length} left). Key dates: Edit date with a note-only change kept Price review Unverified; changing the event to "Annual price review" cleared it. Fields header with ${afterEvent.length} marked values: ${q(controls.map((c) => c.name))}. History: ${q(historyText)}; Analysis entries ${q(analysisEntry)}.`;
@@ -472,7 +796,12 @@ export async function runC21(ctx, stepFor) {
         const { menu, items } = await menuItems(page, `Actions for ${v1Doc.title}`);
         expectThat(items.includes("Mark as executed copy"), `menu ${q(items)}`);
         await menu.getByRole("menuitem", { name: "Mark as executed copy" }).click();
-        const pinnedRun = await waitRun(api, main, (r) => r.id !== runBefore.id && r.state === "ready", "run after pin");
+        const pinnedRun = await waitRun(
+          api,
+          main,
+          (r) => r.id !== runBefore.id && r.state === "ready",
+          "run after pin",
+        );
         pinnedRunId = pinnedRun.id;
         const c1 = (await contract(api, main)).contract;
         const kd1 = (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines;
@@ -493,13 +822,30 @@ export async function runC21(ctx, stepFor) {
         await panel.getByRole("button", { name: "Close the document" }).click();
         await openTab(page, main, "fields");
         await fieldsRegion(page).getByRole("button", { name: "Run analysis" }).click();
-        const manual = await waitRun(api, main, (r) => r.id !== pinnedRun.id && r.state === "ready", "manual run");
-        expectThat(pinnedRun.versionNumber === 1 && pinnedRun.trigger === "automatic", `pinned run ${q(pinnedRun)}`);
-        expectThat(c1.noticePeriodDays === 60 && c1.customFields[fieldSlugs.location.slug] === "Salalah", `kept ${c1.noticePeriodDays} ${c1.customFields[fieldSlugs.location.slug]}`);
+        const manual = await waitRun(
+          api,
+          main,
+          (r) => r.id !== pinnedRun.id && r.state === "ready",
+          "manual run",
+        );
+        expectThat(
+          pinnedRun.versionNumber === 1 && pinnedRun.trigger === "automatic",
+          `pinned run ${q(pinnedRun)}`,
+        );
+        expectThat(
+          c1.noticePeriodDays === 60 && c1.customFields[fieldSlugs.location.slug] === "Salalah",
+          `kept ${c1.noticePeriodDays} ${c1.customFields[fieldSlugs.location.slug]}`,
+        );
         expectThat(!kd1.some((d) => d.label === "Price review"), "Price review re-added");
-        expectThat(runAfterUpload.id === pinnedRun.id && statsAfter.extractions === statsBefore.extractions, "a run started after the newer upload");
+        expectThat(
+          runAfterUpload.id === pinnedRun.id && statsAfter.extractions === statsBefore.extractions,
+          "a run started after the newer upload",
+        );
         expectThat(/version 1$/.test(panelName), `evidence opened ${panelName}`);
-        expectThat(manual.trigger === "manual" && manual.versionNumber === 1, `manual ${q(manual)}`);
+        expectThat(
+          manual.trigger === "manual" && manual.versionNumber === 1,
+          `manual ${q(manual)}`,
+        );
         return `Documents: Actions for ${v1Doc.title} -> Mark as executed copy started an automatic run on Version ${pinnedRun.versionNumber}; notice stayed 60 (confirmed), location stayed Salalah (edited), and "Price review" was not added again. Version 2 uploaded (setup API) and its text became ready: no new run and no provider request (${statsBefore.extractions} -> ${statsAfter.extractions}). Overview Expiry date sparkle still opened ${q(panelName)}. Run analysis then ran manually on Version ${manual.versionNumber}.`;
       },
       { page },
@@ -517,18 +863,38 @@ export async function runC21(ctx, stepFor) {
           const { menu, items } = await menuItems(page, `Actions for ${v1Doc.title}`);
           expectThat(items.includes("Mark as executed copy"), `menu ${q(items)}`);
           await menu.getByRole("menuitem", { name: "Mark as executed copy" }).click();
-          await waitRun(api, main, (r) => r.id !== before.id && r.state === "pending", "pending run on v2");
-          await until(async () => (await h.standin("/control/stats")).waiting > 0, "request held at stand-in", 90000);
+          await waitRun(
+            api,
+            main,
+            (r) => r.id !== before.id && r.state === "pending",
+            "pending run on v2",
+          );
+          await until(
+            async () => (await h.standin("/control/stats")).waiting > 0,
+            "request held at stand-in",
+            90000,
+          );
           await openTab(them.page, main, "fields");
-          const tier = fieldsRegion(them.page).getByRole("spinbutton", { name: fieldSlugs.tier.label }).or(fieldsRegion(them.page).getByRole("textbox", { name: fieldSlugs.tier.label }));
+          const tier = fieldsRegion(them.page)
+            .getByRole("spinbutton", { name: fieldSlugs.tier.label })
+            .or(fieldsRegion(them.page).getByRole("textbox", { name: fieldSlugs.tier.label }));
           await tier.fill("5");
           await tier.blur();
-          await until(async () => (await contract(them.api, main)).contract.customFields[fieldSlugs.tier.slug] === 5, "tier edit saved");
+          await until(
+            async () =>
+              (await contract(them.api, main)).contract.customFields[fieldSlugs.tier.slug] === 5,
+            "tier edit saved",
+          );
           otherEdit = `${PEOPLE[otherOf(role)].name} saved ${fieldSlugs.tier.label} 1 -> 5 on Fields while the run waited at the stand-in`;
         } finally {
           await h.standin("/control/pause", { paused: false });
         }
-        const run = await waitRun(api, main, (r) => r.id !== before.id && r.state === "ready", "v2 run finished");
+        const run = await waitRun(
+          api,
+          main,
+          (r) => r.id !== before.id && r.state === "ready",
+          "v2 run finished",
+        );
         const record = await contract(api, main);
         const c = record.contract;
         const kdRows = (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines;
@@ -539,10 +905,26 @@ export async function runC21(ctx, stepFor) {
         const panelName = await panel.getAttribute("aria-label");
         await panel.getByRole("button", { name: "Close the document" }).click();
         expectThat(run.versionNumber === 2, `run version ${run.versionNumber}`);
-        expectThat(c.expiryDate === "2027-06-30" && c.aiUnverified?.expiry_date && c.noticePeriodDays === 60, `core ${c.expiryDate} ${c.noticePeriodDays}`);
-        expectThat(c.customFields[fieldSlugs.location.slug] === "Salalah" && c.customFields[fieldSlugs.tier.slug] === 5 && !c.aiUnverified?.[fieldSlugs.tier.slug], `fields ${q(c.customFields)}`);
-        expectThat(record.counterparties.some((p) => p.name === supplierName), `counterparties ${q(record.counterparties)}`);
-        expectThat(kdRows.some((d) => d.label === "Option exercise deadline" && d.unverified) && kdRows.some((d) => d.label === "Annual price review") && !kdRows.some((d) => d.label === "Price review"), `key dates ${q(kdRows.map((d) => d.label))}`);
+        expectThat(
+          c.expiryDate === "2027-06-30" && c.aiUnverified?.expiry_date && c.noticePeriodDays === 60,
+          `core ${c.expiryDate} ${c.noticePeriodDays}`,
+        );
+        expectThat(
+          c.customFields[fieldSlugs.location.slug] === "Salalah" &&
+            c.customFields[fieldSlugs.tier.slug] === 5 &&
+            !c.aiUnverified?.[fieldSlugs.tier.slug],
+          `fields ${q(c.customFields)}`,
+        );
+        expectThat(
+          record.counterparties.some((p) => p.name === supplierName),
+          `counterparties ${q(record.counterparties)}`,
+        );
+        expectThat(
+          kdRows.some((d) => d.label === "Option exercise deadline" && d.unverified) &&
+            kdRows.some((d) => d.label === "Annual price review") &&
+            !kdRows.some((d) => d.label === "Price review"),
+          `key dates ${q(kdRows.map((d) => d.label))}`,
+        );
         expectThat(/version 2$/.test(panelName), `evidence opened ${panelName}`);
         return `Documents -> Mark as executed copy pinned Version 2 and queued a run; ${otherEdit}. The run read Version ${run.versionNumber}. Saved: expiry 2027-06-30 (Unverified again, replaced), notice 60 (confirmed, kept although the answer was 90), location Salalah (edited, kept), tier 5 with no marker (concurrent edit kept), Counterparty "${supplierName}" linked. Key dates: Option exercise deadline added Unverified; Annual price review unchanged. Expiry date sparkle now opens ${q(panelName)}.`;
       },
@@ -562,26 +944,42 @@ export async function runC21(ctx, stepFor) {
         await dialog.getByRole("button", { name: "Save" }).click();
         await dialog.waitFor({ state: "hidden" });
         await sleep(800);
-        const optionRow = (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines.find((d) => d.label === "Option exercise deadline");
+        const optionRow = (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines.find(
+          (d) => d.label === "Option exercise deadline",
+        );
         expectThat(optionRow?.unverified === true, "note edit cleared the option marker");
         await kd.getByRole("button", { name: "Actions for Option exercise deadline" }).click();
         await page.getByRole("menuitem", { name: "Remove date" }).click();
         const confirmDialog = page.getByRole("alertdialog");
-        if (await confirmDialog.count()) await confirmDialog.getByRole("button", { name: /Remove/ }).click();
-        await until(async () => !(await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines.some((d) => d.label === "Option exercise deadline"), "option removed");
+        if (await confirmDialog.count())
+          await confirmDialog.getByRole("button", { name: /Remove/ }).click();
+        await until(
+          async () =>
+            !(await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines.some(
+              (d) => d.label === "Option exercise deadline",
+            ),
+          "option removed",
+        );
         await openTab(page, main, "fields");
         const audit = fieldsRegion(page).getByRole("textbox", { name: fieldSlugs.absent.label });
         const auditBefore = await audit.inputValue();
         await audit.fill("");
         await audit.blur();
-        await until(async () => (await contract(api, main)).contract.customFields[fieldSlugs.absent.slug] == null, "audit cleared");
+        await until(
+          async () =>
+            (await contract(api, main)).contract.customFields[fieldSlugs.absent.slug] == null,
+          "audit cleared",
+        );
         const before = await latestRun(api, main);
         await fieldsRegion(page).getByRole("button", { name: "Run analysis" }).click();
         await waitRun(api, main, (r) => r.id !== before.id && r.state === "ready", "rerun");
         const kdRows = (await api.ok("GET", `/contracts/${main}/key-dates`)).deadlines;
         const c = (await contract(api, main)).contract;
         expectThat(!kdRows.some((d) => d.label === "Option exercise deadline"), "option re-added");
-        expectThat(kdRows.some((d) => d.label === "Annual price review"), "earlier Key date changed");
+        expectThat(
+          kdRows.some((d) => d.label === "Annual price review"),
+          "earlier Key date changed",
+        );
         expectThat(c.customFields[fieldSlugs.absent.slug] == null, "audit refilled");
         return `Edit date with a note-only change left Option exercise deadline Unverified; Remove date removed it and its marker. Cleared ${fieldSlugs.absent.label} on Fields (was ${q(auditBefore)}). Run analysis on Version 2 finished: no Option exercise deadline row returned, Annual price review still listed, the audit Field stayed empty.`;
       },
@@ -594,7 +992,13 @@ export async function runC21(ctx, stepFor) {
       async () => {
         const snapshot = async () => {
           const c = (await contract(api, main)).contract;
-          return q({ e: c.expiryDate, n: c.noticePeriodDays, v: c.value, f: c.customFields, m: Object.keys(c.aiUnverified ?? {}).sort() });
+          return q({
+            e: c.expiryDate,
+            n: c.noticePeriodDays,
+            v: c.value,
+            f: c.customFields,
+            m: Object.keys(c.aiUnverified ?? {}).sort(),
+          });
         };
         const before = await snapshot();
         const run0 = await latestRun(api, main);
@@ -603,8 +1007,18 @@ export async function runC21(ctx, stepFor) {
         try {
           await openTab(page, main, "fields");
           await fieldsRegion(page).getByRole("button", { name: "Run analysis" }).click();
-          await waitRun(api, main, (r) => r.id !== run0.id && r.state === "failed", "failed run", 300000);
-          await until(async () => (await fieldsAlerts(page)).some((a) => /^Analysis failed:/.test(a)), "failure note", 60000);
+          await waitRun(
+            api,
+            main,
+            (r) => r.id !== run0.id && r.state === "failed",
+            "failed run",
+            300000,
+          );
+          await until(
+            async () => (await fieldsAlerts(page)).some((a) => /^Analysis failed:/.test(a)),
+            "failure note",
+            60000,
+          );
           failedNote = (await fieldsAlerts(page)).find((a) => /^Analysis failed:/.test(a));
         } finally {
           await h.standin("/control/malformed", { count: 0 });
@@ -614,7 +1028,11 @@ export async function runC21(ctx, stepFor) {
         const failed = await latestRun(api, main);
         await fieldsRegion(page).getByRole("button", { name: "Run analysis" }).click();
         await waitRun(api, main, (r) => r.id !== failed.id && r.state === "ready", "recovery run");
-        await until(async () => !(await fieldsAlerts(page)).some((a) => /^Analysis failed:/.test(a)), "failure note gone", 60000);
+        await until(
+          async () => !(await fieldsAlerts(page)).some((a) => /^Analysis failed:/.test(a)),
+          "failure note gone",
+          60000,
+        );
         return `With the stand-in returning non-JSON, the Fields header note read ${q(failedNote)}. Saved values and markers were identical before and after. With valid replies restored, Run analysis completed and the failure note went.`;
       },
       { page },
@@ -625,10 +1043,19 @@ export async function runC21(ctx, stepFor) {
       "After the cited Document is archived, the value keeps its marker and the sparkle says Source evidence is unavailable",
       async () => {
         const staleNum = await mk("Stale evidence");
-        ctx.records.push({ article: "contract-analysis", role, reference: `C-${staleNum}`, title: `DOC-030 contracts-b V-C21 Stale evidence ${tag}` });
+        ctx.records.push({
+          article: "contract-analysis",
+          role,
+          reference: `C-${staleNum}`,
+          title: `DOC-030 contracts-b V-C21 Stale evidence ${tag}`,
+        });
         const staleMarker = `${marker}STALE`;
         await h.standin("/control/register", { marker: staleMarker, answers: answers(1) });
-        const pdf = await h.makePdf(browser, `doc030-stale-${short(role).toLowerCase()}.pdf`, paper(staleMarker, 1));
+        const pdf = await h.makePdf(
+          browser,
+          `doc030-stale-${short(role).toLowerCase()}.pdf`,
+          paper(staleMarker, 1),
+        );
         const doc = (await api.upload(`/contracts/${staleNum}/documents`, pdf)).json.document;
         await waitRun(api, staleNum, (r) => r.state === "ready", "stale run", 180000);
         const arch = await api("POST", `/documents/${doc.id}/archive`);
@@ -641,7 +1068,10 @@ export async function runC21(ctx, stepFor) {
         const panels = await page.getByRole("complementary", { name: /, version \d+$/ }).count();
         const stillMarked = (await markers(api, staleNum)).includes("expiry_date");
         await page.keyboard.press("Escape");
-        expectThat(/Source evidence is unavailable/.test(msg) && panels === 0 && stillMarked, `msg ${q(msg)} panels ${panels} marked ${stillMarked}`);
+        expectThat(
+          /Source evidence is unavailable/.test(msg) && panels === 0 && stillMarked,
+          `msg ${q(msg)} panels ${panels} marked ${stillMarked}`,
+        );
         return `C-${staleNum}: after the run the cited Document was archived (setup API ${arch.status}). Overview Expiry date sparkle showed ${q(msg)}; no doc panel opened; the value is still Unverified.`;
       },
       { page },
@@ -659,44 +1089,78 @@ export async function runC21(ctx, stepFor) {
         const { items } = await menuItems(page, "Contract actions");
         await page.keyboard.press("Escape");
         const direct = await api("POST", `/contracts/${main}/analysis`);
-        expectThat(!endedControls.some((c) => c.name === "Run analysis") && !items.includes("Run analysis") && direct.status === 409, `ended ${q(endedControls)} ${q(items)} ${direct.status}`);
+        expectThat(
+          !endedControls.some((c) => c.name === "Run analysis") &&
+            !items.includes("Run analysis") &&
+            direct.status === 409,
+          `ended ${q(endedControls)} ${q(items)} ${direct.status}`,
+        );
         const m0 = await markers(api, main);
         await openTab(page, main, "");
         await rowConfirm(page, "Expiry date").click();
-        await until(async () => !(await markers(api, main)).includes("expiry_date"), "expiry confirmed on Ended");
+        await until(
+          async () => !(await markers(api, main)).includes("expiry_date"),
+          "expiry confirmed on Ended",
+        );
         const m1 = await markers(api, main);
         await menuItems(page, "Contract actions");
         await page.getByRole("menuitem", { name: "Archive" }).click();
         const archiveDialog = page.getByRole("alertdialog").or(page.getByRole("dialog"));
-        if (await archiveDialog.count()) await archiveDialog.getByRole("button", { name: /^Archive/ }).click();
-        await until(async () => (await contract(api, main)).contract.archivedAt !== null, "archived");
+        if (await archiveDialog.count())
+          await archiveDialog.getByRole("button", { name: /^Archive/ }).click();
+        await until(
+          async () => (await contract(api, main)).contract.archivedAt !== null,
+          "archived",
+        );
         await openTab(page, main, "fields");
-        const confirmsArchived = (await page.getByRole("button", { name: "Confirm", exact: true }).count()) + (await page.getByRole("button", { name: "Confirm all" }).count());
+        const confirmsArchived =
+          (await page.getByRole("button", { name: "Confirm", exact: true }).count()) +
+          (await page.getByRole("button", { name: "Confirm all" }).count());
         const refused = await api("POST", `/contracts/${main}/analysis/confirm`, { slug: m1[0] });
-        expectThat(confirmsArchived === 0 && refused.status === 409, `archived confirm ${confirmsArchived} ${refused.status}`);
+        expectThat(
+          confirmsArchived === 0 && refused.status === 409,
+          `archived confirm ${confirmsArchived} ${refused.status}`,
+        );
         await api.ok("POST", `/contracts/${main}/restore`);
         const restored = (await contract(api, main)).contract;
-        const valuesBefore = q({ e: restored.expiryDate, v: restored.value, cf: restored.customFields });
+        const valuesBefore = q({
+          e: restored.expiryDate,
+          v: restored.value,
+          cf: restored.customFields,
+        });
         await admin.ok("POST", "/ai-connector/disable");
         let summary;
         try {
           await openTab(page, main, "fields");
           const disabledControls = await headerControls(page);
           const kept = await markers(api, main);
-          const rowConfirms = await fieldsRegion(page).getByRole("button", { name: "Confirm", exact: true }).count();
+          const rowConfirms = await fieldsRegion(page)
+            .getByRole("button", { name: "Confirm", exact: true })
+            .count();
           await page.getByRole("button", { name: "History" }).click();
           const history = page.getByRole("complementary", { name: "History" });
           await history.waitFor();
           await sleep(1500);
-          const runs = (await history.getByText(/AI analysis of this contract/).allTextContents()).length;
+          const runs = (await history.getByText(/AI analysis of this contract/).allTextContents())
+            .length;
           await history.getByRole("button", { name: "Close" }).click();
           await fieldsRegion(page).getByRole("button", { name: "Confirm all" }).click();
           await until(async () => (await markers(api, main)).length === 0, "confirm all");
           const after = (await contract(api, main)).contract;
-          expectThat(!disabledControls.some((c) => c.name === "Run analysis") && disabledControls.some((c) => c.name === "Confirm all"), `disabled controls ${q(disabledControls)}`);
-          expectThat(kept.length === m1.length && kept.length > 1, `markers after disable ${q(kept)}`);
+          expectThat(
+            !disabledControls.some((c) => c.name === "Run analysis") &&
+              disabledControls.some((c) => c.name === "Confirm all"),
+            `disabled controls ${q(disabledControls)}`,
+          );
+          expectThat(
+            kept.length === m1.length && kept.length > 1,
+            `markers after disable ${q(kept)}`,
+          );
           expectThat(runs > 0, "History lost the runs");
-          expectThat(q({ e: after.expiryDate, v: after.value, cf: after.customFields }) === valuesBefore, "values changed by Confirm all");
+          expectThat(
+            q({ e: after.expiryDate, v: after.value, cf: after.customFields }) === valuesBefore,
+            "values changed by Confirm all",
+          );
           summary = `Connector disabled (setup API): the Fields header offered ${q(disabledControls.map((c) => c.name))}; ${kept.length} values stayed Unverified with ${rowConfirms} row Confirm controls on Fields; History still lists ${runs} Analysis entries; Confirm all cleared every marker and changed no saved value.`;
         } finally {
           await admin.ok("POST", "/ai-connector/enable");
@@ -717,10 +1181,17 @@ export async function runC21(ctx, stepFor) {
         await bu.page.waitForLoadState("networkidle").catch(() => {});
         await sleep(1500);
         const landed = new URL(bu.page.url()).pathname;
-        const runButtons = await bu.page.getByRole("button", { name: /Run analysis|Confirm/ }).count();
+        const runButtons = await bu.page
+          .getByRole("button", { name: /Run analysis|Confirm/ })
+          .count();
         const run = await bu.api("POST", `/contracts/${main}/analysis`);
         const confirm = await bu.api("POST", `/contracts/${main}/analysis/confirm-all`);
-        expectThat(runButtons === 0 && [403, 404].includes(run.status) && [403, 404].includes(confirm.status), `bu ${landed} ${runButtons} ${run.status} ${confirm.status}`);
+        expectThat(
+          runButtons === 0 &&
+            [403, 404].includes(run.status) &&
+            [403, 404].includes(confirm.status),
+          `bu ${landed} ${runButtons} ${run.status} ${confirm.status}`,
+        );
         return `${PEOPLE.business_user_team.name} (Business User; team add answered ${added.status}) opening /contracts/${main}/fields landed on ${landed} with no Run analysis or Confirm control; POST analysis answered ${run.status} and POST confirm-all answered ${confirm.status}.`;
       },
       { page },
@@ -742,17 +1213,27 @@ export async function runC21(ctx, stepFor) {
       async () => {
         const adminPage = sessions.administrator.page;
         await adminPage.goto(`${BASE}/settings/ai-analysis`);
-        const toggle = adminPage.getByRole("switch", { name: "Fill Contract Fields after conversion" });
+        const toggle = adminPage.getByRole("switch", {
+          name: "Fill Contract Fields after conversion",
+        });
         await toggle.waitFor({ timeout: 20000 });
         let switchNote = "already on";
         if ((await toggle.getAttribute("aria-checked")) !== "true") {
           await toggle.click();
-          await until(async () => (await admin.ok("GET", "/ai-connector")).connector.contractConversionAnalysis === true, "switch saved");
+          await until(
+            async () =>
+              (await admin.ok("GET", "/ai-connector")).connector.contractConversionAnalysis ===
+              true,
+            "switch saved",
+          );
           switchNote = "turned on by the Administrator on Settings -> AI analysis";
         }
         const bu = await getBusinessUser();
         const types = (await admin.ok("GET", "/request-types")).requestTypes ?? [];
-        const rt = types.find((t) => !t.archivedAt && (t.targetModule === "contract" || t.targetModule == null)) ?? types[0];
+        const rt =
+          types.find(
+            (t) => !t.archivedAt && (t.targetModule === "contract" || t.targetModule == null),
+          ) ?? types[0];
         const departments = (await admin.ok("GET", "/departments")).departments;
         const submitted = await bu.api("POST", "/requests", {
           requestTypeId: rt.id,
@@ -761,41 +1242,102 @@ export async function runC21(ctx, stepFor) {
           description: `Please review the fictional services agreement. The services are performed in ${needle}. The risk is high. It is a DOC-030 walkthrough record.`,
           urgency: "low",
         });
-        expectThat(submitted.status < 300, `request ${submitted.status} ${submitted.text.slice(0, 300)}`);
+        expectThat(
+          submitted.status < 300,
+          `request ${submitted.status} ${submitted.text.slice(0, 300)}`,
+        );
         request = submitted.json.request;
-        await h.standin("/control/fallback", { enabled: true, cite: [{ slug: fieldSlugs.location.slug, needle }, { slug: "risk", needle: "high" }] });
+        await h.standin("/control/fallback", {
+          enabled: true,
+          cite: [
+            { slug: fieldSlugs.location.slug, needle },
+            { slug: "risk", needle: "high" },
+          ],
+        });
         await h.standin("/control/malformed", { count: 20 });
         let failedNote;
         try {
-          const answer = await api("POST", `/requests/${request.number}/convert`, { title: `DOC-030 contracts-b V-C21 Converted ${tag}`, contractTypeId: typeId });
+          const answer = await api("POST", `/requests/${request.number}/convert`, {
+            title: `DOC-030 contracts-b V-C21 Converted ${tag}`,
+            contractTypeId: typeId,
+          });
           expectThat(answer.status < 300, `convert ${answer.status} ${answer.text.slice(0, 300)}`);
-          converted = answer.json.request.convertedContract?.number ?? answer.json.request.convertedRecord?.number;
+          converted =
+            answer.json.request.convertedContract?.number ??
+            answer.json.request.convertedRecord?.number;
           expectThat(converted, `no converted number ${q(answer.json.request).slice(0, 300)}`);
-          ctx.records.push({ article: "contract-analysis", role, reference: `C-${converted}`, title: `DOC-030 contracts-b V-C21 Converted ${tag}`, request: `R-${request.number}` });
-          await waitRun(api, converted, (r) => r.trigger === "conversion" && r.state === "failed", "conversion run failed", 300000);
+          ctx.records.push({
+            article: "contract-analysis",
+            role,
+            reference: `C-${converted}`,
+            title: `DOC-030 contracts-b V-C21 Converted ${tag}`,
+            request: `R-${request.number}`,
+          });
+          await waitRun(
+            api,
+            converted,
+            (r) => r.trigger === "conversion" && r.state === "failed",
+            "conversion run failed",
+            300000,
+          );
           await openTab(page, converted, "fields");
-          await until(async () => (await fieldsAlerts(page)).some((a) => /^Request-context Analysis failed\./.test(a)), "failure note", 30000);
-          failedNote = (await fieldsAlerts(page)).find((a) => /^Request-context Analysis failed\./.test(a));
+          await until(
+            async () =>
+              (await fieldsAlerts(page)).some((a) => /^Request-context Analysis failed\./.test(a)),
+            "failure note",
+            30000,
+          );
+          failedNote = (await fieldsAlerts(page)).find((a) =>
+            /^Request-context Analysis failed\./.test(a),
+          );
         } finally {
           await h.standin("/control/malformed", { count: 0 });
         }
         const exists = (await contract(api, converted)).contract;
-        const retry = fieldsRegion(page).getByRole("button", { name: "Retry Request-context Analysis" });
+        const retry = fieldsRegion(page).getByRole("button", {
+          name: "Retry Request-context Analysis",
+        });
         await retry.waitFor({ timeout: 15000 });
         const failedRun = await latestRun(api, converted);
         await retry.click();
-        const done = await waitRun(api, converted, (r) => r.id !== failedRun.id && r.state === "ready", "retry finished", 300000);
+        const done = await waitRun(
+          api,
+          converted,
+          (r) => r.id !== failedRun.id && r.state === "ready",
+          "retry finished",
+          300000,
+        );
         await until(async () => (await retry.count()) === 0, "retry control gone", 60000);
         const stats = await h.standin("/control/stats");
         await openTab(page, converted, "fields");
-        const locValue = await fieldsRegion(page).getByRole("textbox", { name: fieldSlugs.location.label }).inputValue();
-        const fieldsUnverified = await fieldsRegion(page).getByText("Unverified", { exact: true }).count();
-        const fieldsConfirm = await fieldsRegion(page).getByRole("button", { name: "Confirm", exact: true }).count();
+        const locValue = await fieldsRegion(page)
+          .getByRole("textbox", { name: fieldSlugs.location.label })
+          .inputValue();
+        const fieldsUnverified = await fieldsRegion(page)
+          .getByText("Unverified", { exact: true })
+          .count();
+        const fieldsConfirm = await fieldsRegion(page)
+          .getByRole("button", { name: "Confirm", exact: true })
+          .count();
         const flagged = Object.keys((await contract(api, converted)).contract.aiUnverified ?? {});
-        expectThat(/^Request-context Analysis failed\. The Contract was created successfully\. Check the Type, sources and AI settings, then retry\.$/.test(failedNote), `note ${q(failedNote)}`);
+        expectThat(
+          /^Request-context Analysis failed\. The Contract was created successfully\. Check the Type, sources and AI settings, then retry\.$/.test(
+            failedNote,
+          ),
+          `note ${q(failedNote)}`,
+        );
         expectThat(done.trigger === "conversion", `retry trigger ${done.trigger}`);
-        expectThat(locValue === needle && flagged.includes(fieldSlugs.location.slug) && fieldsUnverified === 1 && fieldsConfirm === 1, `location ${q(locValue)} flagged ${q(flagged)} unverified ${fieldsUnverified} confirm ${fieldsConfirm}`);
-        expectThat(stats.last?.sourceKinds?.some((k) => k !== "document"), `sources ${q(stats.last)}`);
+        expectThat(
+          locValue === needle &&
+            flagged.includes(fieldSlugs.location.slug) &&
+            fieldsUnverified === 1 &&
+            fieldsConfirm === 1,
+          `location ${q(locValue)} flagged ${q(flagged)} unverified ${fieldsUnverified} confirm ${fieldsConfirm}`,
+        );
+        expectThat(
+          stats.last?.sourceKinds?.some((k) => k !== "document"),
+          `sources ${q(stats.last)}`,
+        );
         return `Fill Contract Fields after conversion: ${switchNote}. ${PEOPLE.business_user_team.name} submitted R-${request.number} (setup API, type ${q(rt.displayName)}); ${role} converted it to C-${converted} (setup API) with the analysis type. With non-JSON replies the note under the Fields header read ${q(failedNote)}; the Contract remained (${q(exists.title)}). Retry Request-context Analysis ran a conversion run that completed, and the retry control went. On Fields, ${fieldSlugs.location.label} = ${q(locValue)} with ${fieldsUnverified} Unverified marker and ${fieldsConfirm} Confirm. The stand-in's last call carried source kinds ${q(stats.last.sourceKinds)} and asked ${q(stats.last.asked)}.`;
       },
       { page },
@@ -805,23 +1347,47 @@ export async function runC21(ctx, stepFor) {
       "Analysis after Request conversion (guide at 450aba9d): no page shows a marker, evidence or Confirm for Risk, Region or Department when this run filled them; those values do not count towards showing Confirm all, so the Fields header can show only Run analysis",
       "With Risk and one Field written by the run, Overview and Fields show no Risk marker, evidence or Confirm; the Fields header shows only Run analysis although the stored marker set holds both",
       async () => {
-        const activity = (await admin.ok("GET", `/activity?entityType=contract&entityId=${(await contract(api, converted)).contract.id}`)).entries;
-        const written = activity.find((e) => e.action === "contract.analysis_completed")?.payload?.written ?? [];
+        const activity = (
+          await admin.ok(
+            "GET",
+            `/activity?entityType=contract&entityId=${(await contract(api, converted)).contract.id}`,
+          )
+        ).entries;
+        const written =
+          activity.find((e) => e.action === "contract.analysis_completed")?.payload?.written ?? [];
         const rec = (await contract(api, converted)).contract;
         await openTab(page, converted, "");
         const main = page.getByRole("main");
-        const riskEvidence = await main.getByRole("button", { name: /evidence for (Risk|Region|Department)/i }).count();
+        const riskEvidence = await main
+          .getByRole("button", { name: /evidence for (Risk|Region|Department)/i })
+          .count();
         const overviewUnverified = await main.getByText("Unverified", { exact: true }).count();
-        const overviewConfirm = await main.getByRole("button", { name: "Confirm", exact: true }).count();
+        const overviewConfirm = await main
+          .getByRole("button", { name: "Confirm", exact: true })
+          .count();
         await openTab(page, converted, "fields");
         const controls = await headerControls(page);
-        const fieldsUnverified = await fieldsRegion(page).getByText("Unverified", { exact: true }).count();
+        const fieldsUnverified = await fieldsRegion(page)
+          .getByText("Unverified", { exact: true })
+          .count();
         const stored = storedMarkers(converted);
         const apiMarked = Object.keys(rec.aiUnverified ?? {});
-        expectThat(written.includes("risk") && rec.risk === "high", `risk not written: ${q(written)} ${rec.risk}`);
-        expectThat(stored.includes("risk") && stored.includes(fieldSlugs.location.slug), `stored ${q(stored)}`);
-        expectThat(riskEvidence === 0 && overviewUnverified === 0 && overviewConfirm === 0, `Overview risk evidence ${riskEvidence} unverified ${overviewUnverified} confirm ${overviewConfirm}`);
-        expectThat(controls.map((c) => c.name).join() === "Run analysis" && fieldsUnverified === 1, `header ${q(controls)} fields unverified ${fieldsUnverified}`);
+        expectThat(
+          written.includes("risk") && rec.risk === "high",
+          `risk not written: ${q(written)} ${rec.risk}`,
+        );
+        expectThat(
+          stored.includes("risk") && stored.includes(fieldSlugs.location.slug),
+          `stored ${q(stored)}`,
+        );
+        expectThat(
+          riskEvidence === 0 && overviewUnverified === 0 && overviewConfirm === 0,
+          `Overview risk evidence ${riskEvidence} unverified ${overviewUnverified} confirm ${overviewConfirm}`,
+        );
+        expectThat(
+          controls.map((c) => c.name).join() === "Run analysis" && fieldsUnverified === 1,
+          `header ${q(controls)} fields unverified ${fieldsUnverified}`,
+        );
         return `C-${converted}: the run wrote ${q(written)}; stored markers (database read) ${q(stored)}; the record API lists ${q(apiMarked)}. Overview shows Risk "high" with ${riskEvidence} Risk/Region/Department evidence controls, ${overviewUnverified} Unverified markers and ${overviewConfirm} Confirm controls. Fields shows ${fieldsUnverified} Unverified marker (${fieldSlugs.location.label}) and its header offers only ${q(controls.map((c) => c.name))}: the hidden Risk marker does not count towards Confirm all.`;
       },
       { page },
@@ -832,7 +1398,10 @@ export async function runC21(ctx, stepFor) {
       async () => {
         const bu = await getBusinessUser();
         const types = (await admin.ok("GET", "/request-types")).requestTypes ?? [];
-        const rt = types.find((t) => !t.archivedAt && (t.targetModule === "contract" || t.targetModule == null)) ?? types[0];
+        const rt =
+          types.find(
+            (t) => !t.archivedAt && (t.targetModule === "contract" || t.targetModule == null),
+          ) ?? types[0];
         const departments = (await admin.ok("GET", "/departments")).departments;
         const needle2 = `DOC030 Sohar ${short(role)}${stamp}`;
         const audit2 = `DOC030 yearly audit ${short(role)}${stamp}`;
@@ -843,33 +1412,79 @@ export async function runC21(ctx, stepFor) {
           description: `Please review the fictional services agreement. The services are performed in ${needle2}. Audit: ${audit2}. The risk is high. It is a DOC-030 walkthrough record.`,
           urgency: "low",
         });
-        expectThat(submitted.status < 300, `request ${submitted.status} ${submitted.text.slice(0, 300)}`);
+        expectThat(
+          submitted.status < 300,
+          `request ${submitted.status} ${submitted.text.slice(0, 300)}`,
+        );
         const requestB = submitted.json.request;
-        await h.standin("/control/fallback", { enabled: true, cite: [{ slug: fieldSlugs.location.slug, needle: needle2 }, { slug: fieldSlugs.absent.slug, needle: audit2 }, { slug: "risk", needle: "high" }] });
+        await h.standin("/control/fallback", {
+          enabled: true,
+          cite: [
+            { slug: fieldSlugs.location.slug, needle: needle2 },
+            { slug: fieldSlugs.absent.slug, needle: audit2 },
+            { slug: "risk", needle: "high" },
+          ],
+        });
         let convertedB;
         try {
-          const answer = await api("POST", `/requests/${requestB.number}/convert`, { title: `DOC-030 contracts-b V-C21 Converted B ${tag}`, contractTypeId: typeId });
+          const answer = await api("POST", `/requests/${requestB.number}/convert`, {
+            title: `DOC-030 contracts-b V-C21 Converted B ${tag}`,
+            contractTypeId: typeId,
+          });
           expectThat(answer.status < 300, `convert ${answer.status} ${answer.text.slice(0, 300)}`);
-          convertedB = answer.json.request.convertedContract?.number ?? answer.json.request.convertedRecord?.number;
-          ctx.records.push({ article: "contract-analysis", role, reference: `C-${convertedB}`, title: `DOC-030 contracts-b V-C21 Converted B ${tag}`, request: `R-${requestB.number}` });
-          await waitRun(api, convertedB, (r) => r.trigger === "conversion" && r.state === "ready", "conversion run B finished", 300000);
+          convertedB =
+            answer.json.request.convertedContract?.number ??
+            answer.json.request.convertedRecord?.number;
+          ctx.records.push({
+            article: "contract-analysis",
+            role,
+            reference: `C-${convertedB}`,
+            title: `DOC-030 contracts-b V-C21 Converted B ${tag}`,
+            request: `R-${requestB.number}`,
+          });
+          await waitRun(
+            api,
+            convertedB,
+            (r) => r.trigger === "conversion" && r.state === "ready",
+            "conversion run B finished",
+            300000,
+          );
         } finally {
           await h.standin("/control/fallback", { enabled: false, cite: [] });
         }
         const before = storedMarkers(convertedB);
         await openTab(page, convertedB, "");
-        const riskEvidence = await page.getByRole("main").getByRole("button", { name: /evidence for (Risk|Region|Department)/i }).count();
+        const riskEvidence = await page
+          .getByRole("main")
+          .getByRole("button", { name: /evidence for (Risk|Region|Department)/i })
+          .count();
         await openTab(page, convertedB, "fields");
         const controls = await headerControls(page);
-        const fieldsUnverified = await fieldsRegion(page).getByText("Unverified", { exact: true }).count();
+        const fieldsUnverified = await fieldsRegion(page)
+          .getByText("Unverified", { exact: true })
+          .count();
         expectThat(before.includes("risk") && before.length === 3, `stored before ${q(before)}`);
-        expectThat(riskEvidence === 0 && fieldsUnverified === 2 && controls.some((c) => c.name === "Confirm all"), `risk evidence ${riskEvidence} fields ${fieldsUnverified} header ${q(controls)}`);
+        expectThat(
+          riskEvidence === 0 &&
+            fieldsUnverified === 2 &&
+            controls.some((c) => c.name === "Confirm all"),
+          `risk evidence ${riskEvidence} fields ${fieldsUnverified} header ${q(controls)}`,
+        );
         await fieldsRegion(page).getByRole("button", { name: "Confirm all" }).click();
-        await until(async () => storedMarkers(convertedB).length === 0, "every stored marker cleared", 30000);
+        await until(
+          async () => storedMarkers(convertedB).length === 0,
+          "every stored marker cleared",
+          30000,
+        );
         const rec = (await contract(api, convertedB)).contract;
         await sleep(800);
         const controlsAfter = await headerControls(page);
-        expectThat(rec.risk === "high" && rec.customFields[fieldSlugs.location.slug] === needle2 && rec.customFields[fieldSlugs.absent.slug] === audit2, `values ${rec.risk} ${q(rec.customFields)}`);
+        expectThat(
+          rec.risk === "high" &&
+            rec.customFields[fieldSlugs.location.slug] === needle2 &&
+            rec.customFields[fieldSlugs.absent.slug] === audit2,
+          `values ${rec.risk} ${q(rec.customFields)}`,
+        );
         return `${PEOPLE.business_user_team.name} submitted R-${requestB.number} (setup API); ${role} converted it to C-${convertedB} (setup API). Stored markers (database read) ${q(before)}. Overview showed ${riskEvidence} Risk/Region/Department evidence controls; Fields showed ${fieldsUnverified} Unverified markers and the header offered ${q(controls.map((c) => c.name))}. Confirm all cleared every stored marker, including risk (stored set now empty); Risk stayed "high" and both Field values stayed. Header afterwards: ${q(controlsAfter.map((c) => c.name))}.`;
       },
       { page },
@@ -879,13 +1494,17 @@ export async function runC21(ctx, stepFor) {
   try {
     await setup();
     if (!ctx.parts || ctx.parts.includes("analysis")) for (const role of roles) await walk(role);
-    if (!ctx.parts || ctx.parts.includes("conversion")) for (const role of roles) await conversionWalk(role);
+    if (!ctx.parts || ctx.parts.includes("conversion"))
+      for (const role of roles) await conversionWalk(role);
   } finally {
     try {
       await h.standin("/control/fallback", { enabled: false, cite: [] });
       await h.standin("/control/pause", { paused: false });
       await h.standin("/control/malformed", { count: 0 });
-      ctx.setup.push({ at: new Date().toISOString(), text: `Stand-in request counts: ${q(await h.standin("/control/stats"))}` });
+      ctx.setup.push({
+        at: new Date().toISOString(),
+        text: `Stand-in request counts: ${q(await h.standin("/control/stats"))}`,
+      });
     } catch {}
     await restore();
   }

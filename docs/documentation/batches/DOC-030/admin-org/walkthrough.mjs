@@ -233,7 +233,9 @@ async function rowState(page, email) {
 }
 
 async function signOutUser(page, email) {
-  await row(page, email).getByRole("button", { name: `More actions for ${email}` }).click();
+  await row(page, email)
+    .getByRole("button", { name: `More actions for ${email}` })
+    .click();
   const items = (await page.getByRole("menuitem").allInnerTexts()).map((s) => s.trim());
   await page.getByRole("menuitem", { name: "Sign out user" }).click();
   return items;
@@ -332,8 +334,14 @@ async function org() {
   };
   results.identities = [
     { role: "administrator", account: "Daniel Okafor (seeded)" },
-    { role: "legal_team_member", account: "Nadia Haddad (seeded), unauthorized-administration check" },
-    { role: "business_user", account: "Portal-created doc030-org-bu0 address, unauthorized-administration check" },
+    {
+      role: "legal_team_member",
+      account: "Nadia Haddad (seeded), unauthorized-administration check",
+    },
+    {
+      role: "business_user",
+      account: "Portal-created doc030-org-bu0 address, unauthorized-administration check",
+    },
     { role: "business_user", account: "Jonas Weber (seeded), refused-invitation check only" },
     { role: "invited colleague", account: people.a.name, note: "activated by a sign-in link" },
     { role: "withdrawn invitation", account: people.b.name },
@@ -370,7 +378,10 @@ async function org() {
           out["/settings/users"] === "/settings/profile",
         `landed on ${JSON.stringify(out)}`,
       );
-      expect(users.status === 403 && inv.status === 403, `users ${users.status}, invite ${inv.status}`);
+      expect(
+        users.status === 403 && inv.status === 403,
+        `users ${users.status}, invite ${inv.status}`,
+      );
       return `Settings General and Settings Users both sent Nadia to /settings/profile (first heading "${heading}"). GET /api/v1/users answered ${users.status}; POST /api/v1/auth/invites answered ${inv.status}.`;
     },
   );
@@ -477,8 +488,14 @@ async function org() {
         path.join(fx, "doc030-logo.svg"),
         '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="#2f6f5e"/></svg>\n',
       );
-      writeFileSync(path.join(fx, "doc030-not-an-image.txt"), "DOC-030 admin-org fixture: not an image\n");
-      writeFileSync(path.join(fx, "doc030-unreadable.png"), "DOC-030 admin-org fixture: PNG name, no image data\n");
+      writeFileSync(
+        path.join(fx, "doc030-not-an-image.txt"),
+        "DOC-030 admin-org fixture: not an image\n",
+      );
+      writeFileSync(
+        path.join(fx, "doc030-unreadable.png"),
+        "DOC-030 admin-org fixture: PNG name, no image data\n",
+      );
       writeFileSync(path.join(fx, "doc030-logo-64.png"), png(64, 64));
       const huge = path.join(scratch, "doc030-logo-4001x4001.png");
       writeFileSync(huge, png(4001, 4001));
@@ -552,12 +569,23 @@ async function org() {
       const portalHeaderLogo = await portalHeader.locator('img[src^="data:image/svg"]').count();
       await buPortal.ctx.close();
       expect(
-        staff.text.includes(draftName) && staff.logos.length === 1 && staff.logos[0].startsWith("data:image/svg"),
+        staff.text.includes(draftName) &&
+          staff.logos.length === 1 &&
+          staff.logos[0].startsWith("data:image/svg"),
         `staff ${JSON.stringify(staff)}`,
       );
-      expect(portal.text.includes(draftName) && portal.logos.length === 1, `portal ${JSON.stringify(portal)}`);
-      expect(headerText.includes(draftName) && headerLogo >= 1, `header "${headerText.slice(0, 120)}" logo ${headerLogo}`);
-      expect(portalHeaderText.includes(draftName) && portalHeaderLogo >= 1, `portal header "${portalHeaderText.slice(0, 120)}" logo ${portalHeaderLogo}`);
+      expect(
+        portal.text.includes(draftName) && portal.logos.length === 1,
+        `portal ${JSON.stringify(portal)}`,
+      );
+      expect(
+        headerText.includes(draftName) && headerLogo >= 1,
+        `header "${headerText.slice(0, 120)}" logo ${headerLogo}`,
+      );
+      expect(
+        portalHeaderText.includes(draftName) && portalHeaderLogo >= 1,
+        `portal header "${portalHeaderText.slice(0, 120)}" logo ${portalHeaderLogo}`,
+      );
       return `In a browser with no session, /auth/login began "${staff.text.slice(0, 100)}" with ${staff.logos.length} image named Organization logo; /portal/login began "${portal.text.slice(0, 100)}" with ${portal.logos.length}. Signed in, the staff app header read "${headerText.slice(0, 80)}" with ${headerLogo} SVG logo image, and the Business User's Portal header read "${portalHeaderText.slice(0, 80)}" with ${portalHeaderLogo}.`;
     },
     admin.page,
@@ -577,7 +605,9 @@ async function org() {
       const dialog = page.getByRole("dialog", { name: "Invite user" });
       const radios = await dialog
         .getByRole("radio")
-        .evaluateAll((els) => els.map((e) => e.closest("label")?.innerText.trim() ?? e.getAttribute("aria-label")));
+        .evaluateAll((els) =>
+          els.map((e) => e.closest("label")?.innerText.trim() ?? e.getAttribute("aria-label")),
+        );
       await dialog.getByRole("button", { name: "Cancel" }).click();
       sinceA = new Date(Date.now() - 2000);
       const d = await invite(page, people.a.name, people.a.email, "Legal team member");
@@ -586,7 +616,8 @@ async function org() {
       inviteMail = await latestMail(mail, people.a.email, sinceA, SET_PASSWORD);
       expect(inviteMail, "no invitation email");
       const header = emailHeader(inviteMail);
-      const action = /Set password/.test(inviteMail.html) && /expires in 1 hour/.test(inviteMail.html);
+      const action =
+        /Set password/.test(inviteMail.html) && /expires in 1 hour/.test(inviteMail.html);
       expect(
         JSON.stringify(radios) === JSON.stringify(["Legal team member", "Administrator"]),
         `radios ${radios}`,
@@ -599,7 +630,10 @@ async function org() {
         JSON.stringify(state),
       );
       expect(action, "no Set password action or 1 hour expiry line");
-      expect(header.name === draftName && header.cid === "org-logo@openlaw", `email header ${JSON.stringify(header)}`);
+      expect(
+        header.name === draftName && header.cid === "org-logo@openlaw",
+        `email header ${JSON.stringify(header)}`,
+      );
       return `Role radios were ${JSON.stringify(radios)}. After Send invite the row read Invited with actions ${JSON.stringify(state.actions)} and no role control. Mailpit received "${inviteMail.subject}" with a Set password button and the line "The link expires in 1 hour". Its header named "${header.name}" and showed the inline image ${header.cid} (the uploaded logo, not the OpenLaw mark).`;
     },
     admin.page,
@@ -622,7 +656,10 @@ async function org() {
       // The pane has no remove control, so the recorded original logo is put back through the API.
       const restore = await api(page, app, "PATCH", "/api/v1/org/general", { logo: original.logo });
       const staff = await signInBranding("/auth/login");
-      expect(restoredName === original.name && restore.status === 200, `name ${restoredName} restore ${restore.status}`);
+      expect(
+        restoredName === original.name && restore.status === 200,
+        `name ${restoredName} restore ${restore.status}`,
+      );
       expect(
         staff.text.includes(original.name) && staff.logos.length === (original.logo ? 1 : 0),
         `staff ${JSON.stringify(staff)}`,
@@ -658,31 +695,49 @@ async function org() {
       await page.reload();
       const restored = await tz.inputValue();
       expect(after.startsWith("America/Toronto"), `after reload ${after}`);
-      expect(locales.length === 1 && locales[0].trim() === "English (United States)", `locales ${locales}`);
+      expect(
+        locales.length === 1 && locales[0].trim() === "English (United States)",
+        `locales ${locales}`,
+      );
       expect(restored.startsWith(original.defaultTimezone), `restored ${restored}`);
       return `Default timezone saved America/Toronto and kept it after reload. Default locale offered only ${JSON.stringify(locales)}. The timezone was restored to ${original.defaultTimezone}.`;
     },
     admin.page,
   );
 
-  await step(O, "administrator", "OpenLaw rejects an invalid address", "No row is created", async () => {
-    const { page } = admin;
-    await openUsers(page, app);
-    const before = (await api(page, app, "GET", "/api/v1/users")).data.users.length;
-    const d = await invite(page, "DOC-030 admin-org V-C36 invalid", "doc030-org-invalid-address", "Legal team member");
-    await sleep(800);
-    const stillOpen = await d.isVisible();
-    const validation = await d.getByLabel("Email").evaluate((el) => el.validationMessage);
-    await d.getByRole("button", { name: "Cancel" }).click();
-    const apiTry = await api(page, app, "POST", "/api/v1/auth/invites", {
-      email: "doc030 org@@helix",
-      displayName: "DOC-030 admin-org V-C36 invalid",
-      role: "legal_team_member",
-    });
-    const after = (await api(page, app, "GET", "/api/v1/users")).data.users.length;
-    expect(stillOpen && before === after && apiTry.status >= 400, `open ${stillOpen}, users ${before}->${after}, api ${apiTry.status}`);
-    return `The dialog stayed open with the browser message "${validation}" and no row was added (${before} users before and after). The invite route refused a malformed address with ${apiTry.status}.`;
-  }, admin.page);
+  await step(
+    O,
+    "administrator",
+    "OpenLaw rejects an invalid address",
+    "No row is created",
+    async () => {
+      const { page } = admin;
+      await openUsers(page, app);
+      const before = (await api(page, app, "GET", "/api/v1/users")).data.users.length;
+      const d = await invite(
+        page,
+        "DOC-030 admin-org V-C36 invalid",
+        "doc030-org-invalid-address",
+        "Legal team member",
+      );
+      await sleep(800);
+      const stillOpen = await d.isVisible();
+      const validation = await d.getByLabel("Email").evaluate((el) => el.validationMessage);
+      await d.getByRole("button", { name: "Cancel" }).click();
+      const apiTry = await api(page, app, "POST", "/api/v1/auth/invites", {
+        email: "doc030 org@@helix",
+        displayName: "DOC-030 admin-org V-C36 invalid",
+        role: "legal_team_member",
+      });
+      const after = (await api(page, app, "GET", "/api/v1/users")).data.users.length;
+      expect(
+        stillOpen && before === after && apiTry.status >= 400,
+        `open ${stillOpen}, users ${before}->${after}, api ${apiTry.status}`,
+      );
+      return `The dialog stayed open with the browser message "${validation}" and no row was added (${before} users before and after). The invite route refused a malformed address with ${apiTry.status}.`;
+    },
+    admin.page,
+  );
 
   await step(
     O,
@@ -718,7 +773,10 @@ async function org() {
       await d.getByRole("button", { name: "Cancel" }).click();
       await sleep(2500);
       const n = await countMail(mail, people.a.email, since);
-      expect(alert === "This user already exists with a different role." && n === 0, `alert "${alert}", mails ${n}`);
+      expect(
+        alert === "This user already exists with a different role." && n === 0,
+        `alert "${alert}", mails ${n}`,
+      );
       return `The dialog showed "${alert}" and Mailpit received ${n} messages.`;
     },
     admin.page,
@@ -759,7 +817,9 @@ async function org() {
       const { page } = admin;
       await openUsers(page, app);
       const since = new Date(Date.now() - 1000);
-      await row(page, people.a.email).getByRole("button", { name: `Resend the invite to ${people.a.email}` }).click();
+      await row(page, people.a.email)
+        .getByRole("button", { name: `Resend the invite to ${people.a.email}` })
+        .click();
       const note = await rowNote(page, people.a.email);
       const m = await latestMail(mail, people.a.email, since, SET_PASSWORD);
       expect(note === "Saved" && m, `note ${note} mail ${!!m}`);
@@ -813,7 +873,10 @@ async function org() {
       const me = await api(casey.page, app, "GET", "/api/v1/me");
       await openUsers(page, app);
       const state = await rowState(page, people.c.email);
-      expect(me.status === 200 && state.status === "Active" && state.roleControl, `${me.status} ${JSON.stringify(state)}`);
+      expect(
+        me.status === 200 && state.status === "Active" && state.roleControl,
+        `${me.status} ${JSON.stringify(state)}`,
+      );
       return `"${m.subject}" arrived; "Password set" appeared; the colleague signed in with the new password (me ${me.status}). The row read ${state.status} with a role control.`;
     },
     casey.page,
@@ -847,10 +910,17 @@ async function org() {
       const d = await invite(page, people.b.name, people.b.email, "Legal team member");
       await d.waitFor({ state: "hidden" });
       const beforeState = await rowState(page, people.b.email);
-      await row(page, people.b.email).getByRole("button", { name: `Revoke the invite to ${people.b.email}` }).click();
+      await row(page, people.b.email)
+        .getByRole("button", { name: `Revoke the invite to ${people.b.email}` })
+        .click();
       await row(page, people.b.email).waitFor({ state: "detached" });
-      const listed = (await api(page, app, "GET", "/api/v1/users")).data.users.some((u) => u.email === people.b.email);
-      expect(beforeState.status === "Invited" && !listed, `before ${JSON.stringify(beforeState)}, still listed ${listed}`);
+      const listed = (await api(page, app, "GET", "/api/v1/users")).data.users.some(
+        (u) => u.email === people.b.email,
+      );
+      expect(
+        beforeState.status === "Invited" && !listed,
+        `before ${JSON.stringify(beforeState)}, still listed ${listed}`,
+      );
       return `The Invited row for ${people.b.name} disappeared after Revoke invite, and GET /api/v1/users no longer listed the address.`;
     },
     admin.page,
@@ -869,12 +939,18 @@ async function org() {
       await openUsers(page, app);
       const saved = await rowState(page, people.a.email);
       await colleague.page.goto(`${app}/settings/users`);
-      await colleague.page.getByRole("heading", { name: "Users", level: 2 }).waitFor({ timeout: 15000 });
+      await colleague.page
+        .getByRole("heading", { name: "Users", level: 2 })
+        .waitFor({ timeout: 15000 });
       expect(
-        JSON.stringify(items) === JSON.stringify(["Administrator", "Legal team member", "Business user"]),
+        JSON.stringify(items) ===
+          JSON.stringify(["Administrator", "Legal team member", "Business user"]),
         `items ${items}`,
       );
-      expect(note === "Saved" && saved.role === "Administrator", `${note} ${JSON.stringify(saved)}`);
+      expect(
+        note === "Saved" && saved.role === "Administrator",
+        `${note} ${JSON.stringify(saved)}`,
+      );
       return `The role menu offered ${JSON.stringify(items)}. Choosing Administrator showed "${note}" and the reloaded row read ${saved.role}. The colleague's existing session opened Settings Users on its next navigation without signing in again.`;
     },
     admin.page,
@@ -922,13 +998,27 @@ async function org() {
       const note2 = await rowNote(page, people.bu.email);
       await openUsers(page, app);
       const back = await rowState(page, people.bu.email);
-      expect(beforeState.status === "Active" && beforeState.role === "Business user" && beforeState.roleControl, `before ${JSON.stringify(beforeState)}`);
       expect(
-        note === "Saved" && promoted.status === "Active" && promoted.roleControl && promoted.role === "Legal team member",
+        beforeState.status === "Active" &&
+          beforeState.role === "Business user" &&
+          beforeState.roleControl,
+        `before ${JSON.stringify(beforeState)}`,
+      );
+      expect(
+        note === "Saved" &&
+          promoted.status === "Active" &&
+          promoted.roleControl &&
+          promoted.role === "Legal team member",
         `promoted ${note} ${JSON.stringify(promoted)}`,
       );
-      expect(meAfter.data?.user?.role === "legal_team_member", `me ${JSON.stringify(meAfter.data?.user?.role)}`);
-      expect(back.status === "Active" && back.role === "Business user" && back.roleControl, `back ${note2} ${JSON.stringify(back)}`);
+      expect(
+        meAfter.data?.user?.role === "legal_team_member",
+        `me ${JSON.stringify(meAfter.data?.user?.role)}`,
+      );
+      expect(
+        back.status === "Active" && back.role === "Business user" && back.roleControl,
+        `back ${note2} ${JSON.stringify(back)}`,
+      );
       return `A Portal sign-in link created an ${beforeState.status} ${beforeState.role} row with a role control. Choosing Legal team member showed "${note}"; the row stayed ${promoted.status} with its role control and read ${promoted.role}, and the person's own session reported role ${meAfter.data.user.role} on its next request. Choosing Business user showed "${note2}" and the row returned to ${back.status} ${back.role}. The Invited branch did not occur, as the article says for a Business User who has signed in.`;
     },
     admin.page,
@@ -945,8 +1035,14 @@ async function org() {
       const self = await rowState(page, DANIEL);
       const me = (await api(page, app, "GET", "/api/v1/me")).data.user;
       const r = await api(page, app, "POST", `/api/v1/users/${me.id}/archive`);
-      expect(self.roleControl && !self.moreActions && !self.actions.includes("Archive"), JSON.stringify(self));
-      expect(r.status >= 400 && r.data?.detail === "You cannot archive yourself.", `self archive ${r.status} ${r.data?.detail}`);
+      expect(
+        self.roleControl && !self.moreActions && !self.actions.includes("Archive"),
+        JSON.stringify(self),
+      );
+      expect(
+        r.status >= 400 && r.data?.detail === "You cannot archive yourself.",
+        `self archive ${r.status} ${r.data?.detail}`,
+      );
       return `Daniel's own row had a role control, no Archive and no "More actions for ${DANIEL}" button (buttons: ${JSON.stringify(self.actions)}). A direct archive request for his own account was refused with ${r.status}: "${r.data?.detail}".`;
     },
     admin.page,
@@ -971,8 +1067,14 @@ async function org() {
       await signIn(casey.page, app, people.c.email, people.c.password);
       const again = await api(casey.page, app, "GET", "/api/v1/me");
       expect(JSON.stringify(items) === JSON.stringify(["Sign out user"]), `menu ${items}`);
-      expect(beforeMe.status === 200 && after.status === 401 && landed.startsWith("/auth/login"), `before ${beforeMe.status} after ${after.status} landed ${landed}`);
-      expect(state.status === "Active" && again.status === 200, `state ${JSON.stringify(state)} again ${again.status}`);
+      expect(
+        beforeMe.status === 200 && after.status === 401 && landed.startsWith("/auth/login"),
+        `before ${beforeMe.status} after ${after.status} landed ${landed}`,
+      );
+      expect(
+        state.status === "Active" && again.status === 200,
+        `state ${JSON.stringify(state)} again ${again.status}`,
+      );
       return `The "More actions for ${people.c.email}" menu offered ${JSON.stringify(items)}; choosing it showed "${note}". The colleague's session went from ${beforeMe.status} to ${after.status} on /api/v1/me and the app sent it to ${landed}. The row stayed ${state.status}, and a password sign-in worked again (${again.status}).`;
     },
     admin.page,
@@ -995,10 +1097,15 @@ async function org() {
         contractTypeId: other.id,
         managerId: cId,
       });
-      expect(created.status === 201 || created.status === 200, `create ${created.status} ${JSON.stringify(created.data)}`);
+      expect(
+        created.status === 201 || created.status === 200,
+        `create ${created.status} ${JSON.stringify(created.data)}`,
+      );
       contractNumber = created.data.contract.number;
       people.c.id = cId;
-      results.records = [`Contract ${contractNumber} "DOC-030 admin-org V-C36 offboarding contract ${stamp}"`];
+      results.records = [
+        `Contract ${contractNumber} "DOC-030 admin-org V-C36 offboarding contract ${stamp}"`,
+      ];
       return `Created Contract ${contractNumber} with the colleague as Legal Owner through the API (fixture setup; the check follows the archive).`;
     },
     admin.page,
@@ -1014,7 +1121,9 @@ async function org() {
       await openUsers(page, app);
       const switchBefore = await page.getByRole("switch", { name: "Show archived" }).count();
       const live = await api(casey.page, app, "GET", "/api/v1/me");
-      await row(page, people.c.email).getByRole("button", { name: `Archive ${people.c.email}` }).click();
+      await row(page, people.c.email)
+        .getByRole("button", { name: `Archive ${people.c.email}` })
+        .click();
       await row(page, people.c.email).waitFor({ state: "detached", timeout: 10000 });
       const after = await api(casey.page, app, "GET", "/api/v1/me");
       const fresh = await context();
@@ -1022,10 +1131,13 @@ async function org() {
       await fresh.page.getByLabel("Email", { exact: true }).fill(people.c.email);
       await fresh.page.getByLabel("Password", { exact: true }).fill(people.c.password);
       await fresh.page.getByRole("button", { name: "Sign in", exact: true }).click();
-      const alert = (await fresh.page.getByRole("alert").first().innerText({ timeout: 15000 })).trim();
+      const alert = (
+        await fresh.page.getByRole("alert").first().innerText({ timeout: 15000 })
+      ).trim();
       const since = new Date(Date.now() - 1000);
-      const linkPage = await requestMagicLink(fresh.page, app, people.c.email).catch(async () =>
-        `(no confirmation) ${(await fresh.page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 160)}`,
+      const linkPage = await requestMagicLink(fresh.page, app, people.c.email).catch(
+        async () =>
+          `(no confirmation) ${(await fresh.page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 160)}`,
       );
       await sleep(3000);
       const links = await countMail(mail, people.c.email, since);
@@ -1033,9 +1145,15 @@ async function org() {
       const contract = await api(page, app, "GET", `/api/v1/contracts/${contractNumber}`);
       const manager = contract.data?.contract?.manager;
       const switchAfter = await page.getByRole("switch", { name: "Show archived" }).count();
-      expect(live.status === 200 && after.status === 401, `live ${live.status} after ${after.status}`);
+      expect(
+        live.status === 200 && after.status === 401,
+        `live ${live.status} after ${after.status}`,
+      );
       expect(/archived/i.test(alert) && links === 0, `sign-in alert ${alert} links ${links}`);
-      expect(manager?.id === people.c.id && manager?.archived === true, `manager ${JSON.stringify(manager)}`);
+      expect(
+        manager?.id === people.c.id && manager?.archived === true,
+        `manager ${JSON.stringify(manager)}`,
+      );
       expect(switchAfter === 1, `switch after ${switchAfter}`);
       return `Archive removed the row from the ordinary list at once. The colleague's live session went from ${live.status} to ${after.status}. A new password sign-in showed "${alert}". A sign-in link request answered "${linkPage.slice(0, 140)}" and sent ${links} messages. Contract ${contractNumber} still named the archived colleague as Legal Owner (archived: ${manager.archived}). Show archived was present ${switchBefore ? "before (the shared lab already held archived accounts) and " : ""}after the archive.`;
     },
@@ -1052,14 +1170,22 @@ async function org() {
       await openUsers(page, app);
       await page.getByRole("switch", { name: "Show archived" }).click();
       const archived = await rowState(page, people.c.email);
-      await row(page, people.c.email).getByRole("button", { name: `Restore ${people.c.email}` }).click();
+      await row(page, people.c.email)
+        .getByRole("button", { name: `Restore ${people.c.email}` })
+        .click();
       const note = await rowNote(page, people.c.email);
       const restored = await rowState(page, people.c.email);
       const old = await api(casey.page, app, "GET", "/api/v1/me");
       await signIn(casey.page, app, people.c.email, people.c.password);
       const again = await api(casey.page, app, "GET", "/api/v1/me");
-      expect(archived.status === "Archived" && archived.actions.includes("Restore"), `archived ${JSON.stringify(archived)}`);
-      expect(restored.status === "Active" && old.status === 401 && again.status === 200, `restored ${JSON.stringify(restored)} old ${old.status} again ${again.status}`);
+      expect(
+        archived.status === "Archived" && archived.actions.includes("Restore"),
+        `archived ${JSON.stringify(archived)}`,
+      );
+      expect(
+        restored.status === "Active" && old.status === 401 && again.status === 200,
+        `restored ${JSON.stringify(restored)} old ${old.status} again ${again.status}`,
+      );
       return `With Show archived on, the row read Archived with a Restore action. Restore showed "${note}" and the row read Active. The old browser session still got ${old.status}; a fresh password sign-in got ${again.status}.`;
     },
     admin.page,
@@ -1076,7 +1202,10 @@ const needAuthPassword = () => {
   if (!AUTH_PASSWORD) throw new Error("AUTH_PASSWORD is required for the owned-lab sections");
 };
 function labEnvValue(labName, key) {
-  const env = readFileSync(path.join(root, ".documentation-labs", labName, "source", ".env"), "utf8");
+  const env = readFileSync(
+    path.join(root, ".documentation-labs", labName, "source", ".env"),
+    "utf8",
+  );
   return env.match(new RegExp(`^${key}=(.*)$`, "m"))?.[1] ?? null;
 }
 function totp(uri) {
@@ -1094,7 +1223,10 @@ function totp(uri) {
 }
 
 // The auth2w first Administrator (a fictional first-run fixture).
-const WIZ_ADMIN = { name: "DOC-030 admin-org Avery Morgan", email: "doc030-wiz-admin@helix.example" };
+const WIZ_ADMIN = {
+  name: "DOC-030 admin-org Avery Morgan",
+  email: "doc030-wiz-admin@helix.example",
+};
 const WIZ_PENDING = "doc030-wiz-pending@helix.example";
 const STORED_SENDER = "stored-relay@helix.example";
 const STORED_NAME = "DOC-030 Stored";
@@ -1129,7 +1261,10 @@ const smtp = (page) => ({
   senderName: page.getByLabel("Sender name (optional)"),
   senderEmail: page.getByLabel("Sender email"),
 });
-async function fillRelay(page, { host, port, security, authentication, username, password, senderEmail, senderName }) {
+async function fillRelay(
+  page,
+  { host, port, security, authentication, username, password, senderEmail, senderName },
+) {
   const f = smtp(page);
   await f.host.fill(host);
   await f.security.selectOption({ label: security });
@@ -1163,7 +1298,9 @@ async function emailNotice(page) {
 async function sendTest(page) {
   await page.getByRole("button", { name: "Send test email" }).click();
   const result = page
-    .getByText(/^(Test email sent to \S+\. Check your inbox\.|The test email could not be sent\..*)$/)
+    .getByText(
+      /^(Test email sent to \S+\. Check your inbox\.|The test email could not be sent\..*)$/,
+    )
     .first();
   await result.waitFor({ timeout: 60000 });
   return (await result.innerText()).trim();
@@ -1232,7 +1369,12 @@ async function wizardStored() {
       const text = await paneText(page);
       const b = await buttons(page);
       const cont = page.getByRole("button", { name: "Continue" });
-      expect(/Set up outbound email to finish instance setup\. OpenLaw uses it for invitations, sign-in links, and notifications\./.test(text), text.slice(0, 300));
+      expect(
+        /Set up outbound email to finish instance setup\. OpenLaw uses it for invitations, sign-in links, and notifications\./.test(
+          text,
+        ),
+        text.slice(0, 300),
+      );
       expect(!b.includes("Set up later") && (await cont.isDisabled()), `buttons ${b}`);
       const u = new URL(page.url());
       return `The first Administrator was created with the lab's setup token and landed on /welcome. Skip optional steps opened ${u.pathname}${u.search} with "Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications." The step had no Set up later (buttons ${JSON.stringify(b)}) and Continue was disabled.`;
@@ -1256,13 +1398,17 @@ async function wizardStored() {
         const t = (await anon.page.locator("main").innerText()).replace(/\s+/g, " ");
         out[p] = {
           start: t.slice(0, 60),
-          logos: await anon.page.locator("main").getByRole("img", { name: "Organization logo" }).count(),
+          logos: await anon.page
+            .locator("main")
+            .getByRole("img", { name: "Organization logo" })
+            .count(),
         };
         await anon.ctx.close();
       }
       const branding = await (await fetch(`${app}/api/v1/org/branding`)).json();
       expect(
-        !branding.name && Object.values(out).every((x) => x.start.startsWith("OpenLaw") && x.logos === 0),
+        !branding.name &&
+          Object.values(out).every((x) => x.start.startsWith("OpenLaw") && x.logos === 0),
         `${JSON.stringify(branding)} ${JSON.stringify(out)}`,
       );
       return `The organization had no saved name (GET /api/v1/org/branding ${JSON.stringify(branding)}). In a browser with no session: ${JSON.stringify(out)}.`;
@@ -1280,9 +1426,15 @@ async function wizardStored() {
       const f = smtp(page);
       const seen = {};
       seen.initial = await f.port.inputValue();
-      seen.securityOptions = (await f.security.locator("option").allInnerTexts()).map((x) => x.trim());
-      seen.authenticationOptions = (await f.authentication.locator("option").allInnerTexts()).map((x) => x.trim());
-      seen.initialAuthentication = (await f.authentication.locator("option:checked").innerText()).trim();
+      seen.securityOptions = (await f.security.locator("option").allInnerTexts()).map((x) =>
+        x.trim(),
+      );
+      seen.authenticationOptions = (await f.authentication.locator("option").allInnerTexts()).map(
+        (x) => x.trim(),
+      );
+      seen.initialAuthentication = (
+        await f.authentication.locator("option:checked").innerText()
+      ).trim();
       await f.security.selectOption({ label: "TLS" });
       seen.tls = await f.port.inputValue();
       await f.security.selectOption({ label: "None" });
@@ -1297,14 +1449,27 @@ async function wizardStored() {
       seen.credentialsWithNone = [await f.username.count(), await f.password.count()];
       seen.senderFields = [await f.senderName.count(), await f.senderEmail.count()];
       await emailStep(page, app);
-      expect(seen.initial === "587" && seen.tls === "465" && seen.none === "25" && seen.starttls === "587" && seen.changedThenTls === "2525", JSON.stringify(seen));
+      expect(
+        seen.initial === "587" &&
+          seen.tls === "465" &&
+          seen.none === "25" &&
+          seen.starttls === "587" &&
+          seen.changedThenTls === "2525",
+        JSON.stringify(seen),
+      );
       expect(
         JSON.stringify(seen.securityOptions) === JSON.stringify(["STARTTLS", "TLS", "None"]) &&
-          JSON.stringify(seen.authenticationOptions) === JSON.stringify(["Username and password", "None"]) &&
+          JSON.stringify(seen.authenticationOptions) ===
+            JSON.stringify(["Username and password", "None"]) &&
           seen.initialAuthentication === "Username and password",
         JSON.stringify(seen),
       );
-      expect(seen.credentialsWithPassword.join() === "1,1" && seen.credentialsWithNone.join() === "0,0" && seen.senderFields.join() === "1,1", JSON.stringify(seen));
+      expect(
+        seen.credentialsWithPassword.join() === "1,1" &&
+          seen.credentialsWithNone.join() === "0,0" &&
+          seen.senderFields.join() === "1,1",
+        JSON.stringify(seen),
+      );
       return `Observed ${JSON.stringify(seen)}. The step was reloaded afterwards.`;
     },
     admin.page,
@@ -1325,7 +1490,10 @@ async function wizardStored() {
         const settings = await api(page, app, "GET", "/api/v1/email-settings");
         out.push({ host, notice: n.match, alerts: n.alerts, source: settings.data?.source });
       }
-      expect(out.every((x) => x.source === "unset" && !/Relay saved/.test(x.notice ?? "")), JSON.stringify(out));
+      expect(
+        out.every((x) => x.source === "unset" && !/Relay saved/.test(x.notice ?? "")),
+        JSON.stringify(out),
+      );
       return `Save relay results: ${JSON.stringify(out)}.`;
     },
     admin.page,
@@ -1357,20 +1525,40 @@ async function wizardStored() {
       const html = await page.content();
       const stored = execFileSync(
         "docker",
-        ["--context", "default", "exec", `${WIZ.project}-postgres-1`, "psql", "-U", "openlaw", "-d", "openlaw", "-At", "-c", "select smtp_url from org_settings"],
+        [
+          "--context",
+          "default",
+          "exec",
+          `${WIZ.project}-postgres-1`,
+          "psql",
+          "-U",
+          "openlaw",
+          "-d",
+          "openlaw",
+          "-At",
+          "-c",
+          "select smtp_url from org_settings",
+        ],
         { encoding: "utf8" },
       );
-      const storedPlain = stored.includes(smtpSecret) || stored.includes(smtpUser) || stored.includes("mailpit");
+      const storedPlain =
+        stored.includes(smtpSecret) || stored.includes(smtpUser) || stored.includes("mailpit");
       const since = new Date(Date.now() - 1000);
       const test = await sendTest(page);
       await sleep(3000);
       const n = await countMail(mail, WIZ_ADMIN.email, since);
       expect(/Relay saved\./.test(saved.match ?? ""), JSON.stringify(saved));
       expect(
-        JSON.stringify(Object.keys(settings.data).sort()) === JSON.stringify(["fromAddress", "source"]) && settings.data.source === "app",
+        JSON.stringify(Object.keys(settings.data).sort()) ===
+          JSON.stringify(["fromAddress", "source"]) && settings.data.source === "app",
         JSON.stringify(settings.data),
       );
-      expect(!html.includes(smtpSecret) && !html.includes(smtpUser) && !JSON.stringify(settings.data).includes(smtpSecret), "credentials shown");
+      expect(
+        !html.includes(smtpSecret) &&
+          !html.includes(smtpUser) &&
+          !JSON.stringify(settings.data).includes(smtpSecret),
+        "credentials shown",
+      );
       expect(!storedPlain && stored.trim().length > 0, "stored value readable");
       expect(/The test email could not be sent\./.test(test) && n === 0, `${test} mails ${n}`);
       return `Save relay showed "${saved.match}". The step read "${text.match(/Outbound email is set in the app\.[^.]*\.[^.]*\./)?.[0]}". GET /api/v1/email-settings returned only ${JSON.stringify(settings.data)}; neither the page nor the API contained the SMTP username or password. org_settings.smtp_url held a ${stored.trim().length}-character value without the host, username or password in plain text. Send test email against Mailpit, which offers no STARTTLS, showed "${test}" and Mailpit received ${n} messages.`;
@@ -1406,11 +1594,28 @@ async function wizardStored() {
       const m = await latestMail(mail, WIZ_ADMIN.email, since, null);
       const facts = m && testMailFacts(m);
       const cont = await page.getByRole("button", { name: "Continue" }).isDisabled();
-      expect(Object.values(form).every((v) => v === ""), JSON.stringify(form));
-      expect(formGone === 0 && JSON.stringify(kept) === JSON.stringify(before), `form ${formGone} kept ${JSON.stringify(kept)}`);
-      expect(/Relay saved\./.test(saved.match ?? "") && test === `Test email sent to ${WIZ_ADMIN.email}. Check your inbox.`, `${JSON.stringify(saved)} ${test}`);
       expect(
-        facts && facts.subject === "OpenLaw test email" && facts.headline && facts.sentThrough?.startsWith("mailpit") && facts.fromLine?.includes(STORED_SENDER) && m.from === STORED_SENDER && m.fromName === STORED_NAME && !cont,
+        Object.values(form).every((v) => v === ""),
+        JSON.stringify(form),
+      );
+      expect(
+        formGone === 0 && JSON.stringify(kept) === JSON.stringify(before),
+        `form ${formGone} kept ${JSON.stringify(kept)}`,
+      );
+      expect(
+        /Relay saved\./.test(saved.match ?? "") &&
+          test === `Test email sent to ${WIZ_ADMIN.email}. Check your inbox.`,
+        `${JSON.stringify(saved)} ${test}`,
+      );
+      expect(
+        facts &&
+          facts.subject === "OpenLaw test email" &&
+          facts.headline &&
+          facts.sentThrough?.startsWith("mailpit") &&
+          facts.fromLine?.includes(STORED_SENDER) &&
+          m.from === STORED_SENDER &&
+          m.fromName === STORED_NAME &&
+          !cont,
         `${JSON.stringify(facts)} continue disabled ${cont}`,
       );
       return `Replace relay opened an empty form ${JSON.stringify(form)}. Keep current relay closed it and the settings stayed ${JSON.stringify(kept)}. Replace relay with SMTP server mailpit, Port 1025, None, None, Sender email ${STORED_SENDER} and Sender name ${STORED_NAME} showed "${saved.match}". Send test email showed "${test}". Mailpit received "${facts.subject}" from ${facts.from}; the body said Outbound email works, Sent through ${facts.sentThrough}, From ${facts.fromLine}. Continue became available.`;
@@ -1428,7 +1633,10 @@ async function wizardStored() {
       await sendTest(admin.page);
       const m = await latestMail(mail, WIZ_ADMIN.email, since, null);
       const header = emailHeader(m);
-      expect(header.name === "OpenLaw" && header.cid === "openlaw-mark@openlaw", JSON.stringify(header));
+      expect(
+        header.name === "OpenLaw" && header.cid === "openlaw-mark@openlaw",
+        JSON.stringify(header),
+      );
       return `On the unnamed auth2w instance a test email's header read "${header.name}" with the inline image ${header.cid}.`;
     },
     admin.page,
@@ -1442,7 +1650,11 @@ async function wizardStored() {
     async () => {
       const { page } = admin;
       await page.getByRole("button", { name: "Replace relay" }).click();
-      await fillRelay(page, { ...WORKING_RELAY, host: "doc030-unreachable-relay.invalid", port: 2525 });
+      await fillRelay(page, {
+        ...WORKING_RELAY,
+        host: "doc030-unreachable-relay.invalid",
+        port: 2525,
+      });
       const saved = await emailNotice(page);
       const failure = await sendTest(page);
       await page.getByRole("button", { name: "Replace relay" }).click();
@@ -1451,7 +1663,10 @@ async function wizardStored() {
       const since = new Date(Date.now() - 1000);
       const ok = await sendTest(page);
       const m = await latestMail(mail, WIZ_ADMIN.email, since, null);
-      expect(/Relay saved\./.test(saved.match ?? "") && /could not be sent/.test(failure) && m, `${JSON.stringify(saved)} ${failure} ${!!m}`);
+      expect(
+        /Relay saved\./.test(saved.match ?? "") && /could not be sent/.test(failure) && m,
+        `${JSON.stringify(saved)} ${failure} ${!!m}`,
+      );
       return `An unreachable SMTP server saved with "${saved.match}", but Send test email showed "${failure}". Replace relay, all details entered again, Save relay, and a second test showed "${ok}" and delivered "${m.subject}" from ${m.from}.`;
     },
     admin.page,
@@ -1469,7 +1684,9 @@ async function wizardStored() {
       const source = (await api(page, app, "GET", "/api/v1/email-settings")).data?.source;
       const cont = await page.getByRole("button", { name: "Continue" }).isDisabled();
       const since = new Date();
-      const reset = await api(page, app, "POST", "/api/v1/auth/password-setup", { email: WIZ_ADMIN.email });
+      const reset = await api(page, app, "POST", "/api/v1/auth/password-setup", {
+        email: WIZ_ADMIN.email,
+      });
       await sleep(3000);
       const n = await countMail(mail, WIZ_ADMIN.email, since);
       await fillRelay(page, WORKING_RELAY);
@@ -1477,7 +1694,10 @@ async function wizardStored() {
       const since2 = new Date(Date.now() - 1000);
       await sendTest(page);
       const m = await latestMail(mail, WIZ_ADMIN.email, since2, null);
-      expect(source === "unset" && cont && n === 0, `source ${source}, continue disabled ${cont}, mails ${n}, reset ${reset.status}`);
+      expect(
+        source === "unset" && cont && n === 0,
+        `source ${source}, continue disabled ${cont}, mails ${n}, reset ${reset.status}`,
+      );
       expect(m, "no mail after replacement");
       return `Clear relay showed "Relay cleared. This instance can no longer send email." The source became ${source} and Continue was disabled. A password setup request answered ${reset.status}${reset.data?.detail ? ` ("${reset.data.detail}")` : ""} and Mailpit received ${n} messages. After a valid replacement was saved, a test message arrived again from ${m.from}.`;
     },
@@ -1512,9 +1732,22 @@ async function wizardIncomplete() {
       });
       await sleep(3000);
       const n = await countMail(mail, "doc030-wiz-incomplete@helix.example", since);
-      expect(/The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent\. Set SMTP_FROM in the environment\./.test(text), text.slice(0, 300));
-      expect(!b.some((x) => ["Save relay", "Replace relay", "Clear relay", "Send test email"].includes(x)) && cont, `buttons ${b} continue ${cont}`);
-      expect(settings.data?.source === "env" && inv.status >= 400 && n === 0, `${JSON.stringify(settings.data)} invite ${inv.status} mails ${n}`);
+      expect(
+        /The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent\. Set SMTP_FROM in the environment\./.test(
+          text,
+        ),
+        text.slice(0, 300),
+      );
+      expect(
+        !b.some((x) =>
+          ["Save relay", "Replace relay", "Clear relay", "Send test email"].includes(x),
+        ) && cont,
+        `buttons ${b} continue ${cont}`,
+      );
+      expect(
+        settings.data?.source === "env" && inv.status >= 400 && n === 0,
+        `${JSON.stringify(settings.data)} invite ${inv.status} mails ${n}`,
+      );
       return `Opening Settings sent the Administrator to ${forced} (email setup is required while the wizard is open). The Outbound email step read "The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment." Its buttons were ${JSON.stringify(b)}; Continue was disabled. GET /api/v1/email-settings answered ${JSON.stringify(settings.data)}. An invitation through the invite route answered ${inv.status} ("${inv.data?.detail}") and Mailpit received ${n} messages.`;
     },
     admin.page,
@@ -1527,7 +1760,11 @@ async function wizardIncomplete() {
     async () => {
       const out = await signInLinkOffered(app);
       const methods = await (await fetch(`${app}/api/v1/auth/methods`)).json();
-      expect(Object.values(out).every((b) => !b.includes("Email me a sign-in link")) && methods.policy.legal.magicLink, JSON.stringify(out));
+      expect(
+        Object.values(out).every((b) => !b.includes("Email me a sign-in link")) &&
+          methods.policy.legal.magicLink,
+        JSON.stringify(out),
+      );
       return `With Email magic link on in both groups (${JSON.stringify(methods.policy.legal)}) and emailConfigured ${methods.emailConfigured}, the pages offered ${JSON.stringify(out)}.`;
     },
     admin.page,
@@ -1556,8 +1793,18 @@ async function wizardEnv() {
         senderName: STORED_NAME,
         senderEmail: STORED_SENDER,
       });
-      expect(/Outbound email is set by the deployment environment\. Mail is sent from DOC-030 Environment <env-relay@helix\.example>\./.test(text), text.slice(0, 300));
-      expect(!b.some((x) => ["Save relay", "Replace relay", "Clear relay", "Send test email"].includes(x)), `buttons ${b}`);
+      expect(
+        /Outbound email is set by the deployment environment\. Mail is sent from DOC-030 Environment <env-relay@helix\.example>\./.test(
+          text,
+        ),
+        text.slice(0, 300),
+      );
+      expect(
+        !b.some((x) =>
+          ["Save relay", "Replace relay", "Clear relay", "Send test email"].includes(x),
+        ),
+        `buttons ${b}`,
+      );
       expect(put.status >= 400, `PUT ${put.status}`);
       return `The Outbound email step read "${text.match(/Outbound email is set by the deployment environment\.[^.]*\.[^.]*\./)?.[0]}". Its buttons were ${JSON.stringify(b)}. A direct save answered ${put.status}${put.data?.detail ? ` ("${put.data.detail}")` : ""}.`;
     },
@@ -1572,14 +1819,31 @@ async function wizardEnv() {
       const { page } = admin;
       await openSettingsPane(page, app, "Outbound email");
       const text = await paneText(page);
-      const paneButtons = (await page.locator("main").getByRole("button").allInnerTexts()).map((x) => x.trim()).filter((x) => x && x !== "Advanced");
+      const paneButtons = (await page.locator("main").getByRole("button").allInnerTexts())
+        .map((x) => x.trim())
+        .filter((x) => x && x !== "Advanced");
       const since = new Date(Date.now() - 1000);
       const test = await sendTest(page);
       const m = await latestMail(mail, WIZ_ADMIN.email, since, null);
-      expect(/Managed by your deployment configuration\. Contact your system administrator to change the relay\./.test(text), text.slice(0, 300));
-      expect(/Sender: DOC-030 Environment <env-relay@helix\.example>/.test(text), text.slice(0, 300));
-      expect(m && m.from === ENV_SENDER && m.from !== STORED_SENDER, JSON.stringify(m && { from: m.from }));
-      expect(!paneButtons.some((x) => ["Save relay", "Replace relay", "Clear relay"].includes(x)) && paneButtons.includes("Send test email"), `buttons ${paneButtons}`);
+      expect(
+        /Managed by your deployment configuration\. Contact your system administrator to change the relay\./.test(
+          text,
+        ),
+        text.slice(0, 300),
+      );
+      expect(
+        /Sender: DOC-030 Environment <env-relay@helix\.example>/.test(text),
+        text.slice(0, 300),
+      );
+      expect(
+        m && m.from === ENV_SENDER && m.from !== STORED_SENDER,
+        JSON.stringify(m && { from: m.from }),
+      );
+      expect(
+        !paneButtons.some((x) => ["Save relay", "Replace relay", "Clear relay"].includes(x)) &&
+          paneButtons.includes("Send test email"),
+        `buttons ${paneButtons}`,
+      );
       return `The pane at ${new URL(page.url()).pathname} read "Managed by your deployment configuration. Contact your system administrator to change the relay." and "${text.match(/Sender: [^>]*>/)?.[0]}". Pane buttons: ${JSON.stringify(paneButtons)}. Send test email showed "${test}" and the message arrived from ${m.fromName} <${m.from}> although the stored relay (${STORED_SENDER}) was still saved.`;
     },
     admin.page,
@@ -1639,7 +1903,12 @@ async function settingsIncomplete() {
       const text = await paneText(page);
       const test = page.getByRole("button", { name: "Send test email" });
       const disabled = await test.isDisabled();
-      expect(/The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent\. Set SMTP_FROM in the environment\./.test(text) && disabled, `${text.slice(0, 300)} disabled ${disabled}`);
+      expect(
+        /The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent\. Set SMTP_FROM in the environment\./.test(
+          text,
+        ) && disabled,
+        `${text.slice(0, 300)} disabled ${disabled}`,
+      );
       return `The pane read "${text.slice(0, 260)}". Send test email was ${disabled ? "disabled" : "enabled"}.`;
     },
     admin.page,
@@ -1654,16 +1923,27 @@ async function settingsIncomplete() {
       await openUsers(page, app);
       const before = (await api(page, app, "GET", "/api/v1/users")).data.users.length;
       const newAddress = `doc030-wiz-nomail-${stamp}@helix.example`;
-      const d = await invite(page, "DOC-030 admin-org V-C36 no mailer", newAddress, "Legal team member");
+      const d = await invite(
+        page,
+        "DOC-030 admin-org V-C36 no mailer",
+        newAddress,
+        "Legal team member",
+      );
       const alert = (await d.getByRole("alert").innerText()).trim();
       await d.getByRole("button", { name: "Cancel" }).click();
       await openUsers(page, app);
       const added = await row(page, newAddress).count();
-      await row(page, WIZ_PENDING).getByRole("button", { name: `Resend the invite to ${WIZ_PENDING}` }).click();
+      await row(page, WIZ_PENDING)
+        .getByRole("button", { name: `Resend the invite to ${WIZ_PENDING}` })
+        .click();
       const resend = await rowNote(page, WIZ_PENDING);
       const after = (await api(page, app, "GET", "/api/v1/users")).data.users.length;
       // The deployment sets SMTP_URL here, so the message names the environment fix.
-      expect(alert === "The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.", alert);
+      expect(
+        alert ===
+          "The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.",
+        alert,
+      );
       expect(/^The invite was not sent: this instance cannot send email\./.test(resend), resend);
       expect(added === 0 && before === after, `added ${added} ${before}->${after}`);
       return `With SMTP_URL set and SMTP_FROM empty, Send invite showed "${alert}" and no row was added (${before} users before and after). Resend invite on the pending row showed "${resend}".`;
@@ -1677,7 +1957,10 @@ async function settingsIncomplete() {
     "No Email me a sign-in link",
     async () => {
       const out = await signInLinkOffered(app);
-      expect(Object.values(out).every((b) => !b.includes("Email me a sign-in link")), JSON.stringify(out));
+      expect(
+        Object.values(out).every((b) => !b.includes("Email me a sign-in link")),
+        JSON.stringify(out),
+      );
       return `The pages offered ${JSON.stringify(out)}.`;
     },
     admin.page,
@@ -1700,7 +1983,11 @@ async function settingsStored() {
       const since = new Date(Date.now() - 1000);
       const test = await sendTest(page);
       const m = await latestMail(mail, WIZ_ADMIN.email, since, null);
-      expect(!/Managed by your deployment configuration/.test(text) && /Sender: "?DOC-030 Stored"? <stored-relay@helix\.example>/.test(text), text.slice(0, 300));
+      expect(
+        !/Managed by your deployment configuration/.test(text) &&
+          /Sender: "?DOC-030 Stored"? <stored-relay@helix\.example>/.test(text),
+        text.slice(0, 300),
+      );
       expect(m?.from === STORED_SENDER, JSON.stringify(m && { from: m.from }));
       return `After the override was removed and app and worker were recreated, the pane read "${text.slice(0, 160)}". Send test email showed "${test}" and the message came from ${m.fromName} <${m.from}>.`;
     },
@@ -1715,11 +2002,18 @@ async function settingsStored() {
       const { page } = admin;
       await openSettingsPane(page, app, "Outbound email");
       // The settings rail's Advanced disclosure sits in main too; it is not a pane button.
-      const paneButtons = (await page.locator("main").getByRole("button").allInnerTexts()).map((x) => x.trim()).filter((x) => x && x !== "Advanced");
+      const paneButtons = (await page.locator("main").getByRole("button").allInnerTexts())
+        .map((x) => x.trim())
+        .filter((x) => x && x !== "Advanced");
       const before = (await api(page, app, "GET", "/api/v1/email-settings")).data;
       await page.getByRole("button", { name: "Replace relay" }).click();
       const f = smtp(page);
-      const form = { host: await f.host.inputValue(), senderEmail: await f.senderEmail.inputValue(), senderName: await f.senderName.inputValue(), username: await f.username.inputValue() };
+      const form = {
+        host: await f.host.inputValue(),
+        senderEmail: await f.senderEmail.inputValue(),
+        senderName: await f.senderName.inputValue(),
+        username: await f.username.inputValue(),
+      };
       await page.getByRole("button", { name: "Cancel" }).click();
       const kept = (await api(page, app, "GET", "/api/v1/email-settings")).data;
       await page.getByRole("button", { name: "Replace relay" }).click();
@@ -1736,10 +2030,24 @@ async function settingsStored() {
       await page.getByRole("button", { name: "Replace relay" }).click();
       await fillRelay(page, WORKING_RELAY);
       await emailNotice(page);
-      expect(JSON.stringify(paneButtons) === JSON.stringify(["Send test email", "Replace relay"]), `buttons ${paneButtons}`);
-      expect(Object.values(form).every((v) => v === "") && JSON.stringify(kept) === JSON.stringify(before), `${JSON.stringify(form)} ${JSON.stringify(kept)}`);
-      expect(!/Relay saved/.test(refused.match ?? "") && JSON.stringify(afterRefused) === JSON.stringify(before), `${JSON.stringify(refused)} ${JSON.stringify(afterRefused)}`);
-      expect(/Relay saved\./.test(saved.match ?? "") && m?.fromName === "DOC-030 Stored Replacement", `${JSON.stringify(saved)} ${JSON.stringify(m && { fromName: m.fromName })}`);
+      expect(
+        JSON.stringify(paneButtons) === JSON.stringify(["Send test email", "Replace relay"]),
+        `buttons ${paneButtons}`,
+      );
+      expect(
+        Object.values(form).every((v) => v === "") &&
+          JSON.stringify(kept) === JSON.stringify(before),
+        `${JSON.stringify(form)} ${JSON.stringify(kept)}`,
+      );
+      expect(
+        !/Relay saved/.test(refused.match ?? "") &&
+          JSON.stringify(afterRefused) === JSON.stringify(before),
+        `${JSON.stringify(refused)} ${JSON.stringify(afterRefused)}`,
+      );
+      expect(
+        /Relay saved\./.test(saved.match ?? "") && m?.fromName === "DOC-030 Stored Replacement",
+        `${JSON.stringify(saved)} ${JSON.stringify(m && { fromName: m.fromName })}`,
+      );
       return `Pane buttons were ${JSON.stringify(paneButtons)} (no Clear relay). Replace relay opened an empty form ${JSON.stringify(form)}; Cancel kept ${JSON.stringify(kept)}. SMTP server mailpit:1025 was refused (${JSON.stringify(refused)}) and the relay stayed. A replacement with Sender name "DOC-030 Stored Replacement" showed "${saved.match}", and the next test arrived from "${m.fromName}" with no restart. The original relay was saved again.`;
     },
     admin.page,
@@ -1753,10 +2061,18 @@ async function settingsStored() {
       const { page } = admin;
       // Fixture: no relay saved. The Settings pane has no Clear relay, so the wizard's
       // clear request is sent through the API.
-      const cleared = await api(page, app, "PUT", "/api/v1/email-settings", { smtpUrl: null, smtpFrom: null });
+      const cleared = await api(page, app, "PUT", "/api/v1/email-settings", {
+        smtpUrl: null,
+        smtpFrom: null,
+      });
       await openUsers(page, app);
       const newAddress = `doc030-wiz-unset-${stamp}@helix.example`;
-      const d = await invite(page, "DOC-030 admin-org V-C36 unset mailer", newAddress, "Legal team member");
+      const d = await invite(
+        page,
+        "DOC-030 admin-org V-C36 unset mailer",
+        newAddress,
+        "Legal team member",
+      );
       const alert = (await d.getByRole("alert").innerText()).trim();
       await d.getByRole("button", { name: "Cancel" }).click();
       await openSettingsPane(page, app, "Outbound email");
@@ -1766,11 +2082,24 @@ async function settingsStored() {
       const text = await paneText(page);
       await openUsers(page, app);
       const since = new Date(Date.now() - 1000);
-      await row(page, WIZ_PENDING).getByRole("button", { name: `Resend the invite to ${WIZ_PENDING}` }).click();
+      await row(page, WIZ_PENDING)
+        .getByRole("button", { name: `Resend the invite to ${WIZ_PENDING}` })
+        .click();
       const note = await rowNote(page, WIZ_PENDING);
       const m = await latestMail(mail, WIZ_PENDING, since, SET_PASSWORD);
-      expect(cleared.status === 200 && alert === "The invite was not sent: this instance cannot send email. Set up outbound email in Settings → Advanced → Outbound email.", `${cleared.status} ${alert}`);
-      expect(formShown === 1 && /Relay saved\./.test(saved.match ?? "") && note === "Saved" && m?.from === STORED_SENDER, `${formShown} ${JSON.stringify(saved)} ${note} ${JSON.stringify(m && { from: m.from })}`);
+      expect(
+        cleared.status === 200 &&
+          alert ===
+            "The invite was not sent: this instance cannot send email. Set up outbound email in Settings → Advanced → Outbound email.",
+        `${cleared.status} ${alert}`,
+      );
+      expect(
+        formShown === 1 &&
+          /Relay saved\./.test(saved.match ?? "") &&
+          note === "Saved" &&
+          m?.from === STORED_SENDER,
+        `${formShown} ${JSON.stringify(saved)} ${note} ${JSON.stringify(m && { from: m.from })}`,
+      );
       return `With no relay saved and no environment relay, Send invite showed "${alert}". Settings, Advanced, Outbound email showed the relay form; Save relay showed "${saved.match}" and the pane then read "${text.slice(0, 120)}". Resend invite on the pending row showed "${note}" and "${m.subject}" arrived from ${m.from}.`;
     },
     admin.page,
@@ -1781,7 +2110,11 @@ async function settingsStored() {
 async function guards() {
   const { app, mail } = WIZ;
   const admin = await wizAdmin();
-  const colleague = { name: "DOC-030 admin-org V-C36 Jordan", email: `doc030-wiz-jordan-${stamp}@helix.example`, password: newPassword() };
+  const colleague = {
+    name: "DOC-030 admin-org V-C36 Jordan",
+    email: `doc030-wiz-jordan-${stamp}@helix.example`,
+    password: newPassword(),
+  };
   await step(
     O,
     "administrator",
@@ -1795,9 +2128,21 @@ async function guards() {
       const me = await api(page, app, "GET", "/api/v1/me");
       const self = await rowState(page, WIZ_ADMIN.email);
       const archive = await api(page, app, "POST", `/api/v1/users/${me.data.user.id}/archive`);
-      const admins = (await api(page, app, "GET", "/api/v1/users")).data.users.filter((u) => u.role === "administrator" && u.status !== "archived").length;
-      expect(admins === 1 && t === "You cannot demote the last Administrator." && me.data.user.role === "administrator", `${admins} ${t} ${me.data.user.role}`);
-      expect(archive.data?.detail === "You cannot archive the last Administrator." && !self.moreActions && !self.actions.includes("Archive"), `${archive.status} ${archive.data?.detail} ${JSON.stringify(self)}`);
+      const admins = (await api(page, app, "GET", "/api/v1/users")).data.users.filter(
+        (u) => u.role === "administrator" && u.status !== "archived",
+      ).length;
+      expect(
+        admins === 1 &&
+          t === "You cannot demote the last Administrator." &&
+          me.data.user.role === "administrator",
+        `${admins} ${t} ${me.data.user.role}`,
+      );
+      expect(
+        archive.data?.detail === "You cannot archive the last Administrator." &&
+          !self.moreActions &&
+          !self.actions.includes("Archive"),
+        `${archive.status} ${archive.data?.detail} ${JSON.stringify(self)}`,
+      );
       return `On auth2w ${WIZ_ADMIN.name} is the only active Administrator (${admins}). Choosing Legal team member on the own row showed "${t}" and the role stayed ${me.data.user.role}. The own row has no Archive and no … button, so the archive refusal was read from the archive route: ${archive.status} "${archive.data.detail}".`;
     },
     admin.page,
@@ -1811,7 +2156,9 @@ async function guards() {
     async () => {
       const { page } = admin;
       await openUsers(page, app);
-      const hadArchived = (await api(page, app, "GET", "/api/v1/users")).data.users.some((u) => u.status === "archived");
+      const hadArchived = (await api(page, app, "GET", "/api/v1/users")).data.users.some(
+        (u) => u.status === "archived",
+      );
       const switchBefore = await page.getByRole("switch", { name: "Show archived" }).count();
       const since = new Date(Date.now() - 1000);
       const d = await invite(page, colleague.name, colleague.email, "Legal team member");
@@ -1820,16 +2167,26 @@ async function guards() {
       await setPasswordFromLink(c.page, m.link, colleague.password);
       await signIn(c.page, app, colleague.email, colleague.password);
       await openUsers(page, app);
-      await row(page, colleague.email).getByRole("button", { name: `Archive ${colleague.email}` }).click();
+      await row(page, colleague.email)
+        .getByRole("button", { name: `Archive ${colleague.email}` })
+        .click();
       await row(page, colleague.email).waitFor({ state: "detached" });
       const switchAfter = await page.getByRole("switch", { name: "Show archived" }).count();
       const live = await api(c.page, app, "GET", "/api/v1/me");
       await page.getByRole("switch", { name: "Show archived" }).click();
-      await row(page, colleague.email).getByRole("button", { name: `Restore ${colleague.email}` }).click();
+      await row(page, colleague.email)
+        .getByRole("button", { name: `Restore ${colleague.email}` })
+        .click();
       const note = await rowNote(page, colleague.email);
       const restored = await rowState(page, colleague.email);
-      expect(!hadArchived && switchBefore === 0 && switchAfter === 1, `had ${hadArchived} before ${switchBefore} after ${switchAfter}`);
-      expect(live.status === 401 && restored.status === "Active", `live ${live.status} ${JSON.stringify(restored)}`);
+      expect(
+        !hadArchived && switchBefore === 0 && switchAfter === 1,
+        `had ${hadArchived} before ${switchBefore} after ${switchAfter}`,
+      );
+      expect(
+        live.status === 401 && restored.status === "Active",
+        `live ${live.status} ${JSON.stringify(restored)}`,
+      );
       return `With no archived accounts, the Users header had ${switchBefore} Show archived switch. After ${colleague.name} set a password, signed in and was archived, the switch appeared (${switchAfter}) and the colleague's session answered ${live.status}. Restore showed "${note}" and the row read ${restored.status}.`;
     },
     admin.page,
@@ -1878,7 +2235,9 @@ async function domainsNow(page) {
 }
 async function addDomain(page, domain) {
   await page.getByLabel("Allowed email domains").fill(domain);
-  await authRegion(page, "Business Portal Authentication").getByRole("button", { name: "Add", exact: true }).click();
+  await authRegion(page, "Business Portal Authentication")
+    .getByRole("button", { name: "Add", exact: true })
+    .click();
   await page.getByRole("button", { name: `Remove ${domain}` }).waitFor();
 }
 async function removeDomain(page, domain) {
@@ -1895,13 +2254,17 @@ async function passwordSetupRequest(page, email, portal = true) {
   await page.waitForLoadState("networkidle");
   const setup = page.getByRole("button", { name: "Set up or reset your password" });
   if (!(await setup.count())) {
-    const pw = page.getByRole("button", { name: /Sign in with a password|Administrator sign-in/ }).first();
+    const pw = page
+      .getByRole("button", { name: /Sign in with a password|Administrator sign-in/ })
+      .first();
     if (await pw.count()) await pw.click();
   }
   await page.getByRole("button", { name: "Set up or reset your password" }).click();
   await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: "Send password setup link" }).click();
-  await page.getByText(/If your email address is eligible, a password setup link is on its way/).waitFor({ timeout: 15000 });
+  await page
+    .getByText(/If your email address is eligible, a password setup link is on its way/)
+    .waitFor({ timeout: 15000 });
 }
 async function passwordSignIn(page, email, password, portal = false) {
   await page.goto(`${AUTH.app}${portal ? "/portal/login" : "/auth/login"}`);
@@ -1909,11 +2272,20 @@ async function passwordSignIn(page, email, password, portal = false) {
   await page.waitForLoadState("networkidle");
   const offered = await buttons(page);
   if (!(await page.getByLabel("Password", { exact: true }).count())) {
-    const b = page.getByRole("button", { name: /Sign in with a password|Administrator sign-in/ }).first();
+    const b = page
+      .getByRole("button", { name: /Sign in with a password|Administrator sign-in/ })
+      .first();
     // The page offers no password choice at all: record that as the outcome.
     if (!(await b.count())) {
       const me = await api(page, AUTH.app, "GET", "/api/v1/me");
-      return { offered, outcome: "password-not-offered", alert: null, me: me.status, role: me.data?.user?.role, path: new URL(page.url()).pathname };
+      return {
+        offered,
+        outcome: "password-not-offered",
+        alert: null,
+        me: me.status,
+        role: me.data?.user?.role,
+        path: new URL(page.url()).pathname,
+      };
     }
     await b.click();
   }
@@ -1921,13 +2293,27 @@ async function passwordSignIn(page, email, password, portal = false) {
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   const outcome = await Promise.race([
-    page.waitForURL((u) => !/\/(auth|portal)\/login/.test(u.pathname), { timeout: 15000 }).then(() => "signed-in"),
-    page.getByRole("alert").first().waitFor({ timeout: 15000 }).then(() => "alert"),
+    page
+      .waitForURL((u) => !/\/(auth|portal)\/login/.test(u.pathname), { timeout: 15000 })
+      .then(() => "signed-in"),
+    page
+      .getByRole("alert")
+      .first()
+      .waitFor({ timeout: 15000 })
+      .then(() => "alert"),
   ]).catch(() => "timeout");
-  const alert = outcome === "alert" ? (await page.getByRole("alert").first().innerText()).trim() : null;
+  const alert =
+    outcome === "alert" ? (await page.getByRole("alert").first().innerText()).trim() : null;
   await page.waitForLoadState("networkidle");
   const me = await api(page, AUTH.app, "GET", "/api/v1/me");
-  return { offered, outcome, alert, me: me.status, role: me.data?.user?.role, path: new URL(page.url()).pathname };
+  return {
+    offered,
+    outcome,
+    alert,
+    me: me.status,
+    role: me.data?.user?.role,
+    path: new URL(page.url()).pathname,
+  };
 }
 async function authAdmin() {
   const c = await context();
@@ -1948,7 +2334,12 @@ async function policy() {
   // A link for the expiry check, opened at the end of this section.
   const expiryCtx = await context();
   const expirySince = new Date(Date.now() - 1000);
-  const expiryLink = await magicLinkFor(expiryCtx.page, "tom.iwu@helix.example", false, expirySince);
+  const expiryLink = await magicLinkFor(
+    expiryCtx.page,
+    "tom.iwu@helix.example",
+    false,
+    expirySince,
+  );
   const expiryIssued = Date.now();
 
   await step(
@@ -1963,22 +2354,45 @@ async function policy() {
       for (const card of ["Legal User Authentication", "Business Portal Authentication"]) {
         out[card] = await authRegion(page, card)
           .getByRole("switch")
-          .evaluateAll((els) => els.map((e) => `${document.querySelector(`label[for="${e.id}"]`)?.innerText}:${e.getAttribute("aria-checked")}${e.disabled ? ":disabled" : ""}`));
+          .evaluateAll((els) =>
+            els.map(
+              (e) =>
+                `${document.querySelector(`label[for="${e.id}"]`)?.innerText}:${e.getAttribute("aria-checked")}${e.disabled ? ":disabled" : ""}`,
+            ),
+          );
       }
       const legal = authRegion(page, "Legal User Authentication");
-      const ssoRow = legal.locator("div", { has: page.getByText("Single sign-on (SSO)", { exact: true }) }).last();
+      const ssoRow = legal
+        .locator("div", { has: page.getByText("Single sign-on (SSO)", { exact: true }) })
+        .last();
       await ssoRow.getByRole("button", { name: "More information" }).focus();
-      const tip = page.getByRole("dialog").or(page.locator("[data-radix-popper-content-wrapper]")).first();
+      const tip = page
+        .getByRole("dialog")
+        .or(page.locator("[data-radix-popper-content-wrapper]"))
+        .first();
       await tip.waitFor({ timeout: 5000 });
       const tooltip = (await tip.innerText()).trim();
       await page.keyboard.press("Escape");
-      const recovery = (await legal.innerText()).includes("Administrators retain emergency password sign-in. Any required two-factor authentication still applies.");
-      const labels = ["Email and password", "Email magic link", "Single sign-on (SSO)", "Require two-factor authentication"];
+      const recovery = (await legal.innerText()).includes(
+        "Administrators retain emergency password sign-in. Any required two-factor authentication still applies.",
+      );
+      const labels = [
+        "Email and password",
+        "Email magic link",
+        "Single sign-on (SSO)",
+        "Require two-factor authentication",
+      ];
       for (const card of Object.keys(out)) {
-        expect(JSON.stringify(out[card].map((x) => x.split(":")[0])) === JSON.stringify(labels), `${card} ${out[card]}`);
+        expect(
+          JSON.stringify(out[card].map((x) => x.split(":")[0])) === JSON.stringify(labels),
+          `${card} ${out[card]}`,
+        );
         expect(out[card][2].endsWith(":disabled"), `${card} SSO ${out[card][2]}`);
       }
-      expect(tooltip === "Configure an identity provider below to enable single sign-on." && recovery, `tooltip "${tooltip}" recovery ${recovery}`);
+      expect(
+        tooltip === "Configure an identity provider below to enable single sign-on." && recovery,
+        `tooltip "${tooltip}" recovery ${recovery}`,
+      );
       return `The rail's Advanced group expanded to Authentication (${new URL(page.url()).pathname}). Switches: ${JSON.stringify(out)}. The SSO help tooltip read "${tooltip}". The Legal card said "Administrators retain emergency password sign-in. Any required two-factor authentication still applies."`;
     },
     admin.page,
@@ -2003,8 +2417,22 @@ async function policy() {
         out[card] = { first, second, stored: card.startsWith("Legal") ? pol.legal : pol.business };
       }
       const after = await policyNow(page);
-      expect(Object.values(out).every((x) => x.second === "Enable at least one sign-in method." && x.stored.password && !x.stored.magicLink), JSON.stringify(out));
-      expect(after.legal.magicLink && after.legal.password && after.business.magicLink && after.business.password, JSON.stringify(after));
+      expect(
+        Object.values(out).every(
+          (x) =>
+            x.second === "Enable at least one sign-in method." &&
+            x.stored.password &&
+            !x.stored.magicLink,
+        ),
+        JSON.stringify(out),
+      );
+      expect(
+        after.legal.magicLink &&
+          after.legal.password &&
+          after.business.magicLink &&
+          after.business.password,
+        JSON.stringify(after),
+      );
       return `Observed ${JSON.stringify(out)}. Email magic link was turned back on in both cards (${JSON.stringify(after)}).`;
     },
     admin.page,
@@ -2028,7 +2456,13 @@ async function policy() {
       await openAuthentication(page);
       await toggle(page, "Legal User Authentication", "Email and password");
       const after = await policyNow(page);
-      expect(saved === "Saved" && adminResult.me === 200 && legalResult.me === 401 && after.legal.password, `admin ${JSON.stringify(adminResult)} legal ${JSON.stringify(legalResult)}`);
+      expect(
+        saved === "Saved" &&
+          adminResult.me === 200 &&
+          legalResult.me === 401 &&
+          after.legal.password,
+        `admin ${JSON.stringify(adminResult)} legal ${JSON.stringify(legalResult)}`,
+      );
       return `With Email and password off ("${saved}"), the staff page offered ${JSON.stringify(adminResult.offered)}. Daniel (Administrator with a password) signed in with a password (me ${adminResult.me}, role ${adminResult.role}). Nadia (Legal Team Member) was refused: "${legalResult.alert ?? legalResult.outcome}" (me ${legalResult.me}). Email and password was turned back on.`;
     },
     admin.page,
@@ -2052,8 +2486,12 @@ async function policy() {
       }
       await openUsers(page, app);
       const states = {};
-      for (const e of [authAccounts.pending, authAccounts.offDomain, authAccounts.ssoStaff]) states[e] = (await rowState(page, e)).status;
-      expect(Object.values(states).every((s) => s === "Invited"), JSON.stringify(states));
+      for (const e of [authAccounts.pending, authAccounts.offDomain, authAccounts.ssoStaff])
+        states[e] = (await rowState(page, e)).status;
+      expect(
+        Object.values(states).every((s) => s === "Invited"),
+        JSON.stringify(states),
+      );
       return `Rows: ${JSON.stringify(states)}. Allowed domains: ${JSON.stringify(await domainsNow(page))}.`;
     },
     admin.page,
@@ -2076,23 +2514,38 @@ async function policy() {
         await c.page.goto(m.link);
         await c.page.waitForLoadState("networkidle");
         const me = await api(c.page, app, "GET", "/api/v1/me");
-        out.push({ email, sent: sent.match(/It expires in 5 minutes and works once\./)?.[0] ?? sent.slice(0, 120), me: me.status, role: me.data?.user?.role, mailLine: /expires in 5 minutes and can be used once/.test(m.html) });
+        out.push({
+          email,
+          sent: sent.match(/It expires in 5 minutes and works once\./)?.[0] ?? sent.slice(0, 120),
+          me: me.status,
+          role: me.data?.user?.role,
+          mailLine: /expires in 5 minutes and can be used once/.test(m.html),
+        });
         await c.ctx.close();
         if (email === authAccounts.pending) {
           const r = await context();
           await r.page.goto(m.link);
           await r.page.waitForLoadState("networkidle");
           const rme = await api(r.page, app, "GET", "/api/v1/me");
-          const rtext = (await r.page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 200);
+          const rtext = (await r.page.locator("main").innerText())
+            .replace(/\s+/g, " ")
+            .slice(0, 200);
           reuse = { path: new URL(r.page.url()).pathname, me: rme.status, text: rtext };
           await r.ctx.close();
         }
       }
       await openUsers(admin.page, app);
       const states = {};
-      for (const e of [authAccounts.pending, authAccounts.offDomain]) states[e] = (await rowState(admin.page, e)).status;
-      expect(out.every((x) => x.me === 200 && x.role === "legal_team_member" && x.mailLine), JSON.stringify(out));
-      expect(Object.values(states).every((s) => s === "Active"), JSON.stringify(states));
+      for (const e of [authAccounts.pending, authAccounts.offDomain])
+        states[e] = (await rowState(admin.page, e)).status;
+      expect(
+        out.every((x) => x.me === 200 && x.role === "legal_team_member" && x.mailLine),
+        JSON.stringify(out),
+      );
+      expect(
+        Object.values(states).every((s) => s === "Active"),
+        JSON.stringify(states),
+      );
       expect(reuse.me === 401, JSON.stringify(reuse));
       return `Allowed domains held only helix.example. ${JSON.stringify(out)}. Rows after sign-in: ${JSON.stringify(states)}. Opening the spent link again in a new browser gave ${JSON.stringify(reuse)}.`;
     },
@@ -2110,12 +2563,17 @@ async function policy() {
       const m = await magicLinkFor(c.page, "felix.brandt@helix.example", false, since);
       expect(m, "no link");
       await c.page.goto(m.link);
-      await c.page.waitForURL((u) => u.pathname.startsWith("/portal"), { timeout: 20000 }).catch(() => {});
+      await c.page
+        .waitForURL((u) => u.pathname.startsWith("/portal"), { timeout: 20000 })
+        .catch(() => {});
       await c.page.waitForLoadState("networkidle");
       const landed = new URL(c.page.url()).pathname;
       const me = await api(c.page, app, "GET", "/api/v1/me");
       await c.ctx.close();
-      expect(landed.startsWith("/portal") && me.data?.user?.role === "business_user", `${landed} ${me.data?.user?.role}`);
+      expect(
+        landed.startsWith("/portal") && me.data?.user?.role === "business_user",
+        `${landed} ${me.data?.user?.role}`,
+      );
       return `Felix Brandt requested a link on the staff sign-in page; opening it landed on ${landed} as ${me.data.user.role}.`;
     },
     admin.page,
@@ -2133,7 +2591,10 @@ async function policy() {
       await page.reload();
       await page.getByRole("button", { name: "Remove northwind.example" }).waitFor();
       const domains = await domainsNow(page);
-      expect(JSON.stringify(domains) === JSON.stringify(["helix.example", "northwind.example"]), JSON.stringify(domains));
+      expect(
+        JSON.stringify(domains) === JSON.stringify(["helix.example", "northwind.example"]),
+        JSON.stringify(domains),
+      );
       return `After Add, northwind.example appeared with a "Remove northwind.example" control and stayed after reload (${JSON.stringify(domains)}).`;
     },
     admin.page,
@@ -2151,7 +2612,9 @@ async function policy() {
       const m = await magicLinkFor(portalSession.page, authAccounts.portalNew, true, since);
       expect(m, "no link for allowed entrant");
       await portalSession.page.goto(m.link);
-      await portalSession.page.waitForURL((u) => u.pathname.startsWith("/portal"), { timeout: 20000 });
+      await portalSession.page.waitForURL((u) => u.pathname.startsWith("/portal"), {
+        timeout: 20000,
+      });
       const me = await api(portalSession.page, app, "GET", "/api/v1/me");
       const u = await context();
       const since2 = new Date(Date.now() - 1000);
@@ -2161,7 +2624,12 @@ async function policy() {
       const n = await countMail(mail, authAccounts.unapproved, since2);
       await u.ctx.close();
       const all = await users(admin.page);
-      expect(me.data?.user?.role === "business_user" && n === 0 && !all.some((x) => x.email === authAccounts.unapproved), `role ${me.data?.user?.role}, mails ${n}`);
+      expect(
+        me.data?.user?.role === "business_user" &&
+          n === 0 &&
+          !all.some((x) => x.email === authAccounts.unapproved),
+        `role ${me.data?.user?.role}, mails ${n}`,
+      );
       return `${authAccounts.portalNew} got "${m.subject}", opened the Portal and is a ${me.data.user.role}. ${authAccounts.unapproved} saw "${sent.slice(0, 120)}" and the neutral password-setup confirmation, but Mailpit received ${n} messages and no account exists.`;
     },
     admin.page,
@@ -2195,13 +2663,23 @@ async function policy() {
     async () => {
       const { page } = admin;
       const earlierCtx = await context();
-      const earlier = await magicLinkFor(earlierCtx.page, authAccounts.portalNew, true, new Date(Date.now() - 1000));
+      const earlier = await magicLinkFor(
+        earlierCtx.page,
+        authAccounts.portalNew,
+        true,
+        new Date(Date.now() - 1000),
+      );
       const lateCtx = await context();
       const since2 = new Date(Date.now() - 1000);
       await passwordSetupRequest(lateCtx.page, authAccounts.portalLate);
       const late = await latestMail(mail, authAccounts.portalLate, since2, SET_PASSWORD);
       const lateLinkCtx = await context();
-      const lateLink = await magicLinkFor(lateLinkCtx.page, authAccounts.portalLateLink, true, new Date(Date.now() - 1000));
+      const lateLink = await magicLinkFor(
+        lateLinkCtx.page,
+        authAccounts.portalLateLink,
+        true,
+        new Date(Date.now() - 1000),
+      );
       expect(earlier && late && lateLink, "could not prepare earlier links");
       await openAuthentication(page);
       await removeDomain(page, "northwind.example");
@@ -2219,9 +2697,18 @@ async function policy() {
       await x.ctx.close();
       const since4 = new Date(Date.now() - 1000);
       const y = await context();
-      await requestMagicLink(y.page, app, `doc030-auth-portal-after-${stamp}@northwind.example`, true);
+      await requestMagicLink(
+        y.page,
+        app,
+        `doc030-auth-portal-after-${stamp}@northwind.example`,
+        true,
+      );
       await sleep(3000);
-      obs.newAddressLinks = await countMail(mail, `doc030-auth-portal-after-${stamp}@northwind.example`, since4);
+      obs.newAddressLinks = await countMail(
+        mail,
+        `doc030-auth-portal-after-${stamp}@northwind.example`,
+        since4,
+      );
       await y.ctx.close();
       obs.heldSession = (await api(portalSession.page, app, "GET", "/api/v1/me")).status;
       await earlierCtx.page.goto(earlier.link);
@@ -2237,7 +2724,9 @@ async function policy() {
       await lateCtx.page.getByLabel("Confirm password").fill(AUTH_PASSWORD);
       await lateCtx.page.getByRole("button", { name: "Set password" }).click();
       await sleep(2500);
-      obs.latePasswordSetup = (await lateCtx.page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 200);
+      obs.latePasswordSetup = (await lateCtx.page.locator("main").innerText())
+        .replace(/\s+/g, " ")
+        .slice(0, 200);
       await lateCtx.ctx.close();
       await lateLinkCtx.page.goto(lateLink.link);
       await lateLinkCtx.page.waitForLoadState("networkidle");
@@ -2245,15 +2734,36 @@ async function policy() {
       obs.lateLink = `${lu.pathname}${lu.searchParams.get("error") ? `?error=${lu.searchParams.get("error")}` : ""} me ${(await api(lateLinkCtx.page, app, "GET", "/api/v1/me")).status}: ${(await lateLinkCtx.page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 160)}`;
       await lateLinkCtx.ctx.close();
       const s = await context();
-      const staff = await magicLinkFor(s.page, authAccounts.pending, false, new Date(Date.now() - 1000));
+      const staff = await magicLinkFor(
+        s.page,
+        authAccounts.pending,
+        false,
+        new Date(Date.now() - 1000),
+      );
       obs.staffLink = !!staff;
       await s.ctx.close();
       const all = await users(page);
-      obs.lateAccounts = all.filter((u) => [authAccounts.portalLate, authAccounts.portalLateLink].includes(u.email)).length;
+      obs.lateAccounts = all.filter((u) =>
+        [authAccounts.portalLate, authAccounts.portalLateLink].includes(u.email),
+      ).length;
       await openAuthentication(page);
       await addDomain(page, "northwind.example");
-      expect(obs.existingNewLink && obs.existingNewLinkMe === 200 && obs.newAddressLinks === 0 && obs.heldSession === 200 && obs.earlierLink.endsWith("me 200") && pwr.me === 200, JSON.stringify(obs));
-      expect(obs.lateAccounts === 0 && /Password setup is no longer available for this address\./.test(obs.latePasswordSetup) && / me 401/.test(obs.lateLink) && obs.staffLink, JSON.stringify(obs));
+      expect(
+        obs.existingNewLink &&
+          obs.existingNewLinkMe === 200 &&
+          obs.newAddressLinks === 0 &&
+          obs.heldSession === 200 &&
+          obs.earlierLink.endsWith("me 200") &&
+          pwr.me === 200,
+        JSON.stringify(obs),
+      );
+      expect(
+        obs.lateAccounts === 0 &&
+          /Password setup is no longer available for this address\./.test(obs.latePasswordSetup) &&
+          / me 401/.test(obs.lateLink) &&
+          obs.staffLink,
+        JSON.stringify(obs),
+      );
       return `After Remove northwind.example: ${JSON.stringify(obs)}. The domain was added back.`;
     },
     admin.page,
@@ -2269,20 +2779,32 @@ async function policy() {
       await openAuthentication(page);
       const before = await domainsNow(page);
       for (const d of before) await removeDomain(page, d);
-      const text = (await authRegion(page, "Business Portal Authentication").innerText()).replace(/\s+/g, " ");
-      const message = text.includes("No domains allowed yet. New users must be invited individually.");
+      const text = (await authRegion(page, "Business Portal Authentication").innerText()).replace(
+        /\s+/g,
+        " ",
+      );
+      const message = text.includes(
+        "No domains allowed yet. New users must be invited individually.",
+      );
       const pw = await context();
       const pwr = await passwordSignIn(pw.page, authAccounts.portalPassword, AUTH_PASSWORD, true);
       await pw.ctx.close();
       await openUsers(page, app);
       await page.getByRole("button", { name: "Invite user" }).click();
       const dialog = page.getByRole("dialog", { name: "Invite user" });
-      const radios = await dialog.getByRole("radio").evaluateAll((els) => els.map((e) => e.closest("label")?.innerText.trim()));
+      const radios = await dialog
+        .getByRole("radio")
+        .evaluateAll((els) => els.map((e) => e.closest("label")?.innerText.trim()));
       await dialog.getByRole("button", { name: "Cancel" }).click();
       await openAuthentication(page);
       for (const d of before) await addDomain(page, d);
       const after = await domainsNow(page);
-      expect(message && pwr.me === 200 && JSON.stringify(radios) === JSON.stringify(["Legal team member", "Administrator"]), `${message} ${JSON.stringify(pwr)} ${radios}`);
+      expect(
+        message &&
+          pwr.me === 200 &&
+          JSON.stringify(radios) === JSON.stringify(["Legal team member", "Administrator"]),
+        `${message} ${JSON.stringify(pwr)} ${radios}`,
+      );
       expect(JSON.stringify(after) === JSON.stringify(before), JSON.stringify(after));
       return `With every domain removed the card read "No domains allowed yet. New users must be invited individually." An existing Business User still signed in with a password (me ${pwr.me}). Invite user offered ${JSON.stringify(radios)}, so no Business User can be invited. The list was restored to ${JSON.stringify(after)}.`;
     },
@@ -2297,7 +2819,12 @@ async function policy() {
     async () => {
       const { page } = admin;
       const c = await context();
-      const earlier = await magicLinkFor(c.page, "clara.fontaine@helix.example", true, new Date(Date.now() - 1000));
+      const earlier = await magicLinkFor(
+        c.page,
+        "clara.fontaine@helix.example",
+        true,
+        new Date(Date.now() - 1000),
+      );
       await openAuthentication(page);
       const saved = await toggle(page, "Business Portal Authentication", "Email magic link");
       await c.page.goto(earlier.link);
@@ -2305,7 +2832,9 @@ async function policy() {
       const me = await api(c.page, app, "GET", "/api/v1/me");
       const u = new URL(c.page.url());
       const landed = `${u.pathname}${u.search ? `?${[...u.searchParams.keys()].join("&")}` : ""}`;
-      const landedText = (await c.page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 200);
+      const landedText = (await c.page.locator("main").innerText())
+        .replace(/\s+/g, " ")
+        .slice(0, 200);
       await c.page.goto(`${app}/portal/login`);
       await c.page.getByRole("heading", { name: "Business Portal sign-in" }).waitFor();
       await c.page.waitForLoadState("networkidle");
@@ -2317,7 +2846,13 @@ async function policy() {
       await openAuthentication(page);
       await toggle(page, "Business Portal Authentication", "Email magic link");
       const after = await policyNow(page);
-      expect(me.status === 401 && !portalButtons.includes("Email me a sign-in link") && pwr.me === 200 && after.business.magicLink, `me ${me.status} buttons ${portalButtons} pw ${pwr.me}`);
+      expect(
+        me.status === 401 &&
+          !portalButtons.includes("Email me a sign-in link") &&
+          pwr.me === 200 &&
+          after.business.magicLink,
+        `me ${me.status} buttons ${portalButtons} pw ${pwr.me}`,
+      );
       return `Turning off Email magic link showed "${saved}". Opening Clara Fontaine's link sent before the change landed on ${landed} with "${landedText}" and no session (me ${me.status}). The Portal sign-in page offered ${JSON.stringify(portalButtons)}. A Business User with a password still signed in (me ${pwr.me}). Email magic link was turned back on.`;
     },
     admin.page,
@@ -2334,7 +2869,9 @@ async function policy() {
       await expiryCtx.page.goto(expiryLink.link);
       await expiryCtx.page.waitForLoadState("networkidle");
       const me = await api(expiryCtx.page, app, "GET", "/api/v1/me");
-      const text = (await expiryCtx.page.locator("main").innerText()).replace(/\s+/g, " ").slice(0, 200);
+      const text = (await expiryCtx.page.locator("main").innerText())
+        .replace(/\s+/g, " ")
+        .slice(0, 200);
       const age = Math.round((Date.now() - expiryIssued) / 1000);
       expect(me.status === 401, `me ${me.status}`);
       return `A staff sign-in link for Tom Iwu opened ${age} seconds after it was sent landed on ${new URL(expiryCtx.page.url()).pathname} with "${text}" and no session (me ${me.status}).`;
@@ -2348,7 +2885,10 @@ async function policy() {
 
 const OIDC_CONTROL = OIDC_IP ? `http://${OIDC_IP}:8081/identity` : null;
 async function idpIdentity(sub, email, name) {
-  const r = await fetch(OIDC_CONTROL, { method: "POST", body: JSON.stringify({ sub, email, name }) });
+  const r = await fetch(OIDC_CONTROL, {
+    method: "POST",
+    body: JSON.stringify({ sub, email, name }),
+  });
   return r.json();
 }
 async function ssoRoundTrip(portal, identity, keep = false) {
@@ -2374,9 +2914,18 @@ async function ssoRoundTrip(portal, identity, keep = false) {
   await sleep(500);
   const url = new URL(page.url());
   const me = await api(page, AUTH.app, "GET", "/api/v1/me");
-  const alert = (await page.getByRole("alert").allInnerTexts().catch(() => [])).map((x) => x.trim()).filter(Boolean);
+  const alert = (
+    await page
+      .getByRole("alert")
+      .allInnerTexts()
+      .catch(() => [])
+  )
+    .map((x) => x.trim())
+    .filter(Boolean);
   const result = {
-    path: url.pathname + (url.searchParams.get("error") ? `?error=${url.searchParams.get("error")}` : ""),
+    path:
+      url.pathname +
+      (url.searchParams.get("error") ? `?error=${url.searchParams.get("error")}` : ""),
     me: me.status,
     role: me.data?.user?.role ?? null,
     twoFactorSetupRequired: me.data?.user?.twoFactorSetupRequired ?? null,
@@ -2405,7 +2954,11 @@ async function sso() {
   if (!OIDC_CONTROL) throw new Error("The auth2 OIDC fixture is not running");
   needAuthPassword();
   const admin = await authAdmin();
-  const staffIdentity = ["doc030-idp-sso-staff", authAccounts.ssoStaff, "DOC-030 admin-org V-C37 SSO staff"];
+  const staffIdentity = [
+    "doc030-idp-sso-staff",
+    authAccounts.ssoStaff,
+    "DOC-030 admin-org V-C37 SSO staff",
+  ];
   results.oidcFixture = `oauth2-mock-server 9.2.0 in container ${AUTH.project}-oidc-1 (${OIDC_IP}), issuer http://oidc:8080`;
 
   await step(
@@ -2425,7 +2978,10 @@ async function sso() {
       await box.getByRole("button", { name: "Register provider" }).click();
       const note = await providerNote(page);
       const providers = await providerNow(page);
-      expect(providers.providers.length === 0 && note !== "Saved", `note ${note}; ${JSON.stringify(providers)}`);
+      expect(
+        providers.providers.length === 0 && note !== "Saved",
+        `note ${note}; ${JSON.stringify(providers)}`,
+      );
       return `Register provider with an unreachable issuer showed "${note}" and no provider was stored.`;
     },
     admin.page,
@@ -2443,19 +2999,36 @@ async function sso() {
       await box.getByLabel("Client secret").fill(`fixture-${stamp}`);
       await box.getByRole("button", { name: "Register provider" }).click();
       const note = await providerNote(page);
-      const callbackText = (await box.innerText()).match(/Paste this callback URL into your IdP console: \S+/)?.[0];
+      const callbackText = (await box.innerText()).match(
+        /Paste this callback URL into your IdP console: \S+/,
+      )?.[0];
       const callback = (await box.locator("code").innerText()).trim();
       const pol = await policyNow(page);
       const providers = await providerNow(page);
       await page.reload();
       await identityProvider(page).waitFor();
       const idField = await identityProvider(page).getByLabel("Provider ID").count();
-      const saveLabel = await identityProvider(page).getByRole("button", { name: "Save provider" }).count();
-      const ssoSwitches = await page.getByRole("switch", { name: "Single sign-on (SSO)" }).evaluateAll((els) => els.map((e) => `${e.getAttribute("aria-checked")}${e.disabled ? ":disabled" : ""}`));
+      const saveLabel = await identityProvider(page)
+        .getByRole("button", { name: "Save provider" })
+        .count();
+      const ssoSwitches = await page
+        .getByRole("switch", { name: "Single sign-on (SSO)" })
+        .evaluateAll((els) =>
+          els.map((e) => `${e.getAttribute("aria-checked")}${e.disabled ? ":disabled" : ""}`),
+        );
       const secretShown = JSON.stringify(providers).includes(`fixture-${stamp}`);
-      expect(note === "Saved" && callback === `${app}/api/auth/sso/callback`, `note ${note}; callback ${callback}`);
-      expect(!pol.legal.sso && !pol.business.sso && idField === 0 && saveLabel === 1 && !secretShown, `pol ${JSON.stringify(pol)} id ${idField} secret ${secretShown}`);
-      expect(ssoSwitches.every((x) => x === "false"), `switches ${ssoSwitches}`);
+      expect(
+        note === "Saved" && callback === `${app}/api/auth/sso/callback`,
+        `note ${note}; callback ${callback}`,
+      );
+      expect(
+        !pol.legal.sso && !pol.business.sso && idField === 0 && saveLabel === 1 && !secretShown,
+        `pol ${JSON.stringify(pol)} id ${idField} secret ${secretShown}`,
+      );
+      expect(
+        ssoSwitches.every((x) => x === "false"),
+        `switches ${ssoSwitches}`,
+      );
       return `Register provider showed Saved and "${callbackText}". The instance address is BASE_URL ${app}. Both Single sign-on (SSO) switches stayed off and became available (${JSON.stringify(ssoSwitches)}). GET /api/v1/auth/sso-providers did not contain the client secret. After reload the Provider ID field was gone and the button read Save provider.`;
     },
     admin.page,
@@ -2473,7 +3046,13 @@ async function sso() {
       const r = await ssoRoundTrip(false, staffIdentity);
       await openUsers(page, app);
       const state = await rowState(page, authAccounts.ssoStaff);
-      expect(saved === "Saved" && r.me === 200 && r.role === "legal_team_member" && state.status === "Active", `${saved} ${JSON.stringify(r)} ${JSON.stringify(state)}`);
+      expect(
+        saved === "Saved" &&
+          r.me === 200 &&
+          r.role === "legal_team_member" &&
+          state.status === "Active",
+        `${saved} ${JSON.stringify(r)} ${JSON.stringify(state)}`,
+      );
       return `The switch showed "${saved}". In a separate browser, Continue with single sign-on went through the fixture's authorize endpoint and the OpenLaw callback to ${r.path}, signed in as ${r.role}. The invited row now read ${state.status} with a role control (${state.roleControl}).`;
     },
     admin.page,
@@ -2485,10 +3064,20 @@ async function sso() {
     "Matching an allowed email domain does not grant an uninvited person a staff role",
     "No staff session and no staff account",
     async () => {
-      const r = await ssoRoundTrip(false, [`doc030-idp-uninvited-${stamp}`, authAccounts.uninvitedStaff, "DOC-030 admin-org V-C37 uninvited"]);
-      const created = (await users(admin.page)).find((u) => u.email === authAccounts.uninvitedStaff);
+      const r = await ssoRoundTrip(false, [
+        `doc030-idp-uninvited-${stamp}`,
+        authAccounts.uninvitedStaff,
+        "DOC-030 admin-org V-C37 uninvited",
+      ]);
+      const created = (await users(admin.page)).find(
+        (u) => u.email === authAccounts.uninvitedStaff,
+      );
       const pol = await policyNow(admin.page);
-      expect(!["administrator", "legal_team_member"].includes(r.role) && !(created && created.role !== "business_user"), `${JSON.stringify(r)} ${JSON.stringify(created)}`);
+      expect(
+        !["administrator", "legal_team_member"].includes(r.role) &&
+          !(created && created.role !== "business_user"),
+        `${JSON.stringify(r)} ${JSON.stringify(created)}`,
+      );
       return `With Business Portal SSO ${pol.business.sso ? "on" : "off"} and helix.example on the allowed list, ${authAccounts.uninvitedStaff} ended on ${r.path} with me ${r.me}${r.alert.length ? ` and "${r.alert.join(" ")}"` : ""}. Account created: ${created ? created.role : "none"}.`;
     },
     admin.page,
@@ -2503,7 +3092,9 @@ async function sso() {
       const { page } = admin;
       await openAuthentication(page);
       const box = identityProvider(page);
-      const secretLabel = box.locator("span", { has: page.getByText("Client secret", { exact: true }) }).last();
+      const secretLabel = box
+        .locator("span", { has: page.getByText("Client secret", { exact: true }) })
+        .last();
       await secretLabel.getByRole("button", { name: "More information" }).focus();
       const tip = page.locator("[data-radix-popper-content-wrapper]").first();
       await tip.waitFor({ timeout: 5000 });
@@ -2518,7 +3109,14 @@ async function sso() {
       await identityProvider(page).getByRole("button", { name: "Save provider" }).click();
       const rotated = await providerNote(page);
       const r2 = await ssoRoundTrip(false, staffIdentity);
-      expect(hint === "Leave blank to keep the current secret. Paste a new value to rotate." && blank === "Saved" && rotated === "Saved" && r1.me === 200 && r2.me === 200, `hint ${hint} blank ${blank} rotated ${rotated} r1 ${JSON.stringify(r1)} r2 ${JSON.stringify(r2)}`);
+      expect(
+        hint === "Leave blank to keep the current secret. Paste a new value to rotate." &&
+          blank === "Saved" &&
+          rotated === "Saved" &&
+          r1.me === 200 &&
+          r2.me === 200,
+        `hint ${hint} blank ${blank} rotated ${rotated} r1 ${JSON.stringify(r1)} r2 ${JSON.stringify(r2)}`,
+      );
       return `The Client secret help tooltip read "${hint}". Saving a Client ID change with a blank secret showed ${blank}; a fresh staff SSO sign-in worked (me ${r1.me}). Saving a replacement secret showed ${rotated}; another fresh sign-in worked (me ${r2.me}).`;
     },
     admin.page,
@@ -2538,7 +3136,10 @@ async function sso() {
       const note = await providerNote(page);
       const p = (await providerNow(page)).providers[0];
       const r = await ssoRoundTrip(false, staffIdentity);
-      expect(note !== "Saved" && p.issuer === "http://oidc:8080" && r.me === 200, `note ${note} issuer ${p.issuer} ${JSON.stringify(r)}`);
+      expect(
+        note !== "Saved" && p.issuer === "http://oidc:8080" && r.me === 200,
+        `note ${note} issuer ${p.issuer} ${JSON.stringify(r)}`,
+      );
       return `Save provider with an unreachable issuer showed "${note}". The stored issuer stayed ${p.issuer} and a fresh staff SSO sign-in still worked (me ${r.me}).`;
     },
     admin.page,
@@ -2559,20 +3160,39 @@ async function sso() {
       await c.ctx.close();
       await openAuthentication(page);
       const saved = await toggle(page, "Business Portal Authentication", "Single sign-on (SSO)");
-      const identity = [`doc030-idp-bu-${stamp}`, authAccounts.ssoBu, "DOC-030 admin-org V-C37 Portal BU"];
+      const identity = [
+        `doc030-idp-bu-${stamp}`,
+        authAccounts.ssoBu,
+        "DOC-030 admin-org V-C37 Portal BU",
+      ];
       const first = await ssoRoundTrip(true, identity);
       await removeDomain(page, "helix.example");
       const domains = await domainsNow(page);
       const afterRemoval = await ssoRoundTrip(true, identity);
-      const refused = await ssoRoundTrip(true, [`doc030-idp-newcomer-${stamp}`, authAccounts.newcomer, "DOC-030 admin-org V-C37 newcomer"]);
+      const refused = await ssoRoundTrip(true, [
+        `doc030-idp-newcomer-${stamp}`,
+        authAccounts.newcomer,
+        "DOC-030 admin-org V-C37 newcomer",
+      ]);
       const created = (await users(page)).find((u) => u.email === authAccounts.newcomer);
       await openAuthentication(page);
       await page.getByLabel("Allowed email domains").fill("helix.example");
-      await authRegion(page, "Business Portal Authentication").getByRole("button", { name: "Add", exact: true }).click();
+      await authRegion(page, "Business Portal Authentication")
+        .getByRole("button", { name: "Add", exact: true })
+        .click();
       await page.getByRole("button", { name: "Remove helix.example" }).waitFor();
-      expect(first.me === 200 && first.role === "business_user" && first.path.startsWith("/portal"), `first ${JSON.stringify(first)}`);
-      expect(afterRemoval.me === 200 && afterRemoval.role === "business_user", `after removal ${JSON.stringify(afterRemoval)}`);
-      expect(refused.me === 401 && !created, `newcomer ${JSON.stringify(refused)} ${JSON.stringify(created)}`);
+      expect(
+        first.me === 200 && first.role === "business_user" && first.path.startsWith("/portal"),
+        `first ${JSON.stringify(first)}`,
+      );
+      expect(
+        afterRemoval.me === 200 && afterRemoval.role === "business_user",
+        `after removal ${JSON.stringify(afterRemoval)}`,
+      );
+      expect(
+        refused.me === 401 && !created,
+        `newcomer ${JSON.stringify(refused)} ${JSON.stringify(created)}`,
+      );
       return `${authAccounts.ssoBu} entered the Portal through a sign-in link. The Business Portal SSO switch showed "${saved}". Portal single sign-on for that Business User reached ${first.path} as ${first.role}. After Remove helix.example (list ${JSON.stringify(domains)}), the same identity still signed in through single sign-on (${afterRemoval.path}, ${afterRemoval.role}). A new identity on the removed domain ended on ${refused.path}${refused.alert.length ? ` with "${refused.alert.join(" ")}"` : ""} and no account was created. helix.example was added back.`;
     },
     admin.page,
@@ -2601,8 +3221,14 @@ async function sso() {
       const l = await context();
       const legalResult = await passwordSignIn(l.page, NADIA, PASSWORD);
       await l.ctx.close();
-      expect(pol1.legal.sso && !pol1.legal.password && !pol1.legal.magicLink && adminResult.me === 200, `${JSON.stringify(pol1.legal)} ${JSON.stringify(adminResult)}`);
-      expect(pol2.legal.password && !pol2.legal.sso && !pol2.business.sso && legalResult.me === 200, `${JSON.stringify(pol2)} ${JSON.stringify(legalResult)}`);
+      expect(
+        pol1.legal.sso && !pol1.legal.password && !pol1.legal.magicLink && adminResult.me === 200,
+        `${JSON.stringify(pol1.legal)} ${JSON.stringify(adminResult)}`,
+      );
+      expect(
+        pol2.legal.password && !pol2.legal.sso && !pol2.business.sso && legalResult.me === 200,
+        `${JSON.stringify(pol2)} ${JSON.stringify(legalResult)}`,
+      );
       return `With only Single sign-on (SSO) on for Legal users (${JSON.stringify(pol1.legal)}), the staff page offered ${JSON.stringify(adminResult.offered)} and Daniel still signed in with a password (me ${adminResult.me}). Turning Email and password and Email magic link back on and SSO off in both cards gave ${JSON.stringify(pol2)}, and Nadia signed in with a password again (me ${legalResult.me}).`;
     },
     admin.page,
@@ -2613,7 +3239,10 @@ async function sso() {
 async function twoFactor() {
   const { app, mail } = AUTH;
   needAuthPassword();
-  const tfaAdmin = { name: "DOC-030 admin-org V-C37 2FA admin", email: `doc030-auth-2fa-${stamp}@helix.example` };
+  const tfaAdmin = {
+    name: "DOC-030 admin-org V-C37 2FA admin",
+    email: `doc030-auth-2fa-${stamp}@helix.example`,
+  };
   const daniel = await authAdmin();
   let uri = null;
   const admin = await context();
@@ -2646,11 +3275,17 @@ async function twoFactor() {
       const { page } = admin;
       await openAuthentication(page);
       const before = (await (await fetch(`${app}/api/v1/auth/methods`)).json()).policy.legal;
-      await authRegion(page, "Legal User Authentication").getByRole("switch", { name: "Require two-factor authentication" }).click();
-      await page.waitForURL((u) => u.pathname.startsWith("/auth/two-factor/enroll"), { timeout: 15000 });
+      await authRegion(page, "Legal User Authentication")
+        .getByRole("switch", { name: "Require two-factor authentication" })
+        .click();
+      await page.waitForURL((u) => u.pathname.startsWith("/auth/two-factor/enroll"), {
+        timeout: 15000,
+      });
       const pol = (await (await fetch(`${app}/api/v1/auth/methods`)).json()).policy.legal;
       const blocked = await api(page, app, "GET", "/api/v1/auth/allowed-domains");
-      const required = await page.getByText("Your organization requires two-factor authentication.").count();
+      const required = await page
+        .getByText("Your organization requires two-factor authentication.")
+        .count();
       page.on("response", async (res) => {
         if (res.url().includes("/two-factor/enable") && res.ok()) uri = (await res.json()).totpURI;
       });
@@ -2660,12 +3295,24 @@ async function twoFactor() {
       for (let i = 0; i < 20 && !uri; i++) await sleep(250);
       await page.getByLabel("Code").fill(totp(uri));
       await page.getByRole("button", { name: "Confirm" }).click();
-      await page.getByRole("link", { name: "Done" }).or(page.getByRole("button", { name: "Done" })).first().click();
-      await page.waitForURL((u) => !u.pathname.startsWith("/auth/two-factor"), { timeout: 15000 }).catch(() => {});
+      await page
+        .getByRole("link", { name: "Done" })
+        .or(page.getByRole("button", { name: "Done" }))
+        .first()
+        .click();
+      await page
+        .waitForURL((u) => !u.pathname.startsWith("/auth/two-factor"), { timeout: 15000 })
+        .catch(() => {});
       await page.waitForLoadState("networkidle");
       const allowed = await api(page, app, "GET", "/api/v1/auth/allowed-domains");
-      expect(!before.requireTwoFactor && pol.requireTwoFactor, `policy ${JSON.stringify(before)} -> ${JSON.stringify(pol)}`);
-      expect(required === 1 && blocked.status === 403 && allowed.status === 200, `${required} ${blocked.status} ${allowed.status}`);
+      expect(
+        !before.requireTwoFactor && pol.requireTwoFactor,
+        `policy ${JSON.stringify(before)} -> ${JSON.stringify(pol)}`,
+      );
+      expect(
+        required === 1 && blocked.status === 403 && allowed.status === 200,
+        `${required} ${blocked.status} ${allowed.status}`,
+      );
       return `Require two-factor authentication was off. Selecting it under Legal User Authentication saved it on and took the Administrator to /auth/two-factor/enroll with "Your organization requires two-factor authentication."; an admin API call answered ${blocked.status} ("${blocked.data?.detail}"). After Turn on two-factor, a code, Confirm and Done, the Administrator reached ${new URL(page.url()).pathname} and the same API answered ${allowed.status}.`;
     },
     admin.page,
@@ -2684,14 +3331,19 @@ async function twoFactor() {
       await page.getByLabel("Password", { exact: true }).fill(AUTH_PASSWORD);
       await page.getByRole("button", { name: "Sign in", exact: true }).click();
       await page.waitForURL((u) => u.pathname.startsWith("/auth/two-factor"), { timeout: 15000 });
-      const prompt = await page.getByText("Enter the 6-digit code from your authenticator app.").count();
+      const prompt = await page
+        .getByText("Enter the 6-digit code from your authenticator app.")
+        .count();
       const before = await api(page, app, "GET", "/api/v1/users");
       await page.getByLabel("Code").fill(totp(uri));
       await page.getByRole("button", { name: "Verify" }).click();
       await page.waitForURL((u) => !u.pathname.startsWith("/auth/"), { timeout: 15000 });
       const after = await api(page, app, "GET", "/api/v1/users");
       await c.ctx.close();
-      expect(prompt === 1 && before.status !== 200 && after.status === 200, `${prompt} ${before.status} ${after.status}`);
+      expect(
+        prompt === 1 && before.status !== 200 && after.status === 200,
+        `${prompt} ${before.status} ${after.status}`,
+      );
       return `A fresh password sign-in went to /auth/two-factor with "Enter the 6-digit code from your authenticator app." Before the code an admin API call answered ${before.status}; after Verify it answered ${after.status}.`;
     },
     admin.page,
@@ -2705,34 +3357,67 @@ async function twoFactor() {
     async () => {
       const out = {};
       const c = await context();
-      const m = await magicLinkFor(c.page, authAccounts.offDomain, false, new Date(Date.now() - 1000));
+      const m = await magicLinkFor(
+        c.page,
+        authAccounts.offDomain,
+        false,
+        new Date(Date.now() - 1000),
+      );
       expect(m, "no magic link");
       await c.page.goto(m.link);
       await c.page.waitForLoadState("networkidle");
       await c.page.goto(`${app}/`);
       await c.page.waitForLoadState("networkidle");
-      out.magicLink = { path: new URL(c.page.url()).pathname, work: (await api(c.page, app, "GET", "/api/v1/matters")).status };
+      out.magicLink = {
+        path: new URL(c.page.url()).pathname,
+        work: (await api(c.page, app, "GET", "/api/v1/matters")).status,
+      };
       await c.ctx.close();
       await openAuthentication(admin.page);
       await toggle(admin.page, "Legal User Authentication", "Single sign-on (SSO)");
-      const s = await ssoRoundTrip(false, ["doc030-idp-sso-staff", authAccounts.ssoStaff, "DOC-030 admin-org V-C37 SSO staff"], true);
+      const s = await ssoRoundTrip(
+        false,
+        ["doc030-idp-sso-staff", authAccounts.ssoStaff, "DOC-030 admin-org V-C37 SSO staff"],
+        true,
+      );
       await s.c.page.goto(`${app}/`);
       await s.c.page.waitForLoadState("networkidle");
-      out.sso = { callback: s.path, me: s.me, setupRequired: s.twoFactorSetupRequired, path: new URL(s.c.page.url()).pathname, work: (await api(s.c.page, app, "GET", "/api/v1/matters")).status };
+      out.sso = {
+        callback: s.path,
+        me: s.me,
+        setupRequired: s.twoFactorSetupRequired,
+        path: new URL(s.c.page.url()).pathname,
+        work: (await api(s.c.page, app, "GET", "/api/v1/matters")).status,
+      };
       await s.c.ctx.close();
       await openAuthentication(admin.page);
       await toggle(admin.page, "Legal User Authentication", "Single sign-on (SSO)");
       await toggle(admin.page, "Legal User Authentication", "Email and password");
       const d = await context();
       const dr = await passwordSignIn(d.page, DANIEL, PASSWORD);
-      out.emergencyPassword = { path: dr.path, work: (await api(d.page, app, "GET", "/api/v1/users")).status };
+      out.emergencyPassword = {
+        path: dr.path,
+        work: (await api(d.page, app, "GET", "/api/v1/users")).status,
+      };
       await d.ctx.close();
       await openAuthentication(admin.page);
       await toggle(admin.page, "Legal User Authentication", "Email and password");
       const pol = await policyNow(admin.page);
-      expect(out.magicLink.path.startsWith("/auth/two-factor/enroll") && out.magicLink.work !== 200, JSON.stringify(out));
-      expect(out.sso.path.startsWith("/auth/two-factor/enroll") && out.sso.work !== 200, JSON.stringify(out));
-      expect(out.emergencyPassword.path.startsWith("/auth/two-factor") && out.emergencyPassword.work !== 200 && pol.legal.password && !pol.legal.sso, JSON.stringify(out));
+      expect(
+        out.magicLink.path.startsWith("/auth/two-factor/enroll") && out.magicLink.work !== 200,
+        JSON.stringify(out),
+      );
+      expect(
+        out.sso.path.startsWith("/auth/two-factor/enroll") && out.sso.work !== 200,
+        JSON.stringify(out),
+      );
+      expect(
+        out.emergencyPassword.path.startsWith("/auth/two-factor") &&
+          out.emergencyPassword.work !== 200 &&
+          pol.legal.password &&
+          !pol.legal.sso,
+        JSON.stringify(out),
+      );
       return `Observed ${JSON.stringify(out)}. Legal SSO was turned off and Email and password turned back on (${JSON.stringify(pol.legal)}).`;
     },
     admin.page,
@@ -2746,9 +3431,16 @@ async function twoFactor() {
     async () => {
       const { page } = admin;
       await openAuthentication(page);
-      const saved = await toggle(page, "Legal User Authentication", "Require two-factor authentication");
+      const saved = await toggle(
+        page,
+        "Legal User Authentication",
+        "Require two-factor authentication",
+      );
       const pol = await policyNow(page);
-      expect(saved === "Saved" && !pol.legal.requireTwoFactor, `${saved} ${JSON.stringify(pol.legal)}`);
+      expect(
+        saved === "Saved" && !pol.legal.requireTwoFactor,
+        `${saved} ${JSON.stringify(pol.legal)}`,
+      );
       return `The switch showed "${saved}" (${JSON.stringify(pol.legal)}). The disposable Administrator's authenticator stays enrolled.`;
     },
     admin.page,
@@ -2783,12 +3475,25 @@ async function crossPage() {
       const legalOnPortal = await passwordSignIn(l.page, NADIA, PASSWORD, true);
       await l.ctx.close();
       const b = await context();
-      const buOnStaff = await passwordSignIn(b.page, authAccounts.portalPassword, AUTH_PASSWORD, false);
+      const buOnStaff = await passwordSignIn(
+        b.page,
+        authAccounts.portalPassword,
+        AUTH_PASSWORD,
+        false,
+      );
       await b.ctx.close();
       await openAuthentication(page);
       await toggle(page, "Legal User Authentication", "Email and password");
       const pol = await policyNow(page);
-      expect(off === "Saved" && legalOnPortal.me === 401 && buOnStaff.me === 200 && buOnStaff.role === "business_user" && buOnStaff.path.startsWith("/portal") && pol.legal.password, `${off} ${JSON.stringify(legalOnPortal)} ${JSON.stringify(buOnStaff)}`);
+      expect(
+        off === "Saved" &&
+          legalOnPortal.me === 401 &&
+          buOnStaff.me === 200 &&
+          buOnStaff.role === "business_user" &&
+          buOnStaff.path.startsWith("/portal") &&
+          pol.legal.password,
+        `${off} ${JSON.stringify(legalOnPortal)} ${JSON.stringify(buOnStaff)}`,
+      );
       return `With Email and password off under Legal User Authentication, Nadia's password sign-in on the Business Portal page was refused ("${legalOnPortal.alert ?? legalOnPortal.outcome}"; me ${legalOnPortal.me}). A Business User's password sign-in on the staff page succeeded and landed on ${buOnStaff.path} (${buOnStaff.role}). Legal password sign-in was turned back on.`;
     },
     admin.page,
@@ -2803,21 +3508,47 @@ async function crossPage() {
       await openAuthentication(page);
       const off = await toggle(page, "Business Portal Authentication", "Email and password");
       const a = await context();
-      const onPortal = await passwordSignIn(a.page, authAccounts.portalPassword, AUTH_PASSWORD, true);
+      const onPortal = await passwordSignIn(
+        a.page,
+        authAccounts.portalPassword,
+        AUTH_PASSWORD,
+        true,
+      );
       await a.ctx.close();
       const b = await context();
-      const onStaff = await passwordSignIn(b.page, authAccounts.portalPassword, AUTH_PASSWORD, false);
+      const onStaff = await passwordSignIn(
+        b.page,
+        authAccounts.portalPassword,
+        AUTH_PASSWORD,
+        false,
+      );
       await b.ctx.close();
       const c = await context();
-      const link = await magicLinkFor(c.page, authAccounts.portalPassword, true, new Date(Date.now() - 1000));
+      const link = await magicLinkFor(
+        c.page,
+        authAccounts.portalPassword,
+        true,
+        new Date(Date.now() - 1000),
+      );
       await c.page.goto(link.link);
-      await c.page.waitForURL((u) => u.pathname.startsWith("/portal"), { timeout: 20000 }).catch(() => {});
+      await c.page
+        .waitForURL((u) => u.pathname.startsWith("/portal"), { timeout: 20000 })
+        .catch(() => {});
       const viaLink = (await api(c.page, AUTH.app, "GET", "/api/v1/me")).data?.user?.role;
       await c.ctx.close();
       await openAuthentication(page);
       await toggle(page, "Business Portal Authentication", "Email and password");
       const pol = await policyNow(page);
-      expect(off === "Saved" && onPortal.me === 401 && onPortal.outcome === "password-not-offered" && onStaff.me === 401 && onStaff.outcome === "alert" && viaLink === "business_user" && pol.business.password, `${off} ${JSON.stringify(onPortal)} ${JSON.stringify(onStaff)} ${viaLink}`);
+      expect(
+        off === "Saved" &&
+          onPortal.me === 401 &&
+          onPortal.outcome === "password-not-offered" &&
+          onStaff.me === 401 &&
+          onStaff.outcome === "alert" &&
+          viaLink === "business_user" &&
+          pol.business.password,
+        `${off} ${JSON.stringify(onPortal)} ${JSON.stringify(onStaff)} ${viaLink}`,
+      );
       return `With Email and password off under Business Portal Authentication ("${off}"), the Portal page offered only ${JSON.stringify(onPortal.offered)}, with no password choice. On the staff page, where Legal users still have a password form, the Business User's password sign-in was refused with "${onStaff.alert}" (me ${onStaff.me}). A sign-in link still signed the same person in as ${viaLink}. Business password sign-in was turned back on.`;
     },
     admin.page,
@@ -2833,14 +3564,18 @@ async function instanceField(page, base = AUTH.app) {
   return {
     text,
     summary: [
-      text.match(/Application address (Default|Saved in OpenLaw|Deployment configuration)( · Read only)?/)?.[0],
+      text.match(
+        /Application address (Default|Saved in OpenLaw|Deployment configuration)( · Read only)?/,
+      )?.[0],
       text.match(/Active: \S+/)?.[0],
       text.match(/Saved changes are waiting for a restart\.[^.]*\./)?.[0],
     ]
       .filter(Boolean)
       .join("; "),
     value: (await field.count()) ? await field.inputValue() : null,
-    readOnly: (await field.count()) ? (await field.getAttribute("readonly")) !== null || (await field.isDisabled()) : null,
+    readOnly: (await field.count())
+      ? (await field.getAttribute("readonly")) !== null || (await field.isDisabled())
+      : null,
   };
 }
 async function callbackNow(page, base = AUTH.app) {
@@ -2849,7 +3584,10 @@ async function callbackNow(page, base = AUTH.app) {
   await box.getByLabel("Client ID").fill(`doc030-client-cb-${Date.now().toString(36)}`);
   await box.getByRole("button", { name: "Save provider" }).click();
   const note = await providerNote(page);
-  return { note, callback: note === "Saved" ? (await box.locator("code").innerText()).trim() : null };
+  return {
+    note,
+    callback: note === "Saved" ? (await box.locator("code").innerText()).trim() : null,
+  };
 }
 
 async function instancePinned() {
@@ -2862,7 +3600,12 @@ async function instancePinned() {
     async () => {
       const f = await instanceField(admin.page);
       const cb = await callbackNow(admin.page);
-      expect(/Deployment configuration/.test(f.text) && /Read only/.test(f.text) && cb.callback === `${AUTH.app}/api/auth/sso/callback`, `${f.text.slice(0, 400)} ${JSON.stringify(cb)}`);
+      expect(
+        /Deployment configuration/.test(f.text) &&
+          /Read only/.test(f.text) &&
+          cb.callback === `${AUTH.app}/api/auth/sso/callback`,
+        `${f.text.slice(0, 400)} ${JSON.stringify(cb)}`,
+      );
       return `Settings, Advanced, Instance address showed "${f.summary}" (field value ${f.value}, read-only ${f.readOnly}). Save provider then showed the callback ${cb.callback}.`;
     },
     admin.page,
@@ -2881,7 +3624,9 @@ async function instanceSaved() {
   const mctx = await mappedBrowser.newContext({ viewport: { width: 1440, height: 1000 } });
   const admin = { ctx: mctx, page: await mctx.newPage() };
   const phase = (...names) => {
-    const out = execFileSync(path.join(here, "phase.sh"), ["auth2", ...names], { encoding: "utf8" });
+    const out = execFileSync(path.join(here, "phase.sh"), ["auth2", ...names], {
+      encoding: "utf8",
+    });
     return out.trim().split("\n").pop();
   };
   await step(
@@ -2899,11 +3644,19 @@ async function instanceSaved() {
       await anon.page.getByRole("button", { name: "Sign in", exact: true }).click();
       await sleep(4000);
       const me = await api(anon.page, AUTH.app, "GET", "/api/v1/me");
-      const alert = (await anon.page.getByRole("alert").allInnerTexts()).map((x) => x.trim()).filter(Boolean);
+      const alert = (await anon.page.getByRole("alert").allInnerTexts())
+        .map((x) => x.trim())
+        .filter(Boolean);
       await anon.ctx.close();
       await signIn(admin.page, DEFAULT_ADDRESS, DANIEL);
       const f = await instanceField(admin.page, DEFAULT_ADDRESS);
-      expect(me.status === 401 && !f.readOnly && /Application address Default/.test(f.text) && f.value === DEFAULT_ADDRESS, `me ${me.status} ${f.text.slice(0, 300)} value ${f.value} ro ${f.readOnly}`);
+      expect(
+        me.status === 401 &&
+          !f.readOnly &&
+          /Application address Default/.test(f.text) &&
+          f.value === DEFAULT_ADDRESS,
+        `me ${me.status} ${f.text.slice(0, 300)} value ${f.value} ro ${f.readOnly}`,
+      );
       return `${note}. A password sign-in at ${AUTH.app} got me ${me.status}${alert.length ? ` with "${alert.join(" ")}"` : ""}. At ${DEFAULT_ADDRESS} Daniel signed in, and Instance address showed "${f.summary}" (field value "${f.value}", read-only ${f.readOnly}).`;
     },
     admin.page,
@@ -2922,11 +3675,20 @@ async function instanceSaved() {
         .getByText("Settings saved. Restart the API and worker to apply changes.")
         .innerText({ timeout: 15000 })
         .then((t) => t.trim())
-        .catch(async () => (await page.locator("main").getByRole("alert").allInnerTexts()).join(" | "));
-      expect(notice === "Settings saved. Restart the API and worker to apply changes.", `save answered "${notice}"`);
+        .catch(async () =>
+          (await page.locator("main").getByRole("alert").allInnerTexts()).join(" | "),
+        );
+      expect(
+        notice === "Settings saved. Restart the API and worker to apply changes.",
+        `save answered "${notice}"`,
+      );
       const after = await instanceField(page, DEFAULT_ADDRESS);
       const cb = await callbackNow(page, DEFAULT_ADDRESS);
-      expect(/Saved changes are waiting for a restart/.test(after.text) && cb.callback === `${DEFAULT_ADDRESS}/api/auth/sso/callback`, `${after.text.slice(0, 300)} ${JSON.stringify(cb)}`);
+      expect(
+        /Saved changes are waiting for a restart/.test(after.text) &&
+          cb.callback === `${DEFAULT_ADDRESS}/api/auth/sso/callback`,
+        `${after.text.slice(0, 300)} ${JSON.stringify(cb)}`,
+      );
       return `Entering ${AUTH.app} and Save showed "${notice}" The pane then showed "${after.summary}" (field value "${after.value}"). Before the restart, Save provider showed the callback ${cb.callback}.`;
     },
     admin.page,
@@ -2944,23 +3706,34 @@ async function instanceSaved() {
       const f = await instanceField(c.page);
       const cb = await callbackNow(c.page);
       await c.ctx.close();
-      expect(/Application address Saved in OpenLaw/.test(f.text) && f.value === AUTH.app && cb.callback === `${AUTH.app}/api/auth/sso/callback`, `${f.text.slice(0, 300)} ${f.value} ${JSON.stringify(cb)}`);
+      expect(
+        /Application address Saved in OpenLaw/.test(f.text) &&
+          f.value === AUTH.app &&
+          cb.callback === `${AUTH.app}/api/auth/sso/callback`,
+        `${f.text.slice(0, 300)} ${f.value} ${JSON.stringify(cb)}`,
+      );
       return `${note}. A password sign-in at ${AUTH.app} worked again. Instance address showed "${f.summary}" (field value "${f.value}"). Save provider showed the callback ${cb.callback}.`;
     },
   );
   await mappedBrowser.close();
 }
 
-
 function merge() {
   const dir = path.join(here, "runs");
-  const files = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".json")).sort() : [];
+  const files = existsSync(dir)
+    ? readdirSync(dir)
+        .filter((f) => f.endsWith(".json"))
+        .sort()
+    : [];
   const latest = {};
   for (const f of files) latest[f.replace(/-\d{4}-\d\d-\d\dT.*$/, "")] = f;
   const order = Object.keys(SECTION_LAB);
   const runs = order
     .filter((s) => latest[s])
-    .map((s) => ({ file: `runs/${latest[s]}`, ...JSON.parse(readFileSync(path.join(dir, latest[s]))) }));
+    .map((s) => ({
+      file: `runs/${latest[s]}`,
+      ...JSON.parse(readFileSync(path.join(dir, latest[s]))),
+    }));
   const steps = runs.flatMap((r) =>
     r.steps.map((s) => ({ section: r.section, phase: r.phase, ...s })),
   );

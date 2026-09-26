@@ -30,9 +30,7 @@
   "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
   "runs": [
     {
-      "articles": [
-        "personal-settings"
-      ],
+      "articles": ["personal-settings"],
       "startedAt": "2026-09-25T10:23:22.123Z",
       "finishedAt": "2026-09-25T10:24:30.223Z",
       "stamp": 1790331802061,
@@ -72,9 +70,7 @@
       }
     },
     {
-      "articles": [
-        "staff-sign-in"
-      ],
+      "articles": ["staff-sign-in"],
       "startedAt": "2026-09-25T10:31:11.130Z",
       "finishedAt": "2026-09-25T10:35:31.421Z",
       "stamp": 1790332271055,
@@ -105,10 +101,7 @@
       }
     },
     {
-      "articles": [
-        "find-your-work",
-        "portal-knowledge"
-      ],
+      "articles": ["find-your-work", "portal-knowledge"],
       "startedAt": "2026-09-25T10:35:39.019Z",
       "finishedAt": "2026-09-25T10:37:48.051Z",
       "stamp": 1790332538951,
@@ -157,9 +150,7 @@
       }
     },
     {
-      "articles": [
-        "staff-sign-in"
-      ],
+      "articles": ["staff-sign-in"],
       "startedAt": "2026-09-25T10:41:26.708Z",
       "finishedAt": "2026-09-25T10:45:02.630Z",
       "stamp": 1790332886484,

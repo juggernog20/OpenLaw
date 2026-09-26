@@ -68,11 +68,15 @@ function withApi(context, page, role, person) {
   };
   api.upload = (url, file, fields = {}) =>
     api("POST", url, undefined, {
-      multipart: { ...fields, file: { name: file.name, mimeType: file.mimeType, buffer: file.buffer } },
+      multipart: {
+        ...fields,
+        file: { name: file.name, mimeType: file.mimeType, buffer: file.buffer },
+      },
     });
   api.ok = async (method, url, body) => {
     const r = await api(method, url, body);
-    if (r.status >= 300) throw new Error(`${method} ${url} answered ${r.status}: ${r.text.slice(0, 300)}`);
+    if (r.status >= 300)
+      throw new Error(`${method} ${url} answered ${r.status}: ${r.text.slice(0, 300)}`);
     return r.json;
   };
   return { context, page, api, role, person };
@@ -104,7 +108,7 @@ export async function magicSignIn(browser, role) {
   // The lab is shared: other agents spend the per-client sign-in link budget
   // (thirty per client address in 15 minutes). On 429 wait a minute and ask again.
   let limited = 0;
-  for (let attempt = 0; attempt < 4; ) {
+  for (let attempt = 0; attempt < 4;) {
     const since = Date.now() - 2000;
     const res = await context.request.post(`${BASE}/api/v1/auth/magic-link`, {
       headers: { origin: BASE },

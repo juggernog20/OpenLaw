@@ -116,12 +116,10 @@ const aborted = new WeakMap();
 function watch(page) {
   aborted.set(page, []);
   page.on("requestfailed", (r) =>
-    aborted
-      .get(page)
-      .push({
-        t: Date.now(),
-        what: `${r.method()} ${new URL(r.url()).pathname} ${r.failure()?.errorText ?? ""}`,
-      }),
+    aborted.get(page).push({
+      t: Date.now(),
+      what: `${r.method()} ${new URL(r.url()).pathname} ${r.failure()?.errorText ?? ""}`,
+    }),
   );
 }
 async function settle(page, locator, label, timeout = 30000) {

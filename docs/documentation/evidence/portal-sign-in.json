@@ -49,9 +49,7 @@
   "scenarios": [
     {
       "id": "V-C02",
-      "coverage": [
-        "C02"
-      ],
+      "coverage": ["C02"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [

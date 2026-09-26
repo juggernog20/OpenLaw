@@ -13,5 +13,6 @@
 // Every phase replaces its own steps in walkthrough.json. API keys, Client secrets,
 // sign-in links, cookies and raw mail are never written to a file.
 const phase = process.env.PHASE;
-if (!["m40", "m40r", "lan", "m41"].includes(phase)) throw new Error("Set PHASE to m40, m40r, lan or m41.");
+if (!["m40", "m40r", "lan", "m41"].includes(phase))
+  throw new Error("Set PHASE to m40, m40r, lan or m41.");
 await import(`./phase-${phase}.mjs`);

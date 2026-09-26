@@ -396,7 +396,9 @@ export default async function matterWork(ctx) {
         .click();
       await page.getByRole("menuitem", { name: "Remove Task" }).click();
       await page.waitForTimeout(600);
-      const confirm = page.getByRole("alertdialog").or(page.getByRole("dialog", { name: /Remove/ }));
+      const confirm = page
+        .getByRole("alertdialog")
+        .or(page.getByRole("dialog", { name: /Remove/ }));
       if (
         await confirm
           .first()

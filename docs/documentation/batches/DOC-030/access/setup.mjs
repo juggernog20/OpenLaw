@@ -9,10 +9,12 @@ const OUT = path.join(here, "fixtures.json");
 const fx = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : {};
 const save = () => writeFileSync(OUT, JSON.stringify(fx, null, 2) + "\n");
 const must = (r, what) => {
-  if (r.status >= 300) throw new Error(`${what}: ${r.status} ${JSON.stringify(r.body).slice(0, 300)}`);
+  if (r.status >= 300)
+    throw new Error(`${what}: ${r.status} ${JSON.stringify(r.body).slice(0, 300)}`);
   return r.body;
 };
-const tag = (fx.stamp ??= process.env.FIXTURE_TAG ?? new Date().toISOString().slice(0, 16).replace(/\D/g, "").slice(4));
+const tag = (fx.stamp ??=
+  process.env.FIXTURE_TAG ?? new Date().toISOString().slice(0, 16).replace(/\D/g, "").slice(4));
 const name = (s) => `DOC-030 access ${s} ${tag}`;
 
 const d = await apiSession(SEED.daniel.email);
@@ -34,7 +36,10 @@ if (!fx.form) {
   const field = async (displayName, fieldType) => {
     const f =
       existing.find((x) => x.displayName === displayName) ??
-      must(await call(d, "POST", "/fields", { displayName, moduleScope: "contract", fieldType }), displayName).field;
+      must(
+        await call(d, "POST", "/fields", { displayName, moduleScope: "contract", fieldType }),
+        displayName,
+      ).field;
     return { ...f, key: f.slug };
   };
   const visible = await field(name("Visible field"), "text");
@@ -74,7 +79,12 @@ if (!fx.form) {
     }),
     "form A",
   );
-  must(await call(d, "PUT", `/contract-types/${typeB.id}/form`, { form: [...base, row(visible, false)] }), "form B");
+  must(
+    await call(d, "PUT", `/contract-types/${typeB.id}/form`, {
+      form: [...base, row(visible, false)],
+    }),
+    "form B",
+  );
   fx.form = {
     typeA: { id: typeA.id, name: typeA.displayName },
     typeB: { id: typeB.id, name: typeB.displayName },
@@ -89,7 +99,9 @@ if (!fx.form) {
 // ---- An Administrator-added Contract Document type, for the "reads General" check.
 if (!fx.docType) {
   const t = must(
-    await call(d, "POST", "/documents/types/contract", { displayName: name("Admin document type") }),
+    await call(d, "POST", "/documents/types/contract", {
+      displayName: name("Admin document type"),
+    }),
     "doc type",
   );
   fx.docType = { id: (t.documentType ?? t).id, name: (t.documentType ?? t).displayName };
@@ -106,28 +118,54 @@ async function matter(s, body, what) {
 if (!fx.co) {
   const co = await contract(
     d,
-    { title: name("open contract"), contractTypeId: nda, managerId: fx.ids.daniel, owningDepartmentId: sales, region: "EMEA" },
+    {
+      title: name("open contract"),
+      contractTypeId: nda,
+      managerId: fx.ids.daniel,
+      owningDepartmentId: sales,
+      region: "EMEA",
+    },
     "CO",
   );
   fx.co = { number: co.number, id: co.id, title: co.title };
   const mo = await matter(
     d,
-    { title: name("open matter"), matterTypeId: commercial, managerId: fx.ids.daniel, departmentId: sales, region: "EMEA" },
+    {
+      title: name("open matter"),
+      matterTypeId: commercial,
+      managerId: fx.ids.daniel,
+      departmentId: sales,
+      region: "EMEA",
+    },
     "MO",
   );
   fx.mo = { number: mo.number, id: mo.id, title: mo.title };
   const cc = await contract(
     n,
-    { title: name("confidential contract"), contractTypeId: nda, managerId: fx.ids.nadia, isConfidential: true, matterNumber: mo.number },
+    {
+      title: name("confidential contract"),
+      contractTypeId: nda,
+      managerId: fx.ids.nadia,
+      isConfidential: true,
+      matterNumber: mo.number,
+    },
     "CC",
   );
   fx.cc = { number: cc.number, id: cc.id, title: cc.title };
   const mc = await matter(
     n,
-    { title: name("confidential matter"), matterTypeId: commercial, managerId: fx.ids.nadia, isConfidential: true },
+    {
+      title: name("confidential matter"),
+      matterTypeId: commercial,
+      managerId: fx.ids.nadia,
+      isConfidential: true,
+    },
     "MC",
   );
-  must(await call(n, "PUT", `/matters/${mc.number}/parent`, { parentMatterNumber: mo.number }), "MC parent");
+  must(
+    await call(n, "PUT", `/matters/${mc.number}/parent`, { parentMatterNumber: mo.number }),
+    "MC parent",
+  );
   fx.mc = { number: mc.number, id: mc.id, title: mc.title };
   save();
 }
@@ -135,52 +173,143 @@ if (!fx.parent) {
   // A Confidential parent Contract whose team holds Jonas, and an open child Contract with no Jonas row.
   const p = await contract(
     n,
-    { title: name("confidential parent contract"), contractTypeId: nda, managerId: fx.ids.nadia, isConfidential: true },
+    {
+      title: name("confidential parent contract"),
+      contractTypeId: nda,
+      managerId: fx.ids.nadia,
+      isConfidential: true,
+    },
     "parent",
   );
-  must(await call(n, "POST", `/contracts/${p.number}/team`, { userId: fx.ids.jonas }), "parent team");
-  const c = await contract(n, { title: name("child contract"), contractTypeId: nda, managerId: fx.ids.nadia }, "child");
-  must(await call(n, "POST", `/contracts/${c.number}/parent`, { parentContractNumber: p.number }), "child parent");
+  must(
+    await call(n, "POST", `/contracts/${p.number}/team`, { userId: fx.ids.jonas }),
+    "parent team",
+  );
+  const c = await contract(
+    n,
+    { title: name("child contract"), contractTypeId: nda, managerId: fx.ids.nadia },
+    "child",
+  );
+  must(
+    await call(n, "POST", `/contracts/${c.number}/parent`, { parentContractNumber: p.number }),
+    "child parent",
+  );
   fx.parent = { number: p.number, id: p.id, title: p.title };
   fx.child = { number: c.number, id: c.id, title: c.title };
   save();
 }
 if (!fx.coDocs) {
-  const base = must(await upload(d, `/contracts/${fx.co.number}/documents`, "doc030-access-baseline.txt", "DOC-030 access fictional baseline.\n"), "baseline");
-  const note = must(await upload(d, `/contracts/${fx.co.number}/documents`, "doc030-access-confidential-note.txt", "DOC-030 access fictional confidential note.\n"), "note");
-  must(await call(d, "PATCH", `/documents/${note.document.id}`, { isConfidential: true }), "note confidential");
+  const base = must(
+    await upload(
+      d,
+      `/contracts/${fx.co.number}/documents`,
+      "doc030-access-baseline.txt",
+      "DOC-030 access fictional baseline.\n",
+    ),
+    "baseline",
+  );
+  const note = must(
+    await upload(
+      d,
+      `/contracts/${fx.co.number}/documents`,
+      "doc030-access-confidential-note.txt",
+      "DOC-030 access fictional confidential note.\n",
+    ),
+    "note",
+  );
+  must(
+    await call(d, "PATCH", `/documents/${note.document.id}`, { isConfidential: true }),
+    "note confidential",
+  );
   fx.coDocs = { baseline: base.document.id, note: note.document.id };
   for (const [visibility, body] of [
     ["legal_only", "DOC-030 access Legal only note"],
     ["working_team", "DOC-030 access Working team note"],
     ["full_thread", "DOC-030 access Full thread note"],
   ])
-    must(await call(n, "POST", "/comments", { entityType: "contract", entityId: fx.co.id, body, visibility }), visibility);
+    must(
+      await call(n, "POST", "/comments", {
+        entityType: "contract",
+        entityId: fx.co.id,
+        body,
+        visibility,
+      }),
+      visibility,
+    );
   save();
 }
 if (!fx.entity) {
   const etypes = must(await call(d, "GET", "/entities/types"), "etypes").entityTypes;
-  const e = must(await call(n, "POST", "/entities", { legalName: name("confidential entity Ltd"), entityTypeId: etypes[0].id }), "entity").entity;
-  must(await call(n, "PATCH", `/entities/${e.id}`, { isConfidential: true }), "entity confidential");
+  const e = must(
+    await call(n, "POST", "/entities", {
+      legalName: name("confidential entity Ltd"),
+      entityTypeId: etypes[0].id,
+    }),
+    "entity",
+  ).entity;
+  must(
+    await call(n, "PATCH", `/entities/${e.id}`, { isConfidential: true }),
+    "entity confidential",
+  );
   fx.entity = { id: e.id, name: e.legalName };
   save();
 }
 
 // ---- Approval packets for Jonas: one with an open primary Document, one with a Confidential primary Document.
 if (!fx.approvals) {
-  const a = await contract(n, { title: name("approval contract"), contractTypeId: nda, managerId: fx.ids.nadia }, "approval contract");
-  const ad = must(await upload(n, `/contracts/${a.number}/documents`, "doc030-access-approval-paper.txt", "DOC-030 access fictional approval paper.\n"), "approval doc");
-  const b = await contract(n, { title: name("confidential paper approval contract"), contractTypeId: nda, managerId: fx.ids.nadia }, "approval contract 2");
-  const bd = must(await upload(n, `/contracts/${b.number}/documents`, "doc030-access-restricted-paper.txt", "DOC-030 access fictional restricted paper.\n"), "approval doc 2");
-  must(await call(n, "PATCH", `/documents/${bd.document.id}`, { isConfidential: true }), "approval doc confidential");
-  const w = await contract(n, { title: name("withdrawn approval contract"), contractTypeId: nda, managerId: fx.ids.nadia }, "approval contract 3");
+  const a = await contract(
+    n,
+    { title: name("approval contract"), contractTypeId: nda, managerId: fx.ids.nadia },
+    "approval contract",
+  );
+  const ad = must(
+    await upload(
+      n,
+      `/contracts/${a.number}/documents`,
+      "doc030-access-approval-paper.txt",
+      "DOC-030 access fictional approval paper.\n",
+    ),
+    "approval doc",
+  );
+  const b = await contract(
+    n,
+    {
+      title: name("confidential paper approval contract"),
+      contractTypeId: nda,
+      managerId: fx.ids.nadia,
+    },
+    "approval contract 2",
+  );
+  const bd = must(
+    await upload(
+      n,
+      `/contracts/${b.number}/documents`,
+      "doc030-access-restricted-paper.txt",
+      "DOC-030 access fictional restricted paper.\n",
+    ),
+    "approval doc 2",
+  );
+  must(
+    await call(n, "PATCH", `/documents/${bd.document.id}`, { isConfidential: true }),
+    "approval doc confidential",
+  );
+  const w = await contract(
+    n,
+    { title: name("withdrawn approval contract"), contractTypeId: nda, managerId: fx.ids.nadia },
+    "approval contract 3",
+  );
   fx.approvals = {
     open: { number: a.number, id: a.id, title: a.title, doc: ad.document.id },
     confidentialPaper: { number: b.number, id: b.id, title: b.title, doc: bd.document.id },
     withdraw: { number: w.number, id: w.id, title: w.title },
   };
   for (const k of ["open", "confidentialPaper", "withdraw"]) {
-    const r = must(await call(n, "POST", `/contracts/${fx.approvals[k].number}/approvals`, { approverIds: [fx.ids.jonas] }), `approval ${k}`);
+    const r = must(
+      await call(n, "POST", `/contracts/${fx.approvals[k].number}/approvals`, {
+        approverIds: [fx.ids.jonas],
+      }),
+      `approval ${k}`,
+    );
     fx.approvals[k].approvalId = (r.approvals ?? [r.approval ?? r])[0]?.id ?? null;
   }
   save();
@@ -202,19 +331,36 @@ async function requestAndConvert(email, who, key, contractTypeId) {
     `request ${who}`,
   ).request;
   const cv = must(
-    await call(n, "POST", `/requests/${rq.number}/convert`, { title: name(`${who} converted contract`), contractTypeId }),
+    await call(n, "POST", `/requests/${rq.number}/convert`, {
+      title: name(`${who} converted contract`),
+      contractTypeId,
+    }),
     `convert ${who}`,
   );
   const rec = cv.request?.convertedRecord ?? cv.request?.conversion?.convertedRecord;
-  fx[key] = { request: rq.number, number: rec.number, id: rec.id, title: name(`${who} converted contract`) };
+  fx[key] = {
+    request: rq.number,
+    number: rec.number,
+    id: rec.id,
+    title: name(`${who} converted contract`),
+  };
   save();
 }
 if (!fx.jonasConverted) await requestAndConvert(SEED.jonas.email, "Jonas", "jonasConverted", nda);
-if (!fx.raviConverted) await requestAndConvert(SEED.ravi.email, "Ravi", "raviConverted", fx.form.typeA.id);
+if (!fx.raviConverted)
+  await requestAndConvert(SEED.ravi.email, "Ravi", "raviConverted", fx.form.typeA.id);
 
 // ---- Ravi's Contract: primary Document by Legal, Field values, a primary Counterparty.
 if (!fx.raviPrimary) {
-  const p = must(await upload(n, `/contracts/${fx.raviConverted.number}/documents`, "doc030-access-supporting-v1.txt", "DOC-030 access fictional supporting paper, version 1.\n"), "ravi primary");
+  const p = must(
+    await upload(
+      n,
+      `/contracts/${fx.raviConverted.number}/documents`,
+      "doc030-access-supporting-v1.txt",
+      "DOC-030 access fictional supporting paper, version 1.\n",
+    ),
+    "ravi primary",
+  );
   fx.raviPrimary = { id: p.document.id, v1: p.document.versions[0].id };
   must(
     await call(n, "PATCH", `/contracts/${fx.raviConverted.number}`, {
@@ -231,13 +377,25 @@ if (!fx.raviPrimary) {
     }),
     "ravi fields",
   );
-  must(await call(n, "POST", `/contracts/${fx.raviConverted.number}/counterparties`, { name: name("Fictional Supplier Ltd") }), "counterparty");
+  must(
+    await call(n, "POST", `/contracts/${fx.raviConverted.number}/counterparties`, {
+      name: name("Fictional Supplier Ltd"),
+    }),
+    "counterparty",
+  );
   save();
 }
 if (!fx.mr) {
   const mr = await matter(
     n,
-    { title: name("Ravi matter"), matterTypeId: commercial, managerId: fx.ids.nadia, departmentId: sales, region: "EMEA", description: "DOC-030 access fictional Matter description." },
+    {
+      title: name("Ravi matter"),
+      matterTypeId: commercial,
+      managerId: fx.ids.nadia,
+      departmentId: sales,
+      region: "EMEA",
+      description: "DOC-030 access fictional Matter description.",
+    },
     "MR",
   );
   fx.mr = { number: mr.number, id: mr.id, title: mr.title };
@@ -245,17 +403,30 @@ if (!fx.mr) {
 }
 // Ravi's comparable Matter: same type, no Ravi row.
 if (!fx.mx) {
-  const mx = await matter(n, { title: name("comparable matter"), matterTypeId: commercial, managerId: fx.ids.nadia }, "MX");
+  const mx = await matter(
+    n,
+    { title: name("comparable matter"), matterTypeId: commercial, managerId: fx.ids.nadia },
+    "MX",
+  );
   fx.mx = { number: mx.number, id: mx.id, title: mx.title };
   save();
 }
 // Document paging Matter with 51 Documents, Ravi on its team.
 if (!fx.dm) {
-  const dm = await matter(n, { title: name("document paging matter"), matterTypeId: commercial, managerId: fx.ids.nadia }, "DM");
+  const dm = await matter(
+    n,
+    { title: name("document paging matter"), matterTypeId: commercial, managerId: fx.ids.nadia },
+    "DM",
+  );
   must(await call(n, "POST", `/matters/${dm.number}/team`, { userId: fx.ids.ravi }), "DM team");
   for (let i = 1; i <= 51; i++)
     must(
-      await upload(n, `/matters/${dm.number}/documents`, `doc030-access-page-${String(i).padStart(2, "0")}.txt`, `DOC-030 access fictional paging paper ${i}.\n`),
+      await upload(
+        n,
+        `/matters/${dm.number}/documents`,
+        `doc030-access-page-${String(i).padStart(2, "0")}.txt`,
+        `DOC-030 access fictional paging paper ${i}.\n`,
+      ),
       `page ${i}`,
     );
   fx.dm = { number: dm.number, id: dm.id, title: dm.title };
@@ -265,9 +436,23 @@ if (!fx.dm) {
 if (!fx.paging) {
   fx.paging = [];
   for (let i = 1; i <= 26; i++) {
-    const c = await contract(n, { title: name(`paging contract ${String(i).padStart(2, "0")}`), contractTypeId: nda, managerId: fx.ids.nadia }, `paging ${i}`);
-    must(await call(n, "POST", `/contracts/${c.number}/team`, { userId: fx.ids.jonas }), `paging team J ${i}`);
-    must(await call(n, "POST", `/contracts/${c.number}/team`, { userId: fx.ids.ravi }), `paging team R ${i}`);
+    const c = await contract(
+      n,
+      {
+        title: name(`paging contract ${String(i).padStart(2, "0")}`),
+        contractTypeId: nda,
+        managerId: fx.ids.nadia,
+      },
+      `paging ${i}`,
+    );
+    must(
+      await call(n, "POST", `/contracts/${c.number}/team`, { userId: fx.ids.jonas }),
+      `paging team J ${i}`,
+    );
+    must(
+      await call(n, "POST", `/contracts/${c.number}/team`, { userId: fx.ids.ravi }),
+      `paging team R ${i}`,
+    );
     fx.paging.push(c.number);
     await sleep(50);
   }
@@ -276,15 +461,35 @@ if (!fx.paging) {
 
 // ---- Second round of fixtures.
 if (!fx.archivedJ) {
-  const a = await contract(n, { title: name("archived team contract"), contractTypeId: nda, managerId: fx.ids.nadia }, "archivedJ");
-  must(await call(n, "POST", `/contracts/${a.number}/team`, { userId: fx.ids.jonas }), "archivedJ team");
+  const a = await contract(
+    n,
+    { title: name("archived team contract"), contractTypeId: nda, managerId: fx.ids.nadia },
+    "archivedJ",
+  );
+  must(
+    await call(n, "POST", `/contracts/${a.number}/team`, { userId: fx.ids.jonas }),
+    "archivedJ team",
+  );
   must(await call(n, "POST", `/contracts/${a.number}/archive`, {}), "archivedJ archive");
   fx.archivedJ = { number: a.number, title: a.title };
   save();
 }
 if (!fx.jonasPrimary) {
-  const p = must(await upload(n, `/contracts/${fx.jonasConverted.number}/documents`, "doc030-access-jonas-paper.txt", "DOC-030 access fictional paper for Jonas.\n"), "jonas primary");
-  must(await call(n, "POST", `/contracts/${fx.jonasConverted.number}/counterparties`, { name: name("Fictional Partner Ltd") }), "jonas counterparty");
+  const p = must(
+    await upload(
+      n,
+      `/contracts/${fx.jonasConverted.number}/documents`,
+      "doc030-access-jonas-paper.txt",
+      "DOC-030 access fictional paper for Jonas.\n",
+    ),
+    "jonas primary",
+  );
+  must(
+    await call(n, "POST", `/contracts/${fx.jonasConverted.number}/counterparties`, {
+      name: name("Fictional Partner Ltd"),
+    }),
+    "jonas counterparty",
+  );
   must(
     await call(n, "PATCH", `/contracts/${fx.jonasConverted.number}`, {
       value: { amount: 5000000, currency: "GBP", cadence: "one_time" },
@@ -298,14 +503,36 @@ if (!fx.jonasPrimary) {
 }
 if (!fx.entity2) {
   const etypes = must(await call(d, "GET", "/entities/types"), "etypes").entityTypes;
-  const e = must(await call(n, "POST", "/entities", { legalName: name("second confidential entity Ltd"), entityTypeId: etypes[0].id }), "entity2").entity;
-  must(await call(n, "PATCH", `/entities/${e.id}`, { isConfidential: true }), "entity2 confidential");
+  const e = must(
+    await call(n, "POST", "/entities", {
+      legalName: name("second confidential entity Ltd"),
+      entityTypeId: etypes[0].id,
+    }),
+    "entity2",
+  ).entity;
+  must(
+    await call(n, "PATCH", `/entities/${e.id}`, { isConfidential: true }),
+    "entity2 confidential",
+  );
   fx.entity2 = { id: e.id, name: e.legalName };
   save();
 }
 if (!fx.cr2) {
-  const c = await contract(n, { title: name("Ravi second type contract"), contractTypeId: fx.form.typeB.id, managerId: fx.ids.nadia }, "cr2");
-  must(await call(n, "PATCH", `/contracts/${c.number}`, { customFields: { [fx.form.visible.key]: "DOC-030 access value on the second type" } }), "cr2 field");
+  const c = await contract(
+    n,
+    {
+      title: name("Ravi second type contract"),
+      contractTypeId: fx.form.typeB.id,
+      managerId: fx.ids.nadia,
+    },
+    "cr2",
+  );
+  must(
+    await call(n, "PATCH", `/contracts/${c.number}`, {
+      customFields: { [fx.form.visible.key]: "DOC-030 access value on the second type" },
+    }),
+    "cr2 field",
+  );
   must(await call(n, "POST", `/contracts/${c.number}/team`, { userId: fx.ids.ravi }), "cr2 team");
   fx.cr2 = { number: c.number, title: c.title };
   save();
@@ -313,10 +540,30 @@ if (!fx.cr2) {
 if (!fx.raviApprovals) {
   fx.raviApprovals = {};
   for (const k of ["approve", "reject"]) {
-    const c = await contract(n, { title: name(`Ravi ${k} approval contract`), contractTypeId: nda, managerId: fx.ids.nadia }, `ravi ${k}`);
-    const doc = must(await upload(n, `/contracts/${c.number}/documents`, `doc030-access-ravi-${k}-paper.txt`, `DOC-030 access fictional paper to ${k}.\n`), `ravi ${k} doc`);
-    const r = must(await call(n, "POST", `/contracts/${c.number}/approvals`, { approverIds: [fx.ids.ravi] }), `ravi ${k} approval`);
-    fx.raviApprovals[k] = { number: c.number, title: c.title, doc: doc.document.id, approvalId: (r.approvals ?? [r.approval ?? r])[0]?.id ?? null };
+    const c = await contract(
+      n,
+      { title: name(`Ravi ${k} approval contract`), contractTypeId: nda, managerId: fx.ids.nadia },
+      `ravi ${k}`,
+    );
+    const doc = must(
+      await upload(
+        n,
+        `/contracts/${c.number}/documents`,
+        `doc030-access-ravi-${k}-paper.txt`,
+        `DOC-030 access fictional paper to ${k}.\n`,
+      ),
+      `ravi ${k} doc`,
+    );
+    const r = must(
+      await call(n, "POST", `/contracts/${c.number}/approvals`, { approverIds: [fx.ids.ravi] }),
+      `ravi ${k} approval`,
+    );
+    fx.raviApprovals[k] = {
+      number: c.number,
+      title: c.title,
+      doc: doc.document.id,
+      approvalId: (r.approvals ?? [r.approval ?? r])[0]?.id ?? null,
+    };
   }
   save();
 }

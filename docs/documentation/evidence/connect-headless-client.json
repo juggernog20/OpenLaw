@@ -48,9 +48,7 @@
   "scenarios": [
     {
       "id": "V-M40-CLIENT",
-      "coverage": [
-        "C58"
-      ],
+      "coverage": ["C58"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -72,9 +70,7 @@
     },
     {
       "id": "V-M40-CLIENT",
-      "coverage": [
-        "C58"
-      ],
+      "coverage": ["C58"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -96,9 +92,7 @@
     },
     {
       "id": "V-M40-CLIENT",
-      "coverage": [
-        "C58"
-      ],
+      "coverage": ["C58"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [

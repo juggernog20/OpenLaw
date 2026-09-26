@@ -55,14 +55,8 @@
     }
   },
   "selection": {
-    "articles": [
-      "C19",
-      "C21"
-    ],
-    "roles": [
-      "legal_team_member",
-      "administrator"
-    ]
+    "articles": ["C19", "C21"],
+    "roles": ["legal_team_member", "administrator"]
   },
   "startedAt": "2026-09-25T10:37:11.606Z",
   "stamp": 1790332631605,

@@ -42,9 +42,7 @@
   "scenarios": [
     {
       "id": "V-M41-C59",
-      "coverage": [
-        "C59"
-      ],
+      "coverage": ["C59"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -66,9 +64,7 @@
     },
     {
       "id": "V-M41-C59",
-      "coverage": [
-        "C59"
-      ],
+      "coverage": ["C59"],
       "role": "legal_team_member",
       "method": "live-provider-check",
       "prerequisites": [
@@ -89,9 +85,7 @@
     },
     {
       "id": "V-M41-C59",
-      "coverage": [
-        "C59"
-      ],
+      "coverage": ["C59"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -113,9 +107,7 @@
     },
     {
       "id": "V-M41-C59",
-      "coverage": [
-        "C59"
-      ],
+      "coverage": ["C59"],
       "role": "administrator",
       "method": "live-provider-check",
       "prerequisites": [
@@ -136,9 +128,7 @@
     },
     {
       "id": "V-M41-C59",
-      "coverage": [
-        "C59"
-      ],
+      "coverage": ["C59"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -160,9 +150,7 @@
     },
     {
       "id": "V-M41-C59",
-      "coverage": [
-        "C59"
-      ],
+      "coverage": ["C59"],
       "role": "business_user",
       "method": "live-provider-check",
       "prerequisites": [

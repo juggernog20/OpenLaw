@@ -62,9 +62,7 @@
   "scenarios": [
     {
       "id": "V-M40-MCP",
-      "coverage": [
-        "C57"
-      ],
+      "coverage": ["C57"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -85,9 +83,7 @@
     },
     {
       "id": "V-M40-MCP",
-      "coverage": [
-        "C57"
-      ],
+      "coverage": ["C57"],
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -107,9 +103,7 @@
     },
     {
       "id": "V-M41-MCP",
-      "coverage": [
-        "C57"
-      ],
+      "coverage": ["C57"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [

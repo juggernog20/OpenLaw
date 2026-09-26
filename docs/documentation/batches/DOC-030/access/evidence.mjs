@@ -13,29 +13,53 @@ const review = JSON.parse(readFileSync(path.join(here, "technical-review.json"),
 const seat = "DOC-030 independent walkthrough agent (access)";
 const bug =
   "Portal record ignores Branch conditions (DD-028 points 4 and 5). Reproduction: on work2, C-76 uses DOC-030 access Form type 09251012, whose Branch shows DOC-030 access Branch field 09251012 only when DOC-030 access Gate 09251012 is Yes. With the Gate at No and the Branch field empty, Ravi Menon's Portal record lists the Branch field as Not recorded (step G5). The staff record applies the Form evaluator; the Portal record does not.";
-wt.productBugs = [{ module: "contributor", article: "contributor-guide", confirmsAuthorReport: true, bug }];
+wt.productBugs = [
+  { module: "contributor", article: "contributor-guide", confirmsAuthorReport: true, bug },
+];
 writeFileSync(path.join(here, "walkthrough.json"), JSON.stringify(wt, null, 2) + "\n");
 
-const scripts = ["walkthrough.mjs", "lib.mjs", "setup.mjs", "fixtures.json", "walkthrough.json"].map((f) => rel(path.join(here, f)));
+const scripts = [
+  "walkthrough.mjs",
+  "lib.mjs",
+  "setup.mjs",
+  "fixtures.json",
+  "walkthrough.json",
+].map((f) => rel(path.join(here, f)));
 const common = [
   "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
   "The work2 lab is shared with other DOC-030 agents. The walkthrough created only records and accounts named DOC-030 access (fixtures.json) and deleted nothing that another guide uses. Legal and Administrator actions that are fixtures or a second actor's writes used API sessions; each such step says so.",
   "The shared sign-in link budget (3 per address and 30 per client address in 15 minutes) made the script wait out 429 answers before Business User sign-in. Earlier attempts are kept as walkthrough-attempt2.json, run-attempt2.log and run-3.log (run-3.log holds the final portal-sign-in run; run-4.log the final contributor-guide run; run-5.log the final roles-and-access run; run-5-interrupted.log is a roles run cut short by a session restart). The earlier failures were reviewer script errors: a stale team row from a previous run, a message read before it rendered, a task reorder that listed only two tasks, an unchanged expiry date, an Entity list read past its first page, and a History count compared by length on a full page.",
 ];
 const prev = (id) => {
-  const e = JSON.parse(execFileSync("git", ["show", `HEAD:docs/documentation/evidence/${id}.json`], { cwd: root, encoding: "utf8" }));
+  const e = JSON.parse(
+    execFileSync("git", ["show", `HEAD:docs/documentation/evidence/${id}.json`], {
+      cwd: root,
+      encoding: "utf8",
+    }),
+  );
   return { appCommit: e.appCommit, contentSha256: e.contentSha256, verifiedAt: e.verifiedAt };
 };
 const prevAuthor = (id) =>
-  JSON.parse(execFileSync("git", ["show", `HEAD:docs/documentation/evidence/${id}.json`], { cwd: root, encoding: "utf8" })).author;
+  JSON.parse(
+    execFileSync("git", ["show", `HEAD:docs/documentation/evidence/${id}.json`], {
+      cwd: root,
+      encoding: "utf8",
+    }),
+  ).author;
 
 function actualFor(article, roles) {
   const steps = wt.steps.filter((s) => s.article === article && roles.includes(s.role));
-  return `${steps.length} recorded steps passed on ${wt.appCommit.slice(0, 8)}. ` + steps.map((s) => `${s.id}: ${s.actual}`).join(" ");
+  return (
+    `${steps.length} recorded steps passed on ${wt.appCommit.slice(0, 8)}. ` +
+    steps.map((s) => `${s.id}: ${s.actual}`).join(" ")
+  );
 }
 const settings = wt.settingChanges
   .filter((c) => c.what !== "final check")
-  .map((c) => `${c.at} ${c.what}${c.to ? ` -> ${typeof c.to === "string" ? c.to : JSON.stringify(c.to)}` : ""}`)
+  .map(
+    (c) =>
+      `${c.at} ${c.what}${c.to ? ` -> ${typeof c.to === "string" ? c.to : JSON.stringify(c.to)}` : ""}`,
+  )
   .join("; ");
 
 const spec = {
@@ -104,9 +128,15 @@ const spec = {
 for (const [id, s] of Object.entries(spec)) {
   const steps = wt.steps.filter((x) => x.article === id);
   const failed = steps.filter((x) => x.result !== "pass");
-  const hash = execFileSync("sha256sum", [path.join(root, `docs/user-guides/${id}.md`)], { encoding: "utf8" }).split(" ")[0];
+  const hash = execFileSync("sha256sum", [path.join(root, `docs/user-guides/${id}.md`)], {
+    encoding: "utf8",
+  }).split(" ")[0];
   if (!steps.length || failed.length || hash !== wt.articleContentSha256[id]) {
-    console.log(id, "no evidence:", failed.map((f) => f.id).join(", ") || "hash changed or not run");
+    console.log(
+      id,
+      "no evidence:",
+      failed.map((f) => f.id).join(", ") || "hash changed or not run",
+    );
     continue;
   }
   const art = review.articles.find((a) => a.articleId === id);
@@ -122,7 +152,14 @@ for (const [id, s] of Object.entries(spec)) {
     reviewerKind: "agent",
     verifiedAt: wt.runs[id].finishedAt,
     status: "pass",
-    sources: [`docs/user-guides/${id}.md`, rel(path.join(here, "technical-review.json")), ...scripts, ...art.sources.map((x) => x.split(" (")[0].split(" ")[0]).filter((x) => !x.startsWith("node_modules"))],
+    sources: [
+      `docs/user-guides/${id}.md`,
+      rel(path.join(here, "technical-review.json")),
+      ...scripts,
+      ...art.sources
+        .map((x) => x.split(" (")[0].split(" ")[0])
+        .filter((x) => !x.startsWith("node_modules")),
+    ],
     scenarios: s.roles.map(([role, stepRoles]) => ({
       id: s.scenario,
       coverage: s.coverage,
@@ -132,7 +169,11 @@ for (const [id, s] of Object.entries(spec)) {
       expected: s.expected,
       actual: actualFor(id, stepRoles),
       result: "pass",
-      evidence: [rel(path.join(here, "walkthrough.json")), rel(path.join(here, "walkthrough.mjs")), rel(path.join(here, "lib.mjs"))],
+      evidence: [
+        rel(path.join(here, "walkthrough.json")),
+        rel(path.join(here, "walkthrough.mjs")),
+        rel(path.join(here, "lib.mjs")),
+      ],
     })),
     limitations: [...common, ...s.limitations],
     previousEvidence: prev(id),
@@ -140,6 +181,9 @@ for (const [id, s] of Object.entries(spec)) {
     compatibilityReview: null,
   };
   rec.sources = [...new Set(rec.sources)];
-  writeFileSync(path.join(root, `docs/documentation/evidence/${id}.json`), JSON.stringify(rec, null, 2) + "\n");
+  writeFileSync(
+    path.join(root, `docs/documentation/evidence/${id}.json`),
+    JSON.stringify(rec, null, 2) + "\n",
+  );
   console.log(id, "evidence written", steps.length, "steps");
 }

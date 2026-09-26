@@ -34,9 +34,7 @@
   "scenarios": [
     {
       "id": "V-C11",
-      "coverage": [
-        "C11"
-      ],
+      "coverage": ["C11"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [

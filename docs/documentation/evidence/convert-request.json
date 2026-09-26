@@ -59,9 +59,7 @@
   "scenarios": [
     {
       "id": "V-C13",
-      "coverage": [
-        "C13"
-      ],
+      "coverage": ["C13"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -83,9 +81,7 @@
     },
     {
       "id": "V-C13",
-      "coverage": [
-        "C13"
-      ],
+      "coverage": ["C13"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [

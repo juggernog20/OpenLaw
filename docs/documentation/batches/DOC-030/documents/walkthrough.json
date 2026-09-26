@@ -48,10 +48,7 @@
       "sha256": "dac0eda00e4fb895be58fed622322e660f7a47c8a73f4ab9e8a2a6886d7f09b4"
     }
   ],
-  "roles": [
-    "administrator",
-    "legal_team_member"
-  ],
+  "roles": ["administrator", "legal_team_member"],
   "stamp": "09251116",
   "addedDocumentTypes": [
     {

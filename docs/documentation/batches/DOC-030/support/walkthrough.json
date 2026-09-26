@@ -148,11 +148,7 @@
     {
       "section": "K",
       "setting": "MCP",
-      "value": [
-        "Enable MCP: 200",
-        "Legal Users API keys: 200",
-        "Business Users API keys: 200"
-      ],
+      "value": ["Enable MCP: 200", "Legal Users API keys: 200", "Business Users API keys: 200"],
       "at": "2026-09-25T11:38:13.192Z"
     },
     {
@@ -205,33 +201,23 @@
   "runs": [
     {
       "startedAt": "2026-09-25T11:33:42.701Z",
-      "sections": [
-        "all"
-      ]
+      "sections": ["all"]
     },
     {
       "startedAt": "2026-09-25T11:44:15.993Z",
-      "sections": [
-        "R"
-      ]
+      "sections": ["R"]
     },
     {
       "startedAt": "2026-09-25T11:46:47.848Z",
-      "sections": [
-        "R"
-      ]
+      "sections": ["R"]
     },
     {
       "startedAt": "2026-09-25T11:50:08.539Z",
-      "sections": [
-        "R"
-      ]
+      "sections": ["R"]
     },
     {
       "startedAt": "2026-09-25T11:53:15.326Z",
-      "sections": [
-        "R"
-      ]
+      "sections": ["R"]
     }
   ],
   "steps": [
@@ -699,14 +685,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "API key: open API keys from Personal in staff Settings while MCP is off",
@@ -719,14 +699,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "action": "API key: open API keys from Notification settings in the Portal while MCP is off",
@@ -739,14 +713,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "API key: an Administrator turns on Enable MCP and the groups' API keys switches in Organization > MCP",
@@ -759,14 +727,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "API key: Request a key names a Client, Toolsets and a scope, then Cancel request withdraws it",
@@ -779,14 +741,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "API key: the Administrator denies from Your approvals in the bell and from API key requests with a note",
@@ -799,14 +755,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "API key: the Administrator approves from the bell; the requester sees Your key is ready once",
@@ -819,14 +769,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "API key: the key works at the MCP address with x-api-key; a Read key cannot write; Revoke ends it at once",
@@ -839,14 +783,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "API key: an Administrator's own request approves itself",
@@ -859,14 +797,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "action": "API key: Write is absent from the request dialog while the organization is Read-only",
@@ -879,14 +811,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "action": "API key lifetime: the organization sets 1 to 365 days",
@@ -899,14 +825,8 @@
     },
     {
       "section": "K",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "business_user",
       "method": "browser-walkthrough",
       "action": "API key (Portal): request from Notification settings > API keys; the Administrator approves in API key requests; the key shows once",
@@ -947,14 +867,8 @@
     },
     {
       "section": "O",
-      "article": [
-        "troubleshooting",
-        "reference"
-      ],
-      "scenario": [
-        "V-C49",
-        "V-C50"
-      ],
+      "article": ["troubleshooting", "reference"],
+      "scenario": ["V-C49", "V-C50"],
       "role": "operator",
       "method": "browser-walkthrough (operator)",
       "action": "Links in the reviewed troubleshooting and reference bytes resolve in the formal documentation",

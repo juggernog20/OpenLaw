@@ -423,9 +423,7 @@
     {
       "role": "legal_team_member",
       "kind": "replacement fixture",
-      "names": [
-        "DOC-030 knowledge V-C34 LTM 20260925T1036 late"
-      ]
+      "names": ["DOC-030 knowledge V-C34 LTM 20260925T1036 late"]
     },
     {
       "role": "administrator",
@@ -441,9 +439,7 @@
     {
       "role": "administrator",
       "kind": "replacement fixture",
-      "names": [
-        "DOC-030 knowledge V-C34 Admin 20260925T1036 late"
-      ]
+      "names": ["DOC-030 knowledge V-C34 Admin 20260925T1036 late"]
     }
   ],
   "productBugs": [

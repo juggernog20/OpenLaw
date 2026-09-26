@@ -6,9 +6,8 @@
 // token and userinfo assert.
 import http from "node:http";
 
-const { OAuth2Server } = await import(
-  "/repo/node_modules/.pnpm/oauth2-mock-server@9.2.0/node_modules/oauth2-mock-server/dist/index.mjs"
-);
+const { OAuth2Server } =
+  await import("/repo/node_modules/.pnpm/oauth2-mock-server@9.2.0/node_modules/oauth2-mock-server/dist/index.mjs");
 let identity = { sub: "doc030-none", email: "nobody@example.invalid", name: "" };
 const idp = new OAuth2Server();
 await idp.issuer.keys.generate("RS256");

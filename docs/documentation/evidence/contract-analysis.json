@@ -44,9 +44,7 @@
   "scenarios": [
     {
       "id": "V-C21",
-      "coverage": [
-        "C21"
-      ],
+      "coverage": ["C21"],
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
@@ -68,9 +66,7 @@
     },
     {
       "id": "V-C21",
-      "coverage": [
-        "C21"
-      ],
+      "coverage": ["C21"],
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
