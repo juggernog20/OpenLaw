@@ -739,6 +739,29 @@ class DocuSignProvider implements SigningProvider {
     return { providerEnvelopeId };
   }
 
+  async findEnvelope(transactionId: string): Promise<SentEnvelope | null> {
+    const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
+    const body = readObject(
+      await this.callJson(`${url}?transaction_ids=${encodeURIComponent(transactionId)}`, { token }),
+    );
+    if (!body || !Array.isArray(body.envelopes)) {
+      throw new SigningUnavailableError("DocuSign returned no usable transaction lookup.");
+    }
+    if (body.envelopes.length === 0) return null;
+    const match = readObject(body.envelopes[0]);
+    const providerEnvelopeId = match && readString(match, "envelopeId");
+    if (
+      body.envelopes.length !== 1 ||
+      !providerEnvelopeId ||
+      (match &&
+        readString(match, "transactionId") !== undefined &&
+        readString(match, "transactionId") !== transactionId)
+    ) {
+      throw new SigningUnavailableError("DocuSign returned ambiguous transaction evidence.");
+    }
+    return { providerEnvelopeId };
+  }
+
   async voidEnvelope(providerEnvelopeId: string, reason: string): Promise<void> {
     const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
     await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}`, {

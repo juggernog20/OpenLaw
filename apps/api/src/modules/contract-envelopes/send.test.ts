@@ -47,14 +47,18 @@ import {
   eq,
   signingConnectors,
   users,
+  sql,
 } from "@openlaw/db";
 import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
+import { recoverEnvelope } from "../../lib/signing/recovery.js";
 import { checkEnvelopeStatus } from "../../lib/signing/status-check.js";
 import { runReconciliationSweep } from "../../pipeline/reconciliation.js";
 import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 import { provisionUser } from "../../auth/instance.js";
 import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
 import {
+  type SendEnvelopeInput,
+  SigningConfigError,
   SigningRefusedError,
   EnvelopeNotFoundError,
   EnvelopeAccessError,
@@ -1222,6 +1226,303 @@ describe("preparation refusals and reservations", () => {
     expect(await entriesOn(contract.id)).toEqual([]);
   });
 
+  const recover = (id: string) =>
+    recoverEnvelope(
+      {
+        db: harness.db,
+        notifier: harness.notifier,
+        resolveSigningProvider: harness.resolveSigningProvider,
+        log: { info() {}, warn() {}, error() {} },
+      },
+      harness.pipeline,
+      id,
+    );
+  const due = (id: string) =>
+    harness.db
+      .update(contractEnvelopes)
+      .set({ nextRecoveryAt: new Date(0) })
+      .where(eq(contractEnvelopes.id, id));
+
+  it.each(["draft", "sent"] as const)(
+    "recovers a lost %s response once across workers and preserves snapshots",
+    async (status) => {
+      const { contract, payload, prepare } = await ready();
+      const key = crypto.randomUUID();
+      const method = status === "draft" ? "prepareEnvelope" : "sendEnvelope";
+      const original = provider()[method].bind(provider());
+      const lost = vi
+        .spyOn(provider(), method)
+        .mockImplementationOnce(async (input: SendEnvelopeInput) => {
+          await original({ ...input, transactionId: input.transactionId! });
+          throw new SigningTimeoutError("Lost answer");
+        });
+      const request = () =>
+        status === "draft" ? prepare() : sendKeyed(contract.number, payload.documentVersionId, key);
+      try {
+        expect((await request()).statusCode).toBe(502);
+      } finally {
+        lost.mockRestore();
+      }
+      const before = await storedRound(contract.id);
+      const signers = await harness.db
+        .select()
+        .from(contractEnvelopeSigners)
+        .where(eq(contractEnvelopeSigners.envelopeId, before.id));
+      const count = provider().sentEnvelopeIds().length;
+      const lookup = vi.spyOn(provider(), "findEnvelope");
+      await recover(before.id);
+      expect(lookup).not.toHaveBeenCalled();
+      await due(before.id);
+      await Promise.all([recover(before.id), recover(before.id), recover(before.id)]);
+      expect(lookup).toHaveBeenCalledTimes(1);
+      lookup.mockRestore();
+      const after = await storedRound(contract.id);
+      expect(after).toMatchObject({
+        id: before.id,
+        status,
+        preparationState: "created",
+        recoveryAttempts: 1,
+        subject: before.subject,
+        documentVersionId: before.documentVersionId,
+        requestFingerprint: before.requestFingerprint,
+        providerTransactionId: before.providerTransactionId,
+        idempotencyKey: before.idempotencyKey,
+      });
+      expect(
+        await harness.db
+          .select()
+          .from(contractEnvelopeSigners)
+          .where(eq(contractEnvelopeSigners.envelopeId, before.id)),
+      ).toEqual(signers);
+      expect((await request()).json().envelopes[0].id).toBe(before.id);
+      expect(provider().sentEnvelopeIds()).toHaveLength(count);
+    },
+  );
+
+  async function interruptedDraft() {
+    const readyRound = await ready();
+    const original = provider().prepareEnvelope.bind(provider());
+    const lost = vi.spyOn(provider(), "prepareEnvelope").mockImplementationOnce(async (input) => {
+      await original(input);
+      throw new SigningTimeoutError("Lost response");
+    });
+    try {
+      expect((await readyRound.prepare()).statusCode).toBe(502);
+    } finally {
+      lost.mockRestore();
+    }
+    const row = await storedRound(readyRound.contract.id);
+    await due(row.id);
+    return { ...readyRound, row };
+  }
+
+  it("retains uncertainty through empty lookup, outage and credential errors with durable backoff", async () => {
+    const { row, prepare } = await interruptedDraft();
+    const lookup = vi
+      .spyOn(provider(), "findEnvelope")
+      .mockResolvedValueOnce(null)
+      .mockRejectedValueOnce(new SigningUnavailableError("secret response must not be logged"))
+      .mockRejectedValueOnce(new SigningConfigError("account unavailable"));
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await due(row.id);
+      await recover(row.id);
+      const held = await storedRound(row.contractId);
+      expect(held).toMatchObject({
+        status: "preparing",
+        recoveryAttempts: attempt,
+        recoveryStopped: null,
+      });
+      expect(held.nextRecoveryAt!.getTime()).toBeGreaterThan(
+        Date.now() + (15 * 2 ** (attempt - 1) - 1) * 60_000,
+      );
+      await recover(row.id);
+      expect(lookup).toHaveBeenCalledTimes(attempt);
+      expect((await prepare({ idempotencyKey: crypto.randomUUID() })).statusCode).toBe(409);
+    }
+    lookup.mockRestore();
+    await due(row.id);
+    await recover(row.id);
+    expect(await storedRound(row.contractId)).toMatchObject({
+      status: "draft",
+      recoveryAttempts: 4,
+    });
+  });
+
+  it("logs operation identity without provider errors or Signer details", async () => {
+    const { row } = await interruptedDraft();
+    const failure = vi
+      .spyOn(provider(), "findEnvelope")
+      .mockRejectedValueOnce(new Error("credential-and-launch-url-sentinel"));
+    const info = vi.fn();
+    try {
+      await recoverEnvelope(
+        {
+          db: harness.db,
+          notifier: harness.notifier,
+          resolveSigningProvider: harness.resolveSigningProvider,
+          log: { info, warn() {}, error() {} },
+        },
+        harness.pipeline,
+        row.id,
+      );
+    } finally {
+      failure.mockRestore();
+    }
+    expect(info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        envelopeId: row.id,
+        providerTransactionId: row.providerTransactionId,
+        providerAccountId: row.providerAccountId,
+        outcome: "unavailable",
+        attempt: 1,
+      }),
+      "signing creation recovery",
+    );
+    const output = JSON.stringify(info.mock.calls);
+    expect(output).not.toContain("credential-and-launch-url-sentinel");
+    for (const signer of SIGNERS) {
+      expect(output).not.toContain(signer.name);
+      expect(output).not.toContain(signer.email);
+    }
+  });
+
+  it("does not look up an operation in a different account or environment", async () => {
+    const { row } = await interruptedDraft();
+    const lookup = vi.spyOn(provider(), "findEnvelope");
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ providerAccountId: "different-account" })
+      .where(eq(contractEnvelopes.id, row.id));
+    await recover(row.id);
+    await harness.db
+      .update(contractEnvelopes)
+      .set({
+        providerAccountId: row.providerAccountId,
+        providerEnvironment: "production",
+        nextRecoveryAt: new Date(0),
+      })
+      .where(eq(contractEnvelopes.id, row.id));
+    await recover(row.id);
+    expect(lookup).not.toHaveBeenCalled();
+    lookup.mockRestore();
+    expect(await storedRound(row.contractId)).toMatchObject({
+      status: "preparing",
+      providerEnvelopeId: null,
+    });
+  });
+
+  it("keeps expired and exhausted operations reserved for an operator, including matching retries", async () => {
+    const { row, prepare, payload, contract } = await interruptedDraft();
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ createdAt: new Date(Date.now() - 8 * 86_400_000) })
+      .where(eq(contractEnvelopes.id, row.id));
+    const lookup = vi.spyOn(provider(), "findEnvelope");
+    await recover(row.id);
+    expect(lookup).not.toHaveBeenCalled();
+    expect(await storedRound(row.contractId)).toMatchObject({
+      recoveryStopped: "lookup_expired",
+      nextRecoveryAt: null,
+      status: "preparing",
+    });
+    expect((await prepare()).json().envelopes[0].id).toBe(row.id);
+    expect((await prepare({ idempotencyKey: crypto.randomUUID() })).statusCode).toBe(409);
+    expect((await send(as(MEMBER), contract.number, payload.documentVersionId)).statusCode).toBe(
+      409,
+    );
+    // An operator supplies a provider-verified id. Its status remains readable after seven days.
+    const found = await provider().findEnvelope(row.providerTransactionId!);
+    await harness.db
+      .update(contractEnvelopes)
+      .set({
+        providerEnvelopeId: found!.providerEnvelopeId,
+        recoveryStopped: null,
+        nextRecoveryAt: new Date(0),
+      })
+      .where(eq(contractEnvelopes.id, row.id));
+    lookup.mockClear();
+    await recover(row.id);
+    expect(lookup).not.toHaveBeenCalled();
+    lookup.mockRestore();
+    expect(await storedRound(row.contractId)).toMatchObject({ status: "draft" });
+    const second = await interruptedDraft();
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ recoveryAttempts: 31 })
+      .where(eq(contractEnvelopes.id, second.row.id));
+    const empty = vi.spyOn(provider(), "findEnvelope").mockResolvedValue(null);
+    await recover(second.row.id);
+    await due(second.row.id);
+    await recover(second.row.id);
+    expect(empty).toHaveBeenCalledTimes(1);
+    empty.mockRestore();
+    expect(await storedRound(second.row.contractId)).toMatchObject({
+      recoveryStopped: "attempts_exhausted",
+      recoveryAttempts: 32,
+      status: "preparing",
+    });
+  });
+
+  it.each(["draft", "sent"] as const)(
+    "recovers the pending %s left at a process stop boundary before local finalization",
+    async (status) => {
+      const { row } = await interruptedDraft();
+      const found = await provider().findEnvelope(row.providerTransactionId!);
+      if (status === "sent") provider().sendDraft(found!.providerEnvelopeId);
+      // The durable image left when the process exits after the provider accepts,
+      // before either a success or an uncertainty write reaches PostgreSQL.
+      await harness.db
+        .update(contractEnvelopes)
+        .set({ preparationState: "pending" })
+        .where(eq(contractEnvelopes.id, row.id));
+      await runReconciliationSweep(
+        {
+          db: harness.db,
+          notifier: harness.notifier,
+          resolveSigningProvider: harness.resolveSigningProvider,
+          log: { info() {}, warn() {}, error() {} },
+        },
+        harness.pipeline,
+      );
+      expect(await storedRound(row.contractId)).toMatchObject({
+        status,
+        providerEnvelopeId: found!.providerEnvelopeId,
+      });
+    },
+  );
+
+  it("recovers a provider draft after PostgreSQL rejects the local finalization", async () => {
+    const { contract, prepare } = await ready();
+    await harness.db.execute(
+      sql`CREATE FUNCTION fail_draft_finalization() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status = 'draft' THEN RAISE EXCEPTION 'simulated commit failure'; END IF; RETURN NEW; END $$`,
+    );
+    await harness.db.execute(
+      sql`CREATE TRIGGER fail_draft_finalization BEFORE UPDATE ON contract_envelopes FOR EACH ROW EXECUTE FUNCTION fail_draft_finalization()`,
+    );
+    try {
+      expect((await prepare()).statusCode).toBe(500);
+    } finally {
+      await harness.db.execute(sql`DROP TRIGGER fail_draft_finalization ON contract_envelopes`);
+      await harness.db.execute(sql`DROP FUNCTION fail_draft_finalization()`);
+    }
+    const row = await storedRound(contract.id);
+    expect(row).toMatchObject({
+      status: "preparing",
+      preparationState: "pending",
+      providerEnvelopeId: null,
+    });
+    const count = provider().sentEnvelopeIds().length;
+    await due(row.id);
+    await recover(row.id);
+    expect(await storedRound(contract.id)).toMatchObject({
+      id: row.id,
+      status: "draft",
+      subject: row.subject,
+      documentVersionId: row.documentVersionId,
+    });
+    expect(provider().sentEnvelopeIds()).toHaveLength(count);
+  });
+
   it("refuses to void a draft, which has not been sent", async () => {
     const { contract, prepare } = await ready();
     expect((await prepare()).statusCode).toBe(201);
@@ -1439,6 +1740,42 @@ describe("preparation refusals and reservations", () => {
     const [after] = await harness.db.select().from(contracts).where(eq(contracts.id, contract.id));
     expect(after!.statusId).toBe(before!.statusId);
   });
+
+  it.each(["sent", "voided"] as const)(
+    "settles an unconfirmed compensating Void from provider evidence: %s",
+    async (status) => {
+      const { contract, payload } = await ready();
+      const failure = vi
+        .spyOn(harness.notifier, "statusChanged")
+        .mockRejectedValueOnce(new Error("commit failed"));
+      const originalVoid = provider().voidEnvelope.bind(provider());
+      const voiding = vi
+        .spyOn(provider(), "voidEnvelope")
+        .mockImplementationOnce(async (...args) => {
+          if (status === "voided") await originalVoid(...args);
+          throw new SigningTimeoutError("Lost Void response");
+        });
+      try {
+        expect(
+          (await sendKeyed(contract.number, payload.documentVersionId, "compensation")).statusCode,
+        ).toBe(500);
+      } finally {
+        failure.mockRestore();
+        voiding.mockRestore();
+      }
+      const row = await storedRound(contract.id);
+      expect(row.providerEnvelopeId).toBeTruthy();
+      await due(row.id);
+      const lookup = vi.spyOn(provider(), "findEnvelope");
+      await recover(row.id);
+      expect(lookup).not.toHaveBeenCalled();
+      lookup.mockRestore();
+      expect(await storedRound(contract.id)).toMatchObject({
+        status,
+        providerEnvelopeId: row.providerEnvelopeId,
+      });
+    },
+  );
 
   it("records a confirmed refusal without keeping the live reservation", async () => {
     const { prepare } = await ready();

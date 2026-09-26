@@ -255,6 +255,10 @@ export interface SigningProvider {
    */
   prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope>;
 
+  /** Looks up the original creation in the current account. An empty result is
+   * inconclusive, never evidence that a replacement may be created. */
+  findEnvelope(transactionId: string): Promise<SentEnvelope | null>;
+
   /** Issues a fresh browser editing session for an existing draft. */
   launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string>;
 

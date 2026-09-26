@@ -28657,6 +28657,10 @@ export interface operations {
               sentAt: string | null;
               confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;
@@ -28763,6 +28767,10 @@ export interface operations {
               sentAt: string | null;
               confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;
@@ -28896,6 +28904,10 @@ export interface operations {
               sentAt: string | null;
               confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;
@@ -29017,6 +29029,10 @@ export interface operations {
               sentAt: string | null;
               confirmationPending: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;

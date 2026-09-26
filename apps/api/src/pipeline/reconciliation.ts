@@ -84,6 +84,7 @@ import {
   type Db,
   type SigningProviderKey,
 } from "@openlaw/db";
+import { recoverEnvelope, recoveryDue } from "../lib/signing/recovery.js";
 import { requestExecutedCopy } from "../lib/signing/completion.js";
 import {
   checkEnvelopeStatus,
@@ -268,6 +269,7 @@ export async function runReconciliationSweep(
   // Unreachable answers back to back, which is what an outage looks
   // like from here. Reset by any answer at all.
   let unreachable = 0;
+  let recoveries = 0;
 
   for (;;) {
     if (options.signal?.aborted) {
@@ -287,9 +289,14 @@ export async function runReconciliationSweep(
           // The only status anything can move out of. An ending is an
           // ending (see `transitions.ts`), so a finished envelope has
           // nothing left for this sweep to learn.
-          inArray(contractEnvelopes.status, ["draft", "sent"]),
-          reconciliationDue(),
-          pollableDraft(),
+          or(
+            recoveryDue(),
+            and(
+              inArray(contractEnvelopes.status, ["draft", "sent"]),
+              reconciliationDue(),
+              pollableDraft(),
+            ),
+          ),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
         ),
       )
@@ -323,6 +330,20 @@ export async function runReconciliationSweep(
     }
 
     for (const envelope of page) {
+      if (envelope.status === "preparing") {
+        if (options.signal?.aborted) {
+          summary.stopped = true;
+          return summary;
+        }
+        if (recoveries >= RECONCILIATION_REFUSAL_LIMIT) continue;
+        recoveries += 1;
+        await recoverEnvelope(
+          { ...deps, resolveSigningProvider: async () => signing },
+          jobs,
+          envelope.id,
+        );
+        continue;
+      }
       if (!envelope.providerEnvelopeId) continue;
       if (options.signal?.aborted) {
         summary.stopped = true;

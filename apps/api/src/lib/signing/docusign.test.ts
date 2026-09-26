@@ -375,6 +375,7 @@ describe("the envelope payload", () => {
 
 /** What the stub is holding, in DocuSign's own vocabulary. */
 interface StubEnvelope {
+  transactionId?: string;
   status: "created" | "sent" | "completed" | "declined" | "voided";
   folders?: { type: string }[];
   sentDateTime?: string;
@@ -393,6 +394,7 @@ interface Stub {
 
 /** Ways a test can make the stub misbehave. */
 interface StubOptions {
+  lookupResult?: unknown;
   /** What userinfo names as the account's base_uri. Default: the stub itself. */
   baseUri?: string;
   tokenForbidden?: boolean;
@@ -481,8 +483,24 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
       }
 
       const base = `/restapi/v2.1/accounts/${ACCOUNT_ID}/envelopes`;
+      if (path === base && request.method === "GET") {
+        if (options.lookupResult !== undefined) {
+          sendJson(response, 200, options.lookupResult);
+          return;
+        }
+        const transactionId = new URL(request.url!, "http://stub").searchParams.get(
+          "transaction_ids",
+        );
+        sendJson(response, 200, {
+          envelopes: [...envelopes]
+            .filter(([, envelope]) => envelope.transactionId === transactionId)
+            .map(([envelopeId, envelope]) => ({ envelopeId, ...envelope })),
+        });
+        return;
+      }
       if (path === base && request.method === "POST") {
         const definition = JSON.parse((await readBody(request)).toString("utf8")) as {
+          transactionId?: string;
           recipients?: { signers?: unknown[] };
         };
         if (!definition.recipients?.signers?.length) {
@@ -492,6 +510,7 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
         minted += 1;
         const id = `stub-envelope-${String(minted).padStart(4, "0")}`;
         envelopes.set(id, {
+          ...(definition.transactionId ? { transactionId: definition.transactionId } : {}),
           status: (definition as { status?: string }).status === "created" ? "created" : "sent",
         });
         sendJson(response, 201, { envelopeId: id, status: "sent" });
@@ -921,6 +940,37 @@ describe("resume and native discard through DocuSign HTTP", () => {
       await expect(
         provider.launchEnvelope("saved", "https://openlaw.example/return"),
       ).rejects.toBeInstanceOf(errorClass);
+    } finally {
+      await stub.close();
+    }
+  });
+});
+
+describe("transaction lookup evidence", () => {
+  it.each([
+    [
+      "mismatched identity",
+      { envelopes: [{ envelopeId: "other", transactionId: "other-operation" }] },
+    ],
+    ["multiple matches", { envelopes: [{ envelopeId: "one" }, { envelopeId: "two" }] }],
+    ["missing id", { envelopes: [{}] }],
+    ["missing result", {}],
+  ])("rejects %s without treating it as noncreation", async (_, lookupResult) => {
+    const stub = await startStub({ lookupResult });
+    try {
+      const provider = createDocuSignProvider(
+        {
+          environment: "demo",
+          integrationKey: INTEGRATION_KEY,
+          apiUserId: API_USER_ID,
+          privateKey: KEYS.privateKey,
+          webhookSecret: WEBHOOK_SECRET,
+        },
+        { hosts: { auth: stub.origin, api: stub.origin } },
+      );
+      await expect(provider.findEnvelope("original-operation")).rejects.toBeInstanceOf(
+        SigningUnavailableError,
+      );
     } finally {
       await stub.close();
     }

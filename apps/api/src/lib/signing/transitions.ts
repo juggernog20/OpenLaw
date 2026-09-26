@@ -72,6 +72,8 @@ export interface TransitionedEnvelope {
  */
 export interface EnvelopeStatusChange {
   provider: SigningProviderKey;
+  /** Claim fence for recovery of an interrupted creation. */
+  recoveryAttempt?: number;
   providerEnvelopeId: string;
   status: EnvelopeStatus;
   /** The signer's or the voider's own words. Kept only for a decline
@@ -186,6 +188,7 @@ export async function applyEnvelopeStatus(
         status: contractEnvelopes.status,
         reason: contractEnvelopes.reason,
         completedAt: contractEnvelopes.completedAt,
+        recoveryAttempts: contractEnvelopes.recoveryAttempts,
       })
       .from(contractEnvelopes)
       .where(
@@ -205,9 +208,26 @@ export async function applyEnvelopeStatus(
       reason: row.reason,
       completedAt: row.completedAt,
     };
+    if (row.status === "preparing") {
+      if (change.recoveryAttempt === undefined || row.recoveryAttempts !== change.recoveryAttempt)
+        return { outcome: "unchanged", envelope: held };
+      if (change.status === "draft") {
+        await tx
+          .update(contractEnvelopes)
+          .set({
+            status: "draft",
+            preparationState: "created",
+            recoveryStopped: null,
+            nextRecoveryAt: null,
+            nextReconcileAt: new Date(Date.now() + 15 * 60_000),
+          })
+          .where(eq(contractEnvelopes.id, row.id));
+        return { outcome: "applied", envelope: { ...held, status: "draft" } };
+      }
+    }
     // A confirmed draft can become sent; terminal outcomes never regress.
     if (
-      !["sent", "draft"].includes(row.status) ||
+      !["preparing", "sent", "draft"].includes(row.status) ||
       TERMINAL_STATUSES.has(row.status) ||
       row.status === change.status
     ) {
@@ -215,7 +235,7 @@ export async function applyEnvelopeStatus(
     }
 
     // A deletion observation must never turn a sent round into an unsent one.
-    if (change.status === "discarded" && row.status !== "draft")
+    if (change.status === "discarded" && row.status === "sent")
       return { outcome: "unchanged", envelope: held };
 
     const action = TRANSITION_ACTION[change.status];
@@ -233,7 +253,15 @@ export async function applyEnvelopeStatus(
         reason,
         completedAt,
         confirmationPending: false,
-        ...(row.status === "draft" && change.status !== "discarded"
+        ...(row.status === "preparing"
+          ? {
+              preparationState: "created" as const,
+              recoveryStopped: null,
+              nextRecoveryAt: null,
+              nextReconcileAt: new Date(Date.now() + 15 * 60_000),
+            }
+          : {}),
+        ...((row.status === "draft" || row.status === "preparing") && change.status !== "discarded"
           ? { sentAt: change.sentAt ?? new Date() }
           : {}),
       })

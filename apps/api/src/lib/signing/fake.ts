@@ -161,6 +161,12 @@ export class FakeSigningProvider implements SigningProvider {
     return result;
   }
 
+  async findEnvelope(transactionId: string): Promise<SentEnvelope | null> {
+    this.requireReachable();
+    const providerEnvelopeId = this.preparations.get(transactionId);
+    return providerEnvelopeId ? { providerEnvelopeId } : null;
+  }
+
   async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope> {
     this.requireReachable();
     if (input.signers.length === 0) {
@@ -179,6 +185,7 @@ export class FakeSigningProvider implements SigningProvider {
       subject: input.subject,
       source,
     });
+    if (input.transactionId) this.preparations.set(input.transactionId, id);
     return { providerEnvelopeId: id };
   }
 

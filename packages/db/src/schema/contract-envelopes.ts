@@ -129,6 +129,14 @@ export const contractEnvelopes = pgTable(
     preparationState: text("preparation_state", {
       enum: ["pending", "uncertain", "created", "failed"],
     }),
+    /** Durable recovery allowance. No request retry resets these fields. */
+    recoveryAttempts: integer("recovery_attempts").notNull().default(0),
+    nextRecoveryAt: timestamp("next_recovery_at", { withTimezone: true }).default(
+      sql`now() + interval '15 minutes'`,
+    ),
+    recoveryStopped: text("recovery_stopped", {
+      enum: ["lookup_expired", "attempts_exhausted", "identity_missing"],
+    }),
     /** Next permitted provider status check, shared by all worker replicas. */
     confirmationPending: boolean("confirmation_pending").notNull().default(false),
     launchClaimExpiresAt: timestamp("launch_claim_expires_at", { withTimezone: true }),
@@ -216,6 +224,11 @@ export const contractEnvelopes = pgTable(
      * transaction id. */
     uniqueIndex("contract_envelopes_idempotency_idx").on(table.contractId, table.idempotencyKey),
     uniqueIndex("contract_envelopes_transaction_idx").on(table.providerTransactionId),
+    check("contract_envelopes_recovery_attempts_check", sql`recovery_attempts >= 0`),
+    check(
+      "contract_envelopes_recovery_stopped_check",
+      sql`recovery_stopped is null or recovery_stopped in ('lookup_expired', 'attempts_exhausted', 'identity_missing')`,
+    ),
     check(
       "contract_envelopes_creation_check",
       sql`preparation_state is null or preparation_state in ('pending', 'uncertain', 'created', 'failed')`,
