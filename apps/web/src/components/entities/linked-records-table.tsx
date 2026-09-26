@@ -6,7 +6,7 @@
  * the rows with the main list's column catalogue.
  */
 import { useEffect, useRef, useState } from "react";
-import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
+import { defineMessage, FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { CONTRACT_SORT_KEYS, MATTER_SORT_KEYS } from "@openlaw/shared";
 import { api } from "../../lib/api";
 import { builtInLayout, type Layout, type TableCatalogue } from "../../lib/list-views";
@@ -58,7 +58,7 @@ export function EntityContractsTable({ entityId }: { entityId: string }) {
       entityId={entityId}
       catalogue={CONTRACTS_CATALOGUE}
       read={readContracts}
-      title={{ id: "entities.linked.contracts", defaultMessage: "Contracts" }}
+      title={defineMessage({ id: "entities.linked.contracts", defaultMessage: "Contracts" })}
     />
   );
 }
@@ -68,7 +68,7 @@ export function EntityMattersTable({ entityId }: { entityId: string }) {
       entityId={entityId}
       catalogue={MATTERS_CATALOGUE}
       read={readMatters}
-      title={{ id: "entities.linked.matters", defaultMessage: "Matters" }}
+      title={defineMessage({ id: "entities.linked.matters", defaultMessage: "Matters" })}
     />
   );
 }

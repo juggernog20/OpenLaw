@@ -6956,9 +6956,6 @@
   "knowledge.type.manage": {
     "defaultMessage": "Manage types…"
   },
-  "linkedRecords.restricted": {
-    "defaultMessage": "Restricted record"
-  },
   "listEditor.archivedPill": {
     "defaultMessage": "Archived"
   },
