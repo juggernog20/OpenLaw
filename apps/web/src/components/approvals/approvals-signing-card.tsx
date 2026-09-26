@@ -3,7 +3,7 @@
 /** Approval and signature sections for the contract record. */
 
 import { AutoResizeTextarea } from "../auto-resize-textarea";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecord } from "../record-context";
 import {
   FormattedMessage,
@@ -500,6 +500,11 @@ export function SignaturesCard({
   const intl = useIntl();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [sending, setSending] = useState(false);
+  const sendButton = useRef<HTMLButtonElement>(null);
+  const signaturesHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    signaturesHeading.current?.focus();
+  }, []);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const launchFailed = intl.formatMessage({
     id: "signing.launchFailed",
@@ -551,14 +556,24 @@ export function SignaturesCard({
       className="w-full overflow-hidden rounded-card border border-border-default bg-raised"
     >
       <header className="flex h-section-header items-center justify-between gap-2 rounded-t-card border-b border-border-default bg-section-header px-4">
-        <h2 id="contract-signatures-heading" className="text-base font-semibold">
+        <h2
+          ref={signaturesHeading}
+          tabIndex={-1}
+          id="contract-signatures-heading"
+          className="text-base font-semibold"
+        >
           <FormattedMessage id="signing.section" defaultMessage="Signatures" />
         </h2>
         {!frozen && (
           <div className="flex shrink-0 items-center gap-2">
             <StatusNote status={status} />
             {canSend && (
-              <Button variant="secondary" disabled={busy} onClick={() => setSending(true)}>
+              <Button
+                ref={sendButton}
+                variant="secondary"
+                disabled={busy}
+                onClick={() => setSending(true)}
+              >
                 <Send size={16} aria-hidden="true" />
                 {signing.preparationEnabled ? (
                   <FormattedMessage id="signing.prepare" defaultMessage="Prepare Envelope" />
@@ -782,6 +797,7 @@ export function SignaturesCard({
           people={users.filter((person) => !person.archived)}
           busy={busy}
           onClose={() => setSending(false)}
+          onReturnFocus={() => (sendButton.current ?? signaturesHeading.current)?.focus()}
           onConfirm={async (input) => {
             const refusal = await runSend(
               () =>
@@ -1884,6 +1900,7 @@ function SendEnvelopeDialog({
   people,
   busy,
   onClose,
+  onReturnFocus,
   onConfirm,
 }: Readonly<{
   preparing: boolean;
@@ -1894,6 +1911,7 @@ function SendEnvelopeDialog({
   people: readonly UserOption[];
   busy: boolean;
   onClose: () => void;
+  onReturnFocus: () => void;
   /** Answers with the refusal to show, or `null` when the send
    * landed. */
   onConfirm: (input: {
@@ -1980,7 +1998,13 @@ function SendEnvelopeDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent aria-describedby={undefined}>
+      <DialogContent
+        aria-describedby={undefined}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          onReturnFocus();
+        }}
+      >
         <DialogTitle>
           {preparing ? (
             <FormattedMessage id="signing.prepareTitle" defaultMessage="Prepare Envelope" />

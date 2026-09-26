@@ -36,7 +36,7 @@
  * a pooled connection parked on a stranger's latency. Then:
  *
  * - A preparation that the provider accepts becomes `draft`, with the
- *   provider's id, and records no Activity and moves no Stage. One the
+ *   provider's id, records confirmation Activity and moves no Stage. One the
  *   provider refuses becomes `preparation_failed`.
  * - A direct send that the provider accepts becomes `sent` in one
  *   transaction with its `envelope.sent` entry and the Stage move. One
@@ -80,7 +80,7 @@
  * owning contract at the standing record tier, inside the same
  * transaction as the write — so a failed log write rolls the send back
  * rather than leaving an unrecorded envelope. A preparation is not a
- * send and is not narrated.
+ * send. Reservation, confirmation and launch have separate Activity.
  *
  * **The status comes back on its own** (M15/3). The provider's Connect
  * webhook reports what happened to a sent envelope, through the one
@@ -94,8 +94,8 @@
  * so the preparer is the "sender" here. The void tells the **provider
  * first** and then applies the `voided` transition through that same
  * funnel, with the voider's reason stored and narrated. Only a `sent`
- * envelope is voided here; a draft is not out, and discarding one is a
- * later slice.
+ * envelope is voided here; a draft uses native Discard and provider
+ * confirmation.
  *
  * **Nothing here moves a sent envelope by hand.** Every status change
  * after the send goes through `applyEnvelopeStatus`, which owns its own
@@ -806,7 +806,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listContractEnvelopes",
         summary:
-          "One contract's signing envelopes, newest send first " +
+          "One contract's signing envelopes, newest preparation first with historical Sent ordering " +
           "(CTR-013) — the adapter that carried each one, where it " +
           "stands, who was asked to sign it, what went out, and when. " +
           "A declined or voided envelope carries the reason it ended " +
@@ -866,8 +866,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         schema: {
           operationId: preparing ? "prepareContractEnvelope" : "sendContractEnvelope",
           summary: preparing
-            ? "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage."
-            : "Send a version of the contract's primary document out for " +
+            ? "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage."
+            : "Legacy explicit direct-send API. Send a version of the contract's primary document out for " +
               "signature (CTR-013). The version must be a round of that " +
               "document's own chain — loose attachments are not sendable in " +
               "v1, because the executed copy comes back to the chain the " +

@@ -1,136 +1,574 @@
 {
   "articleId": "configure-signing",
-  "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-live",
-  "walkthroughReviewer": "DOC-029 independent live-provider walkthrough agent",
+  "contentSha256": "b8c7c93467714b09f3129eeb83379d1a823f16947f7989ee7885fe081927938e",
+  "appCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+  "buildId": "No build was exercised for this revision. The builds named in previousEvidence observed the previous guide hash.",
+  "environment": "None for this revision. The live lab named in previousEvidence stands untouched pending owner credential entry.",
+  "author": "#1178 implementation agent; operator-link revision by the #1178 review seat",
+  "technicalReviewer": "#1178 review seat, source inspection of the two link targets only",
+  "walkthroughReviewer": "None for this revision. The independent walkthroughs in previousEvidence observed the previous guide hash and are not reassigned to these bytes.",
   "reviewerKind": "agent",
-  "author": "DOC-022 author; corrections by DOC-029 live-provider author agent",
-  "technicalReviewer": "DOC-029 live-provider author agent",
-  "verifiedAt": "2026-09-16T17:30:00Z",
-  "status": "pass",
-  "sources": [
-    "docs/user-guides/configure-signing.md",
-    "docs/documentation/batches/DOC-029/live-provider/technical-review.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt1.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt2.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt3.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
-    "docs/user-guides/electronic-signing.md"
-  ],
+  "verifiedAt": null,
+  "reviewedAt": "2026-09-26T11:30:40.628735+00:00",
+  "status": "blocked",
+  "revision": {
+    "reason": "Late CodeRabbit finding 4111225539: the two operator-procedure links pointed at the feature branch, which is deleted after merge. Only those link targets changed, to HTTPS links pinned to commit 4cdb988cbfded942fcc6282349c364ebd3088785 with the same anchors. Inspect with: git diff 4cdb988cbfded942fcc6282349c364ebd3088785 -- docs/user-guides/configure-signing.md",
+    "previousContentSha256": "3b0a86e23593c41c631ff7e38aa6e586a3e6ef47332b798010fbf0c4af9ed572",
+    "previousRecord": "previousEvidence",
+    "liveProof": "None. This revision records the edited guide bytes; it is not a new walkthrough, lab run or live-provider check."
+  },
+  "sources": ["docs/user-guides/configure-signing.md", "docs/DEPLOYMENT.md"],
   "scenarios": [
     {
       "id": "V-C42",
       "coverage": ["C42"],
       "role": "administrator",
-      "method": "browser-walkthrough",
+      "method": "live-provider-check",
       "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
-        "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
+        "Committed disposable DOC-029-pattern lab with real provider hosts and explicit preparation opt-in.",
+        "Owner enters developer credentials directly and leaves the secret fields before automation resumes. Use a non-administrator integration user and two controlled Signer inboxes.",
+        "Two-page fictional primary Document Version; separate provider account-administration browser context."
       ],
-      "expected": "Settings shows the saved connector and its Webhook refusals without a save; Test connection names the intended account; turning the connector off stops sends and tests; an Envelope sent from the Contract reaches the provider account; after the Signer completes it, Polling brings back Signed, files the executed copy on the original Document chain, and moves a Contract in the Signature Stage to the first live Active Status. Invalid Webhook callback addresses are refused and the stored connector does not change.",
-      "actual": "S01 to S08 passed on 3fa407e3 (walkthrough-c42.json round 3). Settings > Organization > Integrations opened /settings/integrations/e-signature with the DocuSign card collapsed. The card showed Demo, Polling with its hint, filled identifiers, a blank RSA key input, no Public callback URL, HMAC or Webhook URL field, the Connected chip and the switch on. Choosing Webhook showed Public callback URL and a required Connect HMAC secret; Save with the secret blank was refused by the browser with no request. Webhook saves with an http:// address, an HTTPS address with a query, and an address with user:password in it each answered 400 and the pane showed only \"One or more request fields are invalid.\", as the article warns; the stored connector did not change (Polling, no HMAC secret, updatedAt unchanged). Turning Send for signature from records off showed Turned off; Test connection stayed available and showed \"No e-signature connector is configured. Save the credentials first.\"; C-38 offered no Send for signature. Turning it on restored both, and a retest showed \"Connected to OpenLaw.\". The Send for signature dialog offered \"Version 1 — doc029-live-signing.docx (current)\", and Cancel sent nothing. A Legal Team Member was sent to /settings/profile, got 403 from the connector API, and saw Send for signature on her Contract. The send, void and completion rounds (S09, S09a and S10 in walkthrough-c42-send.json and its attempts) used the same browser controls: Four Envelopes were sent from C-38 by the Administrator with fictional Signer name \"DOC-029 Test Signer\". Sends 1 to 3 (subjects \"DOC-029 live signing round trip C-38\", \"... (resend)\", \"... (third send)\") answered 201 and showed an Out for signature row, but no signing email reached the Signer (see the environment limitation). Each of these three was voided through row actions > Void envelope with a Reason. Each void answered 200; the row then read Voided with its reason, Send for signature was offered again, and the Contract stayed Out for signature, not ended or archived. Send 4 (subject \"DOC-029 live signing round trip C-38 (fourth send)\") went at 17:09:33Z to the DocuSign developer account's own login. The Signer signed from that account's DocuSign inbox, and DocuSign recorded completion at 17:10:35Z. The user confirmed that the signature field was placed at the /sig/ anchor. OpenLaw kept the row Out for signature until the worker's Polling check at 17:25:34Z (about 15 minutes after signing, within the article's 15 to 20 minutes). At 17:25:35Z the row read Signed with an Executed copy control. By 17:26:05Z the executed copy was ready. The primary Document chain holds v1 draft_ours and v2 \"doc029-live-signing (executed).pdf\", marked executed and current. The Contract Status moved from Out for signature to Active (stage active).",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-live.mjs",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-send.mjs"
+      "expected": "Complete every live acceptance check below. Record actual native behavior without sender URLs, return state, tokens, credentials or real counterparty data.",
+      "actual": "Blocked: owner has not entered developer credentials or supplied the two controlled Signer inboxes. No native editor or provider journey was attempted. Stand-in tests are not substituted for these checks.",
+      "result": "blocked",
+      "evidence": [],
+      "checks": [
+        {
+          "id": "prepare-and-restrict",
+          "expected": "Selected source Version, Signers, and Subject reach native tagger; distinct Signature/Initials/Date/Text fields and required assignment work. Attempt every exposed recipient, document, page, subject, visibility and template edit route; record actual prevention or release-blocking gap.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "save-resume-discard",
+          "expected": "Save and close send nothing; a new launch resumes the same provider draft. Expired URL and competing editor are truthful. Native Discard produces confirmed terminal state without racing a send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "return-auth",
+          "expected": "Record event casing and missing provider-ID behavior without retaining opaque state or launch URL. Reauthentication resumes safely; unknown/altered/replayed returns grant no authority or duplicate send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "send-options",
+          "expected": "Record whether Send Later and missing-field sends are offered; test safe synthetic cases if available. Scheduled state stays live and truthful; document provider limits without claiming unproven field guarantees.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "complete-without-return",
+          "expected": "Send a fictional two-Signer round and lose its browser return. Actual provider evidence marks sent once. Owner completes both Signers. Polling, without public callback or accelerated DB clocks, files exactly one executed copy on the original chain and changes Stage only under the existing rule.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "issued-session-access",
+          "expected": "Use separate synthetic rounds to observe an already-issued provider session after OpenLaw logout, reach revocation, archive, and connector disable. Verify new launches refused; distinguish observed native URL lifetime from local authorization.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "sent-envelope-sender-view",
+          "expected": "A sent Envelope refuses Sender View.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "transaction-lookup",
+          "expected": "Observe actual developer-account transaction lookup for a created draft and interruption recovery without duplicates.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "signed-connect",
+          "expected": "If Webhook behavior is claimed, verify real signed Connect delivery and recovery separately under #888.",
+          "result": "blocked",
+          "actual": "No real Connect claim; gap remains #888."
+        }
       ]
     },
     {
       "id": "V-C42",
       "coverage": ["C42"],
       "role": "administrator",
-      "method": "live-provider-check",
-      "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
-        "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
-      ],
-      "expected": "Settings shows the saved connector and its Webhook refusals without a save; Test connection names the intended account; turning the connector off stops sends and tests; an Envelope sent from the Contract reaches the provider account; after the Signer completes it, Polling brings back Signed, files the executed copy on the original Document chain, and moves a Contract in the Signature Stage to the first live Active Status. Invalid Webhook callback addresses are refused and the stored connector does not change.",
-      "actual": "Test connection reached DocuSign Demo and showed \"Connected to OpenLaw.\" (the intended developer account) in S02 and again after re-enabling in S06. Four Envelopes were sent from C-38 by the Administrator with fictional Signer name \"DOC-029 Test Signer\". Sends 1 to 3 (subjects \"DOC-029 live signing round trip C-38\", \"... (resend)\", \"... (third send)\") answered 201 and showed an Out for signature row, but no signing email reached the Signer (see the environment limitation). Each of these three was voided through row actions > Void envelope with a Reason. Each void answered 200; the row then read Voided with its reason, Send for signature was offered again, and the Contract stayed Out for signature, not ended or archived. Send 4 (subject \"DOC-029 live signing round trip C-38 (fourth send)\") went at 17:09:33Z to the DocuSign developer account's own login. The Signer signed from that account's DocuSign inbox, and DocuSign recorded completion at 17:10:35Z. The user confirmed that the signature field was placed at the /sig/ anchor. OpenLaw kept the row Out for signature until the worker's Polling check at 17:25:34Z (about 15 minutes after signing, within the article's 15 to 20 minutes). At 17:25:35Z the row read Signed with an Executed copy control. By 17:26:05Z the executed copy was ready. The primary Document chain holds v1 draft_ours and v2 \"doc029-live-signing (executed).pdf\", marked executed and current. The Contract Status moved from Out for signature to Active (stage active).",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt1.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt2.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt3.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-send.mjs"
-      ]
-    },
-    {
-      "id": "V-C42",
-      "coverage": ["C42"],
-      "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
-        "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
-        "Operator responsibility was performed with deployment tools on the owned lab and the signed-out formal documentation reader, not through an app role."
+        "Committed disposable DOC-029-pattern lab with real provider hosts and explicit preparation opt-in.",
+        "Owner enters developer credentials directly and leaves the secret fields before automation resumes. Use a non-administrator integration user and two controlled Signer inboxes.",
+        "Two-page fictional primary Document Version; separate provider account-administration browser context."
       ],
-      "expected": "The operator can follow the article to the deployment guidance for outbound provider access and credential-key retention.",
-      "actual": "OB01 passed. Signed out, the operator opened /documentation/configure-signing in the formal reader and followed its deployment configuration link to /documentation/deployment-configuration. That page says to allow outbound provider traffic from both the app and worker, and its \"Preserve and rotate encryption keys\" section says OPENLAW_SECRET_KEY encrypts the Signing RSA key and HMAC secret. The reader serves the committed article bytes of 3fa407e3, so this proves the operator link and its target, not the reviewed wording. Operator container actions are in operator-observations.json.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.mjs"
-      ]
-    },
-    {
-      "id": "V-C42",
-      "coverage": ["C42"],
-      "role": "operator",
-      "method": "live-provider-check",
-      "prerequisites": [
-        "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
-        "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
-        "Operator responsibility was performed with container tools on the owned lab, not through an app role."
-      ],
-      "expected": "The app and worker both reach DocuSign, share the credential encryption key, and do not log secrets; Polling reconciliation brings back the provider result.",
-      "actual": "O01 to O04 passed. The app and worker set the same non-empty OPENLAW_SECRET_KEY (compared by hash equality; no value or hash printed) and no provider credential is an environment variable. The app reached DocuSign for Test connection. The worker's reconciliation sweep runs every 5 minutes and reached DocuSign from the worker: it found the live Envelope at 15:40, 16:00, 16:20, 16:40 and 17:10 (live 1, unreachable 0), converged it at 17:25:34Z, and logged \"filed an envelope's executed copy and pinned it\" at 17:25:35Z. The app and worker logs contain no 'PRIVATE KEY', 'sk-or-' or bearer text.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
-        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json"
+      "expected": "Complete every live acceptance check below. Record actual native behavior without sender URLs, return state, tokens, credentials or real counterparty data.",
+      "actual": "Blocked: owner has not entered developer credentials or supplied the two controlled Signer inboxes. No native editor or provider journey was attempted. Stand-in tests are not substituted for these checks.",
+      "result": "blocked",
+      "evidence": [],
+      "checks": [
+        {
+          "id": "prepare-and-restrict",
+          "expected": "Selected source Version, Signers, and Subject reach native tagger; distinct Signature/Initials/Date/Text fields and required assignment work. Attempt every exposed recipient, document, page, subject, visibility and template edit route; record actual prevention or release-blocking gap.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "save-resume-discard",
+          "expected": "Save and close send nothing; a new launch resumes the same provider draft. Expired URL and competing editor are truthful. Native Discard produces confirmed terminal state without racing a send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "return-auth",
+          "expected": "Record event casing and missing provider-ID behavior without retaining opaque state or launch URL. Reauthentication resumes safely; unknown/altered/replayed returns grant no authority or duplicate send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "send-options",
+          "expected": "Record whether Send Later and missing-field sends are offered; test safe synthetic cases if available. Scheduled state stays live and truthful; document provider limits without claiming unproven field guarantees.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "complete-without-return",
+          "expected": "Send a fictional two-Signer round and lose its browser return. Actual provider evidence marks sent once. Owner completes both Signers. Polling, without public callback or accelerated DB clocks, files exactly one executed copy on the original chain and changes Stage only under the existing rule.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "issued-session-access",
+          "expected": "Use separate synthetic rounds to observe an already-issued provider session after OpenLaw logout, reach revocation, archive, and connector disable. Verify new launches refused; distinguish observed native URL lifetime from local authorization.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "sent-envelope-sender-view",
+          "expected": "A sent Envelope refuses Sender View.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "transaction-lookup",
+          "expected": "Observe actual developer-account transaction lookup for a created draft and interruption recovery without duplicates.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "signed-connect",
+          "expected": "If Webhook behavior is claimed, verify real signed Connect delivery and recovery separately under #888.",
+          "result": "blocked",
+          "actual": "No real Connect claim; gap remains #888."
+        }
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author; not a human user study. The Signer step was done by the user by hand in DocuSign.",
-    "Environment: DocuSign demo email delivery was blocked for this developer sandbox. Envelopes 1 to 3 showed Sent in DocuSign but no email reached the hotmail or gmail inbox. Sources: https://community.docusign.com/esignature-111/envelope-shows-sent-but-emails-not-delivered-to-any-recipient-developer-sandbox-27081 and https://community.docusign.com/esignature-111/envelope-emails-appear-in-docusign-inbox-but-are-not-sent-to-the-external-email-address-24112. This is not an article failure. Envelope 4 went to the developer account's own login, and the Signer signed from that account's DocuSign inbox, not from an email link.",
-    "The three voids are extra observations of electronic-signing.md (Void envelope). The reason text of voids 2 and 3 was prepared by the script; void 3's reason says the Signer had to be the developer account login.",
-    "Live Webhook/Connect delivery and Connect HMAC rotation were not tested, because the lab has no public HTTPS callback (issue #888). The Webhook fields and refusals were checked without saving Webhook mode: a browser guard removed any HMAC secret from those requests, so the API had to refuse them before any write.",
-    "Invalid DocuSign credentials and RSA key rotation were not tested live, because the user's credentials cannot be re-entered without the user. The disabled connector was tested live.",
-    "Only Polling mode was tested end to end. Production environment was not tested.",
-    "The upload of the signing paper to C-38 started an automatic Analysis run through the enabled AI connector, so the fictional signing paper went to OpenRouter. Filing the executed copy started another automatic run on Version 2 at 17:26:13Z.",
-    "Reviewer script errors are kept: walkthrough-c42-attempt1.json and attempt2.json failed S06 on a navigation timing and a locator read after navigation, not on app behaviour. walkthrough-c42-send-attempt1.json to attempt3.json hold the undelivered sends. The first send log was written with the hotmail address in voided rows; the agent masked it before keeping the file. No Signer inbox address is recorded.",
-    "The article bytes did not change between the walkthrough and this record (sha256 bff8a53e...)."
+    "No browser walkthrough, automated run, lab or live-provider check was made for this revision. Its only change from the previous guide hash is the target of the two operator-procedure links.",
+    "The native live-provider-check and browser-walkthrough scenarios remain blocked: owner-entered DocuSign credentials and two controlled Signer inboxes are still unavailable.",
+    "The local browser and automated results in previousEvidence belong to the previous guide hash and the builds named there. They are retained as history and not transplanted to this revision.",
+    "Real signed Connect delivery and recovery remain the separate #888 gap. The new interface remains off by default."
   ],
-  "previousEvidence": "docs/documentation/batches/dev-integration/previous-configure-signing.json",
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+  "publicationBlockers": [
+    "#1178: owner-entered developer credentials and two controlled inboxes are required before live preparation acceptance. Keep #1178 and #1170 open and the production default off."
+  ],
+  "previousEvidence": {
+    "articleId": "configure-signing",
+    "contentSha256": "3b0a86e23593c41c631ff7e38aa6e586a3e6ef47332b798010fbf0c4af9ed572",
+    "appCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+    "buildId": "stand-in app sha256:5e44c1cd97b994c9fdefe9015bc6e92cfb1d38ce87c7c1bed70e27340449324d; real-provider lab remains 51b291f9c25f29e020a2a76635bd30aec6ff1303",
+    "environment": "openlaw-1178 stand-in for final local walkthrough; openlaw-docs-3f69f4a6-signing-live for blocked live acceptance",
+    "author": "#1178 implementation agent",
+    "technicalReviewer": "#1178 implementation agent, source inspection only",
+    "walkthroughReviewer": "Independent root agent, not the guide author",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (live-provider)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff and found no change to the E-signature Settings page, signing connector and webhook routes, reconciliation or executed-copy filing. No live DocuSign credentials exist on round 2 labs, so I replayed only the round 1 credential-free checks (S01 to S13 and the Legal Team Member refusal) on the admin2 lab, and every step passed with the round 1 results. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
+    "verifiedAt": null,
+    "reviewedAt": "2026-09-26T11:02:34.223805+00:00",
+    "status": "blocked",
+    "sources": [
+      "docs/user-guides/configure-signing.md",
+      "docs/DEPLOYMENT.md",
+      "apps/api/src/modules/contract-envelopes/routes.ts",
+      "apps/api/src/modules/contract-envelopes/launch.ts",
+      "apps/api/src/lib/signing/docusign.ts",
+      "apps/api/src/pipeline/reconciliation.ts",
+      "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-initial.json",
+      "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-final.json",
+      "docs/documentation/batches/DOC-029/preparation-1178/theme-observation.json"
+    ],
+    "scenarios": [
       {
-        "path": "batches/DOC-029/compat-r2/live-provider.json",
-        "sha256": "a1571249cd8ce2d02f0bd0d362de42917b630b64fdb17e53f72900b6903eff8b"
+        "id": "V-C42",
+        "coverage": ["C42"],
+        "role": "administrator",
+        "method": "live-provider-check",
+        "prerequisites": [
+          "Committed disposable DOC-029-pattern lab with real provider hosts and explicit preparation opt-in.",
+          "Owner enters developer credentials directly and leaves the secret fields before automation resumes. Use a non-administrator integration user and two controlled Signer inboxes.",
+          "Two-page fictional primary Document Version; separate provider account-administration browser context."
+        ],
+        "expected": "Complete every live acceptance check below. Record actual native behavior without sender URLs, return state, tokens, credentials or real counterparty data.",
+        "actual": "Blocked: owner has not entered developer credentials or supplied the two controlled Signer inboxes. No native editor or provider journey was attempted. Stand-in tests are not substituted for these checks.",
+        "result": "blocked",
+        "evidence": [],
+        "checks": [
+          {
+            "id": "prepare-and-restrict",
+            "expected": "Selected source Version, Signers, and Subject reach native tagger; distinct Signature/Initials/Date/Text fields and required assignment work. Attempt every exposed recipient, document, page, subject, visibility and template edit route; record actual prevention or release-blocking gap.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "save-resume-discard",
+            "expected": "Save and close send nothing; a new launch resumes the same provider draft. Expired URL and competing editor are truthful. Native Discard produces confirmed terminal state without racing a send.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "return-auth",
+            "expected": "Record event casing and missing provider-ID behavior without retaining opaque state or launch URL. Reauthentication resumes safely; unknown/altered/replayed returns grant no authority or duplicate send.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "send-options",
+            "expected": "Record whether Send Later and missing-field sends are offered; test safe synthetic cases if available. Scheduled state stays live and truthful; document provider limits without claiming unproven field guarantees.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "complete-without-return",
+            "expected": "Send a fictional two-Signer round and lose its browser return. Actual provider evidence marks sent once. Owner completes both Signers. Polling, without public callback or accelerated DB clocks, files exactly one executed copy on the original chain and changes Stage only under the existing rule.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "issued-session-access",
+            "expected": "Use separate synthetic rounds to observe an already-issued provider session after OpenLaw logout, reach revocation, archive, and connector disable. Verify new launches refused; distinguish observed native URL lifetime from local authorization.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "sent-envelope-sender-view",
+            "expected": "A sent Envelope refuses Sender View.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "transaction-lookup",
+            "expected": "Observe actual developer-account transaction lookup for a created draft and interruption recovery without duplicates.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "signed-connect",
+            "expected": "If Webhook behavior is claimed, verify real signed Connect delivery and recovery separately under #888.",
+            "result": "blocked",
+            "actual": "No real Connect claim; gap remains #888."
+          }
+        ]
       },
       {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+        "id": "V-C42",
+        "coverage": ["C42"],
+        "role": "administrator",
+        "method": "browser-walkthrough",
+        "prerequisites": [
+          "Committed disposable DOC-029-pattern lab with real provider hosts and explicit preparation opt-in.",
+          "Owner enters developer credentials directly and leaves the secret fields before automation resumes. Use a non-administrator integration user and two controlled Signer inboxes.",
+          "Two-page fictional primary Document Version; separate provider account-administration browser context."
+        ],
+        "expected": "Complete every live acceptance check below. Record actual native behavior without sender URLs, return state, tokens, credentials or real counterparty data.",
+        "actual": "Blocked: owner has not entered developer credentials or supplied the two controlled Signer inboxes. No native editor or provider journey was attempted. Stand-in tests are not substituted for these checks.",
+        "result": "blocked",
+        "evidence": [],
+        "checks": [
+          {
+            "id": "prepare-and-restrict",
+            "expected": "Selected source Version, Signers, and Subject reach native tagger; distinct Signature/Initials/Date/Text fields and required assignment work. Attempt every exposed recipient, document, page, subject, visibility and template edit route; record actual prevention or release-blocking gap.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "save-resume-discard",
+            "expected": "Save and close send nothing; a new launch resumes the same provider draft. Expired URL and competing editor are truthful. Native Discard produces confirmed terminal state without racing a send.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "return-auth",
+            "expected": "Record event casing and missing provider-ID behavior without retaining opaque state or launch URL. Reauthentication resumes safely; unknown/altered/replayed returns grant no authority or duplicate send.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "send-options",
+            "expected": "Record whether Send Later and missing-field sends are offered; test safe synthetic cases if available. Scheduled state stays live and truthful; document provider limits without claiming unproven field guarantees.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "complete-without-return",
+            "expected": "Send a fictional two-Signer round and lose its browser return. Actual provider evidence marks sent once. Owner completes both Signers. Polling, without public callback or accelerated DB clocks, files exactly one executed copy on the original chain and changes Stage only under the existing rule.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "issued-session-access",
+            "expected": "Use separate synthetic rounds to observe an already-issued provider session after OpenLaw logout, reach revocation, archive, and connector disable. Verify new launches refused; distinguish observed native URL lifetime from local authorization.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "sent-envelope-sender-view",
+            "expected": "A sent Envelope refuses Sender View.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "transaction-lookup",
+            "expected": "Observe actual developer-account transaction lookup for a created draft and interruption recovery without duplicates.",
+            "result": "blocked",
+            "actual": "Live prerequisites unavailable."
+          },
+          {
+            "id": "signed-connect",
+            "expected": "If Webhook behavior is claimed, verify real signed Connect delivery and recovery separately under #888.",
+            "result": "blocked",
+            "actual": "No real Connect claim; gap remains #888."
+          }
+        ]
+      },
+      {
+        "id": "V-C42-local",
+        "coverage": ["C42"],
+        "role": "administrator",
+        "method": "browser-walkthrough",
+        "prerequisites": [
+          "Committed 51b291f9 live lab for Settings navigation only; independent stand-in stack for preparation controls. No real provider credentials."
+        ],
+        "expected": "Follow the revised guide controls. Open, cancel and return from preparation with keyboard focus restored and controls usable at a narrow viewport.",
+        "actual": "Independent root agent followed Settings to the empty DocuSign card, then stopped before owner credential entry. In the separate stand-in stack, two fictional Signers and the two-page fixture could prepare, save and Resume the same fields. Discard retained Waiting for confirmation under the shared read budget. At 390x844 with app zoom, controls fit the 355 CSS px layout; the Envelope table alone scrolled horizontally. Cancel and provider return left focus on BODY. The focus defects require a correction and final rewalk.",
+        "result": "fail",
+        "evidence": [
+          "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-initial.json",
+          "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-narrow.png",
+          "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-return-narrow.png"
+        ],
+        "supersededBy": "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-final.json"
+      },
+      {
+        "id": "V-C42-local-final",
+        "coverage": ["C42"],
+        "role": "administrator",
+        "method": "browser-walkthrough",
+        "appCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+        "prerequisites": [
+          "Independent root agent followed the same guide hashes on the separate built stand-in at localhost:3218.",
+          "Fictional C-2, two-page Version 1 and two fictional Signers; no real provider."
+        ],
+        "expected": "Recheck the corrected Cancel and provider-return focus behavior, preparation/Resume instructions and narrow layout.",
+        "actual": "Cancel restored focus to Prepare Envelope. Provider return focused the Signatures heading; Tab reached the table scroller and then Resume. Resume retained the saved field, and the second return again focused Signatures. At a 390x844 viewport with app zoom, all dialog controls fit the 355 CSS px page; the Envelope table used its own keyboard-focusable horizontal scroller. This resolves the two earlier focus failures. It does not verify native DocuSign behavior or a full new completion/erasure/connector walkthrough.",
+        "result": "pass",
+        "evidence": [
+          "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-final.json",
+          "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-narrow.png",
+          "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-return.png",
+          "docs/documentation/batches/DOC-029/preparation-1178/theme-observation.json"
+        ]
+      },
+      {
+        "id": "V-C42-local-tests",
+        "coverage": ["C42"],
+        "role": "administrator",
+        "method": "automated-test",
+        "appCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+        "prerequisites": [
+          "Final application source fixed throughout validation. API tests used the shared queue, root Docker and openlaw-doc-engine:test; no live provider.",
+          "Built browser journeys used the separate openlaw-1178 stand-in stack."
+        ],
+        "expected": "Keep HTTP, provider-contract, migration and browser regressions passing, including default-off configuration and corrected focus.",
+        "actual": "All 302 API files and 4,636 tests passed across four complete shards, including provider contracts and the preparation, launch and history migration rehearsals. All 154 web files and 2,649 tests passed. Document engine: 5 tests; CI tools: 79 tests. All 8 built signing journeys for #1171, #1172, #1173, #1175, #1176 and #1177 passed on the final app image. One earlier monolithic run was interrupted and is not counted. These results verify local handling and do not prove native provider controls, delivery, session lifetime or real Connect.",
+        "result": "pass",
+        "evidence": [
+          "apps/api/src/lib/signing/config.test.ts",
+          "apps/api/src/lib/signing/docusign.test.ts",
+          "apps/api/src/envelope-preparation-migration.test.ts",
+          "apps/api/src/envelope-launch-migration.test.ts",
+          "apps/api/src/envelope-history-migration.test.ts",
+          "apps/web/src/routes/contract-record-envelopes.test.tsx",
+          "e2e/tests/1172-envelope-launch.spec.ts",
+          "scripts/documentation/lab-options.test.mjs"
+        ]
       }
-    ]
+    ],
+    "limitations": [
+      "No owner-entered DocuSign credentials or two controlled Signer inboxes are available. No live preparation behavior has been observed.",
+      "The prior DOC-029 developer-account journey exercised legacy direct send, not native preparation. Prior evidence is retained verbatim below.",
+      "No real signed Connect delivery or recovery is claimed. Issue #888 remains open.",
+      "Production entitlements and native editor restrictions remain account-specific. The new interface remains off by default.",
+      "Final local browser source is 648f99ec. The stable live credential-entry lab stays on 51b291f9. The intervening app change only restores keyboard focus; no provider, launch or authorization code changed. No live provider evidence is claimed from either build.",
+      "Original capture themes were unrecorded. Later independent read-only tab-load and open/Cancel recaptures explicitly observed data-theme=light at 390x844 browser / 355 CSS px. The latter checked two fictional Signers, fit and focus return without Continue or a provider call. These are not another provider return or an all-theme check."
+    ],
+    "publicationBlockers": [
+      "#1178: owner-entered developer credentials and two controlled inboxes are required before live preparation acceptance. Keep #1178 and #1170 open and the production default off."
+    ],
+    "previousEvidence": {
+      "articleId": "configure-signing",
+      "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
+      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+      "environment": "openlaw-docs-41255c61-live",
+      "walkthroughReviewer": "DOC-029 independent live-provider walkthrough agent",
+      "reviewerKind": "agent",
+      "author": "DOC-022 author; corrections by DOC-029 live-provider author agent",
+      "technicalReviewer": "DOC-029 live-provider author agent",
+      "verifiedAt": "2026-09-16T17:30:00Z",
+      "status": "pass",
+      "sources": [
+        "docs/user-guides/configure-signing.md",
+        "docs/documentation/batches/DOC-029/live-provider/technical-review.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt1.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt2.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt3.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
+        "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
+        "docs/user-guides/electronic-signing.md"
+      ],
+      "scenarios": [
+        {
+          "id": "V-C42",
+          "coverage": ["C42"],
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "prerequisites": [
+            "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
+            "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
+          ],
+          "expected": "Settings shows the saved connector and its Webhook refusals without a save; Test connection names the intended account; turning the connector off stops sends and tests; an Envelope sent from the Contract reaches the provider account; after the Signer completes it, Polling brings back Signed, files the executed copy on the original Document chain, and moves a Contract in the Signature Stage to the first live Active Status. Invalid Webhook callback addresses are refused and the stored connector does not change.",
+          "actual": "S01 to S08 passed on 3fa407e3 (walkthrough-c42.json round 3). Settings > Organization > Integrations opened /settings/integrations/e-signature with the DocuSign card collapsed. The card showed Demo, Polling with its hint, filled identifiers, a blank RSA key input, no Public callback URL, HMAC or Webhook URL field, the Connected chip and the switch on. Choosing Webhook showed Public callback URL and a required Connect HMAC secret; Save with the secret blank was refused by the browser with no request. Webhook saves with an http:// address, an HTTPS address with a query, and an address with user:password in it each answered 400 and the pane showed only \"One or more request fields are invalid.\", as the article warns; the stored connector did not change (Polling, no HMAC secret, updatedAt unchanged). Turning Send for signature from records off showed Turned off; Test connection stayed available and showed \"No e-signature connector is configured. Save the credentials first.\"; C-38 offered no Send for signature. Turning it on restored both, and a retest showed \"Connected to OpenLaw.\". The Send for signature dialog offered \"Version 1 — doc029-live-signing.docx (current)\", and Cancel sent nothing. A Legal Team Member was sent to /settings/profile, got 403 from the connector API, and saw Send for signature on her Contract. The send, void and completion rounds (S09, S09a and S10 in walkthrough-c42-send.json and its attempts) used the same browser controls: Four Envelopes were sent from C-38 by the Administrator with fictional Signer name \"DOC-029 Test Signer\". Sends 1 to 3 (subjects \"DOC-029 live signing round trip C-38\", \"... (resend)\", \"... (third send)\") answered 201 and showed an Out for signature row, but no signing email reached the Signer (see the environment limitation). Each of these three was voided through row actions > Void envelope with a Reason. Each void answered 200; the row then read Voided with its reason, Send for signature was offered again, and the Contract stayed Out for signature, not ended or archived. Send 4 (subject \"DOC-029 live signing round trip C-38 (fourth send)\") went at 17:09:33Z to the DocuSign developer account's own login. The Signer signed from that account's DocuSign inbox, and DocuSign recorded completion at 17:10:35Z. The user confirmed that the signature field was placed at the /sig/ anchor. OpenLaw kept the row Out for signature until the worker's Polling check at 17:25:34Z (about 15 minutes after signing, within the article's 15 to 20 minutes). At 17:25:35Z the row read Signed with an Executed copy control. By 17:26:05Z the executed copy was ready. The primary Document chain holds v1 draft_ours and v2 \"doc029-live-signing (executed).pdf\", marked executed and current. The Contract Status moved from Out for signature to Active (stage active).",
+          "result": "pass",
+          "evidence": [
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-live.mjs",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-send.mjs"
+          ]
+        },
+        {
+          "id": "V-C42",
+          "coverage": ["C42"],
+          "role": "administrator",
+          "method": "live-provider-check",
+          "prerequisites": [
+            "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
+            "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures."
+          ],
+          "expected": "Settings shows the saved connector and its Webhook refusals without a save; Test connection names the intended account; turning the connector off stops sends and tests; an Envelope sent from the Contract reaches the provider account; after the Signer completes it, Polling brings back Signed, files the executed copy on the original Document chain, and moves a Contract in the Signature Stage to the first live Active Status. Invalid Webhook callback addresses are refused and the stored connector does not change.",
+          "actual": "Test connection reached DocuSign Demo and showed \"Connected to OpenLaw.\" (the intended developer account) in S02 and again after re-enabling in S06. Four Envelopes were sent from C-38 by the Administrator with fictional Signer name \"DOC-029 Test Signer\". Sends 1 to 3 (subjects \"DOC-029 live signing round trip C-38\", \"... (resend)\", \"... (third send)\") answered 201 and showed an Out for signature row, but no signing email reached the Signer (see the environment limitation). Each of these three was voided through row actions > Void envelope with a Reason. Each void answered 200; the row then read Voided with its reason, Send for signature was offered again, and the Contract stayed Out for signature, not ended or archived. Send 4 (subject \"DOC-029 live signing round trip C-38 (fourth send)\") went at 17:09:33Z to the DocuSign developer account's own login. The Signer signed from that account's DocuSign inbox, and DocuSign recorded completion at 17:10:35Z. The user confirmed that the signature field was placed at the /sig/ anchor. OpenLaw kept the row Out for signature until the worker's Polling check at 17:25:34Z (about 15 minutes after signing, within the article's 15 to 20 minutes). At 17:25:35Z the row read Signed with an Executed copy control. By 17:26:05Z the executed copy was ready. The primary Document chain holds v1 draft_ours and v2 \"doc029-live-signing (executed).pdf\", marked executed and current. The Contract Status moved from Out for signature to Active (stage active).",
+          "result": "pass",
+          "evidence": [
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt1.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt2.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send-attempt3.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-send.mjs"
+          ]
+        },
+        {
+          "id": "V-C42",
+          "coverage": ["C42"],
+          "role": "operator",
+          "method": "browser-walkthrough",
+          "prerequisites": [
+            "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
+            "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
+            "Operator responsibility was performed with deployment tools on the owned lab and the signed-out formal documentation reader, not through an app role."
+          ],
+          "expected": "The operator can follow the article to the deployment guidance for outbound provider access and credential-key retention.",
+          "actual": "OB01 passed. Signed out, the operator opened /documentation/configure-signing in the formal reader and followed its deployment configuration link to /documentation/deployment-configuration. That page says to allow outbound provider traffic from both the app and worker, and its \"Preserve and rotate encryption keys\" section says OPENLAW_SECRET_KEY encrypts the Signing RSA key and HMAC secret. The reader serves the committed article bytes of 3fa407e3, so this proves the operator link and its target, not the reviewed wording. Operator container actions are in operator-observations.json.",
+          "result": "pass",
+          "evidence": [
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-browser.mjs"
+          ]
+        },
+        {
+          "id": "V-C42",
+          "coverage": ["C42"],
+          "role": "operator",
+          "method": "live-provider-check",
+          "prerequisites": [
+            "Live lab openlaw-docs-41255c61-live on 3fa407e3 with a DocuSign Demo connector in Polling mode. The user entered the integration key, User ID and RSA private key; the agent never read, entered or saved a secret.",
+            "Fictional Contract C-38 \"DOC-029 live signing\" (NDA, Legal Owner Nadia Haddad) with primary Document doc029-live-signing.docx (sha256 d3d85da2598996e45ea1fef9f0b0dc026e1093bea22bbef448393538ad31c031), which has the /sig/ anchor. Fixtures are in docs/documentation/batches/DOC-029/live-provider/walkthrough/fixtures.",
+            "Operator responsibility was performed with container tools on the owned lab, not through an app role."
+          ],
+          "expected": "The app and worker both reach DocuSign, share the credential encryption key, and do not log secrets; Polling reconciliation brings back the provider result.",
+          "actual": "O01 to O04 passed. The app and worker set the same non-empty OPENLAW_SECRET_KEY (compared by hash equality; no value or hash printed) and no provider credential is an environment variable. The app reached DocuSign for Test connection. The worker's reconciliation sweep runs every 5 minutes and reached DocuSign from the worker: it found the live Envelope at 15:40, 16:00, 16:20, 16:40 and 17:10 (live 1, unreachable 0), converged it at 17:25:34Z, and logged \"filed an envelope's executed copy and pinned it\" at 17:25:35Z. The app and worker logs contain no 'PRIVATE KEY', 'sk-or-' or bearer text.",
+          "result": "pass",
+          "evidence": [
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/operator-observations.json",
+            "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json"
+          ]
+        }
+      ],
+      "limitations": [
+        "Independent agent walkthrough by a different agent from the author; not a human user study. The Signer step was done by the user by hand in DocuSign.",
+        "Environment: DocuSign demo email delivery was blocked for this developer sandbox. Envelopes 1 to 3 showed Sent in DocuSign but no email reached the hotmail or gmail inbox. Sources: https://community.docusign.com/esignature-111/envelope-shows-sent-but-emails-not-delivered-to-any-recipient-developer-sandbox-27081 and https://community.docusign.com/esignature-111/envelope-emails-appear-in-docusign-inbox-but-are-not-sent-to-the-external-email-address-24112. This is not an article failure. Envelope 4 went to the developer account's own login, and the Signer signed from that account's DocuSign inbox, not from an email link.",
+        "The three voids are extra observations of electronic-signing.md (Void envelope). The reason text of voids 2 and 3 was prepared by the script; void 3's reason says the Signer had to be the developer account login.",
+        "Live Webhook/Connect delivery and Connect HMAC rotation were not tested, because the lab has no public HTTPS callback (issue #888). The Webhook fields and refusals were checked without saving Webhook mode: a browser guard removed any HMAC secret from those requests, so the API had to refuse them before any write.",
+        "Invalid DocuSign credentials and RSA key rotation were not tested live, because the user's credentials cannot be re-entered without the user. The disabled connector was tested live.",
+        "Only Polling mode was tested end to end. Production environment was not tested.",
+        "The upload of the signing paper to C-38 started an automatic Analysis run through the enabled AI connector, so the fictional signing paper went to OpenRouter. Filing the executed copy started another automatic run on Version 2 at 17:26:13Z.",
+        "Reviewer script errors are kept: walkthrough-c42-attempt1.json and attempt2.json failed S06 on a navigation timing and a locator read after navigation, not on app behaviour. walkthrough-c42-send-attempt1.json to attempt3.json hold the undelivered sends. The first send log was written with the hotmail address in voided rows; the agent masked it before keeping the file. No Signer inbox address is recorded.",
+        "The article bytes did not change between the walkthrough and this record (sha256 bff8a53e...)."
+      ],
+      "previousEvidence": "docs/documentation/batches/dev-integration/previous-configure-signing.json",
+      "copyOnlyReview": null,
+      "compatibilityReview": {
+        "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+        "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+        "contentSha256": "bff8a53e428dbbab18ec5a983de7ef035e8928d35890ee7673b3e8597ba171bc",
+        "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+        "reviewer": "DOC-029 round 3 compatibility reviewer",
+        "reviewerKind": "agent",
+        "reviewedAt": "2026-09-16T19:11:55Z",
+        "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (live-provider)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff and found no change to the E-signature Settings page, signing connector and webhook routes, reconciliation or executed-copy filing. No live DocuSign credentials exist on round 2 labs, so I replayed only the round 1 credential-free checks (S01 to S13 and the Legal Team Member refusal) on the admin2 lab, and every step passed with the round 1 results. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+        "evidence": [
+          {
+            "path": "batches/DOC-029/compat-r2/live-provider.json",
+            "sha256": "a1571249cd8ce2d02f0bd0d362de42917b630b64fdb17e53f72900b6903eff8b"
+          },
+          {
+            "path": "batches/DOC-029/compat-r3/review.json",
+            "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+          }
+        ]
+      }
+    },
+    "lab": {
+      "sourceCommit": "51b291f9c25f29e020a2a76635bd30aec6ff1303",
+      "snapshotDigest": "44702ac5e0b10f07c1cbee997ee4465166e1aa6b972341cc8670104206d113c5",
+      "configurationDigest": "36eea1c2756f318f33fdabe4db1f19803c69f03c24673d68d26945b5f3ec04a2",
+      "signingPreparation": "live",
+      "appImageId": "sha256:ec341471280077a9f25dfb496d538f6e835706da554ab0f045c6aa394ea24755",
+      "engineImageId": "sha256:b5292e877ba6c2dde9c84888a5bd6b8a726f314f20242ab661a9c3ad9ac10cce",
+      "createdAt": "2026-09-26T10:32:47.437Z",
+      "startedAt": "2026-09-26T10:33:14.401Z",
+      "configuration": "Real DocuSign hosts; explicit API preparation opt-in; Polling intended; no owner credentials entered at lab handoff."
+    }
+  },
+  "lab": {
+    "sourceCommit": "51b291f9c25f29e020a2a76635bd30aec6ff1303",
+    "snapshotDigest": "44702ac5e0b10f07c1cbee997ee4465166e1aa6b972341cc8670104206d113c5",
+    "configurationDigest": "36eea1c2756f318f33fdabe4db1f19803c69f03c24673d68d26945b5f3ec04a2",
+    "signingPreparation": "live",
+    "appImageId": "sha256:ec341471280077a9f25dfb496d538f6e835706da554ab0f045c6aa394ea24755",
+    "engineImageId": "sha256:b5292e877ba6c2dde9c84888a5bd6b8a726f314f20242ab661a9c3ad9ac10cce",
+    "createdAt": "2026-09-26T10:32:47.437Z",
+    "startedAt": "2026-09-26T10:33:14.401Z",
+    "configuration": "Real DocuSign hosts; explicit API preparation opt-in; Polling intended; no owner credentials entered at lab handoff."
   }
 }

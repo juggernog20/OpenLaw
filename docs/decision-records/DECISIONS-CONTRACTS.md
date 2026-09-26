@@ -875,3 +875,27 @@ including an older discarded round restored outside OpenLaw. No migration change
 IDs, real timestamps, original Versions or executed-copy references. A migrated
 HTTP journey covers sent, signed, declined and voided history beside the new flow,
 old Void and erasure, and repeated completion before Sent without a browser return.
+
+### CTR-013 addendum, 2026-09-26, #1178. Live acceptance blocks rollout
+
+Continue to DocuSign remains off by default. The prerequisite code and stand-in
+journeys do not establish native editor enforcement in the deployment account.
+The live acceptance records use configure-signing V-C42 and electronic-signing
+with both live-provider-check and browser-walkthrough. Missing owner-entered
+credentials or two controlled inboxes blocks the new scenarios; DOC-029 legacy
+sending evidence is preserved as history. #1178 and parent #1170 remain open.
+
+The acceptance lab may explicitly opt in against the real provider. Production
+must not inherit that opt-in. If any exposed native route changes recipients,
+Documents, pages, Subject, visibility or templates contrary to the pinned source,
+rollout stops until a provider permission or product design change resolves the
+failure. Reserved flags alone are not proof. Required-field and Send Later behavior
+are account-specific until observed. No strict all-Signers-have-signature-fields
+guarantee is accepted. Real signed Connect proof remains the separate #888 gap.
+
+This defers the proposed default-interface replacement; it does not supersede the
+legacy direct-send API or manual hand-off. The #1176 amendment supersedes the old
+claim that connector disable stops callbacks and reconciliation. #1177 supersedes
+older claims that preparing is not narrated or that a provider-confirmed Send can
+be attributed to the last OpenLaw browser user. Existing decisions remain in place
+as historical records with those amendments.

@@ -24,6 +24,7 @@ import {
   SIGNING_STANDIN_VARIABLE,
   createDocuSignDriverFactory,
   readDocuSignBaseUrl,
+  readSigningPreparationEnabled,
 } from "./config.js";
 import { createDocuSignProvider } from "./docusign.js";
 
@@ -178,5 +179,40 @@ describe("signing host configuration", () => {
       "http://stand-in.invalid:8129/oauth/token",
       "http://stand-in.invalid:8129/oauth/userinfo",
     ]);
+  });
+});
+
+describe("preparation rollout", () => {
+  it("keeps ordinary deployments and an unqualified switch off", () => {
+    expect(readSigningPreparationEnabled({})).toBe(false);
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: "true" })).toBe(false);
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_LIVE_LAB: "true" })).toBe(false);
+  });
+
+  it("enables a declared stand-in without enabling live acceptance", () => {
+    expect(
+      readSigningPreparationEnabled({
+        ...DECLARED,
+        DOCUSIGN_BASE_URL: "http://stand-in.invalid",
+        SIGNING_PREPARATION_ENABLED: "true",
+      }),
+    ).toBe(true);
+  });
+
+  it("requires both explicit switches for real provider acceptance", () => {
+    expect(
+      readSigningPreparationEnabled({
+        SIGNING_PREPARATION_ENABLED: "true",
+        SIGNING_PREPARATION_LIVE_LAB: "true",
+      }),
+    ).toBe(true);
+    expect(() =>
+      readSigningPreparationEnabled({
+        ...DECLARED,
+        DOCUSIGN_BASE_URL: "http://stand-in.invalid",
+        SIGNING_PREPARATION_ENABLED: "true",
+        SIGNING_PREPARATION_LIVE_LAB: "true",
+      }),
+    ).toThrow("cannot use a signing stand-in");
   });
 });

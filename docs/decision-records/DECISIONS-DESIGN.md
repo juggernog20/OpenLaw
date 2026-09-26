@@ -5557,3 +5557,15 @@ The build reviews left these follow-ups open: entering a leading minus clears a 
 | DES-092 | The MCP screens, the consent page, and the pinned "Your approvals" group                                                                                             | Accepted; drawn as `designs/mcp.pen` MC1 to MC6 before the record                                                                                  |
 | DES-093 | A2 · Console+ is the shared HTML email layout                                                                                                                        | Accepted; amends DES-051; briefing anatomy recorded in NOT-006                                                                                     |
 | DES-094 | Advanced search dialog, question chips, and saved and recent searches                                                                                                | Accepted                                                                                                                                           |
+
+### DES-036 addendum, 2026-09-26, #1178. Preparation acceptance interface
+
+The normal Signatures tab retains Send for signature and Send envelope until live
+acceptance passes. An opted-in lab offers Prepare Envelope, then Continue to
+DocuSign in the same tab. Drafts show Not sent and Prepared by, and offer Resume
+in DocuSign only while editable and authorized. Scheduled or externally restored
+drafts retain their provider truth without Resume. Save and browser return do not
+imply send. These amendments supersede the sent-only row model for preparation
+labs; they do not announce production rollout. Narrow-screen, keyboard and return
+focus checks must name the tested build and distinguish local browser evidence
+from the native provider editor still awaiting live verification.

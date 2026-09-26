@@ -2016,3 +2016,19 @@ The driver returns a fresh Sender View URL unchanged and never sends OAuth crede
 to the browser. Launch/return responses use no-store and no-referrer; ordinary request
 logging already excludes query strings, cookies and response bodies. No launch URL or
 return secret is written to Activity or persistent browser storage.
+
+### TECH-013 / TECH-018 addendum, 2026-09-26, #1178. Real acceptance lab
+
+The preparation gate stays off for ordinary deployments. A disposable documentation
+lab explicitly sets both SIGNING_PREPARATION_ENABLED and
+SIGNING_PREPARATION_LIVE_LAB to true. The live declaration refuses any configured
+stand-in; host allowlists and the stored connector still choose the real provider.
+No provider secret is sourced from the lab helper. The owner enters it in Settings.
+
+The DOC-029 helper snapshots a committed tree and includes the live option and
+optional independent /24 subnets in its configuration digest. Generated snapshots
+and overlays are not edited after creation. App source and image identities differ
+from guide content hashes and are recorded separately. This opt-in remains until the
+live restrictions in #1178 pass; retiring the gate before that would violate CTR-013.
+Polling, returns and Resume retain the shared provider-read allowance. A stub cannot
+prove provider account controls, actual session expiry or signed real Connect.

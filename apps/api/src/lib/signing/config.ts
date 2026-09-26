@@ -170,3 +170,13 @@ export function createDocuSignDriverFactory(baseUrl?: string): SigningDriverFact
   if (baseUrl === undefined) return createDocuSignProvider;
   return (config) => createDocuSignProvider(config, { hosts: { auth: baseUrl, api: baseUrl } });
 }
+
+/** Keeps rollout off while allowing an explicitly declared live acceptance lab. */
+export function readSigningPreparationEnabled(env: SigningHostEnvironment): boolean {
+  const baseUrl = readDocuSignBaseUrl(env);
+  const liveLab = env.SIGNING_PREPARATION_LIVE_LAB === "true";
+  if (liveLab && baseUrl) {
+    throw new SigningHostConfigError("A live preparation lab cannot use a signing stand-in.");
+  }
+  return env.SIGNING_PREPARATION_ENABLED === "true" && (Boolean(baseUrl) || liveLab);
+}

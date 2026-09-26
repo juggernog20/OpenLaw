@@ -35,6 +35,7 @@ import { createStorageFromEnv } from "./lib/storage/config.js";
 import {
   createDocuSignDriverFactory,
   readDocuSignBaseUrl,
+  readSigningPreparationEnabled,
   SIGNING_STANDIN_VARIABLE,
 } from "./lib/signing/config.js";
 import { createNotifier } from "./lib/notifications/notifier.js";
@@ -197,6 +198,17 @@ const resolveSigningProvider = createSigningResolver(
   db,
   createDocuSignDriverFactory(docusignBaseUrl),
 );
+// Off on every ordinary install. An explicit live acceptance lab sets both
+// switches (TECH-018 addendum, #1178); a lab that also names a stand-in is a
+// configuration fault and stops the boot with the message, not a stack trace.
+const signingPreparationEnabled = (function readPreparationGate() {
+  try {
+    return readSigningPreparationEnabled(process.env);
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+})();
 // The AI connector is also Organization data. The resolver reads its
 // singleton row live, and the provider adapter follows the stored protocol.
 const resolveAiProvider = createAiResolver(db);
@@ -327,8 +339,7 @@ await resolveVapid().catch((error: unknown) => {
 const app = await buildApp(
   {
     // Development-only until the complete DocuSign flow is released.
-    signingPreparationEnabled:
-      Boolean(docusignBaseUrl) && process.env.SIGNING_PREPARATION_ENABLED === "true",
+    signingPreparationEnabled,
     db,
     config: {
       secret: requireEnv("AUTH_SECRET"),
