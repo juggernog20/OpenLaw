@@ -1536,60 +1536,83 @@ describe("preparation refusals and reservations", () => {
     },
   );
 
-  it.each(["draft", "send"] as const)(
-    "keeps a verified completion ahead of a late %s response",
-    async (kind) => {
-      const { contract, payload, prepare } = await ready();
-      const method = kind === "draft" ? "prepareEnvelope" : "sendEnvelope";
-      const original = provider()[method].bind(provider());
-      const intercepted = vi
-        .spyOn(provider(), method)
-        .mockImplementationOnce(async (input: PrepareEnvelopeInput) => {
-          const result = await original(input);
-          const row = await storedRound(contract.id);
-          await harness.db
-            .update(contractEnvelopes)
-            .set({ providerEnvelopeId: result.providerEnvelopeId })
-            .where(eq(contractEnvelopes.id, row.id));
-          provider().complete(result.providerEnvelopeId);
-          const signed = provider().signedDelivery({
-            providerEnvelopeId: result.providerEnvelopeId,
-            status: "signed",
-          });
-          const delivery = await harness.app.inject({
-            method: "POST",
-            url: "/api/v1/signing/docusign/webhook",
-            headers: { ...signed.headers, "content-type": "application/json" },
-            payload: signed.body,
-          });
-          expect(delivery.statusCode).toBe(204);
-          return result;
+  it.each([
+    { kind: "draft", status: "signed" },
+    { kind: "send", status: "signed" },
+    { kind: "send", status: "sent" },
+  ] as const)("keeps verified $status ahead of a late $kind response", async ({ kind, status }) => {
+    const { contract, payload, prepare } = await ready();
+    const method = kind === "draft" ? "prepareEnvelope" : "sendEnvelope";
+    const original = provider()[method].bind(provider());
+    const intercepted = vi
+      .spyOn(provider(), method)
+      .mockImplementationOnce(async (input: PrepareEnvelopeInput) => {
+        const result = await original(input);
+        const row = await storedRound(contract.id);
+        await harness.db
+          .update(contractEnvelopes)
+          .set({ providerEnvelopeId: result.providerEnvelopeId })
+          .where(eq(contractEnvelopes.id, row.id));
+        if (status === "signed") provider().complete(result.providerEnvelopeId);
+        const signed = provider().signedDelivery({
+          providerEnvelopeId: result.providerEnvelopeId,
+          status,
         });
-      const voided = vi.spyOn(provider(), "voidEnvelope");
-      try {
-        const response =
-          kind === "draft"
-            ? await prepare()
-            : await send(as(MEMBER), contract.number, payload.documentVersionId);
-        expect(response.statusCode, response.body).toBe(201);
-        expect(await storedRound(contract.id)).toMatchObject({
-          status: "signed",
-          preparationState: "created",
+        const delivery = await harness.app.inject({
+          method: "POST",
+          url: "/api/v1/signing/docusign/webhook",
+          headers: { ...signed.headers, "content-type": "application/json" },
+          payload: signed.body,
         });
-        expect(voided).not.toHaveBeenCalled();
-        const events = await harness.db
+        expect(delivery.statusCode).toBe(204);
+        return result;
+      });
+    const voided = vi.spyOn(provider(), "voidEnvelope");
+    try {
+      const response =
+        kind === "draft"
+          ? await prepare()
+          : await send(as(MEMBER), contract.number, payload.documentVersionId);
+      expect(response.statusCode, response.body).toBe(201);
+      expect(await storedRound(contract.id)).toMatchObject({
+        status,
+        preparationState: "created",
+      });
+      expect(voided).not.toHaveBeenCalled();
+      const events = await harness.db
+        .select()
+        .from(activityLog)
+        .where(
+          and(eq(activityLog.entityId, contract.id), eq(activityLog.action, `envelope.${status}`)),
+        );
+      expect(events).toHaveLength(1);
+      if (status === "sent") {
+        const [record] = await harness.db
+          .select({ stage: contractStatuses.stage })
+          .from(contracts)
+          .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
+          .where(eq(contracts.id, contract.id));
+        expect(record!.stage).toBe("signature");
+        const changes = await harness.db
           .select()
           .from(activityLog)
           .where(
-            and(eq(activityLog.entityId, contract.id), eq(activityLog.action, "envelope.signed")),
+            and(
+              eq(activityLog.entityId, contract.id),
+              eq(activityLog.action, "contract.status_changed"),
+            ),
           );
-        expect(events).toHaveLength(1);
-      } finally {
-        intercepted.mockRestore();
-        voided.mockRestore();
+        expect(changes).toHaveLength(1);
+        expect(changes[0]!.payload).toMatchObject({
+          fromStage: "draft",
+          toStage: "signature",
+        });
       }
-    },
-  );
+    } finally {
+      intercepted.mockRestore();
+      voided.mockRestore();
+    }
+  });
 
   it("recovers a provider draft after PostgreSQL rejects the local finalization", async () => {
     const { contract, prepare } = await ready();

@@ -802,4 +802,5 @@ rows. A newer reservation is neither released nor voided. All live Envelopes,
 including restored ones, still block new creation under the Contract lock. Thus
 multiple external live Envelopes can be represented without permitting another
 local creation. Restored drafts are reviewed in DocuSign and cannot Resume here.
-Repeated observations do not add Activity or file another executed copy.
+Repeated observations of one Envelope do not add Activity or file another executed
+copy. Separate Envelopes that complete each file their own executed copy.

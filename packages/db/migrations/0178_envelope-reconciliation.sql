@@ -1,3 +1,5 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
+
 DROP INDEX "contract_envelopes_live_idx";--> statement-breakpoint
 ALTER TABLE "contract_envelopes" ADD COLUMN "scheduled" boolean DEFAULT false NOT NULL;--> statement-breakpoint
 ALTER TABLE "contract_envelopes" ADD COLUMN "externally_restored" boolean DEFAULT false NOT NULL;--> statement-breakpoint
