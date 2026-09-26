@@ -19,7 +19,7 @@
  * opens the provider — the shared contract suite is what holds that.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   activityLog,
   asc,
@@ -568,6 +568,107 @@ describe("taking the connector out", () => {
     }
     await harness.app.inject({ method: "POST", url: `${URL_BASE}/enable`, cookies: adminCookies });
   });
+
+  it.each(["preparing", "draft", "sent"] as const)(
+    "protects %s identity and removal, including externally restored rounds",
+    async (status) => {
+      await save(CONNECTOR);
+      const id = await putEnvelopeOut();
+      try {
+        await harness.db
+          .update(contractEnvelopes)
+          .set({ status, sentAt: status === "sent" ? new Date() : null, externallyRestored: true })
+          .where(eq(contractEnvelopes.id, id));
+        for (const change of [
+          { environment: "production" },
+          { apiUserId: "another-user" },
+          { integrationKey: "another-integration" },
+        ]) {
+          const res = await save({ ...CONNECTOR, ...change });
+          expect(res.statusCode, res.body).toBe(409);
+          expect(res.json().detail).toContain("identity");
+        }
+        expect((await save({ ...CONNECTOR, privateKey: OTHER_RSA_KEY })).statusCode).toBe(200);
+        const removed = await harness.app.inject({
+          method: "DELETE",
+          url: URL_BASE,
+          cookies: adminCookies,
+        });
+        expect(removed.statusCode).toBe(409);
+        expect(removed.json().detail).toContain("preparation");
+      } finally {
+        await harness.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, id));
+      }
+    },
+  );
+
+  it("allows a different API user and rotated key when they reach the recorded account", async () => {
+    await save(CONNECTOR);
+    const id = await putEnvelopeOut();
+    try {
+      const account = await (await harness.resolveSigningProvider())!.testConnection();
+      await harness.db
+        .update(contractEnvelopes)
+        .set({ providerAccountId: account.accountId, providerEnvironment: "demo" })
+        .where(eq(contractEnvelopes.id, id));
+      const saved = await save({
+        ...CONNECTOR,
+        apiUserId: "same-account-user",
+        privateKey: OTHER_RSA_KEY,
+      });
+      expect(saved.statusCode, saved.body).toBe(200);
+      expect(saved.json().connector.apiUserId).toBe("same-account-user");
+      const provider = (await harness.resolveSigningProvider())!;
+      const accountCheck = vi
+        .spyOn(provider, "testConnection")
+        .mockResolvedValue({ ...account, accountId: "different-account" });
+      try {
+        const moved = await save({ ...CONNECTOR, apiUserId: "another-account-user" });
+        expect(moved.statusCode, moved.body).toBe(409);
+      } finally {
+        accountCheck.mockRestore();
+      }
+      const bad = await save({ ...CONNECTOR, integrationKey: "invalid-credentials" });
+      expect(bad.statusCode, bad.body).toBe(409);
+      const [held] = await harness.db.select().from(signingConnectors);
+      expect(held!.apiUserId).toBe("same-account-user");
+    } finally {
+      await harness.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, id));
+      await save(CONNECTOR);
+    }
+  });
+
+  it.each(["pending", "failed"] as const)(
+    "preserves the connector for a legacy %s executed-copy fetch",
+    async (executedFetch) => {
+      await save(CONNECTOR);
+      const id = await putEnvelopeOut();
+      try {
+        await harness.db
+          .update(contractEnvelopes)
+          .set({ status: "signed", completedAt: new Date(), executedFetch })
+          .where(eq(contractEnvelopes.id, id));
+        expect((await save({ ...CONNECTOR, apiUserId: "replacement-user" })).statusCode).toBe(409);
+        expect(
+          (await harness.app.inject({ method: "DELETE", url: URL_BASE, cookies: adminCookies }))
+            .statusCode,
+        ).toBe(409);
+        const [held] = await harness.db
+          .select()
+          .from(contractEnvelopes)
+          .where(eq(contractEnvelopes.id, id));
+        expect(held!.providerAccountId).toBeNull();
+        await harness.db
+          .update(contractEnvelopes)
+          .set({ executedFetch: "ready" })
+          .where(eq(contractEnvelopes.id, id));
+        expect((await save({ ...CONNECTOR, apiUserId: "replacement-user" })).statusCode).toBe(200);
+      } finally {
+        await harness.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, id));
+        await save(CONNECTOR);
+      }
+    },
+  );
 
   it("removes the row, the secrets, and the send affordance with it", async () => {
     expect(await harness.resolveSigningProvider()).not.toBeNull();

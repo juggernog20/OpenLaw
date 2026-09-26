@@ -707,6 +707,41 @@ export function SignaturesCard({
             />
           </p>
         )}
+      {live && (live.status === "draft" || live.status === "preparing") && (
+        <div className="px-4 py-2 text-sm text-muted">
+          {live.sourceState === "changed" && (
+            <p role="status">
+              <FormattedMessage
+                id="signing.sourceChanged"
+                defaultMessage="The primary Document changed. This preparation still uses {document}, Version {version}. Restore that Document as primary to Resume, or resolve this preparation in DocuSign before preparing different paper."
+                values={{ document: live.documentTitle, version: live.documentVersionNumber }}
+              />
+            </p>
+          )}
+          {live.sourceState === "unavailable" && (
+            <p role="status">
+              <FormattedMessage
+                id="signing.sourceUnavailable"
+                defaultMessage="The original source Version is unavailable. This preparation cannot be launched. Ask your Legal Owner to check its access, archive or erasure state and resolve the existing Envelope in DocuSign."
+              />
+            </p>
+          )}
+          {!signing.signingConfigured && (
+            <p role="status">
+              <FormattedMessage
+                id="signing.connectorUnavailable"
+                defaultMessage="The Signing connector is disabled or unavailable. Ask an Administrator to restore the original configuration before resuming. Your preparation remains saved."
+              />
+            </p>
+          )}
+          <p>
+            <FormattedMessage
+              id="signing.externalSessionLimit"
+              defaultMessage="Changing OpenLaw access, archiving the Contract or turning off the connector does not close a session already issued by DocuSign. Resolve that session in DocuSign if it must stop. OpenLaw continues recording confirmed outcomes."
+            />
+          </p>
+        </div>
+      )}
       {launchError && (
         <p role="alert" className="px-4 py-2 text-sm text-status-danger-fg">
           {launchError}
@@ -717,6 +752,7 @@ export function SignaturesCard({
         !live.scheduled &&
         !live.externallyRestored &&
         !frozen &&
+        live.sourceState === "available" &&
         signing.signingConfigured &&
         (viewerRole === "administrator" || viewerRole === "legal_team_member") &&
         (viewerRole === "administrator" || live.sentBy.id === viewerId || ownerId === viewerId) && (

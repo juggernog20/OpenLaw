@@ -2,7 +2,8 @@
 
 /** Durable provider read claims shared by reconciliation and browser returns (TECH-007, CTR-013). */
 import { and, contractEnvelopes, eq, inArray, isNull, or, sql, type Db } from "@openlaw/db";
-import { SigningRefusedError, type SigningProvider } from "./provider.js";
+import type { SigningProvider } from "./provider.js";
+import { requireEnvelopeIdentity } from "./identity.js";
 
 /** How long a browser return correlation stays valid after launch. */
 export const LAUNCH_LIFETIME_MINUTES = 120;
@@ -46,17 +47,7 @@ export async function checkEnvelopeStatus(db: Db, signing: SigningProvider, enve
     .returning();
   if (!claimed?.providerEnvelopeId) return null;
   try {
-    if (
-      claimed.provider !== signing.provider ||
-      (claimed.providerEnvironment !== null &&
-        claimed.providerEnvironment !== signing.environment) ||
-      (claimed.providerAccountId !== null &&
-        claimed.providerAccountId !== (await signing.testConnection()).accountId)
-    ) {
-      // Terminal for this one Envelope, not for the round: the rows beside
-      // it may belong to the current account.
-      throw new SigningRefusedError("The Envelope belongs to a different Signing account.");
-    }
+    await requireEnvelopeIdentity(signing, claimed);
     return await signing.readEnvelope(claimed.providerEnvelopeId);
   } finally {
     await db

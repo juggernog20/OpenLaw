@@ -10599,10 +10599,10 @@
     "defaultMessage": "Send for signature from records"
   },
   "settings.eSignature.enabled.off": {
-    "defaultMessage": "Off since {when}. Records show the manual path, and rounds already out stand still until you turn this back on."
+    "defaultMessage": "Off since {when}. New preparations and Resume links are refused. Existing DocuSign sessions remain usable and confirmed outcomes still reach OpenLaw."
   },
   "settings.eSignature.enabled.on": {
-    "defaultMessage": "Turn this off to go back to the manual path without losing the credentials. Records stop offering the send, and rounds already out stand still until you turn it back on."
+    "defaultMessage": "Turn this off to refuse new preparations and Resume links. Existing DocuSign sessions remain usable and OpenLaw continues recording their outcomes. Credentials and history stay saved."
   },
   "settings.eSignature.environment": {
     "defaultMessage": "Environment"
@@ -10638,7 +10638,7 @@
     "defaultMessage": "Remove connector"
   },
   "settings.eSignature.removeAlternative": {
-    "defaultMessage": "To stop sending and keep the credentials, turn the connector off instead."
+    "defaultMessage": "Live preparations, uncertain creations, sent Envelopes and outstanding executed copies prevent removal or changes to their account and environment. Credentials can rotate after verification of the same identity. Legacy Envelopes without a recorded account require the original integration key and API user. Turning off the connector does not close existing DocuSign sessions."
   },
   "settings.eSignature.removeBody": {
     "defaultMessage": "The RSA key and the Connect secret are deleted with the connector. Reconnecting means pasting both again. Records go back to the manual path."
@@ -12425,6 +12425,9 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.connectorUnavailable": {
+    "defaultMessage": "The Signing connector is disabled or unavailable. Ask an Administrator to restore the original configuration before resuming. Your preparation remains saved."
+  },
   "signing.emailPlaceholder": {
     "defaultMessage": "Email address"
   },
@@ -12439,6 +12442,9 @@
   },
   "signing.executedFiling": {
     "defaultMessage": "Filing the executed copy…"
+  },
+  "signing.externalSessionLimit": {
+    "defaultMessage": "Changing OpenLaw access, archiving the Contract or turning off the connector does not close a session already issued by DocuSign. Resolve that session in DocuSign if it must stop. OpenLaw continues recording confirmed outcomes."
   },
   "signing.externallyRestored": {
     "defaultMessage": "Restored outside OpenLaw. Review this Envelope in DocuSign."
@@ -12559,6 +12565,12 @@
   },
   "signing.signersNote": {
     "defaultMessage": "Pick someone in OpenLaw, and their email fills in for you. For someone outside OpenLaw, type their name and email address."
+  },
+  "signing.sourceChanged": {
+    "defaultMessage": "The primary Document changed. This preparation still uses {document}, Version {version}. Restore that Document as primary to Resume, or resolve this preparation in DocuSign before preparing different paper."
+  },
+  "signing.sourceUnavailable": {
+    "defaultMessage": "The original source Version is unavailable. This preparation cannot be launched. Ask your Legal Owner to check its access, archive or erasure state and resolve the existing Envelope in DocuSign."
   },
   "signing.status.declined": {
     "defaultMessage": "Declined"

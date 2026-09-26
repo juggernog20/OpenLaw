@@ -18,7 +18,7 @@
  * **Nothing unsigned is believed.** There is no auth guard here, so the
  * signature is the whole gate: a delivery whose HMAC does not verify
  * against this install's stored Connect secret is refused, and so is
- * one carrying no signature at all. Only an enabled connector in
+ * one carrying no signature at all. A stored connector in
  * Webhook mode can receive deliveries. Polling mode refuses them even
  * when it retains a secret from an earlier configuration.
  *
@@ -56,7 +56,14 @@
 
 import type { IncomingHttpHeaders } from "node:http";
 import type { FastifyPluginAsync } from "fastify";
-import { SIGNING_PROVIDERS, type SigningProviderKey } from "@openlaw/db";
+import {
+  and,
+  contractEnvelopes,
+  eq,
+  SIGNING_PROVIDERS,
+  type SigningProviderKey,
+} from "@openlaw/db";
+import { requireEnvelopeIdentity } from "../../lib/signing/identity.js";
 import { httpError } from "../../lib/problem.js";
 import { WebhookSignatureError } from "../../lib/signing/provider.js";
 import { requestExecutedCopy } from "../../lib/signing/completion.js";
@@ -165,6 +172,27 @@ export const signingWebhookRoutes: FastifyPluginAsync = async (app) => {
       }
 
       if (delivery.status === null) return reply.status(204).send();
+
+      const [envelope] = await app.db
+        .select()
+        .from(contractEnvelopes)
+        .where(
+          and(
+            eq(contractEnvelopes.provider, provider),
+            eq(contractEnvelopes.providerEnvelopeId, delivery.providerEnvelopeId),
+          ),
+        )
+        .limit(1);
+      if (envelope) {
+        try {
+          await requireEnvelopeIdentity(signing, envelope);
+        } catch {
+          throw httpError(
+            503,
+            "The original Signing account could not be verified. Retry this delivery later.",
+          );
+        }
+      }
 
       const result = await applyEnvelopeStatus(app.notifier, {
         provider,

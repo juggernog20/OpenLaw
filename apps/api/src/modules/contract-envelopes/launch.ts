@@ -67,43 +67,59 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       if (!app.signingPreparationEnabled)
         throw httpError(409, "Envelope preparation is not enabled.");
-      const row = await reached(request.user, request.params.envelopeId);
-      if (!row) throw httpError(404, "No envelope exists with that id.");
-      const { envelope, contract } = row;
-      if (
-        contract.archivedAt ||
-        envelope.status !== "draft" ||
-        envelope.scheduled ||
-        envelope.externallyRestored ||
-        !envelope.providerEnvelopeId ||
-        !envelope.documentVersionId ||
-        envelope.documentId !== contract.primaryDocumentId
-      )
-        throw httpError(
-          409,
-          "This Envelope cannot be resumed. Check its current status in Signatures. Sent Envelopes use Void.",
-        );
-      if (
-        request.user.role !== "administrator" &&
-        request.user.id !== envelope.sentBy &&
-        request.user.id !== contract.managerId
-      )
-        throw httpError(
-          403,
-          "Only the preparer, Legal Owner or an Administrator may open this Envelope.",
-        );
-      const [source] = await app.db
-        .select({ id: documentVersions.id })
-        .from(documentVersions)
-        .innerJoin(documents, eq(documents.id, documentVersions.documentId))
-        .where(
-          and(
-            eq(documentVersions.id, envelope.documentVersionId),
-            documentAudienceScope(app.db, request.user),
-          ),
+      const eligible = async () => {
+        await requireMember(request);
+        const row = await reached(request.user, request.params.envelopeId);
+        if (!row) throw httpError(404, "No envelope exists with that id.");
+        const { envelope, contract } = row;
+        if (
+          contract.archivedAt ||
+          envelope.status !== "draft" ||
+          envelope.scheduled ||
+          envelope.externallyRestored ||
+          !envelope.providerEnvelopeId
         )
-        .limit(1);
-      if (!source) throw httpError(409, "The source Version is no longer available.");
+          throw httpError(
+            409,
+            "This Envelope cannot be resumed. Check its current status in Signatures. Sent Envelopes use Void.",
+          );
+        if (
+          request.user.role !== "administrator" &&
+          request.user.id !== envelope.sentBy &&
+          request.user.id !== contract.managerId
+        )
+          throw httpError(
+            403,
+            "Only the preparer, Legal Owner or an Administrator may open this Envelope.",
+          );
+        if (!envelope.documentVersionId || !envelope.documentId)
+          throw httpError(
+            409,
+            "The source Version was erased. This preparation cannot be launched. Resolve the existing Envelope in DocuSign; OpenLaw will keep its history.",
+          );
+        if (envelope.documentId !== contract.primaryDocumentId)
+          throw httpError(
+            409,
+            "The primary Document changed. This preparation still uses its original Document and Version. Restore that Document as primary to Resume, or resolve this preparation in DocuSign before preparing different paper.",
+          );
+        const [source] = await app.db
+          .select({ id: documentVersions.id })
+          .from(documentVersions)
+          .innerJoin(documents, eq(documents.id, documentVersions.documentId))
+          .where(
+            and(
+              eq(documentVersions.id, envelope.documentVersionId),
+              eq(documents.id, envelope.documentId),
+              eq(documents.contractId, contract.id),
+              isNull(documents.archivedAt),
+              documentAudienceScope(app.db, request.user),
+            ),
+          )
+          .limit(1);
+        if (!source) throw httpError(409, "The source Version is no longer available.");
+        return row;
+      };
+      const { envelope } = await eligible();
       // The claim coordinates requests across API replicas, not browser sessions.
       // A crashed request releases itself after five minutes.
       const [claimed] = await app.db
@@ -158,7 +174,7 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
           if (checked) {
             const result = await applyEnvelopeStatus(app.notifier, {
               provider: signing.provider,
-              providerEnvelopeId: envelope.providerEnvelopeId,
+              providerEnvelopeId: envelope.providerEnvelopeId!,
               ...checked,
             });
             await requestExecutedCopy(app.jobs, request.log, result);
@@ -179,7 +195,13 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         const returnUrl = new URL(RETURN_PATH, app.baseUrl);
         returnUrl.searchParams.set("state", state);
-        const url = await signing.launchEnvelope(envelope.providerEnvelopeId, returnUrl.href);
+        await eligible();
+        if ((await app.resolveSigningProvider()) !== signing)
+          throw httpError(
+            409,
+            "The Signing connector changed. Check its current settings, then Resume.",
+          );
+        const url = await signing.launchEnvelope(envelope.providerEnvelopeId!, returnUrl.href);
         await app.db
           .update(contractEnvelopes)
           .set({ confirmationPending: true })
@@ -194,6 +216,14 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
                 lte(envelopeLaunches.expiresAt, new Date()),
               ),
             ),
+          );
+        // A remote session can already exist if access changed during the request.
+        // Refuse to hand out its URL, but keep provider accounting independent.
+        await eligible();
+        if ((await app.resolveSigningProvider()) !== signing)
+          throw httpError(
+            409,
+            "The Signing connector changed. A session already issued by DocuSign may remain usable. Check Signatures before trying again.",
           );
         return { url };
       } catch (error) {

@@ -808,3 +808,34 @@ multiple external live Envelopes can be represented without permitting another
 local creation. Restored drafts are reviewed in DocuSign and cannot Resume here.
 Repeated observations of one Envelope do not add Activity or file another executed
 copy. Separate Envelopes that complete each file their own executed copy.
+
+### CTR-013 addendum, 2026-09-26, #1176. Changed access, source and connector
+
+Preparation keeps its original Version, Document chain, Signers and provider
+identity. A newer Version does not replace prepared paper. Changing the primary
+Document blocks Resume and names the original source. A person must restore that
+Document as primary or resolve the draft in DocuSign before preparing different
+paper. An erased or inaccessible source cannot launch. Existing erasure and
+executed-copy retention rules remain in force.
+
+Every launch checks current authentication, Member+ role, Contract reach, archive
+state and Resume eligibility. Administrator does not bypass Confidential reach.
+Checks run again around remote calls, so a changed grant refuses the returned URL.
+An already-issued DocuSign session is an external capability. Local permission,
+archive and connector changes cannot revoke it. The record and settings explain
+that the user must resolve such a session in DocuSign if it must stop.
+
+This supersedes the #273 addendum's claim that disabling the connector stops
+accounting. Disable now refuses new sends and launches while reconciliation,
+verified Webhook deliveries and executed-copy fetching continue with the saved
+credentials. Real provider outcomes survive local access changes.
+
+Removal counts all live preparations, uncertain creations and sent Envelopes,
+including externally restored rows. Signed Envelopes with a pending or failed
+executed-copy fetch also retain the connector until that copy is filed. Rotation
+verifies changed credentials against
+each recorded account and environment before saving. Legacy rows with unknown
+identity retain their original integration key, API user and environment; secret
+rotation remains available. No historical account is inferred or written. New
+preparations require their recorded identity for launch, status, Void and completion.
+Local history is never deleted to clear a reservation.

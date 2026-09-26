@@ -37,6 +37,8 @@ import {
   and,
   asc,
   contractEnvelopes,
+  contractTeam,
+  documents,
   envelopeLaunches,
   isNull,
   contractEnvelopeSigners,
@@ -2233,6 +2235,179 @@ describe("authenticated Sender View launch and return", () => {
     expect((await launch(envelope.id)).statusCode).toBe(409);
   });
 
+  it("keeps the original Version after upload and requires the original primary Document", async () => {
+    const { envelope, contract } = await draft();
+    const round = uploadBody("redline_theirs", "newer.pdf", Buffer.from("newer paper"));
+    expect(
+      (
+        await harness.app.inject({
+          method: "POST",
+          url: `/api/v1/documents/${envelope.documentId}/versions`,
+          cookies: as(MEMBER),
+          headers: round.headers,
+          payload: round.payload,
+        })
+      ).statusCode,
+    ).toBe(201);
+    expect((await launch(envelope.id)).statusCode).toBe(200);
+    const [same] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, envelope.id));
+    expect(same!.documentVersionId).toBe(envelope.documentVersionId);
+    await harness.db
+      .update(contracts)
+      .set({ primaryDocumentId: null })
+      .where(eq(contracts.id, contract.id));
+    const blocked = await launch(envelope.id);
+    expect(blocked.statusCode).toBe(409);
+    expect(blocked.json().detail).toContain("primary Document changed");
+    await harness.db
+      .update(contracts)
+      .set({ primaryDocumentId: envelope.documentId })
+      .where(eq(contracts.id, contract.id));
+    expect((await launch(envelope.id)).statusCode).toBe(200);
+  });
+
+  it("refuses new sessions after archive or disable but accounts for an issued session's send", async () => {
+    const { envelope, contract } = await draft();
+    expect((await launch(envelope.id)).statusCode).toBe(200);
+    await harness.db
+      .update(contracts)
+      .set({ archivedAt: new Date() })
+      .where(eq(contracts.id, contract.id));
+    expect((await launch(envelope.id)).statusCode).toBe(409);
+    await harness.db
+      .update(contracts)
+      .set({ archivedAt: null })
+      .where(eq(contracts.id, contract.id));
+    expect((await launch(envelope.id)).statusCode).toBe(200);
+    const off = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/signing-connectors/docusign/disable",
+      cookies: as(ADMIN),
+    });
+    expect(off.statusCode).toBe(200);
+    try {
+      expect((await launch(envelope.id)).statusCode).toBe(409);
+      harness.signing!.sendDraft(envelope.providerEnvelopeId!);
+      const delivery = harness.signing!.signedDelivery({
+        providerEnvelopeId: envelope.providerEnvelopeId!,
+        status: "sent",
+      });
+      const result = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/signing/docusign/webhook",
+        headers: delivery.headers,
+        payload: delivery.body,
+      });
+      expect(result.statusCode, result.body).toBe(204);
+      expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("sent");
+    } finally {
+      await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/signing-connectors/docusign/enable",
+        cookies: as(ADMIN),
+      });
+    }
+  });
+
+  it("refuses logout, demotion and revoked Confidential reach without revealing a launch", async () => {
+    const { envelope, contract } = await draft();
+    const anonymous = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${envelope.id}/launch`,
+    });
+    expect(anonymous.statusCode).toBe(401);
+    await harness.db
+      .update(users)
+      .set({ role: "business_user" })
+      .where(eq(users.id, idOf(MEMBER)));
+    try {
+      expect((await launch(envelope.id)).statusCode).toBe(403);
+    } finally {
+      await harness.db
+        .update(users)
+        .set({ role: "legal_team_member" })
+        .where(eq(users.id, idOf(MEMBER)));
+    }
+    await harness.db
+      .update(contracts)
+      .set({ isConfidential: true, managerId: null })
+      .where(eq(contracts.id, contract.id));
+    await harness.db.delete(contractTeam).where(eq(contractTeam.contractId, contract.id));
+    const denied = await launch(envelope.id);
+    expect(denied.statusCode).toBe(404);
+    expect(denied.body).not.toContain(envelope.providerEnvelopeId);
+    expect((await listEnvelopes(as(MEMBER), contract.number)).statusCode).toBe(404);
+  });
+
+  it("refuses an erased source and retains the Envelope history", async () => {
+    const { envelope, contract } = await draft();
+    const [source] = await harness.db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, envelope.documentId!));
+    const erased = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/documents/${envelope.documentId}`,
+      cookies: as(ADMIN),
+      payload: { confirmTitle: source!.title },
+    });
+    expect(erased.statusCode, erased.body).toBe(200);
+    const denied = await launch(envelope.id);
+    expect(denied.statusCode).toBe(409);
+    expect(denied.json().detail).toContain("erased");
+    const state = await listEnvelopes(as(MEMBER), contract.number);
+    expect(state.json().envelopes[0]).toMatchObject({
+      id: envelope.id,
+      status: "draft",
+      documentVersionId: null,
+      sourceState: "unavailable",
+    });
+  });
+
+  it("hides source details after its audience changes and refuses Resume", async () => {
+    const { envelope, contract } = await draft();
+    await harness.db
+      .update(contracts)
+      .set({ managerId: null })
+      .where(eq(contracts.id, contract.id));
+    await harness.db.delete(contractTeam).where(eq(contractTeam.contractId, contract.id));
+    await harness.db
+      .update(documents)
+      .set({ isConfidential: true })
+      .where(eq(documents.id, envelope.documentId!));
+    const state = await listEnvelopes(as(MEMBER), contract.number);
+    expect(state.json().envelopes[0]).toMatchObject({
+      documentTitle: null,
+      documentVersionId: null,
+      sourceState: "unavailable",
+    });
+    expect((await launch(envelope.id)).statusCode).toBe(409);
+  });
+
+  it("rechecks archive after provider authentication before issuing a session", async () => {
+    const { envelope, contract } = await draft();
+    const original = harness.signing!.testConnection.bind(harness.signing!);
+    const authentication = vi
+      .spyOn(harness.signing!, "testConnection")
+      .mockImplementationOnce(async () => {
+        await harness.db
+          .update(contracts)
+          .set({ archivedAt: new Date() })
+          .where(eq(contracts.id, contract.id));
+        return original();
+      });
+    const launches = harness.signing!.launches.length;
+    try {
+      expect((await launch(envelope.id)).statusCode).toBe(409);
+    } finally {
+      authentication.mockRestore();
+    }
+    expect(harness.signing!.launches).toHaveLength(launches);
+  });
+
   it("enforces role, eligibility and Confidential reach on Resume", async () => {
     const { envelope, contract } = await draft();
     const openAs = (who: typeof MEMBER | typeof OUTSIDER | typeof ADMIN | typeof CONTRIBUTOR) =>
@@ -2597,6 +2772,45 @@ describe("shared browser and worker status allowance", () => {
       .update(contractEnvelopes)
       .set({ createdAt: new Date(Date.now() - minutes * 60_000) })
       .where(eq(contractEnvelopes.id, id));
+
+  it("accounts through Polling after disable, archive and loss of Contract reach", async () => {
+    const { contract, id, providerEnvelopeId } = await launchedDraft(
+      "Disabled connector accounting",
+      "disabled-accounting",
+    );
+    await ageCreation(id, 21);
+    await ageLaunch(id, 21);
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ nextReconcileAt: null })
+      .where(eq(contractEnvelopes.id, id));
+    expect(
+      (
+        await harness.app.inject({
+          method: "POST",
+          url: "/api/v1/signing-connectors/docusign/disable",
+          cookies: as(ADMIN),
+        })
+      ).statusCode,
+    ).toBe(200);
+    try {
+      await harness.db
+        .update(contracts)
+        .set({ archivedAt: new Date(), isConfidential: true, managerId: null })
+        .where(eq(contracts.id, contract.id));
+      await harness.db.delete(contractTeam).where(eq(contractTeam.contractId, contract.id));
+      harness.signing!.sendDraft(providerEnvelopeId);
+      await sweep();
+      expect((await held(id)).status).toBe("sent");
+      expect((await listEnvelopes(as(MEMBER), contract.number)).statusCode).toBe(404);
+    } finally {
+      await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/signing-connectors/docusign/enable",
+        cookies: as(ADMIN),
+      });
+    }
+  });
 
   it("refuses Resume when the provider still reports a created scheduled Envelope", async () => {
     const { id } = await launchedDraft(
