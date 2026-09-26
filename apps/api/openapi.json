@@ -40266,6 +40266,45 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "color"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -40305,6 +40344,7 @@
                                 "byteSize",
                                 "renderFamily",
                                 "kind",
+                                "documentType",
                                 "note",
                                 "createdAt",
                                 "uploadedBy",
@@ -40436,6 +40476,45 @@
                                     "generated_redline"
                                   ]
                                 },
+                                "documentType": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "displayName": {
+                                          "type": "string"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "required": ["id", "displayName", "color"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "note": {
                                   "type": ["string", "null"]
                                 },
@@ -40475,6 +40554,7 @@
                                 "byteSize",
                                 "renderFamily",
                                 "kind",
+                                "documentType",
                                 "note",
                                 "createdAt",
                                 "uploadedBy",
@@ -63939,6 +64019,25 @@
                               "documentType": {
                                 "type": ["string", "null"]
                               },
+                              "documentTypeColor": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "grey",
+                                      "blue",
+                                      "amber",
+                                      "green",
+                                      "red",
+                                      "orange",
+                                      "purple"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
                               "originalFilename": {
                                 "type": "string"
                               },
@@ -63980,6 +64079,7 @@
                               "versionNumber",
                               "kind",
                               "documentType",
+                              "documentTypeColor",
                               "originalFilename",
                               "mimeType",
                               "byteSize",
@@ -64190,9 +64290,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -64489,9 +64608,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -64805,9 +64943,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -65118,9 +65275,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -65444,9 +65620,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -65757,9 +65952,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -66083,9 +66297,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -66396,9 +66629,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -66722,9 +66974,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -67036,9 +67307,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -67369,9 +67659,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -67686,9 +67995,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -67978,9 +68306,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -68278,9 +68625,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -68426,9 +68792,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -68735,9 +69120,28 @@
                                               },
                                               "archived": {
                                                 "type": "boolean"
+                                              },
+                                              "color": {
+                                                "anyOf": [
+                                                  {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "grey",
+                                                      "blue",
+                                                      "amber",
+                                                      "green",
+                                                      "red",
+                                                      "orange",
+                                                      "purple"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "null"
+                                                  }
+                                                ]
                                               }
                                             },
-                                            "required": ["id", "displayName", "archived"],
+                                            "required": ["id", "displayName", "archived", "color"],
                                             "additionalProperties": false
                                           },
                                           {
@@ -69031,9 +69435,28 @@
                                     },
                                     "archived": {
                                       "type": "boolean"
+                                    },
+                                    "color": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "grey",
+                                            "blue",
+                                            "amber",
+                                            "green",
+                                            "red",
+                                            "orange",
+                                            "purple"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
                                     }
                                   },
-                                  "required": ["id", "displayName", "archived"],
+                                  "required": ["id", "displayName", "archived", "color"],
                                   "additionalProperties": false
                                 },
                                 {
@@ -69179,9 +69602,28 @@
                                     },
                                     "archived": {
                                       "type": "boolean"
+                                    },
+                                    "color": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "grey",
+                                            "blue",
+                                            "amber",
+                                            "green",
+                                            "red",
+                                            "orange",
+                                            "purple"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
                                     }
                                   },
-                                  "required": ["id", "displayName", "archived"],
+                                  "required": ["id", "displayName", "archived", "color"],
                                   "additionalProperties": false
                                 },
                                 {
@@ -69476,9 +69918,28 @@
                                           },
                                           "archived": {
                                             "type": "boolean"
+                                          },
+                                          "color": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string",
+                                                "enum": [
+                                                  "grey",
+                                                  "blue",
+                                                  "amber",
+                                                  "green",
+                                                  "red",
+                                                  "orange",
+                                                  "purple"
+                                                ]
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
                                           }
                                         },
-                                        "required": ["id", "displayName", "archived"],
+                                        "required": ["id", "displayName", "archived", "color"],
                                         "additionalProperties": false
                                       },
                                       {
@@ -69714,9 +70175,28 @@
                                     },
                                     "archived": {
                                       "type": "boolean"
+                                    },
+                                    "color": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "grey",
+                                            "blue",
+                                            "amber",
+                                            "green",
+                                            "red",
+                                            "orange",
+                                            "purple"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
                                     }
                                   },
-                                  "required": ["id", "displayName", "archived"],
+                                  "required": ["id", "displayName", "archived", "color"],
                                   "additionalProperties": false
                                 },
                                 {
@@ -69862,9 +70342,28 @@
                                     },
                                     "archived": {
                                       "type": "boolean"
+                                    },
+                                    "color": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "grey",
+                                            "blue",
+                                            "amber",
+                                            "green",
+                                            "red",
+                                            "orange",
+                                            "purple"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
                                     }
                                   },
-                                  "required": ["id", "displayName", "archived"],
+                                  "required": ["id", "displayName", "archived", "color"],
                                   "additionalProperties": false
                                 },
                                 {
@@ -70159,9 +70658,28 @@
                                           },
                                           "archived": {
                                             "type": "boolean"
+                                          },
+                                          "color": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string",
+                                                "enum": [
+                                                  "grey",
+                                                  "blue",
+                                                  "amber",
+                                                  "green",
+                                                  "red",
+                                                  "orange",
+                                                  "purple"
+                                                ]
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
                                           }
                                         },
-                                        "required": ["id", "displayName", "archived"],
+                                        "required": ["id", "displayName", "archived", "color"],
                                         "additionalProperties": false
                                       },
                                       {
@@ -70438,9 +70956,28 @@
                                     },
                                     "archived": {
                                       "type": "boolean"
+                                    },
+                                    "color": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "grey",
+                                            "blue",
+                                            "amber",
+                                            "green",
+                                            "red",
+                                            "orange",
+                                            "purple"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
                                     }
                                   },
-                                  "required": ["id", "displayName", "archived"],
+                                  "required": ["id", "displayName", "archived", "color"],
                                   "additionalProperties": false
                                 },
                                 {
@@ -70586,9 +71123,28 @@
                                     },
                                     "archived": {
                                       "type": "boolean"
+                                    },
+                                    "color": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "enum": [
+                                            "grey",
+                                            "blue",
+                                            "amber",
+                                            "green",
+                                            "red",
+                                            "orange",
+                                            "purple"
+                                          ]
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
                                     }
                                   },
-                                  "required": ["id", "displayName", "archived"],
+                                  "required": ["id", "displayName", "archived", "color"],
                                   "additionalProperties": false
                                 },
                                 {
@@ -70883,9 +71439,28 @@
                                           },
                                           "archived": {
                                             "type": "boolean"
+                                          },
+                                          "color": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string",
+                                                "enum": [
+                                                  "grey",
+                                                  "blue",
+                                                  "amber",
+                                                  "green",
+                                                  "red",
+                                                  "orange",
+                                                  "purple"
+                                                ]
+                                              },
+                                              {
+                                                "type": "null"
+                                              }
+                                            ]
                                           }
                                         },
-                                        "required": ["id", "displayName", "archived"],
+                                        "required": ["id", "displayName", "archived", "color"],
                                         "additionalProperties": false
                                       },
                                       {
@@ -71145,9 +71720,28 @@
                                 },
                                 "archived": {
                                   "type": "boolean"
+                                },
+                                "color": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "grey",
+                                        "blue",
+                                        "amber",
+                                        "green",
+                                        "red",
+                                        "orange",
+                                        "purple"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
-                              "required": ["id", "displayName", "archived"],
+                              "required": ["id", "displayName", "archived", "color"],
                               "additionalProperties": false
                             },
                             {
@@ -71307,9 +71901,28 @@
                                 },
                                 "archived": {
                                   "type": "boolean"
+                                },
+                                "color": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "grey",
+                                        "blue",
+                                        "amber",
+                                        "green",
+                                        "red",
+                                        "orange",
+                                        "purple"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
                               },
-                              "required": ["id", "displayName", "archived"],
+                              "required": ["id", "displayName", "archived", "color"],
                               "additionalProperties": false
                             },
                             {
@@ -71519,9 +72132,28 @@
                                         },
                                         "archived": {
                                           "type": "boolean"
+                                        },
+                                        "color": {
+                                          "anyOf": [
+                                            {
+                                              "type": "string",
+                                              "enum": [
+                                                "grey",
+                                                "blue",
+                                                "amber",
+                                                "green",
+                                                "red",
+                                                "orange",
+                                                "purple"
+                                              ]
+                                            },
+                                            {
+                                              "type": "null"
+                                            }
+                                          ]
                                         }
                                       },
-                                      "required": ["id", "displayName", "archived"],
+                                      "required": ["id", "displayName", "archived", "color"],
                                       "additionalProperties": false
                                     },
                                     {
@@ -71815,9 +72447,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -72087,9 +72738,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -72361,9 +73031,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -72635,9 +73324,28 @@
                                       },
                                       "archived": {
                                         "type": "boolean"
+                                      },
+                                      "color": {
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "enum": [
+                                              "grey",
+                                              "blue",
+                                              "amber",
+                                              "green",
+                                              "red",
+                                              "orange",
+                                              "purple"
+                                            ]
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
                                       }
                                     },
-                                    "required": ["id", "displayName", "archived"],
+                                    "required": ["id", "displayName", "archived", "color"],
                                     "additionalProperties": false
                                   },
                                   {
@@ -92125,6 +92833,25 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "color": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "grey",
+                                  "blue",
+                                  "amber",
+                                  "green",
+                                  "red",
+                                  "orange",
+                                  "purple"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -92136,7 +92863,8 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "systemKind"
+                          "systemKind",
+                          "color"
                         ],
                         "additionalProperties": false
                       }
@@ -92247,6 +92975,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -92258,7 +92997,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -92362,6 +93102,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -92373,7 +93124,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -92504,6 +93256,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -92515,7 +93278,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -92661,6 +93425,25 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "color": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "grey",
+                                  "blue",
+                                  "amber",
+                                  "green",
+                                  "red",
+                                  "orange",
+                                  "purple"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -92672,7 +93455,8 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "systemKind"
+                          "systemKind",
+                          "color"
                         ],
                         "additionalProperties": false
                       }
@@ -92792,6 +93576,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -92803,7 +93598,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -92907,6 +93703,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -92918,7 +93725,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -93025,6 +93833,25 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "color": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "grey",
+                                  "blue",
+                                  "amber",
+                                  "green",
+                                  "red",
+                                  "orange",
+                                  "purple"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -93036,7 +93863,8 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "systemKind"
+                          "systemKind",
+                          "color"
                         ],
                         "additionalProperties": false
                       }
@@ -93147,6 +93975,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -93158,7 +93997,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -93262,6 +94102,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -93273,7 +94124,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -93317,6 +94169,17 @@
                       {
                         "type": "string",
                         "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
                       },
                       {
                         "type": "null"
@@ -93404,6 +94267,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -93415,7 +94289,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -93561,6 +94436,25 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "color": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "grey",
+                                  "blue",
+                                  "amber",
+                                  "green",
+                                  "red",
+                                  "orange",
+                                  "purple"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -93572,7 +94466,8 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "systemKind"
+                          "systemKind",
+                          "color"
                         ],
                         "additionalProperties": false
                       }
@@ -93692,6 +94587,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -93703,7 +94609,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -93807,6 +94714,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -93818,7 +94736,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -93925,6 +94844,25 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "color": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "grey",
+                                  "blue",
+                                  "amber",
+                                  "green",
+                                  "red",
+                                  "orange",
+                                  "purple"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -93936,7 +94874,8 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "systemKind"
+                          "systemKind",
+                          "color"
                         ],
                         "additionalProperties": false
                       }
@@ -94047,6 +94986,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -94058,7 +95008,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -94162,6 +95113,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -94173,7 +95135,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -94217,6 +95180,17 @@
                       {
                         "type": "string",
                         "maxLength": 500
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
                       },
                       {
                         "type": "null"
@@ -94304,6 +95278,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -94315,7 +95300,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -94461,6 +95447,25 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "color": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "grey",
+                                  "blue",
+                                  "amber",
+                                  "green",
+                                  "red",
+                                  "orange",
+                                  "purple"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -94472,7 +95477,8 @@
                           "isSystemDefault",
                           "archivedAt",
                           "inUseCount",
-                          "systemKind"
+                          "systemKind",
+                          "color"
                         ],
                         "additionalProperties": false
                       }
@@ -94592,6 +95598,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -94603,7 +95620,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -94707,6 +95725,17 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "color": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -94718,7 +95747,8 @@
                         "isSystemDefault",
                         "archivedAt",
                         "inUseCount",
-                        "systemKind"
+                        "systemKind",
+                        "color"
                       ],
                       "additionalProperties": false
                     }
@@ -94777,6 +95807,25 @@
                           "displayName": {
                             "type": "string"
                           },
+                          "color": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "grey",
+                                  "blue",
+                                  "amber",
+                                  "green",
+                                  "red",
+                                  "orange",
+                                  "purple"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "systemKind": {
                             "anyOf": [
                               {
@@ -94796,7 +95845,7 @@
                             ]
                           }
                         },
-                        "required": ["id", "displayName", "systemKind"],
+                        "required": ["id", "displayName", "color", "systemKind"],
                         "additionalProperties": false
                       }
                     }
@@ -96872,6 +97921,17 @@
                       {
                         "type": "string",
                         "enum": ["few_words", "sentence", "full_clause"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["grey", "blue", "amber", "green", "red", "orange", "purple"]
                       },
                       {
                         "type": "null"

@@ -39,6 +39,7 @@ function documentRow(overrides: Partial<Record<string, unknown>> = {}) {
       versionNumber: 4,
       kind: "executed",
       documentType: "Executed",
+      documentTypeColor: null as string | null,
       originalFilename: "msa-signed.pdf",
       mimeType: "application/pdf",
       byteSize: 1_400_000,
@@ -96,6 +97,19 @@ describe("the /documents destination", () => {
     const { router } = renderAt("/documents");
     await waitFor(() => expect(router.state.location.pathname).toBe("/portal"));
     expect(screen.queryByRole("link", { name: "Documents" })).not.toBeInTheDocument();
+  });
+
+  it("uses the configured document type colour in the repository", async () => {
+    const document = documentRow();
+    document.currentVersion = { ...document.currentVersion, documentTypeColor: "purple" };
+    const api = repositoryApi([[document]]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/documents");
+    const row = await screen.findByRole("row", { name: /Master services agreement/ });
+    expect(within(row).getByText("Executed", { selector: "span.rounded-pill" })).toHaveClass(
+      "bg-status-assigned-bg",
+      "text-status-assigned-fg",
+    );
   });
 
   it("renders the managed rows, controls, count, and Confidential marker", async () => {

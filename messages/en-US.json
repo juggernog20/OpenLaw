@@ -4880,6 +4880,9 @@
   "documents.showArchived": {
     "defaultMessage": "Show archived"
   },
+  "documents.type.color": {
+    "defaultMessage": "{color, select, grey {Grey} blue {Blue} amber {Amber} green {Green} red {Red} orange {Orange} purple {Purple} other {Automatic}}"
+  },
   "documents.type.none": {
     "defaultMessage": "No type"
   },
@@ -10580,14 +10583,23 @@
   "settings.documentTypes.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."
   },
+  "settings.documentTypes.colorError": {
+    "defaultMessage": "The colour could not be saved. Try again."
+  },
+  "settings.documentTypes.colorLabel": {
+    "defaultMessage": "Colour for {name}"
+  },
+  "settings.documentTypes.colorSaving": {
+    "defaultMessage": "Saving colour…"
+  },
   "settings.documentTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },
   "settings.documentTypes.fixed": {
-    "defaultMessage": "{name} is fixed. Contract workflows depend on it."
+    "defaultMessage": "{name} has a fixed name. Its colour can be changed."
   },
   "settings.documentTypes.help": {
-    "defaultMessage": "People pick a type when they upload a file, or leave it blank. Drag to reorder."
+    "defaultMessage": "People pick a type when they upload a file, or leave it blank. Choose a colour for each type. Drag to reorder."
   },
   "settings.documentTypes.inUse": {
     "defaultMessage": "{count, plural, one {# version} other {# versions}}"

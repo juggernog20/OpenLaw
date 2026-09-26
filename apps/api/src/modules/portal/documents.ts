@@ -2,6 +2,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { DOCUMENT_TYPE_COLORS } from "@openlaw/shared";
 import { DOCUMENT_VERSION_KINDS } from "@openlaw/db";
 import { requireAuth } from "../../auth/guards.js";
 import { problemResponse } from "../../lib/problem.js";
@@ -16,6 +17,13 @@ const Version = z.object({
   byteSize: z.number(),
   renderFamily: z.enum(RENDER_FAMILIES),
   kind: z.enum(DOCUMENT_VERSION_KINDS),
+  documentType: z
+    .object({
+      id: z.string(),
+      displayName: z.string(),
+      color: z.enum(DOCUMENT_TYPE_COLORS).nullable(),
+    })
+    .nullable(),
   note: z.string().nullable(),
   createdAt: z.iso.datetime(),
   uploadedBy: z.object({ id: z.string(), displayName: z.string(), image: z.string().nullable() }),

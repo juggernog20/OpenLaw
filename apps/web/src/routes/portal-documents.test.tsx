@@ -21,6 +21,7 @@ function version(number: number): PortalDocumentVersion {
     byteSize: 40,
     renderFamily: "image",
     kind: "draft_theirs",
+    documentType: null,
     note: `Round ${number}`,
     createdAt: "2026-09-12T12:00:00Z",
     uploadedBy: { id: "lawyer", displayName: "Legal colleague", image: null },
@@ -83,6 +84,26 @@ describe.each(["contract", "matter"] as const)("Portal %s Documents", (module) =
     const dialog = await screen.findByRole("dialog");
     if (module === "contract") expect(within(dialog).getByLabelText("Kind")).toBeInTheDocument();
     else expect(within(dialog).queryByLabelText("Kind")).not.toBeInTheDocument();
+  });
+
+  it("shows the configured colour and label of a document type", async () => {
+    setup(module, [
+      {
+        ...single,
+        versions: [
+          {
+            ...version(1),
+            isCurrent: true,
+            documentType: { id: "dt1", displayName: "Board paper", color: "purple" },
+          },
+        ],
+      },
+    ]);
+    const section = await screen.findByRole("region", { name: "Documents" });
+    expect(within(section).getByText("Board paper")).toHaveClass(
+      "bg-status-assigned-bg",
+      "text-status-assigned-fg",
+    );
   });
 
   it("shows a sole version once, with no empty history control", async () => {

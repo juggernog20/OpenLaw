@@ -18,7 +18,7 @@
  */
 
 import type { paths } from "@openlaw/api-client";
-import type { DocumentOwner } from "@openlaw/shared";
+import type { DocumentTypeColor, DocumentOwner } from "@openlaw/shared";
 import type { IntlShape } from "react-intl";
 import { useEffect, useState } from "react";
 import { api } from "./api";
@@ -305,6 +305,34 @@ export const DOCUMENT_KIND_PILL: Record<DocumentVersionKind, string> = {
   amendment: "bg-status-neutral-bg text-status-neutral-fg",
   generated_redline: "bg-status-neutral-bg text-status-neutral-fg",
 };
+
+export const DOCUMENT_TYPE_COLOR_PILL: Record<DocumentTypeColor, string> = {
+  grey: "bg-status-neutral-bg text-status-neutral-fg",
+  blue: "bg-status-info-bg text-status-info-fg",
+  amber: "bg-status-warning-bg text-status-warning-fg",
+  green: "bg-status-success-bg text-status-success-fg",
+  red: "bg-status-danger-bg text-status-danger-fg",
+  orange: "bg-status-severe-bg text-status-severe-fg",
+  purple: "bg-status-assigned-bg text-status-assigned-fg",
+};
+
+export function documentTypePill(
+  kind: DocumentVersionKind,
+  color?: DocumentTypeColor | null,
+): string {
+  return color ? DOCUMENT_TYPE_COLOR_PILL[color] : DOCUMENT_KIND_PILL[kind];
+}
+
+export function documentTypeColorLabel(intl: IntlShape, color: DocumentTypeColor | null): string {
+  return intl.formatMessage(
+    {
+      id: "documents.type.color",
+      defaultMessage:
+        "{color, select, grey {Grey} blue {Blue} amber {Amber} green {Green} red {Red} orange {Orange} purple {Purple} other {Automatic}}",
+    },
+    { color: color ?? "automatic" },
+  );
+}
 
 /** One Version kind, in the negotiation's own words. */
 export function documentKindLabel(intl: IntlShape, kind: DocumentVersionKind): string {

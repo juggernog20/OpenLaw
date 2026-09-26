@@ -11,6 +11,7 @@ import {
   contracts,
   desc,
   documents,
+  documentTypes,
   documentVersions,
   eq,
   inArray,
@@ -97,12 +98,18 @@ export async function listPortalDocuments(
           mimeType: documentVersions.mimeType,
           byteSize: documentVersions.byteSize,
           kind: documentVersions.kind,
+          documentType: {
+            id: documentTypes.id,
+            displayName: documentTypes.displayName,
+            color: documentTypes.color,
+          },
           note: documentVersions.note,
           createdAt: documentVersions.createdAt,
           uploadedBy: { id: users.id, displayName: users.displayName, image: users.image },
         })
         .from(documentVersions)
         .innerJoin(users, eq(users.id, documentVersions.createdBy))
+        .leftJoin(documentTypes, eq(documentTypes.id, documentVersions.documentTypeId))
         .where(
           inArray(
             documentVersions.documentId,
@@ -125,6 +132,7 @@ export async function listPortalDocuments(
           mimeType: version.mimeType,
           byteSize: version.byteSize,
           kind: version.kind,
+          documentType: version.documentType,
           note: version.note,
           uploadedBy: version.uploadedBy,
           createdAt: version.createdAt.toISOString(),

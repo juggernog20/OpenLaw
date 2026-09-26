@@ -1,0 +1,2 @@
+ALTER TABLE "document_types" ADD COLUMN "color" text;--> statement-breakpoint
+ALTER TABLE "document_types" ADD CONSTRAINT "document_types_color_check" CHECK ("document_types"."color" is null or "document_types"."color" in ('grey', 'blue', 'amber', 'green', 'red', 'orange', 'purple'));

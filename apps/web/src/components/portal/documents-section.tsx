@@ -16,7 +16,7 @@ import { FileTile, FileTileGrid, TILE_ACTION_CLASS } from "../documents/file-til
 import {
   documentDownloadHref,
   documentKindLabel,
-  DOCUMENT_KIND_PILL,
+  documentTypePill,
   DOCUMENT_VERSION_KINDS,
   uploadDocumentVersion,
   uploadRecordDocument,
@@ -399,8 +399,10 @@ function VersionSummary({ version }: Readonly<{ version: PortalDocumentVersion }
             values={{ number: version.versionNumber }}
           />
         </span>
-        <span className={`rounded-pill px-2 py-0.5 ${DOCUMENT_KIND_PILL[version.kind]}`}>
-          {documentKindLabel(intl, version.kind)}
+        <span
+          className={`rounded-pill px-2 py-0.5 ${documentTypePill(version.kind, version.documentType?.color)}`}
+        >
+          {version.documentType?.displayName ?? documentKindLabel(intl, version.kind)}
         </span>
         {version.isCurrent && (
           <span>

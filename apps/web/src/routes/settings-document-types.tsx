@@ -11,7 +11,17 @@
  * the Versions that carry it and only leaves the pickers.
  */
 import { redirect, useLoaderData } from "react-router";
-import { defineMessages } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
+import { useState } from "react";
+import { Check } from "lucide-react";
+import { DOCUMENT_TYPE_COLORS, type DocumentTypeColor } from "@openlaw/shared";
+import { Button } from "../components/ui/button";
+import { Popover, PopoverTrigger, PopoverContent } from "../components/ui/popover";
+import {
+  documentTypeColorLabel,
+  documentTypePill,
+  type DocumentTypeOption,
+} from "../lib/documents";
 import { DocumentsSettingsTabs } from "../components/documents-settings-tabs";
 import {
   TaxonomyTypesPane,
@@ -24,7 +34,8 @@ import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 
 interface DocumentTypeRow extends TaxonomyPaneRow {
-  systemKind: string | null;
+  systemKind: DocumentTypeOption["systemKind"];
+  color: DocumentTypeColor | null;
 }
 
 /** Every module's routes share one shape, so one literal types them all. */
@@ -61,7 +72,7 @@ const MESSAGES = defineMessages({
   help: {
     id: "settings.documentTypes.help",
     defaultMessage:
-      "People pick a type when they upload a file, or leave it blank. Drag to reorder.",
+      "People pick a type when they upload a file, or leave it blank. Choose a colour for each type. Drag to reorder.",
   },
   renameLabel: { id: "settings.documentTypes.renameLabel", defaultMessage: "Rename {name}" },
   inUse: {
@@ -106,7 +117,7 @@ const MESSAGES = defineMessages({
   archiveSubmit: { id: "settings.documentTypes.archiveSubmit", defaultMessage: "Archive type" },
   fixed: {
     id: "settings.documentTypes.fixed",
-    defaultMessage: "{name} is fixed. Contract workflows depend on it.",
+    defaultMessage: "{name} has a fixed name. Its colour can be changed.",
   },
 });
 
@@ -150,6 +161,115 @@ function paneApi(module: DocumentTypeModule): TaxonomyPaneApi<DocumentTypeRow> {
   };
 }
 
+function DocumentTypeColorPicker({
+  module,
+  row,
+  onSaved,
+}: Readonly<{
+  module: DocumentTypeModule;
+  row: DocumentTypeRow;
+  onSaved: (row: DocumentTypeRow) => void;
+}>) {
+  const intl = useIntl();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const label = intl.formatMessage(
+    {
+      id: "settings.documentTypes.colorLabel",
+      defaultMessage: "Colour for {name}",
+    },
+    { name: row.displayName },
+  );
+
+  async function save(color: DocumentTypeColor | null) {
+    if (color === row.color) {
+      setOpen(false);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api
+        .PATCH(one(module), { params: { path: { id: row.id } }, body: { color } })
+        .catch(() => undefined);
+      if (result?.data) {
+        onSaved(result.data.documentType);
+        setOpen(false);
+      } else {
+        const failure = await problem(result);
+        setError(
+          failure.detail ??
+            intl.formatMessage({
+              id: "settings.documentTypes.colorError",
+              defaultMessage: "The colour could not be saved. Try again.",
+            }),
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setError(null);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={label}
+          title={`${label}: ${documentTypeColorLabel(intl, row.color)}`}
+        >
+          <span
+            aria-hidden="true"
+            className={`flex size-5 items-center justify-center rounded-full ${documentTypePill(row.systemKind ?? "general", row.color)}`}
+          >
+            <span className="size-3 rounded-full bg-current" />
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56" aria-label={label}>
+        <p className="px-2 py-1 text-sm font-semibold">{label}</p>
+        <div className="flex flex-col gap-1" aria-busy={busy}>
+          {([null, ...DOCUMENT_TYPE_COLORS] as const).map((color) => (
+            <button
+              key={color ?? "automatic"}
+              type="button"
+              disabled={busy}
+              aria-pressed={row.color === color}
+              className={`flex min-h-8 items-center gap-2 rounded-button px-2 text-sm focus-visible:outline-2 focus-visible:outline-link disabled:opacity-50 ${documentTypePill(row.systemKind ?? "general", color)}`}
+              onClick={() => void save(color)}
+            >
+              <span aria-hidden="true" className="size-3 rounded-full bg-current" />
+              <span className="flex-1 text-start">{documentTypeColorLabel(intl, color)}</span>
+              {row.color === color && <Check size={14} aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+        {busy && (
+          <p role="status" className="px-2 pt-2 text-sm text-muted">
+            <FormattedMessage
+              id="settings.documentTypes.colorSaving"
+              defaultMessage="Saving colour…"
+            />
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="px-2 pt-2 text-sm text-status-danger-fg">
+            {error}
+          </p>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function SettingsDocumentTypesPage() {
   const { module, documentTypes } = useLoaderData() as {
     module: DocumentTypeModule;
@@ -167,6 +287,9 @@ export function SettingsDocumentTypesPage() {
         lockRename: true,
         label: MESSAGES.fixed,
       }}
+      rowActions={(row, onSaved) => (
+        <DocumentTypeColorPicker module={module} row={row} onSaved={onSaved} />
+      )}
       api={paneApi(module)}
       messages={MESSAGES}
     />

@@ -33,6 +33,12 @@ The **Type** column shows each Version's Document type. A Legal Team Member or A
 
 You cannot correct every Version. A **Generated redline** from a [Comparison export](compare-versions.md) has no type and shows **Generated redline**. It is read-only, and no upload list offers it. A Version that an Auto-Doc generated is also read-only. On a Knowledge Item, the column shows the item's Knowledge type. The column offers a choice there, but OpenLaw refuses the change and the Version keeps its label. To change that label, change the Knowledge Item's **Type**; see [Knowledge authoring](create-knowledge.md).
 
+## Configure Document type colours
+
+An Administrator can open **Settings → Documents**, choose **Matters**, **Contracts**, or **Entities**, and select the colour swatch beside a Document type. Choose a colour to save it immediately, or **Automatic** to restore its default. Built-in Contract types keep their fixed names but can have any of the available colours.
+
+The colour applies to existing and future Versions carrying that type, including archived types, in record Documents, the Documents repository, and the Business Portal. Colours adapt to the selected theme and do not change a Version's kind or the Executed pin.
+
 ## Primary Document and the Executed pin
 
 On a Contract, the **Primary** mark identifies its principal Document; **Make primary** moves that designation to another Document. **Mark as executed copy** sets the Executed pin on one Version, including an earlier Version in the expanded chain. **Unmark as executed copy** clears it. A later upload does not move an existing Executed pin merely by becoming the newest Version. The **Executed** type is separate from the pin. Choosing that type does not set the pin, and correcting a Version's type does not move it.

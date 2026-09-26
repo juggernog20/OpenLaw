@@ -22741,6 +22741,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
+                } | null;
                 note: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -22811,6 +22816,11 @@ export interface operations {
                   | "executed"
                   | "amendment"
                   | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
+                } | null;
                 note: string | null;
                 /** Format: date-time */
                 createdAt: string;
@@ -30751,6 +30761,8 @@ export interface operations {
                   | "amendment"
                   | "generated_redline";
                 documentType: string | null;
+                documentTypeColor:
+                  ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 originalFilename: string;
                 mimeType: string;
                 byteSize: number;
@@ -30863,6 +30875,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -30958,6 +30971,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31076,6 +31090,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31171,6 +31186,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31293,6 +31309,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31388,6 +31405,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31510,6 +31528,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31605,6 +31624,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31727,6 +31747,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31844,6 +31865,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -31954,6 +31976,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32051,6 +32074,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32152,6 +32176,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32248,6 +32273,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32288,6 +32314,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32364,6 +32391,8 @@ export interface operations {
                     id: string;
                     displayName: string;
                     archived: boolean;
+                    color:
+                      ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                   } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
@@ -32456,6 +32485,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32496,6 +32526,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32572,6 +32603,8 @@ export interface operations {
                     id: string;
                     displayName: string;
                     archived: boolean;
+                    color:
+                      ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                   } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
@@ -32635,6 +32668,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32675,6 +32709,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32751,6 +32786,8 @@ export interface operations {
                     id: string;
                     displayName: string;
                     archived: boolean;
+                    color:
+                      ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                   } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
@@ -32837,6 +32874,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32877,6 +32915,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -32953,6 +32992,8 @@ export interface operations {
                     id: string;
                     displayName: string;
                     archived: boolean;
+                    color:
+                      ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                   } | null;
                   /** @enum {string} */
                   source: "uploaded" | "generated";
@@ -33032,6 +33073,7 @@ export interface operations {
                 id: string;
                 displayName: string;
                 archived: boolean;
+                color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
               } | null;
               /** @enum {string} */
               source: "uploaded" | "generated";
@@ -33082,6 +33124,7 @@ export interface operations {
                 id: string;
                 displayName: string;
                 archived: boolean;
+                color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
               } | null;
               /** @enum {string} */
               source: "uploaded" | "generated";
@@ -33159,6 +33202,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -33257,6 +33301,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -33348,6 +33393,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -33439,6 +33485,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -33530,6 +33577,7 @@ export interface operations {
                   id: string;
                   displayName: string;
                   archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
                 } | null;
                 /** @enum {string} */
                 source: "uploaded" | "generated";
@@ -40580,6 +40628,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -40632,6 +40681,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -40690,6 +40740,7 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
+          color?: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
         };
       };
     };
@@ -40720,6 +40771,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -40776,6 +40828,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
@@ -40834,6 +40887,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -40886,6 +40940,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -40938,6 +40993,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
@@ -40994,6 +41050,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41046,6 +41103,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41104,6 +41162,7 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
+          color?: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
         };
       };
     };
@@ -41134,6 +41193,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41190,6 +41250,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
@@ -41248,6 +41309,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41300,6 +41362,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41352,6 +41415,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
@@ -41408,6 +41472,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41460,6 +41525,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41518,6 +41584,7 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
+          color?: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
         };
       };
     };
@@ -41548,6 +41615,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41604,6 +41672,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
@@ -41662,6 +41731,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41714,6 +41784,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             };
           };
         };
@@ -41750,6 +41821,7 @@ export interface operations {
             documentTypes: {
               id: string;
               displayName: string;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
               systemKind:
                 | (
                     | "draft_ours"
@@ -41760,6 +41832,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
