@@ -2027,6 +2027,20 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // provider's own ceremony, and the status arrives from the provider's
   // feed with no human here behind it. A void can be either, and it
   // selects on which.
+  "envelope.preparation_started": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.envelope.preparation_started",
+      defaultMessage: "{actor} started preparing this contract's envelope",
+    }),
+  },
+  "envelope.session_launched": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.envelope.session_launched",
+      defaultMessage: "{actor} requested an editing session for this contract's envelope",
+    }),
+  },
   "envelope.sent": {
     icon: Send,
     message: defineMessage({

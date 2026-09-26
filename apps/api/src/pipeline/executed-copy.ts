@@ -363,9 +363,8 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
         mimeType: "application/pdf",
         byteSize: stored.byteSize,
         checksumSha256: stored.checksumSha256,
-        // The integration holds no account. The nearest human act
-        // behind this file is the send, so the round is recorded
-        // against the person who sent the envelope.
+        // The preparer is the file's human author. Historical and direct-send
+        // rounds retain their recorded sender; provider feeds supply no actor.
         createdBy: owed.sentBy,
       });
       // CTR-014's pin, set **explicitly** on the version this round

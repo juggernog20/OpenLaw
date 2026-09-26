@@ -1072,7 +1072,7 @@ function EnvelopeRow({
                   aria-label={intl.formatMessage(
                     {
                       id: "signing.actionsFor",
-                      defaultMessage: "Actions for the envelope sent on {date}",
+                      defaultMessage: "Actions for the envelope: {date}",
                     },
                     {
                       date: envelope.sentAt

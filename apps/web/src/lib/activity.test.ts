@@ -1055,6 +1055,18 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "ai_field_prompt.reset": { slug: "effective_date" },
 
   // Signature round
+  "envelope.preparation_started": {
+    envelopeId: "env_1",
+    provider: "docusign",
+    documentId: "doc_1",
+    documentVersionId: "ver_3",
+    signerCount: 2,
+  },
+  "envelope.session_launched": {
+    envelopeId: "env_1",
+    provider: "docusign",
+    providerEnvelopeId: "de_1",
+  },
   "envelope.sent": {
     envelopeId: "env_1",
     provider: "docusign",

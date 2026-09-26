@@ -67,6 +67,9 @@ export const signerErasureRoutes: FastifyPluginAsyncZod = async (app) => {
           "DD-017). Every `envelope.sent` activity entry naming this " +
           "address has that name and address rewritten to a tombstone, " +
           "in place, and the envelope's signer rows for it are deleted. " +
+          "Affected Envelopes also lose their retained invitation subject, " +
+          "which may identify the Signer. Preparation and session Activity " +
+          "retain references and counts without duplicating Signer details. " +
           "The entry keeps its shape: how many people were asked, and " +
           "in what order, is about the contract rather than about the " +
           "person. The erasure is itself appended to the log, carrying " +

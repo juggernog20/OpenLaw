@@ -30,6 +30,7 @@ import {
   EnvelopeNotFoundError,
   SigningConfigError,
 } from "../../lib/signing/provider.js";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { requestExecutedCopy } from "../../lib/signing/completion.js";
 
 const hash = (state: string) => createHash("sha256").update(state).digest("hex");
@@ -202,10 +203,28 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
             "The Signing connector changed. Check its current settings, then Resume.",
           );
         const url = await signing.launchEnvelope(envelope.providerEnvelopeId!, returnUrl.href);
-        await app.db
-          .update(contractEnvelopes)
-          .set({ confirmationPending: true })
-          .where(and(eq(contractEnvelopes.id, envelope.id), eq(contractEnvelopes.status, "draft")));
+        await app.db.transaction(async (tx) => {
+          await tx
+            .update(contractEnvelopes)
+            .set({ confirmationPending: true })
+            .where(
+              and(eq(contractEnvelopes.id, envelope.id), eq(contractEnvelopes.status, "draft")),
+            );
+          // The provider issued a session even if the final access check withholds
+          // its URL. Neither issuance nor a browser return establishes a send.
+          await recordActivity(tx, {
+            entityType: "contract",
+            entityId: envelope.contractId,
+            actorId: request.user.id,
+            action: "envelope.session_launched",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: {
+              envelopeId: envelope.id,
+              provider: envelope.provider,
+              providerEnvelopeId: envelope.providerEnvelopeId!,
+            },
+          });
+        });
         await app.db
           .delete(envelopeLaunches)
           .where(

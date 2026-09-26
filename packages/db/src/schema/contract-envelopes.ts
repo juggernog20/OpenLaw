@@ -110,7 +110,7 @@ export const contractEnvelopes = pgTable(
     /** The primary document the version was chosen from. NULL on rows
      * sent before #1171, which name only their version. */
     documentId: text("document_id").references(() => documents.id, { onDelete: "set null" }),
-    /** The subject line the round carries. NULL on rows sent before #1171. */
+    /** The retained subject. NULL on historical rounds and after Signer erasure. */
     subject: text("subject"),
     /** The caller's key for one request; unique per contract. */
     idempotencyKey: text("idempotency_key"),

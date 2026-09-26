@@ -1072,6 +1072,212 @@ describe("preparation refusals and reservations", () => {
     return { contract, payload, prepare };
   }
 
+  it("keeps preparation and session actors separate from provider-confirmed history", async () => {
+    const { contract, payload, prepare } = await ready();
+    const history = async () => {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/activity?entityType=contract&entityId=${contract.id}`,
+        cookies: as(MEMBER),
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      return response
+        .json()
+        .entries.filter((entry: { action: string }) => entry.action.startsWith("envelope."));
+    };
+    const prepared = await prepare();
+    expect(prepared.statusCode, prepared.body).toBe(201);
+    const envelope = prepared.json().envelopes[0];
+    expect((await prepare()).json().envelopes[0].id).toBe(envelope.id);
+    expect(await history()).toMatchObject([
+      {
+        action: "envelope.confirmed",
+        actor: null,
+        payload: { envelopeId: envelope.id, status: "draft" },
+      },
+      {
+        action: "envelope.preparation_started",
+        actor: { id: idOf(MEMBER) },
+        payload: {
+          envelopeId: envelope.id,
+          documentVersionId: payload.documentVersionId,
+          signerCount: 2,
+        },
+      },
+    ]);
+    const launched = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/envelopes/${envelope.id}/launch`,
+      cookies: as(ADMIN),
+    });
+    expect(launched.statusCode, launched.body).toBe(200);
+    const stored = await storedRound(contract.id);
+    const delivery = provider().signedDelivery({
+      providerEnvelopeId: stored.providerEnvelopeId!,
+      status: "sent",
+    });
+    for (let replay = 0; replay < 2; replay++) {
+      const response = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/signing/docusign/webhook",
+        headers: { ...delivery.headers, "content-type": "application/json" },
+        payload: delivery.body,
+      });
+      expect(response.statusCode, response.body).toBe(204);
+    }
+    const entries = await history();
+    expect(entries).toHaveLength(4);
+    expect(
+      entries.find((entry: { action: string }) => entry.action === "envelope.session_launched"),
+    ).toMatchObject({ actor: { id: idOf(ADMIN) } });
+    expect(
+      entries.find((entry: { action: string }) => entry.action === "envelope.sent"),
+    ).toMatchObject({ actor: null });
+    expect(JSON.stringify(entries)).not.toContain(SIGNERS[0].email);
+    expect(JSON.stringify(entries)).not.toContain(SIGNERS[0].name);
+    expect(JSON.stringify(entries)).not.toContain(launched.json().url);
+    expect((await signingState(as(MEMBER), contract.number)).envelopes[0]).toMatchObject({
+      sentBy: { id: idOf(MEMBER) },
+      status: "sent",
+    });
+  });
+
+  it.each(["preparing", "draft", "discarded", "signed"] as const)(
+    "erases retained preparation Signers and subject in %s without rewriting history",
+    async (status) => {
+      const { contract, prepare } = await ready();
+      const leaving = { name: "Erased preparation Signer", email: `erase-${status}@example.test` };
+      const original = provider().prepareEnvelope.bind(provider());
+      const lost =
+        status === "preparing"
+          ? vi.spyOn(provider(), "prepareEnvelope").mockImplementationOnce(async (input) => {
+              await original(input);
+              throw new SigningTimeoutError("Lost response");
+            })
+          : null;
+      try {
+        await prepare({
+          signers: [leaving, { personId: idOf(MEMBER) }],
+          subject: `${leaving.name} ${leaving.email}`,
+        });
+      } finally {
+        lost?.mockRestore();
+      }
+      const row = await storedRound(contract.id);
+      if (status === "discarded" || status === "signed") {
+        const signed = provider().signedDelivery({
+          providerEnvelopeId: row.providerEnvelopeId!,
+          status,
+        });
+        expect(
+          (
+            await harness.app.inject({
+              method: "POST",
+              url: "/api/v1/signing/docusign/webhook",
+              headers: { ...signed.headers, "content-type": "application/json" },
+              payload: signed.body,
+            })
+          ).statusCode,
+        ).toBe(204);
+      }
+      const history = () =>
+        harness.db
+          .select()
+          .from(activityLog)
+          .where(eq(activityLog.entityId, contract.id))
+          .orderBy(asc(activityLog.id));
+      const before = await history();
+      const erased = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/signer-erasures",
+        cookies: as(ADMIN),
+        payload: { email: leaving.email.toUpperCase() },
+      });
+      expect(erased.statusCode, erased.body).toBe(200);
+      expect(erased.json().erasure).toEqual({ entriesRedacted: 0, signerRowsDeleted: 1 });
+      expect(await storedRound(contract.id)).toMatchObject({
+        id: row.id,
+        subject: null,
+        documentVersionId: row.documentVersionId,
+        sentBy: idOf(MEMBER),
+        status,
+      });
+      expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.signers).toEqual([
+        { name: MEMBER.displayName, email: MEMBER.email },
+      ]);
+      expect(await history()).toEqual(before);
+      if (status === "preparing") {
+        await due(row.id);
+        await recover(row.id);
+        expect(await storedRound(contract.id)).toMatchObject({ subject: null, status: "draft" });
+        expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.signers).toEqual([
+          { name: MEMBER.displayName, email: MEMBER.email },
+        ]);
+      }
+      expect(await signerAppearances(harness.db, leaving.email)).toBe(0);
+      expect(
+        (
+          await harness.app.inject({
+            method: "POST",
+            url: "/api/v1/signer-erasures",
+            cookies: as(ADMIN),
+            payload: { email: MEMBER.email },
+          })
+        ).statusCode,
+      ).toBe(409);
+    },
+  );
+
+  it.each(["draft", "send"] as const)(
+    "does not restore erased Signers when an in-flight %s finishes or retries",
+    async (kind) => {
+      const { contract, payload, prepare } = await ready();
+      const leaving = { name: "In flight Signer", email: `in-flight-${kind}@example.test` };
+      const method = kind === "draft" ? "prepareEnvelope" : "sendEnvelope";
+      const original = provider()[method].bind(provider());
+      const intercepted = vi
+        .spyOn(provider(), method)
+        .mockImplementationOnce(async (input: PrepareEnvelopeInput) => {
+          const result = await original(input);
+          const erased = await harness.app.inject({
+            method: "POST",
+            url: "/api/v1/signer-erasures",
+            cookies: as(ADMIN),
+            payload: { email: leaving.email },
+          });
+          expect(erased.statusCode, erased.body).toBe(200);
+          expect(erased.json().erasure).toEqual({ entriesRedacted: 0, signerRowsDeleted: 1 });
+          return result;
+        });
+      const request = () =>
+        kind === "draft"
+          ? prepare({ signers: [leaving, SIGNERS[1]], subject: leaving.email })
+          : harness.app.inject({
+              method: "POST",
+              url: `/api/v1/contracts/${contract.number}/envelopes`,
+              cookies: as(MEMBER),
+              payload: { ...payload, signers: [leaving, SIGNERS[1]], subject: leaving.email },
+            });
+      try {
+        const first = await request();
+        expect(first.statusCode, first.body).toBe(201);
+        const retried = await request();
+        expect(retried.statusCode, retried.body).toBe(201);
+        expect(retried.json().envelopes).toMatchObject([
+          { id: first.json().envelopes[0].id, subject: null, signers: [SIGNERS[1]] },
+        ]);
+        expect(intercepted).toHaveBeenCalledTimes(1);
+      } finally {
+        intercepted.mockRestore();
+      }
+      expect(await signerAppearances(harness.db, leaving.email)).toBe(0);
+      if (kind === "send")
+        expect(await entriesOn(contract.id)).toMatchObject([
+          { payload: { signers: [{ name: ERASED, email: ERASED }, SIGNERS[1]] } },
+        ]);
+    },
+  );
+
   it("refuses Business Users, unreachable or archived Contracts, foreign Versions and duplicate Signers", async () => {
     const { contract, payload, prepare } = await ready();
     const denied = await harness.app.inject({
