@@ -55,7 +55,10 @@ import { RecordContext } from "../components/record-context";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialMarker } from "../components/confidential-marker";
 import { ConfidentialToggle } from "../components/confidential-toggle";
-import { LinkedRecordsList } from "../components/linked-records-list";
+import {
+  EntityContractsTable,
+  EntityMattersTable,
+} from "../components/entities/linked-records-table";
 import {
   documentLandingParams,
   previousComparableVersion,
@@ -64,7 +67,6 @@ import {
   type ContractDocument,
 } from "../lib/documents";
 import { readRecordFolders } from "../lib/folders";
-import { ENTITY_LINKED_RECORD_SEAMS } from "../lib/linked-records";
 
 const RECORD_TABS = ["ownership", "obligations", "documents", "contracts", "matters"] as const;
 type EntityTab = "overview" | (typeof RECORD_TABS)[number];
@@ -822,17 +824,9 @@ function EntityRecord() {
                 onFolders={setFolders}
               />
             ) : loaded.tab === "contracts" ? (
-              <LinkedRecordsList
-                key={`${saved.id}:contracts`}
-                record={recordFacts.record}
-                seam={ENTITY_LINKED_RECORD_SEAMS.contract}
-              />
+              <EntityContractsTable key={`${saved.id}:contracts`} entityId={saved.id} />
             ) : (
-              <LinkedRecordsList
-                key={`${saved.id}:matters`}
-                record={recordFacts.record}
-                seam={ENTITY_LINKED_RECORD_SEAMS.matter}
-              />
+              <EntityMattersTable key={`${saved.id}:matters`} entityId={saved.id} />
             )}
           </div>
         </RecordApplets>

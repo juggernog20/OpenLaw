@@ -6,7 +6,7 @@
  * status moves and their activity in one transaction (MTR-002, DD-017).
  */
 
-import type { Db } from "@openlaw/db";
+import type { Db, SQL } from "@openlaw/db";
 import {
   and,
   eq,
@@ -69,6 +69,7 @@ export async function listMatters(
   db: Db,
   user: AuthenticatedUser,
   input: z.input<typeof MatterListQuery> = {},
+  additionalScope?: SQL,
 ) {
   assertReader(user);
   const query = MatterListQuery.parse(input);
@@ -76,6 +77,7 @@ export async function listMatters(
   const today = civilToday();
   const sort: SortRequest | null = query.sort ? { key: query.sort, dir: query.dir ?? "asc" } : null;
   const predicates = and(
+    additionalScope,
     query.includeArchived === "true" ? undefined : isNull(matters.archivedAt),
     query.includeClosed === "true" ? undefined : eq(matterStatuses.category, "open"),
     choiceFilter(matters.statusId, query.status),

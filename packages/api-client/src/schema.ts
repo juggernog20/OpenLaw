@@ -39080,7 +39080,33 @@ export interface operations {
   };
   listEntityContracts: {
     parameters: {
-      query?: never;
+      query?: {
+        owner?: string;
+        status?: string;
+        type?: string;
+        effectiveFrom?: string;
+        effectiveTo?: string;
+        expiryFrom?: string;
+        expiryTo?: string;
+        includeArchived?: "true" | "false";
+        includeEnded?: "true" | "false";
+        sort?:
+          | "number"
+          | "title"
+          | "type"
+          | "status"
+          | "owner"
+          | "counterparty"
+          | "entity"
+          | "risk"
+          | "priority"
+          | "effectiveDate"
+          | "expiryDate"
+          | "createdAt"
+          | "updatedAt";
+        dir?: "asc" | "desc";
+        cursor?: string;
+      };
       header?: never;
       path: {
         id: string;
@@ -39097,19 +39123,116 @@ export interface operations {
         content: {
           "application/json": {
             records: {
+              id: string;
+              number: number;
+              title: string;
+              contractTypeId: string;
+              contractTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              stage: "draft" | "review" | "approval" | "signature" | "active" | "ended";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              createdBy?: string | null;
+              entity:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        legalName: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                      }
+                  )
+                | null;
+              primaryCounterparty: {
+                id: string;
+                name: string;
+              } | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              value: {
+                amount: number;
+                currency: string;
+                /** @enum {string} */
+                cadence: "one_time" | "monthly" | "annually" | "other";
+                cadenceDescription?: string;
+              } | null;
+              /** @enum {string} */
+              termType: "fixed" | "auto_renew" | "evergreen";
+              effectiveDate: string | null;
+              expiryDate: string | null;
+              renewalPeriodMonths: number | null;
+              noticePeriodDays: number | null;
+              noticeDeadline: string | null;
+              daysRemaining: number | null;
+              renewalPendingConfirmation: boolean;
+              proposedRenewalExpiry: string | null;
+              owningDepartment: string | null;
+              owningDepartmentId: string | null;
+              region: string | null;
+              description: string | null;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              aiUnverified: {
+                [key: string]:
+                  | {
+                      runId: string;
+                      sourceContext?: boolean;
+                      keyDateId?: string;
+                      draftId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    }
+                  | {
+                      draftId: string;
+                      runId?: string;
+                      keyDateId?: string;
+                      /** Format: date-time */
+                      writtenAt: string;
+                    };
+              } | null;
+              isConfidential: boolean;
+              endedAt: string | null;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
               /** @enum {string} */
               kind: "contract";
               /** @enum {boolean} */
               restricted: false;
-              id: string;
-              number: number;
-              title: string;
-              statusName: string;
-              isConfidential: boolean;
               archived: boolean;
               /** @enum {string} */
               statusCategory: "draft" | "review" | "approval" | "signature" | "active" | "ended";
             }[];
+            total: number;
+            nextCursor: string | null;
           };
         };
       };
@@ -39126,7 +39249,25 @@ export interface operations {
   };
   listEntityMatters: {
     parameters: {
-      query?: never;
+      query?: {
+        includeClosed?: "true" | "false";
+        includeArchived?: "true" | "false";
+        status?: string;
+        type?: string;
+        priority?: string;
+        risk?: string;
+        timeZone?: string;
+        openedFrom?: string;
+        openedTo?: string;
+        deadlineFrom?: string;
+        deadlineTo?: string;
+        manager?: string;
+        incomplete?: "true" | "false";
+        sort?:
+          "number" | "title" | "type" | "status" | "priority" | "risk" | "manager" | "openedAt";
+        dir?: "asc" | "desc";
+        cursor?: string;
+      };
       header?: never;
       path: {
         id: string;
@@ -39143,19 +39284,73 @@ export interface operations {
         content: {
           "application/json": {
             records: {
+              id: string;
+              number: number;
+              title: string;
+              description: string | null;
+              matterTypeId: string;
+              matterTypeName: string;
+              statusId: string;
+              statusName: string;
+              /** @enum {string} */
+              statusCategory: "open" | "closed";
+              /** @enum {string} */
+              statusProgressionGroup: "open" | "in_progress" | "waiting";
+              manager: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              businessOwner?: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              } | null;
+              departmentId?: string | null;
+              department?: string | null;
+              region?: string | null;
+              createdBy?: string | null;
+              /** @enum {string} */
+              priority: "low" | "medium" | "high" | "critical";
+              risk: ("low" | "medium" | "high" | "critical") | null;
+              aiUnverified?: {
+                [key: string]: {
+                  draftId: string;
+                  writtenAt: string;
+                  targetTypeId?: string;
+                  keyDateId?: string;
+                };
+              } | null;
+              customFields: {
+                [key: string]: string | number | boolean | string[];
+              };
+              /** Format: date-time */
+              openedAt: string;
+              closedAt: string | null;
+              isConfidential: boolean;
+              archivedAt: string | null;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+              nextDeadline: {
+                /** Format: date */
+                date: string;
+                label: string;
+                /** @enum {string} */
+                source: "task" | "key_date";
+                unverified?: boolean;
+              } | null;
               /** @enum {string} */
               kind: "matter";
               /** @enum {boolean} */
               restricted: false;
-              id: string;
-              number: number;
-              title: string;
-              statusName: string;
-              isConfidential: boolean;
               archived: boolean;
-              /** @enum {string} */
-              statusCategory: "open" | "closed";
             }[];
+            total: number;
+            nextCursor: string | null;
           };
         };
       };
@@ -40572,6 +40767,7 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
+              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
@@ -41832,7 +42028,6 @@ export interface operations {
                     | "amendment"
                   )
                 | null;
-              color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
             }[];
           };
         };
