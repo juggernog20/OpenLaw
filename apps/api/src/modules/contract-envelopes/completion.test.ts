@@ -306,7 +306,7 @@ async function providerIdOf(envelopeId: string): Promise<string> {
     .from(contractEnvelopes)
     .where(eq(contractEnvelopes.id, envelopeId));
   expect(row, "the envelope row").toBeDefined();
-  return row!.providerEnvelopeId;
+  return row!.providerEnvelopeId!;
 }
 
 /** Pushes one delivery at the webhook route, signed by this install's
@@ -815,3 +815,26 @@ describe("an executed copy larger than this install accepts", () => {
 function sweepLog() {
   return { info: () => {}, warn: () => {}, error: () => {} };
 }
+
+it("files an early draft completion once and preserves a later Contract Stage", async () => {
+  const contract = await recordWithPaper("Draft completed before its sent event");
+  const envelope = await sendFrom(contract.number);
+  const source = await primaryOf(contract.number);
+  await harness.db
+    .update(contractEnvelopes)
+    .set({ status: "draft", sentAt: null, confirmationPending: true })
+    .where(eq(contractEnvelopes.id, envelope.id));
+  await moveTo(contract.number, "review");
+  await signIt(envelope);
+  await settledFetch(contract.number, envelope.id);
+  await signIt(envelope);
+  const after = await primaryOf(contract.number);
+  expect(after.id).toBe(source.id);
+  const executed = after.versions.filter((version) => version.kind === "executed");
+  expect(executed).toHaveLength(1);
+  expect(executed[0]!.isExecuted).toBe(true);
+  expect((await envelopeRow(contract.number, envelope.id)).executedCopy!.versionId).toBe(
+    executed[0]!.id,
+  );
+  expect((await statusOf(contract.id)).stage).toBe("review");
+});

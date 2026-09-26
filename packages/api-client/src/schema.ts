@@ -1224,7 +1224,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn the e-signature connector off (CTR-013) without losing its credentials. Every surface then answers as an unconfigured install does — the send control leaves the record and the manual hand-off is the path again. A live envelope does not refuse this: turning the connector back on picks the round up where the sweep left it */
+    /** Turn the e-signature connector off (CTR-013) without losing its credentials. New sends and launches are refused. Existing external sessions remain usable and provider accounting continues */
     post: operations["disableSigningConnector"];
     delete?: never;
     options?: never;
@@ -1241,7 +1241,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record and the reconciliation sweep reaches every round that was out while it was off */
+    /** Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record. Provider accounting continues in both states */
     post: operations["enableSigningConnector"];
     delete?: never;
     options?: never;
@@ -1398,7 +1398,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Erase an external signer's name and address (CTR-013, DD-017). Every `envelope.sent` activity entry naming this address has that name and address rewritten to a tombstone, in place, and the envelope's signer rows for it are deleted. The entry keeps its shape: how many people were asked, and in what order, is about the contract rather than about the person. The erasure is itself appended to the log, carrying counts and no address. Refused for an address that belongs to a user of this install — their erasure is a different act. An address that was never a signer's answers with zeros. Copies already shipped to a SIEM are outside this install and are the operator's to purge */
+    /** Erase an external signer's name and address (CTR-013, DD-017). Every `envelope.sent` activity entry naming this address has that name and address rewritten to a tombstone, in place, and the envelope's signer rows for it are deleted. Affected Envelopes also lose their retained invitation subject, which may identify the Signer. Preparation and session Activity retain references and counts without duplicating Signer details. The entry keeps its shape: how many people were asked, and in what order, is about the contract rather than about the person. The erasure is itself appended to the log, carrying counts and no address. Refused for an address that belongs to a user of this install — their erasure is a different act. An address that was never a signer's answers with zeros. Copies already shipped to a SIEM are outside this install and are the operator's to purge */
     post: operations["eraseSigner"];
     delete?: never;
     options?: never;
@@ -5207,11 +5207,28 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One contract's signing envelopes, newest send first (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
+    /** One contract's signing envelopes, newest preparation first with historical Sent ordering (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
     get: operations["listContractEnvelopes"];
     put?: never;
-    /** Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are name-and-email pairs and every one of them is asked at once: there is no routing order. A successful send moves the contract to its first live Signature status. Sending is legal at any stage. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has an envelope out — two envelopes must never race for one signature. The provider is called first and the row commits once it accepts; an envelope the provider took but the record could not keep is voided again before the refusal is raised, so the two systems do not drift apart silently. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
+    /** Legacy explicit direct-send API. Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are users of this install, by id, or name-and-email pairs, and every one of them is asked at once: there is no routing order. A successful send moves the contract to its first live Signature status. Sending is legal at any stage. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has a live envelope (preparing, draft, or sent) — two envelopes must never race for one signature. The live envelope is reserved before the provider is called. A send the provider refuses leaves no row. A send with no clear answer stays reserved as an uncertain preparing envelope, and a matching idempotent retry answers with it rather than sending again. An envelope the provider took but the record could not keep is voided again before the refusal is raised; if the provider does not confirm that void, the envelope stays reserved with its provider id. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
     post: operations["sendContractEnvelope"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{number}/envelopes/prepare": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. */
+    post: operations["prepareContractEnvelope"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5227,8 +5244,42 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Withdraw a live envelope (CTR-013). Three actors may: the person who sent it, the contract's Owner, and an Administrator — a mistaken or superseded send should not sit open, and it should not wait on the one person who made it. The reason is required, because the provider records it with the withdrawal and the record draws it on the row. The provider is told first and the voided transition is applied after it accepts, so the record never says withdrawn while the envelope is still collecting signatures. An envelope that has already ended — signed, declined, or voided — is refused: an ending is part of the record. Appends one envelope.voided entry on the contract at the working-team tier, attributed to the voider (DD-017). Once it is voided the contract sends again, because the one-live-envelope rule holds only while an envelope is out. An envelope on a contract this viewer cannot reach answers 404, exactly as for one that was never sent; an archived contract takes no void until it is restored */
+    /** Withdraw a live envelope (CTR-013). Three actors may: the preparer or direct sender, the contract's Owner, and an Administrator — a mistaken or superseded send should not sit open, and it should not wait on the one person who made it. The reason is required, because the provider records it with the withdrawal and the record draws it on the row. The provider is told first and the voided transition is applied after it accepts, so the record never says withdrawn while the envelope is still collecting signatures. An envelope that has already ended — signed, declined, or voided — is refused: an ending is part of the record. Appends one envelope.voided entry on the contract at the working-team tier, attributed to the voider (DD-017). Once it is voided the contract sends again, because the one-live-envelope rule holds only while an envelope is out. An envelope on a contract this viewer cannot reach answers 404, exactly as for one that was never sent; an archived contract takes no void until it is restored */
     post: operations["voidContractEnvelope"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/envelopes/{envelopeId}/launch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Request a Sender View when signingPreparationEnabled is on. Administrator or Legal Team Member only; the caller must be the preparer, Legal Owner, or an Administrator */
+    post: operations["launchContractEnvelope"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/signing/return": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm a Sender View return as an Administrator or Legal Team Member. The event is only a hint; this POST rechecks the user and Contract access before granting access or confirming provider status */
+    post: operations["confirmEnvelopeReturn"];
     delete?: never;
     options?: never;
     head?: never;
@@ -28599,7 +28650,15 @@ export interface operations {
               id: string;
               provider: string;
               /** @enum {string} */
-              status: "sent" | "signed" | "declined" | "voided";
+              status:
+                | "preparing"
+                | "draft"
+                | "preparation_failed"
+                | "discarded"
+                | "sent"
+                | "signed"
+                | "declined"
+                | "voided";
               signers: {
                 name: string;
                 email: string;
@@ -28612,8 +28671,20 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               };
-              /** Format: date-time */
-              sentAt: string;
+              sentAt: string | null;
+              confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
+              preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
+              subject: string | null;
+              documentVersionId: string | null;
+              documentId: string | null;
+              /** @enum {string} */
+              sourceState: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -28626,6 +28697,7 @@ export interface operations {
             }[];
             signingConfigured: boolean;
             updateMode: ("polling" | "webhook") | null;
+            preparationEnabled?: boolean;
             primaryDocument: {
               id: string;
               title: string;
@@ -28664,6 +28736,7 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
+          idempotencyKey?: string;
           documentVersionId: string;
           signers: (
             | {
@@ -28691,7 +28764,15 @@ export interface operations {
               id: string;
               provider: string;
               /** @enum {string} */
-              status: "sent" | "signed" | "declined" | "voided";
+              status:
+                | "preparing"
+                | "draft"
+                | "preparation_failed"
+                | "discarded"
+                | "sent"
+                | "signed"
+                | "declined"
+                | "voided";
               signers: {
                 name: string;
                 email: string;
@@ -28704,8 +28785,20 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               };
-              /** Format: date-time */
-              sentAt: string;
+              sentAt: string | null;
+              confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
+              preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
+              subject: string | null;
+              documentVersionId: string | null;
+              documentId: string | null;
+              /** @enum {string} */
+              sourceState: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -28718,6 +28811,7 @@ export interface operations {
             }[];
             signingConfigured: boolean;
             updateMode: ("polling" | "webhook") | null;
+            preparationEnabled?: boolean;
             primaryDocument: {
               id: string;
               title: string;
@@ -28733,7 +28827,7 @@ export interface operations {
           };
         };
       };
-      /** @description The send was refused: this install has no e-signature connector, or the contract already has an envelope out. An archived contract is refused here too, without naming a type. */
+      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -28747,6 +28841,148 @@ export interface operations {
             type:
               | "urn:openlaw:problem:signing-not-configured"
               | "urn:openlaw:problem:envelope-live"
+              | "urn:openlaw:problem:envelope-idempotency-conflict"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  prepareContractEnvelope: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          idempotencyKey: string;
+          documentVersionId: string;
+          signers: (
+            | {
+                personId: string;
+              }
+            | {
+                name: string;
+                /** Format: email */
+                email: string;
+              }
+          )[];
+          subject?: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            envelopes: {
+              id: string;
+              provider: string;
+              /** @enum {string} */
+              status:
+                | "preparing"
+                | "draft"
+                | "preparation_failed"
+                | "discarded"
+                | "sent"
+                | "signed"
+                | "declined"
+                | "voided";
+              signers: {
+                name: string;
+                email: string;
+              }[];
+              documentTitle: string | null;
+              documentVersionNumber: number | null;
+              reason: string | null;
+              sentBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+              };
+              sentAt: string | null;
+              confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
+              preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
+              subject: string | null;
+              documentVersionId: string | null;
+              documentId: string | null;
+              /** @enum {string} */
+              sourceState: "available" | "changed" | "unavailable";
+              completedAt: string | null;
+              /** @enum {string} */
+              executedFetch: "pending" | "ready" | "failed";
+              executedCopy: {
+                documentId: string;
+                versionId: string;
+                versionNumber: number;
+                originalFilename: string;
+              } | null;
+            }[];
+            signingConfigured: boolean;
+            updateMode: ("polling" | "webhook") | null;
+            preparationEnabled?: boolean;
+            primaryDocument: {
+              id: string;
+              title: string;
+              versions: {
+                id: string;
+                versionNumber: number;
+                kind: string;
+                originalFilename: string;
+                /** Format: date-time */
+                createdAt: string;
+              }[];
+            } | null;
+          };
+        };
+      };
+      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:signing-not-configured"
+              | "urn:openlaw:problem:envelope-live"
+              | "urn:openlaw:problem:envelope-idempotency-conflict"
               | "about:blank";
             title: string;
             status: number;
@@ -28798,7 +29034,15 @@ export interface operations {
               id: string;
               provider: string;
               /** @enum {string} */
-              status: "sent" | "signed" | "declined" | "voided";
+              status:
+                | "preparing"
+                | "draft"
+                | "preparation_failed"
+                | "discarded"
+                | "sent"
+                | "signed"
+                | "declined"
+                | "voided";
               signers: {
                 name: string;
                 email: string;
@@ -28811,8 +29055,20 @@ export interface operations {
                 displayName: string;
                 image: string | null;
               };
-              /** Format: date-time */
-              sentAt: string;
+              sentAt: string | null;
+              confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
+              preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
+              recoveryAttempts: number;
+              nextRecoveryAt: string | null;
+              recoveryStopped:
+                ("lookup_expired" | "attempts_exhausted" | "identity_missing") | null;
+              subject: string | null;
+              documentVersionId: string | null;
+              documentId: string | null;
+              /** @enum {string} */
+              sourceState: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -28825,6 +29081,7 @@ export interface operations {
             }[];
             signingConfigured: boolean;
             updateMode: ("polling" | "webhook") | null;
+            preparationEnabled?: boolean;
             primaryDocument: {
               id: string;
               title: string;
@@ -28860,6 +29117,71 @@ export interface operations {
               path: string;
               message: string;
             }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  launchContractEnvelope: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        envelopeId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            url: string;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  confirmEnvelopeReturn: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            destination: string;
+            waiting: boolean;
           };
         };
       };

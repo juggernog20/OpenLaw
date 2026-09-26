@@ -33,7 +33,7 @@
  * answers.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   activityLog,
   and,
@@ -48,7 +48,7 @@ import {
 import { SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
 import { provisionUser } from "../../auth/instance.js";
 import { FAKE_SIGNATURE_HEADER, FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
-import type { WebhookDelivery } from "../../lib/signing/provider.js";
+import { EnvelopeAccessError, type WebhookDelivery } from "../../lib/signing/provider.js";
 import {
   signInCookies,
   startHarness,
@@ -306,7 +306,7 @@ async function providerIdOf(envelopeId: string): Promise<string> {
     .from(contractEnvelopes)
     .where(eq(contractEnvelopes.id, envelopeId));
   expect(row, "the envelope row").toBeDefined();
-  return row!.providerEnvelopeId;
+  return row!.providerEnvelopeId!;
 }
 
 /** The fake this app resolved. Non-null once a request has resolved the
@@ -543,6 +543,29 @@ describe("what a void is refused for", () => {
     } finally {
       await configureConnector();
     }
+  });
+});
+
+describe("an envelope the provider will not let the connector touch", () => {
+  it("keeps the row live and says what to do, rather than failing the request", async () => {
+    const record = await recordWithEnvelopeOut("Permission withdrawn mid-round");
+    const denied = vi
+      .spyOn(harness.signing!, "voidEnvelope")
+      .mockRejectedValueOnce(
+        new EnvelopeAccessError("The Signing user cannot access this Envelope."),
+      );
+    try {
+      const res = await voidEnvelope(as(SENDER), record.envelope.id);
+      expect(res.statusCode, res.body).toBe(502);
+      expect(res.json().detail).toContain("permissions");
+    } finally {
+      denied.mockRestore();
+    }
+    const [row] = await harness.db
+      .select({ status: contractEnvelopes.status })
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.id, record.envelope.id));
+    expect(row!.status).toBe("sent");
   });
 });
 

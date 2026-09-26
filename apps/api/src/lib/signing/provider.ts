@@ -59,6 +59,15 @@ export class SigningConfigError extends SigningError {
   }
 }
 
+/** The adapter proves it failed before submitting creation. Generic provider
+ * errors do not carry this guarantee, even when they describe credentials. */
+export class SigningNotSubmittedError extends SigningError {
+  constructor(message: string, options: { cause: unknown }) {
+    super(message, options);
+    this.name = "SigningNotSubmittedError";
+  }
+}
+
 /**
  * The provider understood the request and said no — a malformed
  * envelope, a signer it will not accept, a void of an envelope that has
@@ -68,6 +77,30 @@ export class SigningRefusedError extends SigningError {
   constructor(message: string, options?: { cause?: unknown }) {
     super(message, options);
     this.name = "SigningRefusedError";
+  }
+}
+
+export class EnvelopeEditConflictError extends SigningRefusedError {
+  constructor(readonly conflict: "locked" | "not_draft") {
+    super(
+      conflict === "locked"
+        ? "The Envelope is being edited in another session."
+        : "The Envelope is no longer editable as a draft.",
+    );
+    this.name = "EnvelopeEditConflictError";
+  }
+}
+
+/**
+ * The provider holds the envelope but the connector's user may not act
+ * on it — a 403 on an envelope path, or a permission error code. Not a
+ * credentials fault: the token works, and the fix is a permission on
+ * the account, not a repaired connector. Terminal for this envelope.
+ */
+export class EnvelopeAccessError extends SigningError {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "EnvelopeAccessError";
   }
 }
 
@@ -128,6 +161,7 @@ export function isTerminalSigningError(error: unknown): boolean {
     error instanceof SigningConfigError ||
     error instanceof SigningRefusedError ||
     error instanceof EnvelopeNotFoundError ||
+    error instanceof EnvelopeAccessError ||
     error instanceof WebhookSignatureError
   );
 }
@@ -141,6 +175,9 @@ export interface EnvelopeSigner {
 
 /** What goes out: the bytes, what to call them, and who signs. */
 export interface SendEnvelopeInput {
+  /** The record's own id for this creation, committed before the call,
+   * so a later lookup can find an envelope whose answer was lost. */
+  transactionId?: string;
   /** The document version's bytes, as the storage adapter opens them. */
   document: Readable;
   /** The file name the signers see, extension included. */
@@ -148,6 +185,12 @@ export interface SendEnvelopeInput {
   /** The subject line of the provider's own invitation. */
   subject: string;
   signers: EnvelopeSigner[];
+}
+
+/** What an unsent draft is made from. The transaction id is required
+ * here, because an uncertain draft is recovered by it (#1171). */
+export interface PrepareEnvelopeInput extends SendEnvelopeInput {
+  transactionId: string;
 }
 
 /** What the provider answers when it accepts an envelope. */
@@ -159,18 +202,25 @@ export interface SentEnvelope {
 /** An envelope as the provider currently sees it. */
 export interface EnvelopeState {
   status: EnvelopeStatus;
+  /** Provider scheduled sending remains an unsent, reserved draft. */
+  scheduled?: boolean;
   /** Why it was declined or voided; absent for every other status. */
   reason?: string;
   /** When it reached a terminal status, if the provider says. */
   completedAt?: Date;
+  /** Provider-reported send time, when available. */
+  sentAt?: Date;
 }
 
 /** One verified webhook delivery, reduced to what the record needs. */
 export interface WebhookDelivery {
   providerEnvelopeId: string;
-  status: EnvelopeStatus;
+  /** Null acknowledges a verified event with no actionable status. */
+  status: EnvelopeStatus | null;
   reason?: string;
   completedAt?: Date;
+  /** Provider-reported send time, when available. */
+  sentAt?: Date;
 }
 
 /** What a successful connection test found — the pane shows it, so an
@@ -206,6 +256,23 @@ export interface SigningProvider {
    * {@link SigningTimeoutError} when it could not be asked.
    */
   testConnection(): Promise<ConnectionCheck>;
+
+  /**
+   * Creates one unsent draft for the document and its signers, and
+   * answers the provider's id for it. Nobody is invited and no signature
+   * fields are placed; the draft reads back as `draft`.
+   *
+   * Rejects with {@link SigningRefusedError} when the provider will not
+   * take the envelope as described.
+   */
+  prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope>;
+
+  /** Looks up the original creation in the current account. An empty result is
+   * inconclusive, never evidence that a replacement may be created. */
+  findEnvelope(transactionId: string): Promise<SentEnvelope | null>;
+
+  /** Issues a fresh browser editing session for an existing draft. */
+  launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string>;
 
   /**
    * Sends one document to its signers and answers the provider's id

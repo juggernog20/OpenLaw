@@ -106,6 +106,28 @@ export function describeSigningContract(
       return harness;
     }
 
+    it.each(["draft", "sent"] as const)(
+      "finds the original %s by transaction identity",
+      async (status) => {
+        const provider = held().provider;
+        const transactionId = crypto.randomUUID();
+        const input = {
+          document: document(),
+          fileName: "original.pdf",
+          subject: "Original",
+          signers: SIGNERS,
+          transactionId,
+        };
+        const created =
+          status === "draft"
+            ? await provider.prepareEnvelope(input)
+            : await provider.sendEnvelope(input);
+        expect(await provider.findEnvelope(transactionId)).toEqual(created);
+        expect(await provider.readEnvelope(created.providerEnvelopeId)).toMatchObject({ status });
+        expect(await provider.findEnvelope(crypto.randomUUID())).toBeNull();
+      },
+    );
+
     it("names the adapter it is and the estate it points at", () => {
       expect(held().provider.provider).toBe(held().adapter);
       expect(["demo", "production"]).toContain(held().provider.environment);
@@ -128,6 +150,47 @@ export function describeSigningContract(
       const id = await send(held().provider);
       expect(id).not.toBe("");
       await expect(held().provider.readEnvelope(id)).resolves.toMatchObject({ status: "sent" });
+    });
+
+    it("prepares an unsent draft", async () => {
+      const result = await held().provider.prepareEnvelope({
+        document: document(),
+        fileName: "agreement.pdf",
+        subject: "Draft agreement",
+        signers: SIGNERS,
+        transactionId: "shared-draft-transaction",
+      });
+      expect(result.providerEnvelopeId).not.toBe("");
+      expect(await held().provider.readEnvelope(result.providerEnvelopeId)).toMatchObject({
+        status: "draft",
+      });
+      await expect(
+        held().provider.fetchExecutedDocument(result.providerEnvelopeId),
+      ).rejects.toBeInstanceOf(SigningRefusedError);
+    });
+
+    it("opens fresh sessions on the same draft and refuses a sent Envelope", async () => {
+      const provider = held().provider;
+      const draft = await provider.prepareEnvelope({
+        document: document(),
+        fileName: "paper.pdf",
+        subject: "Place fields",
+        signers: SIGNERS,
+        transactionId: "launch-contract",
+      });
+      const first = await provider.launchEnvelope(
+        draft.providerEnvelopeId,
+        "https://openlaw.example/return?state=one",
+      );
+      const second = await provider.launchEnvelope(
+        draft.providerEnvelopeId,
+        "https://openlaw.example/return?state=two",
+      );
+      expect(first).not.toBe(second);
+      expect((await provider.readEnvelope(draft.providerEnvelopeId)).status).toBe("draft");
+      await expect(
+        provider.launchEnvelope(await send(provider), "https://openlaw.example/return"),
+      ).rejects.toBeInstanceOf(SigningRefusedError);
     });
 
     it("mints a distinct id per envelope", async () => {

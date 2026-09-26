@@ -2019,17 +2019,35 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // verb per act, so a reader can tell a completed signature from a
   // withdrawn one without opening a payload.
   //
-  // The send names its actor, because a person made it. Signed and
-  // declined never do: the signers sign on the provider's own ceremony,
-  // and the status arrives from the provider's feed with no human here
-  // behind it. A sentence reading "{actor} signed this contract" would
-  // then name whoever the entry fell back to, which is nobody. A void
-  // is the one ending that can be either, and it selects on which.
+  // A send made on the record names its actor, because a person made
+  // it. A send the provider confirmed after the sender finished in its
+  // own screen (#1172) names nobody: the provider's read cannot say who
+  // pressed Send, and "OpenLaw sent this contract" would be untrue.
+  // Signed and declined never name anyone: the signers sign on the
+  // provider's own ceremony, and the status arrives from the provider's
+  // feed with no human here behind it. A void can be either, and it
+  // selects on which.
+  "envelope.preparation_started": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.envelope.preparation_started",
+      defaultMessage: "{actor} started preparing this contract's envelope",
+    }),
+  },
+  "envelope.session_launched": {
+    icon: PenLine,
+    message: defineMessage({
+      id: "activity.envelope.session_launched",
+      defaultMessage: "{actor} requested an editing session for this contract's envelope",
+    }),
+  },
   "envelope.sent": {
     icon: Send,
     message: defineMessage({
       id: "activity.envelope.sent",
-      defaultMessage: "{actor} sent this contract for signature",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} sent this contract for signature} " +
+        "other {This contract was sent for signature}}",
     }),
   },
   "envelope.signed": {
@@ -2062,6 +2080,31 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage:
         "{hasActor, select, yes {{actor} voided this contract's envelope} " +
         "other {This contract's envelope was voided}}" +
+        "{hasReason, select, yes { — {reason}} other {}}",
+    }),
+    values: (_intl, payload) => reasonValues(payload),
+  },
+  "envelope.restored": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.restored",
+      defaultMessage: "This contract's envelope was restored in DocuSign",
+    }),
+  },
+  "envelope.confirmed": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.confirmed",
+      defaultMessage: "This contract's envelope status was confirmed by the provider",
+    }),
+  },
+  "envelope.discarded": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.discarded",
+      defaultMessage:
+        "{hasActor, select, yes {{actor} discarded this contract's envelope} " +
+        "other {This contract's envelope was discarded}}" +
         "{hasReason, select, yes { — {reason}} other {}}",
     }),
     values: (_intl, payload) => reasonValues(payload),

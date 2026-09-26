@@ -980,7 +980,7 @@ test.describe("M15 demo path", () => {
       );
       await page.getByRole("button", { name: "Save connector" }).click();
       expect((await saved).status(), await (await saved).text()).toBe(200);
-      await expect(page.getByText("Saved")).toBeVisible();
+      await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
       // A save rotates credentials; it does not throw the switch. The
       // manual half above turns the connector off rather than removing
@@ -1092,7 +1092,7 @@ test.describe("M15 demo path", () => {
       const firstRow = envelopeRow(senderPage, "Out for signature");
       await expect(firstRow).toHaveCount(1);
       await expect(firstRow).toContainText(SIGNERS[0].name);
-      await firstRow.getByRole("button", { name: /^Actions for the envelope sent on/ }).click();
+      await firstRow.getByRole("button", { name: /^Actions for the envelope:/ }).click();
       await senderPage.getByRole("menuitem", { name: "Void envelope" }).click();
       const voidDialog = senderPage.getByRole("dialog");
       await expect(voidDialog.getByText("Void envelope").first()).toBeVisible();

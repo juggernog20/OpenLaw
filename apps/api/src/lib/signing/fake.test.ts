@@ -96,6 +96,27 @@ describe("the deterministic fake's own facts", () => {
     });
   });
 
+  it("refuses Sender View launch during an outage and resumes the same draft afterward", async () => {
+    const provider = createFakeSigningProvider();
+    const { providerEnvelopeId } = await provider.prepareEnvelope({
+      transactionId: "launch-outage",
+      document: Readable.from([Buffer.from("%PDF-1.7\n%%EOF")]),
+      fileName: "agreement.pdf",
+      subject: "Please sign",
+      signers: [{ name: "Signer", email: "signer@example.test" }],
+    });
+    provider.outage();
+    await expect(
+      provider.launchEnvelope(providerEnvelopeId, "https://openlaw.test/return"),
+    ).rejects.toBeInstanceOf(SigningUnavailableError);
+    expect(provider.launches).toHaveLength(0);
+    provider.online();
+    await expect(
+      provider.launchEnvelope(providerEnvelopeId, "https://openlaw.test/return"),
+    ).resolves.toMatch(/^https:/);
+    expect(await provider.readEnvelope(providerEnvelopeId)).toMatchObject({ status: "draft" });
+  });
+
   it("signs deliveries with its own secret alone", () => {
     const provider = createFakeSigningProvider({ webhookSecret: "one-secret" });
     const other = createFakeSigningProvider({ webhookSecret: "another-secret" });

@@ -283,7 +283,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["contracts.signing"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "terms-and-renewals",
@@ -608,7 +608,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P0",
       "contexts": ["settings.signing"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "configure-analysis",

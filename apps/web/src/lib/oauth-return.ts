@@ -29,6 +29,7 @@ export function oauthLoginSearch(search: string): string {
  * app does not honour a forced re-authentication yet.
  */
 export function oauthAuthorizeReturn(search: string): string | undefined {
+  if (new URLSearchParams(search).get("signing_return") === "1") return "/signing/return";
   if (!new URLSearchParams(search).has("sig")) return undefined;
   const parts = search
     .replace(/^\?/, "")

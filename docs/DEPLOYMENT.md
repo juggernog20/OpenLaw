@@ -586,7 +586,9 @@ are sent to DocuSign even when OpenLaw has no inbound internet access.
 New connectors default to Polling. Existing connectors retain Webhook on upgrade.
 In Polling mode, OpenLaw refuses inbound webhook deliveries, even if a secret was
 saved earlier. Switching modes keeps outstanding Envelopes and credentials.
-Disabling the connector stops both update paths until it is enabled again.
+Disabling the connector refuses new sends and launches. Both update paths and
+executed-copy filing continue with the saved credentials. It cannot close a
+provider session that was already issued.
 
 For Webhook, enter the gateway's HTTPS address in **Public callback URL** if it
 differs from the app address. For example, a gateway can forward
@@ -621,3 +623,144 @@ Push uses the SMTP from address as its `mailto:` contact, or `BASE_URL` when no 
 The generated VAPID private key is a stored secret in addition to the five credentials your Administrators enter. If `OPENLAW_SECRET_KEY` cannot decrypt it, OpenLaw preserves the stored pair and both services keep running. The API and the worker each log the failure at boot. Notification preferences still return the public key, which is stored in the clear. Push jobs retry and settle skipped while the private key stays unreadable; every other queue keeps working.
 
 Restore the original `OPENLAW_SECRET_KEY`, or supply it through `OPENLAW_SECRET_KEY_PREVIOUS` with the new key for the rewrap boot. The next push after the restore uses the recovered key with no restart. If you cannot recover it, set both `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in both service environments and restart. Use the same pair for both services. Re-enrol existing browsers if you replace the pair, because their subscriptions belong to the old public key.
+
+## Interrupted Envelope creation
+
+OpenLaw keeps the original Envelope reservation when creation has no confirmed
+answer. The reconciliation sweep recovers preparations and direct sends through
+that same row. It never sends another creation request. Signatures shows the
+attempt count, the next eligible check, and **Refresh status**, which reads local
+state without spending a provider request.
+
+Initial automatic recovery starts after 15 minutes. After an operator attaches a
+verified provider Envelope ID, the next scheduled sweep can process the row.
+PostgreSQL claims each attempt before the worker
+calls the provider. A stopped worker leaves a 20-minute claim. Checks back off
+from 15 minutes to six hours, with at most 32 attempts and five recovery operations
+per sweep. The worker keeps a provider Envelope ID as soon as lookup supplies it.
+It checks the saved account and environment before every provider lookup or read.
+An outage, a missing result, or an account mismatch keeps the reservation.
+
+[DocuSign transaction lookup](https://www.docusign.com/blog/developers/common-api-tasks-use-transactionid-to-find-the-envelope-you-created)
+is available for seven days. Once that window expires, an operation without a
+provider Envelope ID needs operator resolution. An operation with a known ID can
+still be read after the window. Local idempotency keys, snapshots and reservations
+have no age-based expiry.
+
+New reservations also record whether the user asked to prepare or send, the
+Contract's original Status, and its count of Status changes. A recovered direct
+send advances to the first live Signature Status only if that Status choice has
+not changed. Moving away and back counts as a newer choice. Unrelated field edits
+do not suppress the advance. Recovery of a confirmed compensating Void does not
+advance the Stage. Embedded preparations retain their separate Stage behavior.
+
+Migration `0177_envelope-recovery-intent` leaves these fields NULL on older rows.
+It cannot infer which operation produced an old uncertain reservation. Recovery
+still attaches its provider Envelope and settles its status, but does not advance
+the Contract Stage. An Administrator can set the Stage explicitly after checking
+the outcome. No backfill guesses intent from provider status or Subject.
+
+The worker logs `signing creation recovery` with the local Envelope ID, provider,
+account, environment, transaction ID, attempt and outcome. It does not log provider
+responses, credentials, launch URLs or Signer details. Use these fields to find the
+operation. `lookup_expired`, `attempts_exhausted` and `identity_missing` identify
+operations that need an Administrator and operator to resolve them.
+
+To resolve one, stop the worker first. Read the reservation and retain its original
+identity. Confirm the saved DocuSign account and environment. Find the Envelope in
+that account using the transaction ID or provider support. Confirm its identity
+before attaching an ID. A Subject or Signer match alone is not enough evidence.
+Use a parameterized PostgreSQL update with the verified values:
+
+```sql
+UPDATE contract_envelopes
+SET provider_envelope_id = $2,
+    recovery_stopped = NULL,
+    recovery_attempts = 0,
+    next_recovery_at = now()
+WHERE id = $1 AND status = 'preparing'
+  AND (provider_envelope_id IS NULL OR provider_envelope_id = $2)
+  AND provider_account_id = $3 AND provider_environment = $4;
+```
+
+Restart the worker. It reads the provider's status and settles the same local row.
+For an account configuration fault, repair the connector to reach the original
+account. Reset the attempts and next check only after that repair. Do not change
+the saved transaction identity, Version, Subject, Signers or idempotency key.
+
+If provider support definitively confirms that creation was refused and no
+Envelope exists for the original operation, retain that evidence in the operator's
+incident record. With the worker stopped, settle only that row as
+`preparation_failed`, set `preparation_state = 'failed'`, `completed_at = now()` and
+`next_recovery_at = NULL`. This releases the live reservation while retaining the
+original idempotency record. An empty search, a missing ID, an elapsed lookup
+window or an unavailable account is not that evidence. Keep unresolved operations
+reserved until their outcome is known.
+
+## DocuSign preparation acceptance
+
+Release status for #1178: blocked pending a real developer-account walkthrough.
+The production default remains off. The explicit legacy direct-send API and
+manual hand-off remain available. The existing development gate cannot be retired
+until the essential native editor restrictions pass live. Production entitlement
+remains account-specific. Real signed Connect delivery and recovery are tracked
+separately in [#888](https://github.com/juggernog20/OpenLaw/issues/888).
+
+Use the DOC-029 disposable lab helper from a committed revision. These example
+ports and /24 subnets must be unused on the machine. Do not edit a generated
+snapshot, overlay or digest. The helper binds the app and Mailpit to loopback.
+
+```bash
+node scripts/documentation/lab.mjs create signing-live --commit HEAD \
+  --app-port 43378 --mail-port 48478 --signing-preparation live \
+  --backend-subnet 10.241.78.0/24 --engine-subnet 10.242.78.0/24
+node scripts/documentation/lab.mjs up signing-live
+node scripts/documentation/lab.mjs seed signing-live
+```
+
+The live option sets `SIGNING_PREPARATION_ENABLED=true` and
+`SIGNING_PREPARATION_LIVE_LAB=true` on the lab API only. The latter is an explicit
+acceptance opt-in, not a production recommendation. It refuses a signing stand-in.
+Neither `DOCUSIGN_BASE_URL` nor `SIGNING_STANDIN` is set. Without both preparation
+switches, real deployments keep the old interface. No provider secret comes from
+the lab helper or its shell environment.
+
+Ask the account owner to open the seeded lab, then **Settings → Organization →
+Integrations → E-signature → DocuSign**. Have them choose **Demo** and **Polling**,
+enter their integration key, non-administrator integration user's User ID and RSA
+private key, save, then leave the secret inputs. Confirm that the owner has granted
+JWT consent for that user and controls two Signer inboxes. Mailpit receives
+OpenLaw's lab mail, not DocuSign's external invitations. Pause browser automation
+during credential entry. Do not capture forms, input values, network bodies,
+sender URLs or return-state tokens.
+Use a separate browser context for provider account administration or consent so
+that the embedded editor does not share that provider web session.
+
+Record the app commit and image IDs separately from the exact guide content hashes
+in the existing configure-signing V-C42 and electronic-signing verification records.
+Use both `live-provider-check` and independent `browser-walkthrough`. Preserve
+historical legacy evidence. The acceptance matrix in those records includes every
+exposed edit route, fields, save/resume/discard, expired links, competing editors,
+return casing and missing IDs, authentication, scheduling, lost browser returns,
+provider-confirmed send, completion, and already-issued sessions after local access
+changes. A provider stub establishes none of these native account observations.
+
+Verify Polling at its real cadence without changing database clocks. A single
+Envelope's provider status reads share a durable 15-minute allowance across returns,
+Resume and workers, with bounded creation and launch grace. Capture normalized
+state and timings only. Check one executed copy on the original chain and the
+conditional Signature-to-Active rule. Do not claim that all Signers must have
+signature fields unless the actual provider enforces it.
+
+If credentials or controlled inboxes are unavailable, mark the live scenarios
+`blocked` and keep the default off. If any native editor route permits a prohibited
+recipient, Document, page, Subject, visibility or template change, stop rollout.
+Record the failed route and the required provider permission or product design
+change before another acceptance run. Reserved API flags are not evidence of
+native enforcement. Do not alter the parent specification to erase a failed check.
+
+After the owner resolves or discards their test Envelopes, destroy only this lab:
+
+```bash
+node scripts/documentation/lab.mjs destroy signing-live
+```

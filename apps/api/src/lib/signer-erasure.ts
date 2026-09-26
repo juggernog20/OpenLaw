@@ -17,7 +17,8 @@
  *
  * **What an erasure does, and what it deliberately keeps.** The name and
  * the address are rewritten to {@link ERASED} in place, and the
- * envelope's signer rows for that address are deleted. **The shape
+ * envelope's signer rows for that address are deleted. Affected Envelopes
+ * also lose their retained subject, which may name the Signer. **The shape
  * stays**: the array keeps its length and its order, so the entry still
  * says how many people were asked and in what position — which is the
  * part of the record that is about the contract rather than about the
@@ -56,7 +57,14 @@
  * in the self-hosting documentation rather than left to be discovered.
  */
 
-import { activityLog, contractEnvelopeSigners, sql, type Executor } from "@openlaw/db";
+import {
+  activityLog,
+  contractEnvelopes,
+  contractEnvelopeSigners,
+  inArray,
+  sql,
+  type Executor,
+} from "@openlaw/db";
 
 /**
  * What an erased name and an erased address read as.
@@ -97,6 +105,22 @@ export async function eraseSigner(tx: Executor, email: string): Promise<SignerEr
   // has to show a week later — and a request arrives in whatever case
   // the person writes it in.
   const target = email.trim().toLowerCase();
+
+  // Lock affected Envelopes before redacting Activity. A direct send reads
+  // Signers under this same lock, so its later response cannot restore them.
+  // The free-text subject may name the Signer; remove it as a whole.
+  await tx
+    .update(contractEnvelopes)
+    .set({ subject: null })
+    .where(
+      inArray(
+        contractEnvelopes.id,
+        tx
+          .select({ id: contractEnvelopeSigners.envelopeId })
+          .from(contractEnvelopeSigners)
+          .where(sql`lower(${contractEnvelopeSigners.email}) = ${target}`),
+      ),
+    );
 
   // One statement, because the rewrite has to be driven by what is in
   // each row rather than by anything read out and sent back. The array

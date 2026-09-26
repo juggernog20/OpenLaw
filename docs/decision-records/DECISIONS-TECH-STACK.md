@@ -2069,3 +2069,47 @@ this set with the Client's requested scopes. Guide needs no selection.
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
 | TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166            |
+
+### TECH-007 / TECH-013 addendum, 2026-09-26, #1172. Sender View and shared checks
+
+The Sender View uses the discovered account API base URI, envelope-scoped access,
+Tagger and the provider Send action. Requests hide recipient edits, document edits,
+document visibility edits, page edits, Back and advanced header actions. The ordinary
+field palette and native discard remain. Draft creation sets documented message and
+recipient locks. No reserved setting is treated as enforcement; actual native UI
+restrictions remain a live acceptance requirement under #1178.
+
+Worker and browser-return reads share the existing durable claim: reserve twenty
+minutes before the attempt and retain fifteen minutes after it finishes, including
+failure. Creation itself supplies draft evidence, so launch does not read status.
+The worker leaves a draft alone for fifteen minutes after a launch, so a return
+inside that window keeps the first eligible read. That is a grace, not a lock: an
+open correlation is no proof the editor is still open, so after the grace the worker
+polls the draft on its ordinary cadence and confirms a send whose return was lost. A
+sent Envelope is never deferred, whatever correlations it still holds. A new draft is
+likewise left alone for fifteen minutes after creation: its creation response is its
+evidence, and its first launch usually follows at once. Both graces are bounded by the
+clock alone. After them a draft is polled whether or not it was ever launched, so a
+preparation sent through the provider account with no browser session still
+reconciles in Polling mode. A launch after a grace may find the allowance already
+spent; its return then waits for the next allowed check, as #1170 permits.
+The driver returns a fresh Sender View URL unchanged and never sends OAuth credentials
+to the browser. Launch/return responses use no-store and no-referrer; ordinary request
+logging already excludes query strings, cookies and response bodies. No launch URL or
+return secret is written to Activity or persistent browser storage.
+
+### TECH-013 / TECH-018 addendum, 2026-09-26, #1178. Real acceptance lab
+
+The preparation gate stays off for ordinary deployments. A disposable documentation
+lab explicitly sets both SIGNING_PREPARATION_ENABLED and
+SIGNING_PREPARATION_LIVE_LAB to true. The live declaration refuses any configured
+stand-in; host allowlists and the stored connector still choose the real provider.
+No provider secret is sourced from the lab helper. The owner enters it in Settings.
+
+The DOC-029 helper snapshots a committed tree and includes the live option and
+optional independent /24 subnets in its configuration digest. Generated snapshots
+and overlays are not edited after creation. App source and image identities differ
+from guide content hashes and are recorded separately. This opt-in remains until the
+live restrictions in #1178 pass; retiring the gate before that would violate CTR-013.
+Polling, returns and Resume retain the shared provider-read allowance. A stub cannot
+prove provider account controls, actual session expiry or signed real Connect.

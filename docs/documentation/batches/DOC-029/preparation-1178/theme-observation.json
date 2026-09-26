@@ -1,0 +1,38 @@
+{
+  "method": "browser-walkthrough",
+  "reviewerKind": "agent",
+  "sourceCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+  "observedAt": "2026-09-26T10:55:45.741118+00:00",
+  "environment": "localhost3218 synthetic provider stack; read-only fresh browser context on C-2",
+  "browserViewport": {
+    "width": 390,
+    "height": 844
+  },
+  "observedCssViewport": {
+    "width": 355,
+    "height": 767
+  },
+  "theme": "light",
+  "themeEvidence": "Observed document.documentElement data-theme=light and prefers-color-scheme:light; context explicitly requested light scheme.",
+  "focus": "contract-signatures-heading",
+  "screenshot": "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-return-theme.png",
+  "limitations": [
+    "The original dialog screenshot did not record theme. This later C-11 dialog recapture explicitly observed light; use its metadata rather than inferring the old image theme.",
+    "This recapture is read-only after loading the Signatures tab, not another provider return.",
+    "No real provider or credential-entry tab used."
+  ],
+  "dialogRecapture": {
+    "contract": "C-11",
+    "theme": "light, observed DOM data-theme",
+    "browserViewport": {
+      "width": 390,
+      "height": 844
+    },
+    "cssWidth": 355,
+    "documentWidth": 355,
+    "dialogWidth": 354.5454406738281,
+    "cancelFocus": "Prepare Envelope",
+    "screenshot": "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-dialog-theme.png",
+    "actual": "Opened Prepare Envelope, entered two fictional example.test Signers, captured, Cancel restored trigger. Did not Continue or create an Envelope."
+  }
+}

@@ -633,8 +633,9 @@ describe("a Word comparison", () => {
       .select({ state: documentVersionText.state })
       .from(documentVersionText)
       .where(eq(documentVersionText.versionId, exported.id));
-    expect(rendition?.state).toBe("pending");
-    expect(text?.state).toBe("pending");
+    // The background workers may finish before this read; both derivations must exist.
+    expect(["pending", "ready"]).toContain(rendition?.state);
+    expect(["pending", "ready"]).toContain(text?.state);
 
     const entries = await harness.db
       .select({

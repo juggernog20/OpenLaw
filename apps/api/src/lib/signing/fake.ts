@@ -30,6 +30,7 @@ import type { SigningEnvironment, SigningProviderKey } from "@openlaw/db";
 import {
   ENVELOPE_STATUSES,
   EnvelopeNotFoundError,
+  EnvelopeEditConflictError,
   SigningConfigError,
   SigningRefusedError,
   SigningUnavailableError,
@@ -39,6 +40,7 @@ import {
   type EnvelopeState,
   type EnvelopeStatus,
   type SendEnvelopeInput,
+  type PrepareEnvelopeInput,
   type SentEnvelope,
   type SigningProvider,
   type WebhookDelivery,
@@ -71,6 +73,7 @@ interface FakeEnvelope {
   subject: string;
   /** The bytes that were sent, which the executed copy is derived from. */
   source: Buffer;
+  fields?: { signer: number; page: number; value: string }[];
   reason?: string;
   completedAt?: Date;
 }
@@ -134,6 +137,36 @@ export class FakeSigningProvider implements SigningProvider {
     return FAKE_ACCOUNT;
   }
 
+  private readonly preparations = new Map<string, string>();
+
+  readonly launches: { providerEnvelopeId: string; returnUrl: string }[] = [];
+
+  async launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string> {
+    this.requireReachable();
+    const envelope = this.require(providerEnvelopeId);
+    if (envelope.status !== "draft") throw new EnvelopeEditConflictError("not_draft");
+    this.launches.push({ providerEnvelopeId, returnUrl });
+    return `https://demo.docusign.net/sender/${this.launches.length}`;
+  }
+
+  async prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope> {
+    const held = this.preparations.get(input.transactionId);
+    if (held) {
+      input.document.destroy();
+      return { providerEnvelopeId: held };
+    }
+    const result = await this.sendEnvelope(input);
+    this.require(result.providerEnvelopeId).status = "draft";
+    this.preparations.set(input.transactionId, result.providerEnvelopeId);
+    return result;
+  }
+
+  async findEnvelope(transactionId: string): Promise<SentEnvelope | null> {
+    this.requireReachable();
+    const providerEnvelopeId = this.preparations.get(transactionId);
+    return providerEnvelopeId ? { providerEnvelopeId } : null;
+  }
+
   async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope> {
     this.requireReachable();
     if (input.signers.length === 0) {
@@ -152,6 +185,7 @@ export class FakeSigningProvider implements SigningProvider {
       subject: input.subject,
       source,
     });
+    if (input.transactionId) this.preparations.set(input.transactionId, id);
     return { providerEnvelopeId: id };
   }
 
@@ -219,6 +253,7 @@ export class FakeSigningProvider implements SigningProvider {
       status?: unknown;
       reason?: unknown;
       completedAt?: unknown;
+      sentAt?: unknown;
     };
     if (
       typeof delivery.providerEnvelopeId !== "string" ||
@@ -231,6 +266,7 @@ export class FakeSigningProvider implements SigningProvider {
       providerEnvelopeId: delivery.providerEnvelopeId,
       status: delivery.status as EnvelopeStatus,
       ...(typeof delivery.reason === "string" ? { reason: delivery.reason } : {}),
+      ...(typeof delivery.sentAt === "string" ? { sentAt: new Date(delivery.sentAt) } : {}),
       ...(typeof delivery.completedAt === "string"
         ? { completedAt: new Date(delivery.completedAt) }
         : {}),
@@ -238,6 +274,25 @@ export class FakeSigningProvider implements SigningProvider {
   }
 
   // Test controls that stand in for signer actions
+
+  saveFields(id: string, fields: { signer: number; page: number; value: string }[]): void {
+    this.require(id).fields = structuredClone(fields);
+  }
+
+  fieldsOf(id: string) {
+    return structuredClone(this.require(id).fields ?? []);
+  }
+
+  discardDraft(id: string): void {
+    const envelope = this.require(id);
+    if (envelope.status !== "draft") throw new EnvelopeEditConflictError("not_draft");
+    envelope.status = "discarded";
+    envelope.completedAt = new Date();
+  }
+
+  sendDraft(providerEnvelopeId: string): void {
+    this.require(providerEnvelopeId).status = "sent";
+  }
 
   /** Signs the envelope, as its last signer would. */
   complete(providerEnvelopeId: string): void {

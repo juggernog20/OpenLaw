@@ -380,7 +380,7 @@ setInterval(() => {}, 1000);
       assert.equal(snapshot.env.PORT, String(3000 + offset));
       assert.equal(snapshot.env.WEB_PORT, String(5173 + offset));
       assert.equal(snapshot.env.DEV_API_ORIGIN, `http://localhost:${3000 + offset}`);
-      assert.equal(snapshot.env.BASE_URL, snapshot.env.DEV_API_ORIGIN);
+      assert.equal(snapshot.env.BASE_URL, `http://localhost:${5173 + offset}`);
       assert.equal(snapshot.env.DATABASE_URL, "postgres://openlaw:openlaw@127.0.0.1:55432/openlaw");
       assert.equal(snapshot.env.DOC_ENGINE_URL, "http://127.0.0.1:8080");
       assert.equal(snapshot.env.SMTP_URL, "smtp://127.0.0.1:1025");

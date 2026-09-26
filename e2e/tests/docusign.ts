@@ -66,12 +66,15 @@ export const CONNECT_SIGNATURE_HEADER = "x-docusign-signature-1";
 /** One envelope the stand-in is holding, in DocuSign's own vocabulary
  * — `completed` is what DocuSign calls a signed envelope. */
 interface StubEnvelope {
-  status: "sent" | "completed" | "declined" | "voided";
+  status: "created" | "sent" | "completed" | "declined" | "voided";
   signers: { name: string; email: string }[];
   emailSubject: string;
   /** The bytes that were sent, so the demo can prove the round it
    * picked is the round that went out. */
   document: Buffer;
+  fields?: string;
+  discarded?: boolean;
+  locked?: boolean;
   voidedReason?: string;
   declinedReason?: string;
   completedDateTime?: string;
@@ -131,8 +134,20 @@ export function stubExecutedPdf(providerEnvelopeId: string): Buffer {
  */
 export class SigningStub {
   private readonly server: Server;
+  readonly launches: { envelopeId: string; request: Record<string, unknown>; returnUrl: string }[] =
+    [];
   private readonly envelopes = new Map<string, StubEnvelope>();
   private minted = 0;
+  private readonly expiredLinks = new Set<number>();
+  expireLatestLink() {
+    this.expiredLinks.add(this.launches.length - 1);
+  }
+  lockEnvelope(id: string, locked: boolean) {
+    this.require(id).locked = locked;
+  }
+  fieldsOf(id: string) {
+    return this.require(id).fields ?? "";
+  }
   /** What this instance's envelope ids start with. Stamped per run,
    * because a provider envelope id is unique for good: the record holds
    * one row per id whatever became of the contract it was sent from,
@@ -282,6 +297,43 @@ export class SigningStub {
   private async handle(request: IncomingMessage, response: ServerResponse): Promise<void> {
     const path = new URL(request.url ?? "/", "http://stub.invalid").pathname;
 
+    if (path.startsWith("/sender/")) {
+      const index = Number(path.split("/")[2]);
+      const launch = this.launches[index];
+      if (!launch) {
+        response.writeHead(404).end();
+        return;
+      }
+      const envelope = this.require(launch.envelopeId);
+      if (this.expiredLinks.has(index)) {
+        response.writeHead(200, { "content-type": "text/html" });
+        response.end(
+          `<h1>Launch link expired</h1><a href="${launch.returnUrl}&event=sessionEnd">Back to Signatures and Resume</a>`,
+        );
+        return;
+      }
+      const query = new URL(request.url ?? "/", "http://stub.invalid").searchParams;
+      const action = query.get("action");
+      if (action && ["send", "save", "cancel", "discard", "sessionEnd"].includes(action)) {
+        if (action === "save") envelope.fields = query.get("fields") ?? envelope.fields ?? "";
+        if (action === "send") envelope.status = "sent";
+        if (action === "discard" && envelope.status === "created") envelope.discarded = true;
+        const destination = new URL(launch.returnUrl);
+        destination.searchParams.set("event", action === "discard" ? "cancel" : action);
+        response.writeHead(302, { location: destination.href, "cache-control": "no-store" }).end();
+      } else {
+        response.writeHead(200, { "content-type": "text/html", "cache-control": "no-store" });
+        const value = (envelope.fields ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("<", "&lt;");
+        response.end(`<!doctype html><title>DocuSign stand-in</title><h1>Place fields</h1>
+          <form><label>Saved text field<input name="fields" value="${value}"></label><button name="action" value="save">Save fields and close</button></form>
+          <a href="?action=send">Send</a><a href="?action=save">Save and close</a>
+          <a href="?action=cancel">Cancel</a><a href="?action=discard">Discard</a>`);
+      }
+      return;
+    }
     if (path === "/oauth/token" && request.method === "POST") {
       const form = new URLSearchParams((await readBody(request)).toString("utf8"));
       const claims = assertionClaims(form.get("assertion") ?? "");
@@ -324,6 +376,7 @@ export class SigningStub {
     const base = `/restapi/v2.1/accounts/${STUB_ACCOUNT_ID}/envelopes`;
     if (path === base && request.method === "POST") {
       const definition = JSON.parse((await readBody(request)).toString("utf8")) as {
+        status?: string;
         emailSubject?: string;
         documents?: { documentBase64?: string }[];
         recipients?: { signers?: { name?: string; email?: string }[] };
@@ -336,12 +389,12 @@ export class SigningStub {
       this.minted += 1;
       const id = `${this.idPrefix}-${String(this.minted).padStart(4, "0")}`;
       this.envelopes.set(id, {
-        status: "sent",
+        status: definition.status === "created" ? "created" : "sent",
         signers: signers.map((signer) => ({ name: signer.name ?? "", email: signer.email ?? "" })),
         emailSubject: definition.emailSubject ?? "",
         document: Buffer.from(definition.documents?.[0]?.documentBase64 ?? "", "base64"),
       });
-      sendJson(response, 201, { envelopeId: id, status: "sent" });
+      sendJson(response, 201, { envelopeId: id, status: this.require(id).status });
       return;
     }
 
@@ -350,6 +403,24 @@ export class SigningStub {
       const envelope = this.envelopes.get(decodeURIComponent(id ?? ""));
       if (!envelope) {
         sendJson(response, 404, { errorCode: "ENVELOPE_DOES_NOT_EXIST" });
+        return;
+      }
+      if (tail.join("/") === "views/sender" && request.method === "POST") {
+        if (envelope.locked) {
+          sendJson(response, 400, { errorCode: "EDIT_LOCK_ENVELOPE_LOCKED" });
+          return;
+        }
+        if (envelope.status !== "created" || envelope.discarded) {
+          sendJson(response, 400, { errorCode: "ENVELOPE_INVALID_STATUS" });
+          return;
+        }
+        const body = JSON.parse((await readBody(request)).toString("utf8")) as Record<
+          string,
+          unknown
+        >;
+        const index = this.launches.length;
+        this.launches.push({ envelopeId: id!, request: body, returnUrl: String(body.returnUrl) });
+        sendJson(response, 201, { url: `http://localhost:${this.port}/sender/${index}` });
         return;
       }
       if (tail.join("/") === "documents/combined") {
@@ -372,6 +443,7 @@ export class SigningStub {
         sendJson(response, 200, {
           envelopeId: id,
           status: envelope.status,
+          folders: envelope.discarded ? [{ type: "recyclebin" }] : [{ type: "draft" }],
           ...(envelope.voidedReason === undefined ? {} : { voidedReason: envelope.voidedReason }),
           ...(envelope.declinedReason === undefined
             ? {}
@@ -385,6 +457,9 @@ export class SigningStub {
       if (tail.length === 0 && request.method === "PUT") {
         const update = JSON.parse((await readBody(request)).toString("utf8")) as {
           status?: string;
+          fields?: string;
+          discarded?: boolean;
+          locked?: boolean;
           voidedReason?: string;
         };
         if (update.status !== "voided" || envelope.status !== "sent") {

@@ -55,6 +55,7 @@ services:
       # The E2E suite replays sign-in flows from one IP far faster than
       # any human; production keeps better-auth's limits.
       AUTH_RATE_LIMIT: "off"
+      SIGNING_PREPARATION_ENABLED: ${SIGNING_PREPARATION_ENABLED:-false}
       # First-run setup demands a bootstrap token (TECH-031). Pinned so
       # the suite and the seed can run setup without reading the log; a
       # real deployment leaves it unset and reads the generated one.

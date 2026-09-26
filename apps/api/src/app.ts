@@ -52,6 +52,7 @@ import { contractApprovalsRoutes } from "./modules/contract-approvals/routes.js"
 import { contractKeyDatesRoutes } from "./modules/contract-key-dates/routes.js";
 import { contractMattersRoutes } from "./modules/contract-matters/routes.js";
 import { contractTasksRoutes } from "./modules/contract-tasks/routes.js";
+import { envelopeLaunchRoutes } from "./modules/contract-envelopes/launch.js";
 import { contractEnvelopesRoutes } from "./modules/contract-envelopes/routes.js";
 import { contractRelationsRoutes } from "./modules/contract-relations/routes.js";
 import { contractStatusesRoutes } from "./modules/contract-statuses/routes.js";
@@ -194,6 +195,8 @@ export interface AppDeps {
    * keeps CTR-013's zero-config manual hand-off working.
    */
   resolveSigningProvider: SigningResolver;
+  /** Development-only until the complete preparation flow is released. */
+  signingPreparationEnabled?: boolean;
   /** The enabled AI connector, read live before each probe or analysis run. */
   resolveAiProvider: AiResolver;
   /**
@@ -250,6 +253,7 @@ declare module "fastify" {
     docEngine: DocEngine;
     fillEngine: AutoDocFillEngine;
     jobs: JobQueue;
+    signingPreparationEnabled: boolean;
     resolveSigningProvider: SigningResolver;
     resolveAiProvider: AiResolver;
     notifier: Notifier;
@@ -279,7 +283,7 @@ const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
  * signing provider's webhook. It proves itself with an HMAC over the
  * body and carries no cookie, so the Origin check has nothing to add.
  */
-const ORIGIN_CHECK_EXEMPT_PREFIX = "/api/v1/signing/";
+const ORIGIN_CHECK_EXEMPT_PATH = /^\/api\/v1\/signing\/[^/]+\/webhook$/;
 
 /**
  * Whether a browser-originated mutation came from this install's own
@@ -320,6 +324,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("docEngine", deps.docEngine);
   app.decorate("fillEngine", deps.fillEngine);
   app.decorate("jobs", deps.jobs);
+  app.decorate("signingPreparationEnabled", deps.signingPreparationEnabled ?? false);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
   app.decorate("resolveAiProvider", deps.resolveAiProvider);
   app.decorate("notifier", deps.notifier);
@@ -453,6 +458,13 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
     });
   }
 
+  app.addHook("onSend", async (request, reply, payload) => {
+    if (request.url.split("?", 1)[0] === "/signing/return") {
+      reply.header("cache-control", "no-store").header("referrer-policy", "no-referrer");
+    }
+    return payload;
+  });
+
   // Error/404 handlers are installed before route plugins register:
   // encapsulated contexts snapshot their parent, so handlers added
   // afterwards would never apply inside the modules.
@@ -576,7 +588,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.addHook("onRequest", async (request) => {
     if (!UNSAFE_METHODS.has(request.method)) return;
     const pathname = request.url.split("?", 1)[0] ?? request.url;
-    if (!pathname.startsWith("/api/v1/") || pathname.startsWith(ORIGIN_CHECK_EXEMPT_PREFIX)) return;
+    if (!pathname.startsWith("/api/v1/") || ORIGIN_CHECK_EXEMPT_PATH.test(pathname)) return;
     if (!fromOwnOrigin(request.headers, ownOrigin))
       throw httpError(403, "This request did not come from this OpenLaw instance's own origin.");
   });
@@ -668,6 +680,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   await app.register(contractAnalysisRoutes, { prefix: "/api/v1" });
   await app.register(contractApprovalsRoutes, { prefix: "/api/v1" });
   await app.register(contractEnvelopesRoutes, { prefix: "/api/v1" });
+  await app.register(envelopeLaunchRoutes, { prefix: "/api/v1" });
   await app.register(contractKeyDatesRoutes, { prefix: "/api/v1" });
   await app.register(contractMattersRoutes, { prefix: "/api/v1" });
   await app.register(contractRelationsRoutes, { prefix: "/api/v1" });

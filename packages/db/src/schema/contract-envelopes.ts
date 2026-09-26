@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * One signing envelope on one contract, and the people it was sent to
- * (CTR-013, M15/2).
+ * One signing envelope on one contract, and the people it is for
+ * (CTR-013, M15/2, #1171).
  *
- * An envelope is one round of signature on one version of a contract's
- * primary document. The provider holds the ceremony; this row is what
- * the record knows about it — which adapter carried it, the provider's
- * own id for it, where it stands, who sent it, what went out, and when.
+ * An envelope is one round of signature on one exact version of a
+ * contract's primary document. The provider holds the ceremony; this row
+ * is what the record knows about it — which adapter carried it, the
+ * provider's own id for it, where it stands, who prepared or sent it,
+ * what it carries, and when.
+ *
+ * **The row is written before the provider is called** (#1171). A send
+ * or a preparation first commits a `preparing` row that holds the
+ * intent: source document and version, subject, signers, preparer,
+ * provider account and environment, idempotency key, and a provider
+ * transaction id. The provider's envelope id and the sent time arrive
+ * later, so both columns are nullable, and check constraints say which
+ * statuses may lack them.
  *
  * **Manual hand-off writes nothing here.** A team that never configures
  * a connector uploads the executed PDF and pins it by hand, exactly as
@@ -15,33 +24,36 @@
  * all. That is what the record's surfaces read to decide whether to
  * draw an envelope at all.
  *
- * **At most one live envelope per contract**, held by a partial unique
- * index on the `sent` status — the same shape M14 used for the
- * one-pending-ask rule. A declined or voided envelope blocks nothing:
- * the next round is a new row, and the earlier one stays on the record.
+ * **At most one local live reservation per contract**, held by a partial unique
+ * index on `LIVE_ENVELOPE_STATUSES` (`preparing`, `draft`, `sent`) —
+ * excluding externally restored rounds. All live rounds still block new creation. A
+ * declined, voided, or failed round blocks nothing: the next round is a
+ * new row, and the earlier one stays on the record.
  *
  * **Adapter-keyed, like the connector it was sent through.** A record
  * sent through one provider is never voided through another, and the
  * webhook correlates on (`provider`, `provider_envelope_id`) rather than
  * on the provider's id alone.
  *
- * What is deliberately not here, and the step that brings it: nothing.
- * The columns the later M15 slices write — the decline or void reason,
- * the completion time, and the executed-copy fetch state — land with
- * this table rather than after it, because the one-transaction send has
- * to write a row the transition function can then move without a
- * migration between them.
- *
- * M15/5 adds one column this table could not have held earlier:
- * `executed_version_id`, the version this round filed. The fetch state
- * says *whether* the executed copy landed; this says *which file it
- * is*, and the two are different questions.
+ * M15/5 adds `executed_version_id`, the version this round filed. The
+ * fetch state says *whether* the executed copy landed; this says *which
+ * file it is*, and the two are different questions.
  */
 
+import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { contracts } from "./contracts.js";
-import { documentVersions } from "./documents.js";
+import { documents, documentVersions } from "./documents.js";
 import { users } from "./auth.js";
 import { uuidPk } from "./helpers.js";
 import { SIGNING_PROVIDERS } from "./signing-connectors.js";
@@ -51,11 +63,20 @@ import { SIGNING_PROVIDERS } from "./signing-connectors.js";
  * has signed so far is provider-side detail v1 does not surface.
  *
  * Fixed rather than configurable for the reason the approval statuses
- * are: code branches on it — the live-envelope rule is `sent`, the
+ * are: code branches on it — the live-envelope rule includes preparations, the
  * executed-copy fetch fires on `signed`, and the record draws one
  * DES-005 pill family per value.
  */
-export const ENVELOPE_STATUSES = ["sent", "signed", "declined", "voided"] as const;
+export const ENVELOPE_STATUSES = [
+  "preparing",
+  "draft",
+  "preparation_failed",
+  "discarded",
+  "sent",
+  "signed",
+  "declined",
+  "voided",
+] as const;
 export type EnvelopeStatus = (typeof ENVELOPE_STATUSES)[number];
 
 /**
@@ -85,7 +106,55 @@ export const contractEnvelopes = pgTable(
     provider: text("provider", { enum: SIGNING_PROVIDERS }).notNull(),
     /** The provider's own id for the envelope — the correlation key for
      * every later call and for every inbound webhook delivery. */
-    providerEnvelopeId: text("provider_envelope_id").notNull(),
+    providerEnvelopeId: text("provider_envelope_id"),
+    /** The primary document the version was chosen from. NULL on rows
+     * sent before #1171, which name only their version. */
+    documentId: text("document_id").references(() => documents.id, { onDelete: "set null" }),
+    /** The retained subject. NULL on historical rounds and after Signer erasure. */
+    subject: text("subject"),
+    /** The caller's key for one request; unique per contract. */
+    idempotencyKey: text("idempotency_key"),
+    /** A hash of the request the key first named, so a reuse with other
+     * inputs is refused as a conflict rather than answered as a match. */
+    requestFingerprint: text("request_fingerprint"),
+    /** Our own id for the creation, sent to the provider with it, so an
+     * envelope whose answer was lost can be looked up later. NULL means no lookup is possible. */
+    providerTransactionId: text("provider_transaction_id"),
+    /** The original account. NULL means unknown legacy identity; never infer it later. */
+    providerAccountId: text("provider_account_id"),
+    /** The original environment. NULL means unknown legacy identity; never infer it later. */
+    providerEnvironment: text("provider_environment"),
+    /** How far external creation got. `uncertain` means we never heard
+     * back, and the round stays reserved until the outcome is known.
+     * NULL on rows sent before #1171. */
+    preparationState: text("preparation_state", {
+      enum: ["pending", "uncertain", "created", "failed"],
+    }),
+    /** Original operation intent. NULL on reservations made before #1174. */
+    creationKind: text("creation_kind", { enum: ["draft", "send"] }),
+    /** NULL means unknown original Stage; recovery must not move it. */
+    creationStatusId: text("creation_status_id"),
+    /** NULL means unknown original revision; recovery must not move the Stage. */
+    creationStatusRevision: integer("creation_status_revision"),
+    /** Durable recovery allowance. No request retry resets these fields. */
+    recoveryAttempts: integer("recovery_attempts").notNull().default(0),
+    /** NULL means no scheduled claim. An unstopped preparing row then uses
+     * the creation grace; settled or stopped rows are not eligible. */
+    nextRecoveryAt: timestamp("next_recovery_at", { withTimezone: true }).default(
+      sql`now() + interval '15 minutes'`,
+    ),
+    /** NULL means there is no operator stop. Status and nextRecoveryAt
+     * still decide eligibility; it does not mean recovery is complete. */
+    recoveryStopped: text("recovery_stopped", {
+      enum: ["lookup_expired", "attempts_exhausted", "identity_missing"],
+    }),
+    /** Provider schedule, read without modifying its workflow. */
+    scheduled: boolean("scheduled").notNull().default(false),
+    /** A discarded round restored outside OpenLaw does not reclaim another reservation. */
+    externallyRestored: boolean("externally_restored").notNull().default(false),
+    confirmationPending: boolean("confirmation_pending").notNull().default(false),
+    /** NULL means no launch claim is held. */
+    launchClaimExpiresAt: timestamp("launch_claim_expires_at", { withTimezone: true }),
     /** Next permitted provider status check, shared by all worker replicas. */
     nextReconcileAt: timestamp("next_reconcile_at", { withTimezone: true }),
     status: text("status", { enum: ENVELOPE_STATUSES }).notNull().default("sent"),
@@ -101,8 +170,8 @@ export const contractEnvelopes = pgTable(
     documentVersionId: text("document_version_id").references(() => documentVersions.id, {
       onDelete: "set null",
     }),
-    /** Who sent it. No cascade, as everywhere a record names a person:
-     * somebody is archived, never deleted (SET-005). */
+    /** The preparer, retained for Void permission and executed-copy authorship.
+     * Users are archived, never deleted (SET-005). */
     sentBy: text("sent_by")
       .notNull()
       .references(() => users.id),
@@ -131,7 +200,7 @@ export const contractEnvelopes = pgTable(
     executedVersionId: text("executed_version_id").references(() => documentVersions.id, {
       onDelete: "set null",
     }),
-    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow(),
     /** When it reached a terminal status; NULL while it is live. */
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -154,9 +223,9 @@ export const contractEnvelopes = pgTable(
      */
     uniqueIndex("contract_envelopes_provider_id_idx").on(table.provider, table.providerEnvelopeId),
     /**
-     * At most one **live** envelope per contract (CTR-013), as the
-     * database's own last word behind the check the send route makes
-     * under the contract's row lock.
+     * One local live reservation per Contract (CTR-013). Externally restored
+     * rounds retain their provider status without reclaiming this reservation.
+     * The creation routes check all live rows under the Contract lock.
      *
      * Partial on purpose: a declined or voided envelope blocks nothing,
      * so the next round goes out as easily as the first and the earlier
@@ -164,7 +233,42 @@ export const contractEnvelopes = pgTable(
      */
     uniqueIndex("contract_envelopes_live_idx")
       .on(table.contractId)
-      .where(sql`status = 'sent'`),
+      .where(
+        sql.raw(
+          `status in (${LIVE_ENVELOPE_STATUSES.map((status) => `'${status}'`).join(", ")}) and not externally_restored`,
+        ),
+      ),
+    /** One request per key on a contract, and one creation per
+     * transaction id. */
+    uniqueIndex("contract_envelopes_idempotency_idx").on(table.contractId, table.idempotencyKey),
+    uniqueIndex("contract_envelopes_transaction_idx").on(table.providerTransactionId),
+    check(
+      "contract_envelopes_creation_kind_check",
+      sql`creation_kind is null or creation_kind in ('draft', 'send')`,
+    ),
+    check(
+      "contract_envelopes_creation_revision_check",
+      sql`creation_status_revision is null or creation_status_revision >= 0`,
+    ),
+    check("contract_envelopes_recovery_attempts_check", sql`recovery_attempts >= 0`),
+    check(
+      "contract_envelopes_recovery_stopped_check",
+      sql`recovery_stopped is null or recovery_stopped in ('lookup_expired', 'attempts_exhausted', 'identity_missing')`,
+    ),
+    check(
+      "contract_envelopes_creation_check",
+      sql`preparation_state is null or preparation_state in ('pending', 'uncertain', 'created', 'failed')`,
+    ),
+    /** Only a round the provider has not yet named may lack its id. */
+    check(
+      "contract_envelopes_provider_required",
+      sql`status in ('preparing', 'preparation_failed') or provider_envelope_id is not null`,
+    ),
+    /** A sent time exactly when the round was sent. A draft has none. */
+    check(
+      "contract_envelopes_sent_time",
+      sql`(status in ('preparing', 'draft', 'preparation_failed', 'discarded')) = (sent_at is null)`,
+    ),
     /**
      * `provider`, `status`, and `executed_fetch` hold only the values
      * CTR-013 defines. Drizzle's `{ enum }` is a TypeScript narrowing
@@ -177,7 +281,7 @@ export const contractEnvelopes = pgTable(
     check("contract_envelopes_provider_check", sql`provider in ('docusign')`),
     check(
       "contract_envelopes_status_check",
-      sql`status in ('sent', 'signed', 'declined', 'voided')`,
+      sql`status in ('preparing', 'draft', 'preparation_failed', 'discarded', 'sent', 'signed', 'declined', 'voided')`,
     ),
     check(
       "contract_envelopes_executed_fetch_check",
@@ -187,7 +291,10 @@ export const contractEnvelopes = pgTable(
      * envelope carries neither. The row prints "—" for a live
      * envelope's completion rather than guessing, so a row with a time
      * and no ending would be unreadable. */
-    check("contract_envelopes_completed_at", sql`(status = 'sent') = (completed_at is null)`),
+    check(
+      "contract_envelopes_completed_at",
+      sql`(status in ('preparing', 'draft', 'sent')) = (completed_at is null)`,
+    ),
     /** A reason belongs to a decline or a void and to nothing else. A
      * reason on a signed envelope would be a sentence with no act
      * behind it. */
@@ -207,10 +314,8 @@ export type ContractEnvelope = typeof contractEnvelopes.$inferSelect;
  * envelope row answers "who was asked to sign this", and a JSON column
  * could not be read back as rows.
  *
- * A signer is a name and an email typed into the send dialog, not a
- * user of this install and not a counterparty contact. The person on
- * the other side of a deal has no account here, and the envelope has to
- * reach them anyway.
+ * A Signer is resolved from a user of this install or entered as an
+ * external name and email address. Both are retained on the round.
  *
  * **Every signer is asked in parallel** (CTR-013 v1): `signing_order`
  * records the order they were entered, so the row draws them back as
@@ -264,3 +369,24 @@ export const contractEnvelopeSigners = pgTable(
 );
 
 export type ContractEnvelopeSigner = typeof contractEnvelopeSigners.$inferSelect;
+
+/** One expiring return correlation per browser launch. Only its hash is stored. */
+export const envelopeLaunches = pgTable("envelope_launches", {
+  stateHash: text("state_hash").primaryKey(),
+  envelopeId: text("envelope_id")
+    .notNull()
+    .references(() => contractEnvelopes.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  providerAccountId: text("provider_account_id").notNull(),
+  providerEnvironment: text("provider_environment").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  /** NULL means this launch has not been consumed. Expiry still limits its use. */
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});

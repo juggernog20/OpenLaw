@@ -253,13 +253,10 @@ export DOC_ENGINE_PORT="${DOC_ENGINE_PORT:-$((8080 + infra_offset))}"
 export MAILPIT_PORT="${MAILPIT_PORT:-$((8025 + infra_offset))}"
 export MAILPIT_SMTP_PORT="${MAILPIT_SMTP_PORT:-$((1025 + infra_offset))}"
 
-# Where Vite sends /api, and the Origin it signs the request with, which
-# better-auth compares against its own base URL (TECH-008). Both follow
-# the API's port.
+# Vite sends /api to the API port. Browser returns and emailed links
+# use the web port, where the current frontend is served.
 export DEV_API_ORIGIN="${DEV_API_ORIGIN:-http://localhost:$PORT}"
-# Emailed links. Left unset the API falls back to localhost:3000, which
-# belongs to another instance once this one has moved off it.
-export BASE_URL="${BASE_URL:-$DEV_API_ORIGIN}"
+export BASE_URL="${BASE_URL:-http://localhost:$WEB_PORT}"
 
 # A second loop beside a running one is the confusing failure: the
 # containers restart, then the api dies on EADDRINUSE while the web

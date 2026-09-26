@@ -18,6 +18,7 @@
  * asked about is the first row. Nothing here sorts anything.
  */
 
+import { isLiveEnvelopeStatus } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { api } from "./api";
 import { problem, type Problem } from "./problem";
@@ -77,17 +78,20 @@ export type SigningOutcome = ({ ok: true } & SigningState) | ({ ok: false } & Pr
  * decision.
  */
 export const ENVELOPE_PILL: Record<EnvelopeStatus, string> = {
+  preparing: "bg-status-warning-bg text-status-warning-fg",
+  draft: "bg-status-neutral-bg text-status-neutral-fg",
+  discarded: "bg-status-neutral-bg text-status-neutral-fg",
+  preparation_failed: "bg-status-danger-bg text-status-danger-fg",
   sent: "bg-status-warning-bg text-status-warning-fg",
   signed: "bg-status-success-bg text-status-success-fg",
   declined: "bg-status-danger-bg text-status-danger-fg",
   voided: "bg-status-neutral-bg text-status-neutral-fg",
 };
 
-/** The one envelope the record is waiting on, or none (CTR-013). At
- * most one is live at a time, which is the rule the seam holds and the
- * database backs. */
+/** The newest live Envelope. Restored external rounds may also be live;
+ * every live row blocks local creation and remains visible in the history. */
 export const liveEnvelope = (envelopes: readonly ContractEnvelope[]): ContractEnvelope | null =>
-  envelopes.find((envelope) => envelope.status === "sent") ?? null;
+  envelopes.find((envelope) => isLiveEnvelopeStatus(envelope.status)) ?? null;
 
 /** Reads the record's whole signing state through the same route the
  * loader uses. Live prompts call this rather than carrying an Envelope
@@ -155,4 +159,36 @@ export async function voidContractEnvelope(
     })
     .catch(() => undefined);
   return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
+}
+
+export async function prepareContractEnvelope(
+  contractNumber: number,
+  input: {
+    documentVersionId: string;
+    signers: readonly SendSigner[];
+    subject?: string;
+    idempotencyKey: string;
+  },
+): Promise<SigningOutcome> {
+  const result = await api
+    .POST("/api/v1/contracts/{number}/envelopes/prepare", {
+      params: { path: { number: contractNumber } },
+      body: { ...input, signers: [...input.signers] },
+    })
+    .catch(() => undefined);
+  return result?.data ? { ok: true, ...result.data } : { ok: false, ...(await problem(result)) };
+}
+
+/** Launch URLs live only in this call and are used immediately in this tab. */
+export async function launchContractEnvelope(
+  envelopeId: string,
+): Promise<string | null | undefined> {
+  const result = await api
+    .POST("/api/v1/envelopes/{envelopeId}/launch", {
+      params: { path: { envelopeId } },
+    })
+    .catch(() => undefined);
+  if (!result?.data) return (await problem(result)).detail;
+  window.location.assign(result.data.url);
+  return null;
 }

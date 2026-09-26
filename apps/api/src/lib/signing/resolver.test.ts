@@ -64,6 +64,11 @@ function inertDriver(environment: SigningEnvironment): SigningProvider {
     provider: "docusign",
     environment,
     testConnection: unreached,
+    findEnvelope: async () => {
+      throw new Error("unused");
+    },
+    prepareEnvelope: unreached,
+    launchEnvelope: unreached,
     sendEnvelope: unreached,
     voidEnvelope: unreached,
     readEnvelope: unreached,
@@ -172,6 +177,14 @@ describe("the signing resolver", () => {
       .where(eq(signingConnectors.provider, "docusign"));
     expect(await resolve()).toBeNull();
 
+    const accounting = await resolve("accounting");
+    expect(accounting).not.toBeNull();
+    // A refused default read while the row is off keeps the driver, so
+    // the sweep and Webhook deliveries reuse the token it already holds.
+    expect(await resolve()).toBeNull();
+    expect(await resolve("accounting")).toBe(accounting);
+    expect(built).toHaveLength(2);
+
     // Turning it back on builds from the credentials the row kept —
     // which is the difference from deleting it.
     await db
@@ -179,7 +192,7 @@ describe("the signing resolver", () => {
       .set({ disabledAt: null })
       .where(eq(signingConnectors.provider, "docusign"));
     expect(await resolve()).not.toBeNull();
-    expect(built).toHaveLength(2);
+    expect(built).toHaveLength(3);
     expect(built[1]?.privateKey).toBe(RSA_KEY);
   });
 });

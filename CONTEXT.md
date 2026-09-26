@@ -221,11 +221,14 @@ _Avoid_: suggestion, draft value, untrusted value
 The matter equivalent of Stage — `open` or `closed`, immutable once set on a status [MTR-002].
 
 **Envelope**:
-One round of signature on one version of a Contract's primary document, sent through the signing connector and held by the provider. It carries one status — `sent`, `signed`, `declined`, or `voided` — and the Signers it was sent to. A Contract has at most one **live** envelope at a time; a declined or voided one blocks nothing, and the next round is a new envelope [CTR-013].
+One durable round of signature on an exact Version of a Contract’s primary Document. Its status is `preparing`, `draft`, `preparation_failed`, `discarded`, `sent`, `signed`, `declined`, or `voided`. **Live** means preparing, draft, or sent. OpenLaw permits one local live reservation and refuses new creation while any live Envelope exists. A discarded Envelope restored outside OpenLaw can coexist with a newer reservation; its provider status remains visible and it does not reclaim that reservation. An uncertain creation remains preparing and reserved until its outcome is known. A draft is unsent and has no Sent timestamp. A provider-scheduled draft remains reserved and is not editable through Resume. A discarded preparation retains its history with no Sent timestamp and releases its live reservation only after provider confirmation. Envelope status `draft` is not Contract Stage `draft`. The preparation retains its Signers, Subject, source Version and Document chain, provider identity, and preparer; `sent_by` names that preparer for Void and executed-copy authorship [CTR-013, #1171].
 _Avoid_: signature request, signing packet, DocuSign envelope (the term is provider-neutral), request (that is the intake term)
 
+**Sender View**:
+A short-lived provider link that opens the saved draft in DocuSign. Each OpenLaw launch checks current access and requests a fresh link. The link is an external capability; OpenLaw logout, archival, changed access and connector disable cannot close an already-issued provider session. A return is navigation, not proof of send. Sender View and its native restrictions remain live-acceptance gated [CTR-013, #1178].
+
 **Signer**:
-One person an Envelope is sent to, as a name and an email address. A Signer is not a user of this install and not a Counterparty contact — the other side of a deal has no account here. Every Signer on an Envelope is asked in parallel; there is no routing order [CTR-013].
+One person selected to sign an Envelope, resolved to a name and email address. A Signer may be a user of this install, selected by identity, or someone outside it, entered by name and address. Every Signer has a distinct address and is asked in parallel; there is no routing order [CTR-013, September 25 addendum].
 _Avoid_: signatory, recipient, approver (an Approval is a different act, by a colleague, inside the product)
 
 **Soft gate**:
@@ -424,7 +427,7 @@ Signing a Contract outside OpenLaw and filing the result by hand: set the status
 _Avoid_: manual signing, offline signing, the fallback
 
 **Reconciliation sweep**:
-The background round that asks the signing connector where each due live Envelope stands and moves the record to match. An Administrator selects **Polling** for outbound-only status updates, or **Webhook** for signed notifications through a public HTTPS gateway. The reconciliation sweep runs in both modes, with at least 15 minutes between provider status checks of one Envelope. Both paths apply the same transition and file the same executed copy [CTR-013, TECH-007].
+The background round that asks the signing connector where each due Envelope stands, including discarded preparations that can be restored outside OpenLaw and moves the record to match. An Administrator selects **Polling** for outbound-only status updates, or **Webhook** for signed notifications through a public HTTPS gateway. The reconciliation sweep runs in both modes, with at least 15 minutes between provider status checks of one Envelope. Returns, Resume and workers share that read allowance. Both modes keep accounting when the connector is disabled, while new sends and launches are refused. Both paths apply the same transition and file the same executed copy [CTR-013, TECH-007].
 _Avoid_: status poller, sync job, the backfill sweep (that is M12's, and it recovers lost jobs rather than reading a provider)
 
 **Executed pin**:

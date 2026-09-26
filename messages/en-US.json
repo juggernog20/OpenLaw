@@ -455,11 +455,26 @@
   "activity.entityShareEntry.updated": {
     "defaultMessage": "{actor} changed entry {entryNo} on the {name} register"
   },
+  "activity.envelope.confirmed": {
+    "defaultMessage": "This contract's envelope status was confirmed by the provider"
+  },
   "activity.envelope.declined": {
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
   },
+  "activity.envelope.discarded": {
+    "defaultMessage": "{hasActor, select, yes {{actor} discarded this contract's envelope} other {This contract's envelope was discarded}}{hasReason, select, yes { — {reason}} other {}}"
+  },
+  "activity.envelope.preparation_started": {
+    "defaultMessage": "{actor} started preparing this contract's envelope"
+  },
+  "activity.envelope.restored": {
+    "defaultMessage": "This contract's envelope was restored in DocuSign"
+  },
   "activity.envelope.sent": {
-    "defaultMessage": "{actor} sent this contract for signature"
+    "defaultMessage": "{hasActor, select, yes {{actor} sent this contract for signature} other {This contract was sent for signature}}"
+  },
+  "activity.envelope.session_launched": {
+    "defaultMessage": "{actor} requested an editing session for this contract's envelope"
   },
   "activity.envelope.signed": {
     "defaultMessage": "This contract's envelope was signed"
@@ -10593,10 +10608,10 @@
     "defaultMessage": "Send for signature from records"
   },
   "settings.eSignature.enabled.off": {
-    "defaultMessage": "Off since {when}. Records show the manual path, and rounds already out stand still until you turn this back on."
+    "defaultMessage": "Off since {when}. New preparations and Resume links are refused. Existing DocuSign sessions remain usable and confirmed outcomes still reach OpenLaw."
   },
   "settings.eSignature.enabled.on": {
-    "defaultMessage": "Turn this off to go back to the manual path without losing the credentials. Records stop offering the send, and rounds already out stand still until you turn it back on."
+    "defaultMessage": "Turn this off to refuse new preparations and Resume links. Existing DocuSign sessions remain usable and OpenLaw continues recording their outcomes. Credentials and history stay saved."
   },
   "settings.eSignature.environment": {
     "defaultMessage": "Environment"
@@ -10632,7 +10647,7 @@
     "defaultMessage": "Remove connector"
   },
   "settings.eSignature.removeAlternative": {
-    "defaultMessage": "To stop sending and keep the credentials, turn the connector off instead."
+    "defaultMessage": "Live preparations, uncertain creations, sent Envelopes and outstanding executed copies prevent removal or changes to their account and environment. Credentials can rotate after verification of the same identity. Legacy Envelopes without a recorded account require the original integration key and API user. Turning off the connector does not close existing DocuSign sessions."
   },
   "settings.eSignature.removeBody": {
     "defaultMessage": "The RSA key and the Connect secret are deleted with the connector. Reconnecting means pasting both again. Records go back to the manual path."
@@ -12402,7 +12417,7 @@
     "defaultMessage": "workspace"
   },
   "signing.actionsFor": {
-    "defaultMessage": "Actions for the envelope sent on {date}"
+    "defaultMessage": "Actions for the envelope: {date}"
   },
   "signing.addSigner": {
     "defaultMessage": "Add signer"
@@ -12425,6 +12440,9 @@
   "signing.column.status": {
     "defaultMessage": "Status"
   },
+  "signing.connectorUnavailable": {
+    "defaultMessage": "The Signing connector is disabled or unavailable. Ask an Administrator to restore the original configuration before resuming. Your preparation remains saved."
+  },
   "signing.emailPlaceholder": {
     "defaultMessage": "Email address"
   },
@@ -12440,6 +12458,15 @@
   "signing.executedFiling": {
     "defaultMessage": "Filing the executed copy…"
   },
+  "signing.externalSessionLimit": {
+    "defaultMessage": "Changing OpenLaw access, archiving the Contract or turning off the connector does not close a session already issued by DocuSign. Resolve that session in DocuSign if it must stop. OpenLaw continues recording confirmed outcomes."
+  },
+  "signing.externallyRestored": {
+    "defaultMessage": "Restored outside OpenLaw. Review this Envelope in DocuSign."
+  },
+  "signing.launchFailed": {
+    "defaultMessage": "DocuSign could not open this draft. Try again from Signatures."
+  },
   "signing.namePlaceholder": {
     "defaultMessage": "Search people or type a name"
   },
@@ -12449,8 +12476,35 @@
   "signing.needSigners": {
     "defaultMessage": "Give every signer a name and an email address."
   },
+  "signing.notSent": {
+    "defaultMessage": "Not sent"
+  },
+  "signing.openDraft": {
+    "defaultMessage": "Resume in DocuSign"
+  },
   "signing.peopleMatches": {
     "defaultMessage": "People in OpenLaw"
+  },
+  "signing.preparationPending": {
+    "defaultMessage": "Preparation is awaiting confirmation. Check Signatures before trying again."
+  },
+  "signing.prepare": {
+    "defaultMessage": "Prepare Envelope"
+  },
+  "signing.prepareEnvelope": {
+    "defaultMessage": "Continue to DocuSign"
+  },
+  "signing.prepareFailed": {
+    "defaultMessage": "The Envelope could not be prepared. Check its status before trying again."
+  },
+  "signing.prepareNote": {
+    "defaultMessage": "Open DocuSign to place fields on this Version, then send to these Signers."
+  },
+  "signing.prepareTitle": {
+    "defaultMessage": "Prepare Envelope"
+  },
+  "signing.preparedBy": {
+    "defaultMessage": "Prepared by {name}"
   },
   "signing.reason": {
     "defaultMessage": "Reason"
@@ -12458,8 +12512,38 @@
   "signing.reasonHelp": {
     "defaultMessage": "The provider records this with the withdrawal, and the record keeps it on the row."
   },
+  "signing.recoveryNext": {
+    "defaultMessage": "Next check no earlier than {time}."
+  },
+  "signing.recoveryStopped": {
+    "defaultMessage": "Automatic recovery has stopped. Ask your Administrator to resolve this Envelope. It stays reserved until its outcome is confirmed."
+  },
+  "signing.recoveryWaiting": {
+    "defaultMessage": "OpenLaw is checking the original Envelope. Checks made: {attempts}. Refreshing does not create another Envelope or speed up provider checks."
+  },
+  "signing.refreshFailed": {
+    "defaultMessage": "Status could not be refreshed. Try again."
+  },
+  "signing.refreshRecovery": {
+    "defaultMessage": "Refresh status"
+  },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
+  },
+  "signing.resumeHelp": {
+    "defaultMessage": "Save and Close keeps your fields in DocuSign. If a link expires or you close the browser, return here and Resume. A fresh link does not close an earlier editing session."
+  },
+  "signing.returnHelp": {
+    "defaultMessage": "Open the Contract from Signatures to see its confirmed status."
+  },
+  "signing.returnHome": {
+    "defaultMessage": "Go to Home"
+  },
+  "signing.returnUnavailable": {
+    "defaultMessage": "This signing return is unavailable"
+  },
+  "signing.scheduled": {
+    "defaultMessage": "Scheduled in DocuSign"
   },
   "signing.section": {
     "defaultMessage": "Signatures"
@@ -12497,14 +12581,35 @@
   "signing.signersNote": {
     "defaultMessage": "Pick someone in OpenLaw, and their email fills in for you. For someone outside OpenLaw, type their name and email address."
   },
+  "signing.sourceChanged": {
+    "defaultMessage": "The primary Document changed. This preparation still uses {document}, Version {version}. Restore that Document as primary to Resume, or resolve this preparation in DocuSign before preparing different paper."
+  },
+  "signing.sourceUnavailable": {
+    "defaultMessage": "The original source Version is unavailable. This preparation cannot be launched. Ask your Legal Owner to check its access, archive or erasure state and resolve the existing Envelope in DocuSign."
+  },
   "signing.status.declined": {
     "defaultMessage": "Declined"
+  },
+  "signing.status.discarded": {
+    "defaultMessage": "Discarded"
+  },
+  "signing.status.draft": {
+    "defaultMessage": "Draft — not sent"
+  },
+  "signing.status.preparationFailed": {
+    "defaultMessage": "Preparation failed"
+  },
+  "signing.status.preparing": {
+    "defaultMessage": "Preparing"
   },
   "signing.status.sent": {
     "defaultMessage": "Out for signature"
   },
   "signing.status.signed": {
     "defaultMessage": "Signed"
+  },
+  "signing.status.uncertain": {
+    "defaultMessage": "Creation uncertain — not confirmed sent"
   },
   "signing.status.voided": {
     "defaultMessage": "Voided"
@@ -12544,6 +12649,9 @@
   },
   "signing.voidTitle": {
     "defaultMessage": "Void envelope"
+  },
+  "signing.waiting": {
+    "defaultMessage": "Waiting for confirmation"
   },
   "table.columns": {
     "defaultMessage": "Columns"

@@ -1236,19 +1236,36 @@ type EnvelopeEndingPayload = {
 };
 
 type EnvelopePayloads = {
-  "envelope.sent": {
+  "envelope.preparation_started": {
+    envelopeId: string;
+    provider: string;
+    documentId: string;
+    documentVersionId: string;
+    signerCount: number;
+  };
+  "envelope.session_launched": {
     envelopeId: string;
     provider: string;
     providerEnvelopeId: string;
-    documentId: string;
-    documentTitle: string;
-    documentVersionId: string;
-    documentVersionNumber: number;
-    signers: { name: string; email: string }[];
   };
+  "envelope.sent":
+    | EnvelopeEndingPayload
+    | {
+        envelopeId: string;
+        provider: string;
+        providerEnvelopeId: string;
+        documentId: string;
+        documentTitle: string;
+        documentVersionId: string;
+        documentVersionNumber: number;
+        signers: { name: string; email: string }[];
+      };
   "envelope.signed": EnvelopeEndingPayload;
   "envelope.declined": EnvelopeEndingPayload;
   "envelope.voided": EnvelopeEndingPayload;
+  "envelope.discarded": EnvelopeEndingPayload;
+  "envelope.restored": EnvelopeEndingPayload;
+  "envelope.confirmed": EnvelopeEndingPayload;
 };
 
 /**

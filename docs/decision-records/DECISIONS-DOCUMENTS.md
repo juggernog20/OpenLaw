@@ -415,3 +415,20 @@ Matter and Contract Documents share these behaviors:
   Archive, Restore for archived selections, and Administrator Delete. The selection can
   span loaded folders. Each action uses existing per-Document routes with bounded
   concurrency, refreshes once, and retains failed Documents as the selection with errors.
+
+### DOC-001 / DOC-008 / DOC-010 addendum, 2026-09-26, #1178. Preparation source and remote limits
+
+A preparation pins its original Version and Document chain. A newer Version does
+not replace it; another primary Document or lost source reach refuses Resume.
+Provider completion files on the original chain, once per Envelope, through the
+existing executed-copy rules. It advances the Contract only under the existing
+Signature-to-Active condition. Native editing that defeats that source identity
+blocks rollout until the design is changed and verified live.
+
+Archival and erasure retain their established local protections. OpenLaw refuses
+new launches after access loss, archival or connector disable, but those actions
+cannot revoke an already-issued provider session. The actual remote lifetime still
+needs observation. External-Signer erasure removes local Signer rows, tombstones
+retained Activity details and clears the invitation Subject. It does not erase
+provider paper or fields, executed files, or previously exported logs. No remote
+erasure or revocation guarantee is added by the preparation interface.

@@ -24,7 +24,7 @@ beforeAll(async () => {
   // hook applies to them the way it applies to every module.
   app.post("/api/v1/probe", { schema: { hide: true } }, async () => ({ ok: true }));
   app.get("/api/v1/probe", { schema: { hide: true } }, async () => ({ ok: true }));
-  app.post("/api/v1/signing/probe", { schema: { hide: true } }, async () => ({ ok: true }));
+  app.post("/api/v1/signing/probe/webhook", { schema: { hide: true } }, async () => ({ ok: true }));
   app.post("/api/probe", { schema: { hide: true } }, async () => ({ ok: true }));
   await app.ready();
 });
@@ -79,7 +79,9 @@ describe("the Origin check on /api/v1 mutations", () => {
   });
 
   it("exempts the signing webhook, which another site is meant to call", async () => {
-    const res = await post("/api/v1/signing/probe", { origin: "https://other.example.com" });
+    const res = await post("/api/v1/signing/probe/webhook", {
+      origin: "https://other.example.com",
+    });
     expect(res.statusCode, res.body).toBe(200);
   });
 

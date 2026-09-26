@@ -35,7 +35,10 @@ import { maxUploadBytes } from "../uploads.js";
 import { BodyTooLargeError, boundedReadable, readBoundedBody } from "./bounded-body.js";
 import {
   EnvelopeNotFoundError,
+  EnvelopeAccessError,
+  EnvelopeEditConflictError,
   SigningConfigError,
+  SigningNotSubmittedError,
   SigningRefusedError,
   SigningTimeoutError,
   SigningUnavailableError,
@@ -44,6 +47,7 @@ import {
   type EnvelopeState,
   type EnvelopeStatus,
   type SendEnvelopeInput,
+  type PrepareEnvelopeInput,
   type SentEnvelope,
   type SigningProvider,
   type WebhookDelivery,
@@ -218,17 +222,20 @@ export function verifyConnectSignature(
 }
 
 /**
- * DocuSign's envelope statuses, mapped onto CTR-013's four. Anything
- * else — `created`, `deleted` — is not a state the record tracks.
+ * DocuSign's envelope statuses, mapped onto CTR-013's. `created` is a
+ * draft (#1171). Anything else — `deleted`, `correct` — is not a state
+ * the record tracks.
  *
  * A `Map`, not an object literal: the key comes off a webhook body, and
  * an object lookup answers `constructor` and `toString` from the
  * prototype. That would turn a forged delivery into a status.
  */
 const STATUS_MAP: ReadonlyMap<string, EnvelopeStatus> = new Map([
+  // DocuSign's name for a draft: created, and not yet sent (#1171).
+  ["created", "draft"],
   ["sent", "sent"],
   ["delivered", "sent"],
-  ["signed", "signed"],
+  ["signed", "sent"],
   ["completed", "signed"],
   ["declined", "declined"],
   ["voided", "voided"],
@@ -283,8 +290,10 @@ export function parseConnectDelivery(body: Buffer): WebhookDelivery {
   if (!providerEnvelopeId || !rawStatus) {
     throw new WebhookSignatureError("The delivery body is not a DocuSign envelope event.");
   }
-  const status = mapEnvelopeStatus(rawStatus);
-  if (!status) {
+  const status = ["created", "deleted"].includes(rawStatus.toLowerCase())
+    ? null
+    : mapEnvelopeStatus(rawStatus);
+  if (status === undefined) {
     throw new WebhookSignatureError(`The delivery reports a status we do not track: ${rawStatus}.`);
   }
   const reason = readString(envelope, "voidedReason") ?? readString(envelope, "declinedReason");
@@ -295,6 +304,7 @@ export function parseConnectDelivery(body: Buffer): WebhookDelivery {
   return {
     providerEnvelopeId,
     status,
+    ...(readDate(envelope.sentDateTime) ? { sentAt: readDate(envelope.sentDateTime)! } : {}),
     ...(reason !== undefined ? { reason } : {}),
     ...(completedAt !== undefined ? { completedAt } : {}),
   };
@@ -455,16 +465,38 @@ class DocuSignProvider implements SigningProvider {
       relayFetchError(error);
     }
     if (response.ok) return response;
-    // 401/403 is the credential answer, 404 is a missing envelope, and
-    // every other 4xx is DocuSign saying no to this request — all
-    // terminal. 5xx and 429 are the provider's own trouble, which a
-    // retry heals. The refusal body is kept as a bounded cause only.
+    // The error code is read first, because DocuSign says the same
+    // thing under more than one status: an edit lock and a wrong status
+    // arrive as 400, a permission fault as 403. A 403 on an envelope
+    // path is that envelope's permissions, not the credentials, which
+    // is a different remedy. 401/403 elsewhere is the credential
+    // answer, 404 is a missing envelope, and every other 4xx is
+    // DocuSign saying no to this request — all terminal. 5xx and 429
+    // are the provider's own trouble, which a retry heals. The refusal
+    // body is kept as a bounded cause only.
     const body = await readBoundedBody(response.body, {
       maxBytes: MAX_REFUSAL_BYTES,
       onChunk: deadline.touch,
     })
       .then((bytes) => bytes.toString("utf8"))
       .catch(() => "");
+    let code: string | undefined;
+    try {
+      code = readString(readObject(JSON.parse(body)) ?? {}, "errorCode")?.toUpperCase();
+    } catch {
+      /* An empty refusal still has its HTTP status. */
+    }
+    if (code === "EDIT_LOCK_ENVELOPE_LOCKED" || code === "ENVELOPE_LOCKED")
+      throw new EnvelopeEditConflictError("locked");
+    if (code === "ENVELOPE_INVALID_STATUS") throw new EnvelopeEditConflictError("not_draft");
+    if (
+      (response.status === 403 && /\/envelopes\/[^/]+/.test(new URL(url).pathname)) ||
+      code === "USER_LACKS_PERMISSIONS" ||
+      code === "ENVELOPE_ACCESS_DENIED"
+    )
+      throw new EnvelopeAccessError(
+        "The Signing user cannot access this Envelope. Ask an Administrator to check its permissions.",
+      );
     if (response.status === 401 || response.status === 403) {
       throw new SigningConfigError(
         "DocuSign refused the connector's credentials. Check the integration key, the user ID, " +
@@ -472,7 +504,7 @@ class DocuSignProvider implements SigningProvider {
         { cause: body },
       );
     }
-    if (response.status === 404) {
+    if (response.status === 404 || code === "ENVELOPE_DOES_NOT_EXIST") {
       throw new EnvelopeNotFoundError("DocuSign does not know that envelope.");
     }
     if (response.status === 429 || response.status >= 500) {
@@ -663,23 +695,74 @@ class DocuSignProvider implements SigningProvider {
     };
   }
 
+  async prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope> {
+    return this.createEnvelope(input, true);
+  }
+
+  async launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string> {
+    const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
+    const body = readObject(
+      await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}/views/sender`, {
+        method: "POST",
+        token,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(buildSenderViewRequest(returnUrl)),
+      }),
+    );
+    const launchUrl = body && readString(body, "url");
+    if (!launchUrl) throw new SigningUnavailableError("DocuSign returned no sender session.");
+    return launchUrl;
+  }
+
   async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelope> {
+    return this.createEnvelope(input, false);
+  }
+
+  private async createEnvelope(
+    input: SendEnvelopeInput | PrepareEnvelopeInput,
+    draft: boolean,
+  ): Promise<SentEnvelope> {
     const [token, url, bytes] = await Promise.all([
       this.accessToken(),
       this.envelopesUrl(),
       collect(input.document),
-    ]);
+    ]).catch((error: unknown) => {
+      throw new SigningNotSubmittedError("DocuSign creation was not submitted.", { cause: error });
+    });
     const body = readObject(
       await this.callJson(url, {
         method: "POST",
         token,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(buildEnvelopeDefinition(input, bytes)),
+        body: JSON.stringify(buildEnvelopeDefinition(input, bytes, draft)),
       }),
     );
     const providerEnvelopeId = body && readString(body, "envelopeId");
     if (!providerEnvelopeId) {
-      throw new SigningRefusedError("DocuSign accepted the envelope but named no id for it.");
+      throw new SigningUnavailableError("DocuSign accepted the envelope but named no id for it.");
+    }
+    return { providerEnvelopeId };
+  }
+
+  async findEnvelope(transactionId: string): Promise<SentEnvelope | null> {
+    const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
+    const body = readObject(
+      await this.callJson(`${url}?transaction_ids=${encodeURIComponent(transactionId)}`, { token }),
+    );
+    if (!body || !Array.isArray(body.envelopes)) {
+      throw new SigningUnavailableError("DocuSign returned no usable transaction lookup.");
+    }
+    if (body.envelopes.length === 0) return null;
+    const match = readObject(body.envelopes[0]);
+    const providerEnvelopeId = match && readString(match, "envelopeId");
+    if (
+      body.envelopes.length !== 1 ||
+      !providerEnvelopeId ||
+      (match &&
+        readString(match, "transactionId") !== undefined &&
+        readString(match, "transactionId") !== transactionId)
+    ) {
+      throw new SigningUnavailableError("DocuSign returned ambiguous transaction evidence.");
     }
     return { providerEnvelopeId };
   }
@@ -698,7 +781,12 @@ class DocuSignProvider implements SigningProvider {
     const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
     const body =
       readObject(
-        await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}`, { token }),
+        await this.callJson(
+          `${url}/${encodeURIComponent(providerEnvelopeId)}?include=folders,workflow`,
+          {
+            token,
+          },
+        ),
       ) ?? {};
     const rawStatus = readString(body, "status");
     const status = rawStatus ? mapEnvelopeStatus(rawStatus) : undefined;
@@ -707,13 +795,33 @@ class DocuSignProvider implements SigningProvider {
         `DocuSign reports a status we do not track: ${rawStatus ?? "none"}.`,
       );
     }
+    // Folder membership and unsent state come from one provider observation.
+    // Missing results, reserved deletedDateTime, and browser events prove nothing.
+    const discarded =
+      status === "draft" &&
+      !readString(body, "sentDateTime") &&
+      Array.isArray(body.folders) &&
+      body.folders.some(
+        (folder: unknown) =>
+          readString(readObject(folder) ?? {}, "type")?.toLowerCase() === "recyclebin",
+      );
     const reason = readString(body, "voidedReason") ?? readString(body, "declinedReason");
     const completedAt =
       readDate(body.completedDateTime) ??
       readDate(body.voidedDateTime) ??
       readDate(body.declinedDateTime);
     return {
-      status,
+      status: discarded ? "discarded" : status,
+      scheduled:
+        status === "draft" &&
+        !discarded &&
+        ["pending", "started", "completed"].includes(
+          readString(
+            readObject(readObject(body.workflow)?.scheduledSending) ?? {},
+            "status",
+          )?.toLowerCase() ?? "",
+        ),
+      ...(readDate(body.sentDateTime) ? { sentAt: readDate(body.sentDateTime)! } : {}),
       ...(reason !== undefined ? { reason } : {}),
       ...(completedAt !== undefined ? { completedAt } : {}),
     };
@@ -765,10 +873,13 @@ function fileExtensionOf(fileName: string): string {
 export function buildEnvelopeDefinition(
   input: SendEnvelopeInput,
   document: Buffer,
+  draft = false,
 ): Record<string, unknown> {
   return {
     emailSubject: input.subject,
-    status: "sent",
+    status: draft ? "created" : "sent",
+    ...(draft ? { messageLock: "true", recipientsLock: "true" } : {}),
+    ...("transactionId" in input ? { transactionId: input.transactionId } : {}),
     documents: [
       {
         documentId: "1",
@@ -783,19 +894,44 @@ export function buildEnvelopeDefinition(
         routingOrder: "1",
         name: signer.name,
         email: signer.email,
-        tabs: {
-          signHereTabs: [
-            {
-              documentId: "1",
-              anchorString: "/sig/",
-              anchorUnits: "pixels",
-              anchorXOffset: "0",
-              anchorYOffset: "0",
-              anchorIgnoreIfNotPresent: "true",
-            },
-          ],
-        },
+        ...(draft
+          ? {}
+          : {
+              tabs: {
+                signHereTabs: [
+                  {
+                    documentId: "1",
+                    anchorString: "/sig/",
+                    anchorUnits: "pixels",
+                    anchorXOffset: "0",
+                    anchorYOffset: "0",
+                    anchorIgnoreIfNotPresent: "true",
+                  },
+                ],
+              },
+            }),
       })),
+    },
+  };
+}
+
+export function buildSenderViewRequest(returnUrl: string) {
+  return {
+    viewAccess: "envelope",
+    returnUrl,
+    settings: {
+      startingScreen: "Tagger",
+      sendButtonAction: "send",
+      showBackButton: "false",
+      showHeaderActions: "false",
+      showDiscardAction: "true",
+      recipientSettings: { showEditRecipients: "false" },
+      documentSettings: {
+        showEditDocuments: "false",
+        showEditDocumentVisibility: "false",
+        showEditPages: "false",
+      },
+      taggerSettings: { paletteSections: "default" },
     },
   };
 }

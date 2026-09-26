@@ -2,46 +2,67 @@
 
 /**
  * A contract's signing envelopes (M15/2) — CTR-013's send, made on the
- * record instead of on another company's website.
+ * record instead of on another company's website — and, from #1171, the
+ * durable preparation that later slices open in the provider's editor.
  *
  * A Member+ user with reach to a contract picks a version of its
- * **primary document**, names the people who have to sign it, and sends
- * it through the install's configured connector. The record then holds
- * the envelope: what went out, who was asked, and where it stands.
+ * **primary document**, names the people who have to sign it, and either
+ * sends it through the install's configured connector or prepares it as
+ * an unsent draft. The record then holds the envelope: what went out or
+ * is about to, who was asked, and where it stands.
  *
  * **What goes out is the primary document's chain, and nothing else**
  * (CTR-013, CTR-014). The dialog defaults to the current version and
  * offers the earlier ones; loose attachments are not sendable in v1,
  * because the executed copy comes back to the chain the send left from.
  *
- * **Every signer is asked in parallel.** A signer is a name and an
- * email — the person on the other side of a deal has no account here,
- * and the envelope has to reach them anyway. There is no routing order
- * in v1: the stored order is the order they were typed, so the record
- * draws them back as they were entered.
+ * **Every signer is asked in parallel.** A signer is a user of this
+ * install, named by id, or somebody outside it, named by name and
+ * address (the CTR-013 September 25 addendum). There is no routing
+ * order in v1: the stored order is the order they were entered.
  *
- * **At most one live envelope per contract.** Checked under the
- * contract's row lock and backed by a partial unique index, so two
- * sends racing on one record cannot both land. A declined or voided
- * envelope blocks nothing — the next round is a new row, and the
- * earlier one stays on the record.
+ * **One local live reservation per Contract.** Live means `preparing`,
+ * `draft`, or `sent` (`LIVE_ENVELOPE_STATUSES`). The route checks it
+ * under the contract's row lock, and a partial unique index on the same
+ * statuses backs it, so a preparation and a direct send racing on one
+ * record cannot both land. A declined, voided, or failed round blocks
+ * nothing: the next round is a new row, and the earlier one stays.
  *
- * **The provider is called first, and the row commits once it accepts.**
- * The two systems cannot be written atomically, so the order is chosen
- * to make the survivable failure the likely one: an accepted envelope
- * whose row would not commit is **voided at the provider** before the
- * refusal is raised, and a provider that refuses leaves no row behind.
- * The row lock is taken after the call rather than held across it — a
- * lock held over somebody else's network is a pooled connection parked
- * on a stranger's latency — and the live-envelope rule is re-asked
- * under it, so a race loses cleanly instead of quietly.
+ * **The intent is reserved first, and the provider is called after.**
+ * Both operations commit a `preparing` row, with its signers, subject,
+ * source version, preparer, provider account, and a provider
+ * transaction id, before anything is dialled. No transaction is held
+ * across the provider call: a lock held over somebody else's network is
+ * a pooled connection parked on a stranger's latency. Then:
  *
- * **Two refusals carry RFC 9457 types** (TECH-020): no connector
- * configured, and an envelope already live. They are the two the record
- * branches on to decide whether to draw the send control at all, and a
- * client that told them apart by reading the sentence would break the
- * first time the sentence was reworded. Every other refusal here is one
- * a client prints.
+ * - A preparation that the provider accepts becomes `draft`, with the
+ *   provider's id, records confirmation Activity and moves no Stage. One the
+ *   provider refuses becomes `preparation_failed`.
+ * - A direct send that the provider accepts becomes `sent` in one
+ *   transaction with its `envelope.sent` entry and the Stage move. One
+ *   the provider refuses leaves no row, because no envelope exists.
+ * - Either operation that never hears a clear answer stays `preparing`
+ *   with an `uncertain` creation, and keeps the reservation (#1170
+ *   section 2). A matching retry answers with that round rather than
+ *   creating another, and every other send or preparation is refused
+ *   until the recovery slice settles it.
+ * - An envelope the provider took but the record could not keep is
+ *   **voided at the provider** before the refusal is raised. Its
+ *   provider id is kept first. Only a void the provider confirms ends
+ *   the round, as `voided`; an unconfirmed void leaves it reserved and
+ *   uncertain, with that id, for recovery.
+ *
+ * **An idempotency key names one request.** A preparation requires one;
+ * a direct send may carry one. A matching retry answers with the round
+ * it already made, and the same key with changed inputs is a typed
+ * conflict.
+ *
+ * **Three refusals carry RFC 9457 types** (TECH-020): no connector
+ * configured, an envelope already live, and an idempotency conflict.
+ * The record branches on the first two to decide whether to draw the
+ * send control at all, and a client that told them apart by reading the
+ * sentence would break the first time the sentence was reworded. Every
+ * other refusal here is one a client prints.
  *
  * **Access is inherited and nothing is held here** (DD-014, CTR-021).
  * Every route answers the owning contract's reach question first, with
@@ -57,45 +78,41 @@
  *
  * **The send is narrated** (DD-017). One `envelope.sent` entry on the
  * owning contract at the standing record tier, inside the same
- * transaction as the write — so a failed log write rolls the send's row
- * back rather than leaving an unrecorded envelope.
+ * transaction as the write — so a failed log write rolls the send back
+ * rather than leaving an unrecorded envelope. A preparation is not a
+ * send. Reservation, confirmation and launch have separate Activity.
  *
  * **The status comes back on its own** (M15/3). The provider's Connect
- * webhook reports what happened to an envelope, through the one status
- * funnel in `lib/signing/transitions.ts`.
+ * webhook reports what happened to a sent envelope, through the one
+ * status funnel in `lib/signing/transitions.ts`.
  *
  * **A live envelope is withdrawn where it was sent** (M15/4). The
  * sender, the contract's Owner, or an Administrator voids it — the
  * approvals-cancellation audience, for its reason: a mistaken or
  * superseded send should not sit open, and it should not need the
- * person who made it. The void tells the **provider first** and then
- * applies the `voided` transition through that same funnel, with the
- * voider's reason stored and narrated. The order is the send's order
- * inverted for the send's reason: a record that says "voided" while the
- * envelope is still collecting signatures is the failure that matters,
- * and telling the provider first cannot produce it.
+ * person who made it. For a preparation, `sent_by` holds the preparer,
+ * so the preparer is the "sender" here. The void tells the **provider
+ * first** and then applies the `voided` transition through that same
+ * funnel, with the voider's reason stored and narrated. Only a `sent`
+ * envelope is voided here; a draft uses native Discard and provider
+ * confirmation.
  *
- * **Nothing here moves an envelope by hand.** Every status change on
- * this module's rows goes through `applyEnvelopeStatus`, which owns its
- * own transaction, locks the row, and refuses to move an envelope that
- * has already ended. A void racing a decline therefore loses cleanly.
- *
- * **After an ending, the record sends again** (CTR-013). The partial
- * unique index holds only while an envelope is `sent`, so a voided or
- * declined round blocks nothing: the next send is a new row and the
- * earlier one stays on the record.
+ * **Nothing here moves a sent envelope by hand.** Every status change
+ * after the send goes through `applyEnvelopeStatus`, which owns its own
+ * transaction, locks the row, and refuses to move an envelope that has
+ * already ended. A void racing a decline therefore loses cleanly.
  *
  * **The executed copy comes back on its own** (M15/5). A signed
  * envelope's PDF is fetched by the pipeline, appended to the primary
  * document's chain as a round of kind `executed`, and pinned — so the
  * row here answers `executedFetch` and, once it lands, the file itself.
- * That copy is **this round's**, not the document's pin: a chain can
- * hold two rounds both called `executed`, and the row draws the one it
- * produced. None of that work is done here; the row only reports it.
- *
- * The reconciliation sweep is the later slice.
+ * That copy is **this round's**, not the document's pin, and its author
+ * is `sent_by`. None of that work is done here; the row only reports it.
  */
 
+import { EnvelopeIdentityError, requireEnvelopeIdentity } from "../../lib/signing/identity.js";
+import { contractStatusRevision } from "../../lib/signing/recovery-stage.js";
+import { createHash, randomUUID } from "node:crypto";
 import type { Readable } from "node:stream";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
@@ -108,6 +125,7 @@ import {
   contracts,
   contractStatuses,
   signingConnectors,
+  sql,
   desc,
   documents,
   documentVersions,
@@ -123,12 +141,15 @@ import {
 } from "@openlaw/db";
 import {
   ENVELOPE_LIVE_PROBLEM_TYPE,
+  ENVELOPE_IDEMPOTENCY_CONFLICT_PROBLEM_TYPE,
+  LIVE_ENVELOPE_STATUSES,
   MAX_ENVELOPE_REASON_LENGTH,
   MAX_ENVELOPE_SIGNERS,
   MAX_ENVELOPE_SUBJECT_LENGTH,
   SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { ERASED } from "../../lib/signer-erasure.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   contractTeamScope,
@@ -138,12 +159,13 @@ import {
 } from "../../lib/contract-access.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
+  EnvelopeAccessError,
   EnvelopeNotFoundError,
   SigningConfigError,
+  SigningNotSubmittedError,
   SigningRefusedError,
   SigningTimeoutError,
   SigningUnavailableError,
-  type SigningProvider,
 } from "../../lib/signing/provider.js";
 import { applyEnvelopeStatus } from "../../lib/signing/transitions.js";
 
@@ -217,7 +239,18 @@ const EnvelopeSchema = z.object({
    * reporter gave no words — the record does not invent one. */
   reason: z.string().nullable(),
   sentBy: PersonSchema,
-  sentAt: z.iso.datetime(),
+  sentAt: z.iso.datetime().nullable(),
+  confirmationPending: z.boolean(),
+  scheduled: z.boolean(),
+  externallyRestored: z.boolean(),
+  preparationState: z.enum(["pending", "uncertain", "created", "failed"]).nullable(),
+  recoveryAttempts: z.number().int(),
+  nextRecoveryAt: z.iso.datetime().nullable(),
+  recoveryStopped: z.enum(["lookup_expired", "attempts_exhausted", "identity_missing"]).nullable(),
+  subject: z.string().nullable(),
+  documentVersionId: z.string().nullable(),
+  documentId: z.string().nullable(),
+  sourceState: z.enum(["available", "changed", "unavailable"]),
   /** When it reached a terminal status; NULL while it is out. */
   completedAt: z.iso.datetime().nullable(),
   /**
@@ -275,6 +308,7 @@ const EnvelopesEnvelope = z.object({
    * an error. */
   signingConfigured: z.boolean(),
   updateMode: z.enum(["polling", "webhook"]).nullable(),
+  preparationEnabled: z.boolean().optional(),
   /** The primary document this viewer may send, or NULL when the record
    * has none — or when DD-014 walls the one it has off from them. */
   primaryDocument: SendableDocumentSchema.nullable(),
@@ -383,7 +417,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * the signature" answered on the first row. The id breaks a tie
    * between two rows written in the same second, so the order is total.
    */
-  async function envelopesOf(db: Executor, contractId: string) {
+  async function envelopesOf(db: Executor, contractId: string, user: AuthenticatedUser) {
     // The round that came back, joined beside the round that went out.
     // Both are `document_versions`, so the second join needs a name of
     // its own — and the two are different facts: what was sent, and
@@ -394,7 +428,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         id: contractEnvelopes.id,
         provider: contractEnvelopes.provider,
         status: contractEnvelopes.status,
+        preparationState: contractEnvelopes.preparationState,
+        recoveryAttempts: contractEnvelopes.recoveryAttempts,
+        nextRecoveryAt: contractEnvelopes.nextRecoveryAt,
+        recoveryStopped: contractEnvelopes.recoveryStopped,
+        confirmationPending: contractEnvelopes.confirmationPending,
+        scheduled: contractEnvelopes.scheduled,
+        externallyRestored: contractEnvelopes.externallyRestored,
+        subject: contractEnvelopes.subject,
+        documentVersionId: contractEnvelopes.documentVersionId,
+        documentId: contractEnvelopes.documentId,
         documentTitle: documents.title,
+        sourceReadable: sql<boolean>`coalesce(${documentAudienceScope(db, user)}, false)`,
+        sourceArchivedAt: documents.archivedAt,
+        primaryDocumentId: contracts.primaryDocumentId,
         documentVersionNumber: documentVersions.versionNumber,
         reason: contractEnvelopes.reason,
         sentById: contractEnvelopes.sentBy,
@@ -410,6 +457,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       })
       .from(contractEnvelopes)
       .innerJoin(users, eq(contractEnvelopes.sentBy, users.id))
+      .innerJoin(contracts, eq(contractEnvelopes.contractId, contracts.id))
       // Left on all three: the versions an envelope names are set to
       // NULL when they are erased (DOC-010), and an inner join would
       // then take the envelope off the record along with them.
@@ -417,7 +465,13 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       .leftJoin(documents, eq(documentVersions.documentId, documents.id))
       .leftJoin(executedVersions, eq(contractEnvelopes.executedVersionId, executedVersions.id))
       .where(eq(contractEnvelopes.contractId, contractId))
-      .orderBy(desc(contractEnvelopes.sentAt), desc(contractEnvelopes.id));
+      .orderBy(
+        // Historical rounds were ordered by Sent. New preparations keep their
+        // creation position even when an older discarded round is restored.
+        desc(sql`case when ${contractEnvelopes.preparationState} is null
+          then ${contractEnvelopes.sentAt} else ${contractEnvelopes.createdAt} end`),
+        desc(contractEnvelopes.id),
+      );
 
     // The signers, read in one go rather than joined onto the rows
     // above: a join would multiply every envelope by its signers and
@@ -449,12 +503,29 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       id: row.id,
       provider: row.provider,
       status: row.status,
+      preparationState: row.preparationState,
+      recoveryAttempts: row.recoveryAttempts,
+      nextRecoveryAt:
+        row.status === "preparing" ? (row.nextRecoveryAt?.toISOString() ?? null) : null,
+      recoveryStopped: row.recoveryStopped,
+      confirmationPending: row.confirmationPending,
+      scheduled: row.scheduled,
+      externallyRestored: row.externallyRestored,
+      subject: row.subject,
+      documentId: row.sourceReadable ? row.documentId : null,
+      documentVersionId: row.sourceReadable ? row.documentVersionId : null,
+      sourceState:
+        !row.sourceReadable || !row.documentVersionId || row.sourceArchivedAt
+          ? ("unavailable" as const)
+          : row.documentId !== row.primaryDocumentId
+            ? ("changed" as const)
+            : ("available" as const),
       signers: signersByEnvelope.get(row.id) ?? [],
-      documentTitle: row.documentTitle,
-      documentVersionNumber: row.documentVersionNumber,
+      documentTitle: row.sourceReadable ? row.documentTitle : null,
+      documentVersionNumber: row.sourceReadable ? row.documentVersionNumber : null,
       reason: row.reason,
       sentBy: { id: row.sentById, displayName: row.sentByName, image: row.sentByImage },
-      sentAt: row.sentAt.toISOString(),
+      sentAt: row.sentAt?.toISOString() ?? null,
       completedAt: row.completedAt?.toISOString() ?? null,
       executedFetch: row.executedFetch,
       // All four halves arrive together or not at all: the join is on
@@ -483,7 +554,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       .select({ id: contractEnvelopes.id })
       .from(contractEnvelopes)
       .where(
-        and(eq(contractEnvelopes.contractId, contractId), eq(contractEnvelopes.status, "sent")),
+        and(
+          eq(contractEnvelopes.contractId, contractId),
+          inArray(contractEnvelopes.status, [...LIVE_ENVELOPE_STATUSES]),
+        ),
       )
       .limit(1);
     return row !== undefined;
@@ -495,7 +569,11 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     id: string;
     contractId: string;
     provider: SigningProviderKey;
-    providerEnvelopeId: string;
+    providerAccountId: string | null;
+    providerEnvironment: string | null;
+    providerTransactionId: string | null;
+    creationKind: string | null;
+    providerEnvelopeId: string | null;
     status: EnvelopeStatus;
     /** Who sent it — one of the void's three actors (CTR-013). */
     sentBy: string;
@@ -526,6 +604,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         id: contractEnvelopes.id,
         contractId: contractEnvelopes.contractId,
         provider: contractEnvelopes.provider,
+        providerAccountId: contractEnvelopes.providerAccountId,
+        providerEnvironment: contractEnvelopes.providerEnvironment,
+        providerTransactionId: contractEnvelopes.providerTransactionId,
+        creationKind: contractEnvelopes.creationKind,
         providerEnvelopeId: contractEnvelopes.providerEnvelopeId,
         status: contractEnvelopes.status,
         sentBy: contractEnvelopes.sentBy,
@@ -558,11 +640,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     signingConfigured: boolean,
   ): Promise<z.infer<typeof EnvelopesEnvelope>> {
     const [envelopes, primaryDocument] = await Promise.all([
-      envelopesOf(app.db, contract.id),
+      envelopesOf(app.db, contract.id, user),
       sendableDocument(app.db, user, contract.primaryDocumentId),
     ]);
-    return { envelopes, signingConfigured, primaryDocument, updateMode: await signingUpdateMode() };
+    return {
+      envelopes,
+      signingConfigured,
+      primaryDocument,
+      preparationEnabled: app.signingPreparationEnabled,
+      updateMode: await signingUpdateMode(),
+    };
   }
+
+  /** The reason a compensating void gives the provider and the record. */
+  const UNRECORDED_SEND_REASON = "OpenLaw could not record this send.";
 
   /** The typed refusal a second send answers with (TECH-020). One
    * function, because the route raises it twice — once before dialling
@@ -570,8 +661,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
   function liveEnvelopeRefusal() {
     return httpError(
       409,
-      "This contract already has an envelope out for signature. " +
-        "Void it before sending another.",
+      "This contract already has a live envelope. Another cannot be sent or prepared " +
+        "until it ends.",
       { type: ENVELOPE_LIVE_PROBLEM_TYPE },
     );
   }
@@ -584,7 +675,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * can quote back what it was just handed — the connector pane's test
    * button makes the same call for the same reason.
    */
-  function sendFailure(error: unknown): unknown {
+  function sendFailure(
+    error: unknown,
+    unanswered: "unverified" | "reserved" = "unverified",
+  ): unknown {
     if (error instanceof SigningRefusedError) {
       // The provider's own words stay in the log. A driver builds this
       // message from a response that can quote back what it was just
@@ -607,30 +701,30 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       );
     }
     // The two ambiguous ones. A refusal means the provider said no and
-    // no envelope exists; these two mean we never heard back, and the
-    // send may have landed. The compensating void below cannot take it
-    // back — that runs on an envelope id, and an answer that never
-    // arrived carried none. Nothing reached the record either, so the
-    // one-live-envelope rule refuses nothing, and a second send would
-    // put a second envelope out for one contract.
-    //
-    // So the sentence says what is unknown instead of reading as a
-    // refusal. The reconciliation sweep is no help here: it walks the
-    // envelopes the record knows about, and this one is not among them.
-    // A person checking the provider is the only thing that can tell.
-    if (error instanceof SigningTimeoutError) {
+    // no envelope exists; these two mean we never heard back. Before
+    // anything was created (the account check) that is harmless. After
+    // the create call, the provider may hold the envelope, so the round
+    // stays reserved until its outcome is known, for a send and a
+    // preparation alike.
+    if (error instanceof SigningTimeoutError || error instanceof SigningUnavailableError) {
       return httpError(
         502,
-        "The provider did not answer in time. It may still have taken the envelope — " +
-          "check at the provider before you send again.",
+        unanswered === "unverified"
+          ? "The provider account could not be verified. No envelope was created. Try again."
+          : "The provider did not confirm the envelope. It stays reserved on this contract " +
+              "until its outcome is known.",
         { expose: true },
       );
     }
-    if (error instanceof SigningUnavailableError) {
+    // Any other failure of the create call is just as unclear about what
+    // the provider holds, so it answers the same way. Its own words go
+    // to the log.
+    if (unanswered === "reserved") {
+      app.log.error({ err: error }, "signing: envelope creation ended without an answer");
       return httpError(
         502,
-        "The provider could not be reached. It may still have taken the envelope — " +
-          "check at the provider before you send again.",
+        "The provider did not confirm the envelope. It stays reserved on this contract " +
+          "until its outcome is known.",
         { expose: true },
       );
     }
@@ -649,6 +743,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * failures.
    */
   function voidFailure(error: unknown): unknown {
+    if (error instanceof EnvelopeIdentityError) return httpError(409, error.message);
     if (error instanceof SigningRefusedError) {
       // The provider's own words stay in the log, for the reason
       // `sendFailure` gives: a driver builds this message from a
@@ -666,6 +761,18 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         502,
         "The provider refused this install's credentials. An Administrator has to " +
           "check the e-signature connector before anything can be withdrawn.",
+        { expose: true },
+      );
+    }
+    // The credentials work but this one envelope is off limits to the
+    // connector's user. The row stays live: the provider still holds
+    // the round, so ending it here would be a guess.
+    if (error instanceof EnvelopeAccessError) {
+      app.log.error({ err: error }, "signing: the provider denied access to a void");
+      return httpError(
+        502,
+        "The provider's signing user cannot access this envelope. An Administrator has to " +
+          "check its permissions in the provider account before it can be withdrawn.",
         { expose: true },
       );
     }
@@ -692,46 +799,6 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     return row.fileRef;
   }
 
-  /**
-   * Opens the stored bytes and hands them to the provider.
-   *
-   * The stream is opened here rather than by the caller so that a
-   * storage failure is a failure to send — nothing has been dialled
-   * yet — and so that the provider's own failures are the only ones the
-   * caller has to compensate for.
-   */
-  async function sendThroughProvider(
-    signing: SigningProvider,
-    input: {
-      fileRef: string;
-      fileName: string;
-      subject: string;
-      signers: readonly { name: string; email: string }[];
-    },
-  ) {
-    let document: Readable;
-    try {
-      document = await app.storage.get(input.fileRef);
-    } catch (error) {
-      app.log.error({ err: error, fileRef: input.fileRef }, "signing: stored version unreadable");
-      throw httpError(500, "That version's file could not be read. Try again.");
-    }
-    try {
-      return await signing.sendEnvelope({
-        document,
-        fileName: input.fileName,
-        subject: input.subject,
-        signers: input.signers.map((signer) => ({ name: signer.name, email: signer.email })),
-      });
-    } catch (error) {
-      // A provider that gave up part-way through reading leaves the
-      // stream open, and with it the file handle behind it. Closing it
-      // here is what keeps a run of refused sends from exhausting them.
-      document.destroy();
-      throw sendFailure(error);
-    }
-  }
-
   app.get(
     "/contracts/:number/envelopes",
     {
@@ -739,7 +806,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listContractEnvelopes",
         summary:
-          "One contract's signing envelopes, newest send first " +
+          "One contract's signing envelopes, newest preparation first with historical Sent ordering " +
           "(CTR-013) — the adapter that carried each one, where it " +
           "stands, who was asked to sign it, what went out, and when. " +
           "A declined or voided envelope carries the reason it ended " +
@@ -768,7 +835,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       const contract = await reachedContract(app.db, request.user, request.params.number);
       if (!contract) throw httpError(404, NO_CONTRACT);
       const [envelopes, primaryDocument, signing] = await Promise.all([
-        envelopesOf(app.db, contract.id),
+        envelopesOf(app.db, contract.id, request.user),
         sendableDocument(app.db, request.user, contract.primaryDocumentId),
         // A stored connector that cannot be built into a driver — an
         // unreadable RSA key, a row a later adapter wrote — answers as
@@ -784,188 +851,271 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       return {
         envelopes,
         signingConfigured: signing !== null,
+        preparationEnabled: app.signingPreparationEnabled,
         primaryDocument,
         updateMode: await signingUpdateMode(),
       };
     },
   );
 
-  app.post(
-    "/contracts/:number/envelopes",
-    {
-      preHandler: requireMember,
-      schema: {
-        operationId: "sendContractEnvelope",
-        summary:
-          "Send a version of the contract's primary document out for " +
-          "signature (CTR-013). The version must be a round of that " +
-          "document's own chain — loose attachments are not sendable in " +
-          "v1, because the executed copy comes back to the chain the " +
-          "send left from. Signers are name-and-email pairs and every " +
-          "one of them is asked at once: there is no routing order. " +
-          "A successful send moves the contract to its first live Signature status. " +
-          "Sending is legal at any stage. Refused with a typed problem when this install " +
-          "has no e-signature connector, and with another when the " +
-          "contract already has an envelope out — two envelopes must " +
-          "never race for one signature. The provider is called first " +
-          "and the row commits once it accepts; an envelope the " +
-          "provider took but the record could not keep is voided again " +
-          "before the refusal is raised, so the two systems do not " +
-          "drift apart silently. Appends one envelope.sent entry on the " +
-          "contract at the working-team tier (DD-017). Member+: a " +
-          "Contributor who reaches the record is refused 403 rather " +
-          "than 404, because they can already see it. An archived " +
-          "contract sends nothing until it is restored",
-        tags: ["envelopes"],
-        params: NumberParams,
-        body: z.object({
-          /** Which round of the primary document goes out. Named
-           * explicitly rather than defaulted to the current one: the
-           * dialog defaults, and a send is too consequential for the
-           * seam to guess what the caller meant. */
-          documentVersionId: RecordIdSchema,
-          /** A signer is a user of this install, named by id, or
-           * somebody outside it, named by name and address. A user's
-           * name and address are read here, so the sender never types
-           * a colleague's address and cannot get it wrong. */
-          signers: z
-            .array(
-              z.union([
-                z.object({ personId: RecordIdSchema }),
-                z.object({
-                  name: z.string().trim().min(1).max(200),
-                  // Checked as an address, because it is one: an envelope
-                  // that cannot be delivered is worse than a refused send.
-                  email: z.email().max(320),
-                }),
-              ]),
-            )
-            .min(1)
-            .max(MAX_ENVELOPE_SIGNERS),
-          /** The subject line of the provider's own invitation. The
-           * seam carries a subject and no body in v1; omitted, the
-           * record names itself. */
-          subject: z.string().trim().max(MAX_ENVELOPE_SUBJECT_LENGTH).optional(),
-        }),
-        response: {
-          201: EnvelopesEnvelope,
-          // The two refusals the record branches on. It draws the send
-          // control from the first and offers a void from the second,
-          // so a client that could not tell them apart would have to
-          // read `detail` — and `detail` is copy.
-          409: problemTypeResponse(
-            "The send was refused: this install has no e-signature connector, or the " +
-              "contract already has an envelope out. An archived contract is refused " +
-              "here too, without naming a type.",
-            [SIGNING_NOT_CONFIGURED_PROBLEM_TYPE, ENVELOPE_LIVE_PROBLEM_TYPE],
-          ),
-          default: problemResponse,
+  for (const preparing of [false, true]) {
+    app.post(
+      preparing ? "/contracts/:number/envelopes/prepare" : "/contracts/:number/envelopes",
+      {
+        preHandler: requireMember,
+        schema: {
+          operationId: preparing ? "prepareContractEnvelope" : "sendContractEnvelope",
+          summary: preparing
+            ? "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage."
+            : "Legacy explicit direct-send API. Send a version of the contract's primary document out for " +
+              "signature (CTR-013). The version must be a round of that " +
+              "document's own chain — loose attachments are not sendable in " +
+              "v1, because the executed copy comes back to the chain the " +
+              "send left from. Signers are users of this install, by id, or " +
+              "name-and-email pairs, and every one of them is asked at once: " +
+              "there is no routing order. A successful send moves the " +
+              "contract to its first live Signature status. Sending is legal " +
+              "at any stage. Refused with a typed problem when this install " +
+              "has no e-signature connector, and with another when the " +
+              "contract already has a live envelope (preparing, draft, or " +
+              "sent) — two envelopes must never race for one signature. The " +
+              "live envelope is reserved before the provider is called. A " +
+              "send the provider refuses leaves no row. A send with no clear " +
+              "answer stays reserved as an uncertain preparing envelope, and " +
+              "a matching idempotent retry answers with it rather than " +
+              "sending again. An envelope the provider took but the record " +
+              "could not keep is voided again before the refusal is raised; " +
+              "if the provider does not confirm that void, the envelope stays " +
+              "reserved with its provider id. Appends one " +
+              "envelope.sent entry on the contract at the working-team tier " +
+              "(DD-017). Member+: a Contributor who reaches the record is " +
+              "refused 403 rather than 404, because they can already see it. " +
+              "An archived contract sends nothing until it is restored",
+          tags: ["envelopes"],
+          params: NumberParams,
+          body: z.object({
+            idempotencyKey: preparing
+              ? z.string().min(1).max(128)
+              : z.string().min(1).max(128).optional(),
+            /** Which round of the primary document goes out. Named
+             * explicitly rather than defaulted to the current one: the
+             * dialog defaults, and a send is too consequential for the
+             * seam to guess what the caller meant. */
+            documentVersionId: RecordIdSchema,
+            /** A signer is a user of this install, named by id, or
+             * somebody outside it, named by name and address. A user's
+             * name and address are read here, so the sender never types
+             * a colleague's address and cannot get it wrong. */
+            signers: z
+              .array(
+                z.union([
+                  z.object({ personId: RecordIdSchema }),
+                  z.object({
+                    name: z.string().trim().min(1).max(200),
+                    // Checked as an address, because it is one: an envelope
+                    // that cannot be delivered is worse than a refused send.
+                    email: z.email().max(320),
+                  }),
+                ]),
+              )
+              .min(1)
+              .max(MAX_ENVELOPE_SIGNERS),
+            /** The subject line of the provider's own invitation. The
+             * seam carries a subject and no body in v1; omitted, the
+             * record names itself. */
+            subject: z.string().trim().max(MAX_ENVELOPE_SUBJECT_LENGTH).optional(),
+          }),
+          response: {
+            201: EnvelopesEnvelope,
+            // The two refusals the record branches on. It draws the send
+            // control from the first and offers a void from the second,
+            // so a client that could not tell them apart would have to
+            // read `detail` — and `detail` is copy.
+            409: problemTypeResponse(
+              "Refused: this install has no e-signature connector, the contract " +
+                "already has a live envelope, or the idempotency key names a different " +
+                "request. An archived contract is refused here too, without naming a type.",
+              [
+                SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
+                ENVELOPE_LIVE_PROBLEM_TYPE,
+                ENVELOPE_IDEMPOTENCY_CONFLICT_PROBLEM_TYPE,
+              ],
+            ),
+            default: problemResponse,
+          },
         },
       },
-    },
-    async (request, reply) => {
-      const { documentVersionId } = request.body;
+      async (request, reply) => {
+        if (preparing && !app.signingPreparationEnabled)
+          throw httpError(404, "Envelope preparation is not enabled.");
+        const { documentVersionId } = request.body;
 
-      // Everything that can be refused without dialling anybody is
-      // refused first. A send that was never going to work must not
-      // reach the provider, because an envelope it accepted is a thing
-      // in somebody else's inbox that we would then have to take back.
-      const contract = await reachedContract(app.db, request.user, request.params.number);
-      if (!contract) throw httpError(404, NO_CONTRACT);
-      if (contract.archivedAt) throw httpError(409, FROZEN);
+        // Everything that can be refused without dialling anybody is
+        // refused first. A send that was never going to work must not
+        // reach the provider, because an envelope it accepted is a thing
+        // in somebody else's inbox that we would then have to take back.
+        const contract = await reachedContract(app.db, request.user, request.params.number);
+        if (!contract) throw httpError(404, NO_CONTRACT);
+        if (contract.archivedAt) throw httpError(409, FROZEN);
 
-      const signing = await app.resolveSigningProvider();
-      if (!signing) {
-        throw httpError(
-          409,
-          "This install has no e-signature connector. An Administrator configures one " +
-            "in Settings, or the executed copy is uploaded onto the record by hand.",
-          { type: SIGNING_NOT_CONFIGURED_PROBLEM_TYPE },
+        const signing = await app.resolveSigningProvider();
+        if (!signing) {
+          throw httpError(
+            409,
+            "This install has no e-signature connector. An Administrator configures one " +
+              "in Settings, or the executed copy is uploaded onto the record by hand.",
+            { type: SIGNING_NOT_CONFIGURED_PROBLEM_TYPE },
+          );
+        }
+
+        // `||`, not `??`: the schema trims the subject, so a blank one
+        // arrives as an empty string, and an empty subject line forwarded
+        // to the provider is refused there with a sentence about signers
+        // and versions. Blank means what omitted means — the record names
+        // itself — which is the promise the dialog's help text makes.
+        const subject =
+          request.body.subject || `C-${String(contract.number)} ${contract.title}`.trim();
+
+        // The request as the idempotency key promised it. A retry that
+        // matches reuses the round; one that differs is a typed conflict.
+        const fingerprint = createHash("sha256")
+          .update(
+            JSON.stringify({
+              documentVersionId,
+              signers: request.body.signers,
+              subject: request.body.subject || null,
+              preparer: request.user.id,
+              preparing,
+            }),
+          )
+          .digest("hex");
+        const key = request.body.idempotencyKey ?? randomUUID();
+        const [held] = await app.db
+          .select()
+          .from(contractEnvelopes)
+          .where(
+            and(
+              eq(contractEnvelopes.contractId, contract.id),
+              eq(contractEnvelopes.idempotencyKey, key),
+            ),
+          );
+        if (held) {
+          if (held.requestFingerprint !== fingerprint)
+            throw httpError(409, "This idempotency key names a different Envelope preparation.", {
+              type: ENVELOPE_IDEMPOTENCY_CONFLICT_PROBLEM_TYPE,
+            });
+          return reply.status(201).send(await signingStateOf(request.user, contract, true));
+        }
+
+        const primaryDocument = await sendableDocument(
+          app.db,
+          request.user,
+          contract.primaryDocumentId,
         );
-      }
+        if (!primaryDocument) {
+          throw httpError(
+            422,
+            "This contract has no primary document to send. Upload one, or make one of " +
+              "its documents the primary document first.",
+          );
+        }
+        // The version has to be a round of *this* document. A version of
+        // another document is answered as one that is not in the chain
+        // rather than as one that does not exist: the caller is holding a
+        // list of this chain's rounds, and any other answer would be
+        // about a document they never named.
+        const version = primaryDocument.versions.find((round) => round.id === documentVersionId);
+        if (!version) {
+          throw httpError(
+            422,
+            "That version is not a round of this contract's primary document. " +
+              "Pick one from its chain.",
+          );
+        }
 
-      const primaryDocument = await sendableDocument(
-        app.db,
-        request.user,
-        contract.primaryDocumentId,
-      );
-      if (!primaryDocument) {
-        throw httpError(
-          422,
-          "This contract has no primary document to send. Upload one, or make one of " +
-            "its documents the primary document first.",
-        );
-      }
-      // The version has to be a round of *this* document. A version of
-      // another document is answered as one that is not in the chain
-      // rather than as one that does not exist: the caller is holding a
-      // list of this chain's rounds, and any other answer would be
-      // about a document they never named.
-      const version = primaryDocument.versions.find((round) => round.id === documentVersionId);
-      if (!version) {
-        throw httpError(
-          422,
-          "That version is not a round of this contract's primary document. " +
-            "Pick one from its chain.",
-        );
-      }
+        const signers = await namedSigners(app.db, request.body.signers);
 
-      const signers = await namedSigners(app.db, request.body.signers);
+        // One address, one signer. Naming somebody twice is a client that
+        // built the list badly, and it is refused here rather than left
+        // to the provider — a 502 quoting somebody else's validator is a
+        // worse answer than a sentence the sender can act on.
+        const addresses = signers.map((signer) => signer.email.toLowerCase());
+        if (new Set(addresses).size !== addresses.length) {
+          throw httpError(422, "Each signer needs their own email address.");
+        }
 
-      // One address, one signer. Naming somebody twice is a client that
-      // built the list badly, and it is refused here rather than left
-      // to the provider — a 502 quoting somebody else's validator is a
-      // worse answer than a sentence the sender can act on.
-      const addresses = signers.map((signer) => signer.email.toLowerCase());
-      if (new Set(addresses).size !== addresses.length) {
-        throw httpError(422, "Each signer needs their own email address.");
-      }
-
-      if (await hasLiveEnvelope(app.db, contract.id)) throw liveEnvelopeRefusal();
-
-      const fileRef = await versionFileRef(version.id);
-      // `||`, not `??`: the schema trims the subject, so a blank one
-      // arrives as an empty string, and an empty subject line forwarded
-      // to the provider is refused there with a sentence about signers
-      // and versions. Blank means what omitted means — the record names
-      // itself — which is the promise the dialog's help text makes.
-      const subject =
-        request.body.subject || `C-${String(contract.number)} ${contract.title}`.trim();
-
-      const sent = await sendThroughProvider(signing, {
-        fileRef,
-        fileName: version.originalFilename,
-        subject,
-        signers,
-      });
-
-      // From here on an envelope exists at the provider. Anything that
-      // goes wrong takes it back rather than leaving it out there.
-      let answer: z.infer<typeof EnvelopesEnvelope>;
-      try {
-        answer = await app.notifier.notifying(async (tx) => {
-          // The lock, and the two questions asked again under it: a
-          // send that raced this one may have archived the record or
-          // put an envelope out since the checks above.
+        const fileRef = await versionFileRef(version.id);
+        if (await hasLiveEnvelope(app.db, contract.id)) throw liveEnvelopeRefusal();
+        // Authentication creates nothing; persist its identity before creation.
+        const account = await signing.testConnection().catch((error: unknown) => {
+          throw sendFailure(error);
+        });
+        const reservation = await app.db.transaction(async (tx) => {
           const locked = await reachedContract(tx, request.user, request.params.number, {
             lock: true,
           });
           if (!locked) throw httpError(404, NO_CONTRACT);
           if (locked.archivedAt) throw httpError(409, FROZEN);
+          const [connector] = await tx
+            .select()
+            .from(signingConnectors)
+            .where(
+              and(
+                eq(signingConnectors.provider, signing.provider),
+                isNull(signingConnectors.disabledAt),
+              ),
+            )
+            .for("share");
+          if (!connector || (await app.resolveSigningProvider()) !== signing)
+            throw httpError(409, "The Signing connector is unavailable.", {
+              type: SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
+            });
+          const [existing] = await tx
+            .select()
+            .from(contractEnvelopes)
+            .where(
+              and(
+                eq(contractEnvelopes.contractId, locked.id),
+                eq(contractEnvelopes.idempotencyKey, key),
+              ),
+            );
+          if (existing) {
+            if (existing.requestFingerprint !== fingerprint)
+              throw httpError(409, "This idempotency key names a different Envelope preparation.", {
+                type: ENVELOPE_IDEMPOTENCY_CONFLICT_PROBLEM_TYPE,
+              });
+            return { envelope: existing, reused: true };
+          }
           if (await hasLiveEnvelope(tx, locked.id)) throw liveEnvelopeRefusal();
-
+          if (locked.primaryDocumentId !== primaryDocument.id)
+            throw httpError(409, "The primary Document changed. Select its Version again.");
+          const [creationStatus] = await tx
+            .select({ id: contracts.statusId })
+            .from(contracts)
+            .where(eq(contracts.id, locked.id));
           const [envelope] = await tx
             .insert(contractEnvelopes)
             .values({
               contractId: locked.id,
               provider: signing.provider,
-              providerEnvelopeId: sent.providerEnvelopeId,
+              status: "preparing",
+              sentAt: null,
+              documentId: primaryDocument.id,
               documentVersionId: version.id,
               sentBy: request.user.id,
+              subject,
+              idempotencyKey: key,
+              requestFingerprint: fingerprint,
+              providerTransactionId: randomUUID(),
+              providerAccountId: account.accountId,
+              providerEnvironment: signing.environment,
+              preparationState: "pending",
+              creationKind: preparing ? "draft" : "send",
+              creationStatusId: creationStatus!.id,
+              creationStatusRevision: await contractStatusRevision(tx, locked.id),
             })
-            .returning({ id: contractEnvelopes.id });
-          if (!envelope) throw httpError(500, "The envelope could not be recorded.");
-
+            .returning();
+          if (!envelope) throw httpError(500, "The Envelope could not be reserved.");
           await tx.insert(contractEnvelopeSigners).values(
             signers.map((signer, index) => ({
               envelopeId: envelope.id,
@@ -974,106 +1124,350 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               signingOrder: index + 1,
             })),
           );
-
-          await recordActivity(tx, {
-            entityType: "contract",
-            entityId: locked.id,
-            actorId: request.user.id,
-            action: "envelope.sent",
-            visibility: RECORD_ACTIVITY_TIER,
-            // The signers by name and address, because the envelope's
-            // own signer rows go when the record does and this entry is
-            // then the only thing left that says who was asked. The
-            // document is named for the same reason the document verbs
-            // name theirs: the entry outlives an erasure.
-            payload: {
-              envelopeId: envelope.id,
-              provider: signing.provider,
-              providerEnvelopeId: sent.providerEnvelopeId,
-              documentId: primaryDocument.id,
-              documentTitle: primaryDocument.title,
-              documentVersionId: version.id,
-              documentVersionNumber: version.versionNumber,
-              signers: signers.map((signer) => ({ name: signer.name, email: signer.email })),
-            },
-          });
-
-          const [currentStatus] = await tx
-            .select({
-              id: contractStatuses.id,
-              displayName: contractStatuses.displayName,
-              stage: contractStatuses.stage,
-            })
-            .from(contracts)
-            .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
-            .where(eq(contracts.id, locked.id));
-          const [signatureStatus] = await tx
-            .select()
-            .from(contractStatuses)
-            .where(
-              and(eq(contractStatuses.stage, "signature"), isNull(contractStatuses.archivedAt)),
-            )
-            .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
-            .limit(1)
-            .for("share");
-          if (!currentStatus || !signatureStatus) {
-            throw httpError(409, "Configure a live Signature status before sending for signature.");
-          }
-          if (currentStatus.id !== signatureStatus.id) {
-            await tx
-              .update(contracts)
-              .set({ statusId: signatureStatus.id, endedAt: null })
-              .where(eq(contracts.id, locked.id));
-            const change = {
-              from: currentStatus.displayName,
-              to: signatureStatus.displayName,
-              fromStage: currentStatus.stage,
-              toStage: signatureStatus.stage,
-            };
+          if (preparing)
             await recordActivity(tx, {
               entityType: "contract",
               entityId: locked.id,
               actorId: request.user.id,
-              action: "contract.status_changed",
+              action: "envelope.preparation_started",
               visibility: RECORD_ACTIVITY_TIER,
-              payload: { number: locked.number, title: locked.title, ...change },
+              payload: {
+                envelopeId: envelope.id,
+                provider: signing.provider,
+                documentId: primaryDocument.id,
+                documentVersionId: version.id,
+                signerCount: signers.length,
+              },
             });
-            await app.notifier.statusChanged(tx, {
-              contractId: locked.id,
-              actorId: request.user.id,
-              actorName: request.user.displayName,
-              ...change,
-            });
-          }
-
-          return {
-            envelopes: await envelopesOf(tx, locked.id),
-            signingConfigured: true,
-            updateMode: await signingUpdateMode(tx),
-            primaryDocument,
-          };
+          return { envelope, reused: false };
         });
-      } catch (error) {
-        // The compensating void. It is attempted, not guaranteed: the
-        // provider may be exactly what has just gone away. A failure to
-        // take the envelope back is logged and swallowed, because the
-        // caller's refusal is the more useful answer and re-throwing
-        // this one would replace a sentence they can act on with one
-        // they cannot.
-        await signing
-          .voidEnvelope(sent.providerEnvelopeId, "OpenLaw could not record this send.")
-          .catch((voidError: unknown) => {
-            request.log.error(
-              { err: voidError, providerEnvelopeId: sent.providerEnvelopeId },
-              "signing: could not void an envelope whose record failed to commit",
-            );
-          });
-        throw error;
-      }
+        if (reservation.reused)
+          return reply.status(201).send(await signingStateOf(request.user, contract, true));
+        const envelopeId = reservation.envelope.id;
+        const transactionId = reservation.envelope.providerTransactionId!;
 
-      return reply.status(201).send(answer);
-    },
-  );
+        // Confirmed noncreation: nothing reached the provider, or the
+        // provider said no. Only this releases a reservation before its
+        // outcome is terminal. A preparation keeps the round on the record
+        // as a confirmed failure. A direct send leaves no row, because no
+        // envelope exists and the sender asked for a send, not a draft.
+        const failCreation = () =>
+          preparing
+            ? app.db
+                .update(contractEnvelopes)
+                .set({
+                  status: "preparation_failed",
+                  preparationState: "failed",
+                  completedAt: new Date(),
+                })
+                .where(
+                  and(
+                    eq(contractEnvelopes.id, envelopeId),
+                    eq(contractEnvelopes.status, "preparing"),
+                  ),
+                )
+            : app.db
+                .delete(contractEnvelopes)
+                .where(
+                  and(
+                    eq(contractEnvelopes.id, envelopeId),
+                    eq(contractEnvelopes.status, "preparing"),
+                  ),
+                );
+
+        // The stream is opened before the provider is dialled, so a
+        // storage failure is confirmed noncreation and nothing else.
+        let document: Readable;
+        try {
+          document = await app.storage.get(fileRef);
+        } catch (error) {
+          app.log.error({ err: error, fileRef }, "signing: stored version unreadable");
+          await failCreation();
+          throw httpError(500, "That version's file could not be read. Try again.");
+        }
+
+        let sent: { providerEnvelopeId: string };
+        try {
+          const input = {
+            document,
+            fileName: version.originalFilename,
+            subject,
+            signers,
+            transactionId,
+          };
+          sent = preparing
+            ? await signing.prepareEnvelope(input)
+            : await signing.sendEnvelope(input);
+        } catch (error) {
+          // A provider that gave up part-way through reading leaves the
+          // stream open, and with it the file handle behind it. Closing it
+          // here is what keeps a run of refused sends from exhausting them.
+          document.destroy();
+          if (error instanceof SigningNotSubmittedError) {
+            await failCreation();
+            throw sendFailure(error.cause);
+          }
+          if (error instanceof SigningRefusedError) {
+            await failCreation();
+            throw sendFailure(error);
+          }
+          // Anything else means we never heard a clear answer, so the
+          // provider may hold the envelope. Both operations keep the
+          // reservation, with its transaction id, account, source, and
+          // signers, as recoverable uncertainty (#1170 section 2). Releasing
+          // it would let a second round go out beside one that may exist.
+          await app.db
+            .update(contractEnvelopes)
+            .set({ preparationState: "uncertain" })
+            .where(
+              and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
+            );
+          throw sendFailure(error, "reserved");
+        }
+
+        // Keep correlation before finalization so verified callbacks can settle it.
+        await app.db
+          .update(contractEnvelopes)
+          .set({ providerEnvelopeId: sent.providerEnvelopeId })
+          .where(
+            and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
+          );
+
+        if (preparing) {
+          // The provider id is kept before the route answers, so no later
+          // browser launch can be issued for a draft the record cannot name.
+          await app.db.transaction(async (tx) => {
+            const [prepared] = await tx
+              .update(contractEnvelopes)
+              .set({
+                status: "draft",
+                providerEnvelopeId: sent.providerEnvelopeId,
+                preparationState: "created",
+              })
+              .where(
+                and(
+                  eq(contractEnvelopes.id, envelopeId),
+                  eq(contractEnvelopes.status, "preparing"),
+                ),
+              )
+              .returning({ id: contractEnvelopes.id });
+            if (prepared)
+              await recordActivity(tx, {
+                entityType: "contract",
+                entityId: contract.id,
+                action: "envelope.confirmed",
+                visibility: RECORD_ACTIVITY_TIER,
+                payload: {
+                  envelopeId: prepared.id,
+                  provider: signing.provider,
+                  providerEnvelopeId: sent.providerEnvelopeId,
+                  status: "draft",
+                },
+              });
+          });
+          return reply.status(201).send(await signingStateOf(request.user, contract, true));
+        }
+
+        // From here on an envelope exists at the provider. Anything that
+        // goes wrong takes it back rather than leaving it out there.
+        let answer: z.infer<typeof EnvelopesEnvelope>;
+        try {
+          answer = await app.notifier.notifying(async (tx) => {
+            // The lock, and the archive asked again under it. The
+            // reservation already holds the live-envelope rule, but the
+            // record may have been archived while the provider answered.
+            const locked = await reachedContract(tx, request.user, request.params.number, {
+              lock: true,
+            });
+            if (!locked) throw httpError(404, NO_CONTRACT);
+            if (locked.archivedAt) throw httpError(409, FROZEN);
+            const [envelope] = await tx
+              .update(contractEnvelopes)
+              .set({
+                status: "sent",
+                sentAt: new Date(),
+                providerEnvelopeId: sent.providerEnvelopeId,
+                preparationState: "created",
+              })
+              .where(
+                and(
+                  eq(contractEnvelopes.id, envelopeId),
+                  eq(contractEnvelopes.status, "preparing"),
+                ),
+              )
+              .returning({ id: contractEnvelopes.id });
+            if (!envelope)
+              return {
+                envelopes: await envelopesOf(tx, locked.id, request.user),
+                signingConfigured: true,
+                updateMode: await signingUpdateMode(tx),
+                primaryDocument,
+              };
+
+            // An erasure may have removed a Signer while the provider was
+            // answering. Read under the Envelope lock and keep erased slots.
+            const retainedSigners = await tx
+              .select()
+              .from(contractEnvelopeSigners)
+              .where(eq(contractEnvelopeSigners.envelopeId, envelope.id));
+            const retainedByOrder = new Map(
+              retainedSigners.map((signer) => [signer.signingOrder, signer]),
+            );
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: locked.id,
+              actorId: request.user.id,
+              action: "envelope.sent",
+              visibility: RECORD_ACTIVITY_TIER,
+              // The signers by name and address, because the envelope's
+              // own signer rows go when the record does and this entry is
+              // then the only thing left that says who was asked. The
+              // document is named for the same reason the document verbs
+              // name theirs: the entry outlives an erasure.
+              payload: {
+                envelopeId: envelope.id,
+                provider: signing.provider,
+                providerEnvelopeId: sent.providerEnvelopeId,
+                documentId: primaryDocument.id,
+                documentTitle: primaryDocument.title,
+                documentVersionId: version.id,
+                documentVersionNumber: version.versionNumber,
+                signers: signers.map((_signer, index) => {
+                  const retained = retainedByOrder.get(index + 1);
+                  return retained
+                    ? { name: retained.name, email: retained.email }
+                    : { name: ERASED, email: ERASED };
+                }),
+              },
+            });
+
+            const [currentStatus] = await tx
+              .select({
+                id: contractStatuses.id,
+                displayName: contractStatuses.displayName,
+                stage: contractStatuses.stage,
+              })
+              .from(contracts)
+              .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+              .where(eq(contracts.id, locked.id));
+            const [signatureStatus] = await tx
+              .select()
+              .from(contractStatuses)
+              .where(
+                and(eq(contractStatuses.stage, "signature"), isNull(contractStatuses.archivedAt)),
+              )
+              .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
+              .limit(1)
+              .for("share");
+            if (!currentStatus || !signatureStatus) {
+              throw httpError(
+                409,
+                "Configure a live Signature status before sending for signature.",
+              );
+            }
+            if (currentStatus.id !== signatureStatus.id) {
+              await tx
+                .update(contracts)
+                .set({ statusId: signatureStatus.id, endedAt: null })
+                .where(eq(contracts.id, locked.id));
+              const change = {
+                from: currentStatus.displayName,
+                to: signatureStatus.displayName,
+                fromStage: currentStatus.stage,
+                toStage: signatureStatus.stage,
+              };
+              await recordActivity(tx, {
+                entityType: "contract",
+                entityId: locked.id,
+                actorId: request.user.id,
+                action: "contract.status_changed",
+                visibility: RECORD_ACTIVITY_TIER,
+                payload: { number: locked.number, title: locked.title, ...change },
+              });
+              await app.notifier.statusChanged(tx, {
+                contractId: locked.id,
+                actorId: request.user.id,
+                actorName: request.user.displayName,
+                ...change,
+              });
+            }
+
+            return {
+              envelopes: await envelopesOf(tx, locked.id, request.user),
+              signingConfigured: true,
+              updateMode: await signingUpdateMode(tx),
+              primaryDocument,
+            };
+          });
+        } catch (error) {
+          // The provider holds a sent envelope, and the record could not
+          // say so. Its id is kept on the reservation first, so a crash
+          // from here on still leaves the record able to name it.
+          const kept = await app.db
+            .update(contractEnvelopes)
+            .set({ providerEnvelopeId: sent.providerEnvelopeId, preparationState: "uncertain" })
+            .where(
+              and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
+            )
+            .returning({ id: contractEnvelopes.id })
+            .catch((keepError: unknown) => {
+              request.log.error(
+                { err: keepError, envelopeId, providerEnvelopeId: sent.providerEnvelopeId },
+                "signing: could not keep the provider id of a send whose record failed",
+              );
+            });
+          if (kept && kept.length === 0) throw error;
+          // The compensating void. It is attempted, not guaranteed: the
+          // provider may be exactly what has just gone away. Only a void
+          // the provider confirms is a terminal outcome, and only that
+          // releases the reservation, as a voided round. Otherwise the
+          // round stays reserved and uncertain, with its provider id, for
+          // recovery. Either way the caller gets the original failure,
+          // which is the sentence they can act on.
+          const voided = await signing
+            .voidEnvelope(sent.providerEnvelopeId, UNRECORDED_SEND_REASON)
+            .then(
+              () => true,
+              (voidError: unknown) => {
+                request.log.error(
+                  { err: voidError, providerEnvelopeId: sent.providerEnvelopeId },
+                  "signing: could not void an envelope whose record failed to commit",
+                );
+                return false;
+              },
+            );
+          if (voided) {
+            const now = new Date();
+            await app.db
+              .update(contractEnvelopes)
+              .set({
+                status: "voided",
+                providerEnvelopeId: sent.providerEnvelopeId,
+                preparationState: "created",
+                reason: UNRECORDED_SEND_REASON,
+                sentAt: now,
+                completedAt: now,
+              })
+              .where(
+                and(
+                  eq(contractEnvelopes.id, envelopeId),
+                  eq(contractEnvelopes.status, "preparing"),
+                ),
+              )
+              .catch((endError: unknown) => {
+                request.log.error(
+                  { err: endError, envelopeId },
+                  "signing: could not record the compensating void of a failed send",
+                );
+              });
+          }
+          throw error;
+        }
+
+        return reply.status(201).send(answer);
+      },
+    );
+  }
 
   app.post(
     "/envelopes/:envelopeId/void",
@@ -1083,7 +1477,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "voidContractEnvelope",
         summary:
           "Withdraw a live envelope (CTR-013). Three actors may: the " +
-          "person who sent it, the contract's Owner, and an " +
+          "preparer or direct sender, the contract's Owner, and an " +
           "Administrator — a mistaken or superseded send should not sit " +
           "open, and it should not wait on the one person who made it. " +
           "The reason is required, because the provider records it with " +
@@ -1145,11 +1539,14 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!mayVoid) {
         throw httpError(
           403,
-          "Only the person who sent it, the contract's Owner, or an Administrator " +
+          "Only the preparer or direct sender, the contract's Owner, or an Administrator " +
             "can void this envelope.",
         );
       }
-      if (envelope.status !== "sent") {
+      if (envelope.status === "preparing" || envelope.status === "draft") {
+        throw httpError(409, "This envelope has not been sent. There is nothing to void yet.");
+      }
+      if (envelope.status !== "sent" || !envelope.providerEnvelopeId) {
         throw httpError(409, "This envelope has already ended. It cannot be voided.");
       }
 
@@ -1183,6 +1580,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       // The provider first. A withdrawal it refuses leaves the row
       // exactly as it was, which is the state a reader can act on.
       try {
+        await requireEnvelopeIdentity(signing, envelope);
         await signing.voidEnvelope(envelope.providerEnvelopeId, reason);
       } catch (error) {
         // The provider does not hold this envelope at all. It cannot

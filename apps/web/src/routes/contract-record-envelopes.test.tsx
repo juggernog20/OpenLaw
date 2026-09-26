@@ -163,6 +163,7 @@ function envelopeRow(overrides: Record<string, unknown> = {}) {
     signers: SIGNERS,
     documentTitle: "Acme MSA",
     documentVersionNumber: 2,
+    sourceState: "available",
     reason: null,
     sentBy: { id: "u2", displayName: "Nadia Counsel", image: null },
     sentAt: "2026-08-10T00:00:00.000Z",
@@ -192,6 +193,7 @@ function recordApi(
   initial: {
     envelopes?: Record<string, unknown>[];
     signingConfigured?: boolean;
+    preparationEnabled?: boolean;
     updateMode?: "polling" | "webhook";
     primaryDocument?: typeof PRIMARY | null;
   } = {},
@@ -200,6 +202,7 @@ function recordApi(
   let state = {
     envelopes: initial.envelopes ?? [],
     signingConfigured: initial.signingConfigured ?? true,
+    preparationEnabled: initial.preparationEnabled ?? false,
     updateMode: initial.updateMode ?? "webhook",
     primaryDocument: initial.primaryDocument === undefined ? PRIMARY : initial.primaryDocument,
   };
@@ -233,6 +236,33 @@ function recordApi(
         return problem(503, "Signing state unavailable");
       }
       return json(200, state);
+    }
+    if (call.url.pathname.endsWith("/launch") && call.method === "POST") {
+      return problem(502, "DocuSign could not open this draft. Try again from Signatures.");
+    }
+    if (call.url.pathname === "/api/v1/contracts/42/envelopes/prepare" && call.method === "POST") {
+      writes.push({ path: call.url.pathname, body: call.body });
+      if (refuse) {
+        const refusal = refuse;
+        refuse = null;
+        return problem(refusal.status, refusal.detail, refusal.type);
+      }
+      const body = call.body as { documentVersionId: string; signers: typeof SIGNERS };
+      state = {
+        ...state,
+        envelopes: [
+          envelopeRow({
+            status: "draft",
+            preparationState: "created",
+            sentAt: null,
+            signers: body.signers,
+            documentVersionNumber: PRIMARY.versions.find(
+              (round) => round.id === body.documentVersionId,
+            )!.versionNumber,
+          }),
+        ],
+      };
+      return json(201, state);
     }
     if (call.url.pathname === "/api/v1/contracts/42/envelopes" && call.method === "POST") {
       writes.push({ path: call.url.pathname, body: call.body });
@@ -842,7 +872,7 @@ describe("when the send control is absent", () => {
 });
 
 /** The row's action menu, once the card has drawn the signing block. */
-const ROW_ACTIONS = "Actions for the envelope sent on Aug 10";
+const ROW_ACTIONS = "Actions for the envelope: Aug 10";
 
 describe("voiding a live envelope", () => {
   it("collects the reason and withdraws the round, in one write", async () => {
@@ -948,5 +978,306 @@ describe("when the void control is absent", () => {
     const rows = await envelopeRows();
     expect(within(rows[0]!).getByText("Signed")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+  });
+});
+
+describe("preparing an unsent Envelope", () => {
+  it.each([true, false])(
+    "returns focus after Cancel with preparation enabled=%s",
+    async (preparationEnabled) => {
+      const user = userEvent.setup();
+      const api = recordApi({ preparationEnabled });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/signatures");
+      const trigger = await screen.findByRole("button", {
+        name: preparationEnabled ? "Prepare Envelope" : "Send for signature",
+      });
+      await user.click(trigger);
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(trigger).toHaveFocus());
+      expect(api.writes).toHaveLength(0);
+    },
+  );
+
+  it("focuses Signatures when the tab opens and preserves focus on a live update", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    const heading = await screen.findByRole("heading", { name: "Signatures" });
+    await waitFor(() => expect(heading).toHaveFocus());
+    const trigger = screen.getByRole("button", { name: "Prepare Envelope" });
+    trigger.focus();
+    // A live connection rereads the record but must not take keyboard focus.
+    act(() => sources[0]!.open());
+    await waitFor(() => expect(api.reads).toBe(2));
+    expect(trigger).toHaveFocus();
+  });
+
+  it("keeps preparation enabled when the live connection re-reads signing state", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    sources[0]!.open();
+    await waitFor(() => expect(api.reads).toBe(2));
+    await act(async () => Promise.resolve());
+    expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+  });
+
+  it("retains discarded preparation history without Resume or Void", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "discarded", preparationState: "created", sentAt: null })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Discarded")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
+  });
+
+  it.each([
+    { scheduled: true, text: "Scheduled in DocuSign" },
+    {
+      externallyRestored: true,
+      text: "Restored outside OpenLaw. Review this Envelope in DocuSign.",
+    },
+  ])("keeps $text reserved without Resume", async ({ text, ...facts }) => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "draft", sentAt: null, ...facts })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(screen.getByText("Not sent")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+  });
+
+  it("converges a waiting preparation through the record event without a return", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "draft", sentAt: null, confirmationPending: true })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Waiting for confirmation")).toBeInTheDocument();
+    api.replaceEnvelopes([envelopeRow({ status: "sent", confirmationPending: false })]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "envelope.sent",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "worker-sent",
+      visibility: "working_team",
+    });
+    expect(await screen.findByText("Out for signature")).toBeInTheDocument();
+    expect(screen.queryByText("Waiting for confirmation")).not.toBeInTheDocument();
+  });
+
+  it.each(["changed", "unavailable"] as const)(
+    "explains a %s source and retains history without Resume",
+    async (sourceState) => {
+      const api = recordApi({
+        preparationEnabled: true,
+        envelopes: [
+          envelopeRow({ status: "draft", preparationState: "created", sentAt: null, sourceState }),
+        ],
+      });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/signatures");
+      expect(
+        await screen.findByText(
+          sourceState === "changed"
+            ? /The primary Document changed/
+            : /The original source Version is unavailable/,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+      expect(screen.getByText(/does not close a session already issued/)).toBeInTheDocument();
+    },
+  );
+
+  it("explains a disabled connector while retaining the preparation", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      signingConfigured: false,
+      envelopes: [envelopeRow({ status: "draft", preparationState: "created", sentAt: null })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(
+      await screen.findByText(/Signing connector is disabled or unavailable/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+  });
+
+  it("offers Resume while confirmation is pending and never offers Send or Void for the draft", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({
+          status: "draft",
+          preparationState: "created",
+          sentAt: null,
+          confirmationPending: true,
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Waiting for confirmation")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Resume in DocuSign" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: ROW_ACTIONS })).not.toBeInTheDocument();
+  });
+
+  it("shows the localized launch fallback when reopening a draft fails without problem detail", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "draft", preparationState: "created", sentAt: null })],
+    });
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname.endsWith("/launch") && call.method === "POST"
+          ? json(502, { status: 502 })
+          : api.handler(call),
+    });
+    renderAt("/contracts/42/signatures");
+    await user.click(await screen.findByRole("button", { name: "Resume in DocuSign" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "DocuSign could not open this draft. Try again from Signatures.",
+    );
+    expect(screen.getByRole("button", { name: "Resume in DocuSign" })).toBeEnabled();
+  });
+
+  it("selects the exact Version, Signers and Subject and displays the unsent draft", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    await user.click(await screen.findByRole("button", { name: "Prepare Envelope" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.selectOptions(within(dialog).getByLabelText("Version"), "v1");
+    await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+    await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    await user.type(within(dialog).getByLabelText("Subject"), "Please review this agreement");
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
+    expect(await screen.findByText("Draft — not sent")).toBeInTheDocument();
+    expect(screen.getByText("Not sent")).toBeInTheDocument();
+    expect(screen.getByText("Prepared by Nadia Counsel")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
+    expect(api.writes[0]).toMatchObject({
+      path: "/api/v1/contracts/42/envelopes/prepare",
+      body: {
+        documentVersionId: "v1",
+        signers: [SIGNERS[0]],
+        subject: "Please review this agreement",
+        idempotencyKey: expect.any(String),
+      },
+    });
+  });
+
+  it("keeps the idempotency key for a repeated request and replaces it for a corrected one", async () => {
+    const user = userEvent.setup();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    await user.click(await screen.findByRole("button", { name: "Prepare Envelope" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+    await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    const refused = "The provider would not take the envelope.";
+    api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
+    expect(await within(dialog).findByText(refused)).toBeInTheDocument();
+    api.refuseNext(502, refused);
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
+    await waitFor(() => expect(api.writes).toHaveLength(2));
+    await user.type(within(dialog).getByLabelText("Subject"), "Corrected");
+    await user.click(within(dialog).getByRole("button", { name: "Continue to DocuSign" }));
+    await waitFor(() => expect(api.writes).toHaveLength(3));
+    const keys = api.writes.map(
+      (write) => (write.body as { idempotencyKey: string }).idempotencyKey,
+    );
+    // A seam that saw the first key again with a new subject would refuse
+    // it as a conflict, so the corrected request needs its own.
+    expect(keys[1]).toBe(keys[0]);
+    expect(keys[2]).not.toBe(keys[0]);
+  });
+
+  it("refreshes an unresolved creation into the same recovered draft without creating or launching", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({
+          id: "recovering",
+          status: "preparing",
+          preparationState: "uncertain",
+          sentAt: null,
+          recoveryAttempts: 2,
+          nextRecoveryAt: "2026-09-27T12:00:00Z",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText(/Checks made: 2/)).toBeInTheDocument();
+    expect(screen.getByText(/Next check no earlier/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
+    expect(api.writes).toHaveLength(0);
+    api.replaceEnvelopes([
+      envelopeRow({ id: "recovering", status: "draft", preparationState: "created", sentAt: null }),
+    ]);
+    await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
+    expect(await screen.findByRole("button", { name: "Resume in DocuSign" })).toBeInTheDocument();
+    expect(await envelopeRows()).toHaveLength(1);
+    expect(api.writes).toHaveLength(0);
+  });
+
+  it("explains operator resolution when the lookup window has expired", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({
+          status: "preparing",
+          preparationState: "uncertain",
+          sentAt: null,
+          recoveryStopped: "lookup_expired",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(
+      await screen.findByText(/Ask your Administrator to resolve this Envelope/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue to DocuSign" })).not.toBeInTheDocument();
+  });
+
+  it("shows an uncertain creation without offering a second preparation", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({ status: "preparing", preparationState: "uncertain", sentAt: null }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Creation uncertain — not confirmed sent")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send for signature" })).not.toBeInTheDocument();
   });
 });

@@ -1,51 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * The signing connector (CTR-013, TECH-013) — the API behind Settings →
- * Organization → Integrations → E-signature.
- *
- * Six Administrator-only operations on one adapter-keyed connector: read
- * its state (never its secrets), save or rotate it, test the credentials
- * against the provider, turn it off, turn it back on, and take it out.
- *
- * **Off and out are different acts, and the pane offers both.** CTR-013
- * promises that a team which never configures a connector loses nothing,
- * and until #273 an install that configured one could not get back to
- * that promise: there was no route and no control, so the send stayed on
- * offer for ever. Turning it off is the reversible answer — the row and
- * the credentials stay, and every surface answers as an unconfigured
- * install does, because the resolver reads the switch. Taking it out is
- * the other answer, for a team that wants the credentials gone.
- *
- * **A live envelope refuses the delete and not the disable.** Deleting
- * strands a round that is still out for good: nothing left to void it
- * with, and nothing for the reconciliation sweep to ask. Turning the
- * connector off strands nothing, because turning it back on picks the
- * round up again — so an Administrator who needs to stop the sending
- * right now is never blocked by paper somebody else has out.
- *
- * **The two secrets are write-only.** The RSA private key and the
- * Connect HMAC secret go in and never come back: an omitted or blank
- * field keeps the stored value, a pasted one rotates it, and no answer
- * this module gives ever carries either. That is the authentication
- * pane's own credential anatomy (TECH-008), applied here.
- *
- * Webhook mode requires a Connect secret. Polling mode needs none and
- * refuses all inbound status deliveries.
- *
- * **Every mutation is audited, with the secrets redacted at the call
- * site.** `activity_log` is append-only (DD-017 forbids UPDATE and
- * DELETE), so a secret that reached a payload would be in the record
- * forever — the payload records that a secret rotated and never what it
- * became.
+ * Administrator settings for the Signing connector (CTR-013, TECH-013).
+ * Secrets remain write-only. Live preparations, uncertain creations and sent
+ * Envelopes prevent removal or retargeting their account and environment.
+ * Disable refuses new sessions while accounting keeps the real provider outcome.
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  and,
   contractEnvelopes,
   count,
   eq,
+  inArray,
+  ne,
+  or,
   signingConnectors,
   SIGNING_ENVIRONMENTS,
   SIGNING_UPDATE_MODES,
@@ -54,6 +25,7 @@ import {
   type Db,
   type SigningConnector,
 } from "@openlaw/db";
+import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
@@ -182,6 +154,12 @@ function readConnector(
   };
 }
 
+const needsConnector = () =>
+  or(
+    inArray(contractEnvelopes.status, [...LIVE_ENVELOPE_STATUSES]),
+    and(eq(contractEnvelopes.status, "signed"), ne(contractEnvelopes.executedFetch, "ready")),
+  );
+
 export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
   const ParamsSchema = z.object({ provider: z.enum(SIGNING_PROVIDERS) });
 
@@ -229,6 +207,47 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       const body = request.body;
       const privateKey = pasted(body.privateKey);
       const webhookSecret = pasted(body.webhookSecret);
+
+      const [observed] = await app.db
+        .select()
+        .from(signingConnectors)
+        .where(eq(signingConnectors.provider, provider))
+        .limit(1);
+      const changesCredentials = (current: SigningConnector) =>
+        current.environment !== body.environment ||
+        current.apiUserId !== body.apiUserId ||
+        current.integrationKey !== body.integrationKey ||
+        Boolean(privateKey && privateKey !== current.privateKey);
+      let candidateAccountId: string | undefined;
+      if (observed && changesCredentials(observed)) {
+        const live = await app.db
+          .select({ accountId: contractEnvelopes.providerAccountId })
+          .from(contractEnvelopes)
+          .where(needsConnector());
+        if (live.some((envelope) => envelope.accountId !== null)) {
+          try {
+            const candidate = await app.resolveSigningProvider("accounting", {
+              environment: body.environment,
+              integrationKey: body.integrationKey,
+              apiUserId: body.apiUserId,
+              privateKey: privateKey ?? observed.privateKey,
+              webhookSecret: webhookSecret ?? observed.webhookSecret,
+            });
+            candidateAccountId = (await candidate?.testConnection())?.accountId;
+          } catch (error) {
+            if (error instanceof SigningTimeoutError || error instanceof SigningUnavailableError)
+              throw httpError(
+                502,
+                "DocuSign could not be reached to verify these credentials. Try again.",
+                { expose: true },
+              );
+            throw httpError(
+              409,
+              "The replacement credentials could not verify the connector identity. Keep the original account and try again.",
+            );
+          }
+        }
+      }
 
       // The write and its audit entries commit or roll back together;
       // the row lock keeps a concurrent save from reading a stale "old"
@@ -279,6 +298,61 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
             },
           });
           return row;
+        }
+
+        const identityChanged =
+          current.environment !== body.environment ||
+          current.apiUserId !== body.apiUserId ||
+          current.integrationKey !== body.integrationKey;
+        if (identityChanged || (privateKey && privateKey !== current.privateKey)) {
+          const live = await tx
+            .select({
+              providerEnvironment: contractEnvelopes.providerEnvironment,
+              providerAccountId: contractEnvelopes.providerAccountId,
+            })
+            .from(contractEnvelopes)
+            .where(needsConnector());
+          const refusal = () =>
+            httpError(
+              409,
+              `${String(live.length)} Envelope preparations, sends or outstanding executed copies still use this connector identity. ` +
+                "Keep the original account and environment until their outcomes are resolved. " +
+                "Rotate credentials for the same identity or turn the connector off. Existing DocuSign sessions remain usable.",
+            );
+          if (
+            live.some(
+              (envelope) =>
+                (envelope.providerEnvironment !== null &&
+                  envelope.providerEnvironment !== body.environment) ||
+                (identityChanged && (!envelope.providerAccountId || !envelope.providerEnvironment)),
+            )
+          )
+            throw refusal();
+          if (live.some((envelope) => envelope.providerAccountId !== null)) {
+            // A concurrent save may change the key that a blank field keeps.
+            // Never apply a provider result to credentials we did not check.
+            if (
+              !observed ||
+              current.id !== observed.id ||
+              current.environment !== observed.environment ||
+              current.integrationKey !== observed.integrationKey ||
+              current.apiUserId !== observed.apiUserId ||
+              current.privateKey !== observed.privateKey ||
+              !candidateAccountId
+            )
+              throw httpError(
+                409,
+                "The connector or its active Envelopes changed while checking credentials. Try again.",
+              );
+            if (
+              live.some(
+                (envelope) =>
+                  envelope.providerAccountId !== null &&
+                  envelope.providerAccountId !== candidateAccountId,
+              )
+            )
+              throw refusal();
+          }
         }
 
         const [row] = await tx
@@ -417,16 +491,18 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
-  /** How many rounds this install has out right now.
+  /** How many live rounds this install holds right now: preparing,
+   * draft, or sent (`LIVE_ENVELOPE_STATUSES`). A draft counts, because
+   * removing its connector would strand it at the provider.
    *
    * Read under the connector's own row lock, so a send that raced the
-   * switch is either counted here or refused by the resolver after it —
-   * the send resolves the connector before it dials anybody. */
+   * switch is either counted here or refused after it: the send's
+   * reservation takes a share lock on the same row before it dials. */
   async function liveEnvelopeCount(tx: Executor): Promise<number> {
     const [row] = await tx
       .select({ live: count() })
       .from(contractEnvelopes)
-      .where(eq(contractEnvelopes.status, "sent"));
+      .where(needsConnector());
     return row?.live ?? 0;
   }
 
@@ -455,11 +531,8 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "disableSigningConnector",
         summary:
           "Turn the e-signature connector off (CTR-013) without losing " +
-          "its credentials. Every surface then answers as an " +
-          "unconfigured install does — the send control leaves the " +
-          "record and the manual hand-off is the path again. A live " +
-          "envelope does not refuse this: turning the connector back on " +
-          "picks the round up where the sweep left it",
+          "its credentials. New sends and launches are refused. Existing external " +
+          "sessions remain usable and provider accounting continues",
         tags: ["signing-connector"],
         params: ParamsSchema,
         response: { 200: ConnectorEnvelope, default: problemResponse },
@@ -472,10 +545,7 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         if (current.disabledAt) {
           throw httpError(409, "This e-signature connector is already turned off.");
         }
-        // Counted before the write and recorded with it. While the
-        // connector is off the reconciliation sweep resolves nothing
-        // and these rounds stand still, so how many were out at that
-        // moment is the fact somebody reading the log afterwards wants.
+        // Keep the number of outstanding Envelopes at the time sending stopped.
         const liveEnvelopes = await liveEnvelopeCount(tx);
         const [row] = await tx
           .update(signingConnectors)
@@ -505,8 +575,7 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Turn the e-signature connector back on with the credentials " +
           "it already holds (CTR-013). The send control returns to the " +
-          "record and the reconciliation sweep reaches every round that " +
-          "was out while it was off",
+          "record. Provider accounting continues in both states",
         tags: ["signing-connector"],
         params: ParamsSchema,
         response: { 200: ConnectorEnvelope, default: problemResponse },
@@ -566,9 +635,9 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           throw httpError(
             409,
             `${String(liveEnvelopes)} ${liveEnvelopes === 1 ? "envelope is" : "envelopes are"} ` +
-              "still out for signature. Removing the connector would leave " +
-              `${liveEnvelopes === 1 ? "it" : "them"} with no way to be voided or finished. ` +
-              "Void or finish the round first, or turn the connector off instead.",
+              "still dependent on this connector for preparation, sending or outstanding executed-copy work. Removing the connector would leave " +
+              `${liveEnvelopes === 1 ? "it" : "them"} without the credentials needed to resolve that work. ` +
+              "Resolve preparations in DocuSign and finish sent Envelopes or outstanding executed-copy work first. Turn the connector off to refuse new launches while keeping history and status updates.",
           );
         }
         // Written before the delete, so the entry and the row it
