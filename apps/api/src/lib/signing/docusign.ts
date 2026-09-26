@@ -38,6 +38,7 @@ import {
   EnvelopeAccessError,
   EnvelopeEditConflictError,
   SigningConfigError,
+  SigningNotSubmittedError,
   SigningRefusedError,
   SigningTimeoutError,
   SigningUnavailableError,
@@ -723,7 +724,9 @@ class DocuSignProvider implements SigningProvider {
       this.accessToken(),
       this.envelopesUrl(),
       collect(input.document),
-    ]);
+    ]).catch((error: unknown) => {
+      throw new SigningNotSubmittedError("DocuSign creation was not submitted.", { cause: error });
+    });
     const body = readObject(
       await this.callJson(url, {
         method: "POST",

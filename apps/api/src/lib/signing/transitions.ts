@@ -44,10 +44,12 @@
 import {
   and,
   contractEnvelopes,
+  contracts,
   eq,
   type EnvelopeStatus,
   type SigningProviderKey,
 } from "@openlaw/db";
+import { recoverDirectSendStage } from "./recovery-stage.js";
 import { MAX_ENVELOPE_REASON_LENGTH } from "@openlaw/shared";
 import { recordActivity, RECORD_ACTIVITY_TIER, type ActivityAction } from "../activity.js";
 import type { Notifier } from "../notifications/notifier.js";
@@ -179,6 +181,25 @@ export async function applyEnvelopeStatus(
   change: EnvelopeStatusChange,
 ): Promise<EnvelopeTransition> {
   return notifier.notifying(async (tx) => {
+    // Match the direct-send writer's Contract-before-Envelope lock order.
+    if (change.recoveryAttempt !== undefined) {
+      const [reservation] = await tx
+        .select({ contractId: contractEnvelopes.contractId })
+        .from(contractEnvelopes)
+        .where(
+          and(
+            eq(contractEnvelopes.provider, change.provider),
+            eq(contractEnvelopes.providerEnvelopeId, change.providerEnvelopeId),
+          ),
+        );
+      if (reservation)
+        await tx
+          .select({ id: contracts.id })
+          .from(contracts)
+          .where(eq(contracts.id, reservation.contractId))
+          .for("update");
+    }
+
     // Locked before it is read, so a replay arriving at the same moment
     // waits and then reads what the first one wrote.
     const [row] = await tx
@@ -189,6 +210,9 @@ export async function applyEnvelopeStatus(
         reason: contractEnvelopes.reason,
         completedAt: contractEnvelopes.completedAt,
         recoveryAttempts: contractEnvelopes.recoveryAttempts,
+        creationKind: contractEnvelopes.creationKind,
+        creationStatusId: contractEnvelopes.creationStatusId,
+        creationStatusRevision: contractEnvelopes.creationStatusRevision,
       })
       .from(contractEnvelopes)
       .where(
@@ -240,6 +264,9 @@ export async function applyEnvelopeStatus(
 
     const action = TRANSITION_ACTION[change.status];
     if (!action) return { outcome: "unchanged", envelope: held };
+
+    if (row.status === "preparing" && ["sent", "signed", "declined"].includes(change.status))
+      await recoverDirectSendStage(tx, notifier, row);
 
     const reason = keptReason(change.status, change.reason);
     // The moment we were told, when the provider named none. The column

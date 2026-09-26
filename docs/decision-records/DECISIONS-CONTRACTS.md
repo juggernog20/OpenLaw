@@ -748,6 +748,11 @@ and applies confirmed status to the same row. It never calls creation again.
 Attempts and next-check times are durable, with backoff and a 32-attempt limit.
 A lost worker claim is eligible again after 20 minutes. No database lock spans a
 provider call. A failed or empty lookup keeps the live reservation.
+An unresolved preparing row blocks another preparation or direct send on the
+same Contract. Lookup expiry releases neither the reservation nor its idempotency
+record. Operator resolution requires the documented account and identity checks
+before attaching a verified ID or recording proven noncreation; SQL alone is not
+the resolution procedure.
 
 DocuSign transaction lookup expires after seven days. Local idempotency does not.
 Older unresolved operations without a provider ID stop automatic lookup and need
@@ -755,3 +760,11 @@ explicit operator resolution. Known IDs remain readable. Signatures shows the
 waiting state and next check, or asks for an Administrator when automatic recovery
 has stopped. Refresh reads local state and cannot release the reservation or
 change the original inputs. Deployment guidance records the operator procedure.
+
+Recovered direct sends retain their existing Signature Stage behavior. New
+reservations save the operation kind, original Status ID and Status-change count.
+Recovery advances a confirmed direct send only while that choice still holds.
+An explicit move away and back is a newer choice; unrelated field edits are not.
+A confirmed compensating Void does not advance the Stage. Migration 0177 leaves
+old operation kinds and Status snapshots unknown, so recovery of those rows never
+invents a Stage change. An Administrator can set their Stage after verification.

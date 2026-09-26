@@ -598,7 +598,9 @@ that same row. It never sends another creation request. Signatures shows the
 attempt count, the next eligible check, and **Refresh status**, which reads local
 state without spending a provider request.
 
-Recovery starts after 15 minutes. PostgreSQL claims each attempt before the worker
+Initial automatic recovery starts after 15 minutes. After an operator attaches a
+verified provider Envelope ID, the next scheduled sweep can process the row.
+PostgreSQL claims each attempt before the worker
 calls the provider. A stopped worker leaves a 20-minute claim. Checks back off
 from 15 minutes to six hours, with at most 32 attempts and five recovery operations
 per sweep. The worker keeps a provider Envelope ID as soon as lookup supplies it.
@@ -610,6 +612,19 @@ is available for seven days. Once that window expires, an operation without a
 provider Envelope ID needs operator resolution. An operation with a known ID can
 still be read after the window. Local idempotency keys, snapshots and reservations
 have no age-based expiry.
+
+New reservations also record whether the user asked to prepare or send, the
+Contract's original Status, and its count of Status changes. A recovered direct
+send advances to the first live Signature Status only if that Status choice has
+not changed. Moving away and back counts as a newer choice. Unrelated field edits
+do not suppress the advance. Recovery of a confirmed compensating Void does not
+advance the Stage. Embedded preparations retain their separate Stage behavior.
+
+Migration `0177_envelope-recovery-intent` leaves these fields NULL on older rows.
+It cannot infer which operation produced an old uncertain reservation. Recovery
+still attaches its provider Envelope and settles its status, but does not advance
+the Contract Stage. An Administrator can set the Stage explicitly after checking
+the outcome. No backfill guesses intent from provider status or Subject.
 
 The worker logs `signing creation recovery` with the local Envelope ID, provider,
 account, environment, transaction ID, attempt and outcome. It does not log provider

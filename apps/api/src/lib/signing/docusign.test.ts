@@ -976,3 +976,39 @@ describe("transaction lookup evidence", () => {
     }
   });
 });
+
+it("identifies a refused token refresh before the creation POST as confirmed non-submission", async () => {
+  const options: StubOptions = {};
+  const stub = await startStub(options);
+  let now = Date.now();
+  try {
+    const provider = createDocuSignProvider(
+      {
+        environment: "demo",
+        integrationKey: INTEGRATION_KEY,
+        apiUserId: API_USER_ID,
+        privateKey: KEYS.privateKey,
+        webhookSecret: WEBHOOK_SECRET,
+      },
+      { hosts: { auth: stub.origin, api: stub.origin }, clock: () => now },
+    );
+    await provider.testConnection();
+    now += 3_600_000;
+    options.tokenForbidden = true;
+    await expect(
+      provider.prepareEnvelope({
+        document: Readable.from(["paper"]),
+        fileName: "paper.pdf",
+        subject: "Original",
+        signers: [{ name: "Signer", email: "signer@example.test" }],
+        transactionId: "never-submitted",
+      }),
+    ).rejects.toMatchObject({
+      name: "SigningNotSubmittedError",
+      cause: { name: "SigningConfigError" },
+    });
+    expect(stub.envelopes.size).toBe(0);
+  } finally {
+    await stub.close();
+  }
+});

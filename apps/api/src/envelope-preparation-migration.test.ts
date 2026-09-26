@@ -58,3 +58,36 @@ it("preserves sent history, timestamps, Signers and executed-copy references on 
     await db.$client.end();
   }
 });
+
+it("leaves the intent of older interrupted operations unknown", async () => {
+  const db = await freshDb(container, "envelope_recovery_intent");
+  try {
+    await migrateThrough(db, "0176_envelope-recovery", migrationEntries());
+    await db.execute(
+      sql`insert into users (id, email, display_name, role) values ('sender', 'sender@example.test', 'Sender', 'legal_team_member')`,
+    );
+    await db.execute(sql`insert into contracts (id, title, contract_type_id, status_id)
+      select 'contract', 'Interrupted', ct.id, cs.id from contract_types ct cross join contract_statuses cs where ct.slug = 'other' and cs.slug = 'draft'`);
+    await db.execute(sql`insert into contract_envelopes (id, contract_id, provider, status, sent_by, sent_at, preparation_state, provider_transaction_id)
+      values ('interrupted', 'contract', 'docusign', 'preparing', 'sender', null, 'uncertain', 'original-operation')`);
+    await runMigrations(db);
+    expect(
+      (
+        await db.execute(
+          sql`select status, preparation_state, provider_transaction_id, creation_kind, creation_status_id, creation_status_revision from contract_envelopes`,
+        )
+      ).rows,
+    ).toEqual([
+      {
+        status: "preparing",
+        preparation_state: "uncertain",
+        provider_transaction_id: "original-operation",
+        creation_kind: null,
+        creation_status_id: null,
+        creation_status_revision: null,
+      },
+    ]);
+  } finally {
+    await db.$client.end();
+  }
+});

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Recover interrupted creation from durable identity and provider evidence
+ * while retaining the one-live-Envelope reservation (CTR-013, #1174). */
+
 import { and, contractEnvelopes, eq, isNull, or, sql } from "@openlaw/db";
 import type { ReconciliationDeps } from "../../pipeline/reconciliation.js";
 import type { JobQueue } from "../../pipeline/jobs.js";
@@ -93,6 +96,7 @@ export async function recoverEnvelope(
         return;
       }
       providerEnvelopeId = found.providerEnvelopeId;
+      context.providerEnvelopeId = providerEnvelopeId;
       // Keep the id before reading status, including if that read fails or the
       // process stops. Known ids remain useful after transaction lookup expires.
       const attached = await deps.db
@@ -116,7 +120,8 @@ export async function recoverEnvelope(
     // Provider errors may contain payloads; diagnostics keep only local context.
     outcome = "unavailable";
   } finally {
-    if (!stopped && row.recoveryAttempts >= RECOVERY_ATTEMPT_LIMIT) stopped = "attempts_exhausted";
+    if (!stopped && outcome !== "applied" && row.recoveryAttempts >= RECOVERY_ATTEMPT_LIMIT)
+      stopped = "attempts_exhausted";
     const minutes = Math.min(360, 15 * 2 ** Math.min(row.recoveryAttempts - 1, 5));
     await deps.db
       .update(contractEnvelopes)

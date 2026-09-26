@@ -110,6 +110,7 @@
  * is `sent_by`. None of that work is done here; the row only reports it.
  */
 
+import { contractStatusRevision } from "../../lib/signing/recovery-stage.js";
 import { createHash, randomUUID } from "node:crypto";
 import type { Readable } from "node:stream";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -158,6 +159,7 @@ import {
   EnvelopeAccessError,
   EnvelopeNotFoundError,
   SigningConfigError,
+  SigningNotSubmittedError,
   SigningRefusedError,
   SigningTimeoutError,
   SigningUnavailableError,
@@ -1052,6 +1054,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           if (await hasLiveEnvelope(tx, locked.id)) throw liveEnvelopeRefusal();
           if (locked.primaryDocumentId !== primaryDocument.id)
             throw httpError(409, "The primary Document changed. Select its Version again.");
+          const [creationStatus] = await tx
+            .select({ id: contracts.statusId })
+            .from(contracts)
+            .where(eq(contracts.id, locked.id));
           const [envelope] = await tx
             .insert(contractEnvelopes)
             .values({
@@ -1069,6 +1075,9 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               providerAccountId: account.accountId,
               providerEnvironment: signing.environment,
               preparationState: "pending",
+              creationKind: preparing ? "draft" : "send",
+              creationStatusId: creationStatus!.id,
+              creationStatusRevision: await contractStatusRevision(tx, locked.id),
             })
             .returning();
           if (!envelope) throw httpError(500, "The Envelope could not be reserved.");
@@ -1132,6 +1141,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           // stream open, and with it the file handle behind it. Closing it
           // here is what keeps a run of refused sends from exhausting them.
           document.destroy();
+          if (error instanceof SigningNotSubmittedError) {
+            await failCreation();
+            throw sendFailure(error.cause);
+          }
           if (error instanceof SigningRefusedError) {
             await failCreation();
             throw sendFailure(error);

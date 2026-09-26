@@ -59,6 +59,7 @@ import { ERASED, signerAppearances } from "../../lib/signer-erasure.js";
 import {
   type SendEnvelopeInput,
   SigningConfigError,
+  SigningNotSubmittedError,
   SigningRefusedError,
   EnvelopeNotFoundError,
   EnvelopeAccessError,
@@ -144,6 +145,10 @@ interface ContractRow {
 }
 
 interface EnvelopeRow {
+  preparationState: "pending" | "uncertain" | "created" | "failed" | null;
+  recoveryAttempts: number;
+  nextRecoveryAt: string | null;
+  recoveryStopped: "lookup_expired" | "attempts_exhausted" | "identity_missing" | null;
   id: string;
   provider: string;
   status: string;
@@ -1237,6 +1242,13 @@ describe("preparation refusals and reservations", () => {
       harness.pipeline,
       id,
     );
+  const publishedRound = async (contractId: string) => {
+    const [record] = await harness.db
+      .select({ number: contracts.number })
+      .from(contracts)
+      .where(eq(contracts.id, contractId));
+    return (await signingState(as(MEMBER), record!.number)).envelopes[0]!;
+  };
   const due = (id: string) =>
     harness.db
       .update(contractEnvelopes)
@@ -1294,8 +1306,23 @@ describe("preparation refusals and reservations", () => {
           .from(contractEnvelopeSigners)
           .where(eq(contractEnvelopeSigners.envelopeId, before.id)),
       ).toEqual(signers);
+      expect(await publishedRound(contract.id)).toMatchObject({
+        id: before.id,
+        status,
+        preparationState: "created",
+        recoveryAttempts: 1,
+        nextRecoveryAt: null,
+        recoveryStopped: null,
+        signers: SIGNERS,
+      });
       expect((await request()).json().envelopes[0].id).toBe(before.id);
       expect(provider().sentEnvelopeIds()).toHaveLength(count);
+      const [record] = await harness.db
+        .select({ stage: contractStatuses.stage })
+        .from(contracts)
+        .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
+        .where(eq(contracts.id, contract.id));
+      expect(record!.stage).toBe(status === "sent" ? "signature" : "draft");
     },
   );
 
@@ -1332,7 +1359,15 @@ describe("preparation refusals and reservations", () => {
         recoveryAttempts: attempt,
         recoveryStopped: null,
       });
-      expect(held.nextRecoveryAt!.getTime()).toBeGreaterThan(
+      const published = await publishedRound(row.contractId);
+      expect(published).toMatchObject({
+        status: "preparing",
+        preparationState: "uncertain",
+        recoveryAttempts: attempt,
+        recoveryStopped: null,
+        signers: SIGNERS,
+      });
+      expect(new Date(published.nextRecoveryAt!).getTime()).toBeGreaterThan(
         Date.now() + (15 * 2 ** (attempt - 1) - 1) * 60_000,
       );
       await recover(row.id);
@@ -1420,7 +1455,8 @@ describe("preparation refusals and reservations", () => {
     const lookup = vi.spyOn(provider(), "findEnvelope");
     await recover(row.id);
     expect(lookup).not.toHaveBeenCalled();
-    expect(await storedRound(row.contractId)).toMatchObject({
+    expect(await publishedRound(row.contractId)).toMatchObject({
+      signers: SIGNERS,
       recoveryStopped: "lookup_expired",
       nextRecoveryAt: null,
       status: "preparing",
@@ -1487,6 +1523,14 @@ describe("preparation refusals and reservations", () => {
       expect(await storedRound(row.contractId)).toMatchObject({
         status,
         providerEnvelopeId: found!.providerEnvelopeId,
+      });
+      expect(await publishedRound(row.contractId)).toMatchObject({
+        status,
+        preparationState: "created",
+        recoveryAttempts: 1,
+        nextRecoveryAt: null,
+        recoveryStopped: null,
+        signers: SIGNERS,
       });
     },
   );
@@ -1770,12 +1814,200 @@ describe("preparation refusals and reservations", () => {
       await recover(row.id);
       expect(lookup).not.toHaveBeenCalled();
       lookup.mockRestore();
+      const [record] = await harness.db
+        .select({ stage: contractStatuses.stage })
+        .from(contracts)
+        .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
+        .where(eq(contracts.id, contract.id));
+      expect(record!.stage).toBe(status === "sent" ? "signature" : "draft");
       expect(await storedRound(contract.id)).toMatchObject({
         status,
         providerEnvelopeId: row.providerEnvelopeId,
       });
     },
   );
+
+  it("files a recovered direct send that already completed and advances through Signature to Active", async () => {
+    const { contract, payload } = await ready();
+    const original = provider().sendEnvelope.bind(provider());
+    const lost = vi.spyOn(provider(), "sendEnvelope").mockImplementationOnce(async (input) => {
+      const result = await original(input);
+      provider().complete(result.providerEnvelopeId);
+      throw new SigningTimeoutError("Lost completed send response");
+    });
+    try {
+      expect(
+        (await sendKeyed(contract.number, payload.documentVersionId, "completed-intent"))
+          .statusCode,
+      ).toBe(502);
+    } finally {
+      lost.mockRestore();
+    }
+    const row = await storedRound(contract.id);
+    await due(row.id);
+    await recover(row.id);
+    await vi.waitFor(
+      async () => {
+        expect(await storedRound(contract.id)).toMatchObject({
+          status: "signed",
+          executedFetch: "ready",
+        });
+      },
+      { timeout: 30_000, interval: 50 },
+    );
+    const [after] = await harness.db
+      .select({ stage: contractStatuses.stage })
+      .from(contracts)
+      .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
+      .where(eq(contracts.id, contract.id));
+    expect(after!.stage).toBe("active");
+  });
+
+  it.each(["changed", "changed-back", "unrelated-edit", "unknown-kind"] as const)(
+    "respects original direct-send intent and newer Status choices: %s",
+    async (scenario) => {
+      const { contract, payload } = await ready();
+      const original = provider().sendEnvelope.bind(provider());
+      const lost = vi.spyOn(provider(), "sendEnvelope").mockImplementationOnce(async (input) => {
+        await original(input);
+        throw new SigningTimeoutError("Lost send response");
+      });
+      try {
+        expect(
+          (await sendKeyed(contract.number, payload.documentVersionId, "intent")).statusCode,
+        ).toBe(502);
+      } finally {
+        lost.mockRestore();
+      }
+      const row = await storedRound(contract.id);
+      const [initial] = await harness.db
+        .select()
+        .from(contracts)
+        .where(eq(contracts.id, contract.id));
+      const [review] = await harness.db
+        .select()
+        .from(contractStatuses)
+        .where(eq(contractStatuses.stage, "review"));
+      const patch = async (payload: Record<string, unknown>) => {
+        const response = await harness.app.inject({
+          method: "PATCH",
+          url: `/api/v1/contracts/${contract.number}`,
+          cookies: as(MEMBER),
+          payload,
+        });
+        expect(response.statusCode, response.body).toBe(200);
+      };
+      if (scenario === "changed" || scenario === "changed-back") {
+        await patch({ statusId: review!.id });
+        if (scenario === "changed-back") await patch({ statusId: initial!.statusId });
+      } else if (scenario === "unrelated-edit") await patch({ title: "An unrelated edit" });
+      else
+        await harness.db
+          .update(contractEnvelopes)
+          .set({ creationKind: null, creationStatusId: null, creationStatusRevision: null })
+          .where(eq(contractEnvelopes.id, row.id));
+      await due(row.id);
+      await recover(row.id);
+      expect(await storedRound(contract.id)).toMatchObject({ status: "sent" });
+      const [after] = await harness.db
+        .select({ statusId: contracts.statusId, stage: contractStatuses.stage })
+        .from(contracts)
+        .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
+        .where(eq(contracts.id, contract.id));
+      if (scenario === "unrelated-edit") expect(after!.stage).toBe("signature");
+      else expect(after!.statusId).toBe(scenario === "changed" ? review!.id : initial!.statusId);
+    },
+  );
+
+  it.each(["draft", "send"] as const)(
+    "settles proven pre-submission %s failures without retaining the live reservation",
+    async (kind) => {
+      const { contract, payload, prepare } = await ready();
+      const method = kind === "draft" ? "prepareEnvelope" : "sendEnvelope";
+      const failed = vi
+        .spyOn(provider(), method)
+        .mockRejectedValueOnce(
+          new SigningNotSubmittedError("Not submitted", {
+            cause: new SigningConfigError("Refresh refused"),
+          }),
+        );
+      const before = provider().sentEnvelopeIds().length;
+      try {
+        const response =
+          kind === "draft"
+            ? await prepare()
+            : await sendKeyed(contract.number, payload.documentVersionId, "pre-submit");
+        expect(response.statusCode).toBe(502);
+      } finally {
+        failed.mockRestore();
+      }
+      expect(provider().sentEnvelopeIds()).toHaveLength(before);
+      const state = await signingState(as(MEMBER), contract.number);
+      if (kind === "draft")
+        expect(state.envelopes).toMatchObject([
+          { status: "preparation_failed", preparationState: "failed" },
+        ]);
+      else expect(state.envelopes).toEqual([]);
+      expect((await prepare({ idempotencyKey: "new-after-nonsubmission" })).statusCode).toBe(201);
+    },
+  );
+
+  it.each(["draft", "send"] as const)(
+    "retains a submitted %s when a generic credential error hides the response",
+    async (kind) => {
+      const { contract, payload, prepare } = await ready();
+      const method = kind === "draft" ? "prepareEnvelope" : "sendEnvelope";
+      const original = provider()[method].bind(provider());
+      const failed = vi
+        .spyOn(provider(), method)
+        .mockImplementationOnce(async (input: SendEnvelopeInput) => {
+          await original({ ...input, transactionId: input.transactionId! });
+          throw new SigningConfigError("Ambiguous credentials error");
+        });
+      try {
+        const response =
+          kind === "draft"
+            ? await prepare()
+            : await sendKeyed(contract.number, payload.documentVersionId, "post-submit");
+        expect(response.statusCode).toBe(502);
+      } finally {
+        failed.mockRestore();
+      }
+      expect(await publishedRound(contract.id)).toMatchObject({
+        status: "preparing",
+        preparationState: "uncertain",
+        signers: SIGNERS,
+      });
+      expect((await prepare({ idempotencyKey: "cannot-bypass" })).statusCode).toBe(409);
+      const row = await storedRound(contract.id);
+      await due(row.id);
+      await recover(row.id);
+      expect(await publishedRound(contract.id)).toMatchObject({
+        id: row.id,
+        status: kind === "draft" ? "draft" : "sent",
+        preparationState: "created",
+        recoveryAttempts: 1,
+      });
+    },
+  );
+
+  it("keeps embedded preparation Stage behavior when the recovered provider Envelope was sent", async () => {
+    const { row, contract } = await interruptedDraft();
+    const found = await provider().findEnvelope(row.providerTransactionId!);
+    provider().sendDraft(found!.providerEnvelopeId);
+    await recover(row.id);
+    expect(await publishedRound(contract.id)).toMatchObject({
+      status: "sent",
+      preparationState: "created",
+      signers: SIGNERS,
+    });
+    const [record] = await harness.db
+      .select({ stage: contractStatuses.stage })
+      .from(contracts)
+      .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
+      .where(eq(contracts.id, contract.id));
+    expect(record!.stage).toBe("draft");
+  });
 
   it("records a confirmed refusal without keeping the live reservation", async () => {
     const { prepare } = await ready();

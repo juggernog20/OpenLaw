@@ -59,6 +59,15 @@ export class SigningConfigError extends SigningError {
   }
 }
 
+/** The adapter proves it failed before submitting creation. Generic provider
+ * errors do not carry this guarantee, even when they describe credentials. */
+export class SigningNotSubmittedError extends SigningError {
+  constructor(message: string, options: { cause: unknown }) {
+    super(message, options);
+    this.name = "SigningNotSubmittedError";
+  }
+}
+
 /**
  * The provider understood the request and said no — a malformed
  * envelope, a signer it will not accept, a void of an envelope that has
