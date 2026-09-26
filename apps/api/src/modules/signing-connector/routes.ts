@@ -275,7 +275,13 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           current.apiUserId !== body.apiUserId ||
           current.integrationKey !== body.integrationKey;
         if (identityChanged || (privateKey && privateKey !== current.privateKey)) {
-          const live = await tx.select().from(contractEnvelopes).where(needsConnector());
+          const live = await tx
+            .select({
+              providerEnvironment: contractEnvelopes.providerEnvironment,
+              providerAccountId: contractEnvelopes.providerAccountId,
+            })
+            .from(contractEnvelopes)
+            .where(needsConnector());
           const refusal = () =>
             httpError(
               409,

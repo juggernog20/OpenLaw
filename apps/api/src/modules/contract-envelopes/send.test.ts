@@ -2288,25 +2288,28 @@ describe("authenticated Sender View launch and return", () => {
       cookies: as(ADMIN),
     });
     expect(off.statusCode).toBe(200);
-    expect((await launch(envelope.id)).statusCode).toBe(409);
-    harness.signing!.sendDraft(envelope.providerEnvelopeId!);
-    const delivery = harness.signing!.signedDelivery({
-      providerEnvelopeId: envelope.providerEnvelopeId!,
-      status: "sent",
-    });
-    const result = await harness.app.inject({
-      method: "POST",
-      url: "/api/v1/signing/docusign/webhook",
-      headers: delivery.headers,
-      payload: delivery.body,
-    });
-    expect(result.statusCode, result.body).toBe(204);
-    expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("sent");
-    await harness.app.inject({
-      method: "POST",
-      url: "/api/v1/signing-connectors/docusign/enable",
-      cookies: as(ADMIN),
-    });
+    try {
+      expect((await launch(envelope.id)).statusCode).toBe(409);
+      harness.signing!.sendDraft(envelope.providerEnvelopeId!);
+      const delivery = harness.signing!.signedDelivery({
+        providerEnvelopeId: envelope.providerEnvelopeId!,
+        status: "sent",
+      });
+      const result = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/signing/docusign/webhook",
+        headers: delivery.headers,
+        payload: delivery.body,
+      });
+      expect(result.statusCode, result.body).toBe(204);
+      expect((await signingState(as(MEMBER), contract.number)).envelopes[0]!.status).toBe("sent");
+    } finally {
+      await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/signing-connectors/docusign/enable",
+        cookies: as(ADMIN),
+      });
+    }
   });
 
   it("refuses logout, demotion and revoked Confidential reach without revealing a launch", async () => {

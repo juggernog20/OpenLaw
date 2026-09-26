@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Keep provider operations on the recorded Envelope identity (CTR-013). */
+
 import { SigningRefusedError, type SigningProvider } from "./provider.js";
 
 export class EnvelopeIdentityError extends SigningRefusedError {}

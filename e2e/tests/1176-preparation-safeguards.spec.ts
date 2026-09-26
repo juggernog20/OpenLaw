@@ -4,6 +4,19 @@ import { expect, test } from "@playwright/test";
 import { ADMIN, ensureAdminExists, signInAs } from "./helpers.js";
 import { SigningStub } from "./docusign.js";
 
+interface EnvelopeResponse {
+  envelopes: {
+    id: string;
+    status: string;
+    executedFetch: string;
+    confirmationPending: boolean;
+    documentVersionId: string | null;
+  }[];
+}
+interface DocumentResponse {
+  document: { id: string; title: string };
+}
+
 // Run on an isolated Compose stack with SIGNING_PREPARATION_ENABLED=true.
 test("preserves preparation through source, archive and connector changes", async ({ page }) => {
   test.skip(
@@ -20,6 +33,7 @@ test("preserves preparation through source, archive and connector changes", asyn
     integrationKey,
     webhookSecret: "preparation-e2e-webhook",
   });
+  let contractNumber: number | undefined;
   try {
     const { privateKey } = generateKeyPairSync("rsa", {
       modulusLength: 2048,
@@ -48,6 +62,7 @@ test("preserves preparation through source, archive and connector changes", asyn
     });
     expect(created.status(), await created.text()).toBe(201);
     const { contract } = (await created.json()) as { contract: { number: number; stage: string } };
+    contractNumber = contract.number;
     const uploaded = await page.request.post(`/api/v1/contracts/${contract.number}/documents`, {
       multipart: {
         kind: "draft_ours",
@@ -73,14 +88,14 @@ test("preserves preparation through source, archive and connector changes", asyn
       },
     );
     expect(preparation.status(), await preparation.text()).toBe(201);
-    const { envelopes } = await preparation.json();
-    const launch = await page.request.post(`/api/v1/envelopes/${envelopes[0].id}/launch`);
+    const { envelopes } = (await preparation.json()) as EnvelopeResponse;
+    const launch = await page.request.post(`/api/v1/envelopes/${envelopes[0]!.id}/launch`);
     expect(launch.status()).toBe(200);
-    await page.goto((await launch.json()).url);
+    await page.goto(((await launch.json()) as { url: string }).url);
     await expect(page.getByRole("heading", { name: "Place fields" })).toBeVisible();
-    const envelope = envelopes[0];
+    const envelope = envelopes[0]!;
     const signatures = `/contracts/${contract.number}/signatures`;
-    const source = (await uploaded.json()).document;
+    const source = ((await uploaded.json()) as DocumentResponse).document;
     await page.getByLabel("Saved text field").fill("Preserved draft fields");
     await page.getByRole("button", { name: "Save fields and close" }).click();
     await expect(page).toHaveURL(new RegExp(`${signatures}$`));
@@ -114,7 +129,7 @@ test("preserves preparation through source, archive and connector changes", asyn
     expect(
       (
         await page.request.post(
-          `/api/v1/documents/${(await replacement.json()).document.id}/primary`,
+          `/api/v1/documents/${((await replacement.json()) as DocumentResponse).document.id}/primary`,
         )
       ).status(),
     ).toBe(200);
@@ -162,9 +177,9 @@ test("preserves preparation through source, archive and connector changes", asyn
     await page.reload();
     await expect(page.getByText(/The original source Version is unavailable/)).toBeVisible();
     expect((await page.request.post(`/api/v1/envelopes/${envelope.id}/launch`)).status()).toBe(409);
-    const after = await (
+    const after = (await (
       await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
-    ).json();
+    ).json()) as EnvelopeResponse;
     expect(after.envelopes).toHaveLength(1);
     expect(after.envelopes[0]).toMatchObject({
       id: envelope.id,
@@ -172,7 +187,13 @@ test("preserves preparation through source, archive and connector changes", asyn
       documentVersionId: null,
     });
   } finally {
-    await stub.close();
+    try {
+      await page.request.post("/api/v1/signing-connectors/docusign/enable");
+      if (contractNumber !== undefined)
+        await page.request.post(`/api/v1/contracts/${contractNumber}/restore`);
+    } finally {
+      await stub.close();
+    }
   }
 });
 
@@ -193,6 +214,7 @@ test("files a real provider outcome while the connector and Contract refuse new 
     integrationKey,
     webhookSecret: "preparation-e2e-webhook",
   });
+  let contractNumber: number | undefined;
   try {
     const { privateKey } = generateKeyPairSync("rsa", {
       modulusLength: 2048,
@@ -221,6 +243,7 @@ test("files a real provider outcome while the connector and Contract refuse new 
     });
     expect(created.status(), await created.text()).toBe(201);
     const { contract } = (await created.json()) as { contract: { number: number; stage: string } };
+    contractNumber = contract.number;
     const uploaded = await page.request.post(`/api/v1/contracts/${contract.number}/documents`, {
       multipart: {
         kind: "draft_ours",
@@ -246,10 +269,10 @@ test("files a real provider outcome while the connector and Contract refuse new 
       },
     );
     expect(preparation.status(), await preparation.text()).toBe(201);
-    const { envelopes } = await preparation.json();
-    const launch = await page.request.post(`/api/v1/envelopes/${envelopes[0].id}/launch`);
+    const { envelopes } = (await preparation.json()) as EnvelopeResponse;
+    const launch = await page.request.post(`/api/v1/envelopes/${envelopes[0]!.id}/launch`);
     expect(launch.status()).toBe(200);
-    await page.goto((await launch.json()).url);
+    await page.goto(((await launch.json()) as { url: string }).url);
     await expect(page.getByRole("heading", { name: "Place fields" })).toBeVisible();
     // Leaving the editor never visits the provider return URL.
     await page.goto(`/contracts/${contract.number}/signatures`);
@@ -261,7 +284,7 @@ test("files a real provider outcome while the connector and Contract refuse new 
     expect((await page.request.post(`/api/v1/contracts/${contract.number}/archive`)).status()).toBe(
       200,
     );
-    expect((await page.request.post(`/api/v1/envelopes/${envelopes[0].id}/launch`)).status()).toBe(
+    expect((await page.request.post(`/api/v1/envelopes/${envelopes[0]!.id}/launch`)).status()).toBe(
       409,
     );
     stub.complete(providerEnvelopeId);
@@ -277,9 +300,9 @@ test("files a real provider outcome while the connector and Contract refuse new 
     expect((await post()).status()).toBe(204);
     await page.reload();
     await expect(page.getByText("Signed", { exact: true })).toBeVisible();
-    const after = await (
+    const after = (await (
       await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
-    ).json();
+    ).json()) as EnvelopeResponse;
     expect(after.envelopes).toHaveLength(1);
     expect(after.envelopes[0]).toMatchObject({
       status: "signed",
@@ -293,6 +316,12 @@ test("files a real provider outcome while the connector and Contract refuse new 
       200,
     );
   } finally {
-    await stub.close();
+    try {
+      await page.request.post("/api/v1/signing-connectors/docusign/enable");
+      if (contractNumber !== undefined)
+        await page.request.post(`/api/v1/contracts/${contractNumber}/restore`);
+    } finally {
+      await stub.close();
+    }
   }
 });
