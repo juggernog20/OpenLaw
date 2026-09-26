@@ -1145,11 +1145,11 @@ test.describe("M15 demo path", () => {
         signingCard(senderPage).getByRole("button", { name: "Send for signature" }),
       ).toHaveCount(0);
 
-      // The card is this milestone's own surface now that it holds an
-      // envelope row (#48, DES-011).
+      // The Signatures card is this milestone's own surface (#48,
+      // DES-011).
       expect(
         await reportAxeViolations(senderPage, testInfo, "m15-signing-card", {
-          include: 'section[aria-labelledby="contract-approvals-heading"]',
+          include: 'section[aria-labelledby="contract-signatures-heading"]',
         }),
       ).toEqual([]);
 

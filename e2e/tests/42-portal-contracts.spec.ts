@@ -111,13 +111,17 @@ test("Business Owner joins the team, and membership grants revocable Portal work
     await expect(businessOwner).toHaveAttribute("title", owner.displayName);
     await expect(legalOwner).toHaveAttribute("title", "Unassigned");
     await expect.poll(async () => (await portal.request.get(portalPath)).status()).toBe(200);
+    // The two owners have their own Owners section above the Fields
+    // rows, Legal Owner first. Our entity keeps its full width below them.
+    const owners = page.getByRole("region", { name: "Owners", exact: true });
+    await expect(owners.getByRole("button", { name: "Legal Owner", exact: true })).toBeVisible();
+    await expect(owners.getByRole("button", { name: "Business Owner", exact: true })).toBeVisible();
     const businessBox = await businessOwner.boundingBox();
     const legalBox = await legalOwner.boundingBox();
     const entityBox = await page.getByLabel("Our entity", { exact: true }).boundingBox();
-    expect(businessBox!.y).toBeGreaterThan(legalBox!.y);
-    // The Form Rows draw first, in Form order (DD-028), and the two owners
-    // after them. Our entity keeps its full width.
-    expect(entityBox!.y).toBeLessThan(legalBox!.y);
+    expect(businessBox!.y > legalBox!.y || businessBox!.x > legalBox!.x).toBe(true);
+    expect(entityBox!.y).toBeGreaterThan(legalBox!.y);
+    expect(entityBox!.y).toBeGreaterThan(businessBox!.y);
     expect(entityBox!.width).toBeGreaterThan(businessBox!.width * 1.5);
     expect((await portal.request.get(`/api/v1/contracts/${contract.number}`)).status()).toBe(403);
     const detail = await portal.request.get(portalPath);
