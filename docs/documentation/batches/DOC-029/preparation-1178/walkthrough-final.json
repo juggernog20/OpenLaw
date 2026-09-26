@@ -1,0 +1,43 @@
+{
+  "reviewer": "Independent root agent, not the guide author",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "result": "pass",
+  "sourceCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+  "imageId": "sha256:5e44c1cd97b994c9fdefe9015bc6e92cfb1d38ce87c7c1bed70e27340449324d",
+  "observedAt": "2026-09-26T10:48:39.491372+00:00",
+  "articleHashes": {
+    "configure-signing": "3b0a86e23593c41c631ff7e38aa6e586a3e6ef47332b798010fbf0c4af9ed572",
+    "electronic-signing": "c157460d1d0b7f5cdc90cb0cbd31ff9358e9108d9b87373d8f2fa34c2b208ba6"
+  },
+  "environment": "Separate built stand-in localhost3218; fictional C-2, two-page Version1; no real provider",
+  "observations": [
+    {
+      "result": "pass",
+      "actual": "Entering Signatures focuses H2 contract-signatures-heading. Prepare Envelope opens dialog with focus envelope-version. Cancel restores focus to Prepare Envelope."
+    },
+    {
+      "result": "pass",
+      "actual": "At390x844 browser viewport/appCSS355width, pagewidth355 anddialogwidth354.55. Two fictional Signer inputs and Cancel/Continue fit. No document horizontal overflow; Envelope table has its own keyboard-focusable scroller."
+    },
+    {
+      "result": "pass",
+      "actual": "Continue opens stand-in editor, saved fictional field returns to Draft\u2014not sent with Not sent and Prepared by original preparer. Return focuses H2 Signatures, visibly outlined."
+    },
+    {
+      "result": "pass",
+      "actual": "Tab from returned heading reaches table scroll container; next Tab reaches Resume in DocuSign. Resume retains Final walkthrough field. Save and close returns focus to H2 Signatures again."
+    }
+  ],
+  "artifacts": [
+    "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-narrow.png",
+    "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-return.png"
+  ],
+  "resolves": ["Cancel focus BODY on51b291f9", "Provider stand-in return focus BODY on51b291f9"],
+  "limitations": [
+    "Independent agent walkthrough, not a human user study.",
+    "All editor actions used a synthetic provider. No native DocuSign restrictions, real fields, Send Later, Discard, delivery or remote session behavior is proved.",
+    "Live lab remains51b291f9 pending owner credential entry and two controlled inboxes.",
+    "This focused rewalk covers guide preparation/resume and corrected focus/narrow behavior; does not claim a full new completion/erasure/connector walkthrough."
+  ]
+}

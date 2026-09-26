@@ -1,15 +1,15 @@
 {
   "articleId": "electronic-signing",
   "contentSha256": "c157460d1d0b7f5cdc90cb0cbd31ff9358e9108d9b87373d8f2fa34c2b208ba6",
-  "appCommit": "51b291f9c25f29e020a2a76635bd30aec6ff1303",
-  "buildId": "app sha256:ec341471280077a9f25dfb496d538f6e835706da554ab0f045c6aa394ea24755; engine sha256:b5292e877ba6c2dde9c84888a5bd6b8a726f314f20242ab661a9c3ad9ac10cce",
-  "environment": "openlaw-docs-3f69f4a6-signing-live",
+  "appCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+  "buildId": "stand-in app sha256:5e44c1cd97b994c9fdefe9015bc6e92cfb1d38ce87c7c1bed70e27340449324d; real-provider lab remains 51b291f9c25f29e020a2a76635bd30aec6ff1303",
+  "environment": "openlaw-1178 stand-in for final local walkthrough; openlaw-docs-3f69f4a6-signing-live for blocked live acceptance",
   "author": "#1178 implementation agent",
   "technicalReviewer": "#1178 implementation agent, source inspection only",
   "walkthroughReviewer": "Independent root agent, not the guide author",
   "reviewerKind": "agent",
   "verifiedAt": null,
-  "reviewedAt": "2026-09-26T10:32:14.180366+00:00",
+  "reviewedAt": "2026-09-26T11:02:34.224419+00:00",
   "status": "blocked",
   "sources": [
     "docs/user-guides/electronic-signing.md",
@@ -18,7 +18,9 @@
     "apps/api/src/modules/contract-envelopes/launch.ts",
     "apps/api/src/lib/signing/docusign.ts",
     "apps/api/src/pipeline/reconciliation.ts",
-    "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-initial.json"
+    "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-initial.json",
+    "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-final.json",
+    "docs/documentation/batches/DOC-029/preparation-1178/theme-observation.json"
   ],
   "scenarios": [
     {
@@ -178,6 +180,51 @@
         "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-initial.json",
         "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-narrow.png",
         "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-return-narrow.png"
+      ],
+      "supersededBy": "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-final.json"
+    },
+    {
+      "id": "V-C17-accessibility-final",
+      "coverage": ["C17"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "appCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+      "prerequisites": [
+        "Independent root agent followed the same guide hashes on the separate built stand-in at localhost:3218.",
+        "Fictional C-2, two-page Version 1 and two fictional Signers; no real provider."
+      ],
+      "expected": "Recheck the corrected Cancel and provider-return focus behavior, preparation/Resume instructions and narrow layout.",
+      "actual": "Cancel restored focus to Prepare Envelope. Provider return focused the Signatures heading; Tab reached the table scroller and then Resume. Resume retained the saved field, and the second return again focused Signatures. At a 390x844 viewport with app zoom, all dialog controls fit the 355 CSS px page; the Envelope table used its own keyboard-focusable horizontal scroller. This resolves the two earlier focus failures. It does not verify native DocuSign behavior or a full new completion/erasure/connector walkthrough.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-final.json",
+        "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-narrow.png",
+        "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-final-return.png",
+        "docs/documentation/batches/DOC-029/preparation-1178/theme-observation.json"
+      ]
+    },
+    {
+      "id": "V-C17-local-tests",
+      "coverage": ["C17"],
+      "role": "administrator",
+      "method": "automated-test",
+      "appCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+      "prerequisites": [
+        "Final application source fixed throughout validation. API tests used the shared queue, root Docker and openlaw-doc-engine:test; no live provider.",
+        "Built browser journeys used the separate openlaw-1178 stand-in stack."
+      ],
+      "expected": "Keep HTTP, provider-contract, migration and browser regressions passing, including default-off configuration and corrected focus.",
+      "actual": "All 302 API files and 4,636 tests passed across four complete shards, including provider contracts and the preparation, launch and history migration rehearsals. All 154 web files and 2,649 tests passed. Document engine: 5 tests; CI tools: 79 tests. All 8 built signing journeys for #1171, #1172, #1173, #1175, #1176 and #1177 passed on the final app image. One earlier monolithic run was interrupted and is not counted. These results verify local handling and do not prove native provider controls, delivery, session lifetime or real Connect.",
+      "result": "pass",
+      "evidence": [
+        "apps/api/src/lib/signing/config.test.ts",
+        "apps/api/src/lib/signing/docusign.test.ts",
+        "apps/api/src/envelope-preparation-migration.test.ts",
+        "apps/api/src/envelope-launch-migration.test.ts",
+        "apps/api/src/envelope-history-migration.test.ts",
+        "apps/web/src/routes/contract-record-envelopes.test.tsx",
+        "e2e/tests/1172-envelope-launch.spec.ts",
+        "scripts/documentation/lab-options.test.mjs"
       ]
     }
   ],
@@ -185,7 +232,9 @@
     "No owner-entered DocuSign credentials or two controlled Signer inboxes are available. No live preparation behavior has been observed.",
     "The prior DOC-029 developer-account journey exercised legacy direct send, not native preparation. Prior evidence is retained verbatim below.",
     "No real signed Connect delivery or recovery is claimed. Issue #888 remains open.",
-    "Production entitlements and native editor restrictions remain account-specific. The new interface remains off by default."
+    "Production entitlements and native editor restrictions remain account-specific. The new interface remains off by default.",
+    "Final local browser source is 648f99ec. The stable live credential-entry lab stays on 51b291f9. The intervening app change only restores keyboard focus; no provider, launch or authorization code changed. No live provider evidence is claimed from either build.",
+    "Original capture themes were unrecorded. Later independent read-only tab-load and open/Cancel recaptures explicitly observed data-theme=light at 390x844 browser / 355 CSS px. The latter checked two fictional Signers, fit and focus return without Continue or a provider call. These are not another provider return or an all-theme check."
   ],
   "publicationBlockers": [
     "#1178: owner-entered developer credentials and two controlled inboxes are required before live preparation acceptance. Keep #1178 and #1170 open and the production default off."
