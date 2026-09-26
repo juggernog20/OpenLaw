@@ -87,6 +87,7 @@ export {
   parseLiveEvent,
   type BellLiveEvent,
   type InboxLiveEvent,
+  type McpLiveEvent,
   type LiveEvent,
   type LiveEventKind,
   type LiveEventVisibility,
@@ -701,6 +702,7 @@ export * from "./search-fields.js";
 export {
   API_KEY_PROBLEMS,
   MCP_TOOLSETS,
+  MCP_DEFAULT_TOOLSET_CEILING,
   MCP_OAUTH_UNAVAILABLE_PROBLEM,
   type McpToolset,
 } from "./mcp.js";

@@ -76,7 +76,7 @@ import { FilterChoices, validDateRanges } from "../../lib/record-filters.js";
 import { FormNodeSchema } from "../../lib/type-form-routes.js";
 import { AnalysisRunSchema } from "../contract-analysis/routes.js";
 import { OriginalIntakeSchema } from "../requests/original-intake.js";
-import { CONTRACT_RENEWAL_VEHICLES } from "./create.js";
+import { CONTRACT_RENEWAL_VEHICLES } from "./renewal-vehicle.js";
 
 /**
  * How many contracts one read answers (CTR-024).

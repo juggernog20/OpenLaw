@@ -366,8 +366,12 @@ export function SettingsMcpPage() {
       >
         <div className="grid grid-cols-1 gap-3 @lg/page:grid-cols-3">
           {MCP_TOOLSETS.map((id) => (
-            <label key={id} className="flex items-center gap-2">
+            <label key={id} className="flex items-start gap-2">
               <Checkbox
+                aria-label={intl.formatMessage(TOOLSET_MESSAGES[id])}
+                aria-describedby={
+                  id === "team" || id === "administration" ? `mcp-${id}-caption` : undefined
+                }
                 checked={policy.toolsetCeiling.includes(id)}
                 disabled={busy}
                 onCheckedChange={(checked) =>
@@ -378,7 +382,22 @@ export function SettingsMcpPage() {
                   })
                 }
               />
-              {intl.formatMessage(TOOLSET_MESSAGES[id])}
+              <span>
+                {intl.formatMessage(TOOLSET_MESSAGES[id])}
+                {id === "team" && (
+                  <span id="mcp-team-caption" className="block text-xs text-muted">
+                    <FormattedMessage id="settings.mcp.teamCaption" defaultMessage="Starts off." />
+                  </span>
+                )}
+                {id === "administration" && (
+                  <span id="mcp-administration-caption" className="block text-xs text-muted">
+                    <FormattedMessage
+                      id="settings.mcp.administrationCaption"
+                      defaultMessage="Starts off. Administrators only."
+                    />
+                  </span>
+                )}
+              </span>
             </label>
           ))}
         </div>
@@ -467,6 +486,7 @@ export function SettingsMcpPage() {
             enabled: policy.enabled,
             groupEnabled: policy.legalApiKeysEnabled,
             toolsetCeiling: policy.toolsetCeiling,
+            toolsets: [],
             readOnly: policy.readOnly,
             apiKeyLifetimeDays: policy.apiKeyLifetimeDays,
           },

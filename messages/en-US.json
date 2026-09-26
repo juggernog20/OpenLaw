@@ -1025,6 +1025,9 @@
   "apiKeys.newTab": {
     "defaultMessage": "(opens in a new tab)"
   },
+  "apiKeys.noToolsets": {
+    "defaultMessage": "No Toolsets are available for your account. Ask an Administrator to enable a Toolset you can use."
+  },
   "apiKeys.note": {
     "defaultMessage": "Note (Optional)"
   },
@@ -11543,6 +11546,9 @@
   "settings.matters.title": {
     "defaultMessage": "Matters"
   },
+  "settings.mcp.administrationCaption": {
+    "defaultMessage": "Starts off. Administrators only."
+  },
   "settings.mcp.apiKeys": {
     "defaultMessage": "API keys"
   },
@@ -11644,6 +11650,9 @@
   },
   "settings.mcp.serverAddress": {
     "defaultMessage": "Server address"
+  },
+  "settings.mcp.teamCaption": {
+    "defaultMessage": "Starts off."
   },
   "settings.mcp.toolCalls": {
     "defaultMessage": "Tool calls in the last day"

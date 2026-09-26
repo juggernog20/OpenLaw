@@ -30,6 +30,7 @@ import {
   type AiPreset,
   type AiProtocol,
   type Executor,
+  type Db,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { AI_PRESET_DEFINITIONS, AI_PRESET_OPTIONS } from "../../lib/ai/presets.js";
@@ -206,16 +207,6 @@ async function lockedConnector(tx: Executor): Promise<AiConnector> {
 }
 
 export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
-  async function envelope(
-    row: AiConnector | undefined,
-  ): Promise<z.infer<typeof ConnectorEnvelope>> {
-    const keys = await app.db
-      .select()
-      .from(aiSavedKeys)
-      .orderBy(asc(aiSavedKeys.createdAt), asc(aiSavedKeys.id));
-    return { connector: readConnector(row, keys), presets: AI_PRESET_OPTIONS };
-  }
-
   async function stored(): Promise<AiConnector | undefined> {
     const [row] = await app.db.select().from(aiConnector).limit(1);
     return row;
@@ -232,7 +223,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: ConnectorEnvelope, default: problemResponse },
       },
     },
-    async () => envelope(await stored()),
+    () => readAiSettings(app.db),
   );
 
   app.patch(
@@ -271,7 +262,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return row;
       });
-      return envelope(saved);
+      return readAiEnvelope(app.db, saved);
     },
   );
 
@@ -311,7 +302,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return row;
       });
-      return envelope(saved);
+      return readAiEnvelope(app.db, saved);
     },
   );
 
@@ -433,7 +424,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         return row;
       });
-      return envelope(saved);
+      return readAiEnvelope(app.db, saved);
     },
   );
 
@@ -538,7 +529,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return row;
       });
-      return envelope(saved);
+      return readAiEnvelope(app.db, saved);
     },
   );
 
@@ -572,7 +563,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return row;
       });
-      return envelope(saved);
+      return readAiEnvelope(app.db, saved);
     },
   );
 
@@ -617,7 +608,7 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           },
         });
       });
-      return envelope(await stored());
+      return readAiEnvelope(app.db, await stored());
     },
   );
 
@@ -649,7 +640,23 @@ export const aiConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         await tx.delete(aiConnector).where(eq(aiConnector.id, current.id));
       });
-      return envelope(undefined);
+      return readAiEnvelope(app.db, undefined);
     },
   );
 };
+
+export async function readAiEnvelope(
+  db: Db,
+  row: AiConnector | undefined,
+): Promise<z.infer<typeof ConnectorEnvelope>> {
+  const keys = await db
+    .select()
+    .from(aiSavedKeys)
+    .orderBy(asc(aiSavedKeys.createdAt), asc(aiSavedKeys.id));
+  return { connector: readConnector(row, keys), presets: AI_PRESET_OPTIONS };
+}
+
+export async function readAiSettings(db: Db) {
+  const [row] = await db.select().from(aiConnector).limit(1);
+  return readAiEnvelope(db, row);
+}

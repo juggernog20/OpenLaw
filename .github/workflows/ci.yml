@@ -221,8 +221,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Keep a populated M40 install in the gate so M41 migrations run over API keys.
-        baseline: ["", "b1437fa8"]
+        # Keep M40 API keys and M41 OAuth grants in the migration gate.
+        baseline: ["", "b1437fa8", "ee736148"]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -271,7 +271,7 @@ jobs:
       # One copy of the script drives both versions — see its own note on
       # why the seed may only use API surface the baseline already has.
       - name: Keep the fidelity script across the checkout
-        run: cp e2e/scripts/upgrade-fidelity.mjs "$RUNNER_TEMP/upgrade-fidelity.mjs"
+        run: cp e2e/scripts/upgrade-fidelity.mjs e2e/scripts/upgrade-mcp.mjs "$RUNNER_TEMP/"
 
       - name: Pick the baseline and check it out
         id: baseline

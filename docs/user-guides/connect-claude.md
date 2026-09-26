@@ -33,6 +33,51 @@ Open `/mcp`, select `openlaw`, and follow its authentication prompt. Complete th
 
 Claude Code has its own published identity, `https://claude.ai/oauth/claude-code-client-metadata`. The browser returns to a loopback callback on your device. The browser and Claude Code must both reach OpenLaw and trust its certificate. The OpenLaw server must be able to fetch the published identity. No API key header or dynamic client registration is needed.
 
+## Attach a record and run a prompt
+
+In Claude Code, use the connection named `openlaw` from the steps above.
+Type `@` to list resources, or enter a record address directly:
+
+```text
+Summarize @openlaw:openlaw://contracts/C-12
+```
+
+Replace `C-12` with a Contract you can open. The Contracts Toolset must be in
+your grant. Claude Code reads the resource and adds its content to the conversation.
+See the [address list](connect-headless-client.md#read-resources-and-get-prompts)
+for Matters, Requests, Entities, Knowledge Items and Document Versions.
+The resource keeps the same record access as the matching Tool.
+
+Type `/` to find the two OpenLaw prompts. Run either command:
+
+```text
+/openlaw:triage_inbox
+/openlaw:summarize_record openlaw://contracts/C-12
+```
+
+The triage prompt requires the Requests Toolset and a Legal User account.
+It reads up to 25 Requests by default. Add a limit from 1 to 100 after the command
+to change that number, such as `/openlaw:triage_inbox 10`.
+It proposes a Disposition, type, urgency and assignee for each Request.
+It asks for your confirmation before assignments or comments.
+Those actions need the relevant Toolsets and Write scope.
+For conversion, it gives you a link to the Request. Prepare any Conversion draft
+and submit the Convert dialog in OpenLaw yourself.
+
+The summary prompt needs one record address. Use a Contract, Matter, Request,
+Entity or Knowledge Item that your grant and account can read.
+It summarizes the embedded record and identifies missing information.
+It does not change the record. Business Users can use it within their Portal access.
+See [Claude Code's resources and prompts](https://code.claude.com/docs/en/mcp#use-mcp-resources).
+
+In claude.ai, open **+ → Connectors** and the OpenLaw attachment menu.
+The menu shows the resources and prompts available through your connection.
+The views include Inbox, My Tasks and vocabulary when your grant permits them.
+Individual records use addresses, so the menu is not a list of every record.
+Choose a resource or prompt to add it to the conversation.
+See the [MCP guide to remote connections](https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-remote-servers).
+If your Client does not show an item, use the matching Tool or the Claude Code steps above.
+
 ## Choose access on the consent page
 
 1. Sign in to OpenLaw if asked. Use your usual password, magic link or SSO. A Business User signs in through the Portal. Sign-in returns you to the consent page.

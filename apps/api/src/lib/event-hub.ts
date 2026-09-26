@@ -27,7 +27,10 @@ export const DEFAULT_MAX_SUBSCRIPTIONS_PER_USER = 5;
  */
 export const DEFAULT_MAX_SUBSCRIPTIONS = 500;
 
-/** The process cap is reached. The route answers 503 with Retry-After. */
+/**
+ * The process cap is reached. The SPA route answers 503 with Retry-After.
+ * The MCP route answers the SDK's JSON-RPC -32603 "Subscription limit reached".
+ */
 export class EventHubFullError extends Error {
   constructor() {
     super("This process has no room for another live event stream.");
@@ -43,11 +46,13 @@ export interface EventHubLimits {
 export interface EventConnectionScope {
   userId: string;
   role: UserRole;
-  record?: {
+  /** MCP policy events are internal to MCP streams. */
+  mcp?: boolean;
+  record?: readonly {
     entityType: LiveRecordEntityType;
     entityId: string;
     tiers: readonly LiveEventVisibility[];
-  };
+  }[];
 }
 
 export interface EventHub {
@@ -82,16 +87,21 @@ function isMemberPlus(role: UserRole): boolean {
 
 function addressedTo(event: LiveEvent, scope: EventConnectionScope): boolean {
   switch (event.kind) {
+    case "mcp":
+      return scope.mcp === true;
     case "bell":
       return event.userId === scope.userId;
     case "inbox":
       return isMemberPlus(scope.role);
     case "record":
-      return scope.record
-        ? scope.record.entityType === event.entityType &&
-            scope.record.entityId === event.entityId &&
-            scope.record.tiers.includes(event.visibility)
-        : false;
+      return (
+        scope.record?.some(
+          (record) =>
+            record.entityType === event.entityType &&
+            record.entityId === event.entityId &&
+            record.tiers.includes(event.visibility),
+        ) ?? false
+      );
   }
 }
 

@@ -1687,6 +1687,83 @@
       ],
       "requiredMethods": ["container-operation", "live-provider-check"],
       "status": "pending"
+    },
+    {
+      "id": "V-M42-C59",
+      "coverage": ["C59"],
+      "articles": ["connect-claude"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M42 instance, fictional accounts with reached Contracts and Requests, and the Claude accounts the guide requires."
+      ],
+      "actions": [
+        "In Claude Code, attach a Contract with @openlaw:openlaw://contracts/{number}, then run /openlaw:triage_inbox and /openlaw:summarize_record.",
+        "In claude.ai, open the OpenLaw attachment menu and add the Inbox resource and the summary prompt.",
+        "Search for triage_inbox and read Connect Claude through Guide; compare the text with Help."
+      ],
+      "expectedResults": [
+        "The attached resource and the summary follow the person's grant and record access. Triage proposes a Disposition, type, urgency and assignee and waits for confirmation before it assigns or comments.",
+        "Conversion ends at a link to the Request; the person completes the Convert dialog in OpenLaw."
+      ],
+      "negativeChecks": [
+        "A Business User sees no triage prompt. A record outside the grant or reach is refused by address.",
+        "A Contract address is refused when the Contracts Toolset is not in the grant."
+      ],
+      "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M42-C58",
+      "coverage": ["C58"],
+      "articles": ["connect-headless-client"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M42 instance, an approved API key for each account type and a script Client on Streamable HTTP."
+      ],
+      "actions": [
+        "Call resources/templates/list, resources/list and resources/read for each address in the table.",
+        "Call prompts/list, then prompts/get for triage_inbox with a limit and for summarize_record with a record address and with a kind and number.",
+        "Open subscriptions/listen, change the Toolset ceiling and update a subscribed record."
+      ],
+      "expectedResults": [
+        "Each read returns the content the matching Tool returns; Document Version text is plain text with a continuation cursor when more text exists.",
+        "Each prompt returns instructions and an embedded resource; each read or get counts once against the rate limit.",
+        "The stream receives list_changed and resources/updated notifications for reached records only."
+      ],
+      "negativeChecks": [
+        "An address with a query, fragment or extra path segment is refused. A limit outside 1 to 100 is refused.",
+        "A revoked key closes the stream and the next call is unauthorized."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M42-MCP",
+      "coverage": ["C57"],
+      "articles": ["configure-mcp"],
+      "roles": ["administrator"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M42 instance upgraded from M41 with every Toolset in the ceiling, fictional accounts of each type, and one modern and one legacy Client connected."
+      ],
+      "actions": [
+        "Confirm Team and Administration are unchecked after the upgrade; select each and save.",
+        "Request a key and open OAuth consent as a Legal Team Member and as a Business User; note the Toolsets offered.",
+        "Change the ceiling and Read-only while the modern Client and the legacy Client are connected."
+      ],
+      "expectedResults": [
+        "The captions read Starts off. and Starts off. Administrators only. Settings saved appears and the Audit log records each change.",
+        "A Legal Team Member is offered Team but not Administration; a Business User is offered neither. Nothing is pre-selected.",
+        "The modern Client reloads its lists without reconnecting; the legacy Client shows its old list until refreshed, and a call for a removed Toolset is refused."
+      ],
+      "negativeChecks": [
+        "Enabling a ceiling row does not add it to an existing key or grant.",
+        "Removing a Toolset from the ceiling blocks its Tools on an existing key at once."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "pending"
     }
   ]
 }

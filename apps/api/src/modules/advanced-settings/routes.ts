@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import type { Db } from "@openlaw/db";
 import { randomUUID } from "node:crypto";
 import { Readable } from "node:stream";
 import { orgSettings, runtimeStatus, sql, desc, gt } from "@openlaw/db";
@@ -108,41 +109,7 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
       }
       return { candidate, env };
     }
-    async function state(section: SectionId) {
-      const saved = await readSettings(app.db);
-      const desired = effectiveEnvironment(runtime.baseline, saved);
-      const active = runtime.active;
-      const keys =
-        section === "storage" ? [...sections.storage, "STORAGE_PATH"] : sections[section];
-      return {
-        version: saved.version,
-        restartRequired: keys.some((key) => desired[key] !== (active[key] ?? "")),
-        fields: keys.map((key) => ({
-          key,
-          secret: secrets.has(key),
-          configured: Boolean(desired[key]),
-          value: secrets.has(key) ? "" : (desired[key] ?? ""),
-          activeValue: secrets.has(key) ? "" : (active[key] ?? ""),
-          // A pinned key reports the deployment as its source even when
-          // an older save left a value behind: that value is ignored.
-          source: pinned.has(key)
-            ? ("deployment" as const)
-            : key in saved.values
-              ? ("app" as const)
-              : ("default" as const),
-          locked:
-            key === "STORAGE_PATH" ||
-            pinned.has(key) ||
-            Boolean(
-              (desired.S3_BUCKET && ["S3_BUCKET", "S3_ENDPOINT"].includes(key)) ||
-              (desired.AZURE_BLOB_CONTAINER &&
-                ["AZURE_BLOB_CONTAINER", "AZURE_BLOB_ACCOUNT", "AZURE_BLOB_ENDPOINT"].includes(
-                  key,
-                )),
-            ),
-        })),
-      };
-    }
+
     app.get(
       "/advanced-settings/:section",
       {
@@ -154,7 +121,7 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
           response: { 200: State, default: problemResponse },
         },
       },
-      async (request) => state(request.params.section),
+      async (request) => readAdvancedSettings(app.db, runtime, request.params.section),
     );
     app.put(
       "/advanced-settings/:section",
@@ -219,7 +186,7 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
             });
           }
         });
-        return state(request.params.section);
+        return readAdvancedSettings(app.db, runtime, request.params.section);
       },
     );
     app.post(
@@ -343,5 +310,39 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
         };
       },
     );
+  };
+}
+
+export async function readAdvancedSettings(db: Db, runtime: AdvancedRuntime, section: SectionId) {
+  const pinned = pinnedKeys(runtime.baseline);
+  const saved = await readSettings(db);
+  const desired = effectiveEnvironment(runtime.baseline, saved);
+  const active = runtime.active;
+  const keys = section === "storage" ? [...sections.storage, "STORAGE_PATH"] : sections[section];
+  return {
+    version: saved.version,
+    restartRequired: keys.some((key) => desired[key] !== (active[key] ?? "")),
+    fields: keys.map((key) => ({
+      key,
+      secret: secrets.has(key),
+      configured: Boolean(desired[key]),
+      value: secrets.has(key) ? "" : (desired[key] ?? ""),
+      activeValue: secrets.has(key) ? "" : (active[key] ?? ""),
+      // A pinned key reports the deployment as its source even when
+      // an older save left a value behind: that value is ignored.
+      source: pinned.has(key)
+        ? ("deployment" as const)
+        : key in saved.values
+          ? ("app" as const)
+          : ("default" as const),
+      locked:
+        key === "STORAGE_PATH" ||
+        pinned.has(key) ||
+        Boolean(
+          (desired.S3_BUCKET && ["S3_BUCKET", "S3_ENDPOINT"].includes(key)) ||
+          (desired.AZURE_BLOB_CONTAINER &&
+            ["AZURE_BLOB_CONTAINER", "AZURE_BLOB_ACCOUNT", "AZURE_BLOB_ENDPOINT"].includes(key)),
+        ),
+    })),
   };
 }
