@@ -6562,11 +6562,27 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       }
       // The Administrator's erasure. It answers the record's whole
       // paper, because the instrument may have gone with it.
-      const erased = /^\/api\/v1\/documents\/([^/]+)$/.exec(pathname);
+      const erased = /^\/api\/v1\/documents\/([^/]+)\/versions\/([^/]+)$/.exec(pathname);
       if (erased && call.method === "DELETE") {
         writes.push({ url: `${pathname}:DELETE`, body: call.body });
         if (options.removalFails) return problem(400, options.removalFails);
-        current = current.filter((row) => row.id !== erased[1]);
+        current = current.flatMap((row) => {
+          if (row.id !== erased[1]) return [row];
+          const remaining = (row.versions as ReturnType<typeof version>[]).filter(
+            (version) => version.id !== erased[2],
+          );
+          return remaining.length
+            ? [
+                {
+                  ...row,
+                  versions: remaining.map((version, index) => ({
+                    ...version,
+                    isCurrent: index === remaining.length - 1,
+                  })),
+                },
+              ]
+            : [];
+        });
         return json(200, { documents: paper(false), nextCursor: null });
       }
       // The executed pin (CTR-014), set and cleared at the document's
@@ -7425,7 +7441,34 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     ).not.toBeInTheDocument();
   });
 
-  it("requires delete once to delete the selected documents", async () => {
+  it("deletes one historical version and preserves the document and other rounds", async () => {
+    const api = documentsApi([CHAIN]);
+    stubApi({ signedIn: ADMIN, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+    const section = await documentsSection();
+    await user.click(
+      within(section).getByRole("button", { name: /Show.*versions|Show.*history|Expand/i }),
+    );
+    await user.click(
+      within(section).getByRole("button", { name: `Actions for version 2 of ${CHAIN.title}` }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Delete version" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete version 2?" });
+    expect(within(dialog).getByText("All other versions will remain.")).toBeVisible();
+    await user.type(within(dialog).getByLabelText('Type "delete" to confirm'), "delete");
+    await user.click(
+      within(dialog).getByRole("button", { name: `Delete version 2 of ${CHAIN.title}` }),
+    );
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(api.writes[0]).toMatchObject({
+      url: `/api/v1/documents/${CHAIN.id}/versions/ver-b:DELETE`,
+    });
+    expect(within(section).queryByText("round_2.docx")).not.toBeInTheDocument();
+    expect(within(section).getByText(CHAIN.title)).toBeInTheDocument();
+  });
+
+  it("requires confirmation to delete selected current versions", async () => {
     const api = documentsApi([DRAFT, THEIRS]);
     stubApi({ signedIn: ADMIN, extra: api.handler });
     renderAt("/contracts/42/documents");
@@ -7433,16 +7476,22 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const section = await documentsSection();
     await user.click(within(section).getByRole("checkbox", { name: `Select ${DRAFT.title}` }));
     await user.click(within(section).getByRole("checkbox", { name: `Select ${THEIRS.title}` }));
-    await user.click(within(section).getByRole("button", { name: "Delete" }));
+    await user.click(within(section).getByRole("button", { name: "Delete versions" }));
     const dialog = await screen.findByRole("dialog");
-    const confirm = within(dialog).getByRole("button", { name: "Delete" });
+    const confirm = within(dialog).getByRole("button", { name: "Delete versions" });
     expect(confirm).toBeDisabled();
     await user.type(within(dialog).getByLabelText('Type "delete" to confirm'), "delete");
     await user.click(confirm);
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
     expect(api.writes.filter((write) => write.url.endsWith(":DELETE"))).toEqual([
-      { url: `/api/v1/documents/${DRAFT.id}:DELETE`, body: { confirmTitle: DRAFT.title } },
-      { url: `/api/v1/documents/${THEIRS.id}:DELETE`, body: { confirmTitle: THEIRS.title } },
+      {
+        url: `/api/v1/documents/${DRAFT.id}/versions/${DRAFT.versions[0]!.id}:DELETE`,
+        body: { confirmTitle: DRAFT.title },
+      },
+      {
+        url: `/api/v1/documents/${THEIRS.id}/versions/${THEIRS.versions[0]!.id}:DELETE`,
+        body: { confirmTitle: THEIRS.title },
+      },
     ]);
     expect(within(section).queryByRole("checkbox", { name: /^Select / })).not.toBeInTheDocument();
   });
@@ -7454,18 +7503,20 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toContain("Delete");
+    expect(await menuVerbs(user, section, "Orion_MSA_2026_draft.docx")).toContain("Delete version");
     await user.keyboard("{Escape}");
-    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete");
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete version");
 
     const dialog = await screen.findByRole("dialog");
     // The consequence before the verb: the chain and the stored files
     // go, and there is no undo.
     expect(
-      within(dialog).getByText(/Orion_MSA_2026_draft.docx and its 1 version are removed/),
+      within(dialog).getByText(
+        /Version 1 of Orion_MSA_2026_draft.docx and its stored file will be removed/,
+      ),
     ).toBeVisible();
     const confirm = within(dialog).getByRole("button", {
-      name: "Delete Orion_MSA_2026_draft.docx",
+      name: "Delete version 1 of Orion_MSA_2026_draft.docx",
     });
     expect(confirm).toBeDisabled();
 
@@ -7480,7 +7531,7 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     await waitFor(() => expect(api.writes).toHaveLength(1));
     // The server still checks the displayed title to catch a concurrent rename.
     expect(api.writes[0]).toEqual({
-      url: "/api/v1/documents/doc-1:DELETE",
+      url: "/api/v1/documents/doc-1/versions/ver-1:DELETE",
       body: { confirmTitle: "Orion_MSA_2026_draft.docx" },
     });
     await waitFor(() =>
@@ -7505,12 +7556,12 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     const user = userEvent.setup();
 
     const section = await documentsSection();
-    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete");
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Delete version");
 
     const dialog = await screen.findByRole("dialog");
     await user.type(within(dialog).getByLabelText('Type "delete" to confirm'), "delete");
     await user.click(
-      within(dialog).getByRole("button", { name: "Delete Orion_MSA_2026_draft.docx" }),
+      within(dialog).getByRole("button", { name: "Delete version 1 of Orion_MSA_2026_draft.docx" }),
     );
 
     expect(

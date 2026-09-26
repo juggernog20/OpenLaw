@@ -1060,6 +1060,12 @@ type DocumentPayloads = {
   };
   "document.archived": { documentId: string; title: string };
   "document.restored": { documentId: string; title: string };
+  "document.version_deleted": {
+    documentId: string;
+    title: string;
+    versionId: string;
+    versionNumber: number;
+  };
   "document.hard_deleted": { documentId: string; title: string; versionCount: number };
   "document.confidentiality_set": { documentId: string; title: string };
   "document.confidentiality_cleared": { documentId: string; title: string };

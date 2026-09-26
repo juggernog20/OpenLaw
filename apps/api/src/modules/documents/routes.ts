@@ -25,7 +25,7 @@
  *
  * **Only a version's kind is correctable.** One PATCH updates that one
  * column. It cannot move the bytes, number, note, author, place in the
- * chain, or executed pin. There is no per-version DELETE (CTR-014).
+ * chain, or executed pin. DELETE removes only the named version.
  *
  * **The next version number is assigned under the owning contract's row
  * lock.** Two people uploading a revision at the same moment serialize
@@ -106,9 +106,8 @@
  * count, and nothing is destroyed — restore is one write, so a wrong
  * archive is a two-second fix. Hard delete is the lawful-erasure answer:
  * Administrator-only, whole-document, typed confirmation, and it takes
- * the version rows and the stored blobs with it. There is no per-version
- * delete, because a chain you can cut pieces out of is not negotiation
- * history.
+ * the version rows and the stored blobs with it. Version deletion removes
+ * one round; removing the last round also removes its document.
  *
  * **The activity and audit entries survive the erasure and name what was
  * deleted.** Entries hang off the owning contract, never off the
@@ -127,6 +126,7 @@
 import { DOCUMENT_TYPE_COLORS } from "@openlaw/shared";
 import {
   and,
+  or,
   asc,
   contracts,
   DOCUMENT_VERSION_KINDS,
@@ -161,7 +161,7 @@ import { assertConversionDocumentCanNarrow } from "../../lib/conversion-source-p
 import { copyStoredBlob } from "../../lib/copy-stored-blob.js";
 import { isComparableFormat } from "../../lib/doc-engine/engine.js";
 import { requireDocumentReader } from "../../lib/document-access.js";
-import { documentErasureBlobs } from "../../lib/document-erasure.js";
+import { documentErasureBlobs, versionErasureBlobs } from "../../lib/document-erasure.js";
 import {
   EmailUnreadableError,
   isEmail,
@@ -2544,6 +2544,105 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.delete(
+    "/documents/:documentId/versions/:versionId",
+    {
+      preHandler: requireAdministrator,
+      schema: {
+        operationId: "deleteDocumentVersion",
+        summary:
+          "Delete one document version and its files. Other versions are preserved. Deleting the last version removes the document. Requires Administrator access and the document title as confirmation.",
+        tags: ["documents"],
+        params: VersionParams,
+        body: HardDeleteBody,
+        response: { 200: HardDeleteResponse, default: problemResponse },
+      },
+    },
+    async (request) =>
+      app.db.transaction(async (tx) => {
+        const { documentId, versionId } = request.params;
+        const target = await reachedDocument(tx, request.user, documentId, true);
+        assertReachedDocument(target);
+        if (target.autoDocId)
+          throw httpError(
+            409,
+            "The template belongs to its Auto-Doc and cannot be removed separately.",
+          );
+        if (request.body.confirmTitle.trim() !== target.title.trim())
+          throw httpError(400, "Type the document's name exactly to delete this version.");
+        const erased = await versionErasureBlobs(tx, documentId, versionId);
+        if (!erased) throw httpError(404, "This document version was not found.");
+        const [dependent] = await tx
+          .select({ id: documentVersions.id })
+          .from(documentVersions)
+          .where(
+            or(
+              eq(documentVersions.comparedFromVersionId, versionId),
+              eq(documentVersions.comparedToVersionId, versionId),
+            ),
+          )
+          .limit(1);
+        if (dependent)
+          throw httpError(
+            409,
+            "A generated comparison version uses this version. Delete that comparison version first.",
+          );
+        const versions = await tx
+          .select({ id: documentVersions.id })
+          .from(documentVersions)
+          .where(eq(documentVersions.documentId, documentId));
+        const last = versions.length === 1;
+        await recordActivity(tx, {
+          entityType: target.owner.kind,
+          entityId: target.owner.value,
+          actorId: request.user.id,
+          action: "document.version_deleted",
+          visibility: RECORD_ACTIVITY_TIER,
+          payload: {
+            documentId,
+            title: target.title,
+            versionId,
+            versionNumber: erased.version.versionNumber,
+          },
+        });
+        if (erased.comparisonIds.length)
+          await tx
+            .delete(documentComparisons)
+            .where(inArray(documentComparisons.id, erased.comparisonIds));
+        if (last) {
+          await recordActivity(tx, {
+            entityType: target.owner.kind,
+            entityId: target.owner.value,
+            actorId: request.user.id,
+            action: "document.hard_deleted",
+            visibility: RECORD_ACTIVITY_TIER,
+            payload: { documentId, title: target.title, versionCount: 1 },
+          });
+          await tx.delete(documents).where(eq(documents.id, documentId));
+        } else {
+          await tx.delete(documentVersions).where(eq(documentVersions.id, versionId));
+          await tx
+            .update(documents)
+            .set({ updatedAt: new Date() })
+            .where(eq(documents.id, documentId));
+        }
+        for (const fileRef of erased.blobs) await app.storage.delete(fileRef);
+        return paperOf(
+          tx,
+          request.user,
+          {
+            id: target.owner.value,
+            primaryDocumentId:
+              last && target.primaryDocumentId === documentId ? null : target.primaryDocumentId,
+          },
+          target.owner.kind,
+          false,
+          undefined,
+          undefined,
+        );
+      }),
+  );
+
+  app.delete(
     "/documents/:documentId",
     {
       preHandler: requireAdministrator,
@@ -2555,10 +2654,7 @@ export const documentsRoutes: FastifyPluginAsyncZod = async (app) => {
           "under it, every stored blob those versions name, and " +
           "everything the pipeline derived from them: the extracted " +
           "text and the display renditions, rows and blobs alike. It " +
-          "is whole-document by design: there " +
-          "is no route that deletes one version, because a chain " +
-          "somebody can cut pieces out of is not negotiation history " +
-          "(DOC-001), so the whole document goes or nothing does. It " +
+          "is whole-document erasure. Use the version DELETE route to remove only one round. It " +
           "takes a typed confirmation: confirmTitle must be the " +
           "document's own title, exactly. It is the Administrator's " +
           "alone; every other role is refused 403, a Contributor and a " +

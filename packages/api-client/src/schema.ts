@@ -5740,7 +5740,8 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    delete?: never;
+    /** Delete one document version and its files. Other versions are preserved. Deleting the last version removes the document. Requires Administrator access and the document title as confirmation. */
+    delete: operations["deleteDocumentVersion"];
     options?: never;
     head?: never;
     /** Correct one version's Document type (CTR-014, DOC-015). This is the only per-version update. It changes only the type and the kind that follows it: the bytes, number, note, author, order, and executed pin stay where they are. The target is a live type from the owning module's list, null for no type, or a hand-set kind that maps to the list's fixed row. A generated Version cannot be corrected because its kind records how the file was made. Appends document.version_type_changed on the owning record with the type names before and after (DD-017). Member+ may correct a type; a Contributor who reaches the record is refused 403 */
@@ -5757,7 +5758,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, every stored blob those versions name, and everything the pipeline derived from them: the extracted text and the display renditions, rows and blobs alike. It is whole-document by design: there is no route that deletes one version, because a chain somebody can cut pieces out of is not negotiation history (DOC-001), so the whole document goes or nothing does. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404 */
+    /** Destroy a whole document — the lawful-erasure answer (DOC-010). It removes the document row, every version row under it, every stored blob those versions name, and everything the pipeline derived from them: the extracted text and the display renditions, rows and blobs alike. It is whole-document erasure. Use the version DELETE route to remove only one round. It takes a typed confirmation: confirmTitle must be the document's own title, exactly. It is the Administrator's alone; every other role is refused 403, a Contributor and a Legal Team Member alike. The activity and audit entries written before it survive it and still name what was deleted, and the erasure appends document.hard_deleted beside them (DD-017) — the record stays accountable after the files are gone. It reaches an archived contract too, because erasure is compelled from outside the record and a frozen record is not a place to hide from it. A document on a contract the Administrator cannot reach answers 404 */
     delete: operations["hardDeleteDocument"];
     options?: never;
     head?: never;
@@ -31903,6 +31904,106 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteDocumentVersion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        documentId: string;
+        versionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          confirmTitle: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            documents: {
+              id: string;
+              title: string;
+              description: string | null;
+              isPrimary: boolean;
+              versions: {
+                id: string;
+                versionNumber: number;
+                /** @enum {string} */
+                kind:
+                  | "general"
+                  | "draft_ours"
+                  | "draft_theirs"
+                  | "redline_theirs"
+                  | "redline_ours"
+                  | "executed"
+                  | "amendment"
+                  | "generated_redline";
+                documentType: {
+                  id: string;
+                  displayName: string;
+                  archived: boolean;
+                  color: ("grey" | "blue" | "amber" | "green" | "red" | "orange" | "purple") | null;
+                } | null;
+                /** @enum {string} */
+                source: "uploaded" | "generated";
+                comparedFromVersionNumber: number | null;
+                comparedToVersionNumber: number | null;
+                note: string | null;
+                originalFilename: string;
+                mimeType: string;
+                /** @enum {string} */
+                renderFamily: "pdf" | "image" | "word" | "presentation" | "email" | "other";
+                byteSize: number;
+                checksumSha256: string;
+                uploadedBy: {
+                  id: string;
+                  displayName: string;
+                  image: string | null;
+                  archived: boolean;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                isCurrent: boolean;
+                isExecuted: boolean;
+              }[];
+              archivedAt: string | null;
+              isConfidential: boolean;
+              folderId: string | null;
+              createdBy: {
+                id: string;
+                displayName: string;
+                image: string | null;
+                archived: boolean;
+              };
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            nextCursor: string | null;
           };
         };
       };

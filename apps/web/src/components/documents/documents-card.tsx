@@ -189,7 +189,7 @@ import {
   documentTypeModuleOf,
   documentTypePill,
   FOLDER_ROOT,
-  hardDeleteDocument,
+  deleteDocumentVersion,
   isPreviewable,
   previousComparableVersion,
   readRecordDocuments,
@@ -347,7 +347,7 @@ interface RowContext {
   onMoveToFolder: (document: ContractDocument) => void;
   onSetConfidential: (document: ContractDocument, confidential: boolean) => void;
   onArchive: (document: ContractDocument, archived: boolean) => void;
-  onDelete: (document: ContractDocument) => void;
+  onDelete: (document: ContractDocument, version: DocumentVersion) => void;
 }
 
 function supportsDesignations(owner: DocumentRecord["entityType"]): boolean {
@@ -588,7 +588,10 @@ export function DocumentsCard({
    * and the entity registry already do it. */
   const [showArchived, setShowArchived] = useState(false);
   /** The document a typed confirmation is open for, or none. */
-  const [deleting, setDeleting] = useState<ContractDocument | null>(null);
+  const [deleting, setDeleting] = useState<{
+    document: ContractDocument;
+    version: DocumentVersion;
+  } | null>(null);
   /** How many rows the last page brought, and the id it started at. The
    * first is what the live region announces; the second is the row focus
    * moves to, because that is where what the reader asked for begins
@@ -1075,27 +1078,17 @@ export function DocumentsCard({
     replace(outcome.document);
   }
 
-  /**
-   * DOC-010's hard delete: the document, its whole chain, and every
-   * stored file behind it.
-   *
-   * The typed name goes to the seam rather than being checked only here.
-   * The dialog can be skipped, and the seam is where the ceremony has to
-   * hold — this is the client half of one rule, not the rule itself.
-   *
-   * A refusal is handed back to the dialog rather than written to the
-   * section note, because the dialog covers the spot that note reads in.
-   * The refusal is reachable: a rename that lands between the dialog
-   * opening and Delete arriving makes the typed name the wrong one, and
-   * a role taken away in the same window answers 403. Success keeps the
-   * note — by then the dialog is gone and the note is what is left.
-   */
-  async function erase(document: ContractDocument, confirmTitle: string): Promise<string | null> {
+  /** Delete the selected round and refresh the remaining chain. */
+  async function erase(
+    document: ContractDocument,
+    version: DocumentVersion,
+    confirmTitle: string,
+  ): Promise<string | null> {
     if (busy) return null;
     setBusy(true);
     setStatus("saving");
     setDetail(null);
-    const outcome = await hardDeleteDocument(document.id, confirmTitle);
+    const outcome = await deleteDocumentVersion(document.id, version.id, confirmTitle);
     if (outcome.ok) await applyPaper();
     setBusy(false);
     if (outcome.ok) {
@@ -1432,7 +1425,7 @@ export function DocumentsCard({
     onMoveToFolder: setFiling,
     onSetConfidential: (document, next) => void setConfidential(document, next),
     onArchive: (document, next) => void setArchived(document, next),
-    onDelete: setDeleting,
+    onDelete: (document, version) => setDeleting({ document, version }),
   };
 
   return (
@@ -1804,10 +1797,11 @@ export function DocumentsCard({
       )}
       {deleting && (
         <DeleteDialog
-          document={deleting}
+          document={deleting.document}
+          version={deleting.version}
           busy={busy}
           onClose={() => setDeleting(null)}
-          onConfirm={(confirmTitle) => erase(deleting, confirmTitle)}
+          onConfirm={(confirmTitle) => erase(deleting.document, deleting.version, confirmTitle)}
         />
       )}
       {(folderDialog?.mode === "create" || folderDialog?.mode === "rename") && (
@@ -2092,7 +2086,7 @@ function DocumentRows({
                         onSetConfidential={(next) => rows.onSetConfidential(document, next)}
                         onArchive={() => rows.onArchive(document, true)}
                         onRestore={() => rows.onArchive(document, false)}
-                        onDelete={() => rows.onDelete(document)}
+                        onDelete={() => rows.onDelete(document, chain.current)}
                         onToggleExecuted={() => rows.onPin(document, chain.current)}
                       />
                     )}
@@ -2166,7 +2160,8 @@ function DocumentRows({
                           from the document row and never administers an
                           existing round. */}
                       <span className="flex items-center justify-end gap-1">
-                        {(previousComparableVersion(document, version) ||
+                        {(rows.canErase ||
+                          previousComparableVersion(document, version) ||
                           (!rows.frozen &&
                             rows.executedDesignations &&
                             document.archivedAt === null)) && (
@@ -2177,6 +2172,7 @@ function DocumentRows({
                             busy={rows.busy}
                             intl={rows.intl}
                             onCompare={rows.onCompare}
+                            onDelete={rows.canErase ? rows.onDelete : undefined}
                             onToggle={
                               !rows.frozen &&
                               rows.executedDesignations &&
@@ -3168,7 +3164,7 @@ const ACTION_LABEL = {
   }),
   archive: defineMessage({ id: "documents.action.archive", defaultMessage: "Archive" }),
   restore: defineMessage({ id: "documents.action.restore", defaultMessage: "Restore" }),
-  delete: defineMessage({ id: "documents.action.delete", defaultMessage: "Delete" }),
+  delete: defineMessage({ id: "documents.action.delete", defaultMessage: "Delete version" }),
   markExecuted: defineMessage({
     id: "documents.action.markExecuted",
     defaultMessage: "Mark as executed copy",
@@ -3389,11 +3385,13 @@ function DocumentActions({
 /** Confirm deletion with a fixed word while identifying the document in the warning. */
 function DeleteDialog({
   document,
+  version,
   busy,
   onClose,
   onConfirm,
 }: Readonly<{
   document: ContractDocument;
+  version: DocumentVersion;
   busy: boolean;
   onClose: () => void;
   /** Answers with the refusal to show, or `null` when the erasure landed. */
@@ -3414,17 +3412,33 @@ function DeleteDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent aria-describedby={undefined}>
         <DialogTitle>
-          <FormattedMessage id="documents.delete.title" defaultMessage="Delete this document?" />
+          <FormattedMessage
+            id="documents.delete.versionTitle"
+            defaultMessage="Delete version {number}?"
+            values={{ number: version.versionNumber }}
+          />
         </DialogTitle>
         <p className="mt-4 text-base text-primary">
           <FormattedMessage
-            id="documents.delete.body"
-            defaultMessage={
-              "{title} and its {count, plural, one {# version} other {# versions}} " +
-              "are removed, and the stored files with them. You cannot undo this."
-            }
-            values={{ title: document.title, count: document.versions.length }}
+            id="documents.delete.versionBody"
+            defaultMessage="Version {number} of {title} and its stored file will be removed. You cannot undo this."
+            values={{ number: version.versionNumber, title: document.title }}
           />
+          {document.versions.length === 1 ? (
+            <span className="mt-2 block">
+              <FormattedMessage
+                id="documents.delete.lastVersion"
+                defaultMessage="This is the last version, so the document will also be removed."
+              />
+            </span>
+          ) : (
+            <span className="mt-2 block">
+              <FormattedMessage
+                id="documents.delete.otherVersions"
+                defaultMessage="All other versions will remain."
+              />
+            </span>
+          )}
         </p>
         <form
           className="mt-4 flex flex-col gap-1.5"
@@ -3470,8 +3484,11 @@ function DeleteDialog({
               // to explain it.
               disabled={busy || !matches}
               aria-label={intl.formatMessage(
-                { id: "documents.delete.confirmAction", defaultMessage: "Delete {title}" },
-                { title: document.title },
+                {
+                  id: "documents.delete.confirmVersion",
+                  defaultMessage: "Delete version {number} of {title}",
+                },
+                { title: document.title, number: version.versionNumber },
               )}
             >
               <FormattedMessage {...ACTION_LABEL.delete} />
@@ -3630,6 +3647,7 @@ function VersionActions({
   intl,
   onCompare,
   onToggle,
+  onDelete,
 }: Readonly<{
   document: ContractDocument;
   version: DocumentVersion;
@@ -3638,6 +3656,7 @@ function VersionActions({
   intl: IntlShape;
   onCompare: (document: ContractDocument, from: DocumentVersion, to: DocumentVersion) => void;
   onToggle?: (document: ContractDocument, version: DocumentVersion) => void;
+  onDelete?: (document: ContractDocument, version: DocumentVersion) => void;
 }>) {
   return (
     <DropdownMenu>
@@ -3671,6 +3690,12 @@ function VersionActions({
             <FormattedMessage
               {...(version.isExecuted ? ACTION_LABEL.unmarkExecuted : ACTION_LABEL.markExecuted)}
             />
+          </DropdownMenuItem>
+        )}
+        {onDelete && (
+          <DropdownMenuItem onSelect={() => onDelete(document, version)}>
+            <Trash2 size={16} aria-hidden="true" />
+            <FormattedMessage {...ACTION_LABEL.delete} />
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

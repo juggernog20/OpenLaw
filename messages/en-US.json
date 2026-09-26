@@ -347,6 +347,9 @@
   "activity.document.versionAdded": {
     "defaultMessage": "{version, select, unknown {{actor} added a version of {title}} other {{actor} added version {version} of {title}}}"
   },
+  "activity.document.versionDeleted": {
+    "defaultMessage": "{actor} deleted version {version} of {title}"
+  },
   "activity.document.versionKind": {
     "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {{kind}}}"
   },
@@ -4323,7 +4326,7 @@
     "defaultMessage": "Compare with previous"
   },
   "documents.action.delete": {
-    "defaultMessage": "Delete"
+    "defaultMessage": "Delete version"
   },
   "documents.action.editDetails": {
     "defaultMessage": "Edit details"
@@ -4464,10 +4467,13 @@
     "defaultMessage": "Clear selection"
   },
   "documents.bulk.deleteTitle": {
-    "defaultMessage": "Delete {count, plural, one {# document} other {# documents}}?"
+    "defaultMessage": "Delete {count, plural, one {# selected version} other {# selected versions}}?"
+  },
+  "documents.bulk.deleteVersions": {
+    "defaultMessage": "Delete versions"
   },
   "documents.bulk.deleteWarning": {
-    "defaultMessage": "The selected documents and all their versions will be permanently deleted. This cannot be undone."
+    "defaultMessage": "Only the current version of each selected document will be deleted. Other versions will remain. A document is removed when its last version is deleted. This cannot be undone."
   },
   "documents.bulk.errorRow": {
     "defaultMessage": "{title}: {detail}"
@@ -4559,20 +4565,26 @@
   "documents.current": {
     "defaultMessage": "Current"
   },
-  "documents.delete.body": {
-    "defaultMessage": "{title} and its {count, plural, one {# version} other {# versions}} are removed, and the stored files with them. You cannot undo this."
-  },
-  "documents.delete.confirmAction": {
-    "defaultMessage": "Delete {title}"
-  },
   "documents.delete.confirmLabel": {
     "defaultMessage": "Type \"delete\" to confirm"
+  },
+  "documents.delete.confirmVersion": {
+    "defaultMessage": "Delete version {number} of {title}"
   },
   "documents.delete.error": {
     "defaultMessage": "That document could not be deleted. Try again."
   },
-  "documents.delete.title": {
-    "defaultMessage": "Delete this document?"
+  "documents.delete.lastVersion": {
+    "defaultMessage": "This is the last version, so the document will also be removed."
+  },
+  "documents.delete.otherVersions": {
+    "defaultMessage": "All other versions will remain."
+  },
+  "documents.delete.versionBody": {
+    "defaultMessage": "Version {number} of {title} and its stored file will be removed. You cannot undo this."
+  },
+  "documents.delete.versionTitle": {
+    "defaultMessage": "Delete version {number}?"
   },
   "documents.descriptionPrefix": {
     "defaultMessage": "Description:"

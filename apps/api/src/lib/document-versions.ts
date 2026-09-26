@@ -41,6 +41,8 @@
 
 import {
   and,
+  activityLog,
+  sql,
   desc,
   documents,
   documentTypes,
@@ -87,9 +89,18 @@ export async function nextVersionNumber(tx: Executor, documentId: string): Promi
     .where(eq(documentVersions.documentId, documentId))
     .orderBy(desc(documentVersions.versionNumber))
     .limit(1);
-  // A document always has version 1, so this is a step up from a number
-  // that is really there rather than a count of rows.
-  return (high?.versionNumber ?? 0) + 1;
+  const [deleted] = await tx
+    .select({
+      number: sql<number>`coalesce(max((${activityLog.payload}->>'versionNumber')::integer), 0)`,
+    })
+    .from(activityLog)
+    .where(
+      and(
+        eq(activityLog.action, "document.version_deleted"),
+        sql`${activityLog.payload}->>'documentId' = ${documentId}`,
+      ),
+    );
+  return Math.max(high?.versionNumber ?? 0, deleted?.number ?? 0) + 1;
 }
 
 /** One round, as the chain stores it. */

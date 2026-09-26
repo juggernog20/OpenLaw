@@ -885,19 +885,10 @@ describe("appending the next version", () => {
 describe("correcting a version's kind", () => {
   const VERSION_URL = "/api/v1/documents/:documentId/versions/:versionId";
 
-  it("declares one PATCH and no PUT or DELETE for a version", () => {
+  it("offers PATCH and DELETE for an individual version", () => {
     expect(harness.app.hasRoute({ method: "PATCH", url: VERSION_URL })).toBe(true);
-    for (const method of ["PUT", "DELETE"] as const) {
-      expect(harness.app.hasRoute({ method, url: VERSION_URL }), `${method} ${VERSION_URL}`).toBe(
-        false,
-      );
-    }
-    // DELETE at the document's own address is DOC-010's hard delete, and
-    // it is whole-document by design: the erasure exists, and there is
-    // still no way to cut one round out of a chain.
-    expect(harness.app.hasRoute({ method: "DELETE", url: "/api/v1/documents/:documentId" })).toBe(
-      true,
-    );
+    expect(harness.app.hasRoute({ method: "DELETE", url: VERSION_URL })).toBe(true);
+    expect(harness.app.hasRoute({ method: "PUT", url: VERSION_URL })).toBe(false);
   });
 
   it("changes only kind and narrates both sides of the correction", async () => {
@@ -2049,6 +2040,74 @@ describe("archiving a document", () => {
  * readable afterwards and still name what was destroyed, which is the
  * only thing left that can.
  */
+describe("deleting individual document versions", () => {
+  const removeVersion = (
+    document: DocumentRow,
+    versionId: string,
+    cookies = adminCookies,
+    confirmTitle = document.title,
+  ) =>
+    harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/documents/${document.id}/versions/${versionId}`,
+      cookies,
+      payload: { confirmTitle },
+    });
+
+  it("deletes only the selected file, clears its pin and never reuses its version number", async () => {
+    const contract = await newContract("Version deletion");
+    const original = await uploaded(adminCookies, contract.number, { filename: "retained.pdf" });
+    const document = await versionAdded(adminCookies, original.id, { filename: "remove.pdf" });
+    const refs = await fileRefsOf(document.id);
+    await pinExecuted(adminCookies, document.id, document.versions[1]!.id);
+    const removed = await removeVersion(document, document.versions[1]!.id);
+    expect(removed.statusCode, removed.body).toBe(200);
+    const retained = removed
+      .json()
+      .documents.find((item: DocumentRow) => item.id === document.id) as DocumentRow;
+    expect(retained.versions).toHaveLength(1);
+    expect(retained.versions[0]).toMatchObject({
+      id: original.versions[0]!.id,
+      isCurrent: true,
+      isExecuted: false,
+    });
+    expect(retained.isPrimary).toBe(true);
+    expect(await blobExists(refs[0]!)).toBe(true);
+    expect(await blobExists(refs[1]!)).toBe(false);
+    const next = await versionAdded(adminCookies, document.id);
+    expect(next.versions.map((version) => version.versionNumber)).toEqual([1, 3]);
+    const older = await removeVersion(next, original.versions[0]!.id);
+    expect(older.statusCode, older.body).toBe(200);
+    expect(
+      older.json().documents[0].versions.map((version: VersionRow) => version.versionNumber),
+    ).toEqual([3]);
+  });
+
+  it("removes the document only when its last version is deleted", async () => {
+    const contract = await newContract("Last version deletion");
+    const document = await uploaded(adminCookies, contract.number);
+    const keep = await uploaded(adminCookies, contract.number, { filename: "keep.pdf" });
+    const removed = await removeVersion(document, document.versions[0]!.id);
+    expect(removed.statusCode, removed.body).toBe(200);
+    expect(removed.json().documents.map((item: DocumentRow) => item.id)).toEqual([keep.id]);
+    expect(removed.json().documents[0].isPrimary).toBe(false);
+  });
+
+  it("requires Administrator access, title confirmation and a version belonging to the document", async () => {
+    const contract = await newContract("Version deletion guards");
+    const document = await uploaded(adminCookies, contract.number);
+    const other = await uploaded(adminCookies, contract.number, { filename: "other.pdf" });
+    expect(
+      (await removeVersion(document, document.versions[0]!.id, memberCookies)).statusCode,
+    ).toBe(403);
+    expect(
+      (await removeVersion(document, document.versions[0]!.id, adminCookies, "wrong")).statusCode,
+    ).toBe(400);
+    expect((await removeVersion(document, other.versions[0]!.id)).statusCode).toBe(404);
+    expect(await fileRefsOf(document.id)).toHaveLength(1);
+  });
+});
+
 describe("the Administrator's hard delete", () => {
   it("removes the document row, its version rows, and its stored blobs", async () => {
     const contract = await newContract("Orion Cloud — the erasure");

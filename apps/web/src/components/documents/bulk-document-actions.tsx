@@ -6,7 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import {
   archiveDocument,
   restoreDocument,
-  hardDeleteDocument,
+  deleteDocumentVersion,
   updateDocument,
   type ContractDocument,
 } from "../../lib/documents";
@@ -68,7 +68,12 @@ export function BulkDocumentActions({
       await runBounded(documents, 3, async (document) => {
         const result =
           action === "delete"
-            ? await hardDeleteDocument(document.id, document.title)
+            ? await deleteDocumentVersion(
+                document.id,
+                (document.versions.find((version) => version.isCurrent) ??
+                  document.versions.at(-1))!.id,
+                document.title,
+              )
             : action === "archive"
               ? await archiveDocument(document.id)
               : action === "restore"
@@ -141,7 +146,7 @@ export function BulkDocumentActions({
             }}
           >
             <Trash2 size={16} aria-hidden="true" />
-            <FormattedMessage id="documents.action.delete" defaultMessage="Delete" />
+            <FormattedMessage id="documents.bulk.deleteVersions" defaultMessage="Delete versions" />
           </Button>
         )}
         {busy && (
@@ -188,7 +193,7 @@ export function BulkDocumentActions({
               {dialog === "delete" ? (
                 <FormattedMessage
                   id="documents.bulk.deleteTitle"
-                  defaultMessage="Delete {count, plural, one {# document} other {# documents}}?"
+                  defaultMessage="Delete {count, plural, one {# selected version} other {# selected versions}}?"
                   values={{ count: documents.length }}
                 />
               ) : (
@@ -240,7 +245,7 @@ export function BulkDocumentActions({
                   <p className="text-sm">
                     <FormattedMessage
                       id="documents.bulk.deleteWarning"
-                      defaultMessage="The selected documents and all their versions will be permanently deleted. This cannot be undone."
+                      defaultMessage="Only the current version of each selected document will be deleted. Other versions will remain. A document is removed when its last version is deleted. This cannot be undone."
                     />
                   </p>
                   <Label htmlFor="bulk-document-delete">
@@ -276,7 +281,10 @@ export function BulkDocumentActions({
                   }
                 >
                   {dialog === "delete" ? (
-                    <FormattedMessage id="documents.action.delete" defaultMessage="Delete" />
+                    <FormattedMessage
+                      id="documents.bulk.deleteVersions"
+                      defaultMessage="Delete versions"
+                    />
                   ) : (
                     <FormattedMessage id="documents.bulk.move" defaultMessage="Move" />
                   )}

@@ -965,6 +965,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   },
   "document.archived": { documentId: "doc_1", title: "Supply agreement.pdf" },
   "document.restored": { documentId: "doc_1", title: "Supply agreement.pdf" },
+  "document.version_deleted": {
+    documentId: "doc_1",
+    versionId: "ver_2",
+    title: "Supply agreement.pdf",
+    versionNumber: 2,
+  },
   "document.hard_deleted": {
     documentId: "doc_1",
     title: "Supply agreement.pdf",

@@ -2314,6 +2314,17 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   // is looking for. The sentence names the document and how many rounds
   // went with it: after this entry there is no row left anywhere that
   // says either, which is why the payload carries both.
+  "document.version_deleted": {
+    icon: Trash2,
+    message: defineMessage({
+      id: "activity.document.versionDeleted",
+      defaultMessage: "{actor} deleted version {version} of {title}",
+    }),
+    values: (intl, payload) => ({
+      title: named(intl, payload, "title"),
+      version: payload.versionNumber as number,
+    }),
+  },
   "document.hard_deleted": {
     icon: Trash2,
     message: defineMessage({

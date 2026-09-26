@@ -1160,6 +1160,23 @@ export async function hardDeleteDocument(
     : { ok: false, ...(await problem(result)) };
 }
 
+/** Delete only the selected version; the document goes when its last version goes. */
+export async function deleteDocumentVersion(
+  documentId: string,
+  versionId: string,
+  confirmTitle: string,
+): Promise<PaperOutcome> {
+  const result = await api
+    .DELETE("/api/v1/documents/{documentId}/versions/{versionId}", {
+      params: { path: { documentId, versionId } },
+      body: { confirmTitle },
+    })
+    .catch(() => undefined);
+  return result?.data
+    ? { ok: true, documents: result.data.documents, nextCursor: result.data.nextCursor }
+    : { ok: false, ...(await problem(result)) };
+}
+
 /** One field off a parsed JSON body, without asserting its shape. */
 function field(body: unknown, name: string): unknown {
   return typeof body === "object" && body !== null
