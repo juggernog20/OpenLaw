@@ -51,6 +51,7 @@ import { provisionUser } from "../../auth/instance.js";
 import type { ActivityAction } from "../../lib/activity.js";
 import { FAKE_SIGNATURE_HEADER, FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import type { WebhookDelivery } from "../../lib/signing/provider.js";
+import { DISCARD_OBSERVATION_DAYS } from "../../lib/signing/status-check.js";
 import { JOB_QUEUES } from "../../pipeline/jobs.js";
 import { startPipeline } from "../../pipeline/pg-boss.js";
 import {
@@ -910,6 +911,38 @@ describe("preparations reconciled without a browser return", () => {
       });
     },
   );
+
+  it("stops polling a discarded preparation once its observation window has passed", async () => {
+    const contract = await recordAtSignature("Discard observed for a bounded window");
+    const envelope = await prepare(contract.number);
+    const providerId = await providerIdOf(envelope.id);
+    provider().discardDraft(providerId);
+    await due(envelope.id);
+    await sweep();
+    expect(await held(envelope.id)).toMatchObject({ status: "discarded" });
+    const discardedDaysAgo = async (days: number) => {
+      await harness.db
+        .update(contractEnvelopes)
+        .set({
+          completedAt: new Date(Date.now() - days * 86_400_000),
+          nextReconcileAt: new Date(0),
+        })
+        .where(eq(contractEnvelopes.id, envelope.id));
+    };
+    const read = vi.spyOn(provider(), "readEnvelope");
+    const reads = () => read.mock.calls.filter(([id]) => id === providerId).length;
+    try {
+      await discardedDaysAgo(DISCARD_OBSERVATION_DAYS + 1);
+      await sweep();
+      expect(reads()).toBe(0);
+      await discardedDaysAgo(DISCARD_OBSERVATION_DAYS - 1);
+      await sweep();
+      expect(reads()).toBe(1);
+      expect(await held(envelope.id)).toMatchObject({ status: "discarded" });
+    } finally {
+      read.mockRestore();
+    }
+  });
 
   it("holds a scheduled draft without a sent time or a Resume action", async () => {
     const contract = await recordAtSignature("Scheduled without a return");

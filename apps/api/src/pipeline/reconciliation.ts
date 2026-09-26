@@ -3,9 +3,9 @@
 /** Browser-independent provider status recovery (CTR-013, TECH-007).
  * The five-minute job checks only due rows. Drafts, sent Envelopes and
  * discarded preparations share the durable 15-minute provider-read allowance
- * with browser returns and Resume. Discarded rows remain observable because
- * they can be restored outside OpenLaw. Interrupted creation uses its recovery
- * claim. Every observation passes through the same transactional status writer.
+ * with browser returns and Resume. Discarded rows remain observable for
+ * `DISCARD_OBSERVATION_DAYS` because they can be restored outside OpenLaw.
+ * Interrupted creation uses its recovery claim. Every observation passes through the same transactional status writer.
  */
 
 import {
@@ -26,6 +26,7 @@ import { requestExecutedCopy } from "../lib/signing/completion.js";
 import {
   checkEnvelopeStatus,
   CREATION_READ_GRACE_MINUTES,
+  DISCARD_OBSERVATION_DAYS,
   LAUNCH_LIFETIME_MINUTES,
   LAUNCH_RETURN_GRACE_MINUTES,
   reconciliationDue,
@@ -106,6 +107,21 @@ const pollableDraft = () =>
               > clock_timestamp() - make_interval(mins => ${LAUNCH_RETURN_GRACE_MINUTES})
       )`,
     ),
+  );
+
+/**
+ * Which discarded preparations the sweep still asks about (#1175).
+ *
+ * A confirmed discard stays observable for `DISCARD_OBSERVATION_DAYS`
+ * after the discard was confirmed, which is the row's `completed_at`.
+ * After that only a verified Connect delivery can restore it: the row is
+ * still on the record, but the sweep no longer spends a provider read on
+ * it every round.
+ */
+const observableDiscard = () =>
+  or(
+    ne(contractEnvelopes.status, "discarded"),
+    sql`${contractEnvelopes.completedAt} >= clock_timestamp() - make_interval(days => ${DISCARD_OBSERVATION_DAYS})`,
   );
 
 /** What the sweep is built from: the rows, the connector, somewhere to
@@ -223,13 +239,15 @@ export async function runReconciliationSweep(
       .from(contractEnvelopes)
       .where(
         and(
-          // Discarded drafts remain observable for external restoration.
+          // Discarded drafts remain observable for external restoration,
+          // for a bounded window.
           or(
             recoveryDue(),
             and(
               inArray(contractEnvelopes.status, ["draft", "sent", "discarded"]),
               reconciliationDue(),
               pollableDraft(),
+              observableDiscard(),
             ),
           ),
           after === undefined ? undefined : gt(contractEnvelopes.id, after),
