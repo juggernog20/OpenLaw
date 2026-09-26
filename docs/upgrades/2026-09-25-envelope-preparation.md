@@ -31,7 +31,7 @@ is not evidence that creation failed.
 
 ## Existing records and migration
 
-The expand migration `0172_durable-envelope-preparation.sql` preserves existing
+The expand migration `0173_durable-envelope-preparation.sql` preserves existing
 `sent`, `signed`, `declined`, and `voided` rows, their Sent timestamps, Document
 Version references, and executed-copy references. Successful direct sends
 continue to return a Sent timestamp.

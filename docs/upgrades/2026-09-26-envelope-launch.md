@@ -1,10 +1,10 @@
 # Envelope launch and return (#1172)
 
-Migration `0173_envelope-launch-return` adds a confirmation flag to Envelopes and a
+Migration `0174_envelope-launch-return` adds a confirmation flag to Envelopes and a
 separate table of hashed, expiring launch correlations. Existing Envelope statuses,
 provider IDs, sent timestamps and executed-copy references retain their meaning.
-Migration `0174_envelope-launch-timestamps` adds creation and update timestamps to
-launch correlations, including installs that already applied 0173. Existing rows
+Migration `0175_envelope-launch-timestamps` adds creation and update timestamps to
+launch correlations, including installs that already applied the earlier launch migration. Existing rows
 receive the upgrade time; their hashes, expiry and consumption are unchanged.
 
 The preparation feature switch stays off by default. When enabled, Continue to
