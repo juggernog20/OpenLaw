@@ -692,19 +692,22 @@ export function SignaturesCard({
             disabled={busy}
             onClick={async () => {
               setStatus("saving");
-              const current = await readContractSigning(contractNumber);
-              if (current.ok) {
-                onSigning(current);
-                setLaunchError(null);
-              } else
-                setLaunchError(
-                  current.detail ??
-                    intl.formatMessage({
-                      id: "signing.refreshFailed",
-                      defaultMessage: "Status could not be refreshed. Try again.",
-                    }),
-                );
-              setStatus("idle");
+              try {
+                const current = await readContractSigning(contractNumber);
+                if (current.ok) {
+                  onSigning(current);
+                  setLaunchError(null);
+                } else
+                  setLaunchError(
+                    current.detail ??
+                      intl.formatMessage({
+                        id: "signing.refreshFailed",
+                        defaultMessage: "Status could not be refreshed. Try again.",
+                      }),
+                  );
+              } finally {
+                setStatus("idle");
+              }
             }}
           >
             <FormattedMessage id="signing.refreshRecovery" defaultMessage="Refresh status" />
@@ -778,13 +781,16 @@ export function SignaturesCard({
             className="m-4"
             onClick={async () => {
               setStatus("saving");
-              const detail = await launchContractEnvelope(live.id);
-              setLaunchError(detail === null ? null : (detail ?? launchFailed));
-              if (detail !== null) {
-                const current = await readContractSigning(contractNumber);
-                if (current.ok) onSigning(current);
+              try {
+                const detail = await launchContractEnvelope(live.id);
+                setLaunchError(detail === null ? null : (detail ?? launchFailed));
+                if (detail !== null) {
+                  const current = await readContractSigning(contractNumber);
+                  if (current.ok) onSigning(current);
+                }
+              } finally {
+                setStatus("idle");
               }
-              setStatus("idle");
             }}
           >
             <FormattedMessage id="signing.openDraft" defaultMessage="Resume in DocuSign" />

@@ -40,6 +40,7 @@ import {
   tokenFrom,
   type TestHarness,
 } from "../../testing/harness.js";
+import { SigningTimeoutError, SigningUnavailableError } from "../../lib/signing/provider.js";
 import { FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 
 let harness: TestHarness;
@@ -633,6 +634,98 @@ describe("taking the connector out", () => {
       const [held] = await harness.db.select().from(signingConnectors);
       expect(held!.apiUserId).toBe("same-account-user");
     } finally {
+      await harness.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, id));
+      await save(CONNECTOR);
+    }
+  });
+
+  it.each([
+    ["timeout", SigningTimeoutError],
+    ["unavailable provider", SigningUnavailableError],
+  ] as const)(
+    "reports a retryable %s while checking replacement credentials",
+    async (_name, Failure) => {
+      await save(CONNECTOR);
+      const id = await putEnvelopeOut();
+      const provider = (await harness.resolveSigningProvider())!;
+      const account = await provider.testConnection();
+      await harness.db
+        .update(contractEnvelopes)
+        .set({ providerAccountId: account.accountId, providerEnvironment: "demo" })
+        .where(eq(contractEnvelopes.id, id));
+      const check = vi
+        .spyOn(provider, "testConnection")
+        .mockRejectedValueOnce(new Failure("private provider failure"));
+      try {
+        const result = await save({ ...CONNECTOR, apiUserId: "replacement-user" });
+        expect(result.statusCode, result.body).toBe(502);
+        expect(result.json().detail).toContain("Try again");
+        expect(result.body).not.toContain("private provider failure");
+        const current = await harness.app.inject({
+          method: "GET",
+          url: URL_BASE,
+          cookies: adminCookies,
+        });
+        expect(current.json().connector.apiUserId).toBe(CONNECTOR.apiUserId);
+      } finally {
+        check.mockRestore();
+        await harness.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, id));
+      }
+    },
+  );
+
+  it("leaves the connector unlocked during a provider check and refuses a stale result", async () => {
+    await save(CONNECTOR);
+    const id = await putEnvelopeOut();
+    const provider = (await harness.resolveSigningProvider())!;
+    const account = await provider.testConnection();
+    await harness.db
+      .update(contractEnvelopes)
+      .set({ providerAccountId: account.accountId, providerEnvironment: "demo" })
+      .where(eq(contractEnvelopes.id, id));
+    let release!: () => void;
+    let entered!: () => void;
+    const started = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const waiting = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const check = vi.spyOn(provider, "testConnection").mockImplementationOnce(async () => {
+      entered();
+      await waiting;
+      return account;
+    });
+    const pending = save({ ...CONNECTOR, apiUserId: "slow-replacement" });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await started;
+      const concurrent = save({ ...CONNECTOR, apiUserId: "winning-replacement" });
+      const result = await Promise.race([
+        concurrent,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error("Provider check held the connector lock")),
+            5_000,
+          );
+        }),
+      ]);
+      expect(result.statusCode, result.body).toBe(200);
+      release();
+      const stale = await pending;
+      expect(stale.statusCode, stale.body).toBe(409);
+      expect(stale.json().detail).toContain("changed while checking");
+      const current = await harness.app.inject({
+        method: "GET",
+        url: URL_BASE,
+        cookies: adminCookies,
+      });
+      expect(current.json().connector.apiUserId).toBe("winning-replacement");
+    } finally {
+      clearTimeout(timer);
+      release();
+      await pending;
+      check.mockRestore();
       await harness.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, id));
       await save(CONNECTOR);
     }

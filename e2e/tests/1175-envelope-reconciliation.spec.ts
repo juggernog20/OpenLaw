@@ -75,10 +75,10 @@ test("confirms and files completion after the sender leaves DocuSign without ret
       },
     );
     expect(preparation.status(), await preparation.text()).toBe(201);
-    const { envelopes } = await preparation.json();
-    const launch = await page.request.post(`/api/v1/envelopes/${envelopes[0].id}/launch`);
+    const { envelopes } = (await preparation.json()) as { envelopes: { id: string }[] };
+    const launch = await page.request.post(`/api/v1/envelopes/${envelopes[0]!.id}/launch`);
     expect(launch.status()).toBe(200);
-    await page.goto((await launch.json()).url);
+    await page.goto(((await launch.json()) as { url: string }).url);
     await expect(page.getByRole("heading", { name: "Place fields" })).toBeVisible();
     // Leaving the editor never visits the provider return URL.
     await page.goto(`/contracts/${contract.number}/signatures`);
@@ -97,9 +97,11 @@ test("confirms and files completion after the sender leaves DocuSign without ret
     expect((await post()).status()).toBe(204);
     await page.reload();
     await expect(page.getByText("Signed", { exact: true })).toBeVisible();
-    const after = await (
+    const after = (await (
       await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
-    ).json();
+    ).json()) as {
+      envelopes: { status: string; executedFetch: string; confirmationPending: boolean }[];
+    };
     expect(after.envelopes).toHaveLength(1);
     expect(after.envelopes[0]).toMatchObject({
       status: "signed",

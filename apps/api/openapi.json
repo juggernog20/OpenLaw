@@ -59934,6 +59934,7 @@
     "/api/v1/envelopes/{envelopeId}/launch": {
       "post": {
         "operationId": "launchContractEnvelope",
+        "summary": "Request a Sender View when signingPreparationEnabled is on. Administrator or Legal Team Member only; the caller must be the preparer, Legal Owner, or an Administrator",
         "tags": ["envelopes"],
         "parameters": [
           {
@@ -59981,6 +59982,7 @@
     "/api/v1/signing/return": {
       "post": {
         "operationId": "confirmEnvelopeReturn",
+        "summary": "Confirm a Sender View return as an Administrator or Legal Team Member. The event is only a hint; this POST rechecks the user and Contract access before granting access or confirming provider status",
         "tags": ["envelopes"],
         "responses": {
           "200": {

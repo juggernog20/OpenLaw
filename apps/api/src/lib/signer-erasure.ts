@@ -61,6 +61,7 @@ import {
   activityLog,
   contractEnvelopes,
   contractEnvelopeSigners,
+  inArray,
   sql,
   type Executor,
 } from "@openlaw/db";
@@ -108,14 +109,18 @@ export async function eraseSigner(tx: Executor, email: string): Promise<SignerEr
   // Lock affected Envelopes before redacting Activity. A direct send reads
   // Signers under this same lock, so its later response cannot restore them.
   // The free-text subject may name the Signer; remove it as a whole.
-  await tx.execute(sql`
-    UPDATE ${contractEnvelopes}
-       SET subject = NULL
-     WHERE id IN (
-       SELECT envelope_id FROM ${contractEnvelopeSigners}
-        WHERE lower(email) = ${target}
-     )
-  `);
+  await tx
+    .update(contractEnvelopes)
+    .set({ subject: null })
+    .where(
+      inArray(
+        contractEnvelopes.id,
+        tx
+          .select({ id: contractEnvelopeSigners.envelopeId })
+          .from(contractEnvelopeSigners)
+          .where(sql`lower(${contractEnvelopeSigners.email}) = ${target}`),
+      ),
+    );
 
   // One statement, because the rewrite has to be driven by what is in
   // each row rather than by anything read out and sent back. The array

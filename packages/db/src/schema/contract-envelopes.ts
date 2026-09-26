@@ -118,10 +118,11 @@ export const contractEnvelopes = pgTable(
      * inputs is refused as a conflict rather than answered as a match. */
     requestFingerprint: text("request_fingerprint"),
     /** Our own id for the creation, sent to the provider with it, so an
-     * envelope whose answer was lost can be looked up later. */
+     * envelope whose answer was lost can be looked up later. NULL means no lookup is possible. */
     providerTransactionId: text("provider_transaction_id"),
-    /** The provider account and environment the round was created in. */
+    /** The original account. NULL means unknown legacy identity; never infer it later. */
     providerAccountId: text("provider_account_id"),
+    /** The original environment. NULL means unknown legacy identity; never infer it later. */
     providerEnvironment: text("provider_environment"),
     /** How far external creation got. `uncertain` means we never heard
      * back, and the round stays reserved until the outcome is known.
@@ -131,7 +132,9 @@ export const contractEnvelopes = pgTable(
     }),
     /** Original operation intent. NULL on reservations made before #1174. */
     creationKind: text("creation_kind", { enum: ["draft", "send"] }),
+    /** NULL means unknown original Stage; recovery must not move it. */
     creationStatusId: text("creation_status_id"),
+    /** NULL means unknown original revision; recovery must not move the Stage. */
     creationStatusRevision: integer("creation_status_revision"),
     /** Durable recovery allowance. No request retry resets these fields. */
     recoveryAttempts: integer("recovery_attempts").notNull().default(0),
@@ -150,6 +153,7 @@ export const contractEnvelopes = pgTable(
     /** A discarded round restored outside OpenLaw does not reclaim another reservation. */
     externallyRestored: boolean("externally_restored").notNull().default(false),
     confirmationPending: boolean("confirmation_pending").notNull().default(false),
+    /** NULL means no launch claim is held. */
     launchClaimExpiresAt: timestamp("launch_claim_expires_at", { withTimezone: true }),
     /** Next permitted provider status check, shared by all worker replicas. */
     nextReconcileAt: timestamp("next_reconcile_at", { withTimezone: true }),

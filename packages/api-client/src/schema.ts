@@ -5261,6 +5261,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /** Request a Sender View when signingPreparationEnabled is on. Administrator or Legal Team Member only; the caller must be the preparer, Legal Owner, or an Administrator */
     post: operations["launchContractEnvelope"];
     delete?: never;
     options?: never;
@@ -5277,6 +5278,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /** Confirm a Sender View return as an Administrator or Legal Team Member. The event is only a hint; this POST rechecks the user and Contract access before granting access or confirming provider status */
     post: operations["confirmEnvelopeReturn"];
     delete?: never;
     options?: never;

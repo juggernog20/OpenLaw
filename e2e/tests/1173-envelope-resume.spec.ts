@@ -91,9 +91,9 @@ for (const scenario of ["resume", "discard"] as const)
         await expect(page.getByText("Discarded", { exact: true })).toBeVisible();
         await expect(page.getByRole("button", { name: "Resume in DocuSign" })).toHaveCount(0);
         await expect(page.getByRole("button", { name: "Prepare Envelope" })).toBeVisible();
-        const state = await (
+        const state = (await (
           await page.request.get(`/api/v1/contracts/${contract.number}/envelopes`)
-        ).json();
+        ).json()) as { envelopes: { status: string; sentAt: string | null }[] };
         expect(state.envelopes).toHaveLength(1);
         expect(state.envelopes[0]).toMatchObject({ status: "discarded", sentAt: null });
       } else {

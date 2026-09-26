@@ -1,8 +1,8 @@
 # Envelope preparation — API upgrade note
 
 This change accompanies #1171 under #1170. Interactive preparation remains
-disabled by default until the feature's final cutover. Recovery of interrupted
-creation belongs to #1174 and must land before the feature reaches `dev`.
+disabled by default until the feature's final cutover. Interrupted-creation
+recovery is included; follow the [recovery procedure](../DEPLOYMENT.md#interrupted-envelope-creation).
 
 ## External API clients
 
@@ -11,10 +11,12 @@ an ISO date-time string. This is a breaking response-contract change for clients
 that require a timestamp. A null value means OpenLaw has no confirmed Sent
 timestamp; it does not prove that the provider sent no invitation.
 
-The status vocabulary adds `preparing`, `draft`, and `preparation_failed`.
+The status vocabulary adds `preparing`, `draft`, `preparation_failed`, and `discarded`.
 `preparing` reserves an operation whose creation is pending or uncertain;
 `draft` identifies a confirmed unsent Envelope; `preparation_failed` identifies
-a confirmed creation failure. An Envelope's `draft` status is separate from the
+a confirmed creation failure; `discarded` identifies a provider-confirmed
+abandoned draft that is not live and has no Sent timestamp. An Envelope's
+`draft` status is separate from the
 Contract Stage `draft`.
 
 Update response validators and status handling, check for null before parsing
@@ -39,5 +41,5 @@ continue to return a Sent timestamp.
 The live-Envelope rule now covers `preparing`, `draft`, and `sent`. An unresolved
 creation therefore blocks another send or preparation and blocks connector
 removal. The durable provider transaction identity, account, source, and Signer
-snapshot remain available for recovery in #1174; do not delete an uncertain
+snapshot remain available for interrupted-creation recovery; do not delete an uncertain
 reservation to permit another attempt.

@@ -208,6 +208,47 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
       const privateKey = pasted(body.privateKey);
       const webhookSecret = pasted(body.webhookSecret);
 
+      const [observed] = await app.db
+        .select()
+        .from(signingConnectors)
+        .where(eq(signingConnectors.provider, provider))
+        .limit(1);
+      const changesCredentials = (current: SigningConnector) =>
+        current.environment !== body.environment ||
+        current.apiUserId !== body.apiUserId ||
+        current.integrationKey !== body.integrationKey ||
+        Boolean(privateKey && privateKey !== current.privateKey);
+      let candidateAccountId: string | undefined;
+      if (observed && changesCredentials(observed)) {
+        const live = await app.db
+          .select({ accountId: contractEnvelopes.providerAccountId })
+          .from(contractEnvelopes)
+          .where(needsConnector());
+        if (live.some((envelope) => envelope.accountId !== null)) {
+          try {
+            const candidate = await app.resolveSigningProvider("accounting", {
+              environment: body.environment,
+              integrationKey: body.integrationKey,
+              apiUserId: body.apiUserId,
+              privateKey: privateKey ?? observed.privateKey,
+              webhookSecret: webhookSecret ?? observed.webhookSecret,
+            });
+            candidateAccountId = (await candidate?.testConnection())?.accountId;
+          } catch (error) {
+            if (error instanceof SigningTimeoutError || error instanceof SigningUnavailableError)
+              throw httpError(
+                502,
+                "DocuSign could not be reached to verify these credentials. Try again.",
+                { expose: true },
+              );
+            throw httpError(
+              409,
+              "The replacement credentials could not verify the connector identity. Keep the original account and try again.",
+            );
+          }
+        }
+      }
+
       // The write and its audit entries commit or roll back together;
       // the row lock keeps a concurrent save from reading a stale "old"
       // into its payload.
@@ -288,27 +329,29 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
           )
             throw refusal();
           if (live.some((envelope) => envelope.providerAccountId !== null)) {
-            try {
-              const candidate = await app.resolveSigningProvider("accounting", {
-                environment: body.environment,
-                integrationKey: body.integrationKey,
-                apiUserId: body.apiUserId,
-                privateKey: privateKey ?? current.privateKey,
-                webhookSecret: webhookSecret ?? current.webhookSecret,
-              });
-              const account = await candidate?.testConnection();
-              if (
-                !account ||
-                live.some(
-                  (envelope) =>
-                    envelope.providerAccountId !== null &&
-                    envelope.providerAccountId !== account.accountId,
-                )
+            // A concurrent save may change the key that a blank field keeps.
+            // Never apply a provider result to credentials we did not check.
+            if (
+              !observed ||
+              current.id !== observed.id ||
+              current.environment !== observed.environment ||
+              current.integrationKey !== observed.integrationKey ||
+              current.apiUserId !== observed.apiUserId ||
+              current.privateKey !== observed.privateKey ||
+              !candidateAccountId
+            )
+              throw httpError(
+                409,
+                "The connector or its active Envelopes changed while checking credentials. Try again.",
+              );
+            if (
+              live.some(
+                (envelope) =>
+                  envelope.providerAccountId !== null &&
+                  envelope.providerAccountId !== candidateAccountId,
               )
-                throw refusal();
-            } catch {
+            )
               throw refusal();
-            }
           }
         }
 

@@ -60,6 +60,8 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "launchContractEnvelope",
+        summary:
+          "Request a Sender View when signingPreparationEnabled is on. Administrator or Legal Team Member only; the caller must be the preparer, Legal Owner, or an Administrator",
         tags: ["envelopes"],
         params: z.object({ envelopeId: z.string().min(1).max(64) }),
         response: { 200: z.object({ url: z.string() }), default: problemResponse },
@@ -310,6 +312,8 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireMember,
       schema: {
         operationId: "confirmEnvelopeReturn",
+        summary:
+          "Confirm a Sender View return as an Administrator or Legal Team Member. The event is only a hint; this POST rechecks the user and Contract access before granting access or confirming provider status",
         tags: ["envelopes"],
         response: {
           200: z.object({ destination: z.string(), waiting: z.boolean() }),

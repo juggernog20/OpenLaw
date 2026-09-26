@@ -225,7 +225,7 @@ One durable round of signature on an exact Version of a Contract’s primary Doc
 _Avoid_: signature request, signing packet, DocuSign envelope (the term is provider-neutral), request (that is the intake term)
 
 **Sender View**:
-A short-lived provider link that opens the saved draft in DocuSign. Each OpenLaw launch checks current access and requests a fresh link. The link is an external capability; OpenLaw logout, archival, reach changes and connector disable cannot close an already-issued provider session. A return is navigation, not proof of send. Sender View and its native restrictions remain live-acceptance gated [CTR-013, #1178].
+A short-lived provider link that opens the saved draft in DocuSign. Each OpenLaw launch checks current access and requests a fresh link. The link is an external capability; OpenLaw logout, archival, changed access and connector disable cannot close an already-issued provider session. A return is navigation, not proof of send. Sender View and its native restrictions remain live-acceptance gated [CTR-013, #1178].
 
 **Signer**:
 One person selected to sign an Envelope, resolved to a name and email address. A Signer may be a user of this install, selected by identity, or someone outside it, entered by name and address. Every Signer has a distinct address and is asked in parallel; there is no routing order [CTR-013, September 25 addendum].
