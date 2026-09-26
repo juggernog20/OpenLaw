@@ -2545,7 +2545,11 @@ C20's own note row is the other thing this slice touches. DES-037 clause 4 drew 
 
 **2. The menu's label names the round, not the record.** "Actions for the envelope sent on {date}" — the sent date, `formatShortDate`, which is the fact already in the row's Sent cell. A record can hold several rounds, so "Actions for this envelope" would give a screen-reader user the same label several times over on the same table.
 
+**Clause 2 amendment, 2026-09-26.** The label is now "Actions for the envelope: {date}", following [CTR-013 addendum #1177](DECISIONS-CONTRACTS.md#ctr-013-addendum-2026-09-26-1177-preparation-history-and-signer-erasure). A preparation round has no Sent date, so the label takes the same value as the row's Sent cell: the short date, or "Not sent". The label still names the round and not the record.
+
 **3. The trigger is absent for a viewer who may not void, and absent on a round that has ended.** DES-035 clause 9's rule twice. The three actors are CTR-013's: the person who sent it, the contract's Owner, and an Administrator — the approvals-cancellation audience, mirrored here over the facts the page already holds. Everybody else gets no trigger at all, because a greyed-out "Void envelope" on somebody else's send is an invitation to ask why and the answer is not a permissions lesson. An ended round draws none either: there is nothing to withdraw.
+
+**Clause 3 amendment, 2026-09-26.** The first actor is the preparer for a preparation round and the recorded sender for a historical or direct send, as the M15/4 addendum of CTR-013 was amended by #1177. The trigger reads the row's `sentBy`, which holds that person in both cases.
 
 **4. Voiding opens a dialog, where cancelling an approval does not.** DES-035 clause 10 refused a confirmation on cancel because the ask goes, the activity entry keeps it, and asking again is one dialog away. A void is not that act: it ends a round that is already out with people who have no account here, and it collects a datum. Both reasons point the same way, and the second is decisive — the dialog exists to ask for the reason, not to ask "are you sure".
 
