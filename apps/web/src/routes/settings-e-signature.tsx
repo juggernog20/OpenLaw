@@ -672,12 +672,12 @@ export function SettingsESignaturePage() {
                   {connector.disabledAt === null ? (
                     <FormattedMessage
                       id="settings.eSignature.enabled.on"
-                      defaultMessage="Turn this off to go back to the manual path without losing the credentials. Records stop offering the send, and rounds already out stand still until you turn it back on."
+                      defaultMessage="Turn this off to refuse new preparations and Resume links. Existing DocuSign sessions remain usable and OpenLaw continues recording their outcomes. Credentials and history stay saved."
                     />
                   ) : (
                     <FormattedMessage
                       id="settings.eSignature.enabled.off"
-                      defaultMessage="Off since {when}. Records show the manual path, and rounds already out stand still until you turn this back on."
+                      defaultMessage="Off since {when}. New preparations and Resume links are refused. Existing DocuSign sessions remain usable and confirmed outcomes still reach OpenLaw."
                       values={{ when: formatShortDate(connector.disabledAt) }}
                     />
                   )}
@@ -786,7 +786,7 @@ function RemoveConnectorDialog({
           <p className="text-sm text-muted">
             <FormattedMessage
               id="settings.eSignature.removeAlternative"
-              defaultMessage="To stop sending and keep the credentials, turn the connector off instead."
+              defaultMessage="Live preparations, uncertain creations, sent Envelopes and outstanding executed copies prevent removal or changes to their account and environment. Credentials can rotate after verification of the same identity. Legacy Envelopes without a recorded account require the original integration key and API user. Turning off the connector does not close existing DocuSign sessions."
             />
           </p>
           <div className="flex justify-end gap-2">

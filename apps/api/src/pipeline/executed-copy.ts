@@ -52,6 +52,7 @@
  * work owed, and the queue send only wakes a worker.
  */
 
+import { requireEnvelopeIdentity } from "../lib/signing/identity.js";
 import { createHash } from "node:crypto";
 import { Readable } from "node:stream";
 import {
@@ -199,6 +200,10 @@ interface OwedFetch {
   envelopeId: string;
   contractId: string;
   provider: string;
+  providerAccountId: string | null;
+  providerEnvironment: string | null;
+  providerTransactionId: string | null;
+  creationKind: string | null;
   providerEnvelopeId: string;
   sentBy: string;
   /** The chain the send left from, or NULL once that round has been
@@ -223,6 +228,10 @@ async function owedFetch(deps: ExecutedCopyDeps, envelopeId: string): Promise<Ow
       envelopeId: contractEnvelopes.id,
       contractId: contractEnvelopes.contractId,
       provider: contractEnvelopes.provider,
+      providerAccountId: contractEnvelopes.providerAccountId,
+      providerEnvironment: contractEnvelopes.providerEnvironment,
+      providerTransactionId: contractEnvelopes.providerTransactionId,
+      creationKind: contractEnvelopes.creationKind,
       providerEnvelopeId: contractEnvelopes.providerEnvelopeId,
       status: contractEnvelopes.status,
       executedFetch: contractEnvelopes.executedFetch,
@@ -267,7 +276,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
     );
   }
 
-  const signing = await deps.resolveSigningProvider();
+  const signing = await deps.resolveSigningProvider("accounting");
   if (!signing) {
     // Settled rather than retried: an install with no connector row
     // resolves to nothing every time, and the record saying the copy
@@ -276,12 +285,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
       "This install has no signing connector, so no executed copy can be fetched.",
     );
   }
-  if (signing.provider !== owed.provider) {
-    throw new SigningConfigError(
-      `This envelope was sent through ${owed.provider}, and the configured connector is ` +
-        `${signing.provider}.`,
-    );
-  }
+  await requireEnvelopeIdentity(signing, owed);
 
   const versionId = uuidv7();
   const filename = executedCopyFilename(owed.sentFilename);

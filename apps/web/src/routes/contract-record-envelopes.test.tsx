@@ -1048,6 +1048,44 @@ describe("preparing an unsent Envelope", () => {
     expect(screen.queryByText("Waiting for confirmation")).not.toBeInTheDocument();
   });
 
+  it.each(["changed", "unavailable"] as const)(
+    "explains a %s source and retains history without Resume",
+    async (sourceState) => {
+      const api = recordApi({
+        preparationEnabled: true,
+        envelopes: [
+          envelopeRow({ status: "draft", preparationState: "created", sentAt: null, sourceState }),
+        ],
+      });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/signatures");
+      expect(
+        await screen.findByText(
+          sourceState === "changed"
+            ? /The primary Document changed/
+            : /The original source Version is unavailable/,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+      expect(screen.getByText(/does not close a session already issued/)).toBeInTheDocument();
+    },
+  );
+
+  it("explains a disabled connector while retaining the preparation", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      signingConfigured: false,
+      envelopes: [envelopeRow({ status: "draft", preparationState: "created", sentAt: null })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(
+      await screen.findByText(/Signing connector is disabled or unavailable/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+  });
+
   it("offers Resume while confirmation is pending and never offers Send or Void for the draft", async () => {
     const api = recordApi({
       preparationEnabled: true,

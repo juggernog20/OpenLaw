@@ -110,6 +110,7 @@
  * is `sent_by`. None of that work is done here; the row only reports it.
  */
 
+import { EnvelopeIdentityError, requireEnvelopeIdentity } from "../../lib/signing/identity.js";
 import { contractStatusRevision } from "../../lib/signing/recovery-stage.js";
 import { createHash, randomUUID } from "node:crypto";
 import type { Readable } from "node:stream";
@@ -124,6 +125,7 @@ import {
   contracts,
   contractStatuses,
   signingConnectors,
+  sql,
   desc,
   documents,
   documentVersions,
@@ -247,6 +249,7 @@ const EnvelopeSchema = z.object({
   subject: z.string().nullable(),
   documentVersionId: z.string().nullable(),
   documentId: z.string().nullable(),
+  sourceState: z.enum(["available", "changed", "unavailable"]).optional(),
   /** When it reached a terminal status; NULL while it is out. */
   completedAt: z.iso.datetime().nullable(),
   /**
@@ -413,7 +416,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * the signature" answered on the first row. The id breaks a tie
    * between two rows written in the same second, so the order is total.
    */
-  async function envelopesOf(db: Executor, contractId: string) {
+  async function envelopesOf(db: Executor, contractId: string, user: AuthenticatedUser) {
     // The round that came back, joined beside the round that went out.
     // Both are `document_versions`, so the second join needs a name of
     // its own — and the two are different facts: what was sent, and
@@ -435,6 +438,9 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         documentVersionId: contractEnvelopes.documentVersionId,
         documentId: contractEnvelopes.documentId,
         documentTitle: documents.title,
+        sourceReadable: sql<boolean>`coalesce(${documentAudienceScope(db, user)}, false)`,
+        sourceArchivedAt: documents.archivedAt,
+        primaryDocumentId: contracts.primaryDocumentId,
         documentVersionNumber: documentVersions.versionNumber,
         reason: contractEnvelopes.reason,
         sentById: contractEnvelopes.sentBy,
@@ -450,6 +456,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       })
       .from(contractEnvelopes)
       .innerJoin(users, eq(contractEnvelopes.sentBy, users.id))
+      .innerJoin(contracts, eq(contractEnvelopes.contractId, contracts.id))
       // Left on all three: the versions an envelope names are set to
       // NULL when they are erased (DOC-010), and an inner join would
       // then take the envelope off the record along with them.
@@ -498,11 +505,17 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       scheduled: row.scheduled,
       externallyRestored: row.externallyRestored,
       subject: row.subject,
-      documentId: row.documentId,
-      documentVersionId: row.documentVersionId,
+      documentId: row.sourceReadable ? row.documentId : null,
+      documentVersionId: row.sourceReadable ? row.documentVersionId : null,
+      sourceState:
+        !row.sourceReadable || !row.documentVersionId || row.sourceArchivedAt
+          ? ("unavailable" as const)
+          : row.documentId !== row.primaryDocumentId
+            ? ("changed" as const)
+            : ("available" as const),
       signers: signersByEnvelope.get(row.id) ?? [],
-      documentTitle: row.documentTitle,
-      documentVersionNumber: row.documentVersionNumber,
+      documentTitle: row.sourceReadable ? row.documentTitle : null,
+      documentVersionNumber: row.sourceReadable ? row.documentVersionNumber : null,
       reason: row.reason,
       sentBy: { id: row.sentById, displayName: row.sentByName, image: row.sentByImage },
       sentAt: row.sentAt?.toISOString() ?? null,
@@ -549,6 +562,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     id: string;
     contractId: string;
     provider: SigningProviderKey;
+    providerAccountId: string | null;
+    providerEnvironment: string | null;
+    providerTransactionId: string | null;
+    creationKind: string | null;
     providerEnvelopeId: string | null;
     status: EnvelopeStatus;
     /** Who sent it — one of the void's three actors (CTR-013). */
@@ -580,6 +597,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         id: contractEnvelopes.id,
         contractId: contractEnvelopes.contractId,
         provider: contractEnvelopes.provider,
+        providerAccountId: contractEnvelopes.providerAccountId,
+        providerEnvironment: contractEnvelopes.providerEnvironment,
+        providerTransactionId: contractEnvelopes.providerTransactionId,
+        creationKind: contractEnvelopes.creationKind,
         providerEnvelopeId: contractEnvelopes.providerEnvelopeId,
         status: contractEnvelopes.status,
         sentBy: contractEnvelopes.sentBy,
@@ -612,7 +633,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
     signingConfigured: boolean,
   ): Promise<z.infer<typeof EnvelopesEnvelope>> {
     const [envelopes, primaryDocument] = await Promise.all([
-      envelopesOf(app.db, contract.id),
+      envelopesOf(app.db, contract.id, user),
       sendableDocument(app.db, user, contract.primaryDocumentId),
     ]);
     return {
@@ -715,6 +736,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
    * failures.
    */
   function voidFailure(error: unknown): unknown {
+    if (error instanceof EnvelopeIdentityError) return httpError(409, error.message);
     if (error instanceof SigningRefusedError) {
       // The provider's own words stay in the log, for the reason
       // `sendFailure` gives: a driver builds this message from a
@@ -806,7 +828,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       const contract = await reachedContract(app.db, request.user, request.params.number);
       if (!contract) throw httpError(404, NO_CONTRACT);
       const [envelopes, primaryDocument, signing] = await Promise.all([
-        envelopesOf(app.db, contract.id),
+        envelopesOf(app.db, contract.id, request.user),
         sendableDocument(app.db, request.user, contract.primaryDocumentId),
         // A stored connector that cannot be built into a driver — an
         // unreadable RSA key, a row a later adapter wrote — answers as
@@ -1037,7 +1059,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               ),
             )
             .for("share");
-          if (!connector)
+          if (!connector || (await app.resolveSigningProvider()) !== signing)
             throw httpError(409, "The Signing connector is unavailable.", {
               type: SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
             });
@@ -1235,7 +1257,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               .returning({ id: contractEnvelopes.id });
             if (!envelope)
               return {
-                envelopes: await envelopesOf(tx, locked.id),
+                envelopes: await envelopesOf(tx, locked.id, request.user),
                 signingConfigured: true,
                 updateMode: await signingUpdateMode(tx),
                 primaryDocument,
@@ -1316,7 +1338,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
             }
 
             return {
-              envelopes: await envelopesOf(tx, locked.id),
+              envelopes: await envelopesOf(tx, locked.id, request.user),
               signingConfigured: true,
               updateMode: await signingUpdateMode(tx),
               primaryDocument,
@@ -1503,6 +1525,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       // The provider first. A withdrawal it refuses leaves the row
       // exactly as it was, which is the state a reader can act on.
       try {
+        await requireEnvelopeIdentity(signing, envelope);
         await signing.voidEnvelope(envelope.providerEnvelopeId, reason);
       } catch (error) {
         // The provider does not hold this envelope at all. It cannot

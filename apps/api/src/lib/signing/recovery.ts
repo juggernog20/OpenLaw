@@ -78,7 +78,7 @@ export async function recoverEnvelope(
       stopped = "attempts_exhausted";
       return;
     }
-    const signing = await deps.resolveSigningProvider();
+    const signing = await deps.resolveSigningProvider("accounting");
     if (!signing) return;
     if (
       signing.provider !== row.provider ||

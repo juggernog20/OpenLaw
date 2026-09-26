@@ -7240,7 +7240,7 @@
     "/api/v1/signing-connectors/{provider}/disable": {
       "post": {
         "operationId": "disableSigningConnector",
-        "summary": "Turn the e-signature connector off (CTR-013) without losing its credentials. Every surface then answers as an unconfigured install does — the send control leaves the record and the manual hand-off is the path again. A live envelope does not refuse this: turning the connector back on picks the round up where the sweep left it",
+        "summary": "Turn the e-signature connector off (CTR-013) without losing its credentials. New sends and launches are refused. Existing external sessions remain usable and provider accounting continues",
         "tags": ["signing-connector"],
         "parameters": [
           {
@@ -7372,7 +7372,7 @@
     "/api/v1/signing-connectors/{provider}/enable": {
       "post": {
         "operationId": "enableSigningConnector",
-        "summary": "Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record and the reconciliation sweep reaches every round that was out while it was off",
+        "summary": "Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record. Provider accounting continues in both states",
         "tags": ["signing-connector"],
         "parameters": [
           {
@@ -58405,6 +58405,10 @@
                           "documentId": {
                             "type": ["string", "null"]
                           },
+                          "sourceState": {
+                            "type": "string",
+                            "enum": ["available", "changed", "unavailable"]
+                          },
                           "completedAt": {
                             "anyOf": [
                               {
@@ -58803,6 +58807,10 @@
                           },
                           "documentId": {
                             "type": ["string", "null"]
+                          },
+                          "sourceState": {
+                            "type": "string",
+                            "enum": ["available", "changed", "unavailable"]
                           },
                           "completedAt": {
                             "anyOf": [
@@ -59260,6 +59268,10 @@
                           "documentId": {
                             "type": ["string", "null"]
                           },
+                          "sourceState": {
+                            "type": "string",
+                            "enum": ["available", "changed", "unavailable"]
+                          },
                           "completedAt": {
                             "anyOf": [
                               {
@@ -59669,6 +59681,10 @@
                           },
                           "documentId": {
                             "type": ["string", "null"]
+                          },
+                          "sourceState": {
+                            "type": "string",
+                            "enum": ["available", "changed", "unavailable"]
                           },
                           "completedAt": {
                             "anyOf": [

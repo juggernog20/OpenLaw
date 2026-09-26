@@ -1224,7 +1224,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn the e-signature connector off (CTR-013) without losing its credentials. Every surface then answers as an unconfigured install does — the send control leaves the record and the manual hand-off is the path again. A live envelope does not refuse this: turning the connector back on picks the round up where the sweep left it */
+    /** Turn the e-signature connector off (CTR-013) without losing its credentials. New sends and launches are refused. Existing external sessions remain usable and provider accounting continues */
     post: operations["disableSigningConnector"];
     delete?: never;
     options?: never;
@@ -1241,7 +1241,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record and the reconciliation sweep reaches every round that was out while it was off */
+    /** Turn the e-signature connector back on with the credentials it already holds (CTR-013). The send control returns to the record. Provider accounting continues in both states */
     post: operations["enableSigningConnector"];
     delete?: never;
     options?: never;
@@ -28666,6 +28666,8 @@ export interface operations {
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;
+              /** @enum {string} */
+              sourceState?: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -28778,6 +28780,8 @@ export interface operations {
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;
+              /** @enum {string} */
+              sourceState?: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -28917,6 +28921,8 @@ export interface operations {
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;
+              /** @enum {string} */
+              sourceState?: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";
@@ -29044,6 +29050,8 @@ export interface operations {
               subject: string | null;
               documentVersionId: string | null;
               documentId: string | null;
+              /** @enum {string} */
+              sourceState?: "available" | "changed" | "unavailable";
               completedAt: string | null;
               /** @enum {string} */
               executedFetch: "pending" | "ready" | "failed";

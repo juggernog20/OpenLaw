@@ -177,6 +177,8 @@ describe("the signing resolver", () => {
       .where(eq(signingConnectors.provider, "docusign"));
     expect(await resolve()).toBeNull();
 
+    expect(await resolve("accounting")).not.toBeNull();
+
     // Turning it back on builds from the credentials the row kept —
     // which is the difference from deleting it.
     await db
@@ -184,7 +186,7 @@ describe("the signing resolver", () => {
       .set({ disabledAt: null })
       .where(eq(signingConnectors.provider, "docusign"));
     expect(await resolve()).not.toBeNull();
-    expect(built).toHaveLength(2);
+    expect(built).toHaveLength(3);
     expect(built[1]?.privateKey).toBe(RSA_KEY);
   });
 });

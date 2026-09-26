@@ -250,7 +250,7 @@ export async function runReconciliationSweep(
     // limits. A resolver that raises is a stored row that cannot be
     // built into a driver, which is install-wide — every envelope after
     // it would fail the same way.
-    const signing = await deps.resolveSigningProvider().catch((error: unknown) => {
+    const signing = await deps.resolveSigningProvider("accounting").catch((error: unknown) => {
       deps.log.error(
         { reason: reasonOf(error) },
         "the reconciliation sweep could not build the signing connector",
