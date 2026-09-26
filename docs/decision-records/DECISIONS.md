@@ -1633,3 +1633,13 @@ they do not establish live vendor interoperability.
 | DD-027 | Business Users may pick Portal-listed Entities on forms Legal put an Entity picker on     | Accepted                                                                    |
 | DD-028 | The type Form — one tree per type decides intake, creation, record and Portal             | Accepted                                                                    |
 | DD-029 | MCP — a person's agent works in OpenLaw as that person                                    | Accepted; addenda #1134, #1138                                              |
+
+### DD-017 addendum, 2026-09-26, #1178. Preparation provenance and verification
+
+Preparation started, provider draft confirmed and session launched are separate
+Activity from provider-confirmed sending. A provider event carries no inferred
+human sender. Prepared by is the immutable OpenLaw preparer, also retained for the
+existing Void audience and executed-copy author. This supersedes earlier sent-only
+narration for prepared Envelopes. User guides must not use the shared integration
+user or the last session launcher to name who clicked Send. Native provider controls
+and their enforcement remain unverified until #1178's live acceptance succeeds.

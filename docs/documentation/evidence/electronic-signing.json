@@ -1,26 +1,22 @@
 {
   "articleId": "electronic-signing",
-  "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-sign-rw",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (signing-standin); corrections by DOC-029 integration author agent",
-  "technicalReviewer": "DOC-029 integration author agent",
-  "walkthroughReviewer": "DOC-029 independent re-walk agent",
+  "contentSha256": "c157460d1d0b7f5cdc90cb0cbd31ff9358e9108d9b87373d8f2fa34c2b208ba6",
+  "appCommit": "097a6cac43fa68db973dbb0fd3bf35dd330d3622",
+  "buildId": "Pending committed acceptance lab build; no live preparation proof obtained",
+  "environment": "Disposable #1178 live lab pending build",
+  "author": "#1178 implementation agent",
+  "technicalReviewer": "#1178 implementation agent, source inspection only",
+  "walkthroughReviewer": "Pending independent root agent walkthrough",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T17:37:00Z",
-  "status": "pass",
+  "verifiedAt": null,
+  "reviewedAt": "2026-09-26T10:32:14.180366+00:00",
+  "status": "blocked",
   "sources": [
     "docs/user-guides/electronic-signing.md",
-    "docs/documentation/batches/DOC-029/signing-standin/technical-review.json",
-    "docs/documentation/batches/DOC-029/signing-standin/technical-review-addendum.json",
-    "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.json",
-    "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
-    "apps/api/src/lib/signing/docusign.ts",
-    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "docs/DEPLOYMENT.md",
     "apps/api/src/modules/contract-envelopes/routes.ts",
-    "apps/api/src/modules/signing-webhook/routes.ts",
-    "apps/api/src/pipeline/executed-copy.ts",
+    "apps/api/src/modules/contract-envelopes/launch.ts",
+    "apps/api/src/lib/signing/docusign.ts",
     "apps/api/src/pipeline/reconciliation.ts"
   ],
   "scenarios": [
@@ -28,88 +24,267 @@
       "id": "V-C17-electronic",
       "coverage": ["C17"],
       "role": "legal_team_member",
-      "method": "browser-walkthrough",
+      "method": "live-provider-check",
       "prerequisites": [
-        "Owned lab sign-rw (project openlaw-docs-41255c61-sign-rw, Helix light seed 7, built from 3fa407e3) with the local DocuSign protocol stand-in from docs/documentation/batches/DOC-029/rewalk/signing (a copy of signing-standin/fixture that also keeps the posted Signer tabs); fictional paper and Signers only.",
-        "DOC-029 prerequisite Contracts created through the lab API with a Legal Owner, a primary Document whose Version 1 carries two /sig/ marks and whose Version 2 carries none, one supporting Document, and Ravi Menon on the team."
+        "Committed disposable DOC-029-pattern lab with real provider hosts and explicit preparation opt-in.",
+        "Owner enters developer credentials directly and leaves the secret fields before automation resumes. Use a non-administrator integration user and two controlled Signer inboxes.",
+        "Two-page fictional primary Document Version; separate provider account-administration browser context."
       ],
-      "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
-      "actual": "17 recorded steps for this role passed on 3fa407e3 (plus 3 shared Administrator setup steps and the Polling setup step). Send for signature was absent with no connector, before and after C-32 had a primary Document with 2 Versions and a supporting Document; with the connector enabled it was absent on C-33 (no paper) and shown on C-32; turning the connector off hid it and turning it on showed it again. Before you start: Version 1 was uploaded with two /sig/ marks already in the paper, and its download returned the same bytes. Nadia Haddad moved C-32 to Out for signature and opened Approvals > Send for signature. Version listed \"Version 2 — doc029-primary-v2-legal_team_member.pdf (current) | Version 1 — doc029-primary-legal_team_member.pdf\" with the current one selected and no supporting Document. Empty Signers were refused with \"Give every signer a name and an email address.\", a duplicate address with \"Each signer needs their own email address.\", Remove signer 3 left 2 rows, and Cancel left 0 Envelopes in the app and at the provider. During a controlled provider outage the dialog said \"The provider could not be reached. It may still have taken the envelope — check at the provider before you send again.\" and no round existed after reload. The retry sent Version 1 with a blank Subject: the row showed both fictional Signers, Version 1, Out for signature, Sep 16 by Nadia Haddad; the header said Envelope sent; the provider got subject \"C-32 DOC-029 signing-standin legal_team_member 20260916172450\", one document equal to Version 1 bytes, both Signers at routingOrder 1, and each Signer carried the same single Sign Here tab with anchorString /sig/, anchorUnits pixels, offsets 0 and anchorIgnoreIfNotPresent true; the Status stayed Out for signature. While it was out Send for signature was absent and a direct send answered 409. Marcus Oyelaran had no envelope actions and his void answered 403; the sender had the actions menu; Daniel Okafor, an Administrator who was neither sender nor Legal Owner, got \"Say why this envelope is being voided.\" for an empty Reason, Cancel kept the round, and the void recorded Voided with the reason (provider status voided); Send for signature returned and the Status did not move. The next round sent the current Version 2, which has no /sig/, with the same anchor request. A provider decline (signed delivery 204) showed Declined with its reason above the Voided row and the header Envelope declined; no Version was filed; the Contract stayed Out for signature and unarchived; Send was offered. With both dialogs open, Priya Raman's later send showed \"This contract already has an envelope out for signature. Void it before sending another.\" and after reload she saw Nadia's live round; the provider held one new envelope. Completion (delivery 204) showed Signed with executedFetch pending right after, then Executed copy; the download bytes equalled the provider output; Version 3 \"doc029-primary-v2-legal_team_member (executed).pdf\" was filed on the primary Document as kind executed, current and designated (Unmark as executed copy offered); the supporting Document kept 1 Version; the Status became Active; a repeated delivery added no Version or Envelope. After moving the Contract to Internal review before completion, Version 4 was filed and designated and the Status stayed Internal review. A void after the provider had completed was refused with \"The provider says this envelope is no longer live. Its ending arrives on the record from the provider's own feed.\"; after the feed and reload the row read Signed with Executed copy. With the executed file refused at the provider, the Signed row said \"The executed copy could not be filed. Upload it to the record instead.\" and no Version was added. Ravi Menon (Business User on the team) got 403 for Envelope read and send. Archived C-32 kept 6 rounds readable with no Send for signature and no envelope actions, a direct send answered 409, and it was restored. In Polling mode (C-36) the live row still carried the webhook note, a signed delivery answered 401, and the record read Signed with Executed copy and Active 4.0 minutes after the provider completion.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.json",
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-main.raw.json",
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-polling.raw.json",
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.mjs",
-        "docs/documentation/batches/DOC-029/rewalk/signing/server.mjs",
-        "docs/documentation/batches/DOC-029/rewalk/signing/signing-overlay.yml",
-        "docs/documentation/batches/DOC-029/rewalk/signing/up.sh"
+      "expected": "Complete every live acceptance check below. Record actual native behavior without sender URLs, return state, tokens, credentials or real counterparty data.",
+      "actual": "Blocked: owner has not entered developer credentials or supplied the two controlled Signer inboxes. No native editor or provider journey was attempted. Stand-in tests are not substituted for these checks.",
+      "result": "blocked",
+      "evidence": [],
+      "checks": [
+        {
+          "id": "prepare-and-restrict",
+          "expected": "Selected source Version, Signers, and Subject reach native tagger; distinct Signature/Initials/Date/Text fields and required assignment work. Attempt every exposed recipient, document, page, subject, visibility and template edit route; record actual prevention or release-blocking gap.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "save-resume-discard",
+          "expected": "Save and close send nothing; a new launch resumes the same provider draft. Expired URL and competing editor are truthful. Native Discard produces confirmed terminal state without racing a send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "return-auth",
+          "expected": "Record event casing and missing provider-ID behavior without retaining opaque state or launch URL. Reauthentication resumes safely; unknown/altered/replayed returns grant no authority or duplicate send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "send-options",
+          "expected": "Record whether Send Later and missing-field sends are offered; test safe synthetic cases if available. Scheduled state stays live and truthful; document provider limits without claiming unproven field guarantees.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "complete-without-return",
+          "expected": "Send a fictional two-Signer round and lose its browser return. Actual provider evidence marks sent once. Owner completes both Signers. Polling, without public callback or accelerated DB clocks, files exactly one executed copy on the original chain and changes Stage only under the existing rule.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "issued-session-access",
+          "expected": "Use separate synthetic rounds to observe an already-issued provider session after OpenLaw logout, reach revocation, archive, and connector disable. Verify new launches refused; distinguish observed native URL lifetime from local authorization.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "sent-envelope-sender-view",
+          "expected": "A sent Envelope refuses Sender View.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "transaction-lookup",
+          "expected": "Observe actual developer-account transaction lookup for a created draft and interruption recovery without duplicates.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "signed-connect",
+          "expected": "If Webhook behavior is claimed, verify real signed Connect delivery and recovery separately under #888.",
+          "result": "blocked",
+          "actual": "No real Connect claim; gap remains #888."
+        }
       ]
     },
     {
       "id": "V-C17-electronic",
       "coverage": ["C17"],
-      "role": "administrator",
+      "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Owned lab sign-rw (project openlaw-docs-41255c61-sign-rw, Helix light seed 7, built from 3fa407e3) with the local DocuSign protocol stand-in from docs/documentation/batches/DOC-029/rewalk/signing (a copy of signing-standin/fixture that also keeps the posted Signer tabs); fictional paper and Signers only.",
-        "DOC-029 prerequisite Contracts created through the lab API with a Legal Owner, a primary Document whose Version 1 carries two /sig/ marks and whose Version 2 carries none, one supporting Document, and Ravi Menon on the team."
+        "Committed disposable DOC-029-pattern lab with real provider hosts and explicit preparation opt-in.",
+        "Owner enters developer credentials directly and leaves the secret fields before automation resumes. Use a non-administrator integration user and two controlled Signer inboxes.",
+        "Two-page fictional primary Document Version; separate provider account-administration browser context."
       ],
-      "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
-      "actual": "20 recorded steps for this role passed on 3fa407e3, including 4 Administrator setup steps. The lab started with no connector and Signing updates defaulting to Polling. Send for signature was absent with no connector, before and after C-34 had a primary Document with 2 Versions and a supporting Document; Daniel Okafor saved a Webhook-mode connector pointing at the stand-in and Test connection said \"Connected to DOC-029 signing stand-in.\"; Send was absent on C-35 (no paper) and shown on C-34; turning the connector off hid it and on showed it. Before you start: Version 1 carried two /sig/ marks and downloaded unchanged. Daniel moved C-34 to Out for signature. Version listed \"Version 2 — doc029-primary-v2-administrator.pdf (current) | Version 1 — doc029-primary-administrator.pdf\" with the current one selected; empty and duplicate Signers were refused with the same messages; Remove signer 3 worked; Cancel left 0 Envelopes and the provider count at 6. The outage showed the same send error with no round; the retry sent Version 1 with a blank Subject, the row showed both Signers, Version 1, Out for signature, Sep 16 by Daniel Okafor, the header Envelope sent, and the provider got subject \"C-34 DOC-029 signing-standin administrator 20260916172450\" with one document equal to Version 1, both Signers at routingOrder 1, and the same /sig/ Sign Here tab on each Signer; the Status stayed Out for signature. A direct second send answered 409 with Send absent. Priya Raman had no actions and her void answered 403; the sender had the actions menu; the Legal Owner Nadia Haddad got the Reason refusal, Cancel kept the round, and the void recorded Voided with the reason at the provider and on the row; Send returned; Status unchanged. The decline round sent Version 2 (no /sig/) with the same anchor request; the provider decline (204) showed Declined with its reason beside the Voided row and Envelope declined; nothing filed; Contract still Out for signature and unarchived; Send offered. Nadia's later send in a parallel dialog showed the one-live-Envelope refusal, and after reload she saw Daniel's live round. Completion (204) showed Signed, then Executed copy with bytes equal to the provider output; Version 3 \"doc029-primary-v2-administrator (executed).pdf\" was executed, current and designated on the primary Document; the supporting Document was untouched; Status Active; a repeated delivery changed nothing. Moving to Internal review before completion filed Version 4 and left Internal review. A void after provider completion showed the no-longer-live refusal, and after the feed the row read Signed. A refused executed file showed \"The executed copy could not be filed. Upload it to the record instead.\" with no new Version. Ravi Menon got 403 for read and send. Archived C-34 kept 6 rounds readable with no Send and a direct send answered 409; restored. Daniel switched Signing updates to Polling; the Polling hint about 15 to 20 minutes was shown.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.json",
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-main.raw.json",
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-polling.raw.json",
-        "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.mjs",
-        "docs/documentation/batches/DOC-029/rewalk/signing/server.mjs",
-        "docs/documentation/batches/DOC-029/rewalk/signing/signing-overlay.yml",
-        "docs/documentation/batches/DOC-029/rewalk/signing/up.sh"
+      "expected": "Complete every live acceptance check below. Record actual native behavior without sender URLs, return state, tokens, credentials or real counterparty data.",
+      "actual": "Blocked: owner has not entered developer credentials or supplied the two controlled Signer inboxes. No native editor or provider journey was attempted. Stand-in tests are not substituted for these checks.",
+      "result": "blocked",
+      "evidence": [],
+      "checks": [
+        {
+          "id": "prepare-and-restrict",
+          "expected": "Selected source Version, Signers, and Subject reach native tagger; distinct Signature/Initials/Date/Text fields and required assignment work. Attempt every exposed recipient, document, page, subject, visibility and template edit route; record actual prevention or release-blocking gap.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "save-resume-discard",
+          "expected": "Save and close send nothing; a new launch resumes the same provider draft. Expired URL and competing editor are truthful. Native Discard produces confirmed terminal state without racing a send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "return-auth",
+          "expected": "Record event casing and missing provider-ID behavior without retaining opaque state or launch URL. Reauthentication resumes safely; unknown/altered/replayed returns grant no authority or duplicate send.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "send-options",
+          "expected": "Record whether Send Later and missing-field sends are offered; test safe synthetic cases if available. Scheduled state stays live and truthful; document provider limits without claiming unproven field guarantees.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "complete-without-return",
+          "expected": "Send a fictional two-Signer round and lose its browser return. Actual provider evidence marks sent once. Owner completes both Signers. Polling, without public callback or accelerated DB clocks, files exactly one executed copy on the original chain and changes Stage only under the existing rule.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "issued-session-access",
+          "expected": "Use separate synthetic rounds to observe an already-issued provider session after OpenLaw logout, reach revocation, archive, and connector disable. Verify new launches refused; distinguish observed native URL lifetime from local authorization.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "sent-envelope-sender-view",
+          "expected": "A sent Envelope refuses Sender View.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "transaction-lookup",
+          "expected": "Observe actual developer-account transaction lookup for a created draft and interruption recovery without duplicates.",
+          "result": "blocked",
+          "actual": "Live prerequisites unavailable."
+        },
+        {
+          "id": "signed-connect",
+          "expected": "If Webhook behavior is claimed, verify real signed Connect delivery and recovery separately under #888.",
+          "result": "blocked",
+          "actual": "No real Connect claim; gap remains #888."
+        }
       ]
     }
   ],
   "limitations": [
-    "Independent agent re-walk by an agent that did not write or edit the article; not a human user study and not the feature owner's approval.",
-    "The /sig/ paragraph is verified in three separate parts, and none of them alone proves all of it. (1) This stand-in walkthrough proves that OpenLaw sends each Signer the same single Sign Here tab anchored on /sig/ with anchorIgnoreIfNotPresent true, for paper with and without marks. The stand-in copy keeps the posted tabs for that reason. It does not render the paper, so it cannot show where a field lands, that white text still anchors, or the free-form fallback. The fictional PDFs hold /sig/ in a PDF comment, not in rendered text. (2) Source inspection of buildEnvelopeDefinition in apps/api/src/lib/signing/docusign.ts at 3fa407e3 (unchanged in this worktree): every Signer gets routingOrder 1 and the identical signHereTabs entry, so all Signers share the same marks; the doc comment says DocuSign drops the tab and falls back to free-form signing when the paper has no anchor. (3) Real placement comes from the live DocuSign round trip in docs/documentation/batches/DOC-029/live-provider/walkthrough/ (C-38, paper doc029-live-signing.docx with /sig/ marks). The user confirmed on 2026-09-16 that the Sign Here field sat at the /sig/ anchor. That confirmation is the user's report, not an agent observation, and the live round did not test white text, several Signers, or paper without /sig/.",
-    "C17 otherwise used an isolated local DocuSign protocol stand-in with fictional paper and Signers. Completion, decline, outage and the refused executed file came from its controls, and deliveries were signed with a per-run in-memory Connect secret. It does not verify real provider setup and does not satisfy C42.",
-    "Connector configuration, disabling and the Polling switch used the Settings page as setup only; the configure-signing guide owns those steps. Contract creation, Document uploads, the team add, archive and restore used the lab API as prerequisites.",
-    "The Polling claim was checked once: the first provider check came 4.0 minutes after completion, at the first 5-minute sweep for a new Envelope. The 15 to 20 minute interval between later checks is from source (reconciliation.ts) and was not measured.",
-    "After a refused void, an immediate reload still showed Out for signature; the Signed outcome appeared once the provider feed arrived. The article's reload advice holds, but the outcome depends on that feed.",
-    "The sender's own void was not exercised end to end; the sender's actions menu was checked. The Legal Owner (administrator flow) and an Administrator who was neither sender nor Legal Owner (legal_team_member flow) each voided a round.",
-    "The article's manual follow-up for an unfiled executed copy links to manual-signing and was not repeated here.",
-    "The negative access check used Ravi Menon, a Business User on the team. The article does not address this audience.",
-    "This re-walk replays signing-standin/walkthrough-r1.mjs with the /sig/ checks added. It ran against the article bytes 89fa2f3b; the only difference from the earlier walked bytes (bb311a48) is the new /sig/ paragraph. Browser contexts were 1280x1800 CSS px. One run of each phase, no failed attempt. The lab was destroyed after the run."
+    "No owner-entered DocuSign credentials or two controlled Signer inboxes are available. No live preparation behavior has been observed.",
+    "The prior DOC-029 developer-account journey exercised legacy direct send, not native preparation. Prior evidence is retained verbatim below.",
+    "No real signed Connect delivery or recovery is claimed. Issue #888 remains open.",
+    "Production entitlements and native editor restrictions remain account-specific. The new interface remains off by default."
+  ],
+  "publicationBlockers": [
+    "#1178: owner-entered developer credentials and two controlled inboxes are required before live preparation acceptance. Keep #1178 and #1170 open and the production default off."
   ],
   "previousEvidence": {
-    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "contentSha256": "bb311a48eb2d4495ab88402b2e88ff410e03f5f2e207903e7ce10b3dcb48130c",
-    "verifiedAt": "2026-09-16T15:26:26Z",
-    "walkthroughReviewer": "DOC-029 independent walkthrough agent (signing-standin, round 1)",
-    "evidence": "docs/documentation/batches/DOC-029/signing-standin/walkthrough-r1.json"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "articleId": "electronic-signing",
     "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
+    "environment": "openlaw-docs-41255c61-sign-rw",
+    "author": "Codex documentation author; corrections by DOC-029 source-review author agent (signing-standin); corrections by DOC-029 integration author agent",
+    "technicalReviewer": "DOC-029 integration author agent",
+    "walkthroughReviewer": "DOC-029 independent re-walk agent",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (signing-standin)) found the article compatible: I inspected the app diff 3fa407e3..57e77e38 and found no change to the signing, Envelope, executed-copy or Approvals card code, or to their UI copy. I then replayed the V-C17-electronic walkthrough in full on lab sign-r2 (57e77e38) with the local DocuSign stand-in: 35 main steps, 2 Polling steps and 1 webhook-note check passed for Legal Team Member and Administrator. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
+    "verifiedAt": "2026-09-16T17:37:00Z",
+    "status": "pass",
+    "sources": [
+      "docs/user-guides/electronic-signing.md",
+      "docs/documentation/batches/DOC-029/signing-standin/technical-review.json",
+      "docs/documentation/batches/DOC-029/signing-standin/technical-review-addendum.json",
+      "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.json",
+      "docs/documentation/batches/DOC-029/live-provider/walkthrough/walkthrough-c42-send.json",
+      "apps/api/src/lib/signing/docusign.ts",
+      "apps/web/src/components/approvals/approvals-signing-card.tsx",
+      "apps/api/src/modules/contract-envelopes/routes.ts",
+      "apps/api/src/modules/signing-webhook/routes.ts",
+      "apps/api/src/pipeline/executed-copy.ts",
+      "apps/api/src/pipeline/reconciliation.ts"
+    ],
+    "scenarios": [
       {
-        "path": "batches/DOC-029/compat-r2/signing-standin.json",
-        "sha256": "6fac6b32a3e3ecfc0cde49b50a877a28c237ceb10d04a398f88d56e2916fd712"
+        "id": "V-C17-electronic",
+        "coverage": ["C17"],
+        "role": "legal_team_member",
+        "method": "browser-walkthrough",
+        "prerequisites": [
+          "Owned lab sign-rw (project openlaw-docs-41255c61-sign-rw, Helix light seed 7, built from 3fa407e3) with the local DocuSign protocol stand-in from docs/documentation/batches/DOC-029/rewalk/signing (a copy of signing-standin/fixture that also keeps the posted Signer tabs); fictional paper and Signers only.",
+          "DOC-029 prerequisite Contracts created through the lab API with a Legal Owner, a primary Document whose Version 1 carries two /sig/ marks and whose Version 2 carries none, one supporting Document, and Ravi Menon on the team."
+        ],
+        "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
+        "actual": "17 recorded steps for this role passed on 3fa407e3 (plus 3 shared Administrator setup steps and the Polling setup step). Send for signature was absent with no connector, before and after C-32 had a primary Document with 2 Versions and a supporting Document; with the connector enabled it was absent on C-33 (no paper) and shown on C-32; turning the connector off hid it and turning it on showed it again. Before you start: Version 1 was uploaded with two /sig/ marks already in the paper, and its download returned the same bytes. Nadia Haddad moved C-32 to Out for signature and opened Approvals > Send for signature. Version listed \"Version 2 \u2014 doc029-primary-v2-legal_team_member.pdf (current) | Version 1 \u2014 doc029-primary-legal_team_member.pdf\" with the current one selected and no supporting Document. Empty Signers were refused with \"Give every signer a name and an email address.\", a duplicate address with \"Each signer needs their own email address.\", Remove signer 3 left 2 rows, and Cancel left 0 Envelopes in the app and at the provider. During a controlled provider outage the dialog said \"The provider could not be reached. It may still have taken the envelope \u2014 check at the provider before you send again.\" and no round existed after reload. The retry sent Version 1 with a blank Subject: the row showed both fictional Signers, Version 1, Out for signature, Sep 16 by Nadia Haddad; the header said Envelope sent; the provider got subject \"C-32 DOC-029 signing-standin legal_team_member 20260916172450\", one document equal to Version 1 bytes, both Signers at routingOrder 1, and each Signer carried the same single Sign Here tab with anchorString /sig/, anchorUnits pixels, offsets 0 and anchorIgnoreIfNotPresent true; the Status stayed Out for signature. While it was out Send for signature was absent and a direct send answered 409. Marcus Oyelaran had no envelope actions and his void answered 403; the sender had the actions menu; Daniel Okafor, an Administrator who was neither sender nor Legal Owner, got \"Say why this envelope is being voided.\" for an empty Reason, Cancel kept the round, and the void recorded Voided with the reason (provider status voided); Send for signature returned and the Status did not move. The next round sent the current Version 2, which has no /sig/, with the same anchor request. A provider decline (signed delivery 204) showed Declined with its reason above the Voided row and the header Envelope declined; no Version was filed; the Contract stayed Out for signature and unarchived; Send was offered. With both dialogs open, Priya Raman's later send showed \"This contract already has an envelope out for signature. Void it before sending another.\" and after reload she saw Nadia's live round; the provider held one new envelope. Completion (delivery 204) showed Signed with executedFetch pending right after, then Executed copy; the download bytes equalled the provider output; Version 3 \"doc029-primary-v2-legal_team_member (executed).pdf\" was filed on the primary Document as kind executed, current and designated (Unmark as executed copy offered); the supporting Document kept 1 Version; the Status became Active; a repeated delivery added no Version or Envelope. After moving the Contract to Internal review before completion, Version 4 was filed and designated and the Status stayed Internal review. A void after the provider had completed was refused with \"The provider says this envelope is no longer live. Its ending arrives on the record from the provider's own feed.\"; after the feed and reload the row read Signed with Executed copy. With the executed file refused at the provider, the Signed row said \"The executed copy could not be filed. Upload it to the record instead.\" and no Version was added. Ravi Menon (Business User on the team) got 403 for Envelope read and send. Archived C-32 kept 6 rounds readable with no Send for signature and no envelope actions, a direct send answered 409, and it was restored. In Polling mode (C-36) the live row still carried the webhook note, a signed delivery answered 401, and the record read Signed with Executed copy and Active 4.0 minutes after the provider completion.",
+        "result": "pass",
+        "evidence": [
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.json",
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-main.raw.json",
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-polling.raw.json",
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.mjs",
+          "docs/documentation/batches/DOC-029/rewalk/signing/server.mjs",
+          "docs/documentation/batches/DOC-029/rewalk/signing/signing-overlay.yml",
+          "docs/documentation/batches/DOC-029/rewalk/signing/up.sh"
+        ]
       },
       {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+        "id": "V-C17-electronic",
+        "coverage": ["C17"],
+        "role": "administrator",
+        "method": "browser-walkthrough",
+        "prerequisites": [
+          "Owned lab sign-rw (project openlaw-docs-41255c61-sign-rw, Helix light seed 7, built from 3fa407e3) with the local DocuSign protocol stand-in from docs/documentation/batches/DOC-029/rewalk/signing (a copy of signing-standin/fixture that also keeps the posted Signer tabs); fictional paper and Signers only.",
+          "DOC-029 prerequisite Contracts created through the lab API with a Legal Owner, a primary Document whose Version 1 carries two /sig/ marks and whose Version 2 carries none, one supporting Document, and Ravi Menon on the team."
+        ],
+        "expected": "OpenLaw records the correct Envelope transitions and files/pins the returned executed paper once. Unavailable/disabled configuration, a second live Envelope, and provider failure have the documented outcomes. Local stand-ins do not satisfy C42 setup checks.",
+        "actual": "20 recorded steps for this role passed on 3fa407e3, including 4 Administrator setup steps. The lab started with no connector and Signing updates defaulting to Polling. Send for signature was absent with no connector, before and after C-34 had a primary Document with 2 Versions and a supporting Document; Daniel Okafor saved a Webhook-mode connector pointing at the stand-in and Test connection said \"Connected to DOC-029 signing stand-in.\"; Send was absent on C-35 (no paper) and shown on C-34; turning the connector off hid it and on showed it. Before you start: Version 1 carried two /sig/ marks and downloaded unchanged. Daniel moved C-34 to Out for signature. Version listed \"Version 2 \u2014 doc029-primary-v2-administrator.pdf (current) | Version 1 \u2014 doc029-primary-administrator.pdf\" with the current one selected; empty and duplicate Signers were refused with the same messages; Remove signer 3 worked; Cancel left 0 Envelopes and the provider count at 6. The outage showed the same send error with no round; the retry sent Version 1 with a blank Subject, the row showed both Signers, Version 1, Out for signature, Sep 16 by Daniel Okafor, the header Envelope sent, and the provider got subject \"C-34 DOC-029 signing-standin administrator 20260916172450\" with one document equal to Version 1, both Signers at routingOrder 1, and the same /sig/ Sign Here tab on each Signer; the Status stayed Out for signature. A direct second send answered 409 with Send absent. Priya Raman had no actions and her void answered 403; the sender had the actions menu; the Legal Owner Nadia Haddad got the Reason refusal, Cancel kept the round, and the void recorded Voided with the reason at the provider and on the row; Send returned; Status unchanged. The decline round sent Version 2 (no /sig/) with the same anchor request; the provider decline (204) showed Declined with its reason beside the Voided row and Envelope declined; nothing filed; Contract still Out for signature and unarchived; Send offered. Nadia's later send in a parallel dialog showed the one-live-Envelope refusal, and after reload she saw Daniel's live round. Completion (204) showed Signed, then Executed copy with bytes equal to the provider output; Version 3 \"doc029-primary-v2-administrator (executed).pdf\" was executed, current and designated on the primary Document; the supporting Document was untouched; Status Active; a repeated delivery changed nothing. Moving to Internal review before completion filed Version 4 and left Internal review. A void after provider completion showed the no-longer-live refusal, and after the feed the row read Signed. A refused executed file showed \"The executed copy could not be filed. Upload it to the record instead.\" with no new Version. Ravi Menon got 403 for read and send. Archived C-34 kept 6 rounds readable with no Send and a direct send answered 409; restored. Daniel switched Signing updates to Polling; the Polling hint about 15 to 20 minutes was shown.",
+        "result": "pass",
+        "evidence": [
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.json",
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-main.raw.json",
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw-polling.raw.json",
+          "docs/documentation/batches/DOC-029/rewalk/signing/walkthrough-rw.mjs",
+          "docs/documentation/batches/DOC-029/rewalk/signing/server.mjs",
+          "docs/documentation/batches/DOC-029/rewalk/signing/signing-overlay.yml",
+          "docs/documentation/batches/DOC-029/rewalk/signing/up.sh"
+        ]
       }
+    ],
+    "limitations": [
+      "Independent agent re-walk by an agent that did not write or edit the article; not a human user study and not the feature owner's approval.",
+      "The /sig/ paragraph is verified in three separate parts, and none of them alone proves all of it. (1) This stand-in walkthrough proves that OpenLaw sends each Signer the same single Sign Here tab anchored on /sig/ with anchorIgnoreIfNotPresent true, for paper with and without marks. The stand-in copy keeps the posted tabs for that reason. It does not render the paper, so it cannot show where a field lands, that white text still anchors, or the free-form fallback. The fictional PDFs hold /sig/ in a PDF comment, not in rendered text. (2) Source inspection of buildEnvelopeDefinition in apps/api/src/lib/signing/docusign.ts at 3fa407e3 (unchanged in this worktree): every Signer gets routingOrder 1 and the identical signHereTabs entry, so all Signers share the same marks; the doc comment says DocuSign drops the tab and falls back to free-form signing when the paper has no anchor. (3) Real placement comes from the live DocuSign round trip in docs/documentation/batches/DOC-029/live-provider/walkthrough/ (C-38, paper doc029-live-signing.docx with /sig/ marks). The user confirmed on 2026-09-16 that the Sign Here field sat at the /sig/ anchor. That confirmation is the user's report, not an agent observation, and the live round did not test white text, several Signers, or paper without /sig/.",
+      "C17 otherwise used an isolated local DocuSign protocol stand-in with fictional paper and Signers. Completion, decline, outage and the refused executed file came from its controls, and deliveries were signed with a per-run in-memory Connect secret. It does not verify real provider setup and does not satisfy C42.",
+      "Connector configuration, disabling and the Polling switch used the Settings page as setup only; the configure-signing guide owns those steps. Contract creation, Document uploads, the team add, archive and restore used the lab API as prerequisites.",
+      "The Polling claim was checked once: the first provider check came 4.0 minutes after completion, at the first 5-minute sweep for a new Envelope. The 15 to 20 minute interval between later checks is from source (reconciliation.ts) and was not measured.",
+      "After a refused void, an immediate reload still showed Out for signature; the Signed outcome appeared once the provider feed arrived. The article's reload advice holds, but the outcome depends on that feed.",
+      "The sender's own void was not exercised end to end; the sender's actions menu was checked. The Legal Owner (administrator flow) and an Administrator who was neither sender nor Legal Owner (legal_team_member flow) each voided a round.",
+      "The article's manual follow-up for an unfiled executed copy links to manual-signing and was not repeated here.",
+      "The negative access check used Ravi Menon, a Business User on the team. The article does not address this audience.",
+      "This re-walk replays signing-standin/walkthrough-r1.mjs with the /sig/ checks added. It ran against the article bytes 89fa2f3b; the only difference from the earlier walked bytes (bb311a48) is the new /sig/ paragraph. Browser contexts were 1280x1800 CSS px. One run of each phase, no failed attempt. The lab was destroyed after the run."
+    ],
+    "previousEvidence": {
+      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "contentSha256": "bb311a48eb2d4495ab88402b2e88ff410e03f5f2e207903e7ce10b3dcb48130c",
+      "verifiedAt": "2026-09-16T15:26:26Z",
+      "walkthroughReviewer": "DOC-029 independent walkthrough agent (signing-standin, round 1)",
+      "evidence": "docs/documentation/batches/DOC-029/signing-standin/walkthrough-r1.json"
+    },
+    "copyOnlyReview": null,
+    "compatibilityReview": {
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+      "contentSha256": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
+      "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
+      "reviewer": "DOC-029 round 3 compatibility reviewer",
+      "reviewerKind": "agent",
+      "reviewedAt": "2026-09-16T19:11:55Z",
+      "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (signing-standin)) found the article compatible: I inspected the app diff 3fa407e3..57e77e38 and found no change to the signing, Envelope, executed-copy or Approvals card code, or to their UI copy. I then replayed the V-C17-electronic walkthrough in full on lab sign-r2 (57e77e38) with the local DocuSign stand-in: 35 main steps, 2 Polling steps and 1 webhook-note check passed for Legal Team Member and Administrator. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+      "evidence": [
+        {
+          "path": "batches/DOC-029/compat-r2/signing-standin.json",
+          "sha256": "6fac6b32a3e3ecfc0cde49b50a877a28c237ceb10d04a398f88d56e2916fd712"
+        },
+        {
+          "path": "batches/DOC-029/compat-r3/review.json",
+          "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+        }
+      ]
+    },
+    "publicationBlockers": [
+      "Live-provider C42/C43 acceptance remains blocked under #742; this local stand-in walkthrough does not change that."
     ]
-  },
-  "publicationBlockers": [
-    "Live-provider C42/C43 acceptance remains blocked under #742; this local stand-in walkthrough does not change that."
-  ]
+  }
 }

@@ -35,6 +35,7 @@ import { createStorageFromEnv } from "./lib/storage/config.js";
 import {
   createDocuSignDriverFactory,
   readDocuSignBaseUrl,
+  readSigningPreparationEnabled,
   SIGNING_STANDIN_VARIABLE,
 } from "./lib/signing/config.js";
 import { createNotifier } from "./lib/notifications/notifier.js";
@@ -327,8 +328,7 @@ await resolveVapid().catch((error: unknown) => {
 const app = await buildApp(
   {
     // Development-only until the complete DocuSign flow is released.
-    signingPreparationEnabled:
-      Boolean(docusignBaseUrl) && process.env.SIGNING_PREPARATION_ENABLED === "true",
+    signingPreparationEnabled: readSigningPreparationEnabled(process.env),
     db,
     config: {
       secret: requireEnv("AUTH_SECRET"),

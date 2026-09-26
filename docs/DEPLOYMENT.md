@@ -554,7 +554,9 @@ are sent to DocuSign even when OpenLaw has no inbound internet access.
 New connectors default to Polling. Existing connectors retain Webhook on upgrade.
 In Polling mode, OpenLaw refuses inbound webhook deliveries, even if a secret was
 saved earlier. Switching modes keeps outstanding Envelopes and credentials.
-Disabling the connector stops both update paths until it is enabled again.
+Disabling the connector refuses new sends and launches. Both update paths and
+executed-copy filing continue with the saved credentials. It cannot close a
+provider session that was already issued.
 
 For Webhook, enter the gateway's HTTPS address in **Public callback URL** if it
 differs from the app address. For example, a gateway can forward
@@ -662,3 +664,70 @@ incident record. With the worker stopped, settle only that row as
 original idempotency record. An empty search, a missing ID, an elapsed lookup
 window or an unavailable account is not that evidence. Keep unresolved operations
 reserved until their outcome is known.
+
+## DocuSign preparation acceptance
+
+Release status for #1178: blocked pending a real developer-account walkthrough.
+The production default remains off. The explicit legacy direct-send API and
+manual hand-off remain available. The existing development gate cannot be retired
+until the essential native editor restrictions pass live. Production entitlement
+remains account-specific. Real signed Connect delivery and recovery are tracked
+separately in [#888](https://github.com/juggernog20/OpenLaw/issues/888).
+
+Use the DOC-029 disposable lab helper from a committed revision. These example
+ports and /24 subnets must be unused on the machine. Do not edit a generated
+snapshot, overlay or digest. The helper binds the app and Mailpit to loopback.
+
+```bash
+node scripts/documentation/lab.mjs create signing-live --commit HEAD \
+  --app-port 43378 --mail-port 48478 --signing-preparation live \
+  --backend-subnet 10.241.78.0/24 --engine-subnet 10.242.78.0/24
+node scripts/documentation/lab.mjs up signing-live
+node scripts/documentation/lab.mjs seed signing-live
+```
+
+The live option sets `SIGNING_PREPARATION_ENABLED=true` and
+`SIGNING_PREPARATION_LIVE_LAB=true` on the lab API only. The latter is an explicit
+acceptance opt-in, not a production recommendation. It refuses a signing stand-in.
+Neither `DOCUSIGN_BASE_URL` nor `SIGNING_STANDIN` is set. Without both preparation
+switches, real deployments keep the old interface. No provider secret comes from
+the lab helper or its shell environment.
+
+The owner opens the seeded lab, then **Settings → Organization → Integrations →
+E-signature → DocuSign**. They choose **Demo** and **Polling**, enter their integration
+key, non-administrator integration user's User ID and RSA private key, save, then
+leave the secret inputs. The owner must have granted JWT consent for that user
+and control two Signer inboxes. Mailpit receives OpenLaw's lab mail, not DocuSign's
+external invitations. Pause browser automation during credential entry. Do not
+capture forms, input values, network bodies, sender URLs or return-state tokens.
+Use a separate browser context for provider account administration or consent so
+that the embedded editor does not share that provider web session.
+
+Record the app commit and image IDs separately from the exact guide content hashes
+in the existing configure-signing V-C42 and electronic-signing verification records.
+Use both `live-provider-check` and independent `browser-walkthrough`. Preserve
+historical legacy evidence. The acceptance matrix in those records includes every
+exposed edit route, fields, save/resume/discard, expired links, competing editors,
+return casing and missing IDs, authentication, scheduling, lost browser returns,
+provider-confirmed send, completion, and already-issued sessions after local access
+changes. A provider stub establishes none of these native account observations.
+
+Verify Polling at its real cadence without changing database clocks. A single
+Envelope's provider status reads share a durable 15-minute allowance across returns,
+Resume and workers, with bounded creation and launch grace. Capture normalized
+state and timings only. Check one executed copy on the original chain and the
+conditional Signature-to-Active rule. Do not claim that all Signers must have
+signature fields unless the actual provider enforces it.
+
+If credentials or controlled inboxes are unavailable, mark the live scenarios
+`blocked` and keep the default off. If any native editor route permits a prohibited
+recipient, Document, page, Subject, visibility or template change, stop rollout.
+Record the failed route and the required provider permission or product design
+change before another acceptance run. Reserved API flags are not evidence of
+native enforcement. Do not alter the parent specification to erase a failed check.
+
+After the owner resolves or discards their test Envelopes, destroy only this lab:
+
+```bash
+node scripts/documentation/lab.mjs destroy signing-live
+```

@@ -17,6 +17,7 @@ import {
 import { createServer } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { acceptanceConfiguration } from "./lab-options.mjs";
 import { readOwnedFile } from "./owned-file.mjs";
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -115,7 +116,8 @@ async function main() {
   if (!commands.has(command) || !/^[a-z][a-z0-9-]{0,23}$/.test(name ?? "")) {
     fail(
       "Usage: node scripts/documentation/lab.mjs create|up|seed|status|stop|destroy <name> " +
-        "[create only: --commit <revision> --app-port <port> --mail-port <port>]",
+        "[create only: --commit <revision> --app-port <port> --mail-port <port> " +
+        "--signing-preparation off|live --backend-subnet <IPv4/24> --engine-subnet <IPv4/24>]",
     );
   }
   assertDirectory(stateRoot);
@@ -144,13 +146,21 @@ async function main() {
 
   if (command === "create") {
     if (existsSync(directory)) fail(`Lab ${name} already exists; choose another name.`);
-    const config = { commit: "HEAD", "app-port": "43300", "mail-port": "48425" };
+    const config = {
+      commit: "HEAD",
+      "app-port": "43300",
+      "mail-port": "48425",
+      "signing-preparation": "off",
+      "backend-subnet": "",
+      "engine-subnet": "",
+    };
     for (let index = 0; index < options.length; index += 2) {
       const key = options[index]?.replace(/^--/, "");
       const value = options[index + 1];
       if (!Object.hasOwn(config, key) || value === undefined) fail("Unknown or incomplete option.");
       config[key] = value;
     }
+    const acceptance = acceptanceConfiguration(config);
     const appPort = Number(config["app-port"]);
     const mailPort = Number(config["mail-port"]);
     for (const port of [appPort, mailPort])
@@ -198,7 +208,8 @@ async function main() {
         [
           `AUTH_SECRET=${randomBytes(32).toString("base64")}`,
           `OPENLAW_SECRET_KEY=${randomBytes(32).toString("base64")}`,
-          `PORT=127.0.0.1:${appPort}`,
+          `PORT=${appPort}`,
+          "APP_BIND=127.0.0.1",
           `BASE_URL=http://127.0.0.1:${appPort}`,
           "",
         ].join("\n"),
@@ -213,10 +224,16 @@ async function main() {
       const setupToken = randomBytes(16).toString("base64url");
       appendFileSync(join(source, ".env"), `SETUP_TOKEN=${setupToken}\n`, { mode: 0o600 });
       writeJson(join(directory, "overlay.json"), {
+        networks: acceptance.networks,
         services: {
           app: {
             image: appImage,
-            environment: { ...mail, AUTH_RATE_LIMIT: "off", SETUP_TOKEN: setupToken },
+            environment: {
+              ...mail,
+              ...acceptance.environment,
+              AUTH_RATE_LIMIT: "off",
+              SETUP_TOKEN: setupToken,
+            },
           },
           worker: { image: appImage, environment: mail },
           "doc-engine": { image: engineImage },
@@ -233,6 +250,7 @@ async function main() {
         name,
         project,
         sourceCommit: commit,
+        signingPreparation: config["signing-preparation"],
         snapshotDigest: snapshotDigest(source),
         configurationDigest: configurationDigest(directory),
         createdAt: new Date().toISOString(),
