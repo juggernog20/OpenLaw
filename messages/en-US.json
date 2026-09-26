@@ -5453,9 +5453,6 @@
   "entities.record.fields.yes": {
     "defaultMessage": "Yes"
   },
-  "entities.record.none": {
-    "defaultMessage": "None"
-  },
   "entities.record.notRecorded": {
     "defaultMessage": "Not recorded"
   },
@@ -5543,8 +5540,17 @@
   "entities.record.officers.empty": {
     "defaultMessage": "No current directors or officers."
   },
+  "entities.record.officers.enterName": {
+    "defaultMessage": "Enter a name to add someone outside the user list."
+  },
   "entities.record.officers.name": {
     "defaultMessage": "Director or officer name"
+  },
+  "entities.record.officers.namePlaceholder": {
+    "defaultMessage": "Select a user or enter a name"
+  },
+  "entities.record.officers.people": {
+    "defaultMessage": "People"
   },
   "entities.record.officers.remove": {
     "defaultMessage": "Remove {officer}"
@@ -5564,8 +5570,11 @@
   "entities.record.officers.title": {
     "defaultMessage": "Directors & Officers"
   },
-  "entities.record.officers.user": {
-    "defaultMessage": "Linked user"
+  "entities.record.officers.useName": {
+    "defaultMessage": "Use \"{name}\" without linking a user"
+  },
+  "entities.record.officers.userLinked": {
+    "defaultMessage": "User linked"
   },
   "entities.record.portal.title": {
     "defaultMessage": "Portal"
