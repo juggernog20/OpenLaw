@@ -1236,6 +1236,18 @@ type EnvelopeEndingPayload = {
 };
 
 type EnvelopePayloads = {
+  "envelope.preparation_started": {
+    envelopeId: string;
+    provider: string;
+    documentId: string;
+    documentVersionId: string;
+    signerCount: number;
+  };
+  "envelope.session_launched": {
+    envelopeId: string;
+    provider: string;
+    providerEnvelopeId: string;
+  };
   "envelope.sent":
     | EnvelopeEndingPayload
     | {

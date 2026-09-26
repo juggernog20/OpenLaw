@@ -149,6 +149,7 @@ import {
   SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
+import { ERASED } from "../../lib/signer-erasure.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import {
   contractTeamScope,
@@ -464,7 +465,13 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       .leftJoin(documents, eq(documentVersions.documentId, documents.id))
       .leftJoin(executedVersions, eq(contractEnvelopes.executedVersionId, executedVersions.id))
       .where(eq(contractEnvelopes.contractId, contractId))
-      .orderBy(desc(contractEnvelopes.createdAt), desc(contractEnvelopes.id));
+      .orderBy(
+        // Historical rounds were ordered by Sent. New preparations keep their
+        // creation position even when an older discarded round is restored.
+        desc(sql`case when ${contractEnvelopes.preparationState} is null
+          then ${contractEnvelopes.sentAt} else ${contractEnvelopes.createdAt} end`),
+        desc(contractEnvelopes.id),
+      );
 
     // The signers, read in one go rather than joined onto the rows
     // above: a join would multiply every envelope by its signers and
@@ -1117,6 +1124,21 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               signingOrder: index + 1,
             })),
           );
+          if (preparing)
+            await recordActivity(tx, {
+              entityType: "contract",
+              entityId: locked.id,
+              actorId: request.user.id,
+              action: "envelope.preparation_started",
+              visibility: RECORD_ACTIVITY_TIER,
+              payload: {
+                envelopeId: envelope.id,
+                provider: signing.provider,
+                documentId: primaryDocument.id,
+                documentVersionId: version.id,
+                signerCount: signers.length,
+              },
+            });
           return { envelope, reused: false };
         });
         if (reservation.reused)
@@ -1214,16 +1236,35 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         if (preparing) {
           // The provider id is kept before the route answers, so no later
           // browser launch can be issued for a draft the record cannot name.
-          await app.db
-            .update(contractEnvelopes)
-            .set({
-              status: "draft",
-              providerEnvelopeId: sent.providerEnvelopeId,
-              preparationState: "created",
-            })
-            .where(
-              and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
-            );
+          await app.db.transaction(async (tx) => {
+            const [prepared] = await tx
+              .update(contractEnvelopes)
+              .set({
+                status: "draft",
+                providerEnvelopeId: sent.providerEnvelopeId,
+                preparationState: "created",
+              })
+              .where(
+                and(
+                  eq(contractEnvelopes.id, envelopeId),
+                  eq(contractEnvelopes.status, "preparing"),
+                ),
+              )
+              .returning({ id: contractEnvelopes.id });
+            if (prepared)
+              await recordActivity(tx, {
+                entityType: "contract",
+                entityId: contract.id,
+                action: "envelope.confirmed",
+                visibility: RECORD_ACTIVITY_TIER,
+                payload: {
+                  envelopeId: prepared.id,
+                  provider: signing.provider,
+                  providerEnvelopeId: sent.providerEnvelopeId,
+                  status: "draft",
+                },
+              });
+          });
           return reply.status(201).send(await signingStateOf(request.user, contract, true));
         }
 
@@ -1263,6 +1304,15 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
                 primaryDocument,
               };
 
+            // An erasure may have removed a Signer while the provider was
+            // answering. Read under the Envelope lock and keep erased slots.
+            const retainedSigners = await tx
+              .select()
+              .from(contractEnvelopeSigners)
+              .where(eq(contractEnvelopeSigners.envelopeId, envelope.id));
+            const retainedByOrder = new Map(
+              retainedSigners.map((signer) => [signer.signingOrder, signer]),
+            );
             await recordActivity(tx, {
               entityType: "contract",
               entityId: locked.id,
@@ -1282,7 +1332,12 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
                 documentTitle: primaryDocument.title,
                 documentVersionId: version.id,
                 documentVersionNumber: version.versionNumber,
-                signers: signers.map((signer) => ({ name: signer.name, email: signer.email })),
+                signers: signers.map((_signer, index) => {
+                  const retained = retainedByOrder.get(index + 1);
+                  return retained
+                    ? { name: retained.name, email: retained.email }
+                    : { name: ERASED, email: ERASED };
+                }),
               },
             });
 
@@ -1422,7 +1477,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "voidContractEnvelope",
         summary:
           "Withdraw a live envelope (CTR-013). Three actors may: the " +
-          "person who sent it, the contract's Owner, and an " +
+          "preparer or direct sender, the contract's Owner, and an " +
           "Administrator — a mistaken or superseded send should not sit " +
           "open, and it should not wait on the one person who made it. " +
           "The reason is required, because the provider records it with " +
@@ -1484,7 +1539,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!mayVoid) {
         throw httpError(
           403,
-          "Only the person who sent it, the contract's Owner, or an Administrator " +
+          "Only the preparer or direct sender, the contract's Owner, or an Administrator " +
             "can void this envelope.",
         );
       }

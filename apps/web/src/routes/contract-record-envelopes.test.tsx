@@ -872,7 +872,7 @@ describe("when the send control is absent", () => {
 });
 
 /** The row's action menu, once the card has drawn the signing block. */
-const ROW_ACTIONS = "Actions for the envelope sent on Aug 10";
+const ROW_ACTIONS = "Actions for the envelope: Aug 10";
 
 describe("voiding a live envelope", () => {
   it("collects the reason and withdraws the round, in one write", async () => {

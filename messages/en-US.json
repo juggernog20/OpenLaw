@@ -464,11 +464,17 @@
   "activity.envelope.discarded": {
     "defaultMessage": "{hasActor, select, yes {{actor} discarded this contract's envelope} other {This contract's envelope was discarded}}{hasReason, select, yes { — {reason}} other {}}"
   },
+  "activity.envelope.preparation_started": {
+    "defaultMessage": "{actor} started preparing this contract's envelope"
+  },
   "activity.envelope.restored": {
     "defaultMessage": "This contract's envelope was restored in DocuSign"
   },
   "activity.envelope.sent": {
     "defaultMessage": "{hasActor, select, yes {{actor} sent this contract for signature} other {This contract was sent for signature}}"
+  },
+  "activity.envelope.session_launched": {
+    "defaultMessage": "{actor} requested an editing session for this contract's envelope"
   },
   "activity.envelope.signed": {
     "defaultMessage": "This contract's envelope was signed"
@@ -12402,7 +12408,7 @@
     "defaultMessage": "workspace"
   },
   "signing.actionsFor": {
-    "defaultMessage": "Actions for the envelope sent on {date}"
+    "defaultMessage": "Actions for the envelope: {date}"
   },
   "signing.addSigner": {
     "defaultMessage": "Add signer"
