@@ -359,13 +359,11 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
         fileRef: stored.fileRef,
         // What the round **is** (CTR-014). The pin below is a separate
         // write, and this value is never read as one.
-        kind: owed.completesContract ? "executed" : "general",
+        kind: owed.completesContract ? "executed" : "partially_signed",
         source: "uploaded",
         comparedFromVersionId: null,
         comparedToVersionId: null,
-        note: owed.completesContract
-          ? null
-          : "Partially signed; additional signatures are required.",
+        note: null,
         originalFilename: filename,
         // The provider answers a PDF. Declared rather than sniffed, as
         // everywhere else: it is a rendering hint (DOC-004).
@@ -406,7 +404,7 @@ export async function fileExecutedCopy(deps: ExecutedCopyDeps, envelopeId: strin
           versionId,
           title: document.title,
           versionNumber,
-          kind: owed.completesContract ? "executed" : "general",
+          kind: owed.completesContract ? "executed" : "partially_signed",
         },
       });
       if (owed.completesContract)

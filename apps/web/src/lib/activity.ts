@@ -511,7 +511,7 @@ function changeValue(
         defaultMessage:
           "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
           "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
-          "executed {Executed} amendment {Amendment} " +
+          "partially_signed {Partially signed} executed {Executed} amendment {Amendment} " +
           "generated_redline {Generated redline} other {{kind}}}",
       },
       { kind: value as string },

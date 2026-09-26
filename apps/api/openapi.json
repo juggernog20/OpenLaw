@@ -38547,6 +38547,7 @@
                                         "draft_theirs",
                                         "redline_theirs",
                                         "redline_ours",
+                                        "partially_signed",
                                         "executed",
                                         "amendment",
                                         "generated_redline"
@@ -40261,6 +40262,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -40471,6 +40473,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -64035,6 +64038,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -64296,6 +64300,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -64614,6 +64619,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -64877,6 +64883,7 @@
                       "draft_theirs",
                       "redline_theirs",
                       "redline_ours",
+                      "partially_signed",
                       "executed",
                       "amendment"
                     ],
@@ -64949,6 +64956,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -65281,6 +65289,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -65544,6 +65553,7 @@
                       "draft_theirs",
                       "redline_theirs",
                       "redline_ours",
+                      "partially_signed",
                       "executed",
                       "amendment"
                     ],
@@ -65626,6 +65636,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -65958,6 +65969,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -66221,6 +66233,7 @@
                       "draft_theirs",
                       "redline_theirs",
                       "redline_ours",
+                      "partially_signed",
                       "executed",
                       "amendment"
                     ],
@@ -66303,6 +66316,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -66635,6 +66649,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -66898,6 +66913,7 @@
                       "draft_theirs",
                       "redline_theirs",
                       "redline_ours",
+                      "partially_signed",
                       "executed",
                       "amendment"
                     ],
@@ -66980,6 +66996,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -67241,6 +67258,7 @@
                       "draft_theirs",
                       "redline_theirs",
                       "redline_ours",
+                      "partially_signed",
                       "executed",
                       "amendment"
                     ],
@@ -67313,6 +67331,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -67586,6 +67605,7 @@
                           "draft_theirs",
                           "redline_theirs",
                           "redline_ours",
+                          "partially_signed",
                           "executed",
                           "amendment"
                         ]
@@ -67665,6 +67685,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -67986,6 +68007,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -68326,6 +68348,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -68637,6 +68660,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -68956,6 +68980,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -69123,6 +69148,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -69451,6 +69477,7 @@
                                           "draft_theirs",
                                           "redline_theirs",
                                           "redline_ours",
+                                          "partially_signed",
                                           "executed",
                                           "amendment",
                                           "generated_redline"
@@ -69766,6 +69793,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment",
                                 "generated_redline"
@@ -69933,6 +69961,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment",
                                 "generated_redline"
@@ -70249,6 +70278,7 @@
                                       "draft_theirs",
                                       "redline_theirs",
                                       "redline_ours",
+                                      "partially_signed",
                                       "executed",
                                       "amendment",
                                       "generated_redline"
@@ -70506,6 +70536,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment",
                                 "generated_redline"
@@ -70673,6 +70704,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment",
                                 "generated_redline"
@@ -70989,6 +71021,7 @@
                                       "draft_theirs",
                                       "redline_theirs",
                                       "redline_ours",
+                                      "partially_signed",
                                       "executed",
                                       "amendment",
                                       "generated_redline"
@@ -71287,6 +71320,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment",
                                 "generated_redline"
@@ -71454,6 +71488,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment",
                                 "generated_redline"
@@ -71770,6 +71805,7 @@
                                       "draft_theirs",
                                       "redline_theirs",
                                       "redline_ours",
+                                      "partially_signed",
                                       "executed",
                                       "amendment",
                                       "generated_redline"
@@ -72051,6 +72087,7 @@
                             "draft_theirs",
                             "redline_theirs",
                             "redline_ours",
+                            "partially_signed",
                             "executed",
                             "amendment",
                             "generated_redline"
@@ -72232,6 +72269,7 @@
                             "draft_theirs",
                             "redline_theirs",
                             "redline_ours",
+                            "partially_signed",
                             "executed",
                             "amendment",
                             "generated_redline"
@@ -72463,6 +72501,7 @@
                                     "draft_theirs",
                                     "redline_theirs",
                                     "redline_ours",
+                                    "partially_signed",
                                     "executed",
                                     "amendment",
                                     "generated_redline"
@@ -72778,6 +72817,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -73069,6 +73109,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -73362,6 +73403,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -73655,6 +73697,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment",
                                   "generated_redline"
@@ -76094,6 +76137,7 @@
                           "draft_theirs",
                           "redline_theirs",
                           "redline_ours",
+                          "partially_signed",
                           "executed",
                           "amendment"
                         ]
@@ -76142,6 +76186,7 @@
                           "draft_theirs",
                           "redline_theirs",
                           "redline_ours",
+                          "partially_signed",
                           "executed",
                           "amendment"
                         ]
@@ -94173,6 +94218,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment"
                                 ]
@@ -94315,6 +94361,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -94442,6 +94489,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -94607,6 +94655,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -94776,6 +94825,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment"
                                 ]
@@ -94927,6 +94977,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -95054,6 +95105,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -95184,6 +95236,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment"
                                 ]
@@ -95326,6 +95379,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -95453,6 +95507,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -95618,6 +95673,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -95787,6 +95843,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment"
                                 ]
@@ -95938,6 +95995,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -96065,6 +96123,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -96195,6 +96254,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment"
                                 ]
@@ -96337,6 +96397,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -96464,6 +96525,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -96629,6 +96691,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -96798,6 +96861,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment"
                                 ]
@@ -96949,6 +97013,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -97076,6 +97141,7 @@
                                 "draft_theirs",
                                 "redline_theirs",
                                 "redline_ours",
+                                "partially_signed",
                                 "executed",
                                 "amendment"
                               ]
@@ -97194,6 +97260,7 @@
                                   "draft_theirs",
                                   "redline_theirs",
                                   "redline_ours",
+                                  "partially_signed",
                                   "executed",
                                   "amendment"
                                 ]

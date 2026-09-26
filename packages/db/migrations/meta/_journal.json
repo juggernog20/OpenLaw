@@ -1275,6 +1275,13 @@
       "when": 1790440443274,
       "tag": "0181_partial-signing",
       "breakpoints": true
+    },
+    {
+      "idx": 182,
+      "version": "7",
+      "when": 1790442498390,
+      "tag": "0182_partially-signed-document-type",
+      "breakpoints": true
     }
   ]
 }

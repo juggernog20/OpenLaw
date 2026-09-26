@@ -351,7 +351,7 @@
     "defaultMessage": "{actor} deleted version {version} of {title}"
   },
   "activity.document.versionKind": {
-    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {{kind}}}"
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} partially_signed {Partially signed} executed {Executed} amendment {Amendment} generated_redline {Generated redline} other {{kind}}}"
   },
   "activity.document.versionKindChanged": {
     "defaultMessage": "{version, select, unknown {{actor} changed the kind of a version of {title}} other {{actor} changed the kind of version {version} of {title}}}"
@@ -4773,7 +4773,7 @@
     "defaultMessage": "Compares v{from} and v{to}"
   },
   "documents.kind": {
-    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} executed {Executed} amendment {Amendment} general {General} generated_redline {Generated redline} other {Unknown}}"
+    "defaultMessage": "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} redline_theirs {Redline · theirs} redline_ours {Redline · ours} partially_signed {Partially signed} executed {Executed} amendment {Amendment} general {General} generated_redline {Generated redline} other {Unknown}}"
   },
   "documents.kindLabel": {
     "defaultMessage": "Kind"

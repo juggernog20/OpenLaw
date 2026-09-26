@@ -10,7 +10,7 @@
  * its files show the item's Knowledge type instead (DOC-015 addendum).
  *
  * **Fixed rows carry a system kind.** The Contract list starts with the
- * six CTR-014 negotiation types. Each one maps to the Version kind that
+ * fixed Contract negotiation types. Each one maps to the Version kind that
  * code reads (the executed-copy append, the Auto-Doc original, the
  * renewal seed), so those rows cannot be renamed,
  * archived, or deleted. A row an Administrator adds has no system kind,
@@ -37,6 +37,7 @@ export const DOCUMENT_TYPE_SYSTEM_KINDS = [
   "draft_theirs",
   "redline_theirs",
   "redline_ours",
+  "partially_signed",
   "executed",
   "amendment",
 ] as const;
@@ -67,7 +68,7 @@ export const documentTypes = pgTable(
     check("document_types_module_check", sql`${table.module} in ('matter', 'contract', 'entity')`),
     check(
       "document_types_system_kind_check",
-      sql`${table.systemKind} is null or ${table.systemKind} in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'executed', 'amendment')`,
+      sql`${table.systemKind} is null or ${table.systemKind} in ('draft_ours', 'draft_theirs', 'redline_theirs', 'redline_ours', 'partially_signed', 'executed', 'amendment')`,
     ),
   ],
 );

@@ -172,7 +172,7 @@ export const documentTools: readonly ToolDefinition[] = [
     name: "openlaw_document_upload",
     title: "Prepare a Document upload",
     description:
-      "Get a signed uploadUrl, headers and pending versionId. PUT the file bytes to that URL within ten minutes. No Version exists until upload succeeds. ownerType is contract, matter, entity, knowledge_item or auto_doc; supply number for contract or matter, id otherwise. Add documentId to append a Version. Auto-Doc permits append only. kind is general, draft_ours, draft_theirs, redline_theirs, redline_ours, executed or amendment. Matter, Entity and Auto-Doc use general. Existing designations do not move on append.",
+      "Get a signed uploadUrl, headers and pending versionId. PUT the file bytes to that URL within ten minutes. No Version exists until upload succeeds. ownerType is contract, matter, entity, knowledge_item or auto_doc; supply number for contract or matter, id otherwise. Add documentId to append a Version. Auto-Doc permits append only. kind is general, draft_ours, draft_theirs, redline_theirs, redline_ours, partially_signed, executed or amendment. Matter, Entity and Auto-Doc use general. Existing designations do not move on append.",
     inputSchema: uploadInput,
     outputSchema: z.object({
       uploadUrl: z.string(),

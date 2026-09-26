@@ -22148,6 +22148,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                     | "generated_redline";
@@ -22739,6 +22740,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -22814,6 +22816,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -30766,6 +30769,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -30877,6 +30881,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -30973,6 +30978,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31062,6 +31068,7 @@ export interface operations {
             | "draft_theirs"
             | "redline_theirs"
             | "redline_ours"
+            | "partially_signed"
             | "executed"
             | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
@@ -31092,6 +31099,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31188,6 +31196,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31277,6 +31286,7 @@ export interface operations {
             | "draft_theirs"
             | "redline_theirs"
             | "redline_ours"
+            | "partially_signed"
             | "executed"
             | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
@@ -31311,6 +31321,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31407,6 +31418,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31496,6 +31508,7 @@ export interface operations {
             | "draft_theirs"
             | "redline_theirs"
             | "redline_ours"
+            | "partially_signed"
             | "executed"
             | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
@@ -31530,6 +31543,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31626,6 +31640,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31715,6 +31730,7 @@ export interface operations {
             | "draft_theirs"
             | "redline_theirs"
             | "redline_ours"
+            | "partially_signed"
             | "executed"
             | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
@@ -31749,6 +31765,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31837,6 +31854,7 @@ export interface operations {
             | "draft_theirs"
             | "redline_theirs"
             | "redline_ours"
+            | "partially_signed"
             | "executed"
             | "amendment";
           /** @description What changed in this round, kept beside the file. Must be sent before the file part. */
@@ -31867,6 +31885,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -31966,6 +31985,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32050,6 +32070,7 @@ export interface operations {
                 | "draft_theirs"
                 | "redline_theirs"
                 | "redline_ours"
+                | "partially_signed"
                 | "executed"
                 | "amendment";
             };
@@ -32078,6 +32099,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32176,6 +32198,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32278,6 +32301,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32375,6 +32399,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32416,6 +32441,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32493,6 +32519,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                     | "generated_redline";
@@ -32587,6 +32614,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32628,6 +32656,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32705,6 +32734,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                     | "generated_redline";
@@ -32770,6 +32800,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32811,6 +32842,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -32888,6 +32920,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                     | "generated_redline";
@@ -32976,6 +33009,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -33017,6 +33051,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -33094,6 +33129,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                     | "generated_redline";
@@ -33175,6 +33211,7 @@ export interface operations {
                 | "draft_theirs"
                 | "redline_theirs"
                 | "redline_ours"
+                | "partially_signed"
                 | "executed"
                 | "amendment"
                 | "generated_redline";
@@ -33226,6 +33263,7 @@ export interface operations {
                 | "draft_theirs"
                 | "redline_theirs"
                 | "redline_ours"
+                | "partially_signed"
                 | "executed"
                 | "amendment"
                 | "generated_redline";
@@ -33304,6 +33342,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -33403,6 +33442,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -33495,6 +33535,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -33587,6 +33628,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -33679,6 +33721,7 @@ export interface operations {
                   | "draft_theirs"
                   | "redline_theirs"
                   | "redline_ours"
+                  | "partially_signed"
                   | "executed"
                   | "amendment"
                   | "generated_redline";
@@ -34687,6 +34730,7 @@ export interface operations {
                 | "draft_theirs"
                 | "redline_theirs"
                 | "redline_ours"
+                | "partially_signed"
                 | "executed"
                 | "amendment";
               name: string;
@@ -34704,6 +34748,7 @@ export interface operations {
                 | "draft_theirs"
                 | "redline_theirs"
                 | "redline_ours"
+                | "partially_signed"
                 | "executed"
                 | "amendment";
               note?: string;
@@ -40872,6 +40917,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -40929,6 +40975,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -40982,6 +41029,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41072,6 +41120,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41129,6 +41178,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41188,6 +41238,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41241,6 +41292,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41294,6 +41346,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41351,6 +41404,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41404,6 +41458,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41494,6 +41549,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41551,6 +41607,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41610,6 +41667,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41663,6 +41721,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41716,6 +41775,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41773,6 +41833,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41826,6 +41887,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41916,6 +41978,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -41973,6 +42036,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -42032,6 +42096,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -42085,6 +42150,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )
@@ -42133,6 +42199,7 @@ export interface operations {
                     | "draft_theirs"
                     | "redline_theirs"
                     | "redline_ours"
+                    | "partially_signed"
                     | "executed"
                     | "amendment"
                   )

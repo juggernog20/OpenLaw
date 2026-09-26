@@ -74,6 +74,7 @@ export const DOCUMENT_REPOSITORY_KINDS = [
   "draft_theirs",
   "redline_theirs",
   "redline_ours",
+  "partially_signed",
   "executed",
   "amendment",
   "generated_redline",
@@ -301,6 +302,7 @@ export const DOCUMENT_KIND_PILL: Record<DocumentVersionKind, string> = {
   redline_ours: "bg-status-info-bg text-status-info-fg",
   draft_theirs: "bg-status-warning-bg text-status-warning-fg",
   redline_theirs: "bg-status-warning-bg text-status-warning-fg",
+  partially_signed: "bg-status-warning-bg text-status-warning-fg",
   executed: "bg-status-success-bg text-status-success-fg",
   amendment: "bg-status-neutral-bg text-status-neutral-fg",
   generated_redline: "bg-status-neutral-bg text-status-neutral-fg",
@@ -344,7 +346,7 @@ export function documentKindLabel(intl: IntlShape, kind: DocumentVersionKind): s
       defaultMessage:
         "{kind, select, draft_ours {Draft · ours} draft_theirs {Draft · theirs} " +
         "redline_theirs {Redline · theirs} redline_ours {Redline · ours} " +
-        "executed {Executed} amendment {Amendment} " +
+        "partially_signed {Partially signed} executed {Executed} amendment {Amendment} " +
         "general {General} generated_redline {Generated redline} other {Unknown}}",
     },
     { kind },
@@ -460,6 +462,7 @@ export const DOCUMENT_VERSION_KINDS = [
   "redline_theirs",
   "redline_ours",
   "amendment",
+  "partially_signed",
   "executed",
 ] as const satisfies readonly DocumentVersionKind[];
 export type HandSetDocumentVersionKind = (typeof DOCUMENT_VERSION_KINDS)[number] | "general";

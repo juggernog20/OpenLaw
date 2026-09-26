@@ -518,7 +518,8 @@ describe("a signed envelope files its executed copy", () => {
     const paper = await primaryOf(partialContract.number);
     expect(paper.versions).toHaveLength(2);
     expect(paper.versions[1]).toMatchObject({
-      kind: "general",
+      kind: "partially_signed",
+      documentType: { displayName: "Partially signed" },
       isExecuted: false,
       originalFilename: "agreement (partially signed).pdf",
     });

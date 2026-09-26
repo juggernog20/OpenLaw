@@ -156,13 +156,14 @@ function currentOf(document: { versions: VersionRow[] }): VersionRow {
 }
 
 describe("the Document type lists", () => {
-  it("seeds six fixed Contract types, leaves the other lists empty, and has no Knowledge list", async () => {
+  it("seeds seven fixed Contract types, leaves the other lists empty, and has no Knowledge list", async () => {
     const contract = await listTypes("contract");
     expect(contract.map((row) => [row.displayName, row.systemKind])).toEqual([
       ["Draft · ours", "draft_ours"],
       ["Draft · theirs", "draft_theirs"],
       ["Redline · theirs", "redline_theirs"],
       ["Redline · ours", "redline_ours"],
+      ["Partially signed", "partially_signed"],
       ["Executed", "executed"],
       ["Amendment", "amendment"],
     ]);
@@ -190,7 +191,7 @@ describe("the Document type lists", () => {
       cookies: memberCookies,
     });
     expect(options.statusCode, options.body).toBe(200);
-    expect(options.json().documentTypes).toHaveLength(6);
+    expect(options.json().documentTypes).toHaveLength(7);
 
     // A Business User uploads to Contracts and Matters but reaches no
     // Entity paper (ENT-004), so the Entity list is refused.
