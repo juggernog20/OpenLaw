@@ -982,6 +982,39 @@ describe("when the void control is absent", () => {
 });
 
 describe("preparing an unsent Envelope", () => {
+  it.each([true, false])(
+    "returns focus after Cancel with preparation enabled=%s",
+    async (preparationEnabled) => {
+      const user = userEvent.setup();
+      const api = recordApi({ preparationEnabled });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/signatures");
+      const trigger = await screen.findByRole("button", {
+        name: preparationEnabled ? "Prepare Envelope" : "Send for signature",
+      });
+      await user.click(trigger);
+      const dialog = await screen.findByRole("dialog");
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(trigger).toHaveFocus());
+      expect(api.writes).toHaveLength(0);
+    },
+  );
+
+  it("focuses Signatures when the tab opens and preserves focus on a live update", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({ preparationEnabled: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    const heading = await screen.findByRole("heading", { name: "Signatures" });
+    await waitFor(() => expect(heading).toHaveFocus());
+    const trigger = screen.getByRole("button", { name: "Prepare Envelope" });
+    trigger.focus();
+    // A live connection rereads the record but must not take keyboard focus.
+    act(() => sources[0]!.open());
+    await waitFor(() => expect(api.reads).toBe(2));
+    expect(trigger).toHaveFocus();
+  });
+
   it("keeps preparation enabled when the live connection re-reads signing state", async () => {
     const sources = stubEventSource();
     const api = recordApi({ preparationEnabled: true });

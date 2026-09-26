@@ -1,12 +1,12 @@
 {
   "articleId": "electronic-signing",
   "contentSha256": "c157460d1d0b7f5cdc90cb0cbd31ff9358e9108d9b87373d8f2fa34c2b208ba6",
-  "appCommit": "097a6cac43fa68db973dbb0fd3bf35dd330d3622",
-  "buildId": "Pending committed acceptance lab build; no live preparation proof obtained",
-  "environment": "Disposable #1178 live lab pending build",
+  "appCommit": "51b291f9c25f29e020a2a76635bd30aec6ff1303",
+  "buildId": "app sha256:ec341471280077a9f25dfb496d538f6e835706da554ab0f045c6aa394ea24755; engine sha256:b5292e877ba6c2dde9c84888a5bd6b8a726f314f20242ab661a9c3ad9ac10cce",
+  "environment": "openlaw-docs-3f69f4a6-signing-live",
   "author": "#1178 implementation agent",
   "technicalReviewer": "#1178 implementation agent, source inspection only",
-  "walkthroughReviewer": "Pending independent root agent walkthrough",
+  "walkthroughReviewer": "Independent root agent, not the guide author",
   "reviewerKind": "agent",
   "verifiedAt": null,
   "reviewedAt": "2026-09-26T10:32:14.180366+00:00",
@@ -17,7 +17,8 @@
     "apps/api/src/modules/contract-envelopes/routes.ts",
     "apps/api/src/modules/contract-envelopes/launch.ts",
     "apps/api/src/lib/signing/docusign.ts",
-    "apps/api/src/pipeline/reconciliation.ts"
+    "apps/api/src/pipeline/reconciliation.ts",
+    "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-initial.json"
   ],
   "scenarios": [
     {
@@ -161,6 +162,23 @@
           "actual": "No real Connect claim; gap remains #888."
         }
       ]
+    },
+    {
+      "id": "V-C17-accessibility",
+      "coverage": ["C17"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Committed 51b291f9 live lab for Settings navigation only; independent stand-in stack for preparation controls. No real provider credentials."
+      ],
+      "expected": "Follow the revised guide controls. Open, cancel and return from preparation with keyboard focus restored and controls usable at a narrow viewport.",
+      "actual": "Independent root agent followed Settings to the empty DocuSign card, then stopped before owner credential entry. In the separate stand-in stack, two fictional Signers and the two-page fixture could prepare, save and Resume the same fields. Discard retained Waiting for confirmation under the shared read budget. At 390x844 with app zoom, controls fit the 355 CSS px layout; the Envelope table alone scrolled horizontally. Cancel and provider return left focus on BODY. The focus defects require a correction and final rewalk.",
+      "result": "fail",
+      "evidence": [
+        "docs/documentation/batches/DOC-029/preparation-1178/walkthrough-initial.json",
+        "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-narrow.png",
+        "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-return-narrow.png"
+      ]
     }
   ],
   "limitations": [
@@ -286,5 +304,16 @@
     "publicationBlockers": [
       "Live-provider C42/C43 acceptance remains blocked under #742; this local stand-in walkthrough does not change that."
     ]
+  },
+  "lab": {
+    "sourceCommit": "51b291f9c25f29e020a2a76635bd30aec6ff1303",
+    "snapshotDigest": "44702ac5e0b10f07c1cbee997ee4465166e1aa6b972341cc8670104206d113c5",
+    "configurationDigest": "36eea1c2756f318f33fdabe4db1f19803c69f03c24673d68d26945b5f3ec04a2",
+    "signingPreparation": "live",
+    "appImageId": "sha256:ec341471280077a9f25dfb496d538f6e835706da554ab0f045c6aa394ea24755",
+    "engineImageId": "sha256:b5292e877ba6c2dde9c84888a5bd6b8a726f314f20242ab661a9c3ad9ac10cce",
+    "createdAt": "2026-09-26T10:32:47.437Z",
+    "startedAt": "2026-09-26T10:33:14.401Z",
+    "configuration": "Real DocuSign hosts; explicit API preparation opt-in; Polling intended; no owner credentials entered at lab handoff."
   }
 }

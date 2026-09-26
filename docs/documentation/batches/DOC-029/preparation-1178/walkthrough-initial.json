@@ -1,0 +1,55 @@
+{
+  "reviewer": "Independent root agent, not the guide author",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "sourceCommit": "51b291f9c25f29e020a2a76635bd30aec6ff1303",
+  "observedAt": "2026-09-26T10:42:26.510765+00:00",
+  "articleHashes": {
+    "configure-signing": "3b0a86e23593c41c631ff7e38aa6e586a3e6ef47332b798010fbf0c4af9ed572",
+    "electronic-signing": "c157460d1d0b7f5cdc90cb0cbd31ff9358e9108d9b87373d8f2fa34c2b208ba6"
+  },
+  "environments": {
+    "live": "http://127.0.0.1:43378; no provider configured before owner handoff; no native provider action performed",
+    "standIn": "http://localhost:3218; synthetic DocuSign protocol stand-in, separate database/files; fictional C-1"
+  },
+  "observations": [
+    {
+      "result": "pass",
+      "actual": "Live lab: used seeded Administrator, avatar menu Settings, Organization Integrations, E-signature, DocuSign. Saw Not connected, expanded card. Stopped automation before owner credential-entry request. No credentials read or entered by agent."
+    },
+    {
+      "result": "pass",
+      "actual": "Stand-in: Signatures tab has Prepare Envelope. Dialog names Version1 fictional-two-page-agreement.pdf (current), Signers, Add signer, Subject, Cancel, Continue to DocuSign. Initial focus envelope-version. Entered two fictional names and example.test addresses."
+    },
+    {
+      "result": "pass",
+      "actual": "390x844 Playwright viewport, existing application zoom yields355CSSpx. Document width355 and dialog right354.55; every input, select and button withinviewport. Cancel/Continue visible. Envelope table uses intentional local horizontal scroller241wide/789content; document itself does not overflow."
+    },
+    {
+      "result": "fail",
+      "actual": "Cancel closes dialog but leaves activeElement BODY, confirmed in a second observation. Expected focus to Prepare Envelope."
+    },
+    {
+      "result": "pass",
+      "actual": "Continue opened stand-in editor. Saved fictional field value, returned to exact Signatures route. Row showed Draft\u2014not sent, Not sent and Prepared by Blair Wentworth. Resume reopened editor with same retained field."
+    },
+    {
+      "result": "fail",
+      "actual": "Provider stand-in return leaves focus BODY, confirmed before Resume. Expected reachable Signatures focus destination."
+    },
+    {
+      "result": "pass",
+      "actual": "Stand-in Discard returned to Signatures showing Waiting for confirmation, Not sent and original preparer. Did not falsely claim confirmed discard before next allowed provider read."
+    }
+  ],
+  "artifacts": [
+    "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-narrow.png",
+    "docs/documentation/batches/DOC-029/preparation-1178/1178-walk-return-narrow.png"
+  ],
+  "limitations": [
+    "No real DocuSign session or native restriction/field/account behavior verified. Owner credential entry and two controlled inboxes remain pending.",
+    "T3 preview resize timed out; narrow walkthrough instead used separate isolated Playwright context.",
+    "Focus defects require correction and a new committed build rewalk before marking current accessibility checks passed.",
+    "This is an independent agent walkthrough, not a human user study."
+  ]
+}
