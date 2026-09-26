@@ -1924,13 +1924,11 @@ describe("preparation refusals and reservations", () => {
     async (kind) => {
       const { contract, payload, prepare } = await ready();
       const method = kind === "draft" ? "prepareEnvelope" : "sendEnvelope";
-      const failed = vi
-        .spyOn(provider(), method)
-        .mockRejectedValueOnce(
-          new SigningNotSubmittedError("Not submitted", {
-            cause: new SigningConfigError("Refresh refused"),
-          }),
-        );
+      const failed = vi.spyOn(provider(), method).mockRejectedValueOnce(
+        new SigningNotSubmittedError("Not submitted", {
+          cause: new SigningConfigError("Refresh refused"),
+        }),
+      );
       const before = provider().sentEnvelopeIds().length;
       try {
         const response =
