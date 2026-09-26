@@ -107,6 +107,7 @@ async function listen(secret: string, addresses: string[] = [], flags = true) {
       accept: "application/json, text/event-stream",
       "x-api-key": secret,
       "mcp-method": "subscriptions/listen",
+      "mcp-protocol-version": "2026-07-28",
     },
     body: JSON.stringify({
       jsonrpc: "2.0",

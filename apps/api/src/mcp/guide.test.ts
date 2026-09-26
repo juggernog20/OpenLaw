@@ -188,6 +188,17 @@ async function call<N extends keyof typeof outputs>(
   expect(result.content).toEqual([{ type: "text", text: JSON.stringify(parsed) }]);
   return outputs[name].parse(parsed) as z.infer<(typeof outputs)[N]>;
 }
+async function readArticle(client: Client, id: string) {
+  let page = await call(client, "openlaw_docs_read", { id });
+  let text = page.text;
+  while (page.nextCursor !== null) {
+    expect(Number(page.nextCursor)).toBe(text.length);
+    page = await call(client, "openlaw_docs_read", { id, cursor: page.nextCursor });
+    expect(page.text.length).toBeGreaterThan(0);
+    text += page.text;
+  }
+  return { ...page, text };
+}
 it("always lists five Guide Tools for both audiences with a narrowed ceiling", async () => {
   await h.db.update(orgSettings).set({ mcpToolsetCeiling: [] });
   try {
@@ -292,7 +303,7 @@ it("searches and reads the same compiled articles with shared ranking and excerp
     cursor: result.nextCursor,
   });
   expect(next.articles[0]!.id).toBe(searchDocumentation(bundle, { query })[2]!.id);
-  const article = await call(legal, "openlaw_docs_read", { id: expected[0]!.id });
+  const article = await readArticle(legal, expected[0]!.id);
   expect(article.text).toBe(expected[0]!.text);
   expect(article.unverified).toBe(expected[0]!.unverified);
   expect(
@@ -402,7 +413,7 @@ it.each([
   for (const client of [legal, business]) {
     const found = await call(client, "openlaw_docs_search", { query: article!.title });
     expect(found.articles.map((a) => a.id)).toContain(id);
-    const read = await call(client, "openlaw_docs_read", { id });
+    const read = await readArticle(client, id);
     expect(read.text).toBe(article!.text);
   }
 });
